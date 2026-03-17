@@ -16,7 +16,7 @@ Click the green **Code** button at the top of this page → **Download ZIP**
 
 | Light Mode | Dark Mode |
 |-----------|-----------|
-| ![AI Hive Light Mode](images/readme-screenshot-light.png) | ![AI Hive Dark Mode](readme-screenshot-dark.png) |
+| ![AI Hive Light Mode](images/readme-screenshot-light.png) | ![AI Hive Dark Mode](images/readme-screenshot-dark.png) |
 
 **Step 2 — Unzip**
 
