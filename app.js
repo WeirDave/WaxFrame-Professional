@@ -169,59 +169,92 @@ function setPhaseTab(id) {
 // Default instructions per phase
 const DEFAULT_PHASE_INSTRUCTIONS = {
 
-  draft_scratch: `You are part of a multi-AI collaboration called AI Hive.
+  draft_scratch: `You are part of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-Your task: Create a complete first draft based on the project goal provided above.
-
-RULES:
-- Text only — no markdown, no headers, no bullet formatting
-- Return the full document, nothing else
-- Write as if this is the only version that will be reviewed`,
-
-  draft_refine: `You are part of a multi-AI collaboration called AI Hive.
-
-The user has provided a starting document above. Your task: review it and give specific, numbered suggestions for improvement.
+Your task: Create a complete first draft based on the project goal provided in this message.
 
 RULES:
-- Do NOT rewrite the document
-- Give numbered suggestions only: "Change X to Y", "Add a section about Z", "Remove the line about W"
-- Focus on content and clarity only — ignore formatting entirely
-- If a section is already strong, say so`,
+- Use plain text only. Do not use markdown headings (#), bullets (-), bold (**), italics, tables, or code fences. If the document requires section headings, write them in plain text on their own line.
+- Do not use ellipses (...) or placeholders — write every word of the document from start to finish.
+- Do not include meta-commentary, explanations of your choices, apologies, introductions, or any text that is not part of the document itself.
+- Do not reference AI Hive, this prompt, or the collaboration process anywhere in the draft.
+- Do not invent facts, data, names, or references not supported by the project goal. Use clearly labeled placeholders (e.g., [INSERT DATE]) when specific information is missing.
+- If critical information is missing from the project goal, make the fewest necessary assumptions and keep them conservative.
+- Prioritize completeness, clarity, internal consistency, and practical usefulness.`,
 
-  refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive.
+  draft_refine: `You are part of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-Review the current document above and give specific, numbered suggestions to improve it.
+The user has provided a document above. Your task: review it and give specific, numbered suggestions for improvement.
 
-RULES:
-- Do NOT rewrite the document
-- Numbered suggestions only: clarity, word choice, logical flow, anything that sounds off
-- No formatting suggestions — text content only
-- If you believe the text needs no further changes, say exactly: NO CHANGES NEEDED
-
-⚠️ IMPORTANT: Do NOT return a rewritten or full document. If you return a full document instead of numbered suggestions, your response will be discarded.`,
-
-  review: `You are the Builder in this AI Hive collaboration.
-
-The team has been refining this document and the user is ready for a review copy.
-
-Your task: Produce the complete, clean current version of the document incorporating all the suggestions and refinements discussed so far.
+Begin your response immediately with suggestion number 1. Do not include an introduction, summary, or restatement of the document.
 
 RULES:
-- Return the full document — every section, complete
-- Text only, no formatting
-- This is what the user will read, edit, and return for final refinement`,
+- Do NOT rewrite the document. Do not quote or restate large portions of it.
+- Number every suggestion starting from 1.
+- Each suggestion must identify the exact section or sentence being changed and propose a concrete, concise change. Example: "Section 2, sentence 3: Change 'utilize' to 'use'."
+- Focus on content, clarity, accuracy, internal consistency, tone, and logical flow only.
+- Do not suggest formatting, visual layout, or markup changes.
+- Do not add new requirements or sections unless the project goal clearly implies they are missing.
+- Do not include general praise, summaries, or filler. Only note a section requires no changes if it helps explain why you skipped it — keep it to one sentence maximum.
+- Only suggest changes that materially improve accuracy, professional tone, or clarity.`,
+
+  refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
+
+Review the current document provided in this message and give specific, numbered suggestions to improve it.
+
+Begin your response immediately with suggestion number 1. Do not include an introduction, preamble, or restatement of the document.
+
+RULES:
+- Do NOT rewrite the document. Do not quote or restate large portions of it.
+- Number every suggestion starting from 1.
+- Each suggestion must identify the exact section or sentence and propose a concrete change.
+- Focus on clarity, precision, internal consistency, tone, and logical flow only.
+- Do not suggest formatting, structural layout, or markup changes.
+- Do not introduce new content that changes the intended meaning of the document.
+- Keep each suggestion concise — one to two sentences maximum.
+- If you believe the text needs no further changes, return exactly this and nothing else: NO CHANGES NEEDED
+
+⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
+
+  review: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
+
+The team has been refining this document and the user is ready for a clean review copy.
+
+Your task: Produce the complete, clean current version of the document as it stands now.
+
+RULES:
+- Return the full document — every section, complete. Do not use ellipses or placeholders.
+- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
+- Do not add meta-commentary, explanations, or any text that is not part of the document itself.
+- Do not introduce new content, requirements, or changes not already present in the document.
+- Do not place any content outside the required wrapper blocks.
+- Structure your response EXACTLY like this — nothing before [DOCUMENT START], nothing after [DOCUMENT END]:
+
+[DOCUMENT START]
+...the complete document here...
+[DOCUMENT END]`,
 
 };
 
 // Builder instructions — used when responses are present (Builder compiles the updated doc)
 const BUILDER_INSTRUCTIONS = {
-  refine: `You are the Builder in this AI Hive collaboration.
+  refine: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-All reviewer suggestions are included above. Your task: produce the complete updated document incorporating all valid suggestions.
+All reviewer suggestions are included above. Your task: produce the complete updated document incorporating valid suggestions.
+
+A valid suggestion is one that improves clarity, accuracy, consistency, logic, or readability without changing the document's intended meaning or scope.
 
 RULES:
-- Return the FULL document — every section, complete
-- Text only, no markdown formatting
+- Return the FULL document — every section, complete. Do not use ellipses or placeholders.
+- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
+- Do not add meta-commentary or any text inside the document that is not document content.
+- Do not introduce new content, claims, or requirements that no reviewer suggested.
+- Do not treat repeated or substantially similar suggestions as conflicts — apply them once.
+- Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
+- Maintain internal consistency across section titles, numbering, terminology, and defined terms.
+- If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
+- Keep each conflict explanation to one or two sentences.
+- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
 - Structure your response EXACTLY like this:
 
 [DOCUMENT START]
@@ -229,21 +262,25 @@ RULES:
 [DOCUMENT END]
 
 [CONFLICTS START]
-List any conflicting suggestions here — what each AI suggested, which you chose, and why.
-If there are no conflicts write: NO CONFLICTS
-[CONFLICTS END]
+List any conflicting or incompatible suggestions here. For each conflict note: which AI suggested each version, which you chose, and why in one to two sentences.
+If there are no conflicts write exactly: NO CONFLICTS
+[CONFLICTS END]`,
 
-- Everything between [DOCUMENT START] and [DOCUMENT END] is the clean document to paste back
-- Everything between [CONFLICTS START] and [CONFLICTS END] is for the user to review`,
+  draft: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-  draft: `You are the Builder in this AI Hive collaboration.
-
-All reviewer drafts are included above. Your task: produce the single best consolidated first draft.
+All reviewer drafts are included above. Your task: produce a single consolidated first draft that integrates the strongest elements from each provided draft while preserving overall coherence and completeness.
 
 RULES:
-- Return the FULL document — every section, complete
-- Take the best elements from each draft
-- Text only, no markdown formatting
+- Return the FULL document — every section, complete. Do not use ellipses or placeholders.
+- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
+- Prioritize accuracy, completeness, clarity, internal consistency, and practical usefulness over stylistic flourish.
+- Do not introduce new ideas, content, or requirements not present in any of the provided drafts.
+- Do not merge conflicting text mechanically — choose the stronger approach and note the conflict below.
+- Normalize terminology across drafts for consistency.
+- Ensure the consolidated draft has a single, consistent voice. Eliminate redundant content introduced by merging.
+- If a requirement from the project goal is missing from all drafts, flag it in the conflicts section as a MISSING REQUIREMENT.
+- Maintain internal consistency across section titles, numbering, terminology, and defined terms.
+- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
 - Structure your response EXACTLY like this:
 
 [DOCUMENT START]
@@ -251,18 +288,24 @@ RULES:
 [DOCUMENT END]
 
 [CONFLICTS START]
-List any major structural or approach conflicts between the drafts here.
-If there are no conflicts write: NO CONFLICTS
+List any conflicting or incompatible approaches between drafts. For each conflict note: what each draft proposed, which you chose, and why in one to two sentences. Flag any MISSING REQUIREMENTS here.
+If there are no conflicts write exactly: NO CONFLICTS
 [CONFLICTS END]`,
 
-  review: `You are the Builder in this AI Hive collaboration.
+  review: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-The user has reviewed the document and provided their edits. Your task: produce the complete updated document incorporating the user's changes plus any reviewer suggestions.
+The user has reviewed the document and their edits are incorporated above. Your task: produce the complete updated document.
 
 RULES:
-- Return the FULL document — every section, complete
-- Honor the user's intent — their edits take priority
-- Text only, no markdown formatting
+- Return the FULL document — every section, complete. Do not use ellipses or placeholders.
+- Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
+- The user's edits and stated intent have absolute priority. User edits override reviewer suggestions wherever they conflict.
+- Only apply reviewer suggestions that do not contradict or undo a user edit.
+- Do not override the user's wording choices for style preference alone — only adjust if required for grammar, consistency, or logical coherence.
+- Do not introduce new content beyond what the user's edits and reviewer suggestions provide.
+- Preserve the document structure unless the user's edits changed it.
+- Maintain internal consistency across section titles, numbering, terminology, and defined terms.
+- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
 - Structure your response EXACTLY like this:
 
 [DOCUMENT START]
@@ -270,8 +313,8 @@ RULES:
 [DOCUMENT END]
 
 [CONFLICTS START]
-List any cases where reviewer suggestions conflicted with the user's edits.
-If there are no conflicts write: NO CONFLICTS
+List any cases where reviewer suggestions were discarded due to user edits. For each note: what the reviewer suggested, what the user chose, in one to two sentences.
+If there are no conflicts write exactly: NO CONFLICTS
 [CONFLICTS END]`,
 
 };
