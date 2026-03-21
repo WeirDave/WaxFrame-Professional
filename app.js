@@ -457,7 +457,7 @@ function renderBuilderPicker() {
       onclick="setBuilder('${ai.id}'); return false;">
       <img src="${ai.icon}" class="builder-pick-icon" onerror="this.style.display='none'">
       <span class="builder-pick-name">${ai.name}</span>
-      ${builder === ai.id ? '<img src="images/AI Hive Builder v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
+      ${builder === ai.id ? '<img src="images/AI_Hive_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
     </button>
   `).join('');
 }
