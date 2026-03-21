@@ -1,224 +1,421 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AI Hive</title>
-
-  <!-- Favicon: PNG primary, inline SVG honeycomb as fallback -->
-  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4__ChatGPT.png">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBvbHlnb24gcG9pbnRzPSIxNiwxIDI5LDguNSAyOSwyMy41IDE2LDMxIDMsMjMuNSAzLDguNSIgZmlsbD0iIzkyNDAwZSIvPjxwb2x5Z29uIHBvaW50cz0iMTYsMTEgMjAsMTMuMyAyMCwxOCAxNiwyMC4zIDEyLDE4IDEyLDEzLjMiIGZpbGw9IiNmYmJmMjQiIHN0cm9rZT0iIzkyNDAwZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBvbHlnb24gcG9pbnRzPSIxNiwyIDIwLDQuMyAyMCw5IDE2LDExLjMgMTIsOSAxMiw0LjMiIGZpbGw9IiNmZGU2OGEiIHN0cm9rZT0iIzkyNDAwZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBvbHlnb24gcG9pbnRzPSIyMy41LDYuNSAyNy41LDguOCAyNy41LDEzLjUgMjMuNSwxNS44IDE5LjUsMTMuNSAxOS41LDguOCIgZmlsbD0iI2ZkZTY4YSIgc3Ryb2tlPSIjOTI0MDBlIiBzdHJva2Utd2lkdGg9IjEiLz48cG9seWdvbiBwb2ludHM9IjIzLjUsMTUuOCAyNy41LDE4LjEgMjcuNSwyMi44IDIzLjUsMjUuMSAxOS41LDIyLjggMTkuNSwxOC4xIiBmaWxsPSIjZmRlNjhhIiBzdHJva2U9IiM5MjQwMGUiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iMTYsMjAuMyAyMCwyMi42IDIwLDI3LjMgMTYsMjkuNiAxMiwyNy4zIDEyLDIyLjYiIGZpbGw9IiNmZGU2OGEiIHN0cm9rZT0iIzkyNDAwZSIgc3Ryb2tlLXdpZHRoPSIxIi8+PHBvbHlnb24gcG9pbnRzPSI4LjUsMTUuOCAxMi41LDE4LjEgMTIuNSwyMi44IDguNSwyNS4xIDQuNSwyMi44IDQuNSwxOC4xIiBmaWxsPSIjZmRlNjhhIiBzdHJva2U9IiM5MjQwMGUiIHN0cm9rZS13aWR0aD0iMSIvPjxwb2x5Z29uIHBvaW50cz0iOC41LDYuNSAxMi41LDguOCAxMi41LDEzLjUgOC41LDE1LjggNC41LDEzLjUgNC41LDguOCIgZmlsbD0iI2ZkZTY4YSIgc3Ryb2tlPSIjOTI0MDBlIiBzdHJva2Utd2lkdGg9IjEiLz48L3N2Zz4=">
-
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+  <link rel="manifest" href="images/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <!-- ============================================================
-     HEADER
-     Phase progress bar (center) | Theme toggle + nav buttons (right)
-     The sidebar occupies col 1 row 1 — header only spans col 2
+     SCREEN 1 — WELCOME
      ============================================================ -->
-<header>
-
-  <!-- Logo: hidden via CSS — branding lives in sidebar col-logo -->
-  <div class="logo">
-    <div class="logo-mark">
-      <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="header-logo-img">
-    </div>
-    <div>
-      <div class="logo-name">AI Hive</div>
-      <div class="logo-sub">Multi-AI collaboration workspace</div>
-    </div>
-  </div>
-
-  <!-- Phase progress bar — rendered by renderPhaseBar() -->
-  <div class="hdr-center">
-    <div class="phase-bar" id="phaseBar"></div>
-  </div>
-
-  <!-- Theme toggle + session action buttons -->
-  <div class="hdr-btns">
-    <button class="btn btn-ghost" onclick="openHistory()">📋 History</button>
-    <button class="btn btn-ghost" onclick="exportTxt()">💾 Export</button>
-    <button class="btn btn-ghost" onclick="clearState()">New Session</button>
-    <div class="theme-toggle" id="themeToggle">
-      <button class="theme-opt" data-theme="light" data-tooltip="Light mode"        onclick="setTheme('light')" title="Light mode">☀️</button>
-      <button class="theme-opt" data-theme="auto"  data-tooltip="Auto (follows OS)" onclick="setTheme('auto')"  title="Auto (follow OS)">⚙️</button>
-      <button class="theme-opt" data-theme="dark"  data-tooltip="Dark mode"         onclick="setTheme('dark')"  title="Dark mode">🌙</button>
-    </div>
-  </div>
-
-</header><!-- /header -->
-
-
-<!-- ============================================================
-     SIDEBAR — Col 1
-     Fixed width, spans full height (grid rows 1–3)
-     Contains: logo, project details (step 1), AI worker bees (step 2)
-     ============================================================ -->
-<div class="col-sidebar">
-
-  <!-- Branding -->
-  <div class="col-logo">
-    <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="sidebar-logo-img">
-    <div>
-      <div class="logo-name">AI Hive</div>
-      <div class="logo-sub">Orchestrate the Hive</div>
-      <div class="logo-sub" style="margin-top:2px;">v1.2</div>
-    </div>
-  </div>
-
-  <!-- Step 1: Project details -->
-  <div class="col-header">
-    <div class="col-title"><div class="step-num">1</div> Project Details</div>
-  </div>
-  <div class="project-name-bar">
-    <input id="projectVersion" type="text" placeholder="Version — e.g. v1, v2.1, draft-3" oninput="saveState()" class="version-input">
-    <input id="projectName"    type="text" placeholder="Project name…" oninput="saveState()">
-    <div class="goal-wrap">
-      <textarea id="projectGoal" class="goal-textarea"
-        placeholder="Project goal — what are we trying to create or achieve?"
-        oninput="saveState()"></textarea>
-      <div class="goal-actions">
-        <button class="resp-btn" onclick="document.getElementById('projectGoal').value=''; saveState();">✕ Clear</button>
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-bg"></div>
+  <div class="welcome-inner">
+    <div class="welcome-logo">
+      <div class="welcome-logo-anim">
+        <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="welcome-logo-static">
+        <img src="images/AI Hive Bee v1.png" alt="Bee" class="welcome-bee-fly">
+      </div>
+      <div class="welcome-brand">
+        <h1>AI Hive</h1>
+        <p>Orchestrate the Hive</p>
+        <span class="welcome-version">v2.0</span>
       </div>
     </div>
-  </div>
 
-  <!-- Step 2: AI worker bees -->
-  <div class="col-header col-header-sub">
-    <div class="col-title">
-      <div class="step-num">2</div> AI Worker Bees
-      <img src="images/Ai Hive Bee v1.png" alt="bee" class="bee-img">
+    <div class="welcome-pitch">
+      <p>AI Hive puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better.</p>
+    </div>
+
+    <div class="welcome-choices">
+      <div class="welcome-card free" onclick="goToFree()">
+        <div class="welcome-card-icon">🆓</div>
+        <div class="welcome-card-body">
+          <div class="welcome-card-title">Free Version</div>
+          <div class="welcome-card-desc">Manual copy/paste workflow. No API keys needed — free tier AIs work fine. You copy prompts to each AI tab yourself and paste responses back. Mix paid and free AIs however you like. If an AI hits its limit, skip it that round.</div>
+        </div>
+        <div class="welcome-card-arrow">→</div>
+      </div>
+      <div class="welcome-card pro" onclick="goToScreen('screen-api-setup')">
+        <div class="welcome-card-icon">⚡</div>
+        <div class="welcome-card-body">
+          <div class="welcome-card-title">Pro Version <span class="badge-api">API</span></div>
+          <div class="welcome-card-desc">Fully automated — one button does everything. Each AI you want to use needs its own API key and paid subscription. Start with just 2 if you like, or use all 6. Your Builder AI processes the full document every round, so it needs a subscription with enough capacity.</div>
+        </div>
+        <div class="welcome-card-arrow">→</div>
+      </div>
+    </div>
+
+    <div class="welcome-footer">
+      <a href="https://github.com/WeirDave/AIHive" target="_blank">GitHub</a>
+      <span>·</span>
+      <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+      <button class="theme-opt active" data-theme="auto"  onclick="setTheme('auto')"  title="Auto (follows OS)">⚙️ Auto</button>
+      <button class="theme-opt" data-theme="dark"  onclick="setTheme('dark')"  title="Dark mode">🌙 Dark</button>
     </div>
   </div>
-  <div class="bee-controls">
-    <button class="btn btn-sm btn-ghost" onclick="toggleAllAIs(true)">☑ All</button>
-    <button class="btn btn-sm btn-ghost" onclick="toggleAllAIs(false)">☐ None</button>
-    <button class="btn btn-sm btn-ghost" onclick="resetToDefaults()">↺ Defaults</button>
-    <button class="btn btn-sm btn-ghost" onclick="showAddAI()">＋ Add</button>
-  </div>
-
-  <!-- AI row list — rendered by renderAIPanel() -->
-  <div class="col-body-bees col-body">
-    <div id="aiPanelList" class="ai-btn-list"></div>
-  </div>
-
-</div><!-- /col-sidebar -->
+</div>
 
 
 <!-- ============================================================
-     WORKSPACE — 3-column grid to the right of the sidebar
-     Col 3: Working Document | Col 4: Paste Responses | Col 5: Prompts
+     SCREEN 2 — WORKER BEES + API KEYS
      ============================================================ -->
-<div class="workspace">
+<div class="screen" id="screen-api-setup">
+  <div class="setup-layout">
 
-  <!-- ── Col 3: Working Document ── -->
-  <div class="col">
-    <div class="col-header">
-      <div class="col-title"><div class="step-num">3</div> Working Document</div>
+    <div class="setup-header">
+      <div class="setup-header-top">
+        <button class="back-btn" onclick="goToScreen('screen-welcome')">← Back</button>
+        <div class="setup-step-badge">Step 1 of 3</div>
+      </div>
+      <div class="setup-branding">
+        <div class="setup-logo-wrap">
+          <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="setup-logo-img">
+          <div class="setup-logo-text">
+            <div class="setup-logo-name">AI Hive</div>
+            <div class="setup-logo-tagline">Orchestrate the Hive</div>
+          </div>
+        </div>
+      </div>
+      <div class="setup-page-title">
+        <h2>Your Worker Bees</h2>
+      </div>
     </div>
-    <div class="col-body col-body-prompt">
-      <!-- Card wrapper matches response card aesthetic -->
-      <div class="doc-card">
-        <textarea id="masterPrompt" class="master-prompt-ta"
-          placeholder="Paste your working document here each round.&#10;&#10;Round 1: paste your first draft.&#10;Subsequent rounds: paste the latest version before gathering feedback."></textarea>
-        <div class="doc-card-footer">
-          <button class="resp-btn" onclick="clearPrompt()">✕ Clear</button>
-          <button class="resp-btn" onclick="copyAll()">📋 Copy All</button>
+
+    <div class="setup-body-single" style="position:relative;">
+      <img src="images/AI Hive Bee v1.png" class="page-watermark" alt="">
+
+      <div class="setup-section-sub setup-section-sub-bees" style="margin-bottom:12px;">
+        These 6 AIs all have straightforward APIs you can sign up for — but you don't need all of them. <strong>You need at least 2</strong> (that's the whole point — multiple AIs collaborating). Get API keys for as many as you want beyond that. Only AIs with a saved key will run automatically. On the work screen you'll choose which ones to activate for each session.
+      </div>
+
+      <div class="bee-controls-row">
+        <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
+        <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">🔑 Open All API Consoles</button>
+        <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add a custom AI</button>
+      </div>
+
+      <!-- Custom AI form — shown/hidden inline -->
+      <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
+        <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
+        <div class="custom-ai-form-row">
+          <div class="custom-ai-field-wrap">
+            <label>URL <span class="field-required">*</span></label>
+            <input type="text" id="customAIUrl" placeholder="https://chat.deepseek.com"
+              oninput="autoFillAIName(this.value)">
+          </div>
+          <div class="custom-ai-field-wrap">
+            <label>Name <span class="field-optional">(auto-detected)</span></label>
+            <input type="text" id="customAIName" placeholder="e.g. DeepSeek"
+              oninput="this.dataset.userTyped='true'">
+          </div>
+        </div>
+        <div class="custom-ai-form-row" style="margin-top:8px;">
+          <div class="custom-ai-field-wrap">
+            <label>API Format <span class="field-required">*</span></label>
+            <select id="customAIFormat" class="custom-ai-select">
+              <option value="openai">OpenAI compatible (most AIs — DeepSeek, Mistral, etc.)</option>
+              <option value="anthropic">Anthropic (Claude)</option>
+              <option value="google">Google (Gemini)</option>
+            </select>
+          </div>
+          <div class="custom-ai-field-wrap">
+            <label>API Key <span class="field-optional">(optional)</span></label>
+            <input type="password" id="customAIKey" placeholder="Paste key if using API mode">
+          </div>
+        </div>
+        <div class="custom-ai-form-footer">
+          <button class="btn btn-ghost btn-sm" onclick="showAddCustomAI()">Cancel</button>
+          <button class="btn btn-accent btn-sm" onclick="addCustomAI()">Add to Hive</button>
+        </div>
+      </div>
+
+      <!-- Scrollable AI list — fills all available space -->
+      <div class="setup-section-bees">
+        <div class="ai-list-scroll">
+          <div class="ai-setup-grid" id="aiSetupGrid"></div>
+        </div>
+      </div>
+
+    </div><!-- /setup-body-single -->
+
+    <div class="setup-footer">
+      <div class="setup-footer-note">⚙️ You can change these settings any time from the main screen</div>
+      <button class="btn btn-accent btn-lg" onclick="goToBuilderStep()"><img src="images/AI Hive Builder v3.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Choose your Builder →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 2b — WHO IS YOUR BUILDER?
+     ============================================================ -->
+<div class="screen" id="screen-builder">
+  <div class="setup-layout">
+
+    <div class="setup-header">
+      <div class="setup-header-top">
+        <button class="back-btn" onclick="goToScreen('screen-api-setup')">← Back</button>
+        <div class="setup-step-badge">Step 2 of 3</div>
+      </div>
+      <div class="setup-branding">
+        <div class="setup-logo-wrap">
+          <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="setup-logo-img">
+          <div class="setup-logo-text">
+            <div class="setup-logo-name">AI Hive</div>
+            <div class="setup-logo-tagline">Orchestrate the Hive</div>
+          </div>
+        </div>
+      </div>
+      <div class="setup-page-title">
+        <h2>Who is your Builder?</h2>
+      </div>
+    </div>
+
+    <div class="setup-body-single" style="position:relative;">
+      <img src="images/AI Hive Builder v3.png" class="page-watermark" alt="">
+
+      <div class="setup-section-sub" style="margin-bottom:20px;">
+        The Builder receives the full document every round and writes the updated version. Choose carefully — in Pro/API mode your Builder <strong>must have a paid API subscription</strong> since it processes a lot of tokens every round.
+      </div>
+
+      <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+
+      <div class="builder-tip" style="margin-top:20px;">
+        💡 <strong>Tip:</strong> Claude, ChatGPT, and Gemini all handle large documents well and make excellent Builders. Avoid an AI with strict free-tier token limits as your Builder — it will run out quickly and you may not be able to finish your project without an extended wait. <a href="tokens-explainer.html" target="_blank" style="color:var(--accent);" title="Opens in a new tab">Learn more about tokens →</a>
+      </div>
+
+    </div>
+
+    <div class="setup-footer">
+      <div class="setup-footer-note">⚙️ You can change your Builder any time from the main screen</div>
+      <button class="btn btn-accent btn-lg" onclick="validateAndContinue()"><img src="images/AI Hive Project Bee v1.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Continue to Project Setup →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 3 — PROJECT SETUP
+     ============================================================ -->
+<div class="screen" id="screen-project">
+  <div class="setup-layout">
+
+    <div class="setup-header">
+      <div class="setup-header-top">
+        <button class="back-btn" onclick="goToScreen('screen-builder')">← Back</button>
+        <div class="setup-step-badge">Step 3 of 3</div>
+      </div>
+      <div class="setup-branding">
+        <div class="setup-logo-wrap">
+          <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="setup-logo-img">
+          <div class="setup-logo-text">
+            <div class="setup-logo-name">AI Hive</div>
+            <div class="setup-logo-tagline">Orchestrate the Hive</div>
+          </div>
+        </div>
+      </div>
+      <div class="setup-page-title">
+        <h2>Your Project</h2>
+      </div>
+    </div>
+
+    <div class="setup-body-single" style="position:relative;">
+      <img src="images/AI Hive Project Bee v1.png" class="page-watermark" alt="">
+
+      <!-- Project Details -->
+      <div class="setup-section-sub" style="margin-bottom:10px;">Give your project a name and describe your goal — the more detail the better, especially when starting from scratch.</div>
+
+      <div class="project-fields" style="margin-bottom:10px;">
+        <div class="project-field-wrap">
+          <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg" oninput="saveProject()">
+          <button class="field-clear-btn" onclick="document.getElementById('projectName').value='';saveProject();" title="Clear project name">✕</button>
+        </div>
+        <div class="project-field-wrap">
+          <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm" oninput="saveProject()">
+          <button class="field-clear-btn" onclick="document.getElementById('projectVersion').value='';saveProject();" title="Clear version">✕</button>
+        </div>
+        <button class="btn btn-ghost" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
+      </div>
+      <div style="position:relative;">
+        <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="field-goal" style="margin-bottom:4px;" oninput="saveProject()"></textarea>
+        <button class="field-clear-btn field-clear-ta" onclick="document.getElementById('projectGoal').value='';saveProject();" title="Clear goal">✕</button>
+      </div>
+
+      <!-- Starting Document -->
+      <div class="setup-section-sub" style="margin-bottom:10px;">Starting document — choose one:</div>
+
+      <div class="doc-input-tabs">
+        <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload"  onclick="switchDocTab('upload')">📄 Upload File</button>
+        <button class="btn btn-sm btn-ghost doc-tab"        id="tab-paste"   onclick="switchDocTab('paste')">📋 Paste Text</button>
+        <button class="btn btn-sm btn-ghost doc-tab"        id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
+      </div>
+
+      <!-- Upload -->
+      <div class="doc-tab-panel active" id="panel-upload">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+             ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
+          <div class="drop-zone-icon">📄</div>
+          <div class="drop-zone-text">Drag & drop or click to browse</div>
+          <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), or plain text (.txt)</div>
+          <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt" style="display:none" onchange="handleFileSelect(event)">
+        </div>
+        <div id="fileStatus" class="file-status" style="display:none;"></div>
+      </div>
+
+      <!-- Paste -->
+      <div class="doc-tab-panel" id="panel-paste">
+        <textarea id="pasteText" class="field-doc" placeholder="Paste your existing document text here…"></textarea>
+      </div>
+
+      <!-- Scratch -->
+      <div class="doc-tab-panel" id="panel-scratch">
+        <div class="scratch-info">
+          <span>✅</span>
+          <span>AI Hive will ask all your AIs to create a first draft based on your project goal above. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</span>
+        </div>
+      </div>
+
+    </div><!-- /setup-body-single -->
+
+    <div class="setup-footer">
+      <div class="setup-footer-note">⚙️ You can adjust settings any time from the main screen</div>
+      <button class="btn btn-accent btn-lg" onclick="startSession()"><img src="images/AI Hive Bee v1.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Launch AI Hive →</button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 4 — WORK
+     ============================================================ -->
+<div class="screen" id="screen-work">
+  <div class="work-layout">
+
+    <!-- TOP BAR -->
+    <div class="work-topbar">
+      <div class="work-topbar-left">
+        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-project')" title="Back to Project Setup">← Back</button>
+        <div class="work-project-info">
+          <span class="work-project-name" id="workProjectName">Project</span>
+          <span class="work-project-version" id="workProjectVersion"></span>
+          <span class="work-start-mode" id="workStartMode"></span>
+        </div>
+      </div>
+      <div class="work-topbar-right">
+        <span class="work-round-badge" id="workRoundBadge">Round 1</span>
+        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-api-setup')">⚙️ Settings</button>
+        <div class="theme-toggle">
+          <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light">☀️</button>
+          <button class="theme-opt" data-theme="auto"  onclick="setTheme('auto')"  title="Auto">⚙️</button>
+          <button class="theme-opt" data-theme="dark"  onclick="setTheme('dark')"  title="Dark">🌙</button>
         </div>
       </div>
     </div>
-  </div><!-- /col 3 -->
 
-  <!-- ── Col 4: Paste Responses ── -->
-  <div class="col col-responses">
-    <div class="col-header col-header-responses">
-      <div class="col-title"><div class="step-num">4</div> Paste Responses</div>
+    <!-- MAIN 3-COLUMN WORK AREA -->
+    <div class="work-main">
+
+      <!-- COL 1: Working Document with line numbers -->
+      <div class="work-doc-panel">
+        <div class="work-panel-header">
+          <span class="work-panel-title">📄 Working Document</span>
+          <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm" onclick="exportDocument()">💾 Export</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyDocument()">📋 Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearDocument()">✕ Clear</button>
+          </div>
+        </div>
+        <div class="work-doc-editor">
+          <div class="work-line-numbers" id="lineNumbers"></div>
+          <textarea id="workDocument" class="work-doc-ta"
+            placeholder="Your document appears here. You can paste or edit directly — line numbers update automatically."
+            oninput="updateLineNumbers()" onscroll="syncLineNumberScroll()"></textarea>
+        </div>
+      </div>
+
+      <!-- COL 2: Notes for this round -->
+      <div class="work-notes-panel">
+        <div class="work-panel-header">
+          <span class="work-panel-title">📝 Notes for this Round</span>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value=''">✕ Clear</button>
+        </div>
+        <div class="work-notes-hint">Optional — reference line numbers. e.g. "Line 12: more formal. Line 34–38: expand this."</div>
+        <textarea id="workNotes" class="work-notes-ta"
+          placeholder="e.g. Line 5: change job title to Senior Wireless Architect&#10;Line 12–15: expand the skills section&#10;Overall: make tone more confident"></textarea>
+      </div>
+
+      <!-- COL 3: Control Panel -->
+      <div class="work-right-panel">
+
+        <!-- Logo — hero branding -->
+        <div class="work-logo-wrap">
+          <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive" class="work-logo">
+          <div class="work-logo-text">
+            <div class="work-logo-name">AI Hive</div>
+            <div class="work-logo-tagline">Orchestrate the Hive</div>
+          </div>
+        </div>
+
+        <!-- Run Round + phase selector -->
+        <div class="run-round-bar">
+          <button class="btn-run-round" id="runRoundBtn" onclick="runRound()">
+            Activate the Hive
+          </button>
+<select id="phaseSelect" style="display:none" onchange="setPhase(this.value)"><option value="draft">Draft</option><option value="refine">Refine Text</option><option value="review">User Review</option></select>
+        </div>
+
+        <!-- The Hive — per-session AI toggles -->
+        <div class="work-panel-header" style="margin-top:12px;">
+          <span class="work-panel-title">The Hive</span>
+          <span class="work-hive-status" id="hiveStatus">Standing by</span>
+        </div>
+        <div class="work-hive-hint">Toggle which AIs run this session. Builder always runs.</div>
+        <div class="bee-status-grid" id="beeStatusGrid"></div>
+
+        <!-- Phase selector -->
+        <div class="work-phase-bar" id="workPhaseBar"></div>
+
+        <!-- Round History -->
+        <div class="work-panel-header" style="margin-top:8px;">
+          <span class="work-panel-title">Round History</span>
+          <span class="work-history-hint">click to restore</span>
+        </div>
+        <div class="round-history" id="roundHistory">
+          <div class="round-history-empty">Completed rounds appear here. Click any round to restore that version of the document.</div>
+        </div>
+
+      </div><!-- /work-right-panel -->
+    </div><!-- /work-main -->
+
+    <!-- STATUS BAR -->
+    <div class="work-statusbar" id="workStatusBar">
+      <span id="statusText">👋 Ready — toggle your bees above, then click ⚡ Run Round</span>
     </div>
-    <div class="col-body">
-      <!-- Response cards rendered by renderResponsePanels() -->
-      <div id="responsePanels" class="responses-grid"></div>
-    </div>
-  </div><!-- /col 4 -->
 
-  <!-- ── Col 5: Prompts ── -->
-  <div class="col right-col">
-    <div class="col-header">
-      <div class="col-title"><div class="step-num">5</div> Prompts</div>
-    </div>
-
-    <!-- Primary CTA: build and copy the compiled prompt -->
-    <div class="build-prompt-bar">
-      <button class="btn btn-build-big" id="buildPromptBtn" onclick="buildAndCopy()">
-        ⚡ Build &amp; Copy Prompt
-      </button>
-    </div>
-
-    <!-- Phase selector — rendered by renderPhaseTabs() -->
-    <div class="phase-tabs" id="phaseTabs"></div>
-
-    <!-- Editable per-phase instructions -->
-    <div class="phase-instructions-area">
-      <div class="phase-instr-label">Phase instructions — edit freely</div>
-      <textarea id="phaseInstructions" class="phase-instr-textarea"
-        placeholder="Select a phase above to see and edit its instructions."></textarea>
-    </div>
-
-    <hr class="send-block-divider">
-
-    <!-- Compiled send block — output of buildSendBlock() -->
-    <div class="send-block-area">
-      <div class="send-block-label">Compiled send block — ready to copy</div>
-      <textarea id="sendBlock" class="send-block-ta"
-        placeholder="Hit ⚡ Build Prompt after pasting responses. The full prompt for all AIs appears here."></textarea>
-    </div>
-
-  </div><!-- /col 5 -->
-
-</div><!-- /workspace -->
-
-
-<!-- ============================================================
-     OVERLAYS AND DRAWERS
-     ============================================================ -->
-
-<!-- Backdrop overlay — closes history drawer on click -->
-<div class="overlay" id="overlay" onclick="closeHistory()"></div>
-
-<!-- History drawer — slides in from the right edge -->
-<div id="historyDrawer">
-  <div class="drawer-hdr">
-    <span>Round History</span>
-    <button class="btn btn-sm btn-ghost" onclick="closeHistory()">✕ Close</button>
-  </div>
-  <div class="drawer-body" id="historyBody">
-    <div class="history-empty">No completed rounds yet.</div>
-  </div>
-</div>
-
-
-<!-- ============================================================
-     STATUS BAR — full-width bottom bar (grid col 1 / -1)
-     Shows: round · phase · response count · action hint | nav buttons
-     ============================================================ -->
-<div id="statusBar" class="status-bar state-waiting">
-  <div class="status-segment" id="statusRound">Round <span id="roundNum">1</span></div>
-  <div class="status-divider">·</div>
-  <div class="status-segment" id="statusPhase">1 · Draft</div>
-  <div class="status-divider">·</div>
-  <div class="status-segment" id="statusResponses">0 of 0 AIs responded</div>
-  <div class="status-divider">·</div>
-  <div class="status-main" id="statusAction">👋 Start by entering your project details, then click ⚡ Build &amp; Copy Prompt</div>
-  <div class="status-actions">
-    <button class="btn btn-sm btn-ghost" id="backRoundBtn" onclick="goBackRound()" disabled>← Prev Round</button>
-    <button class="btn btn-sm btn-accent" onclick="buildAndAdvance()">Next Round →</button>
   </div>
 </div>
 
-<!-- Toast notification — shown/hidden by toast() in app.js -->
+
+<!-- Toast -->
 <div id="toast"></div>
 
-<script src="app.js"></script>
+<script src="app.js?v=2.01"></script>
 </body>
 </html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Hive — Understanding Tokens</title>
+  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4__ChatGPT.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0c12;--surface:#111318;--surface2:#181b24;--surface3:#1e2130;
+      --border:#252838;--border2:#2e3348;--text:#e8ecf4;--text-dim:#9aa3b8;
+      --muted:#4a5270;--accent:#f5a623;--accent-dim:rgba(245,166,35,0.10);
+      --blue:#4d8aff;--blue-dim:rgba(77,138,255,0.10);
+      --green:#34d399;--green-dim:rgba(52,211,153,0.10);
+      --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.10);--red:#f87171;
+      --font:'DM Sans',system-ui,sans-serif;
+      --font-display:'Syne',system-ui,sans-serif;
+      --radius-sm:8px;--radius-md:14px;
+      --shadow-sm:0 2px 8px rgba(0,0,0,0.4);
+    }
+    [data-theme="light"] {
+      --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f5fb;--surface3:#e8eaf4;
+      --border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;
+      --muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);
+      --green:#059669;--green-dim:rgba(5,150,105,0.10);
+      --amber:#d97706;--amber-dim:rgba(217,119,6,0.09);
+      --shadow-sm:0 2px 8px rgba(0,0,0,0.08);
+    }
+    @media(prefers-color-scheme:light){[data-theme="auto"]{--bg:#f0f2f8;--surface:#fff;--surface2:#f4f5fb;--surface3:#e8eaf4;--border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;--muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);--green:#059669;--green-dim:rgba(5,150,105,0.10);--amber:#d97706;--shadow-sm:0 2px 8px rgba(0,0,0,0.08);}}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;padding-bottom:60px;}
+    a{color:var(--accent);text-decoration:none;}a:hover{text-decoration:underline;}
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}
+    .page-header-inner{align-items:center;display:flex;gap:14px;margin:0 auto;max-width:780px;padding:0 32px;}
+    .page-header img{height:34px;width:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,166,35,0.3));}
+    .page-header-brand h1{font-family:var(--font-display);font-size:16px;font-weight:800;line-height:1;}
+    .page-header-brand p{color:var(--muted);font-size:11px;margin-top:2px;}
+    .page-header-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+    .back-link{align-items:center;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text-dim);display:inline-flex;font-family:var(--font);font-size:12px;gap:5px;padding:6px 12px;transition:all 0.12s;}
+    .back-link:hover{border-color:var(--accent);color:var(--accent);text-decoration:none;}
+    .theme-toggle{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px;}
+    .theme-opt{background:transparent;border:none;border-radius:5px;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;transition:all 0.12s;}
+    .theme-opt.active{background:var(--surface3);color:var(--text);}
+
+    .content{margin:0 auto;max-width:780px;padding:32px 32px 0;}
+    h2{font-family:var(--font-display);font-size:22px;font-weight:800;margin-bottom:20px;}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);padding:20px 24px;margin-bottom:16px;box-shadow:var(--shadow-sm);}
+    .card.accent{border-left:4px solid var(--accent);}
+    .card.green{border-left:4px solid var(--green);}
+    .card.amber{border-left:4px solid var(--amber);}
+    .card h3{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:10px;}
+    .card p{color:var(--text-dim);font-size:14px;line-height:1.75;margin-bottom:10px;}
+    .card p:last-child{margin-bottom:0;}
+    .card strong{color:var(--text);}
+    .ai-table{width:100%;border-collapse:collapse;margin-top:10px;font-size:13px;}
+    .ai-table th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.06em;padding:6px 12px;border-bottom:1px solid var(--border2);}
+    .ai-table td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--text-dim);vertical-align:top;}
+    .ai-table tr:last-child td{border-bottom:none;}
+    .badge{display:inline-block;border-radius:20px;font-size:11px;font-weight:600;padding:2px 8px;white-space:nowrap;}
+    .badge-green{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
+    .badge-amber{background:var(--amber-dim);border:1px solid var(--amber);color:var(--amber);}
+    .badge-red{background:rgba(248,113,113,0.1);border:1px solid var(--red);color:var(--red);}
+    .page-footer{border-top:1px solid var(--border);color:var(--muted);font-size:12px;margin-top:40px;padding:16px 32px;text-align:center;}
+    @media(max-width:600px){.content,.page-header-inner{padding:16px;}}
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive">
+    <div class="page-header-brand">
+      <h1>AI Hive</h1>
+      <p>Understanding Tokens</p>
+    </div>
+    <div class="page-header-right">
+      <div class="theme-toggle">
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
+      </div>
+      <button class="back-link" onclick="window.close()" title="Close this tab">✕ Close tab</button>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <h2>Tokens and your Builder</h2>
+
+  <div class="card accent">
+    <h3>What is a token?</h3>
+    <p>Tokens are the unit of measurement AI models use to read and write text. Roughly speaking, <strong>1 token ≈ ¾ of a word</strong>. A typical paragraph is about 100 tokens. A full-page document might be 500–800 tokens.</p>
+    <p>Every time AI Hive runs a round, your Builder AI reads your <em>entire document</em> plus the full prompt, then writes back the updated version. That's a lot of tokens — both in and out — every single round.</p>
+  </div>
+
+  <div class="card amber">
+    <h3>Why does this matter for your Builder?</h3>
+    <p>Free-tier AI accounts have token limits — a cap on how much they can read and write per minute, per hour, or per day. If your Builder hits that limit mid-session, it will either fail or make you wait (sometimes hours) before it can continue.</p>
+    <p><strong>Reviewers</strong> only send numbered suggestions, so they use far fewer tokens. Free-tier AIs work fine as Reviewers. The Builder is the one that needs headroom.</p>
+  </div>
+
+  <div class="card green">
+    <h3>Best Builder choices</h3>
+    <table class="ai-table">
+      <tr>
+        <th>AI</th>
+        <th>Token limits</th>
+        <th>Cost</th>
+        <th>Verdict</th>
+      </tr>
+      <tr>
+        <td><strong>Claude</strong></td>
+        <td>Large context window, generous API limits</td>
+        <td>Pay-as-you-go</td>
+        <td><span class="badge badge-green">Excellent Builder</span></td>
+      </tr>
+      <tr>
+        <td><strong>ChatGPT</strong></td>
+        <td>Large context, reliable at high volume</td>
+        <td>Pay-as-you-go</td>
+        <td><span class="badge badge-green">Excellent Builder</span></td>
+      </tr>
+      <tr>
+        <td><strong>Gemini</strong></td>
+        <td>Very large context window, generous free tier</td>
+        <td>Free tier available</td>
+        <td><span class="badge badge-green">Excellent Builder — free option</span></td>
+      </tr>
+      <tr>
+        <td><strong>DeepSeek</strong></td>
+        <td>Large context, very low cost per token</td>
+        <td>Pay-as-you-go (cheap)</td>
+        <td><span class="badge badge-green">Great Builder — budget choice</span></td>
+      </tr>
+      <tr>
+        <td><strong>Grok</strong></td>
+        <td>Good context, API limits vary</td>
+        <td>Pay-as-you-go</td>
+        <td><span class="badge badge-amber">Fine as Builder with API key</span></td>
+      </tr>
+      <tr>
+        <td><strong>Perplexity</strong></td>
+        <td>Smaller context, search-focused model</td>
+        <td>Pay-as-you-go</td>
+        <td><span class="badge badge-amber">Better as a Reviewer</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h3>A practical example</h3>
+    <p>Say you're working on a 2,000-word report. That's roughly 2,700 tokens. Your Builder reads the full document + the prompt (~500 tokens) = about 3,200 tokens in, then writes back the updated version at roughly the same length. That's <strong>~6,000 tokens per round</strong>.</p>
+    <p>Over 5 rounds, that's ~30,000 tokens from your Builder alone. With a paid API key this costs a few cents. On a free tier with strict limits, this could hit the cap by round 2 or 3 — leaving you waiting or unable to continue.</p>
+    <p><strong>Bottom line:</strong> use a paid API key for your Builder, or use Gemini's free tier which is genuinely generous. Keep cost-conscious or free-tier AIs as Reviewers where the token load is light.</p>
+  </div>
+
+</div>
+
+<div class="page-footer">
+  AI Hive — open source, no server, no tracking. &nbsp;·&nbsp;
+  <a href="https://github.com/WeirDave/AIHive" target="_blank">GitHub</a> &nbsp;·&nbsp;
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a>
+</div>
+
+<script>
+  const THEME_KEY = 'aihive_v2_theme';
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem(THEME_KEY, t);
+    document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === t));
+  }
+  (function() { setTheme(localStorage.getItem(THEME_KEY) || 'auto'); })();
+</script>
+</body>
+</html>

@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Hive — API Key Guide</title>
+  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4__ChatGPT.png">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0a0c12;--surface:#111318;--surface2:#181b24;--surface3:#1e2130;
+      --border:#252838;--border2:#2e3348;--text:#e8ecf4;--text-dim:#9aa3b8;
+      --muted:#4a5270;--accent:#f5a623;--accent-dim:rgba(245,166,35,0.10);
+      --blue:#4d8aff;--blue-dim:rgba(77,138,255,0.10);
+      --green:#34d399;--green-dim:rgba(52,211,153,0.10);
+      --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.10);--red:#f87171;
+      --font:'DM Sans',system-ui,sans-serif;
+      --font-display:'Syne',system-ui,sans-serif;
+      --font-mono:'JetBrains Mono',monospace;
+      --radius-sm:8px;--radius-md:14px;
+      --shadow-sm:0 2px 8px rgba(0,0,0,0.4);
+    }
+    [data-theme="light"] {
+      --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f5fb;--surface3:#e8eaf4;
+      --border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;
+      --muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);
+      --blue:#2563eb;--blue-dim:rgba(37,99,235,0.10);
+      --green:#059669;--green-dim:rgba(5,150,105,0.10);
+      --amber:#d97706;--amber-dim:rgba(217,119,6,0.09);--red:#dc2626;
+      --shadow-sm:0 2px 8px rgba(0,0,0,0.08);
+    }
+    @media (prefers-color-scheme:light) {
+      [data-theme="auto"] {
+        --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f5fb;--surface3:#e8eaf4;
+        --border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;
+        --muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);
+        --blue:#2563eb;--blue-dim:rgba(37,99,235,0.10);
+        --green:#059669;--green-dim:rgba(5,150,105,0.10);
+        --amber:#d97706;--shadow-sm:0 2px 8px rgba(0,0,0,0.08);
+      }
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;padding-bottom:60px;}
+    a{color:var(--accent);text-decoration:none;}
+    a:hover{text-decoration:underline;}
+    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+    .page-header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 0;position:sticky;top:0;z-index:100;box-shadow:var(--shadow-sm);}
+    .page-header-inner{align-items:center;display:flex;gap:14px;margin:0 auto;max-width:860px;padding:0 32px;}
+    .page-header img{height:34px;width:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(245,166,35,0.3));}
+    .page-header-brand h1{font-family:var(--font-display);font-size:16px;font-weight:800;line-height:1;}
+    .page-header-brand p{color:var(--muted);font-size:11px;margin-top:2px;}
+    .page-header-right{display:flex;align-items:center;gap:8px;margin-left:auto;}
+    .back-link{align-items:center;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text-dim);display:inline-flex;font-family:var(--font);font-size:12px;gap:5px;padding:6px 12px;transition:all 0.12s;}
+    .back-link:hover{border-color:var(--accent);color:var(--accent);text-decoration:none;}
+    .theme-toggle{display:flex;gap:2px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:2px;}
+    .theme-opt{background:transparent;border:none;border-radius:5px;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;transition:all 0.12s;}
+    .theme-opt.active{background:var(--surface3);color:var(--text);}
+
+    .content{margin:0 auto;max-width:860px;padding:28px 32px 0;}
+
+    .open-all-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:transparent;border:1px dashed var(--border2);border-radius:var(--radius-sm);color:var(--text-dim);font-family:var(--font);font-size:14px;font-weight:600;padding:14px 20px;cursor:pointer;transition:all 0.12s;margin-bottom:6px;}
+    .open-all-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .open-all-note{text-align:center;font-size:12px;color:var(--muted);margin-bottom:24px;}
+
+    .info-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:12px;padding:16px 20px;}
+    .info-card h2{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:8px;}
+    .info-card p{color:var(--text-dim);font-size:14px;margin-bottom:8px;line-height:1.7;}
+    .info-card p:last-child{margin-bottom:0;}
+    .info-card.green{background:var(--green-dim);border:1px solid var(--green);border-left:4px solid var(--green);}
+    .info-card.green h3{color:var(--green);font-size:13px;font-weight:700;margin-bottom:6px;}
+    .info-card.green p{font-size:13px;}
+
+    .section-title{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;margin:24px 0 14px;}
+
+    .ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:10px;overflow:hidden;}
+    .ai-card-header{align-items:center;border-bottom:1px solid var(--border);display:flex;gap:12px;padding:12px 16px;}
+    .ai-card-header img{border-radius:6px;height:26px;object-fit:contain;width:26px;flex-shrink:0;}
+    .ai-card-name{flex:1;font-family:var(--font-display);font-size:14px;font-weight:700;}
+    .badge{border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;white-space:nowrap;}
+    .badge-free{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
+    .badge-paid{background:var(--amber-dim);border:1px solid var(--amber);color:var(--amber);}
+    .badge-limited{background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);}
+    .badge-note{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);}
+    .ai-card-body{padding:14px 16px;}
+    .model-line{align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;font-size:11px;gap:8px;margin-bottom:12px;padding:7px 11px;flex-wrap:wrap;}
+    .model-line code{background:var(--surface3);border-radius:4px;font-family:var(--font-mono);font-size:11px;padding:2px 6px;}
+    .model-label{color:var(--muted);font-weight:600;flex-shrink:0;}
+    .steps{counter-reset:step;display:flex;flex-direction:column;gap:7px;list-style:none;}
+    .steps li{align-items:flex-start;color:var(--text-dim);counter-increment:step;display:flex;font-size:13px;gap:10px;line-height:1.6;}
+    .steps li::before{align-items:center;background:var(--accent-dim);border:1px solid var(--accent);border-radius:50%;color:var(--accent);content:counter(step);display:flex;flex-shrink:0;font-size:10px;font-weight:700;height:20px;justify-content:center;margin-top:2px;width:20px;}
+    .steps a{color:var(--accent);font-weight:500;}
+    .note-box{background:var(--amber-dim);border:1px solid var(--amber);border-radius:var(--radius-sm);color:var(--text-dim);font-size:13px;margin-top:10px;padding:9px 12px;line-height:1.6;}
+    .note-box.green{background:var(--green-dim);border-color:var(--green);}
+
+    .page-footer{border-top:1px solid var(--border);color:var(--muted);font-size:12px;margin-top:32px;padding:16px 32px;text-align:center;}
+    @media(max-width:600px){.content,.page-header-inner{padding:16px;}.page-header-inner{padding:0 16px;}}
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <img src="images/AI_Hive_Logo_v4__ChatGPT.png" alt="AI Hive">
+    <div class="page-header-brand">
+      <h1>AI Hive</h1>
+      <p>API Key Setup Guide</p>
+    </div>
+    <div class="page-header-right">
+      <div class="theme-toggle">
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
+      </div>
+      <a class="back-link" href="AI%20Hive.html">← Back to AI Hive</a>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+
+  <button class="open-all-btn" onclick="openAllConsoles()">🔑 Open All API Consoles at Once</button>
+  <div class="open-all-note">Opens all 7 consoles in new tabs — if your browser blocks popups click Allow in the address bar</div>
+
+  <div class="info-card">
+    <h2>What is an API key and why do I need one?</h2>
+    <p>In Pro mode, AI Hive sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets AI Hive talk to each AI on your behalf.</p>
+    <p>Without a key, AI Hive works in Free mode — you copy/paste prompts manually. API keys are only needed for the fully automated Pro experience.</p>
+  </div>
+
+  <div class="info-card green">
+    <h3>🔒 Your keys never leave your device</h3>
+    <p>Keys are stored in your browser's localStorage only. They go directly from your browser to each AI provider. AI Hive has no server — your keys are never shared with any third party.</p>
+  </div>
+
+  <div class="section-title">How to get your key — step by step</div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="images/chatgpt.ico" onerror="this.style.display='none'">
+      <div class="ai-card-name">ChatGPT (OpenAI)</div>
+      <span class="badge badge-paid">Pay-as-you-go</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>gpt-4o</code><span style="color:var(--muted)">OpenAI's flagship model</span></div>
+      <ol class="steps">
+        <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and sign in.</li>
+        <li>Click <strong>Create new secret key</strong>, give it a name, click Create.</li>
+        <li>Copy the key immediately — shown only once.</li>
+        <li>Paste it into the ChatGPT field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box">⚠️ Requires credit balance. Go to <strong>Billing → Payment methods</strong> to add credit before API calls will work.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="images/claude.ico" onerror="this.style.display='none'">
+      <div class="ai-card-name">Claude (Anthropic)</div>
+      <span class="badge badge-paid">Pay-as-you-go</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>claude-opus-4-5</code><span style="color:var(--muted)">Anthropic's capable everyday model</span></div>
+      <ol class="steps">
+        <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a> and sign in.</li>
+        <li>Click <strong>Create Key</strong>, give it a name (e.g. "AI Hive"), click Create.</li>
+        <li>Copy the key immediately — shown only once.</li>
+        <li>Paste it into the Claude field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box">⚠️ Requires credit balance. Go to <strong>Settings → Billing</strong> and add credit (~$5 minimum). You're only charged for what you use.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="images/copilot.ico" onerror="this.style.display='none'">
+      <div class="ai-card-name">Copilot (Microsoft)</div>
+      <span class="badge badge-note">Not yet available for individuals</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Status:</span><span style="color:var(--amber)">API in Private Preview — enterprise only as of early 2026</span></div>
+      <div class="note-box" style="margin-bottom:10px;">ℹ️ <strong>Copilot API is not currently available for personal Microsoft 365 subscribers.</strong> It requires an enterprise add-on license (E3/E5 + Copilot add-on) and is still in Private Preview. This is a Microsoft restriction — not an AI Hive limitation. We'll add full support the moment Microsoft opens the API to individuals.</div>
+      <div class="note-box green">✅ <strong>Copilot works great in free/manual mode.</strong> Open <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> in a tab, paste your prompts, and copy responses back into AI Hive. Copilot thinks differently from ChatGPT — it's worth keeping in your hive.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=64" onerror="this.style.display='none'">
+      <div class="ai-card-name">DeepSeek</div>
+      <span class="badge badge-free">Very affordable</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>deepseek-chat</code><span style="color:var(--muted)">DeepSeek's flagship model</span></div>
+      <ol class="steps">
+        <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a> and sign up.</li>
+        <li>Click <strong>Create new API key</strong> and copy it.</li>
+        <li>Paste it into the DeepSeek field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box green">✅ DeepSeek is often 10-20x cheaper per token than OpenAI or Anthropic. Requires a small credit balance (~$5) to get started. Excellent Builder choice if you want to keep API costs low.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" onerror="this.style.display='none'">
+      <div class="ai-card-name">Gemini (Google)</div>
+      <span class="badge badge-free">Free tier available</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>gemini-1.5-flash</code><span style="color:var(--muted)">Google's fast multimodal model</span></div>
+      <ol class="steps">
+        <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
+        <li>Click <strong>Create API Key</strong> and copy the key shown.</li>
+        <li>Paste it into the Gemini field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box green">✅ Gemini is completely free — no credit card or billing required. A set number of requests per day at no cost. Most AI Hive sessions will stay comfortably within the free limit.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" onerror="this.style.display='none'">
+      <div class="ai-card-name">Grok (xAI)</div>
+      <span class="badge badge-limited">Limited availability</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>grok-beta</code></div>
+      <ol class="steps">
+        <li>Go to <a href="https://console.x.ai" target="_blank">console.x.ai</a> and sign in with your X account.</li>
+        <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
+        <li>Paste it into the Grok field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box">⚠️ Requires credit balance — add via the billing section at <a href="https://console.x.ai" target="_blank">console.x.ai</a>.</div>
+    </div>
+  </div>
+
+  <div class="ai-card">
+    <div class="ai-card-header">
+      <img src="images/perplexity.ico" onerror="this.style.display='none'">
+      <div class="ai-card-name">Perplexity</div>
+      <span class="badge badge-paid">Pay-as-you-go</span>
+    </div>
+    <div class="ai-card-body">
+      <div class="model-line"><span class="model-label">Model:</span><code>llama-3.1-sonar-large-128k-online</code></div>
+      <ol class="steps">
+        <li>Go to <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a> and sign in.</li>
+        <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
+        <li>Paste it into the Perplexity field in AI Hive and press Enter.</li>
+      </ol>
+      <div class="note-box">⚠️ Requires credit balance — add via the billing section on the same settings page.</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="page-footer">
+  AI Hive — open source, no server, no tracking. &nbsp;·&nbsp;
+  <a href="https://github.com/WeirDave/AIHive" target="_blank">GitHub</a> &nbsp;·&nbsp;
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a>
+</div>
+
+<script>
+  const THEME_KEY = 'aihive_v2_theme';
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem(THEME_KEY, t);
+    document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === t));
+  }
+  (function() { setTheme(localStorage.getItem(THEME_KEY) || 'auto'); })();
+
+  function openAllConsoles() {
+    ['https://platform.openai.com/api-keys',
+     'https://console.anthropic.com/settings/keys',
+     'https://portal.azure.com',
+     'https://aistudio.google.com/apikey',
+     'https://console.x.ai',
+     'https://www.perplexity.ai/settings/api',
+     'https://platform.deepseek.com/api_keys'
+    ].forEach(url => window.open(url, '_blank'));
+  }
+</script>
+</body>
+</html>
