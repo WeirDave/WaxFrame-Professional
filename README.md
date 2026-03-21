@@ -14,6 +14,10 @@ AI Hive orchestrates multiple AI assistants to collaboratively create and refine
 
 Click the green **Code** button at the top of this page → **Download ZIP**
 
+| Light Mode | Dark Mode |
+|-----------|-----------|
+| ![AI Hive Light Mode](images/readme-screenshot-light.png) | ![AI Hive Dark Mode](images/readme-screenshot-dark.png) |
+
 **Step 2 — Unzip**
 
 Right-click the downloaded ZIP file and choose **Extract All** (Windows) or double-click it (Mac). Put the folder anywhere you like — your Desktop, Documents, wherever.
@@ -35,7 +39,7 @@ That's it. It opens in your browser and is ready to use. No installation, no acc
 - **Smart build button** — automatically detects what to build based on current state
 - **3-phase workflow** — Draft → Refine Text → User Review
 - **Builder / Reviewer roles** — one AI builds, the rest critique
-- **Project version + goal field** — included in Draft prompts, dropped in later phases
+- **Project goal field** — included in Draft prompts, dropped in later phases
 - **Round tracking** — advances through rounds, saves all history
 - **Full session history** — review and restore any past round
 - **Export to .txt** — saves full transcript plus current document
@@ -63,7 +67,7 @@ That's it. It opens in your browser and is ready to use. No installation, no acc
 2. Click **⚡ Build & Copy Prompt** — builds a "create a first draft" prompt
 3. Paste into all AI tabs and wait for responses
 4. Paste each response into its card
-5. Click **⚡ Build & Copy Prompt** again — now builds a Builder prompt to consolidate the best draft
+5. Click **⚡ Build & Copy Prompt** again — builds a Builder prompt to consolidate the best draft
 6. Paste into your Builder AI only — get the first unified document
 7. Paste that document into Working Document and move to Phase 2
 
@@ -159,21 +163,40 @@ ai-hive/
 ├── style.css           — All styling, light/dark themes
 ├── app.js              — All logic, state, and workflow
 ├── README.md           — This file
-├── LICENSE             — GPL-3.0 license
+├── LICENSE             — AGPL-3.0 license
 └── images/
     ├── AI_Hive_Logo_v4__ChatGPT.png
     ├── Ai_Hive_Bee_v1.png
     ├── chatgpt.ico
     ├── claude.ico
     ├── copilot.ico
-    └── perplexity.ico
+    ├── perplexity.ico
+    ├── readme-screenshot-light.png
+    └── readme-screenshot-dark.png
 ```
 
 ---
 
 ## 📄 License
 
-GPL-3.0 — see `LICENSE` for details.
+GNU Affero General Public License v3.0 (AGPL-3.0) — see `LICENSE` for details.
+
+Free to use, modify, and distribute — but any modified version, including one run as a web service, must also be released under AGPL-3.0 with its source code made available.
+
+---
+
+## 📦 Version History
+
+### v1.2 — March 2026
+- Added version number display in sidebar
+- Corrected license to AGPL-3.0
+
+### v1.1 — Initial public release
+- 3-phase workflow: Draft → Refine Text → User Review
+- 6 built-in AI worker bees (ChatGPT, Claude, Copilot, Gemini, Grok, Perplexity)
+- Builder / Reviewer roles with crown indicator
+- Light / Dark / Auto theme
+- Full session history and export to .txt
 
 ---
 
