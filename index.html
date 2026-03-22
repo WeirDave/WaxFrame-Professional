@@ -83,7 +83,7 @@
           <div class="fs-logo-tag">Orchestrate the Hive</div>
         </div>
       </div>
-      <div class="setup-step-badge">Step 1 of 2</div>
+      <div class="setup-step-badge">Setup — Step 1 of 2</div>
     </div>
 
     <!-- Two-column body -->
@@ -93,13 +93,14 @@
       <div class="fs-col fs-col-left" style="position:relative;">
         <img src="images/AI_Hive_Worker_Bee_v1.png" class="page-watermark" alt="">
         <div class="fs-col-header">
-          <h2 class="fs-col-title">🐝 Your Worker Bees</h2>
-          <p class="fs-col-sub">You need at least <strong>2 AIs with API keys</strong> to collaborate. Get keys for as many as you like — only keyed AIs run automatically.</p>
+          <h2 class="fs-col-title">Your Worker Bees</h2>
+          <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
+          <p class="fs-col-sub" style="margin-top:8px;">Don't have keys yet? <a href="api-details.html" target="_blank" style="color:var(--accent);font-weight:600;">Open the API Key Guide</a> for step-by-step instructions and direct billing links for each AI.</p>
         </div>
         <div class="bee-controls-row">
-          <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Defaults</button>
-          <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">🔑 Open All Consoles</button>
-          <a class="btn btn-sm btn-ghost" href="api-details.html" target="_blank">📖 API Key Guide</a>
+          <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
+          <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">Open All API Consoles</button>
+          <a class="btn btn-sm btn-ghost" href="api-details.html" target="_blank">API Key Guide</a>
           <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add Custom AI</button>
         </div>
 
@@ -148,8 +149,8 @@
       <div class="fs-col fs-col-right" style="position:relative;">
         <img src="images/AI_Hive_Builder_v3.png" class="page-watermark" alt="">
         <div class="fs-col-header">
-          <h2 class="fs-col-title">🔨 Choose Your Builder</h2>
-          <p class="fs-col-sub">The Builder receives the full document every round and writes the updated version. It <strong>must have a paid API subscription</strong> — it processes a lot of tokens.</p>
+          <h2 class="fs-col-title">Choose Your Builder</h2>
+          <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
         </div>
         <div class="builder-pick-grid-large" id="builderPickGrid"></div>
         <div class="builder-tip">
@@ -188,19 +189,19 @@
           <div class="fs-logo-tag">Orchestrate the Hive</div>
         </div>
       </div>
-      <div class="setup-step-badge">Step 2 of 2</div>
+      <div class="setup-step-badge">Setup — Step 2 of 2</div>
     </div>
 
     <!-- Full-width body -->
     <div class="fs-body fs-body-single" style="position:relative;">
       <img src="images/AI_Hive_Project_Bee_v1.png" class="page-watermark" alt="">
 
-      <div class="fs-col-header" style="max-width:760px;">
-        <h2 class="fs-col-title">📋 Your Project</h2>
-        <p class="fs-col-sub">Give your project a name and describe your goal — the more detail the better, especially when starting from scratch.</p>
+      <div class="fs-col-header project-centered">
+        <h2 class="fs-col-title">Your Project</h2>
+        <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal is sent to every AI every round — the more specific you are, the better your results will be. If you are starting from scratch with no existing document, your goal is everything, so be thorough.</p>
       </div>
 
-      <div class="project-fields" style="margin-bottom:10px;max-width:760px;">
+      <div class="project-fields project-centered" style="margin-bottom:10px;">
         <div class="project-field-wrap">
           <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg" oninput="saveProject()">
           <button class="field-clear-btn" onclick="document.getElementById('projectName').value='';saveProject();" title="Clear">✕</button>
@@ -212,19 +213,19 @@
         <button class="btn btn-ghost" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
       </div>
 
-      <div style="position:relative;max-width:760px;margin-bottom:20px;">
+      <div style="position:relative;margin-bottom:20px;" class="project-centered">
         <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="field-goal" style="margin-bottom:4px;" oninput="saveProject()"></textarea>
         <button class="field-clear-btn field-clear-ta" onclick="document.getElementById('projectGoal').value='';saveProject();" title="Clear goal">✕</button>
       </div>
 
-      <div class="fs-col-sub" style="margin-bottom:10px;max-width:760px;">Starting document — choose one:</div>
-      <div class="doc-input-tabs" style="max-width:760px;">
+      <div class="fs-col-sub project-centered" style="margin-bottom:10px;">Starting document — choose one:</div>
+      <div class="doc-input-tabs project-centered">
         <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
         <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
         <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
       </div>
 
-      <div class="doc-tab-panel active" id="panel-upload" style="max-width:760px;">
+      <div class="doc-tab-panel active project-centered" id="panel-upload">
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
              ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
           <div class="drop-zone-icon">📄</div>
@@ -235,11 +236,11 @@
         <div id="fileStatus" class="file-status" style="display:none;"></div>
       </div>
 
-      <div class="doc-tab-panel" id="panel-paste" style="max-width:760px;">
+      <div class="doc-tab-panel project-centered" id="panel-paste">
         <textarea id="pasteText" class="field-doc" placeholder="Paste your existing document text here…"></textarea>
       </div>
 
-      <div class="doc-tab-panel" id="panel-scratch" style="max-width:760px;">
+      <div class="doc-tab-panel project-centered" id="panel-scratch">
         <div class="scratch-info">
           <span>✅</span>
           <span>AI Hive will ask all your AIs to create a first draft based on your project goal above. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</span>
@@ -330,18 +331,18 @@
       <!-- COL 3: Control Panel -->
       <div class="work-right-panel">
 
-        <!-- Logo + Shake the Hive hex button -->
+        <!-- Shake the Hive hex button + Logo -->
         <div class="work-hero-row">
+          <button class="btn-hex-shake" id="runRoundBtn" onclick="runRound()">
+            <span class="hex-label">Shake<br>the Hive</span>
+          </button>
           <div class="work-logo-inline">
-            <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-logo">
             <div class="work-logo-text">
               <div class="work-logo-name">AI Hive</div>
               <div class="work-logo-tagline">Orchestrate the Hive</div>
             </div>
+            <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-logo">
           </div>
-          <button class="btn-hex-shake" id="runRoundBtn" onclick="runRound()">
-            <span class="hex-label">Shake<br>the Hive</span>
-          </button>
         </div>
 
         <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
@@ -355,7 +356,7 @@
           <span class="work-section-title">🐝 The Hive</span>
           <span class="work-hive-status" id="hiveStatus">Standing by</span>
         </div>
-        <div class="work-hive-hint">Toggle AIs for this session — Builder always runs.</div>
+        <div class="work-hive-hint">Toggle which AIs run this session. Builder always runs.</div>
         <div class="bee-status-grid" id="beeStatusGrid"></div>
 
         <!-- Live Console -->

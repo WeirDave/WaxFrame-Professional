@@ -1240,7 +1240,7 @@ html, body {
   width: 280px;
   height: 280px;
   object-fit: contain;
-  opacity: 0.07;
+  opacity: 0.12;
   pointer-events: none;
   user-select: none;
   z-index: 0;
@@ -1618,22 +1618,22 @@ kbd {
   min-width: 0;
 }
 .work-logo-inline .work-logo {
-  width: 60px;
-  height: 60px;
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
 }
 .work-logo-inline .work-logo-name {
-  font-size: 16px;
+  font-size: 18px;
 }
 .work-logo-inline .work-logo-tagline {
-  font-size: 9px;
+  font-size: 10px;
 }
 
 /* ── HEXAGON BUTTON ── */
 .btn-hex-shake {
   position: relative;
-  width: 68px;
-  height: 76px;
+  width: 80px;
+  height: 90px;
   flex-shrink: 0;
   background: var(--accent);
   border: none;
@@ -1667,11 +1667,11 @@ kbd {
 }
 .hex-label {
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 800;
   color: #0a0c12;
   text-align: center;
-  line-height: 1.3;
+  line-height: 1.35;
   letter-spacing: 0.02em;
   pointer-events: none;
 }
@@ -1680,15 +1680,15 @@ kbd {
 .bee-status-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
-  margin-bottom: 4px;
+  gap: 6px;
+  margin-bottom: 6px;
 }
 .bee-card {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 3px;
-  padding: 7px 4px 6px;
+  gap: 5px;
+  padding: 10px 6px 8px;
   border: 2px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--surface2);
@@ -1708,27 +1708,28 @@ kbd {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  gap: 3px;
+  gap: 4px;
 }
 .bee-card-icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   object-fit: contain;
-  border-radius: 4px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 .bee-builder-tag {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   background: var(--accent);
   color: #0a0c12;
   border-radius: 4px;
-  padding: 1px 4px;
+  padding: 2px 5px;
   letter-spacing: 0.04em;
+  flex-shrink: 0;
 }
 .bee-card-name {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--text);
   text-align: center;
   white-space: nowrap;
@@ -1737,7 +1738,7 @@ kbd {
   width: 100%;
 }
 .bee-card-status {
-  font-size: 9px;
+  font-size: 10px;
   color: var(--muted);
   text-align: center;
   white-space: nowrap;
@@ -1749,7 +1750,7 @@ kbd {
 .bee-card.is-done    .bee-card-status { color: var(--green); }
 .bee-card.is-error   .bee-card-status { color: var(--red); }
 .bee-card.is-builder .bee-card-status { color: var(--accent); }
-.bee-toggle { accent-color: var(--accent); cursor: pointer; width: 13px; height: 13px; flex-shrink: 0; }
+.bee-toggle { accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; flex-shrink: 0; }
 
 /* ── COL 2: NOTES + HISTORY SECTION BORDERS ── */
 .work-notes-panel {
@@ -1777,7 +1778,7 @@ kbd {
   scrollbar-color: var(--border2) transparent;
 }
 
-/* ── LINE NUMBERS FIX ── */
+/* ── LINE NUMBERS — RULED PAPER STYLE ── */
 .work-doc-editor {
   display: flex;
   flex: 1;
@@ -1786,34 +1787,47 @@ kbd {
   position: relative;
 }
 .work-line-numbers {
-  width: 44px;
+  width: 48px;
   flex-shrink: 0;
   background: var(--surface2);
-  border-right: 1px solid var(--border);
+  border-right: 2px solid var(--accent-dim);
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 20px;
+  font-size: 12px;
+  line-height: 24px;
   color: var(--muted);
   text-align: right;
-  padding: 10px 6px 10px 0;
+  padding: 10px 8px 10px 0;
   user-select: none;
+}
+.work-line-numbers div {
+  height: 24px;
+  line-height: 24px;
 }
 .work-doc-ta {
   flex: 1;
-  background: var(--surface);
   border: none;
   color: var(--text);
   font-family: var(--font-mono);
   font-size: 13px;
-  line-height: 20px;
-  padding: 10px 12px;
+  line-height: 24px;
+  padding: 10px 14px;
   resize: none;
   outline: none;
   overflow-y: auto;
-  white-space: pre;
-  word-wrap: normal;
-  overflow-x: auto;
+  overflow-x: hidden;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  /* Ruled paper lines matching line-height of 24px */
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 23px,
+    var(--border) 23px,
+    var(--border) 24px
+  );
+  background-attachment: local;
+  background-color: var(--surface);
 }
 
 /* ══════════════════════════════════════
@@ -1930,4 +1944,31 @@ kbd {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   overflow-y: auto;
+}
+
+
+/* ── PROJECT SCREEN CENTERING ── */
+.project-centered {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+}
+.fs-body-single {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.fs-body-single .project-centered {
+  width: 100%;
+  max-width: 720px;
+}
+.fs-body-single .field-goal {
+  min-height: 130px;
+  font-size: 15px;
+}
+.fs-body-single .field-lg,
+.fs-body-single .field-sm {
+  font-size: 15px;
+  padding: 12px 16px;
 }
