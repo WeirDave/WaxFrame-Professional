@@ -1,5 +1,5 @@
 // ============================================================
-//  AI Hive v2.0 — app.js
+//  AI Hive v3.0 — app.js
 //  Author: WeirDave | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/AIHive
 //
@@ -9,7 +9,7 @@
 //    LS_SESSION (aihive_v2_session) — round state + document, per session
 //
 //  Screen flow:
-//    screen-welcome → screen-api-setup → screen-builder → screen-project → screen-work
+//    screen-welcome → screen-setup → screen-project → screen-work
 // ============================================================
 
 // ── PHASES ──
@@ -174,14 +174,14 @@ function goToScreen(id) {
     requestAnimationFrame(() => target.classList.add('active'));
   }
   // Render screen-specific content immediately on navigation
-  if (id === 'screen-api-setup') {
+  if (id === 'screen-setup') {
     // Only default to all active on very first visit ever
     if (activeAIs.length === 0 && !localStorage.getItem(LS_HIVE)) {
       activeAIs = [...aiList];
     }
     renderAISetupGrid();
   }
-  if (id === 'screen-builder') {
+  if (id === 'screen-setup') {
     renderBuilderPicker();
   }
   if (id === 'screen-project') {
@@ -594,7 +594,7 @@ function goToBuilderStep() {
   // Make sure activeAIs reflects who has keys
   activeAIs = keyed;
   saveHive();
-  goToScreen('screen-builder');
+  goToScreen('screen-setup');
   renderBuilderPicker();
 }
 
@@ -709,9 +709,17 @@ function addCustomAI() {
 }
 
 function validateAndContinue() {
-  if (activeAIs.length === 0) { toast('⚠️ Select at least one AI'); return; }
-  if (!builder) { toast('⚠️ Choose a Builder AI'); return; }
-  saveSettings();
+  const keyed = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return cfg?._key;
+  });
+  if (keyed.length < 2) {
+    toast('⚠️ You need API keys for at least 2 AIs to collaborate');
+    return;
+  }
+  if (!builder) { toast('⚠️ Choose a Builder AI on the right'); return; }
+  activeAIs = keyed;
+  saveHive();
   goToScreen('screen-project');
 }
 
@@ -1551,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Render API setup if starting on that screen
-  if (document.getElementById('screen-api-setup')?.classList.contains('active')) {
+  if (document.getElementById('screen-setup')?.classList.contains('active')) {
     if (activeAIs.length === 0) activeAIs = [...aiList];
     renderAISetupGrid();
   }
