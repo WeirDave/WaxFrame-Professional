@@ -2460,14 +2460,6 @@ kbd {
    FINISH PILL + MODAL
 ══════════════════════════════════════ */
 
-.work-phase-finish {
-  border-color: var(--green) !important;
-  color: var(--green) !important;
-}
-.work-phase-finish:hover {
-  background: var(--green-dim) !important;
-  color: var(--green) !important;
-}
 
 .finish-modal-overlay {
   position: fixed;
