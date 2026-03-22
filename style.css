@@ -1776,6 +1776,14 @@ kbd {
   from { box-shadow: 0 0 8px rgba(245,166,35,0.4); }
   to   { box-shadow: 0 0 24px rgba(245,166,35,0.9); }
 }
+.smoke-btn-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+  flex-shrink: 0;
+}
+
 .shake-wide-label {
   font-family: var(--font-display);
   font-size: 17px;
