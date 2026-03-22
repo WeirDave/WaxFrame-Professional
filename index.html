@@ -11,7 +11,7 @@
   <link rel="manifest" href="images/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.06">
+  <link rel="stylesheet" href="style.css?v=3.00">
 </head>
 <body>
 
@@ -32,30 +32,27 @@
         <span class="welcome-version">v2.0</span>
       </div>
     </div>
-
     <div class="welcome-pitch">
       <p>AI Hive puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better.</p>
     </div>
-
     <div class="welcome-choices">
       <div class="welcome-card free" onclick="goToFree()">
         <div class="welcome-card-icon">🆓</div>
         <div class="welcome-card-body">
           <div class="welcome-card-title">Free Version</div>
-          <div class="welcome-card-desc">Manual copy/paste workflow. No API keys needed — free tier AIs work fine. You copy prompts to each AI tab yourself and paste responses back. Mix paid and free AIs however you like. If an AI hits its limit, skip it that round.</div>
+          <div class="welcome-card-desc">Manual copy/paste workflow. No API keys needed — free tier AIs work fine. You copy prompts to each AI tab yourself and paste responses back. Mix paid and free AIs however you like.</div>
         </div>
         <div class="welcome-card-arrow">→</div>
       </div>
-      <div class="welcome-card pro" onclick="goToScreen('screen-api-setup')">
+      <div class="welcome-card pro" onclick="goToScreen('screen-setup')">
         <div class="welcome-card-icon">⚡</div>
         <div class="welcome-card-body">
           <div class="welcome-card-title">Pro Version <span class="badge-api">API</span></div>
-          <div class="welcome-card-desc">Fully automated — one button does everything. Each AI you want to use needs its own API key and paid subscription. Start with just 2 if you like, or use all 6. Your Builder AI processes the full document every round, so it needs a subscription with enough capacity.</div>
+          <div class="welcome-card-desc">Fully automated — one button does everything. Each AI you want to use needs its own API key. Start with just 2 if you like, or use all 6. Your Builder AI processes the full document every round.</div>
         </div>
         <div class="welcome-card-arrow">→</div>
       </div>
     </div>
-
     <div class="welcome-footer">
       <a href="https://github.com/WeirDave/AIHive" target="_blank">GitHub</a>
       <span>·</span>
@@ -63,147 +60,112 @@
     </div>
     <div class="theme-toggle">
       <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
-      <button class="theme-opt active" data-theme="auto"  onclick="setTheme('auto')"  title="Auto (follows OS)">⚙️ Auto</button>
-      <button class="theme-opt" data-theme="dark"  onclick="setTheme('dark')"  title="Dark mode">🌙 Dark</button>
+      <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️ Auto</button>
+      <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
     </div>
   </div>
 </div>
 
 
 <!-- ============================================================
-     SCREEN 2 — WORKER BEES + API KEYS
+     SCREEN 2 — SETUP (Worker Bees + Builder, merged, full-width)
      ============================================================ -->
-<div class="screen" id="screen-api-setup">
-  <div class="setup-layout">
+<div class="screen" id="screen-setup">
+  <div class="fullscreen-layout">
 
-    <div class="setup-header">
-      <div class="setup-header-top">
-        <button class="back-btn" onclick="goToScreen('screen-welcome')">← Back</button>
-        <div class="setup-step-badge">Step 1 of 3</div>
-      </div>
-      <div class="setup-branding">
-        <div class="setup-logo-wrap">
-          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="setup-logo-img">
-          <div class="setup-logo-text">
-            <div class="setup-logo-name">AI Hive</div>
-            <div class="setup-logo-tagline">Orchestrate the Hive</div>
-          </div>
+    <!-- Header bar -->
+    <div class="fs-header">
+      <button class="back-btn" onclick="goToScreen('screen-welcome')">← Back</button>
+      <div class="fs-header-brand">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">AI Hive</div>
+          <div class="fs-logo-tag">Orchestrate the Hive</div>
         </div>
       </div>
-      <div class="setup-page-title">
-        <h2>Your Worker Bees</h2>
-      </div>
+      <div class="setup-step-badge">Step 1 of 2</div>
     </div>
 
-    <div class="setup-body-single" style="position:relative;">
-      <img src="images/AI_Hive_Worker_Bee_v1.png" class="page-watermark" alt="">
+    <!-- Two-column body -->
+    <div class="fs-body">
 
-      <div class="setup-section-sub setup-section-sub-bees" style="margin-bottom:12px;">
-        These 6 AIs all have straightforward APIs you can sign up for — but you don't need all of them. <strong>You need at least 2</strong> (that's the whole point — multiple AIs collaborating). Get API keys for as many as you want beyond that. Only AIs with a saved key will run automatically. On the work screen you'll choose which ones to activate for each session.
-      </div>
+      <!-- LEFT: Worker Bees -->
+      <div class="fs-col fs-col-left" style="position:relative;">
+        <img src="images/AI_Hive_Worker_Bee_v1.png" class="page-watermark" alt="">
+        <div class="fs-col-header">
+          <h2 class="fs-col-title">🐝 Your Worker Bees</h2>
+          <p class="fs-col-sub">You need at least <strong>2 AIs with API keys</strong> to collaborate. Get keys for as many as you like — only keyed AIs run automatically.</p>
+        </div>
+        <div class="bee-controls-row">
+          <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Defaults</button>
+          <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">🔑 Open All Consoles</button>
+          <a class="btn btn-sm btn-ghost" href="api-details.html" target="_blank">📖 API Key Guide</a>
+          <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add Custom AI</button>
+        </div>
 
-      <div class="bee-controls-row">
-        <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
-        <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">🔑 Open All API Consoles</button>
-        <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add a custom AI</button>
-      </div>
-
-      <!-- Custom AI form — shown/hidden inline -->
-      <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
-        <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
-        <div class="custom-ai-form-row">
-          <div class="custom-ai-field-wrap">
-            <label>URL <span class="field-required">*</span></label>
-            <input type="text" id="customAIUrl" placeholder="https://chat.deepseek.com"
-              oninput="autoFillAIName(this.value)">
+        <!-- Custom AI form -->
+        <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
+          <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
+          <div class="custom-ai-form-row">
+            <div class="custom-ai-field-wrap">
+              <label>URL <span class="field-required">*</span></label>
+              <input type="text" id="customAIUrl" placeholder="https://chat.deepseek.com" oninput="autoFillAIName(this.value)">
+            </div>
+            <div class="custom-ai-field-wrap">
+              <label>Name <span class="field-optional">(auto-detected)</span></label>
+              <input type="text" id="customAIName" placeholder="e.g. DeepSeek" oninput="this.dataset.userTyped='true'">
+            </div>
           </div>
-          <div class="custom-ai-field-wrap">
-            <label>Name <span class="field-optional">(auto-detected)</span></label>
-            <input type="text" id="customAIName" placeholder="e.g. DeepSeek"
-              oninput="this.dataset.userTyped='true'">
+          <div class="custom-ai-form-row" style="margin-top:8px;">
+            <div class="custom-ai-field-wrap">
+              <label>API Format <span class="field-required">*</span></label>
+              <select id="customAIFormat" class="custom-ai-select">
+                <option value="openai">OpenAI compatible (DeepSeek, Mistral, etc.)</option>
+                <option value="anthropic">Anthropic (Claude)</option>
+                <option value="google">Google (Gemini)</option>
+              </select>
+            </div>
+            <div class="custom-ai-field-wrap">
+              <label>API Key <span class="field-optional">(optional)</span></label>
+              <input type="password" id="customAIKey" placeholder="Paste key if using API mode">
+            </div>
+          </div>
+          <div class="custom-ai-form-footer">
+            <button class="btn btn-ghost btn-sm" onclick="showAddCustomAI()">Cancel</button>
+            <button class="btn btn-accent btn-sm" onclick="addCustomAI()">Add to Hive</button>
           </div>
         </div>
-        <div class="custom-ai-form-row" style="margin-top:8px;">
-          <div class="custom-ai-field-wrap">
-            <label>API Format <span class="field-required">*</span></label>
-            <select id="customAIFormat" class="custom-ai-select">
-              <option value="openai">OpenAI compatible (most AIs — DeepSeek, Mistral, etc.)</option>
-              <option value="anthropic">Anthropic (Claude)</option>
-              <option value="google">Google (Gemini)</option>
-            </select>
-          </div>
-          <div class="custom-ai-field-wrap">
-            <label>API Key <span class="field-optional">(optional)</span></label>
-            <input type="password" id="customAIKey" placeholder="Paste key if using API mode">
-          </div>
-        </div>
-        <div class="custom-ai-form-footer">
-          <button class="btn btn-ghost btn-sm" onclick="showAddCustomAI()">Cancel</button>
-          <button class="btn btn-accent btn-sm" onclick="addCustomAI()">Add to Hive</button>
-        </div>
-      </div>
 
-      <!-- Scrollable AI list — fills all available space -->
-      <div class="setup-section-bees">
         <div class="ai-list-scroll">
           <div class="ai-setup-grid" id="aiSetupGrid"></div>
         </div>
       </div>
 
-    </div><!-- /setup-body-single -->
+      <!-- DIVIDER -->
+      <div class="fs-divider"></div>
 
-    <div class="setup-footer">
-      <div class="setup-footer-note">⚙️ You can change these settings any time from the main screen</div>
-      <button class="btn btn-accent btn-lg" onclick="goToBuilderStep()"><img src="images/AI_Hive_Builder_v3.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Choose your Builder →</button>
-    </div>
-
-  </div>
-</div>
-
-
-<!-- ============================================================
-     SCREEN 2b — WHO IS YOUR BUILDER?
-     ============================================================ -->
-<div class="screen" id="screen-builder">
-  <div class="setup-layout">
-
-    <div class="setup-header">
-      <div class="setup-header-top">
-        <button class="back-btn" onclick="goToScreen('screen-api-setup')">← Back</button>
-        <div class="setup-step-badge">Step 2 of 3</div>
-      </div>
-      <div class="setup-branding">
-        <div class="setup-logo-wrap">
-          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="setup-logo-img">
-          <div class="setup-logo-text">
-            <div class="setup-logo-name">AI Hive</div>
-            <div class="setup-logo-tagline">Orchestrate the Hive</div>
-          </div>
+      <!-- RIGHT: Builder Picker -->
+      <div class="fs-col fs-col-right" style="position:relative;">
+        <img src="images/AI_Hive_Builder_v3.png" class="page-watermark" alt="">
+        <div class="fs-col-header">
+          <h2 class="fs-col-title">🔨 Choose Your Builder</h2>
+          <p class="fs-col-sub">The Builder receives the full document every round and writes the updated version. It <strong>must have a paid API subscription</strong> — it processes a lot of tokens.</p>
+        </div>
+        <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+        <div class="builder-tip">
+          💡 <strong>Tip:</strong> Claude, ChatGPT, and Gemini handle large documents well. Avoid free-tier AIs as Builder — they run out of tokens fast. <a href="tokens-explainer.html" target="_blank" style="color:var(--accent);">Learn about tokens →</a>
         </div>
       </div>
-      <div class="setup-page-title">
-        <h2>Who is your Builder?</h2>
-      </div>
-    </div>
 
-    <div class="setup-body-single" style="position:relative;">
-      <img src="images/AI_Hive_Builder_v3.png" class="page-watermark" alt="">
+    </div><!-- /fs-body -->
 
-      <div class="setup-section-sub" style="margin-bottom:20px;">
-        The Builder receives the full document every round and writes the updated version. Choose carefully — in Pro/API mode your Builder <strong>must have a paid API subscription</strong> since it processes a lot of tokens every round.
-      </div>
-
-      <div class="builder-pick-grid-large" id="builderPickGrid"></div>
-
-      <div class="builder-tip" style="margin-top:20px;">
-        💡 <strong>Tip:</strong> Claude, ChatGPT, and Gemini all handle large documents well and make excellent Builders. Avoid an AI with strict free-tier token limits as your Builder — it will run out quickly and you may not be able to finish your project without an extended wait. <a href="tokens-explainer.html" target="_blank" style="color:var(--accent);" title="Opens in a new tab">Learn more about tokens →</a>
-      </div>
-
-    </div>
-
-    <div class="setup-footer">
-      <div class="setup-footer-note">⚙️ You can change your Builder any time from the main screen</div>
-      <button class="btn btn-accent btn-lg" onclick="validateAndContinue()"><img src="images/AI_Hive_Project_Bee_v1.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Continue to Project Setup →</button>
+    <!-- Footer -->
+    <div class="fs-footer">
+      <div class="setup-footer-note">⚙️ You can change these settings any time from the work screen</div>
+      <button class="btn btn-accent btn-lg" onclick="validateAndContinue()">
+        <img src="images/AI_Hive_Project_Bee_v1.png" style="width:36px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px;">
+        Continue to Project Setup →
+      </button>
     </div>
 
   </div>
@@ -211,63 +173,58 @@
 
 
 <!-- ============================================================
-     SCREEN 3 — PROJECT SETUP
+     SCREEN 3 — PROJECT SETUP (full-width)
      ============================================================ -->
 <div class="screen" id="screen-project">
-  <div class="setup-layout">
+  <div class="fullscreen-layout">
 
-    <div class="setup-header">
-      <div class="setup-header-top">
-        <button class="back-btn" onclick="goToScreen('screen-builder')">← Back</button>
-        <div class="setup-step-badge">Step 3 of 3</div>
-      </div>
-      <div class="setup-branding">
-        <div class="setup-logo-wrap">
-          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="setup-logo-img">
-          <div class="setup-logo-text">
-            <div class="setup-logo-name">AI Hive</div>
-            <div class="setup-logo-tagline">Orchestrate the Hive</div>
-          </div>
+    <!-- Header bar -->
+    <div class="fs-header">
+      <button class="back-btn" onclick="goToScreen('screen-setup')">← Back</button>
+      <div class="fs-header-brand">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">AI Hive</div>
+          <div class="fs-logo-tag">Orchestrate the Hive</div>
         </div>
       </div>
-      <div class="setup-page-title">
-        <h2>Your Project</h2>
-      </div>
+      <div class="setup-step-badge">Step 2 of 2</div>
     </div>
 
-    <div class="setup-body-single" style="position:relative;">
+    <!-- Full-width body -->
+    <div class="fs-body fs-body-single" style="position:relative;">
       <img src="images/AI_Hive_Project_Bee_v1.png" class="page-watermark" alt="">
 
-      <!-- Project Details -->
-      <div class="setup-section-sub" style="margin-bottom:10px;">Give your project a name and describe your goal — the more detail the better, especially when starting from scratch.</div>
+      <div class="fs-col-header" style="max-width:760px;">
+        <h2 class="fs-col-title">📋 Your Project</h2>
+        <p class="fs-col-sub">Give your project a name and describe your goal — the more detail the better, especially when starting from scratch.</p>
+      </div>
 
-      <div class="project-fields" style="margin-bottom:10px;">
+      <div class="project-fields" style="margin-bottom:10px;max-width:760px;">
         <div class="project-field-wrap">
           <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg" oninput="saveProject()">
-          <button class="field-clear-btn" onclick="document.getElementById('projectName').value='';saveProject();" title="Clear project name">✕</button>
+          <button class="field-clear-btn" onclick="document.getElementById('projectName').value='';saveProject();" title="Clear">✕</button>
         </div>
         <div class="project-field-wrap">
           <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm" oninput="saveProject()">
-          <button class="field-clear-btn" onclick="document.getElementById('projectVersion').value='';saveProject();" title="Clear version">✕</button>
+          <button class="field-clear-btn" onclick="document.getElementById('projectVersion').value='';saveProject();" title="Clear">✕</button>
         </div>
         <button class="btn btn-ghost" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
       </div>
-      <div style="position:relative;">
+
+      <div style="position:relative;max-width:760px;margin-bottom:20px;">
         <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="field-goal" style="margin-bottom:4px;" oninput="saveProject()"></textarea>
         <button class="field-clear-btn field-clear-ta" onclick="document.getElementById('projectGoal').value='';saveProject();" title="Clear goal">✕</button>
       </div>
 
-      <!-- Starting Document -->
-      <div class="setup-section-sub" style="margin-bottom:10px;">Starting document — choose one:</div>
-
-      <div class="doc-input-tabs">
-        <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload"  onclick="switchDocTab('upload')">📄 Upload File</button>
-        <button class="btn btn-sm btn-ghost doc-tab"        id="tab-paste"   onclick="switchDocTab('paste')">📋 Paste Text</button>
-        <button class="btn btn-sm btn-ghost doc-tab"        id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
+      <div class="fs-col-sub" style="margin-bottom:10px;max-width:760px;">Starting document — choose one:</div>
+      <div class="doc-input-tabs" style="max-width:760px;">
+        <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
+        <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
+        <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
       </div>
 
-      <!-- Upload -->
-      <div class="doc-tab-panel active" id="panel-upload">
+      <div class="doc-tab-panel active" id="panel-upload" style="max-width:760px;">
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
              ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
           <div class="drop-zone-icon">📄</div>
@@ -278,24 +235,25 @@
         <div id="fileStatus" class="file-status" style="display:none;"></div>
       </div>
 
-      <!-- Paste -->
-      <div class="doc-tab-panel" id="panel-paste">
+      <div class="doc-tab-panel" id="panel-paste" style="max-width:760px;">
         <textarea id="pasteText" class="field-doc" placeholder="Paste your existing document text here…"></textarea>
       </div>
 
-      <!-- Scratch -->
-      <div class="doc-tab-panel" id="panel-scratch">
+      <div class="doc-tab-panel" id="panel-scratch" style="max-width:760px;">
         <div class="scratch-info">
           <span>✅</span>
           <span>AI Hive will ask all your AIs to create a first draft based on your project goal above. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</span>
         </div>
       </div>
 
-    </div><!-- /setup-body-single -->
+    </div><!-- /fs-body -->
 
-    <div class="setup-footer">
-      <div class="setup-footer-note">⚙️ You can adjust settings any time from the main screen</div>
-      <button class="btn btn-accent btn-lg" onclick="startSession()"><img src="images/AI_Hive_Worker_Bee_v1.png" style="width:44px;height:44px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Launch AI Hive →</button>
+    <div class="fs-footer">
+      <div class="setup-footer-note">⚙️ You can adjust settings any time from the work screen</div>
+      <button class="btn btn-accent btn-lg" onclick="startSession()">
+        <img src="images/AI_Hive_Worker_Bee_v1.png" style="width:36px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px;">
+        Launch AI Hive →
+      </button>
     </div>
 
   </div>
@@ -321,11 +279,11 @@
       <div class="work-topbar-right">
         <div class="work-phase-bar" id="workPhaseBar"></div>
         <span class="work-round-badge" id="workRoundBadge">Round 1</span>
-        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-api-setup')">⚙️ Settings</button>
+        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-setup')">⚙️ Settings</button>
         <div class="theme-toggle">
           <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light">☀️</button>
-          <button class="theme-opt" data-theme="auto"  onclick="setTheme('auto')"  title="Auto">⚙️</button>
-          <button class="theme-opt" data-theme="dark"  onclick="setTheme('dark')"  title="Dark">🌙</button>
+          <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+          <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark">🌙</button>
         </div>
       </div>
     </div>
@@ -333,7 +291,7 @@
     <!-- MAIN 3-COLUMN WORK AREA -->
     <div class="work-main">
 
-      <!-- COL 1: Working Document with line numbers -->
+      <!-- COL 1: Working Document -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
           <span class="work-section-title">📄 Working Document</span>
@@ -357,16 +315,15 @@
           <span class="work-section-title">📝 Notes for this Round</span>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value=''">✕ Clear</button>
         </div>
-        <div class="work-notes-hint">Optional — add notes or directions for the next round. Reference line numbers if helpful.</div>
+        <div class="work-notes-hint">Optional — add directions for the next round. Reference line numbers if helpful.</div>
         <textarea id="workNotes" class="work-notes-ta"
-          placeholder="e.g. Line 5: change job title to Senior Wireless Architect&#10;Line 12–15: expand the skills section&#10;Overall: make tone more confident"></textarea>
-        <!-- Round History -->
+          placeholder="e.g. Line 5: change tone to be more formal&#10;Line 12–15: expand this section&#10;Overall: make it more concise"></textarea>
         <div class="work-panel-header work-section-border-top">
           <span class="work-section-title">🕐 Round History</span>
-          <span class="work-history-hint">click entry to restore</span>
+          <span class="work-history-hint">click to restore</span>
         </div>
         <div class="round-history" id="roundHistory">
-          <div class="round-history-empty">Completed rounds appear here. Click any entry to restore that version of the document.</div>
+          <div class="round-history-empty">Completed rounds appear here. Click any entry to restore that version.</div>
         </div>
       </div>
 
@@ -387,7 +344,11 @@
           </button>
         </div>
 
-        <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)"><option value="draft">Draft</option><option value="refine">Refine Text</option><option value="review">User Review</option></select>
+        <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
+          <option value="draft">Draft</option>
+          <option value="refine">Refine Text</option>
+          <option value="review">User Review</option>
+        </select>
 
         <!-- The Hive -->
         <div class="work-panel-header work-section-header-top">
@@ -424,6 +385,6 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<script src="app.js?v=2.06"></script>
+<script src="app.js?v=3.00"></script>
 </body>
 </html>
