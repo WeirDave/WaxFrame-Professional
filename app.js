@@ -154,6 +154,56 @@ function copyConsole() {
   navigator.clipboard.writeText(text).then(() => toast('📋 Console copied'));
 }
 
+function copyConflicts() {
+  const el = document.getElementById('conflictsPanel');
+  if (!el) return;
+  navigator.clipboard.writeText(el.innerText).then(() => toast('📋 Conflicts copied'));
+}
+
+function clearConflicts() {
+  const el = document.getElementById('conflictsPanel');
+  const label = document.getElementById('conflictsRoundLabel');
+  if (el) el.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
+  if (label) label.textContent = '';
+}
+
+function copyNotes() {
+  const ta = document.getElementById('workNotes');
+  if (!ta || !ta.value.trim()) { toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(ta.value).then(() => toast('📋 Notes copied'));
+}
+
+function openChangeBuilder() {
+  const grid = document.getElementById('changeBuilderGrid');
+  if (grid) {
+    grid.innerHTML = activeAIs.map(ai => {
+      const isSelected = ai.id === builder;
+      return `<div class="builder-pick-btn btn ${isSelected ? 'selected' : ''}"
+        onclick="setBuilderFromModal('${ai.id}')"
+        style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;">
+        <img src="${ai.icon}" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"
+          onerror="this.style.display='none'">
+        <span style="font-size:12px;font-weight:700;">${ai.name}</span>
+        ${isSelected ? '<span style="font-size:10px;color:var(--accent);">👑 Current</span>' : ''}
+      </div>`;
+    }).join('');
+  }
+  const modal = document.getElementById('changeBuilderModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeChangeBuilder() {
+  const modal = document.getElementById('changeBuilderModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function setBuilderFromModal(id) {
+  setBuilder(id);
+  closeChangeBuilder();
+  renderBeeStatusGrid();
+  toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
+}
+
 function clearConsole() {
   const el = document.getElementById('liveConsole');
   if (el) el.innerHTML = '<div class="console-entry console-info">Console cleared.</div>';
@@ -270,9 +320,10 @@ function updateLicenseBadge() {
   }
 }
 function goToScreen(id) {
-  // Always save document state before navigating away from work screen
+  // Auto-save document state when navigating away from work screen,
+  // but only if docText hasn't already been cleared (e.g. after finishAndNew)
   const currentDoc = document.getElementById('workDocument');
-  if (currentDoc && currentDoc.value.trim()) {
+  if (currentDoc && currentDoc.value.trim() && docText) {
     docText = currentDoc.value.trim();
     saveSession();
   }
@@ -299,6 +350,9 @@ function goToScreen(id) {
   }
   if (id === 'screen-project') {
     switchDocTab(docTab);
+    // Init goal line numbers
+    const goalTa = document.getElementById('projectGoal');
+    if (goalTa) updateProjLineNums('projGoalNums', goalTa);
     // Restore file status if we had an uploaded file
     if (docTab === 'upload' && docText) {
       const fname = localStorage.getItem('aihive_v2_filename') || 'uploaded file';
@@ -358,6 +412,14 @@ function clearProject() {
   document.getElementById('projectName').value    = '';
   document.getElementById('projectVersion').value = '';
   document.getElementById('projectGoal').value    = '';
+  // Clear live work screen fields so the goToScreen auto-save can't resurrect them
+  const workDoc = document.getElementById('workDocument');
+  if (workDoc) workDoc.value = '';
+  const workNotes = document.getElementById('workNotes');
+  if (workNotes) workNotes.value = '';
+  const pasteText = document.getElementById('pasteText');
+  if (pasteText) pasteText.value = '';
+  updateProjLineNums('projPasteNums', pasteText);
   docTab = 'upload';
   switchDocTab('upload');
   round = 1; phase = 'draft'; history = []; docText = '';
@@ -818,6 +880,7 @@ function addCustomAI() {
   document.getElementById('customAIFormat').value = 'openai';
 
   renderAISetupGrid();
+  saveHive();
   toast(`🐝 ${name} added to the hive`);
 }
 
@@ -867,6 +930,11 @@ function switchDocTab(tab) {
   document.querySelectorAll('.doc-tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'   + tab)?.classList.add('active');
   document.getElementById('panel-' + tab)?.classList.add('active');
+  // Init line numbers when switching to paste tab
+  if (tab === 'paste') {
+    const ta = document.getElementById('pasteText');
+    if (ta) updateProjLineNums('projPasteNums', ta);
+  }
   saveSettings();
 }
 
@@ -1065,11 +1133,19 @@ function initWorkScreen() {
   updateLineNumbers();
 }
 
+function updateProjLineNums(numsId, ta) {
+  const ln = document.getElementById(numsId);
+  if (!ln || !ta) return;
+  const lines = Math.max(ta.value.split('\n').length, 20);
+  ln.innerHTML = Array.from({length: lines}, (_, i) => `<div>${i + 1}</div>`).join('');
+  ln.scrollTop = ta.scrollTop;
+}
+
 function updateLineNumbers() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
-  const lineH = 26; // must match CSS line-height of .work-doc-ta
+  const lineH = 21; // must match CSS line-height of .work-doc-ta (21px)
   const lines = ta.value.split('\n').length;
   // Always show at least enough lines to fill the visible area
   const visibleLines = Math.ceil(ta.clientHeight / lineH);
@@ -1078,6 +1154,16 @@ function updateLineNumbers() {
     `<div>${i + 1}</div>`
   ).join('');
   syncLineNumberScroll();
+
+  // Update doc stats
+  const stats = document.getElementById('docStats');
+  if (stats && ta.value.trim()) {
+    const wordCount = ta.value.trim().split(/\s+/).length;
+    const lineCount = ta.value.split('\n').length;
+    stats.textContent = `${lineCount} lines · ${wordCount.toLocaleString()} words`;
+  } else if (stats) {
+    stats.textContent = '';
+  }
 }
 
 function syncLineNumberScroll() {
