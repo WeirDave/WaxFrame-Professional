@@ -12,7 +12,7 @@ Put a team of AI assistants to work on your document — simultaneously. One wri
 [![Version](https://img.shields.io/badge/Version-2.0-orange.svg)](https://github.com/WeirDave/AIHive/releases)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/AIHive/)
 
-[**→ Launch AI Hive**](https://weirdave.github.io/AIHive/)
+<a href="https://weirdave.github.io/AIHive/" target="_blank"><strong>→ Launch AI Hive</strong></a>
 
 </div>
 
