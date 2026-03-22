@@ -1610,7 +1610,8 @@ async function runRound() {
       const newDoc    = extractDocument(builderResponse);
       const conflicts = extractConflicts(builderResponse);
       window._lastConflicts = conflicts || null;
-      const hasConflictBlock = builderResponse.includes('[CONFLICTS START]');
+      const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
+      const hasConflictBlock = cleanResponse.includes('[CONFLICTS START]');
       if (!hasConflictBlock) {
         consoleLog(`⚠️ Builder did not return a [CONFLICTS START] block — ChatGPT may have ignored the format`, 'warn');
       } else if (conflicts) {
@@ -1735,18 +1736,21 @@ async function callAPI(ai, prompt) {
 
 // ── HELPERS ──
 function extractDocument(text) {
-  const start = text.indexOf('[DOCUMENT START]');
-  const end   = text.indexOf('[DOCUMENT END]');
-  if (start === -1 || end === -1) return null;
-  return text.slice(start + '[DOCUMENT START]'.length, end).trim();
+  // Strip markdown code fences that some AIs wrap around delimiters
+  const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
+  const start = clean.indexOf('[DOCUMENT START]');
+  const end   = clean.lastIndexOf('[DOCUMENT END]');
+  if (start === -1 || end === -1 || end <= start) return null;
+  return clean.slice(start + '[DOCUMENT START]'.length, end).trim();
 }
 
 function extractConflicts(text) {
-  const start = text.indexOf('[CONFLICTS START]');
-  const end   = text.indexOf('[CONFLICTS END]');
-  if (start === -1 || end === -1) return null;
-  const raw = text.slice(start + '[CONFLICTS START]'.length, end).trim();
-  if (!raw || raw === 'NO CONFLICTS') return null;
+  const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
+  const start = clean.indexOf('[CONFLICTS START]');
+  const end   = clean.lastIndexOf('[CONFLICTS END]');
+  if (start === -1 || end === -1 || end <= start) return null;
+  const raw = clean.slice(start + '[CONFLICTS START]'.length, end).trim();
+  if (!raw || raw.toUpperCase() === 'NO CONFLICTS') return null;
   return raw;
 }
 
