@@ -1557,7 +1557,7 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking…</span>';
+  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1696,7 +1696,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
-    btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span>';
+    btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   toast(`✅ Round ${round - 1} complete!`);
