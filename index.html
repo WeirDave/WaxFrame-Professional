@@ -280,6 +280,7 @@
       <div class="work-topbar-right">
         <div class="work-phase-bar" id="workPhaseBar"></div>
         <span class="work-round-badge" id="workRoundBadge">Round 1</span>
+        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">🕐 History</button>
         <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-setup')">⚙️ Settings</button>
         <div class="theme-toggle">
           <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light">☀️</button>
@@ -310,22 +311,27 @@
         </div>
       </div>
 
-      <!-- COL 2: Notes + Round History -->
+      <!-- COL 2: Conflicts + Notes -->
       <div class="work-notes-panel">
+
+        <!-- Conflicts -->
         <div class="work-panel-header">
+          <span class="work-section-title">Conflicts</span>
+          <span class="work-history-hint" id="conflictsRoundLabel"></span>
+        </div>
+        <div class="conflicts-panel" id="conflictsPanel">
+          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
+        </div>
+
+        <!-- Notes -->
+        <div class="work-panel-header work-section-border-top">
           <span class="work-section-title">Notes for this Round</span>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value=''">✕ Clear</button>
         </div>
         <div class="work-notes-hint">Optional — add directions for the next round. Reference line numbers if helpful.</div>
         <textarea id="workNotes" class="work-notes-ta"
           placeholder="e.g. Line 5: change tone to be more formal&#10;Line 12–15: expand this section&#10;Overall: make it more concise"></textarea>
-        <div class="work-panel-header work-section-border-top">
-          <span class="work-section-title">Round History</span>
-          <span class="work-history-hint">click to restore</span>
-        </div>
-        <div class="round-history" id="roundHistory">
-          <div class="round-history-empty">Completed rounds appear here. Click any entry to restore that version.</div>
-        </div>
+
       </div>
 
       <!-- COL 3: Control Panel -->
@@ -343,7 +349,6 @@
         <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
           <option value="draft">Draft</option>
           <option value="refine">Refine Text</option>
-          <option value="review">User Review</option>
         </select>
 
         <!-- The Hive -->
@@ -383,9 +388,27 @@
 </div>
 
 
+<!-- ============================================================
+     ROUND HISTORY MODAL
+     ============================================================ -->
+<div class="hist-modal-overlay" id="roundHistoryModal" onclick="if(event.target===this)closeRoundHistoryModal()">
+  <div class="hist-modal">
+    <div class="hist-modal-hdr">
+      <span class="hist-modal-title">🕐 Round History</span>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <span class="work-history-hint">click to restore</span>
+        <button class="btn btn-ghost btn-sm" onclick="closeRoundHistoryModal()">✕ Close</button>
+      </div>
+    </div>
+    <div class="round-history" id="roundHistory">
+      <div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
-<script src="app.js?v=3.07"></script>
+<script src="app.js?v=3.08"></script>
 </body>
 </html>

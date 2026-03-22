@@ -1041,9 +1041,7 @@ html, body {
   flex-shrink: 0;
 }
 .work-notes-ta {
-  height: 120px;
   flex-shrink: 0;
-  max-height: 380px;
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
@@ -2355,8 +2353,8 @@ kbd {
   min-height: 0;
 }
 .work-notes-panel .work-notes-ta {
-  flex: 1;
-  min-height: 80px;
+  flex: 0 0 320px;
+  min-height: 320px;
 }
 .work-notes-panel .round-history {
   flex: 0 0 auto;
@@ -2365,6 +2363,95 @@ kbd {
   padding: 8px;
   min-height: 0;
   background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+/* ══════════════════════════════════════
+   CONFLICTS PANEL
+══════════════════════════════════════ */
+
+.conflicts-panel {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  background: #0a0c12;
+  border: 1px solid #1a7a3a;
+  border-radius: var(--radius-sm);
+  margin: 8px 10px;
+  padding: 10px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.7;
+  color: #9aa3b8;
+  box-shadow: 0 0 8px rgba(52,211,153,0.10), inset 0 0 12px rgba(52,211,153,0.03);
+  scrollbar-width: thin;
+  scrollbar-color: #1a7a3a transparent;
+}
+
+[data-theme="light"] .conflicts-panel,
+[data-theme="auto"] .conflicts-panel {
+  background: #1a1d2e;
+}
+
+.conflicts-empty {
+  color: #4a5270;
+  font-size: 12px;
+  font-style: italic;
+  padding: 4px 0;
+}
+
+.conflicts-body {
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #e8ecf4;
+}
+
+/* ── ROUND HISTORY MODAL ── */
+.hist-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+.hist-modal-overlay.active {
+  display: flex;
+}
+.hist-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  width: 100%;
+  max-width: 700px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.hist-modal-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.hist-modal-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.hist-modal .round-history {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
 }
