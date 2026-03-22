@@ -1075,7 +1075,22 @@ function startSession() {
   saveSettings();
   goToScreen('screen-work');
   initWorkScreen();
-}
+  // Save original document as Round 0 so it can always be restored
+  if (docText && history.length === 0) {
+    history.push({
+      round:          0,
+      phase:          phase,
+      projectName:    document.getElementById('projectName')?.value.trim()    || '',
+      projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
+      doc:            docText,
+      conflicts:      null,
+      responses:      {},
+      timestamp:      new Date().toLocaleTimeString(),
+      label:          'Original Document'
+    });
+    renderRoundHistory();
+    saveSession();
+  }
 
 // ── SCREEN 4: WORK ──
 function initWorkScreen() {
@@ -1792,8 +1807,8 @@ function renderRoundHistory() {
     <div class="round-hist-item">
       <div class="round-hist-hdr">
         <div class="round-hist-hdr-left">
-          <span class="round-hist-badge">Round ${h.round}</span>
-          <span class="round-hist-meta">${phaseLabel} · ${h.timestamp}</span>
+          <span class="round-hist-badge">${h.round === 0 ? 'Original' : 'Round ' + h.round}</span>
+          <span class="round-hist-meta">${h.label || phaseLabel} · ${h.timestamp}</span>
           <span class="round-hist-stats">${wordCount} words · ${responseCount} response${responseCount!==1?'s':''}</span>
         </div>
         <div class="round-hist-hdr-right">
