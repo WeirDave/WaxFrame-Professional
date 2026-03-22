@@ -211,9 +211,6 @@ html, body {
 }
 .back-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
-/* Builder pick button — no dark/light weirdness */
-.builder-pick-btn.selected { border: 2px solid var(--accent); background: var(--accent-dim); color: var(--accent); font-weight: 700; }
-
 /* ── THEME TOGGLE ── */
 .theme-opt {
   background: transparent;
@@ -239,9 +236,9 @@ html, body {
   color: var(--accent);
 }
 
-/* ============================================================
+/* ══════════════════════════════════════
    SCREEN 1 — WELCOME
-   ============================================================ */
+══════════════════════════════════════ */
 
 .screen#screen-welcome {
   flex-direction: column;
@@ -404,10 +401,9 @@ html, body {
   margin-bottom: 10px;
 }
 
-
-/* ============================================================
+/* ══════════════════════════════════════
    SCREENS 2 & 3 — SETUP LAYOUT
-   ============================================================ */
+══════════════════════════════════════ */
 
 .screen#screen-api-setup,
 .screen#screen-project {
@@ -415,113 +411,18 @@ html, body {
   overflow: hidden;
 }
 
-.setup-layout {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 40px 0;
-  overflow: hidden;
-}
-
-.setup-body {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 55fr 45fr;
-  gap: 40px;
-  align-items: start;
-}
-
-.setup-col-left { min-width: 0; }
-.setup-col-right {
-  min-width: 0;
-  position: sticky;
-  top: 20px;
-}
-
 @media (max-width: 900px) {
-  .setup-layout { padding: 0 20px 40px; }
-  .setup-body { grid-template-columns: 1fr; gap: 0; }
-  .setup-col-right { position: static; }
+  
+  
+  
 }
 
-.setup-header {
-  padding: 20px 0 0;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 32px;
-  flex-shrink: 0;
-}
-.setup-header-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 20px;
-}
-.setup-branding {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-.setup-logo-wrap {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.setup-logo-img {
-  width: 120px;
-  height: 120px;
-  object-fit: contain;
-  filter: drop-shadow(0 0 28px rgba(245,166,35,0.5));
-  flex-shrink: 0;
-}
-.setup-logo-name {
-  font-family: var(--font-display);
-  font-size: 32px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -0.02em;
-}
-.setup-logo-tagline {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-top: 4px;
-}
-.setup-page-title {
-  padding: 20px 0 16px;
-  border-top: 1px solid var(--border);
-  text-align: center;
-}
 .setup-page-title h2 {
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 800;
   color: var(--text);
   letter-spacing: -0.01em;
-}
-
-.setup-body { flex: 1; }
-
-.setup-section {
-  margin-bottom: 36px;
-}
-.setup-section-title {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
-  color: var(--text);
-  margin-bottom: 4px;
-}
-.setup-section-sub {
-  font-size: 13px;
-  color: var(--text-dim);
-  margin-bottom: 14px;
 }
 
 .setup-footer {
@@ -677,29 +578,8 @@ html, body {
   filter: drop-shadow(0 2px 6px rgba(0,0,0,0.4));
 }
 
-.builder-tip {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--amber);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  font-size: 13px;
-  color: var(--text-dim);
-  line-height: 1.6;
-}
 .builder-tip strong { color: var(--text); }
 
-.btn-add-custom {
-  background: transparent;
-  border: 1px dashed var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
-  font-size: 13px;
-  padding: 9px 16px;
-  width: 100%;
-  text-align: center;
-  transition: all 0.12s;
-}
 .btn-add-custom:hover { border-color: var(--accent); color: var(--accent); }
 
 .custom-ai-form {
@@ -731,27 +611,9 @@ html, body {
   margin-bottom: 10px;
   width: 100%;
 }
-.field-lg, .field-sm, .field-goal, .field-doc {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-size: 14px;
-  outline: none;
-  padding: 10px 14px;
-  transition: border-color 0.12s;
-}
-.field-lg { flex: 1; }
+.field-lg, .field-sm, .field-goal, 
 .field-sm { width: 180px; min-width: 0; }
 .field-lg:focus, .field-sm:focus, .field-goal:focus, .field-doc:focus { border-color: var(--accent); }
-/* field-goal is now rendered as proj-notebook-goal */
-.field-doc {
-  width: 100%;
-  min-height: 260px;
-  resize: vertical;
-  line-height: 1.7;
-  font-size: 13px;
-}
 
 /* ── Doc input tabs ── */
 .doc-input-tabs {
@@ -798,22 +660,8 @@ html, body {
   color: var(--green);
 }
 
-.scratch-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  background: var(--blue-dim);
-  border: 1px solid var(--blue);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  font-size: 14px;
-  color: var(--text-dim);
-  line-height: 1.6;
-}
-
-
 /* ══════════════════════════════════════
-   WORK SCREEN (Screen 4)
+   SCREEN 4 — WORK SCREEN
 ══════════════════════════════════════ */
 .screen#screen-work { overflow: hidden; }
 
@@ -945,13 +793,6 @@ html, body {
   padding: 10px 14px;
   background: var(--surface2);
   flex-shrink: 0;
-}
-.work-panel-title {
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  color: var(--muted);
 }
 
 /* COL 1: DOCUMENT WITH LINE NUMBERS */
@@ -1098,17 +939,6 @@ html, body {
   scrollbar-color: var(--border2) transparent;
 }
 
-/* LOGO IN RIGHT PANEL */
-.work-logo-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding-bottom: 14px;
-  margin-bottom: 14px;
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-}
 .work-logo {
   width: 96px;
   height: 96px;
@@ -1130,30 +960,6 @@ html, body {
   margin-top: 2px;
 }
 
-/* RUN ROUND */
-.run-round-bar {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.btn-run-round {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  color: #0a0c12;
-  font-family: var(--font-display);
-  font-size: 16px;
-  font-weight: 800;
-  padding: 14px 20px;
-  transition: all 0.15s;
-  letter-spacing: 0.01em;
-}
 .btn-run-round:hover {
   background: var(--accent-hover);
   transform: translateY(-2px);
@@ -1161,49 +967,14 @@ html, body {
 }
 .btn-run-round:active { transform: translateY(0); box-shadow: none; }
 .btn-run-round:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-.phase-select-wrap { width: 100%; }
-.phase-select {
-  width: 100%;
-  background: var(--surface2);
-  border: 1px dashed var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text);
-  font-family: var(--font);
-  font-size: 13px;
-  padding: 7px 10px;
-  outline: none;
-}
 
-/* BEE STATUS CARDS */
-.bee-status-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 4px;
-}
-.bee-status-card {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 7px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 12px;
-  transition: all 0.15s;
-}
 .bee-status-card.is-active { border-color: var(--border2); }
 .bee-status-card.is-inactive { opacity: 0.45; }
 .bee-status-card.is-builder { border-color: var(--accent); background: var(--accent-dim); }
 .bee-status-card.is-working { border-color: var(--blue); background: var(--blue-dim); }
 .bee-status-card.is-done { border-color: var(--green); }
 .bee-status-card.is-error { border-color: var(--red); background: var(--red-dim); }
-.bee-status-icon { width: 20px; height: 20px; object-fit: contain; border-radius: 3px; flex-shrink: 0; }
-.bee-status-name { font-weight: 600; flex: 1; color: var(--text); font-size: 12px; min-width: 0; }
-.bee-status-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 10px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent); flex-shrink: 0; }
-.bee-status-live { font-size: 10px; color: var(--muted); flex-shrink: 0; max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.bee-toggle { width: 16px; height: 16px; flex-shrink: 0; accent-color: var(--accent); cursor: pointer; }
-.work-hive-status { font-size: 11px; font-weight: 600; color: var(--green); }
+
 .work-hive-hint { font-size: 11px; color: var(--muted); padding: 4px 0 6px; }
 .work-history-hint { font-size: 10px; color: var(--muted); }
 
@@ -1215,27 +986,6 @@ html, body {
   flex: 1;
 }
 .round-history-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 16px 0; }
-.round-hist-hdr {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 7px 10px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-dim);
-}
-.round-hist-restore {
-  font-size: 10px;
-  background: transparent;
-  border: 1px dashed var(--border2);
-  border-radius: 4px;
-  color: var(--muted);
-  padding: 2px 6px;
-}
 
 /* STATUS BAR */
 .work-statusbar {
@@ -1249,62 +999,9 @@ html, body {
   flex-shrink: 0;
 }
 
-
-/* ── SETUP BODY SINGLE ── */
-.setup-body-single {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: 8px;
-  position: relative;
-}
-
-/* ── PAGE WATERMARK BEE ── */
-.page-watermark {
-  position: absolute;
-  bottom: 20px;
-  right: 40px;
-  width: 280px;
-  height: 280px;
-  object-fit: contain;
-  opacity: 0.12;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-}
 .setup-body-single > *:not(.page-watermark) {
   position: relative;
   z-index: 1;
-}
-
-/* ── ADD BEE BAR ── */
-.add-bee-bar {
-  flex-shrink: 0;
-  border-top: 1px solid var(--border);
-  padding: 8px 0;
-  background: var(--bg);
-}
-
-/* ── SETUP SECTION BEES ── */
-.setup-section-bees {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-.ai-list-scroll {
-  min-height: 432px;
-  max-height: 432px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 4px;
-  margin-bottom: 8px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
 }
 
 /* ── SETUP STEP BADGE ── */
@@ -1317,9 +1014,6 @@ html, body {
   font-weight: 700;
   padding: 3px 12px;
 }
-
-/* ── SETUP FOOTER ── */
-.setup-footer-note-old { display: none; }
 
 /* ── BEE CONTROLS ROW ── */
 .bee-controls-row {
@@ -1348,14 +1042,6 @@ html, body {
 }
 
 /* ── SECTION BEE IMAGE ── */
-.setup-section-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: 14px;
-  margin-bottom: 6px;
-}
 
 /* ── CUSTOM AI FORM ── */
 .custom-ai-form-title {
@@ -1407,12 +1093,6 @@ html, body {
 .field-required { color: var(--red); }
 .field-optional { color: var(--muted); font-weight: 400; }
 
-/* ── AI ROW BUTTONS ── */
-.ai-setup-check-wrap {
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-}
 .ai-setup-key-status {
   font-size: 14px;
   flex-shrink: 0;
@@ -1484,30 +1164,6 @@ kbd {
   padding: 1px 5px;
 }
 
-/* ── SCRATCH INFO ── */
-.scratch-info {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  background: var(--green-dim);
-  border: 1px solid var(--green);
-  border-radius: var(--radius-sm);
-  padding: 14px;
-  font-size: 14px;
-  color: var(--text-dim);
-  line-height: 1.6;
-}
-
-/* ── BUILDER BADGE ── */
-.builder-crown-img {
-  width: 22px;
-  height: 22px;
-  object-fit: contain;
-  vertical-align: middle;
-  margin-right: 2px;
-  flex-shrink: 0;
-}
-
 /* ── PROJECT FIELD CLEAR BUTTONS ── */
 .project-field-wrap {
   display: flex;
@@ -1531,19 +1187,6 @@ kbd {
   line-height: 1;
 }
 .field-clear-btn:hover { border-color: var(--red); color: var(--red); }
-.field-clear-ta {
-  display: block;
-  margin-top: 6px;
-  margin-left: auto;
-}
-
-/* ── PHASE SELECT LABEL ── */
-.phase-select-label { display: none; }
-.phase-select-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
 
 /* ── LIVE CONSOLE ── */
 .live-console {
@@ -1576,26 +1219,6 @@ kbd {
 .console-warn  { color: #fbbf24; }
 .console-error { color: #f87171; }
 .console-divider { color: #f5a623; font-weight: 700; margin: 4px 0 2px; }
-
-/* ── NOTES PANEL WITH HISTORY ── */
-.work-notes-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
-.work-notes-panel .round-history {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px 8px;
-  min-height: 0;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
-}
-
-/* ══════════════════════════════════════
-   WORK SCREEN REDESIGN v2.06
-══════════════════════════════════════ */
 
 /* ── SECTION TITLES (larger headers) ── */
 .work-section-title {
@@ -1659,63 +1282,10 @@ kbd {
   text-align: right;
 }
 
-/* ── WIDE SHAKE BUTTON ── */
-.btn-shake-wide {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  background: var(--accent);
-  border: none;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  padding: 12px 16px;
-  margin: 8px 0;
-  transition: all 0.15s;
-}
-.btn-shake-wide:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 16px rgba(245,166,35,0.4);
-}
-.btn-shake-wide:active { transform: translateY(0); box-shadow: none; }
-.btn-shake-wide:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
-.btn-shake-wide.running {
-  animation: shakePulse 0.8s ease-in-out infinite alternate;
-}
-@keyframes shakePulse {
-  from { box-shadow: 0 0 8px rgba(245,166,35,0.3); }
-  to   { box-shadow: 0 0 24px rgba(245,166,35,0.8); }
-}
-.shake-wide-label {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 800;
-  color: #0a0c12;
-  letter-spacing: 0.02em;
-  pointer-events: none;
-}
-
-/* ── COMPACT BEE GRID (2 columns) ── */
-.bee-status-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-bottom: 6px;
 }
-.bee-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 5px;
-  padding: 10px 6px 8px;
-  border: 2px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface2);
-  transition: all 0.15s;
-  min-width: 0;
-  position: relative;
-}
+
 .bee-card.is-builder { border-color: var(--accent); background: var(--accent-dim); }
 .bee-card.is-active  { border-color: var(--border2); }
 .bee-card.is-inactive { opacity: 0.4; }
@@ -1723,83 +1293,20 @@ kbd {
 .bee-card.is-done    { border-color: var(--green); background: var(--green-dim); }
 .bee-card.is-error   { border-color: var(--red); background: var(--red-dim); }
 
-.bee-card-top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 4px;
-}
-.bee-card-icon {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  border-radius: 7px;
-  flex-shrink: 0;
-}
-.bee-builder-tag {
-  font-size: 9px;
-  font-weight: 800;
-  background: var(--accent);
-  color: #0a0c12;
-  border-radius: 4px;
-  padding: 2px 5px;
-  letter-spacing: 0.04em;
-  flex-shrink: 0;
-}
-.bee-card-name {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-}
-.bee-card-status {
-  font-size: 11px;
-  color: var(--muted);
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-}
-.bee-card.is-working .bee-card-status { color: var(--blue); }
-.bee-card.is-done    .bee-card-status { color: var(--green); }
-.bee-card.is-error   .bee-card-status { color: var(--red); }
-.bee-card.is-builder .bee-card-status { color: var(--accent); }
-.bee-toggle { accent-color: var(--accent); cursor: pointer; width: 14px; height: 14px; flex-shrink: 0; }
+.bee-card.is-working 
+.bee-card.is-done    
+.bee-card.is-error   
+.bee-card.is-builder 
 
-/* ── COL 2: NOTES + HISTORY SECTION BORDERS ── */
-.work-notes-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
 .work-notes-panel .work-panel-header {
   background: var(--surface2);
 }
 .work-notes-panel .work-section-border-top {
   background: var(--surface2);
 }
-.work-notes-panel .round-history {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-  min-height: 0;
-  background: var(--surface);
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
-}
-
-/* ── LINE NUMBERS — RULED PAPER STYLE ── */
-
 
 /* ══════════════════════════════════════
-   V3 FULLSCREEN LAYOUT (Screens 2 & 3)
+   FULLSCREEN LAYOUT (Setup Screens 2 & 3)
 ══════════════════════════════════════ */
 .fullscreen-layout {
   display: flex;
@@ -1817,7 +1324,6 @@ kbd {
   padding: 14px 32px;
   background: var(--surface2);
   flex-shrink: 0;
-  border-bottom: none;
 }
 .fs-header-brand {
   display: flex;
@@ -1827,20 +1333,20 @@ kbd {
   justify-content: center;
 }
 .fs-logo {
-  width: 40px;
-  height: 40px;
+  width: 80px;
+  height: 80px;
   object-fit: contain;
   filter: drop-shadow(0 0 10px rgba(245,166,35,0.4));
 }
 .fs-logo-name {
   font-family: var(--font-display);
-  font-size: 20px;
+  font-size: 28px;
   font-weight: 800;
   color: var(--text);
   line-height: 1;
 }
 .fs-logo-tag {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1859,62 +1365,9 @@ kbd {
   padding: 0 16px 0 16px;
   gap: 0;
 }
-.fs-body-single {
-  flex: 1;
-  overflow: hidden;
-  background: var(--surface2);
-  padding: 16px;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-}
 
-/* Project screen — single full-height card like step 1 */
-.project-card {
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  max-width: 900px;
-  width: 100%;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
-  position: relative;
-}
-.project-card-bee-wrap {
-  display: none; /* bee is now absolute like step 1 */
-}
-.project-card-bee {
-  position: absolute;
-  top: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 260px;
-  height: 260px;
-  object-fit: contain;
-  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
-  pointer-events: none;
-  z-index: 0;
-}
-.project-card-scroll {
-  flex: 1;
-  overflow-y: auto;
-  padding: 290px 40px 40px;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
 .project-card-scroll > * { position: relative; z-index: 1; }
-.project-card .project-centered {
-  max-width: 680px;
-  margin: 0 auto;
-  width: 100%;
-}
+.project-card 
 .project-card .fs-col-header {
   max-width: 680px;
   margin: 0 auto;
@@ -1998,7 +1451,6 @@ kbd {
   letter-spacing: -0.01em;
 }
 .fs-col-sub { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
-.fs-col-sub-gap { margin-top: 10px; }
 
 /* Bee — fixed block above scroll area, not absolute */
 .setup-card-bee {
@@ -2047,14 +1499,6 @@ kbd {
 }
 .fs-footer .btn-accent {
   justify-self: end;
-}
-
-/* ── PROJECT SCREEN CENTERING ── */
-.project-centered {
-  max-width: 720px;
-  margin-left: auto;
-  margin-right: auto;
-  width: 100%;
 }
 
 /* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
@@ -2165,48 +1609,17 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   V3 SETUP SCREEN IMAGES + DIVIDER
+   SETUP SCREEN — BEE IMAGES & DIVIDER
 ══════════════════════════════════════ */
 
 /* Make sure col content sits above the image */
 .fs-col > *:not(.setup-section-img) { position: relative; z-index: 1; }
 .fs-body-single > *:not(.setup-section-img) { position: relative; z-index: 1; }
-
-/* ── BIGGER HEADER LOGO IN SETUP ── */
-.fs-logo {
-  width: 80px !important;
-  height: 80px !important;
-}
-.fs-logo-name {
-  font-size: 28px !important;
-}
-.fs-logo-tag {
-  font-size: 12px !important;
-}
-.fs-header {
-  padding: 14px 32px !important;
-}
-
-/* ── PROJECT SCREEN: full-width header/footer, centered content ── */
-.fs-body-single {
-  padding: 28px 0 !important;
-  overflow-y: auto;
-}
-.fs-body-single .project-centered {
-  max-width: 680px;
-  padding-left: 20px;
-  padding-right: 20px;
-}
+.fs-body-single 
 .fs-body-single .fs-col-header {
   max-width: 680px;
   padding: 0 20px;
 }
-
-/* Project page watermark size fix */
-.page-watermark {
-  opacity: 0.12;
-}
-
 
 /* ── ROUND HISTORY CARDS ── */
 .round-hist-item {
@@ -2333,51 +1746,6 @@ kbd {
   overflow-y: auto;
 }
 
-/* ══════════════════════════════════════
-   V3.04 RIGHT PANEL REDESIGN
-══════════════════════════════════════ */
-
-/* ── Logo block: text left, big logo right ── */
-.work-logo-block {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 10px;
-  flex-shrink: 0;
-}
-.work-logo-block-text {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1;
-  min-width: 0;
-}
-.work-logo-block .work-logo-name {
-  font-family: var(--font-display) !important;
-  font-size: 28px !important;
-  font-weight: 800 !important;
-  color: var(--text) !important;
-  line-height: 1 !important;
-  letter-spacing: -0.01em !important;
-}
-.work-logo-block .work-logo-tagline {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-weight: 600;
-}
-.work-logo-big {
-  width: 110px;
-  height: 110px;
-  object-fit: contain;
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 20px rgba(245,166,35,0.5));
-}
-
 /* ── Full-width Shake the Hive button ── */
 .btn-shake-wide {
   width: 100%;
@@ -2415,13 +1783,6 @@ kbd {
   color: #0a0c12;
   letter-spacing: 0.02em;
   pointer-events: none;
-}
-
-/* ── Hive status inline ── */
-.work-hive-hint-inline {
-  font-size: 11px;
-  color: var(--muted);
-  font-style: italic;
 }
 
 /* ── Compact bee rows ── */
@@ -2486,12 +1847,7 @@ kbd {
 }
 
 /* ── NOTES 1/3, HISTORY 2/3 SPLIT ── */
-.work-notes-panel {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
+
 .work-notes-panel .work-notes-ta {
   flex: 0 0 320px;
   min-height: 320px;
@@ -2636,9 +1992,8 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   FINISH PILL + MODAL
+   FINISH MODAL
 ══════════════════════════════════════ */
-
 
 .finish-modal-overlay {
   position: fixed;
@@ -2902,25 +2257,18 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   UTILITY CLASSES — replaces all inline styles
+   UTILITY CLASSES
 ══════════════════════════════════════ */
-.pos-relative       { position: relative; }
-.mt-8               { margin-top: 8px; }
-.mb-6               { margin-bottom: 6px; }
-.mb-10              { margin-bottom: 10px; }
-.mb-20              { margin-bottom: 20px; }
-.ml-auto            { margin-left: auto; display: block; }
 .flex-row           { display: flex; gap: 6px; }
 .flex-row-sm        { display: flex; gap: 4px; }
 .flex-row-center    { display: flex; gap: 6px; align-items: center; }
 .link-accent        { color: var(--accent); text-decoration: none; transition: all 0.12s; }
 .link-accent:hover  { color: var(--accent-hover); text-decoration: underline; }
-.link-accent-bold   { color: var(--accent); font-weight: 600; text-decoration: none; transition: all 0.12s; }
+
 .link-accent-bold:hover { color: var(--accent-hover); text-decoration: underline; }
 .bee-btn-img { width: 48px; height: 48px; object-fit: contain; vertical-align: middle; margin-right: 8px; }
 .full-width         { width: 100%; }
 .change-builder-modal { max-width: 560px; }
-.change-builder-title { font-size: 20px; }
 
 /* ── LAUNCH REQUIREMENTS ── */
 .launch-requirements {
@@ -2949,11 +2297,9 @@ kbd {
   gap: 8px;
 }
 
-
 /* ══════════════════════════════════════
-   HELPER PAGES — shared by tokens-explainer,
-   api-details, and prompt-editor
-   (replaces inline <style> blocks)
+   HELPER PAGES
+   tokens-explainer, api-details, prompt-editor
 ══════════════════════════════════════ */
 
 /* ── Helper page body ── */
@@ -2970,6 +2316,16 @@ kbd {
 }
 .helper-body a { color: var(--accent); text-decoration: none; transition: all 0.12s; }
 .helper-body a:hover { color: var(--accent-hover); text-decoration: underline; }
+
+/* ── Close button (helper pages) ── */
+.close-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: transparent; border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm); color: var(--text-dim);
+  font-family: var(--font); font-size: 13px;
+  padding: 8px 16px; cursor: pointer; transition: all 0.12s; white-space: nowrap;
+}
+.close-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
 
 /* ── Helper page header ── */
 .page-header {
