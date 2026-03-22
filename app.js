@@ -131,7 +131,14 @@ function consoleLog(msg, type = 'info') {
   const entry = document.createElement('div');
   entry.className = `console-entry console-${type}`;
   const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
-  entry.innerHTML = `<span class="console-time">${time}</span> ${msg}`;
+  const timeSpan = document.createElement('span');
+  timeSpan.className = 'console-time';
+  timeSpan.textContent = time + ' ';
+  const msgSpan = document.createElement('span');
+  // Strip any HTML tags from message for CSP safety
+  msgSpan.textContent = msg.replace(/<[^>]+>/g, '');
+  entry.appendChild(timeSpan);
+  entry.appendChild(msgSpan);
   el.appendChild(entry);
   el.scrollTop = el.scrollHeight;
 }
@@ -1239,7 +1246,7 @@ async function runRound() {
   const failedCount = reviewers.length - successfulReviews.length;
   if (failedCount > 0) consoleLog(`⚠️ ${failedCount} reviewer${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
   if (builderAI && (successfulReviews.length > 0 || phase === 'review')) {
-    consoleLog(`🔨 <strong>${builderAI.name}</strong> (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''}…`, 'info');
+    consoleLog(`🔨 ${builderAI.name} (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''}…`, 'info');
     setBeeStatus(builderAI.id, 'sending', 'Building document…');
     setStatus(`🏗️ ${builderAI.name} is building the updated document…`);
 
@@ -1305,7 +1312,7 @@ async function callAPI(ai, prompt) {
   if (!cfg || !cfg._key) throw new Error('No API key');
 
   const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
-  consoleLog(`📤 <strong>${ai.name}</strong> — sending request (key: ${keyHint})`, 'info');
+  consoleLog(`📤 ${ai.name} — sending request (key: ${keyHint})`, 'info');
   const t0 = Date.now();
 
   let response;
@@ -1320,10 +1327,10 @@ async function callAPI(ai, prompt) {
                    fetchErr.message.toLowerCase().includes('fetch') ||
                    fetchErr.message.toLowerCase().includes('cors');
     if (isCors) {
-      consoleLog(`❌ <strong>${ai.name}</strong> — CORS blocked. Browser cannot call this API directly. A proxy is required.`, 'error');
+      consoleLog(`❌ ${ai.name} — CORS blocked. Browser cannot call this API directly. A proxy is required.`, 'error');
       throw new Error('CORS_BLOCKED: Browser cannot reach ' + ai.name + ' API directly. Proxy required.');
     }
-    consoleLog(`❌ <strong>${ai.name}</strong> — Network error: ${fetchErr.message}`, 'error');
+    consoleLog(`❌ ${ai.name} — Network error: ${fetchErr.message}`, 'error');
     throw fetchErr;
   }
 
@@ -1334,10 +1341,10 @@ async function callAPI(ai, prompt) {
     const msg = err?.error?.message || `HTTP ${response.status}`;
     if (response.status === 429 || msg.toLowerCase().includes('rate limit') ||
         msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')) {
-      consoleLog(`⏳ <strong>${ai.name}</strong> — Rate limited / quota exceeded: ${msg}`, 'warn');
+      consoleLog(`⏳ ${ai.name} — Rate limited / quota exceeded: ${msg}`, 'warn');
       throw new Error('RATE_LIMITED:' + msg);
     }
-    consoleLog(`❌ <strong>${ai.name}</strong> — HTTP ${response.status}: ${msg}`, 'error');
+    consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error');
     throw new Error(msg);
   }
 
@@ -1345,7 +1352,7 @@ async function callAPI(ai, prompt) {
   const text = cfg.extractFn(data);
   if (!text) throw new Error('Empty response');
   const words = text.trim().split(/\s+/).length;
-  consoleLog(`✅ <strong>${ai.name}</strong> — responded in ${elapsed}s (~${words} words)`, 'success');
+  consoleLog(`✅ ${ai.name} — responded in ${elapsed}s (~${words} words)`, 'success');
   return text;
 }
 
