@@ -1368,17 +1368,22 @@ All reviewer suggestions are included above. Your task: produce the complete upd
 
 A valid suggestion is one that improves clarity, accuracy, consistency, logic, or readability without changing the document's intended meaning or scope.
 
+MAJORITY RULES — CONFLICT DECISION LOGIC:
+Before deciding whether to apply or flag a suggestion, count how many reviewers independently suggested the same change (or substantially the same change):
+- 4 or more reviewers agree → apply it automatically. Do not flag this as a conflict.
+- Exactly 3 reviewers agree vs 3 who disagree or suggest an alternative → flag it as a USER DECISION conflict.
+- 2 or fewer reviewers suggest something that conflicts with another suggestion → use your best judgment, apply the stronger choice, flag it as a BUILDER DECISION conflict.
+- Only 1 reviewer suggests something → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
+
 RULES:
 - Return the FULL document — every section, complete. Do not use ellipses or placeholders.
 - Maintain the document at approximately the same length as the input. Incorporate suggestions by REPLACING or IMPROVING existing content, not by appending to it. The document must not grow longer each round.
 - Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
 - Do not add meta-commentary or any text inside the document that is not document content.
 - Do not introduce new content, claims, or requirements that no reviewer suggested.
-- Do not treat repeated or substantially similar suggestions as conflicts — apply them once.
 - Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
 - If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
-- Keep each conflict explanation to one or two sentences.
 - Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
 - Structure your response EXACTLY like this:
 
@@ -1387,7 +1392,10 @@ RULES:
 [DOCUMENT END]
 
 [CONFLICTS START]
-List any conflicting or incompatible suggestions here. For each conflict note: which AI suggested each version, which you chose, and why in one to two sentences.
+For each conflict, state: the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
+Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
+Example: [USER DECISION] 3 reviewers preferred "conclude" while 3 preferred "summarise" — user should decide which tone fits the document.
+Example: [BUILDER DECISION] 2 reviewers wanted a new section added, 2 said remove it — applied the removal as it keeps the document concise.
 If there are no conflicts write exactly: NO CONFLICTS
 [CONFLICTS END]`,
 

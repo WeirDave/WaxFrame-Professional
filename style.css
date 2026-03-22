@@ -1579,16 +1579,6 @@ kbd {
   min-height: 230px;
   resize: vertical;
   overflow: hidden;
-  background-color: var(--surface);
-  background-image:
-    linear-gradient(to right, transparent 44px, rgba(220,50,50,0.25) 44px, rgba(220,50,50,0.25) 46px, transparent 46px),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 20px,
-      rgba(80,140,220,0.18) 20px,
-      rgba(80,140,220,0.18) 21px
-    );
 }
 .proj-notebook-scratch {
   align-items: center;
