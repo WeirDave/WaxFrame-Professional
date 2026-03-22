@@ -139,18 +139,16 @@ function consoleLog(msg, type = 'info') {
   timeSpan.className = 'console-time';
   timeSpan.textContent = time + ' ';
   const msgSpan = document.createElement('span');
-  // Strip any HTML tags from message for CSP safety
   msgSpan.textContent = msg.replace(/<[^>]+>/g, '');
   entry.appendChild(timeSpan);
   entry.appendChild(msgSpan);
-  el.appendChild(entry);
-  el.scrollTop = el.scrollHeight;
+  el.prepend(entry);
 }
 
 function copyConsole() {
   const el = document.getElementById('liveConsole');
   if (!el) return;
-  const text = Array.from(el.querySelectorAll('.console-entry')).map(e => e.textContent).join('\n');
+  const text = Array.from(el.querySelectorAll('.console-entry')).reverse().map(e => e.textContent).join('\n');
   navigator.clipboard.writeText(text).then(() => toast('📋 Console copied'));
 }
 
