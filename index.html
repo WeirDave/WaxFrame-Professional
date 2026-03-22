@@ -350,7 +350,7 @@
         </div>
       </div>
 
-      <!-- COL 2: Notes for this round -->
+      <!-- COL 2: Notes + Round History -->
       <div class="work-notes-panel">
         <div class="work-panel-header">
           <span class="work-panel-title">📝 Notes for this Round</span>
@@ -359,6 +359,14 @@
         <div class="work-notes-hint">Optional — reference line numbers. e.g. "Line 12: more formal. Line 34–38: expand this."</div>
         <textarea id="workNotes" class="work-notes-ta"
           placeholder="e.g. Line 5: change job title to Senior Wireless Architect&#10;Line 12–15: expand the skills section&#10;Overall: make tone more confident"></textarea>
+        <!-- Round History -->
+        <div class="work-panel-header" style="flex-shrink:0;">
+          <span class="work-panel-title">Round History</span>
+          <span class="work-history-hint">click to restore</span>
+        </div>
+        <div class="round-history" id="roundHistory">
+          <div class="round-history-empty">Completed rounds appear here. Click any round to restore that version of the document.</div>
+        </div>
       </div>
 
       <!-- COL 3: Control Panel -->
@@ -392,13 +400,13 @@
         <!-- Phase selector -->
         <div class="work-phase-bar" id="workPhaseBar"></div>
 
-        <!-- Round History -->
+        <!-- Live Console -->
         <div class="work-panel-header" style="margin-top:8px;">
-          <span class="work-panel-title">Round History</span>
-          <span class="work-history-hint">click to restore</span>
+          <span class="work-panel-title">🖥️ Live Console</span>
+          <button class="btn btn-ghost btn-sm" onclick="clearConsole()" style="font-size:10px;padding:2px 6px;">Clear</button>
         </div>
-        <div class="round-history" id="roundHistory">
-          <div class="round-history-empty">Completed rounds appear here. Click any round to restore that version of the document.</div>
+        <div class="live-console" id="liveConsole">
+          <div class="console-entry console-info">Console ready — activate the hive to begin.</div>
         </div>
 
       </div><!-- /work-right-panel -->
