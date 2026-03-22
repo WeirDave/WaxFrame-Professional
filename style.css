@@ -2574,22 +2574,25 @@ kbd {
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 20px;
-  border: 1px solid var(--border2);
-  color: var(--muted);
-  background: var(--surface2);
+  border: none;
+  color: #e8ecf4;
+  background: #c0152a;
   white-space: nowrap;
   cursor: pointer;
   transition: all 0.12s;
   user-select: none;
+  box-shadow: 0 0 8px rgba(192,21,42,0.5);
 }
-.license-badge:hover { border-color: var(--accent); color: var(--accent); }
+.license-badge:hover { background: #e01830; box-shadow: 0 0 12px rgba(192,21,42,0.7); }
 .license-badge.licensed {
-  border-color: var(--green);
-  color: var(--green);
+  border: none;
   background: var(--green-dim);
+  border: 1px solid var(--green);
+  color: var(--green);
+  box-shadow: none;
   cursor: default;
 }
-.license-badge.licensed:hover { border-color: var(--green); color: var(--green); }
+.license-badge.licensed:hover { background: var(--green-dim); }
 
 .license-modal-overlay {
   position: fixed;
