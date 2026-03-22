@@ -1972,3 +1972,100 @@ kbd {
   font-size: 15px;
   padding: 12px 16px;
 }
+
+/* ══════════════════════════════════════
+   V3 SETUP SCREEN IMAGES + DIVIDER
+══════════════════════════════════════ */
+
+/* Full-opacity section images — bottom corner of each column */
+.setup-section-img {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.setup-section-img-left {
+  bottom: 0;
+  right: 20px;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+}
+.setup-section-img-right {
+  bottom: 0;
+  right: 20px;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  opacity: 0.9;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+}
+.setup-section-img-project {
+  bottom: 0;
+  right: 60px;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  opacity: 0.85;
+  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
+}
+
+/* Make sure col content sits above the image */
+.fs-col > *:not(.setup-section-img) { position: relative; z-index: 1; }
+.fs-body-single > *:not(.setup-section-img) { position: relative; z-index: 1; }
+
+/* ── 3D DIVIDER ── */
+.fs-divider {
+  width: 6px;
+  flex-shrink: 0;
+  background: linear-gradient(
+    to right,
+    var(--border) 0px,
+    var(--border2) 1px,
+    var(--surface3) 2px,
+    var(--surface2) 3px,
+    var(--border2) 4px,
+    var(--border) 5px,
+    transparent 6px
+  );
+  box-shadow:
+    inset 2px 0 4px rgba(0,0,0,0.3),
+    inset -2px 0 4px rgba(0,0,0,0.3);
+}
+
+/* ── BIGGER HEADER LOGO IN SETUP ── */
+.fs-logo {
+  width: 60px !important;
+  height: 60px !important;
+}
+.fs-logo-name {
+  font-size: 26px !important;
+}
+.fs-logo-tag {
+  font-size: 12px !important;
+}
+.fs-header {
+  padding: 18px 32px !important;
+}
+
+/* ── PROJECT SCREEN: full-width header/footer, centered content ── */
+.fs-body-single {
+  padding: 28px 0 !important;
+  overflow-y: auto;
+}
+.fs-body-single .project-centered {
+  max-width: 680px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.fs-body-single .fs-col-header {
+  max-width: 680px;
+  padding: 0 20px;
+}
+
+/* Project page watermark size fix */
+.page-watermark {
+  opacity: 0.12;
+}
