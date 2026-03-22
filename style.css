@@ -2455,3 +2455,117 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
 }
+
+/* ══════════════════════════════════════
+   FINISH PILL + MODAL
+══════════════════════════════════════ */
+
+.work-phase-finish {
+  border-color: var(--green) !important;
+  color: var(--green) !important;
+}
+.work-phase-finish:hover {
+  background: var(--green-dim) !important;
+  color: var(--green) !important;
+}
+
+.finish-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+.finish-modal-overlay.active { display: flex; }
+
+.finish-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 40px 36px 32px;
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.finish-modal-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 16px rgba(245,166,35,0.4));
+}
+
+.finish-modal-title {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0;
+}
+
+.finish-modal-msg {
+  font-size: 13px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.finish-modal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.finish-modal-btn {
+  width: 100%;
+  padding: 13px 20px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+
+.finish-modal-btn-export {
+  background: var(--accent);
+  color: #0a0c12;
+}
+.finish-modal-btn-export:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245,166,35,0.3);
+}
+
+.finish-modal-btn-new {
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green);
+}
+.finish-modal-btn-new:hover {
+  background: var(--green);
+  color: #0a0c12;
+  transform: translateY(-1px);
+}
+
+.finish-modal-cancel {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.12s;
+}
+.finish-modal-cancel:hover { color: var(--text); }

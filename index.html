@@ -270,7 +270,6 @@
     <!-- TOP BAR -->
     <div class="work-topbar">
       <div class="work-topbar-left">
-        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-project')" title="Back to Project Setup">← Back</button>
         <div class="work-project-info">
           <span class="work-project-name" id="workProjectName">Project</span>
           <span class="work-project-version" id="workProjectVersion"></span>
@@ -403,6 +402,26 @@
     <div class="round-history" id="roundHistory">
       <div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>
     </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FINISH MODAL
+     ============================================================ -->
+<div class="finish-modal-overlay" id="finishModal" onclick="if(event.target===this)hideFinishModal()">
+  <div class="finish-modal">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="finish-modal-logo">
+    <h2 class="finish-modal-title">Finish this project?</h2>
+    <p class="finish-modal-msg">Make sure you've saved your document before starting a new project. Your working document and round history will be cleared.</p>
+    <div class="finish-modal-actions">
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">
+        💾 Export Document First
+      </button>
+      <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
+        🐝 Start New Project
+      </button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideFinishModal()">← Keep working</button>
   </div>
 </div>
 
