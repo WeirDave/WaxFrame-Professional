@@ -163,7 +163,7 @@
     <!-- Footer -->
     <div class="fs-footer">
       <div class="setup-footer-note">⚙️ You can change these settings any time from the work screen</div>
-      <button class="btn btn-accent btn-lg" onclick="validateAndContinue()">
+      <button class="btn btn-accent btn-lg" id="setupContinueBtn" onclick="validateAndContinue()">
         <img src="images/AI_Hive_Project_Bee_v1.png" style="width:36px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px;">
         Continue to Project Setup →
       </button>
@@ -280,7 +280,7 @@
         <div class="work-phase-bar" id="workPhaseBar"></div>
         <span class="work-round-badge" id="workRoundBadge">Round 1</span>
         <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">🕐 History</button>
-        <button class="btn btn-ghost btn-sm" onclick="goToScreen('screen-setup')">⚙️ Settings</button>
+        <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ Settings</button>
         <div class="theme-toggle">
           <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light">☀️</button>
           <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
