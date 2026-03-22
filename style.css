@@ -1043,10 +1043,10 @@ html, body {
 .work-notes-ta {
   height: 120px;
   flex-shrink: 0;
-  max-height: 120px;
-  background: var(--surface);
-  border: none;
-  border-bottom: 1px solid var(--border);
+  max-height: 380px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
   color: var(--text);
   font-family: var(--font);
   font-size: 13px;
@@ -1054,6 +1054,14 @@ html, body {
   padding: 12px;
   resize: none;
   outline: none;
+  margin: 8px 10px;
+  width: calc(100% - 20px);
+  box-shadow: var(--shadow-sm);
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.work-notes-ta:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-dim);
 }
 
 /* COL 3: CONTROL PANEL */
@@ -1511,9 +1519,9 @@ kbd {
 }
 .field-clear-btn:hover { border-color: var(--red); color: var(--red); }
 .field-clear-ta {
-  position: absolute;
-  top: 6px;
-  right: 6px;
+  display: block;
+  margin-top: 6px;
+  margin-left: auto;
 }
 
 /* ── PHASE SELECT LABEL ── */
@@ -1529,15 +1537,16 @@ kbd {
   flex: 1;
   overflow-y: auto;
   background: #0a0c12;
-  border: 1px solid var(--border);
+  border: 1px solid #1a7a3a;
   border-radius: var(--radius-sm);
   padding: 8px;
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.7;
   scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
+  scrollbar-color: #1a7a3a transparent;
   min-height: 120px;
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.12), inset 0 0 12px rgba(52, 211, 153, 0.04);
 }
 [data-theme="light"] .live-console,
 [data-theme="auto"] .live-console {
@@ -1613,8 +1622,8 @@ kbd {
   margin-bottom: 4px;
 }
 .work-logo-row .work-logo {
-  width: 80px;
-  height: 80px;
+  width: 110px;
+  height: 110px;
   flex-shrink: 0;
   filter: drop-shadow(0 0 18px rgba(245,166,35,0.4));
 }
@@ -2207,12 +2216,12 @@ kbd {
   min-width: 0;
 }
 .work-logo-block .work-logo-name {
-  font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 800;
-  color: var(--text);
-  line-height: 1;
-  letter-spacing: -0.01em;
+  font-family: var(--font-display) !important;
+  font-size: 28px !important;
+  font-weight: 800 !important;
+  color: var(--text) !important;
+  line-height: 1 !important;
+  letter-spacing: -0.01em !important;
 }
 .work-logo-block .work-logo-tagline {
   font-size: 11px;
@@ -2346,10 +2355,12 @@ kbd {
   min-height: 0;
 }
 .work-notes-panel .work-notes-ta {
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 80px;
 }
 .work-notes-panel .round-history {
-  flex: 1;
+  flex: 0 0 auto;
+  max-height: 220px;
   overflow-y: auto;
   padding: 8px;
   min-height: 0;
