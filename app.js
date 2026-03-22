@@ -979,14 +979,7 @@ function finishAndExport() {
 
 function finishAndNew() {
   hideFinishModal();
-  // Full reset — clear storage, memory, and the textarea
   clearProject();
-  round = 1; phase = 'draft'; history = []; docText = '';
-  const docTa = document.getElementById('workDocument');
-  if (docTa) { docTa.value = ''; updateLineNumbers(); }
-  const notesTa = document.getElementById('workNotes');
-  if (notesTa) notesTa.value = '';
-  renderConflicts();
   goToScreen('screen-project');
 }
 
@@ -1284,10 +1277,17 @@ async function runRound() {
     const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
     try {
       const response = await callAPI(ai, prompt);
-      const summary = extractSummary(response);
+      const noChanges = response.trim() === 'NO CHANGES NEEDED';
+      const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
       setBeeStatus(ai.id, 'done', summary);
-      reviewerResponses.push({ id: ai.id, name: ai.name, response });
-      return { ai, response, success: true };
+      if (noChanges) {
+        consoleLog(`✓ ${ai.name} — no changes needed`, 'success');
+      } else {
+        const preview = response.trim().substring(0, 80).replace(/\n/g, ' ');
+        consoleLog(`📋 ${ai.name}: ${preview}…`, 'info');
+      }
+      reviewerResponses.push({ id: ai.id, name: ai.name, response, noChanges });
+      return { ai, response, success: true, noChanges };
     } catch(e) {
       if (e.message.startsWith('RATE_LIMITED:')) {
         setBeeStatus(ai.id, 'error', `⏳ Rate limited`);
@@ -1297,17 +1297,24 @@ async function runRound() {
       } else {
         setBeeStatus(ai.id, 'error', e.message);
       }
-      return { ai, response: '', success: false };
+      return { ai, response: '', success: false, noChanges: false };
     }
   });
 
   await Promise.all(reviewerPromises);
 
   const successfulReviews = reviewerResponses.filter(r => r.response);
+  const noChangesCount = reviewerResponses.filter(r => r.noChanges).length;
 
   // Phase 2: Builder compiles ALL reviews (including its own) into updated document
   const failedCount = allReviewers.length - successfulReviews.length;
   if (failedCount > 0) consoleLog(`⚠️ ${failedCount} AI${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
+  if (noChangesCount > 0 && noChangesCount === successfulReviews.length) {
+    consoleLog(`🏁 All AIs agree — no further changes needed. Consider finishing the project.`, 'success');
+    toast(`🏁 All AIs agree the document is ready — consider finishing`, 5000);
+  } else if (noChangesCount > 0) {
+    consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
+  }
   if (builderAI && successfulReviews.length > 0) {
     // Include all responses — Builder's own review is in there too
     const allForBuilder = successfulReviews;
