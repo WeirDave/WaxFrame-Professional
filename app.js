@@ -1769,7 +1769,7 @@ function extractConflicts(text) {
   const start = clean.indexOf('[CONFLICTS START]');
   const end   = clean.lastIndexOf('[CONFLICTS END]');
   if (start === -1 || end === -1 || end <= start) return null;
-  const raw = clean.slice(start + '[CONFLICTS START]'.length, end).trim();
+  const raw = clean.slice(start + '[CONFLICTS START]'.length, end).trim().replace(/[,\s]+$/, '');
   if (!raw || raw.toUpperCase() === 'NO CONFLICTS') return null;
   return raw;
 }
@@ -1784,8 +1784,12 @@ function renderConflicts() {
     if (label) label.textContent = '';
     return;
   }
-  if (label) label.textContent = `Round ${latest.round}`;
-  el.innerHTML = `<div class="conflicts-body">${esc(latest.conflicts)}</div>`;
+  if (label) label.textContent = `Round ${latest.round === 0 ? 'Original' : latest.round}`;
+  // Highlight decision tags
+  const html = esc(latest.conflicts)
+    .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
+    .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
+  el.innerHTML = `<div class="conflicts-body">${html}</div>`;
 }
 
 function extractSummary(text) {
