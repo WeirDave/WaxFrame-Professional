@@ -16,7 +16,6 @@
 const PHASES = [
   { id: 'draft',  label: '1 · Draft',       icon: '✏️' },
   { id: 'refine', label: '2 · Refine Text',  icon: '🔁' },
-  { id: 'review', label: '3 · User Review',  icon: '👤' },
 ];
 
 // ── DEFAULT AI LIST ──
@@ -913,6 +912,7 @@ function initWorkScreen() {
   renderWorkPhaseBar();
   renderBeeStatusGrid();
   renderRoundHistory();
+  renderConflicts();
   updateRoundBadge();
   setStatus('Standing by — toggle bees above, then Shake the Hive');
 
@@ -1243,7 +1243,9 @@ async function runRound() {
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
   // ALL AIs including Builder review the document simultaneously
-  const allReviewers = [...activeAIs]; // everyone reviews first
+  const allReviewers = activeAIs.filter(ai =>
+    ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
+  ); // Builder always runs; others only if toggled on
   const reviewerResponses = [];
 
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
@@ -1289,7 +1291,10 @@ async function runRound() {
     const builderPrompt = buildPromptForAI(builderAI, allForBuilder);
     try {
       const builderResponse = await callAPI(builderAI, builderPrompt);
-      const newDoc = extractDocument(builderResponse);
+      const newDoc    = extractDocument(builderResponse);
+      const conflicts = extractConflicts(builderResponse);
+      window._lastConflicts = conflicts || null;
+      if (conflicts) consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       if (newDoc) {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
@@ -1307,26 +1312,30 @@ async function runRound() {
         consoleLog(`✅ Round ${round} complete`, 'success');
       }
     } catch(e) {
+      window._lastConflicts = null;
       setBeeStatus(builderAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
       consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
     }
   }
 
-  // Save to history — full document + all responses
+  // Save to history — full document + all responses + conflicts
   history.push({
     round, phase,
     projectName:    document.getElementById('projectName')?.value.trim()    || '',
     projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
     doc:            docText,
+    conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString()
   });
+  window._lastConflicts = null;
 
   round++;
   updateRoundBadge();
   renderRoundHistory();
   renderWorkPhaseBar();
+  renderConflicts();
   saveSession();
 
   // Clear notes
@@ -1400,6 +1409,29 @@ function extractDocument(text) {
   return text.slice(start + '[DOCUMENT START]'.length, end).trim();
 }
 
+function extractConflicts(text) {
+  const start = text.indexOf('[CONFLICTS START]');
+  const end   = text.indexOf('[CONFLICTS END]');
+  if (start === -1 || end === -1) return null;
+  const raw = text.slice(start + '[CONFLICTS START]'.length, end).trim();
+  if (!raw || raw === 'NO CONFLICTS') return null;
+  return raw;
+}
+
+function renderConflicts() {
+  const el    = document.getElementById('conflictsPanel');
+  const label = document.getElementById('conflictsRoundLabel');
+  if (!el) return;
+  const latest = history.slice().reverse().find(h => h.conflicts);
+  if (!latest) {
+    el.innerHTML = '<div class="conflicts-empty">No conflicts from the last round. The Builder resolved everything.</div>';
+    if (label) label.textContent = '';
+    return;
+  }
+  if (label) label.textContent = `Round ${latest.round}`;
+  el.innerHTML = `<div class="conflicts-body">${esc(latest.conflicts)}</div>`;
+}
+
 function extractSummary(text) {
   // Get first meaningful line as summary
   const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
@@ -1435,6 +1467,17 @@ function renderRoundHistory() {
       </div>
     </div>`;
   }).join('');
+}
+
+function openRoundHistoryModal() {
+  renderRoundHistory();
+  const modal = document.getElementById('roundHistoryModal');
+  if (modal) modal.classList.add('active');
+}
+
+function closeRoundHistoryModal() {
+  const modal = document.getElementById('roundHistoryModal');
+  if (modal) modal.classList.remove('active');
 }
 
 function viewRoundDoc(idx) {
