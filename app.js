@@ -1296,6 +1296,13 @@ async function runRound() {
       } else {
         consoleLog(`✓ Conflicts block found — Builder reported NO CONFLICTS`, 'info');
       }
+      // Temporary debug — log raw content between conflict tags
+      if (hasConflictBlock) {
+        const rawStart = builderResponse.indexOf('[CONFLICTS START]') + '[CONFLICTS START]'.length;
+        const rawEnd   = builderResponse.indexOf('[CONFLICTS END]');
+        const rawVal   = builderResponse.slice(rawStart, rawEnd).trim();
+        consoleLog(`🔍 Raw conflicts value: "${rawVal.substring(0, 120)}"`, 'info');
+      }
       if (newDoc) {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
