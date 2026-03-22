@@ -1186,7 +1186,7 @@ html, body {
   gap: 4px;
   flex: 1;
 }
-.round-history-empty { font-size: 12px; color: var(--muted); text-align: center; padding: 16px 0; }
+.round-history-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 16px 0; }
 .round-hist-hdr {
   display: flex;
   align-items: center;
@@ -1196,7 +1196,7 @@ html, body {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text-dim);
 }
@@ -1601,77 +1601,75 @@ kbd {
   align-items: center;
 }
 
-/* ── HERO ROW: logo + hex button ── */
-.work-hero-row {
+/* ── LOGO ROW (right-aligned, top of right panel) ── */
+.work-logo-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding-bottom: 12px;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
   margin-bottom: 4px;
 }
-.work-logo-inline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-.work-logo-inline .work-logo {
-  width: 96px;
-  height: 96px;
+.work-logo-row .work-logo {
+  width: 80px;
+  height: 80px;
   flex-shrink: 0;
+  filter: drop-shadow(0 0 18px rgba(245,166,35,0.4));
 }
-.work-logo-inline .work-logo-name {
-  font-size: 22px;
+.work-logo-row .work-logo-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1;
+  text-align: right;
 }
-.work-logo-inline .work-logo-tagline {
-  font-size: 11px;
+.work-logo-row .work-logo-tagline {
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  text-align: right;
+  margin-top: 3px;
+}
+.work-logo-row .work-logo-text {
+  text-align: right;
 }
 
-/* ── HEXAGON BUTTON ── */
-.btn-hex-shake {
-  position: relative;
-  width: 96px;
-  height: 108px;
-  flex-shrink: 0;
-  background: var(--accent);
-  border: none;
-  cursor: pointer;
+/* ── WIDE SHAKE BUTTON ── */
+.btn-shake-wide {
   display: flex;
   align-items: center;
   justify-content: center;
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  width: 100%;
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 12px 16px;
+  margin: 8px 0;
   transition: all 0.15s;
 }
-.btn-hex-shake:hover {
+.btn-shake-wide:hover {
   background: var(--accent-hover);
-  transform: scale(1.06);
-  filter: drop-shadow(0 4px 12px rgba(245,166,35,0.5));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(245,166,35,0.4);
 }
-.btn-hex-shake:active {
-  transform: scale(0.97);
+.btn-shake-wide:active { transform: translateY(0); box-shadow: none; }
+.btn-shake-wide:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-shake-wide.running {
+  animation: shakePulse 0.8s ease-in-out infinite alternate;
 }
-.btn-hex-shake:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  transform: none;
-  filter: none;
+@keyframes shakePulse {
+  from { box-shadow: 0 0 8px rgba(245,166,35,0.3); }
+  to   { box-shadow: 0 0 24px rgba(245,166,35,0.8); }
 }
-.btn-hex-shake.running {
-  animation: hexPulse 0.8s ease-in-out infinite alternate;
-}
-@keyframes hexPulse {
-  from { filter: drop-shadow(0 0 6px rgba(245,166,35,0.4)); }
-  to   { filter: drop-shadow(0 0 18px rgba(245,166,35,0.9)); }
-}
-.hex-label {
+.shake-wide-label {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 800;
   color: #0a0c12;
-  text-align: center;
-  line-height: 1.35;
   letter-spacing: 0.02em;
   pointer-events: none;
 }
@@ -1797,12 +1795,17 @@ kbd {
   line-height: 26px;
   color: var(--muted);
   text-align: right;
-  padding: 10px 8px 10px 0;
+  /* No top padding — must match textarea exactly */
+  padding: 4px 8px 0 0;
   user-select: none;
 }
 .work-line-numbers div {
   height: 26px;
   line-height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 2px;
 }
 .work-doc-ta {
   flex: 1;
@@ -1811,14 +1814,15 @@ kbd {
   font-family: var(--font-mono);
   font-size: 15px;
   line-height: 26px;
-  padding: 10px 14px;
+  /* No top padding — must match line numbers exactly */
+  padding: 4px 14px 0;
   resize: none;
   outline: none;
   overflow-y: auto;
   overflow-x: hidden;
   white-space: pre-wrap;
   word-wrap: break-word;
-  /* Ruled paper lines matching line-height of 24px */
+  /* Ruled paper lines — 26px line height, 1px rule at bottom of each line */
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0px,
@@ -1977,38 +1981,21 @@ kbd {
    V3 SETUP SCREEN IMAGES + DIVIDER
 ══════════════════════════════════════ */
 
-/* Full-opacity section images — bottom corner of each column */
+/* Section images — centered at bottom of each column */
 .setup-section-img {
   position: absolute;
   pointer-events: none;
   user-select: none;
   z-index: 0;
 }
-.setup-section-img-left {
-  bottom: 0;
-  right: 20px;
-  width: 220px;
-  height: 220px;
+.setup-section-img-center {
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 242px;
+  height: 242px;
   object-fit: contain;
   opacity: 0.9;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
-}
-.setup-section-img-right {
-  bottom: 0;
-  right: 20px;
-  width: 200px;
-  height: 200px;
-  object-fit: contain;
-  opacity: 0.9;
-  filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
-}
-.setup-section-img-project {
-  bottom: 0;
-  right: 60px;
-  width: 220px;
-  height: 220px;
-  object-fit: contain;
-  opacity: 0.85;
   filter: drop-shadow(0 8px 24px rgba(0,0,0,0.5));
 }
 
