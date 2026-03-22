@@ -501,7 +501,9 @@ function loadSettings() {
 function saveSession() {
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
-  const session = { round, phase, history, docText, consoleHTML };
+  const notesEl = document.getElementById('workNotes');
+  const notes = notesEl ? notesEl.value : '';
+  const session = { round, phase, history, docText, consoleHTML, notes };
   try { localStorage.setItem(LS_SESSION, JSON.stringify(session)); } catch(e) {}
   saveProject(); // keep project fields in sync
 }
@@ -515,10 +517,13 @@ function loadSession() {
     phase   = s.phase   || 'draft';
     history = s.history || [];
     docText = s.docText || '';
-    // Restore console if we have it
     if (s.consoleHTML) {
       const el = document.getElementById('liveConsole');
       if (el) el.innerHTML = s.consoleHTML;
+    }
+    if (s.notes) {
+      const notesEl = document.getElementById('workNotes');
+      if (notesEl) notesEl.value = s.notes;
     }
     return true;
   } catch(e) { return false; }
@@ -1074,7 +1079,7 @@ function startSession() {
 
   saveSettings();
   goToScreen('screen-work');
-  initWorkScreen();
+  initWorkScreen(true);
   // Save original document as Round 0 so it can always be restored
   if (docText && history.length === 0) {
     history.push({
@@ -1093,10 +1098,22 @@ function startSession() {
   }
 
 // ── SCREEN 4: WORK ──
-function initWorkScreen() {
+function initWorkScreen(isNewSession = false) {
   const name    = document.getElementById('projectName')?.value.trim()    || 'Project';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
   const goal    = document.getElementById('projectGoal')?.value.trim()    || '';
+
+  // Only clear transient panels on a brand new session — not on page refresh
+  if (isNewSession) {
+    const consoleEl = document.getElementById('liveConsole');
+    if (consoleEl) consoleEl.innerHTML = '<div class="console-entry console-info">Console ready — shake the hive to begin.</div>';
+    const conflictsEl = document.getElementById('conflictsPanel');
+    if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
+    const conflictsLabel = document.getElementById('conflictsRoundLabel');
+    if (conflictsLabel) conflictsLabel.textContent = '';
+    const notesEl = document.getElementById('workNotes');
+    if (notesEl) notesEl.value = '';
+  }
 
   const el = document.getElementById('workProjectName');
   const ve = document.getElementById('workProjectVersion');
@@ -1123,15 +1140,6 @@ function initWorkScreen() {
 
   const ps = document.getElementById('phaseSelect');
   if (ps) ps.value = phase;
-
-  // Pre-fill notes with project goal on round 1 (helps the AI understand intent)
-  if (round === 1) {
-    const goal = document.getElementById('projectGoal')?.value?.trim();
-    const notesTa = document.getElementById('workNotes');
-    if (goal && notesTa && !notesTa.value) {
-      notesTa.value = `Project goal: ${goal}`;
-    }
-  }
 
   // Reset per-session bee selection to all active AIs
   window.sessionAIs = new Set(activeAIs.map(a => a.id));
@@ -1685,10 +1693,6 @@ async function runRound() {
       toast(`⏳ That was your last free round — enter a license key to continue`, 5000);
     }
   }
-
-  // Clear notes
-  const notesTa = document.getElementById('workNotes');
-  if (notesTa) notesTa.value = '';
 
   // Reset button
   if (btn) {
