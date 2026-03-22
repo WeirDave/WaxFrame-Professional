@@ -1856,12 +1856,17 @@ function restoreRound(idx) {
   phase = h.phase || 'draft';
   docText = h.doc || '';
   const docTa = document.getElementById('workDocument');
-  if (docTa) docTa.value = docText;
+  if (docTa) { docTa.value = docText; updateLineNumbers(); }
   const ps = document.getElementById('phaseSelect');
   if (ps) ps.value = phase;
   updateRoundBadge();
   renderWorkPhaseBar();
+  renderConflicts();
   saveSession();
+  // Close any open history modals
+  closeRoundHistoryModal();
+  const viewModal = document.getElementById('histDocModal');
+  if (viewModal) viewModal.remove();
   toast(`↩ Restored Round ${h.round}`);
 }
 
