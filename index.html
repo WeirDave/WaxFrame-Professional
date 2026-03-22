@@ -11,7 +11,7 @@
   <link rel="manifest" href="images/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.07">
+  <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body>
 
@@ -24,7 +24,7 @@
     <div class="welcome-logo">
       <div class="welcome-logo-anim">
         <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="welcome-logo-static">
-        <img src="images/AI_Hive_Worker_Bee_v1.png" alt="Bee" class="welcome-bee-fly">
+        <img src="images/AI_Hive_Worker_Bee_v2.png" alt="Bee" class="welcome-bee-fly">
       </div>
       <div class="welcome-brand">
         <h1>AI Hive</h1>
@@ -72,7 +72,7 @@
 <div class="screen" id="screen-setup">
   <div class="fullscreen-layout">
 
-    <!-- Header bar -->
+    <!-- ── Header bar ── -->
     <div class="fs-header">
       <button class="back-btn" onclick="goToScreen('screen-welcome')">← Back</button>
       <div class="fs-header-brand">
@@ -85,10 +85,10 @@
       <div class="setup-step-badge">Setup — Step 1 of 2</div>
     </div>
 
-    <!-- Two-column body -->
+    <!-- ── Two-column body ── -->
     <div class="fs-body">
 
-      <!-- LEFT: Worker Bees -->
+      <!-- ── LEFT: Worker Bees ── -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main">
           <img src="images/AI_Hive_Worker_Bee_v2.png" class="setup-card-bee" alt="">
@@ -104,7 +104,7 @@
               <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add Custom AI</button>
             </div>
 
-            <!-- Custom AI form -->
+            <!-- ── Custom AI Form ── -->
             <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
               <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
               <div class="custom-ai-form-row">
@@ -145,10 +145,10 @@
         </div>
       </div>
 
-      <!-- DIVIDER -->
+        <!-- ── Divider ── -->
       <div class="fs-divider"></div>
 
-      <!-- RIGHT: Builder Picker -->
+      <!-- ── RIGHT: Builder Picker ── -->
       <div class="fs-col fs-col-right">
         <div class="fs-col-main">
           <img src="images/AI_Hive_Builder_v3.png" class="setup-card-bee" alt="">
@@ -167,7 +167,7 @@
 
     </div><!-- /fs-body -->
 
-    <!-- Footer -->
+    <!-- ── Footer ── -->
     <div class="fs-footer">
       <div class="fs-footer-spacer"></div>
       <div class="setup-footer-note">⚙️ You can change these settings any time from the work screen</div>
@@ -187,7 +187,7 @@
 <div class="screen" id="screen-project">
   <div class="fullscreen-layout">
 
-    <!-- Header bar -->
+    <!-- ── Header bar ── -->
     <div class="fs-header">
       <button class="back-btn" onclick="goToScreen('screen-setup')">← Back</button>
       <div class="fs-header-brand">
@@ -200,10 +200,10 @@
       <div class="setup-step-badge">Setup — Step 2 of 2</div>
     </div>
 
-    <!-- Two-column body — same as step 1 -->
+    <!-- ── Two-column body ── -->
     <div class="fs-body">
 
-      <!-- LEFT: Project details -->
+      <!-- ── LEFT: Project Details ── -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main">
           <img src="images/AI_Hive_Project_Bee_v2.png" class="setup-card-bee" alt="">
@@ -239,10 +239,10 @@
         </div>
       </div>
 
-      <!-- DIVIDER -->
+        <!-- ── Divider ── -->
       <div class="fs-divider"></div>
 
-      <!-- RIGHT: Document input -->
+      <!-- ── RIGHT: Starting Document ── -->
       <div class="fs-col fs-col-right">
         <div class="fs-col-main">
           <div class="fs-col-scroll proj-right-scroll">
@@ -321,7 +321,7 @@
 <div class="screen" id="screen-work">
   <div class="work-layout">
 
-    <!-- TOP BAR -->
+    <!-- ── TOP BAR ── -->
     <div class="work-topbar">
       <div class="work-topbar-left">
         <div class="work-project-info">
@@ -338,10 +338,10 @@
       </div>
     </div>
 
-    <!-- MAIN 3-COLUMN WORK AREA -->
+    <!-- ── MAIN 3-COLUMN WORK AREA ── -->
     <div class="work-main">
 
-      <!-- COL 1: Working Document -->
+      <!-- ── COL 1: Working Document ── -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
           <span class="work-section-title">📄 Working Document</span>
@@ -360,10 +360,10 @@
         </div>
       </div>
 
-      <!-- COL 2: Conflicts + Notes -->
+      <!-- ── COL 2: Conflicts + Notes ── -->
       <div class="work-notes-panel">
 
-        <!-- Conflicts -->
+        <!-- ── Conflicts Panel ── -->
         <div class="work-panel-header">
           <span class="work-section-title">Conflicts</span>
           <div class="flex-row-center">
@@ -376,7 +376,7 @@
           <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
         </div>
 
-        <!-- Notes -->
+        <!-- ── Notes for this Round ── -->
         <div class="work-panel-header work-section-border-top">
           <span class="work-section-title">Notes for this Round</span>
           <div class="flex-row">
@@ -390,10 +390,10 @@
 
       </div>
 
-      <!-- COL 3: Control Panel -->
+      <!-- ── COL 3: Control Panel ── -->
       <div class="work-right-panel">
 
-        <!-- Logo row: text left, logo right -->
+        <!-- ── Logo ── -->
         <div class="work-logo-row">
           <div class="work-logo-text">
             <div class="work-logo-name">AI Hive</div>
@@ -407,7 +407,7 @@
           <option value="refine">Refine Text</option>
         </select>
 
-        <!-- The Hive -->
+        <!-- ── The Hive ── -->
         <div class="work-panel-header work-section-header-top">
           <span class="work-section-title">The Hive</span>
           <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">👑 Builder</button>
@@ -415,18 +415,18 @@
         <div class="work-hive-hint">Toggle AIs for this session. Builder always runs. Click 👑 Builder to change.</div>
         <div class="bee-status-grid" id="beeStatusGrid"></div>
 
-        <!-- Shake the Hive — full-width button -->
+        <!-- ── Shake the Hive ── -->
         <button class="btn-shake-wide" id="runRoundBtn" onclick="runRound()">
           <span class="shake-wide-label">Shake the Hive</span>
         </button>
 
-        <!-- Phase + Round controls -->
+        <!-- ── Phase + Round Controls ── -->
         <div class="work-phase-round-row">
           <div class="work-phase-bar" id="workPhaseBar"></div>
           <span class="work-round-badge" id="workRoundBadge">Round 1</span>
         </div>
 
-        <!-- Live Console -->
+        <!-- ── Live Console ── -->
         <div class="work-panel-header work-section-border-top">
           <span class="work-section-title">🖥️ Live Console</span>
           <div class="flex-row-sm">
@@ -441,7 +441,7 @@
       </div><!-- /work-right-panel -->
     </div><!-- /work-main -->
 
-    <!-- STATUS BAR -->
+    <!-- ── STATUS BAR ── -->
     <div class="work-statusbar" id="workStatusBar">
       <span id="statusText">Standing by — toggle bees above, then Shake the Hive</span>
       <div class="flex-row-sm">
@@ -527,9 +527,9 @@
   </div>
 </div>
 
-<!-- Toast -->
+<!-- ── Toast Notification ── -->
 <div id="toast"></div>
 
-<script src="app.js?v=3.09"></script>
+<script src="app.js?v=2.0"></script>
 </body>
 </html>
