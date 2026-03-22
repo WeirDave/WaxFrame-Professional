@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="images/AI_Hive_Logo_v4__ChatGPT.png" width="140" alt="AI Hive">
+<img src="images/AI_Hive_Logo_v4.png" width="140" alt="AI Hive">
 
 # AI Hive
 
@@ -179,7 +179,7 @@ AI Hive is open source under the **GPL-3.0** license. See [LICENSE](LICENSE) for
 
 <div align="center">
 
-<img src="images/AI_Hive_Logo_v4__ChatGPT.png" width="60" alt="AI Hive">
+<img src="images/AI_Hive_Logo_v4.png" width="60" alt="AI Hive">
 
 Built by **WeirDave** · [github.com/WeirDave](https://github.com/WeirDave)
 
