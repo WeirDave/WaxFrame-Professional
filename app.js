@@ -1235,7 +1235,7 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<span class="hex-label">Shaking…</span>';
+  if (btn) btn.innerHTML = '<span class="shake-wide-label">⬡ Shaking…</span>';
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1335,7 +1335,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
-    btn.innerHTML = '<span class="hex-label">Shake<br>the Hive</span>';
+    btn.innerHTML = '<span class="shake-wide-label">⬡ Shake the Hive</span>';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   toast(`✅ Round ${round - 1} complete!`);
