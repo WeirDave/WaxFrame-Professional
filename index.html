@@ -281,6 +281,7 @@
         <span class="work-round-badge" id="workRoundBadge">Round 1</span>
         <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">🕐 History</button>
         <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ Settings</button>
+        <span class="license-badge" id="licenseBadge" title="License status"></span>
         <div class="theme-toggle">
           <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light">☀️</button>
           <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
@@ -422,6 +423,24 @@
       </button>
     </div>
     <button class="finish-modal-cancel" onclick="hideFinishModal()">← Keep working</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     LICENSE MODAL
+     ============================================================ -->
+<div class="license-modal-overlay" id="licenseModal">
+  <div class="license-modal">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="license-modal-logo">
+    <h2 class="license-modal-title">AI Hive Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text"
+      placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"
+      autocomplete="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/aihive-pro" target="_blank">Don't have a key? Buy AI Hive Pro →</a>
   </div>
 </div>
 

@@ -106,6 +106,11 @@ const LS_HIVE     = 'aihive_v2_hive';      // AI list + API keys — persistent 
 const LS_PROJECT  = 'aihive_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'aihive_v2_session';   // round state — per session
 const LS_SETTINGS = 'aihive_v2_settings';  // legacy key — migrated on first load
+const LS_LICENSE  = 'aihive_v2_license';   // license key — persistent
+
+// ── LICENSE CONFIG ──
+const GUMROAD_PRODUCT_ID = 'cGk8nQS-i4C7rU7mWGRgzQ==';
+const FREE_TRIAL_ROUNDS  = 3;
 
 // ── UTILS ──
 function esc(s) {
@@ -154,7 +159,114 @@ function clearConsole() {
   if (el) el.innerHTML = '<div class="console-entry console-info">Console cleared.</div>';
 }
 
-// ── SCREEN NAVIGATION ──
+// ══════════════════════════════════════
+// LICENSE SYSTEM
+// ══════════════════════════════════════
+
+function isLicensed() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
+    return data && data.valid === true && data.key;
+  } catch(e) { return false; }
+}
+
+function getTrialRoundsUsed() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
+    return (data && data.trialRoundsUsed) ? data.trialRoundsUsed : 0;
+  } catch(e) { return 0; }
+}
+
+function incrementTrialRound() {
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || '{}');
+    data.trialRoundsUsed = (data.trialRoundsUsed || 0) + 1;
+    localStorage.setItem(LS_LICENSE, JSON.stringify(data));
+    return data.trialRoundsUsed;
+  } catch(e) { return 1; }
+}
+
+function saveLicense(key) {
+  try {
+    const existing = JSON.parse(localStorage.getItem(LS_LICENSE) || '{}');
+    existing.valid = true;
+    existing.key   = key;
+    localStorage.setItem(LS_LICENSE, JSON.stringify(existing));
+  } catch(e) {}
+}
+
+function showLicenseModal(reason) {
+  const modal = document.getElementById('licenseModal');
+  const msg   = document.getElementById('licenseModalMsg');
+  if (msg) {
+    msg.textContent = reason === 'trial_expired'
+      ? `You've used your ${FREE_TRIAL_ROUNDS} free rounds. Enter your license key to keep going.`
+      : 'Enter your license key to continue using AI Hive Pro.';
+  }
+  if (modal) modal.classList.add('active');
+  setTimeout(() => document.getElementById('licenseKeyInput')?.focus(), 100);
+}
+
+function hideLicenseModal() {
+  const modal = document.getElementById('licenseModal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function submitLicenseKey() {
+  const input = document.getElementById('licenseKeyInput');
+  const errEl = document.getElementById('licenseKeyError');
+  const btn   = document.getElementById('licenseSubmitBtn');
+  const key   = input?.value.trim();
+
+  if (!key) { if (errEl) errEl.textContent = 'Please enter your license key.'; return; }
+  if (btn)   { btn.disabled = true; btn.textContent = 'Verifying…'; }
+  if (errEl) errEl.textContent = '';
+
+  try {
+    const resp = await fetch('https://api.gumroad.com/v2/licenses/verify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        product_id:           GUMROAD_PRODUCT_ID,
+        license_key:          key,
+        increment_uses_count: 'false'
+      })
+    });
+    const data = await resp.json();
+    if (data.success && !data.purchase?.refunded && !data.purchase?.chargebacked) {
+      saveLicense(key);
+      hideLicenseModal();
+      updateLicenseBadge();
+      toast('✅ License verified — welcome to AI Hive Pro!', 4000);
+    } else {
+      if (errEl) errEl.textContent = data.message || 'Invalid key. Check your Gumroad receipt and try again.';
+    }
+  } catch(e) {
+    if (errEl) errEl.textContent = 'Could not reach Gumroad. Check your connection and try again.';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Unlock Pro'; }
+  }
+}
+
+function updateLicenseBadge() {
+  const badge = document.getElementById('licenseBadge');
+  if (!badge) return;
+  if (isLicensed()) {
+    badge.textContent = '✓ Licensed';
+    badge.title       = 'AI Hive Pro — licensed';
+    badge.classList.add('licensed');
+    badge.onclick     = null;
+  } else {
+    const used      = getTrialRoundsUsed();
+    const remaining = Math.max(0, FREE_TRIAL_ROUNDS - used);
+    badge.textContent = remaining > 0
+      ? `Trial — ${remaining} round${remaining === 1 ? '' : 's'} left`
+      : 'Trial expired';
+    badge.title   = 'Click to enter license key';
+    badge.classList.remove('licensed');
+    badge.onclick = () => showLicenseModal('');
+  }
+}
 function goToScreen(id) {
   // Always save document state before navigating away from work screen
   const currentDoc = document.getElementById('workDocument');
@@ -938,6 +1050,7 @@ function initWorkScreen() {
   renderRoundHistory();
   renderConflicts();
   updateRoundBadge();
+  updateLicenseBadge();
   setStatus('Standing by — toggle bees above, then Shake the Hive');
 
   // Keep line numbers filled on resize
@@ -1285,6 +1398,15 @@ async function runRound() {
 
   if (btn?.classList.contains('running')) return;
 
+  // ── LICENSE CHECK ──
+  if (!isLicensed()) {
+    const used = getTrialRoundsUsed();
+    if (used >= FREE_TRIAL_ROUNDS) {
+      showLicenseModal('trial_expired');
+      return;
+    }
+  }
+
   // Save current doc state
   docText = document.getElementById('workDocument')?.value.trim() || '';
 
@@ -1425,6 +1547,15 @@ async function runRound() {
   renderWorkPhaseBar();
   renderConflicts();
   saveSession();
+
+  // ── TRIAL COUNTER ──
+  if (!isLicensed()) {
+    const used = incrementTrialRound();
+    updateLicenseBadge();
+    if (used >= FREE_TRIAL_ROUNDS) {
+      toast(`⏳ That was your last free round — enter a license key to continue`, 5000);
+    }
+  }
 
   // Clear notes
   const notesTa = document.getElementById('workNotes');
