@@ -58,8 +58,8 @@ const API_CONFIGS = {
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   gemini: {
-    label: 'Google (Gemini)', model: 'gemini-2.0-flash',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    label: 'Google (Gemini)', model: 'gemini-flash-latest',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
     bodyFn: (model, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
