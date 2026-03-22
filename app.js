@@ -1753,23 +1753,26 @@ async function callAPI(ai, prompt) {
 }
 
 // ── HELPERS ──
-function extractDocument(text) {
-  // Strip markdown code fences that some AIs wrap around delimiters
-  const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
-  const start = clean.indexOf('[DOCUMENT START]');
-  const end   = clean.lastIndexOf('[DOCUMENT END]');
-  if (start === -1 || end === -1 || end <= start) return null;
-  return clean.slice(start + '[DOCUMENT START]'.length, end).trim();
-}
-
 function extractConflicts(text) {
   const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
-  const start = clean.indexOf('[CONFLICTS START]');
+  // Use lastIndexOf for BOTH markers — the document itself may contain these
+  // delimiter names as examples, so we want the LAST occurrence of each
+  const start = clean.lastIndexOf('[CONFLICTS START]');
   const end   = clean.lastIndexOf('[CONFLICTS END]');
   if (start === -1 || end === -1 || end <= start) return null;
   const raw = clean.slice(start + '[CONFLICTS START]'.length, end).trim().replace(/[,\s]+$/, '');
   if (!raw || raw.toUpperCase() === 'NO CONFLICTS') return null;
   return raw;
+}
+
+function extractDocument(text) {
+  const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
+  // Use lastIndexOf for END — some AIs repeat the delimiter
+  // But use indexOf for START so we get the first real document block
+  const start = clean.indexOf('[DOCUMENT START]');
+  const end   = clean.lastIndexOf('[DOCUMENT END]');
+  if (start === -1 || end === -1 || end <= start) return null;
+  return clean.slice(start + '[DOCUMENT START]'.length, end).trim();
 }
 
 function renderConflicts() {
