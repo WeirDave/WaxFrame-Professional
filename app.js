@@ -979,7 +979,14 @@ function finishAndExport() {
 
 function finishAndNew() {
   hideFinishModal();
+  // Full reset — clear storage, memory, and the textarea
   clearProject();
+  round = 1; phase = 'draft'; history = []; docText = '';
+  const docTa = document.getElementById('workDocument');
+  if (docTa) { docTa.value = ''; updateLineNumbers(); }
+  const notesTa = document.getElementById('workNotes');
+  if (notesTa) notesTa.value = '';
+  renderConflicts();
   goToScreen('screen-project');
 }
 
