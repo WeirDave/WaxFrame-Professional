@@ -1,4 +1,4 @@
-# AI Hive 🐝
+# AI Hive
 
 **Orchestrate multiple AI assistants simultaneously on your documents.**
 
