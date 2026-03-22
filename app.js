@@ -499,7 +499,9 @@ function loadSettings() {
 }
 
 function saveSession() {
-  const session = { round, phase, history, docText };
+  const consoleEl = document.getElementById('liveConsole');
+  const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
+  const session = { round, phase, history, docText, consoleHTML };
   try { localStorage.setItem(LS_SESSION, JSON.stringify(session)); } catch(e) {}
   saveProject(); // keep project fields in sync
 }
@@ -512,8 +514,12 @@ function loadSession() {
     round   = s.round   || 1;
     phase   = s.phase   || 'draft';
     history = s.history || [];
-    // Only restore docText if it's a real document (not scratch with empty doc)
     docText = s.docText || '';
+    // Restore console if we have it
+    if (s.consoleHTML) {
+      const el = document.getElementById('liveConsole');
+      if (el) el.innerHTML = s.consoleHTML;
+    }
     return true;
   } catch(e) { return false; }
 }
