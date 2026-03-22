@@ -124,6 +124,23 @@ function setStatus(msg) {
   if (el) el.textContent = msg;
 }
 
+// ── LIVE CONSOLE ──
+function consoleLog(msg, type = 'info') {
+  const el = document.getElementById('liveConsole');
+  if (!el) return;
+  const entry = document.createElement('div');
+  entry.className = `console-entry console-${type}`;
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  entry.innerHTML = `<span class="console-time">${time}</span> ${msg}`;
+  el.appendChild(entry);
+  el.scrollTop = el.scrollHeight;
+}
+
+function clearConsole() {
+  const el = document.getElementById('liveConsole');
+  if (el) el.innerHTML = '<div class="console-entry console-info">Console cleared.</div>';
+}
+
 // ── SCREEN NAVIGATION ──
 function goToScreen(id) {
   document.querySelectorAll('.screen').forEach(s => {
@@ -1179,6 +1196,7 @@ async function runRound() {
   if (btn) btn.innerHTML = '<span class="run-round-icon">⏳</span><span class="run-round-text">Running…</span>';
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
+  consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
 
   // Reset all bee statuses
   activeAIs.forEach(ai => setBeeStatus(ai.id, 'waiting', 'Ready'));
@@ -1187,6 +1205,7 @@ async function runRound() {
   const builderAI = activeAIs.find(ai => ai.id === builder);
   const reviewerResponses = [];
 
+  consoleLog(`🐝 ${reviewers.length} reviewer${reviewers.length!==1?'s':''} + 1 builder — starting simultaneously`, 'info');
   // Phase 1: Send to all reviewers simultaneously
   setStatus(`⚡ Sending to ${reviewers.length} reviewer${reviewers.length !== 1 ? 's' : ''}…`);
   reviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Thinking…'));
@@ -1203,6 +1222,8 @@ async function runRound() {
       if (e.message.startsWith('RATE_LIMITED:')) {
         setBeeStatus(ai.id, 'error', `⏳ Rate limited — skipped this round`);
         toast(`⏳ ${ai.name} hit a usage limit — skipped this round`, 4000);
+      } else if (e.message.startsWith('CORS_BLOCKED:')) {
+        setBeeStatus(ai.id, 'error', 'CORS blocked — proxy needed');
       } else {
         setBeeStatus(ai.id, 'error', e.message);
       }
@@ -1215,7 +1236,10 @@ async function runRound() {
   const successfulReviews = reviewerResponses.filter(r => r.response);
 
   // Phase 2: Send to Builder
+  const failedCount = reviewers.length - successfulReviews.length;
+  if (failedCount > 0) consoleLog(`⚠️ ${failedCount} reviewer${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
   if (builderAI && (successfulReviews.length > 0 || phase === 'review')) {
+    consoleLog(`🔨 <strong>${builderAI.name}</strong> (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''}…`, 'info');
     setBeeStatus(builderAI.id, 'sending', 'Building document…');
     setStatus(`🏗️ ${builderAI.name} is building the updated document…`);
 
@@ -1229,6 +1253,7 @@ async function runRound() {
         docText = newDoc;
         setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
         setStatus(`✅ Round ${round} complete — document updated`);
+        consoleLog(`✅ Round ${round} complete — document updated (${docText.split(/\s+/).length} words)`, 'success');
       } else {
         // Builder returned full response, use as-is
         const docTa = document.getElementById('workDocument');
@@ -1236,10 +1261,12 @@ async function runRound() {
         docText = builderResponse;
         setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
         setStatus(`✅ Round ${round} complete`);
+        consoleLog(`✅ Round ${round} complete`, 'success');
       }
     } catch(e) {
       setBeeStatus(builderAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
+      consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
     }
   }
 
@@ -1266,7 +1293,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
-    btn.innerHTML = '<span class="run-round-icon">⚡</span><span class="run-round-text">Run Round</span>';
+    btn.innerHTML = 'Activate the Hive';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   toast(`✅ Round ${round - 1} complete!`);
@@ -1277,26 +1304,48 @@ async function callAPI(ai, prompt) {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg || !cfg._key) throw new Error('No API key');
 
-  const response = await fetch(cfg.endpoint, {
-    method: 'POST',
-    headers: cfg.headersFn(cfg._key),
-    body: cfg.bodyFn(cfg.model, prompt)
-  });
+  const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
+  consoleLog(`📤 <strong>${ai.name}</strong> — sending request (key: ${keyHint})`, 'info');
+  const t0 = Date.now();
+
+  let response;
+  try {
+    response = await fetch(cfg.endpoint, {
+      method: 'POST',
+      headers: cfg.headersFn(cfg._key),
+      body: cfg.bodyFn(cfg.model, prompt)
+    });
+  } catch(fetchErr) {
+    const isCors = fetchErr.message.toLowerCase().includes('network') ||
+                   fetchErr.message.toLowerCase().includes('fetch') ||
+                   fetchErr.message.toLowerCase().includes('cors');
+    if (isCors) {
+      consoleLog(`❌ <strong>${ai.name}</strong> — CORS blocked. Browser cannot call this API directly. A proxy is required.`, 'error');
+      throw new Error('CORS_BLOCKED: Browser cannot reach ' + ai.name + ' API directly. Proxy required.');
+    }
+    consoleLog(`❌ <strong>${ai.name}</strong> — Network error: ${fetchErr.message}`, 'error');
+    throw fetchErr;
+  }
+
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     const msg = err?.error?.message || `HTTP ${response.status}`;
-    // Detect rate limit specifically
     if (response.status === 429 || msg.toLowerCase().includes('rate limit') ||
         msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')) {
+      consoleLog(`⏳ <strong>${ai.name}</strong> — Rate limited / quota exceeded: ${msg}`, 'warn');
       throw new Error('RATE_LIMITED:' + msg);
     }
+    consoleLog(`❌ <strong>${ai.name}</strong> — HTTP ${response.status}: ${msg}`, 'error');
     throw new Error(msg);
   }
 
   const data = await response.json();
   const text = cfg.extractFn(data);
   if (!text) throw new Error('Empty response');
+  const words = text.trim().split(/\s+/).length;
+  consoleLog(`✅ <strong>${ai.name}</strong> — responded in ${elapsed}s (~${words} words)`, 'success');
   return text;
 }
 
