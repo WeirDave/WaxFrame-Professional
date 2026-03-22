@@ -1096,6 +1096,7 @@ function startSession() {
     renderRoundHistory();
     saveSession();
   }
+}
 
 // ── SCREEN 4: WORK ──
 function initWorkScreen(isNewSession = false) {
