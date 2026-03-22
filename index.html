@@ -11,7 +11,7 @@
   <link rel="manifest" href="images/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=2.03">
+  <link rel="stylesheet" href="style.css?v=2.04">
 </head>
 <body>
 
@@ -403,7 +403,7 @@
         <!-- Live Console -->
         <div class="work-panel-header" style="margin-top:8px;">
           <span class="work-panel-title">🖥️ Live Console</span>
-          <button class="btn btn-ghost btn-sm" onclick="clearConsole()" style="font-size:10px;padding:2px 6px;">Clear</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyConsole()" style="font-size:10px;padding:2px 6px;">Copy</button><button class="btn btn-ghost btn-sm" onclick="clearConsole()" style="font-size:10px;padding:2px 6px;">Clear</button>
         </div>
         <div class="live-console" id="liveConsole">
           <div class="console-entry console-info">Console ready — activate the hive to begin.</div>
@@ -424,6 +424,6 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<script src="app.js?v=2.03"></script>
+<script src="app.js?v=2.04"></script>
 </body>
 </html>
