@@ -32,7 +32,7 @@ No install. No server. No account. Just open it and go.
 
 ## How It Works
 
-<img src="images/AI_Hive_Worker_Bee_v1.png" width="160" align="right" alt="Worker Bee">
+<img src="images/AI_Hive_Worker_Bee_v2.png" width="160" align="right" alt="Worker Bee">
 
 **1. Set up your Hive**
 Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round.
