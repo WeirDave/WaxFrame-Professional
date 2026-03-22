@@ -157,6 +157,13 @@ function clearConsole() {
 
 // ── SCREEN NAVIGATION ──
 function goToScreen(id) {
+  // Always save document state before navigating away from work screen
+  const currentDoc = document.getElementById('workDocument');
+  if (currentDoc && currentDoc.value.trim()) {
+    docText = currentDoc.value.trim();
+    saveSession();
+  }
+
   document.querySelectorAll('.screen').forEach(s => {
     s.classList.remove('active');
     s.style.display = 'none';
@@ -899,16 +906,17 @@ function initWorkScreen() {
   renderBeeStatusGrid();
   renderRoundHistory();
   updateRoundBadge();
-  setStatus('Standing by — toggle bees above, then Activate the Hive');
+  setStatus('Standing by — toggle bees above, then Shake the Hive');
 }
 
 function updateLineNumbers() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
+  const lineH = parseFloat(getComputedStyle(ta).lineHeight) || 20;
   const lines = ta.value.split('\n').length;
   ln.innerHTML = Array.from({length: lines}, (_, i) =>
-    `<div style="height:21px;line-height:21px;">${i + 1}</div>`
+    `<div style="height:${lineH}px;line-height:${lineH}px;">${i + 1}</div>`
   ).join('');
   syncLineNumberScroll();
 }
@@ -947,23 +955,23 @@ function updateRoundBadge() {
 function renderBeeStatusGrid() {
   const grid = document.getElementById('beeStatusGrid');
   if (!grid) return;
-  // sessionAIs = AIs active for this session (default: all activeAIs)
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
   grid.innerHTML = activeAIs.map(ai => {
-    const isB    = ai.id === builder;
-    const isOn   = isB || window.sessionAIs.has(ai.id); // builder always on
+    const isB  = ai.id === builder;
+    const isOn = isB || window.sessionAIs.has(ai.id);
     return `
-    <div class="bee-status-card ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
-      ${isB
-        ? `<span class="bee-status-badge">BUILD</span>`
-        : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
-            ${isOn ? 'checked' : ''}
-            onchange="toggleSessionBee('${ai.id}', this.checked)"
-            title="${isOn ? 'Disable for this session' : 'Enable for this session'}">`
-      }
-      <img src="${ai.icon}" class="bee-status-icon" onerror="this.style.display='none'">
-      <span class="bee-status-name">${ai.name}</span>
-      <span class="bee-status-live" id="blive-${ai.id}"></span>
+    <div class="bee-card ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
+      <div class="bee-card-top">
+        <img src="${ai.icon}" class="bee-card-icon" onerror="this.style.display='none'">
+        ${isB
+          ? `<span class="bee-builder-tag">BUILD</span>`
+          : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
+              ${isOn ? 'checked' : ''}
+              onchange="toggleSessionBee('${ai.id}', this.checked)">`
+        }
+      </div>
+      <div class="bee-card-name">${ai.name}</div>
+      <div class="bee-card-status" id="blive-${ai.id}">Idle</div>
     </div>`;
   }).join('');
 }
@@ -991,21 +999,21 @@ function setBeeStatus(id, state, summary) {
 
   if (state === 'sending') {
     card.classList.add('is-working');
-    if (live) live.textContent = '⏳ Sending…';
+    if (live) live.textContent = 'Sending…';
   } else if (state === 'thinking') {
     card.classList.add('is-working');
-    if (live) live.textContent = '💭 Thinking…';
+    if (live) live.textContent = 'Thinking…';
   } else if (state === 'streaming') {
     card.classList.add('is-working');
-    if (live) live.textContent = summary ? '✍️ ' + summary.slice(0,20) + '…' : '✍️ Writing…';
+    if (live) live.textContent = 'Writing…';
   } else if (state === 'done') {
     card.classList.add('is-done');
-    if (live) live.textContent = summary || '✅ Done';
+    if (live) live.textContent = 'Done ✓';
   } else if (state === 'error') {
     card.classList.add('is-error');
-    if (live) live.textContent = '❌ ' + (summary || 'Failed');
+    if (live) live.textContent = 'Failed';
   } else {
-    if (live) live.textContent = '';
+    if (live) live.textContent = 'Idle';
   }
 }
 
@@ -1207,7 +1215,7 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<span class="run-round-icon">⏳</span><span class="run-round-text">Running…</span>';
+  if (btn) btn.innerHTML = '<span class="hex-label">Shaking…</span>';
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1307,7 +1315,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
-    btn.innerHTML = 'Activate the Hive';
+    btn.innerHTML = '<span class="hex-label">Shake<br>the Hive</span>';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   toast(`✅ Round ${round - 1} complete!`);
