@@ -1239,7 +1239,9 @@ async function runRound() {
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
   // ALL AIs including Builder review the document simultaneously
-  const allReviewers = [...activeAIs]; // everyone reviews first
+  const allReviewers = activeAIs.filter(ai =>
+    ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
+  ); // Builder always runs; others only if toggled on
   const reviewerResponses = [];
 
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
@@ -1295,13 +1297,6 @@ async function runRound() {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
         consoleLog(`✓ Conflicts block found — Builder reported NO CONFLICTS`, 'info');
-      }
-      // Temporary debug — log raw content between conflict tags
-      if (hasConflictBlock) {
-        const rawStart = builderResponse.indexOf('[CONFLICTS START]') + '[CONFLICTS START]'.length;
-        const rawEnd   = builderResponse.indexOf('[CONFLICTS END]');
-        const rawVal   = builderResponse.slice(rawStart, rawEnd).trim();
-        consoleLog(`🔍 Raw conflicts value: "${rawVal.substring(0, 120)}"`, 'info');
       }
       if (newDoc) {
         const docTa = document.getElementById('workDocument');
