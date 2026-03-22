@@ -429,7 +429,7 @@
 <!-- ============================================================
      LICENSE MODAL
      ============================================================ -->
-<div class="license-modal-overlay" id="licenseModal">
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
   <div class="license-modal">
     <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="license-modal-logo">
     <h2 class="license-modal-title">AI Hive Pro</h2>
@@ -441,6 +441,7 @@
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
     <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/aihive-pro" target="_blank">Don't have a key? Buy AI Hive Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
 
