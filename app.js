@@ -35,7 +35,7 @@ const DEFAULT_AIS = [
 const API_CONFIGS = {
   claude: {
     label: 'Anthropic (Claude)', model: 'claude-opus-4-5',
-    endpoint: 'https://api.anthropic.com/v1/messages',
+    endpoint: 'https://aihive-claude-proxy.weirdave.workers.dev',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
     bodyFn: (model, prompt) => JSON.stringify({ model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
