@@ -7,13 +7,14 @@
   <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4.png">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* ── THEME VARIABLES ── */
     :root {
       --bg:#0a0c12;--surface:#111318;--surface2:#181b24;--surface3:#1e2130;
       --border:#252838;--border2:#2e3348;--text:#e8ecf4;--text-dim:#9aa3b8;
-      --muted:#4a5270;--accent:#f5a623;--accent-dim:rgba(245,166,35,0.10);
+      --muted:#4a5270;--accent:#f5a623;--accent-hover:#f7b84a;--accent-dim:rgba(245,166,35,0.10);
       --blue:#4d8aff;--blue-dim:rgba(77,138,255,0.10);
       --green:#34d399;--green-dim:rgba(52,211,153,0.10);
-      --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.10);--red:#f87171;
+      --amber:#fbbf24;--amber-dim:rgba(251,191,36,0.10);
       --font:'DM Sans',system-ui,sans-serif;
       --font-display:'Syne',system-ui,sans-serif;
       --font-mono:'JetBrains Mono',monospace;
@@ -21,171 +22,263 @@
       --shadow-sm:0 2px 8px rgba(0,0,0,0.4);
     }
     [data-theme="light"] {
-      --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f5fb;--surface3:#e8eaf4;
-      --border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;
-      --muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);
-      --blue:#2563eb;--blue-dim:rgba(37,99,235,0.10);
-      --green:#059669;--green-dim:rgba(5,150,105,0.10);
-      --amber:#d97706;--amber-dim:rgba(217,119,6,0.09);--red:#dc2626;
+      --bg:#f2f4f8;--surface:#ffffff;--surface2:#f0f2f8;--surface3:#e4e7f4;
+      --border:#d0d4e8;--border2:#b8bdd8;--text:#0f1221;--text-dim:#384060;
+      --muted:#7880a0;--accent:#c97c06;--accent-hover:#d98a10;--accent-dim:rgba(201,124,6,0.12);
+      --blue:#1d4ed8;--blue-dim:rgba(29,78,216,0.10);
+      --green:#047857;--green-dim:rgba(4,120,87,0.10);
+      --amber:#b45309;--amber-dim:rgba(180,83,9,0.10);
       --shadow-sm:0 2px 8px rgba(0,0,0,0.08);
     }
     @media (prefers-color-scheme:light) {
       [data-theme="auto"] {
-        --bg:#f0f2f8;--surface:#ffffff;--surface2:#f4f5fb;--surface3:#e8eaf4;
-        --border:#dde0ee;--border2:#c8ccde;--text:#1a1d2e;--text-dim:#4a5270;
-        --muted:#9aa3c0;--accent:#d4880a;--accent-dim:rgba(212,136,10,0.10);
-        --blue:#2563eb;--blue-dim:rgba(37,99,235,0.10);
-        --green:#059669;--green-dim:rgba(5,150,105,0.10);
-        --amber:#d97706;--shadow-sm:0 2px 8px rgba(0,0,0,0.08);
+        --bg:#f2f4f8;--surface:#ffffff;--surface2:#f0f2f8;--surface3:#e4e7f4;
+        --border:#d0d4e8;--border2:#b8bdd8;--text:#0f1221;--text-dim:#384060;
+        --muted:#7880a0;--accent:#c97c06;--accent-hover:#d98a10;--accent-dim:rgba(201,124,6,0.12);
+        --blue:#1d4ed8;--blue-dim:rgba(29,78,216,0.10);
+        --green:#047857;--green-dim:rgba(4,120,87,0.10);
+        --amber:#b45309;--amber-dim:rgba(180,83,9,0.10);
+        --shadow-sm:0 2px 8px rgba(0,0,0,0.08);
       }
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-    body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.7;padding-bottom:60px;}
-    a{color:var(--accent);text-decoration:none;}
-    a:hover{text-decoration:underline;}
-    ::-webkit-scrollbar{width:4px;}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
 
-    /* ── HEADER ── */
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; }
+    body { background:var(--surface2); color:var(--text); font-family:var(--font); font-size:15px; line-height:1.7; display:flex; flex-direction:column; min-height:100vh; }
+    a { color:var(--accent); text-decoration:none; transition:all 0.12s; }
+    a:hover { color:var(--accent-hover); text-decoration:underline; }
+    ::-webkit-scrollbar { width:4px; }
+    ::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+    /* ── HEADER ── matches setup fs-header exactly ── */
     .page-header {
-      background:var(--surface);
-      border-bottom:1px solid var(--border);
-      padding:20px 40px;
-      position:sticky;top:0;z-index:100;
-      box-shadow:var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      background: var(--surface2);
+      position: sticky; top: 0; z-index: 100;
+      flex-shrink: 0;
     }
-    .page-header-inner {
-      display:flex;
-      align-items:center;
-      gap:18px;
-      width:100%;
+    .page-header-brand {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
     }
-    .page-header-inner img {
-      height:54px;width:54px;
-      object-fit:contain;
-      filter:drop-shadow(0 0 14px rgba(245,166,35,0.5));
-      flex-shrink:0;
+    .page-header-left-spacer {
+      /* mirrors the actions group width to keep brand truly centred */
+      visibility: hidden;
+      display: flex;
+      gap: 8px;
     }
-    .page-header-brand { flex:1; }
-    .page-header-brand h1 {
-      font-family:var(--font-display);
-      font-size:24px;font-weight:800;line-height:1;
+    .page-header-left-spacer::before { content: '🔑 All API Consoles'; font-size:12px; padding:7px 12px; border:1px solid transparent; white-space:nowrap; }
+    .page-header-left-spacer::after  { content: '💳 All Billing Pages ✕ Close this tab'; font-size:12px; padding:7px 12px; border:1px solid transparent; white-space:nowrap; }
+    .page-header-logo {
+      width: 80px; height: 80px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 10px rgba(245,166,35,0.4));
+      flex-shrink: 0;
     }
-    .page-header-brand p { color:var(--muted);font-size:12px;margin-top:3px;letter-spacing:0.06em;text-transform:uppercase; }
+    .page-header-name {
+      font-family: var(--font-display);
+      font-size: 28px; font-weight: 800;
+      color: var(--text); line-height: 1;
+    }
+    .page-header-tag {
+      font-size: 11px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      font-weight: 600; margin-top: 2px;
+    }
     .close-btn {
-      display:inline-flex;align-items:center;gap:6px;
-      background:transparent;
-      border:1px dashed var(--border2);
-      border-radius:var(--radius-sm);
-      color:var(--text-dim);
-      font-family:var(--font);font-size:13px;
-      padding:8px 16px;cursor:pointer;
-      transition:all 0.12s;
-      white-space:nowrap;
+      display:inline-flex; align-items:center; gap:6px;
+      background:transparent; border:1px dashed var(--border2);
+      border-radius:var(--radius-sm); color:var(--text-dim);
+      font-family:var(--font); font-size:13px;
+      padding:8px 16px; cursor:pointer; transition:all 0.12s; white-space:nowrap;
     }
-    .close-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .close-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-    /* ── ACTION BUTTONS ── */
-    .action-bar {
-      display:flex;gap:10px;
-      padding:20px 40px 0;
+    /* ── HEADER ACTIONS ── right side button group ── */
+    .page-header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
     }
-    .open-all-btn {
-      flex:1;display:flex;align-items:center;justify-content:center;gap:8px;
-      background:transparent;border:1px dashed var(--border2);
-      border-radius:var(--radius-sm);color:var(--text-dim);
-      font-family:var(--font);font-size:14px;font-weight:600;
-      padding:14px 20px;cursor:pointer;transition:all 0.12s;
+    .action-btn-sm {
+      display:inline-flex; align-items:center; gap:6px;
+      background:transparent; border:1px dashed var(--border2);
+      border-radius:var(--radius-sm); color:var(--text-dim);
+      font-family:var(--font); font-size:12px; font-weight:500;
+      padding:7px 12px; cursor:pointer; transition:all 0.12s; white-space:nowrap;
     }
-    .open-all-btn:hover{border-color:var(--accent);color:var(--accent);}
-    .open-all-note{text-align:center;font-size:12px;color:var(--muted);padding:8px 40px 0;}
+    .action-btn-sm:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-    /* ── TWO COLUMN LAYOUT ── */
-    .two-col {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:0;
-      padding:24px 40px 0;
+    /* ── LAYOUT ── */
+    .page-main { flex:1; display:flex; flex-direction:column; }
+    .two-col { display:grid; grid-template-columns:1fr 1fr; padding:16px 16px 16px; gap:32px; flex:1; }
+    .col {
+      background:var(--surface); border:1px solid var(--border2);
+      border-radius:var(--radius-md); padding:20px;
+      display:flex; flex-direction:column; gap:12px;
     }
-    .col { padding-right:32px; }
-    .col:last-child { padding-right:0; padding-left:32px; border-left:1px solid var(--border); }
+
+    /* ── SECTION TITLE ── matches fs-col-title from setup pages ── */
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 24px; font-weight: 800;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── COLUMN BEE ── matches setup-card-bee exactly ── */
+    .col-bee {
+      display: block;
+      width: 260px; height: 260px;
+      object-fit: contain;
+      margin: 0 auto 4px;
+      align-self: center;
+      flex-shrink: 0;
+      padding-top: 12px;
+      pointer-events: none;
+      filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+    }
 
     /* ── INFO CARDS ── */
-    .info-card{background:var(--surface);border:1px solid var(--border);border-left:4px solid var(--accent);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:12px;padding:16px 20px;}
-    .info-card h2{font-family:var(--font-display);font-size:15px;font-weight:700;margin-bottom:8px;}
-    .info-card p{color:var(--text-dim);font-size:14px;margin-bottom:8px;line-height:1.7;}
-    .info-card p:last-child{margin-bottom:0;}
-    .info-card.green{background:var(--green-dim);border:1px solid var(--green);border-left:4px solid var(--green);}
-    .info-card.green h3{color:var(--green);font-size:13px;font-weight:700;margin-bottom:6px;}
-    .info-card.green p{font-size:13px;}
-
-    .section-title{color:var(--muted);font-size:11px;font-weight:700;letter-spacing:0.09em;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:8px;margin:0 0 14px;}
+    .info-card {
+      background:var(--surface2); border:1px solid var(--border);
+      border-left:4px solid var(--accent);
+      border-radius:var(--radius-md); padding:16px 20px;
+    }
+    .info-card.green {
+      background:var(--green-dim); border:1px solid var(--green);
+      border-left:4px solid var(--green);
+    }
+    .info-card h2 { font-family:var(--font-display); font-size:15px; font-weight:700; margin-bottom:8px; }
+    .info-card h3 { font-size:13px; font-weight:700; margin-bottom:6px; color:var(--green); }
+    .info-card p { color:var(--text-dim); font-size:14px; line-height:1.7; margin-bottom:8px; }
+    .info-card p:last-child { margin-bottom:0; }
 
     /* ── AI CARDS ── */
-    .ai-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);box-shadow:var(--shadow-sm);margin-bottom:12px;overflow:hidden;}
-    .ai-card-header{align-items:center;border-bottom:1px solid var(--border);display:flex;gap:12px;padding:12px 16px;}
-    .ai-card-header img{border-radius:6px;height:28px;object-fit:contain;width:28px;flex-shrink:0;}
-    .ai-card-name{flex:1;font-family:var(--font-display);font-size:14px;font-weight:700;}
-    .badge{border-radius:20px;font-size:11px;font-weight:600;padding:3px 10px;white-space:nowrap;}
-    .badge-free{background:var(--green-dim);border:1px solid var(--green);color:var(--green);}
-    .badge-paid{background:var(--amber-dim);border:1px solid var(--amber);color:var(--amber);}
-    .badge-limited{background:var(--blue-dim);border:1px solid var(--blue);color:var(--blue);}
-    .badge-note{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);}
-    .ai-card-body{padding:14px 16px;}
-    .model-line{align-items:center;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);display:flex;font-size:11px;gap:8px;margin-bottom:12px;padding:7px 11px;flex-wrap:wrap;}
-    .model-line code{background:var(--surface3);border-radius:4px;font-family:var(--font-mono);font-size:11px;padding:2px 6px;}
-    .model-label{color:var(--muted);font-weight:600;flex-shrink:0;}
-    .steps{counter-reset:step;display:flex;flex-direction:column;gap:7px;list-style:none;}
-    .steps li{align-items:flex-start;color:var(--text-dim);counter-increment:step;display:flex;font-size:13px;gap:10px;line-height:1.6;}
-    .steps li::before{align-items:center;background:var(--accent-dim);border:1px solid var(--accent);border-radius:50%;color:var(--accent);content:counter(step);display:flex;flex-shrink:0;font-size:10px;font-weight:700;height:20px;justify-content:center;margin-top:2px;width:20px;}
-    .steps a{color:var(--accent);font-weight:500;}
-    .note-box{background:var(--amber-dim);border:1px solid var(--amber);border-radius:var(--radius-sm);color:var(--text-dim);font-size:13px;margin-top:10px;padding:9px 12px;line-height:1.6;}
-    .note-box.green{background:var(--green-dim);border-color:var(--green);}
+    .ai-card {
+      background:var(--surface2); border:1px solid var(--border);
+      border-radius:var(--radius-md); overflow:hidden;
+    }
+    .ai-card-header {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 14px; border-bottom:1px solid var(--border);
+      background:var(--surface3);
+    }
+    .ai-card-header img { border-radius:6px; height:28px; width:28px; object-fit:contain; flex-shrink:0; }
+    .ai-card-name { flex:1; font-family:var(--font-display); font-size:14px; font-weight:700; }
+    .ai-card-body { padding:14px; }
 
-    .page-footer{border-top:1px solid var(--border);color:var(--muted);font-size:12px;margin-top:32px;padding:16px 40px;text-align:center;}
-    @media(max-width:800px){
-      .two-col{grid-template-columns:1fr;padding:16px;}
-      .col{padding:0 0 24px 0 !important;border-left:none !important;border-bottom:1px solid var(--border);margin-bottom:24px;}
-      .action-bar{padding:16px;}
-      .page-header{padding:14px 20px;}
+    /* ── BADGES ── */
+    .badge { display:inline-block; border-radius:20px; font-size:11px; font-weight:600; padding:3px 10px; white-space:nowrap; }
+    .badge-free    { background:var(--green-dim); border:1px solid var(--green); color:var(--green); }
+    .badge-paid    { background:var(--amber-dim); border:1px solid var(--amber); color:var(--amber); }
+    .badge-limited { background:var(--blue-dim);  border:1px solid var(--blue);  color:var(--blue); }
+    .badge-note    { background:var(--surface2);  border:1px solid var(--border2); color:var(--muted); }
+
+    /* ── MODEL LINE ── */
+    .model-line {
+      display:flex; align-items:center; flex-wrap:wrap; gap:8px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius-sm); font-size:11px;
+      margin-bottom:12px; padding:7px 11px;
+    }
+    .model-label { color:var(--muted); font-weight:600; flex-shrink:0; }
+    .model-note { color:var(--muted); }
+    code { background:var(--surface3); border-radius:4px; font-family:var(--font-mono); font-size:11px; padding:2px 6px; }
+
+    /* ── STEPS ── */
+    .steps { counter-reset:step; display:flex; flex-direction:column; gap:7px; list-style:none; }
+    .steps li {
+      display:flex; align-items:flex-start; gap:10px;
+      color:var(--text-dim); counter-increment:step; font-size:13px; line-height:1.6;
+    }
+    .steps li::before {
+      content:counter(step);
+      display:flex; align-items:center; justify-content:center;
+      width:20px; height:20px; flex-shrink:0; margin-top:2px;
+      background:var(--accent-dim); border:1px solid var(--accent);
+      border-radius:50%; color:var(--accent); font-size:10px; font-weight:700;
+    }
+
+    /* ── NOTE BOXES ── */
+    .note-box {
+      background:var(--amber-dim); border:1px solid var(--amber);
+      border-radius:var(--radius-sm); color:var(--text-dim);
+      font-size:13px; margin-top:10px; padding:10px 13px; line-height:1.6;
+    }
+    .note-box.green { background:var(--green-dim); border-color:var(--green); }
+
+    /* ── FOOTER ── */
+    .page-footer {
+      background:var(--surface2);
+      padding:14px 32px; margin-top:0;
+      display:flex; align-items:center; justify-content:center; gap:10px;
+      flex-shrink:0;
+    }
+    .footer-note { color:var(--muted); font-size:12px; }
+    .footer-btn {
+      display:inline-flex; align-items:center; gap:6px;
+      background:transparent; border:1px dashed var(--border2);
+      border-radius:var(--radius-sm); color:var(--text-dim);
+      font-family:var(--font); font-size:12px; font-weight:500;
+      padding:5px 12px; cursor:pointer; transition:all 0.12s;
+      text-decoration:none;
+    }
+    .footer-btn:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+    @media(max-width:800px) {
+      .two-col { grid-template-columns:1fr; padding:12px; }
+      .action-bar { padding:12px; flex-direction:column; }
+      .page-header { padding:14px 20px; }
     }
   </style>
 </head>
 <body>
 
 <div class="page-header">
-  <div class="page-header-inner">
-    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive">
-    <div class="page-header-brand">
-      <h1>AI Hive</h1>
-      <p>API Key Setup Guide</p>
+  <div class="page-header-left-spacer"></div>
+  <div class="page-header-brand">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="page-header-logo">
+    <div>
+      <div class="page-header-name">AI Hive</div>
+      <div class="page-header-tag">API Key Setup Guide</div>
     </div>
+  </div>
+  <div class="page-header-actions">
+    <button class="action-btn-sm" onclick="openAllConsoles()">🔑 All API Consoles</button>
+    <button class="action-btn-sm" onclick="openAllBilling()">💳 All Billing Pages</button>
     <button class="close-btn" onclick="window.close()">✕ Close this tab</button>
   </div>
 </div>
 
-<div class="action-bar">
-  <button class="open-all-btn" onclick="openAllConsoles()">🔑 Open All API Consoles</button>
-  <button class="open-all-btn" onclick="openAllBilling()">💳 Open All Billing Pages</button>
-</div>
-<div class="open-all-note">Opens pages in new tabs — if your browser blocks popups, click Allow in the address bar</div>
+<div class="page-main">
 
 <div class="two-col">
 
   <!-- LEFT COLUMN -->
   <div class="col">
 
-    <div class="info-card" style="margin-top:24px;">
+    <img src="images/AI_Hive_API_Bee_v1.png" alt="" class="col-bee">
+
+    <div class="section-title">Free or low-cost AIs</div>
+
+    <div class="info-card section-title-top">
       <h2>What is an API key?</h2>
       <p>In Pro mode, AI Hive sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets AI Hive talk to each AI on your behalf.</p>
       <p>Without a key, AI Hive works in Free mode — you copy/paste prompts manually. API keys are only needed for the fully automated Pro experience.</p>
     </div>
 
-    <div class="info-card green" style="margin-bottom:24px;">
+    <div class="info-card green">
       <h3>Your keys never leave your device</h3>
       <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. AI Hive has no server — your keys are never shared with any third party.</p>
     </div>
-
-    <div class="section-title">Free or low-cost AIs</div>
 
     <div class="ai-card">
       <div class="ai-card-header">
@@ -194,7 +287,10 @@
         <span class="badge badge-free">Free tier available</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>gemini-2.0-flash</code><span style="color:var(--muted)">Google's fast multimodal model</span></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>gemini-2.0-flash</code>
+          <span class="model-note">Google's fast multimodal model</span>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
           <li>Click <strong>Create API Key</strong> and copy the key shown.</li>
@@ -211,13 +307,16 @@
         <span class="badge badge-free">Very affordable</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>deepseek-chat</code><span style="color:var(--muted)">DeepSeek's flagship model</span></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>deepseek-chat</code>
+          <span class="model-note">DeepSeek's flagship model</span>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a> and sign up.</li>
           <li>Click <strong>Create new API key</strong> and copy it.</li>
           <li>Paste it into the DeepSeek field in AI Hive and press Enter.</li>
         </ol>
-        <div class="note-box green">DeepSeek is 10-20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</div>
+        <div class="note-box green">DeepSeek is 10–20× cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</div>
       </div>
     </div>
 
@@ -228,9 +327,12 @@
         <span class="badge badge-note">Not yet available for individuals</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Status:</span><span style="color:var(--amber)">API in Private Preview — enterprise only as of early 2026</span></div>
-        <div class="note-box" style="margin-bottom:10px;">Copilot API is not currently available for personal Microsoft 365 subscribers. It requires an enterprise license and is still in Private Preview. This is a Microsoft restriction — not an AI Hive limitation.</div>
-        <div class="note-box green">Copilot works great in free/manual mode. Open <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> in a tab, paste your prompts, and copy responses back into AI Hive.</div>
+        <div class="model-line">
+          <span class="model-label">Status:</span>
+          <span class="model-note">API in Private Preview — enterprise only as of early 2026</span>
+        </div>
+        <div class="note-box">Copilot API is not currently available for personal Microsoft 365 subscribers. It requires an enterprise license and is still in Private Preview. This is a Microsoft restriction — not an AI Hive limitation.</div>
+        <div class="note-box green">Copilot works great in Free mode. Open <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> in a tab, paste your prompts, and copy responses back into AI Hive.</div>
       </div>
     </div>
 
@@ -239,7 +341,7 @@
   <!-- RIGHT COLUMN -->
   <div class="col">
 
-    <div class="section-title" style="margin-top:24px;">Pay-as-you-go AIs</div>
+    <div class="section-title">Pay-as-you-go AIs</div>
 
     <div class="ai-card">
       <div class="ai-card-header">
@@ -248,14 +350,17 @@
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>gpt-4o</code><span style="color:var(--muted)">OpenAI's flagship model</span></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>gpt-4o</code>
+          <span class="model-note">OpenAI's flagship model</span>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and sign in.</li>
           <li>Click <strong>Create new secret key</strong>, give it a name, click Create.</li>
           <li>Copy the key immediately — it is shown only once.</li>
           <li>Paste it into the ChatGPT field in AI Hive and press Enter.</li>
         </ol>
-        <div class="note-box">Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing). Without this, all API calls will fail immediately.</div>
+        <div class="note-box">Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing).</div>
       </div>
     </div>
 
@@ -266,7 +371,10 @@
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>claude-opus-4-5</code><span style="color:var(--muted)">Anthropic's capable everyday model</span></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>claude-opus-4-5</code>
+          <span class="model-note">Anthropic's capable everyday model</span>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a> and sign in.</li>
           <li>Click <strong>Create Key</strong>, give it a name (e.g. "AI Hive"), click Create.</li>
@@ -284,7 +392,9 @@
         <span class="badge badge-limited">Limited availability</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>grok-3</code></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>grok-3</code>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://console.x.ai" target="_blank">console.x.ai</a> and sign in with your X account.</li>
           <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
@@ -301,7 +411,9 @@
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
-        <div class="model-line"><span class="model-label">Model:</span><code>sonar-pro</code></div>
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>sonar-pro</code>
+        </div>
         <ol class="steps">
           <li>Go to <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a> and sign in.</li>
           <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
@@ -313,12 +425,13 @@
 
   </div>
 
-</div>
+</div><!-- /two-col -->
+</div><!-- /page-main -->
 
 <div class="page-footer">
-  AI Hive — open source, no server, no tracking. &nbsp;·&nbsp;
-  <a href="https://github.com/WeirDave/AIHive" target="_blank">GitHub</a> &nbsp;·&nbsp;
-  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank">AGPL-3.0</a>
+  <span class="footer-note">AI Hive — open source, no server, no tracking.</span>
+  <a href="https://github.com/WeirDave/AIHive" target="_blank" class="footer-btn">⭐ GitHub</a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="footer-btn">📄 AGPL-3.0</a>
 </div>
 
 <script>
