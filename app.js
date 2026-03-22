@@ -1151,7 +1151,7 @@ function initWorkScreen(isNewSession = false) {
   renderConflicts();
   updateRoundBadge();
   updateLicenseBadge();
-  setStatus('Standing by — toggle bees above, then Shake the Hive');
+  setStatus('Standing by — toggle bees above, then Smoke the Hive');
 
   // Keep line numbers filled on resize
   if (window._lineNumObserver) window._lineNumObserver.disconnect();
@@ -1559,7 +1559,7 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<span class="shake-wide-label">⬡ Shaking…</span>';
+  if (btn) btn.innerHTML = '<span class="shake-wide-label">🫖 Smoking…</span>';
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1698,7 +1698,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
-    btn.innerHTML = '<span class="shake-wide-label">⬡ Shake the Hive</span>';
+    btn.innerHTML = '<span class="shake-wide-label">🫖 Smoke the Hive</span>';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   toast(`✅ Round ${round - 1} complete!`);
@@ -1778,14 +1778,18 @@ function renderConflicts() {
   const el    = document.getElementById('conflictsPanel');
   const label = document.getElementById('conflictsRoundLabel');
   if (!el) return;
-  const latest = history.slice().reverse().find(h => h.conflicts);
+  // Always show the most recent completed round — not the most recent round that happened to have conflicts
+  const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest) {
-    el.innerHTML = '<div class="conflicts-empty">No conflicts from the last round. The Builder resolved everything.</div>';
+    el.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
     if (label) label.textContent = '';
     return;
   }
   if (label) label.textContent = `Round ${latest.round === 0 ? 'Original' : latest.round}`;
-  // Highlight decision tags
+  if (!latest.conflicts) {
+    el.innerHTML = '<div class="conflicts-empty">No conflicts from the last round. The Builder resolved everything.</div>';
+    return;
+  }
   const html = esc(latest.conflicts)
     .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
     .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
