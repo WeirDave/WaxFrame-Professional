@@ -59,8 +59,8 @@ const API_CONFIGS = {
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   gemini: {
-    label: 'Google (Gemini)', model: 'gemini-1.5-flash',
-    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+    label: 'Google (Gemini)', model: 'gemini-2.0-flash',
+    endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
     bodyFn: (model, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
@@ -75,7 +75,7 @@ const API_CONFIGS = {
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   perplexity: {
-    label: 'Perplexity', model: 'llama-3.1-sonar-large-128k-online',
+    label: 'Perplexity', model: 'sonar-pro',
     endpoint: 'https://api.perplexity.ai/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
@@ -141,6 +141,13 @@ function consoleLog(msg, type = 'info') {
   entry.appendChild(msgSpan);
   el.appendChild(entry);
   el.scrollTop = el.scrollHeight;
+}
+
+function copyConsole() {
+  const el = document.getElementById('liveConsole');
+  if (!el) return;
+  const text = Array.from(el.querySelectorAll('.console-entry')).map(e => e.textContent).join('\n');
+  navigator.clipboard.writeText(text).then(() => toast('📋 Console copied'));
 }
 
 function clearConsole() {
