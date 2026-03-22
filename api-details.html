@@ -119,8 +119,11 @@
 
 <div class="content">
 
-  <button class="open-all-btn" onclick="openAllConsoles()">🔑 Open All API Consoles at Once</button>
-  <div class="open-all-note">Opens all 7 consoles in new tabs — if your browser blocks popups click Allow in the address bar</div>
+  <div style="display:flex;gap:8px;margin-bottom:6px;">
+    <button class="open-all-btn" style="flex:1;" onclick="openAllConsoles()">🔑 Open All API Consoles</button>
+    <button class="open-all-btn" style="flex:1;" onclick="openAllBilling()">💳 Open All Billing Pages</button>
+  </div>
+  <div class="open-all-note">Opens all pages in new tabs — if your browser blocks popups click Allow in the address bar</div>
 
   <div class="info-card">
     <h2>What is an API key and why do I need one?</h2>
@@ -149,7 +152,7 @@
         <li>Copy the key immediately — shown only once.</li>
         <li>Paste it into the ChatGPT field in AI Hive and press Enter.</li>
       </ol>
-      <div class="note-box">⚠️ Requires credit balance. Go to <strong>Billing → Payment methods</strong> to add credit before API calls will work.</div>
+      <div class="note-box">⚠️ Requires credit balance. Your ChatGPT <em>subscription</em> does NOT include API access — the API is separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank">platform.openai.com → Billing</a> and add credit ($5–$10 gets you a lot of testing). Without this, all API calls will fail.</div>
     </div>
   </div>
 
@@ -167,7 +170,7 @@
         <li>Copy the key immediately — shown only once.</li>
         <li>Paste it into the Claude field in AI Hive and press Enter.</li>
       </ol>
-      <div class="note-box">⚠️ Requires credit balance. Go to <strong>Settings → Billing</strong> and add credit (~$5 minimum). You're only charged for what you use.</div>
+      <div class="note-box">⚠️ Requires credit balance. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank">console.anthropic.com → Billing</a> and add credit (~$5 minimum). You're only charged for what you use.</div>
     </div>
   </div>
 
@@ -197,7 +200,7 @@
         <li>Click <strong>Create new API key</strong> and copy it.</li>
         <li>Paste it into the DeepSeek field in AI Hive and press Enter.</li>
       </ol>
-      <div class="note-box green">✅ DeepSeek is often 10-20x cheaper per token than OpenAI or Anthropic. Requires a small credit balance (~$5) to get started. Excellent Builder choice if you want to keep API costs low.</div>
+      <div class="note-box green">✅ DeepSeek is often 10-20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> (~$5 gets you a lot). Excellent Builder choice if you want to keep API costs low.</div>
     </div>
   </div>
 
@@ -231,7 +234,7 @@
         <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
         <li>Paste it into the Grok field in AI Hive and press Enter.</li>
       </ol>
-      <div class="note-box">⚠️ Requires credit balance — add via the billing section at <a href="https://console.x.ai" target="_blank">console.x.ai</a>.</div>
+      <div class="note-box">⚠️ Requires credit balance — add at <a href="https://console.x.ai/billing" target="_blank">console.x.ai → Billing</a>. Note: API availability may vary — check the console for current status.</div>
     </div>
   </div>
 
@@ -248,7 +251,7 @@
         <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
         <li>Paste it into the Perplexity field in AI Hive and press Enter.</li>
       </ol>
-      <div class="note-box">⚠️ Requires credit balance — add via the billing section on the same settings page.</div>
+      <div class="note-box">⚠️ Requires credit balance — add at <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai → Settings → API → Add Credits</a>.</div>
     </div>
   </div>
 
@@ -272,11 +275,18 @@
   function openAllConsoles() {
     ['https://platform.openai.com/api-keys',
      'https://console.anthropic.com/settings/keys',
-     'https://portal.azure.com',
      'https://aistudio.google.com/apikey',
      'https://console.x.ai',
      'https://www.perplexity.ai/settings/api',
      'https://platform.deepseek.com/api_keys'
+    ].forEach(url => window.open(url, '_blank'));
+  }
+  function openAllBilling() {
+    ['https://platform.openai.com/settings/organization/billing/overview',
+     'https://console.anthropic.com/settings/billing',
+     'https://platform.deepseek.com/top_up',
+     'https://console.x.ai/billing',
+     'https://www.perplexity.ai/settings/api'
     ].forEach(url => window.open(url, '_blank'));
   }
 </script>
