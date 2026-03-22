@@ -67,7 +67,7 @@ const API_CONFIGS = {
     extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || ''
   },
   grok: {
-    label: 'xAI (Grok)', model: 'grok-beta',
+    label: 'xAI (Grok)', model: 'grok-3',
     endpoint: 'https://api.x.ai/v1/chat/completions',
     note: '⚠️ Check console.x.ai for API availability',
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
@@ -980,18 +980,16 @@ function renderBeeStatusGrid() {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     return `
-    <div class="bee-card ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
-      <div class="bee-card-top">
-        ${isB
-          ? `<span class="bee-builder-tag">BUILD</span>`
-          : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
-              ${isOn ? 'checked' : ''}
-              onchange="toggleSessionBee('${ai.id}', this.checked)">`
-        }
-        <img src="${ai.icon}" class="bee-card-icon" onerror="this.style.display='none'">
-      </div>
-      <div class="bee-card-name">${ai.name}</div>
-      <div class="bee-card-status" id="blive-${ai.id}">Idle</div>
+    <div class="bee-row ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
+      ${isB
+        ? `<span class="bee-builder-tag">BUILD</span>`
+        : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
+            ${isOn ? 'checked' : ''}
+            onchange="toggleSessionBee('${ai.id}', this.checked)">`
+      }
+      <img src="${ai.icon}" class="bee-row-icon" onerror="this.style.display='none'">
+      <span class="bee-row-name">${ai.name}</span>
+      <span class="bee-row-status" id="blive-${ai.id}">Idle</span>
     </div>`;
   }).join('');
 }
@@ -1019,7 +1017,7 @@ function setBeeStatus(id, state, summary) {
 
   if (state === 'sending') {
     card.classList.add('is-working');
-    if (live) live.textContent = 'Sending…';
+    if (live) live.textContent = 'Reviewing…';
   } else if (state === 'thinking') {
     card.classList.add('is-working');
     if (live) live.textContent = 'Thinking…';
@@ -1243,17 +1241,18 @@ async function runRound() {
   // Reset all bee statuses
   activeAIs.forEach(ai => setBeeStatus(ai.id, 'waiting', 'Ready'));
 
-  const reviewers = activeAIs.filter(ai => ai.id !== builder);
   const builderAI = activeAIs.find(ai => ai.id === builder);
+  // ALL AIs including Builder review the document simultaneously
+  const allReviewers = [...activeAIs]; // everyone reviews first
   const reviewerResponses = [];
 
-  consoleLog(`🐝 ${reviewers.length} reviewer${reviewers.length!==1?'s':''} + 1 builder — starting simultaneously`, 'info');
-  // Phase 1: Send to all reviewers simultaneously
-  setStatus(`⚡ Sending to ${reviewers.length} reviewer${reviewers.length !== 1 ? 's' : ''}…`);
-  reviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Thinking…'));
+  consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
+  setStatus(`⚡ Round ${round} — all ${allReviewers.length} AIs reviewing…`);
+  allReviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Reviewing…'));
 
-  const reviewerPromises = reviewers.map(async ai => {
-    const prompt = buildPromptForAI(ai, []);
+  // Phase 1: Everyone reviews — Builder gets reviewer prompt too
+  const reviewerPromises = allReviewers.map(async ai => {
+    const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
     try {
       const response = await callAPI(ai, prompt);
       const summary = extractSummary(response);
@@ -1262,10 +1261,10 @@ async function runRound() {
       return { ai, response, success: true };
     } catch(e) {
       if (e.message.startsWith('RATE_LIMITED:')) {
-        setBeeStatus(ai.id, 'error', `⏳ Rate limited — skipped this round`);
-        toast(`⏳ ${ai.name} hit a usage limit — skipped this round`, 4000);
+        setBeeStatus(ai.id, 'error', `⏳ Rate limited`);
+        toast(`⏳ ${ai.name} hit a usage limit — skipped`, 4000);
       } else if (e.message.startsWith('CORS_BLOCKED:')) {
-        setBeeStatus(ai.id, 'error', 'CORS blocked — proxy needed');
+        setBeeStatus(ai.id, 'error', 'CORS blocked');
       } else {
         setBeeStatus(ai.id, 'error', e.message);
       }
@@ -1277,15 +1276,17 @@ async function runRound() {
 
   const successfulReviews = reviewerResponses.filter(r => r.response);
 
-  // Phase 2: Send to Builder
-  const failedCount = reviewers.length - successfulReviews.length;
-  if (failedCount > 0) consoleLog(`⚠️ ${failedCount} reviewer${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
-  if (builderAI && (successfulReviews.length > 0 || phase === 'review')) {
-    consoleLog(`🔨 ${builderAI.name} (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''}…`, 'info');
-    setBeeStatus(builderAI.id, 'sending', 'Building document…');
+  // Phase 2: Builder compiles ALL reviews (including its own) into updated document
+  const failedCount = allReviewers.length - successfulReviews.length;
+  if (failedCount > 0) consoleLog(`⚠️ ${failedCount} AI${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
+  if (builderAI && successfulReviews.length > 0) {
+    // Include all responses — Builder's own review is in there too
+    const allForBuilder = successfulReviews;
+    consoleLog(`🔨 ${builderAI.name} (Builder) — compiling document from ${allForBuilder.length} review${allForBuilder.length!==1?'s':''} (including its own)…`, 'info');
+    setBeeStatus(builderAI.id, 'sending', 'Building…');
     setStatus(`🏗️ ${builderAI.name} is building the updated document…`);
 
-    const builderPrompt = buildPromptForAI(builderAI, successfulReviews);
+    const builderPrompt = buildPromptForAI(builderAI, allForBuilder);
     try {
       const builderResponse = await callAPI(builderAI, builderPrompt);
       const newDoc = extractDocument(builderResponse);
@@ -1312,7 +1313,7 @@ async function runRound() {
     }
   }
 
-  // Save to history
+  // Save to history — full document + all responses
   history.push({
     round, phase,
     projectName:    document.getElementById('projectName')?.value.trim()    || '',
@@ -1411,25 +1412,54 @@ function renderRoundHistory() {
   const el = document.getElementById('roundHistory');
   if (!el) return;
   if (history.length === 0) {
-    el.innerHTML = '<div class="round-history-empty">No completed rounds yet.</div>';
+    el.innerHTML = '<div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>';
     return;
   }
   el.innerHTML = history.slice().reverse().map((h, ri) => {
     const idx = history.length - 1 - ri;
     const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
+    const wordCount = h.doc ? h.doc.trim().split(/\s+/).length : 0;
+    const responseCount = Object.values(h.responses || {}).filter(Boolean).length;
     return `
     <div class="round-hist-item">
-      <div class="round-hist-hdr" onclick="toggleHistItem(${idx})">
-        <span class="round-hist-badge">Round ${h.round}</span>
-        <span class="round-hist-meta">${phaseLabel} · ${h.timestamp}</span>
-        <span id="rha${idx}" style="color:var(--muted);font-size:11px;">▼</span>
-      </div>
-      <div class="round-hist-body" id="rhb${idx}">
-        ${h.doc ? `<div style="color:var(--text-dim);font-size:12px;line-height:1.5;">${esc(h.doc.substring(0, 200))}${h.doc.length > 200 ? '…' : ''}</div>` : ''}
-        <button class="round-hist-restore" onclick="restoreRound(${idx})">↩ Restore this round</button>
+      <div class="round-hist-hdr">
+        <div class="round-hist-hdr-left">
+          <span class="round-hist-badge">Round ${h.round}</span>
+          <span class="round-hist-meta">${phaseLabel} · ${h.timestamp}</span>
+          <span class="round-hist-stats">${wordCount} words · ${responseCount} response${responseCount!==1?'s':''}</span>
+        </div>
+        <div class="round-hist-hdr-right">
+          <button class="round-hist-view-btn" onclick="viewRoundDoc(${idx})">View Doc</button>
+          <button class="round-hist-restore-btn" onclick="restoreRound(${idx})" title="Restore this version of the document">↩ Restore</button>
+        </div>
       </div>
     </div>`;
   }).join('');
+}
+
+function viewRoundDoc(idx) {
+  const h = history[idx];
+  if (!h || !h.doc) { toast('No document saved for this round'); return; }
+  // Show in a modal overlay
+  const existing = document.getElementById('histDocModal');
+  if (existing) existing.remove();
+  const modal = document.createElement('div');
+  modal.id = 'histDocModal';
+  modal.className = 'hist-doc-modal';
+  modal.innerHTML = `
+    <div class="hist-doc-modal-inner">
+      <div class="hist-doc-modal-hdr">
+        <span>Round ${h.round} Document — ${PHASES.find(p=>p.id===h.phase)?.label||h.phase} · ${h.timestamp}</span>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('histDocText').value).then(()=>toast('📋 Copied'))">📋 Copy</button>
+          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${idx});document.getElementById('histDocModal').remove()">↩ Restore this version</button>
+          <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
+        </div>
+      </div>
+      <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
+    </div>
+  `;
+  document.body.appendChild(modal);
 }
 
 function toggleHistItem(idx) {
