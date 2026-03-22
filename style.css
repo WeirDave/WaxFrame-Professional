@@ -1575,7 +1575,7 @@ kbd {
 /* ── SECTION TITLES (larger headers) ── */
 .work-section-title {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -1618,22 +1618,22 @@ kbd {
   min-width: 0;
 }
 .work-logo-inline .work-logo {
-  width: 80px;
-  height: 80px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
 }
 .work-logo-inline .work-logo-name {
-  font-size: 18px;
+  font-size: 22px;
 }
 .work-logo-inline .work-logo-tagline {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 /* ── HEXAGON BUTTON ── */
 .btn-hex-shake {
   position: relative;
-  width: 80px;
-  height: 90px;
+  width: 96px;
+  height: 108px;
   flex-shrink: 0;
   background: var(--accent);
   border: none;
@@ -1667,7 +1667,7 @@ kbd {
 }
 .hex-label {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
   color: #0a0c12;
   text-align: center;
@@ -1711,8 +1711,8 @@ kbd {
   gap: 4px;
 }
 .bee-card-icon {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
   border-radius: 6px;
   flex-shrink: 0;
@@ -1728,7 +1728,7 @@ kbd {
   flex-shrink: 0;
 }
 .bee-card-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
   text-align: center;
@@ -1738,7 +1738,7 @@ kbd {
   width: 100%;
 }
 .bee-card-status {
-  font-size: 10px;
+  font-size: 11px;
   color: var(--muted);
   text-align: center;
   white-space: nowrap;
@@ -1787,30 +1787,30 @@ kbd {
   position: relative;
 }
 .work-line-numbers {
-  width: 48px;
+  width: 52px;
   flex-shrink: 0;
   background: var(--surface2);
   border-right: 2px solid var(--accent-dim);
   overflow: hidden;
   font-family: var(--font-mono);
-  font-size: 12px;
-  line-height: 24px;
+  font-size: 13px;
+  line-height: 26px;
   color: var(--muted);
   text-align: right;
   padding: 10px 8px 10px 0;
   user-select: none;
 }
 .work-line-numbers div {
-  height: 24px;
-  line-height: 24px;
+  height: 26px;
+  line-height: 26px;
 }
 .work-doc-ta {
   flex: 1;
   border: none;
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 24px;
+  font-size: 15px;
+  line-height: 26px;
   padding: 10px 14px;
   resize: none;
   outline: none;
@@ -1822,9 +1822,9 @@ kbd {
   background-image: repeating-linear-gradient(
     to bottom,
     transparent 0px,
-    transparent 23px,
-    var(--border) 23px,
-    var(--border) 24px
+    transparent 25px,
+    var(--border) 25px,
+    var(--border) 26px
   );
   background-attachment: local;
   background-color: var(--surface);

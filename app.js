@@ -930,7 +930,7 @@ function updateLineNumbers() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
-  const lineH = 24; // must match CSS line-height of .work-doc-ta
+  const lineH = 26; // must match CSS line-height of .work-doc-ta
   const lines = ta.value.split('\n').length;
   // Always show at least enough lines to fill the visible area
   const visibleLines = Math.ceil(ta.clientHeight / lineH);
