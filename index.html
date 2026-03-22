@@ -331,7 +331,7 @@
         </div>
       </div>
       <div class="work-topbar-right">
-        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">🕐 History</button>
+        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">History</button>
         <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ API Keys</button>
         <a class="btn btn-ghost btn-sm" href="prompt-editor.html" target="_blank">✏️ Prompts</a>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
@@ -461,11 +461,14 @@
 <div class="hist-modal-overlay" id="roundHistoryModal" onclick="if(event.target===this)closeRoundHistoryModal()">
   <div class="hist-modal">
     <div class="hist-modal-hdr">
-      <span class="hist-modal-title">🕐 Round History</span>
-      <div class="flex-row-center">
-        <span class="work-history-hint">click to restore</span>
-        <button class="btn btn-ghost btn-sm" onclick="closeRoundHistoryModal()">✕ Close</button>
+      <div class="hist-modal-brand">
+        <img src="images/AI_Hive_History_Bee_v1.png" alt="" class="hist-modal-bee">
+        <div>
+          <div class="hist-modal-title">Round History</div>
+          <div class="hist-modal-sub">Click any round to restore that version of the document</div>
+        </div>
       </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeRoundHistoryModal()">✕ Close</button>
     </div>
     <div class="round-history" id="roundHistory">
       <div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>
