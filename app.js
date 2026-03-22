@@ -1364,6 +1364,7 @@ A valid suggestion is one that improves clarity, accuracy, consistency, logic, o
 
 RULES:
 - Return the FULL document — every section, complete. Do not use ellipses or placeholders.
+- Maintain the document at approximately the same length as the input. Incorporate suggestions by REPLACING or IMPROVING existing content, not by appending to it. The document must not grow longer each round.
 - Use plain text only. Do not use markdown headings, bullets, bold, italics, or tables. Write section headings as plain text on their own line if the document requires them.
 - Do not add meta-commentary or any text inside the document that is not document content.
 - Do not introduce new content, claims, or requirements that no reviewer suggested.
@@ -1438,6 +1439,15 @@ If there are no conflicts write exactly: NO CONFLICTS
 };
 
 
+// ── PROMPT LOADER — checks localStorage overrides first ──
+const LS_PROMPTS = 'aihive_v2_prompts';
+function getPrompt(key, fallback) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}');
+    return saved[key] !== undefined ? saved[key] : fallback;
+  } catch(e) { return fallback; }
+}
+
 function buildPromptForAI(ai, reviewerResponses) {
   const doc      = document.getElementById('workDocument')?.value.trim() || '';
   const goal     = document.getElementById('projectGoal')?.value.trim()  || '';
@@ -1465,15 +1475,16 @@ function buildPromptForAI(ai, reviewerResponses) {
       prompt += `${sep}\nFROM ${r.name.toUpperCase()}:\n${sep}\n${r.response}\n\n`;
     });
     prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
-    prompt += BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine;
+    const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
+    prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
   } else if (isScratch) {
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
-    prompt += DEFAULT_PHASE_INSTRUCTIONS.draft_scratch;
+    prompt += getPrompt('draft_scratch', DEFAULT_PHASE_INSTRUCTIONS.draft_scratch);
   } else {
     prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
     const key = phase === 'draft' ? 'draft_refine' : phase;
-    prompt += DEFAULT_PHASE_INSTRUCTIONS[key] || DEFAULT_PHASE_INSTRUCTIONS.refine;
+    prompt += getPrompt(key, DEFAULT_PHASE_INSTRUCTIONS[key] || DEFAULT_PHASE_INSTRUCTIONS.refine);
   }
 
   return prompt;
