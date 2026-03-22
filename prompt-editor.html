@@ -74,11 +74,16 @@
     .save-bar {
       display:flex; align-items:center; justify-content:space-between;
       background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-md);
-      padding:14px 20px; flex-shrink:0; gap:16px;
+      padding:14px 20px; flex-shrink:0; gap:16px; overflow:visible;
     }
-    .save-bar-left { display:flex; flex-direction:column; gap:2px; }
-    .save-bar-title { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--text); }
-    .save-bar-note { font-size:12px; color:var(--muted); }
+    .save-bar-left { display:flex; align-items:center; gap:16px; }
+    .save-bar-bee {
+      width: 160px; height: 160px; object-fit:contain;
+      filter:drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+      flex-shrink:0; margin-bottom:-40px;
+    }
+    .save-bar-title { font-family:var(--font-display); font-size:24px; font-weight:800; color:var(--text); line-height:1; }
+    .save-bar-note { font-size:12px; color:var(--muted); margin-top:4px; }
     .save-bar-actions { display:flex; gap:10px; flex-shrink:0; }
     .btn {
       display:inline-flex; align-items:center; gap:6px;
@@ -180,8 +185,11 @@
   <!-- SAVE BAR -->
   <div class="save-bar">
     <div class="save-bar-left">
-      <div class="save-bar-title">Edit your AI prompts</div>
-      <div class="save-bar-note">Changes are saved to your browser and used immediately on the next round. Prompts never leave your device.</div>
+      <img src="images/AI_Hive_Prompt_Editor_Bee_v1.png" alt="" class="save-bar-bee">
+      <div>
+        <div class="save-bar-title">Prompt Editor</div>
+        <div class="save-bar-note">Changes are saved to your browser and used immediately on the next round. Prompts never leave your device.</div>
+      </div>
     </div>
     <div class="save-bar-actions">
       <span class="status-toast" id="statusToast"></span>
