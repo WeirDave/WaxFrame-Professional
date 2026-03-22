@@ -707,6 +707,20 @@ function addCustomAI() {
   toast(`🐝 ${name} added to the hive`);
 }
 
+let _settingsReturnToWork = false;
+
+function openSettings() {
+  _settingsReturnToWork = true;
+  const btn = document.getElementById('setupContinueBtn');
+  if (btn) {
+    btn.innerHTML = '← Back to Work Screen';
+    btn.querySelector('img') && (btn.innerHTML = '← Back to Work Screen');
+  }
+  goToScreen('screen-setup');
+  renderAISetupGrid();
+  renderBuilderPickGrid();
+}
+
 function validateAndContinue() {
   const keyed = aiList.filter(ai => {
     const cfg = API_CONFIGS[ai.provider];
@@ -719,7 +733,17 @@ function validateAndContinue() {
   if (!builder) { toast('⚠️ Choose a Builder AI on the right'); return; }
   activeAIs = keyed;
   saveHive();
-  goToScreen('screen-project');
+
+  if (_settingsReturnToWork) {
+    _settingsReturnToWork = false;
+    // Reset button text
+    const btn = document.getElementById('setupContinueBtn');
+    if (btn) btn.innerHTML = '<img src="images/AI_Hive_Project_Bee_v1.png" style="width:36px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Continue to Project Setup →';
+    renderBeeStatusGrid();
+    goToScreen('screen-work');
+  } else {
+    goToScreen('screen-project');
+  }
 }
 
 // ── SCREEN 3: PROJECT SETUP ──
