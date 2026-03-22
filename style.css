@@ -2586,8 +2586,8 @@ kbd {
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-lg);
   width: 100%;
-  max-width: 700px;
-  max-height: 80vh;
+  max-width: 1000px;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2596,15 +2596,36 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 20px 28px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  background: var(--surface2);
+  gap: 16px;
+}
+.hist-modal-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+.hist-modal-bee {
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+  flex-shrink: 0;
+  margin-bottom: -60px;
 }
 .hist-modal-title {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
+  font-size: 32px;
+  font-weight: 800;
   color: var(--text);
+  line-height: 1;
+}
+.hist-modal-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 6px;
 }
 .hist-modal .round-history {
   flex: 1;
