@@ -952,11 +952,35 @@ function renderWorkPhaseBar() {
   const bar = document.getElementById('workPhaseBar');
   if (!bar) return;
   const idx = PHASES.findIndex(p => p.id === phase);
-  bar.innerHTML = PHASES.map((p, i) => {
+  let html = PHASES.map((p, i) => {
     const cls = i < idx ? 'work-phase-pill done' : i === idx ? 'work-phase-pill active' : 'work-phase-pill';
     return (i > 0 ? '<span class="work-phase-arrow">›</span>' : '') +
       `<span class="${cls}" onclick="setPhase('${p.id}')" title="Switch to ${p.label}">${p.label}</span>`;
   }).join('');
+  html += '<span class="work-phase-arrow">›</span>';
+  html += '<span class="work-phase-pill work-phase-finish" onclick="showFinishModal()" title="Export and start a new project">3 · Finish</span>';
+  bar.innerHTML = html;
+}
+
+function showFinishModal() {
+  const modal = document.getElementById('finishModal');
+  if (modal) modal.classList.add('active');
+}
+
+function hideFinishModal() {
+  const modal = document.getElementById('finishModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function finishAndExport() {
+  exportDocument();
+  hideFinishModal();
+}
+
+function finishAndNew() {
+  hideFinishModal();
+  clearProject();
+  goToScreen('screen-project');
 }
 
 function setPhase(id) {
