@@ -2592,7 +2592,7 @@ kbd {
 
 .hist-resp-panel { display: none; flex: 1; min-height: 0; }
 .hist-resp-panel.active { display: flex; flex-direction: column; }
-.hist-resp-tab.active { background: var(--accent-dim) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+.hist-resp-tab.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #0a0c12 !important; font-weight: 700 !important; cursor: default; }
 
 /* ── Shared footer (helper pages) ── */
 .page-footer {

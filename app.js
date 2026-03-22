@@ -1857,11 +1857,11 @@ function viewRoundDoc(idx) {
   const hasResponses = aiNames.length > 0;
 
   const tabButtons = hasResponses ? aiNames.map((id, i) =>
-    `<button class="btn btn-ghost btn-sm hist-resp-tab ${i===0?'doc-tab active':''}" onclick="switchHistTab('${id}',this)">${id}</button>`
+    `<button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('${id}',this)">${id}</button>`
   ).join('') : '';
 
   const tabPanels = hasResponses ? aiNames.map((id, i) =>
-    `<div class="hist-resp-panel ${i===0?'active':''}" id="histresp-${id}">
+    `<div class="hist-resp-panel" id="histresp-${id}">
       <textarea class="hist-doc-modal-ta" readonly>${esc(responses[id] || '(no response)')}</textarea>
     </div>`
   ).join('') : '';
@@ -1879,8 +1879,8 @@ function viewRoundDoc(idx) {
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
         </div>
       </div>
-      <div style="display:flex;gap:6px;padding:10px 14px 0;flex-wrap:wrap;background:var(--surface2);flex-shrink:0;">
-        <button class="btn btn-ghost btn-sm hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
+      <div style="display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;background:var(--surface2);flex-shrink:0;border-bottom:1px solid var(--border);">
+        <button class="work-phase-pill hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
         ${tabButtons}
       </div>
       <div class="hist-resp-panel active" id="histresp-__doc__">
