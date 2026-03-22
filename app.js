@@ -915,16 +915,28 @@ function initWorkScreen() {
   renderRoundHistory();
   updateRoundBadge();
   setStatus('Standing by — toggle bees above, then Shake the Hive');
+
+  // Keep line numbers filled on resize
+  if (window._lineNumObserver) window._lineNumObserver.disconnect();
+  const ta = document.getElementById('workDocument');
+  if (ta && window.ResizeObserver) {
+    window._lineNumObserver = new ResizeObserver(() => updateLineNumbers());
+    window._lineNumObserver.observe(ta);
+  }
+  updateLineNumbers();
 }
 
 function updateLineNumbers() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
-  const lineH = parseFloat(getComputedStyle(ta).lineHeight) || 20;
+  const lineH = 24; // must match CSS line-height of .work-doc-ta
   const lines = ta.value.split('\n').length;
-  ln.innerHTML = Array.from({length: lines}, (_, i) =>
-    `<div style="height:${lineH}px;line-height:${lineH}px;">${i + 1}</div>`
+  // Always show at least enough lines to fill the visible area
+  const visibleLines = Math.ceil(ta.clientHeight / lineH);
+  const totalLines = Math.max(lines, visibleLines);
+  ln.innerHTML = Array.from({length: totalLines}, (_, i) =>
+    `<div>${i + 1}</div>`
   ).join('');
   syncLineNumberScroll();
 }
@@ -970,13 +982,13 @@ function renderBeeStatusGrid() {
     return `
     <div class="bee-card ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
       <div class="bee-card-top">
-        <img src="${ai.icon}" class="bee-card-icon" onerror="this.style.display='none'">
         ${isB
           ? `<span class="bee-builder-tag">BUILD</span>`
           : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
               ${isOn ? 'checked' : ''}
               onchange="toggleSessionBee('${ai.id}', this.checked)">`
         }
+        <img src="${ai.icon}" class="bee-card-icon" onerror="this.style.display='none'">
       </div>
       <div class="bee-card-name">${ai.name}</div>
       <div class="bee-card-status" id="blive-${ai.id}">Idle</div>
