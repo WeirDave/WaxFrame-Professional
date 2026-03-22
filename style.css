@@ -2590,6 +2590,10 @@ kbd {
 .status-toast.saved { background: var(--green-dim); border-color: var(--green); color: var(--green); }
 .status-toast.reset { background: var(--red-dim); border-color: var(--red); color: var(--red); }
 
+.hist-resp-panel { display: none; flex: 1; min-height: 0; }
+.hist-resp-panel.active { display: flex; flex-direction: column; }
+.hist-resp-tab.active { background: var(--accent-dim) !important; border-color: var(--accent) !important; color: var(--accent) !important; }
+
 /* ── Shared footer (helper pages) ── */
 .page-footer {
   background: var(--surface2);
