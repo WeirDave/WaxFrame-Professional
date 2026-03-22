@@ -1108,7 +1108,7 @@ Begin your response immediately with suggestion number 1. Do not include an intr
 RULES:
 - Do NOT rewrite the document. Do not quote or restate large portions of it.
 - Number every suggestion starting from 1.
-- Each suggestion must identify the exact section or sentence being changed and propose a concrete, concise change. Example: "Section 2, sentence 3: Change 'utilize' to 'use'."
+- Each suggestion must identify the exact section or sentence being changed and propose a concrete, concise change. Example: "Line 14: Change 'utilize' to 'use'." or "Section 2, Line 23: Reword for clarity."
 - Focus on content, clarity, accuracy, internal consistency, tone, and logical flow only.
 - Do not suggest formatting, visual layout, or markup changes.
 - Do not add new requirements or sections unless the project goal clearly implies they are missing.
@@ -1124,7 +1124,7 @@ Begin your response immediately with suggestion number 1. Do not include an intr
 RULES:
 - Do NOT rewrite the document. Do not quote or restate large portions of it.
 - Number every suggestion starting from 1.
-- Each suggestion must identify the exact section or sentence and propose a concrete change.
+- Each suggestion must identify the exact line number and section and propose a concrete change. Example: "Line 42: Change 'notify supervisor' to 'alert team lead'."
 - Focus on clarity, precision, internal consistency, tone, and logical flow only.
 - Do not suggest formatting, structural layout, or markup changes.
 - Do not introduce new content that changes the intended meaning of the document.
@@ -1250,13 +1250,16 @@ function buildPromptForAI(ai, reviewerResponses) {
   const hasResponses  = reviewerResponses && reviewerResponses.length > 0;
   const builderAI     = activeAIs.find(a => a.id === builder);
 
+  // Add line numbers to document so AIs can reference them precisely
+  const numberedDoc = doc ? doc.split('\n').map((line, i) => `${String(i + 1).padStart(4, ' ')}  ${line}`).join('\n') : '';
+
   let prompt = `${eq}\n  AI HIVE — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
   if (notes) prompt += `USER NOTES FOR THIS ROUND:\n${sep}\n${notes}\n\n`;
 
   if (isBuilder && hasResponses) {
-    prompt += doc ? `CURRENT DOCUMENT:\n${sep}\n${doc}\n\n` : '';
+    prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
     reviewerResponses.forEach(r => {
       prompt += `${sep}\nFROM ${r.name.toUpperCase()}:\n${sep}\n${r.response}\n\n`;
     });
@@ -1266,7 +1269,7 @@ function buildPromptForAI(ai, reviewerResponses) {
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
     prompt += DEFAULT_PHASE_INSTRUCTIONS.draft_scratch;
   } else {
-    prompt += doc ? `CURRENT DOCUMENT:\n${sep}\n${doc}\n\n` : '';
+    prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
     const key = phase === 'draft' ? 'draft_refine' : phase;
     prompt += DEFAULT_PHASE_INSTRUCTIONS[key] || DEFAULT_PHASE_INSTRUCTIONS.refine;
