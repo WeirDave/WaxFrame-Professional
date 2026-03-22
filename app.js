@@ -1848,26 +1848,65 @@ function closeRoundHistoryModal() {
 function viewRoundDoc(idx) {
   const h = history[idx];
   if (!h || !h.doc) { toast('No document saved for this round'); return; }
-  // Show in a modal overlay
   const existing = document.getElementById('histDocModal');
   if (existing) existing.remove();
+
+  // Build reviewer response tabs
+  const responses = h.responses || {};
+  const aiNames = Object.keys(responses);
+  const hasResponses = aiNames.length > 0;
+
+  const tabButtons = hasResponses ? aiNames.map((id, i) =>
+    `<button class="btn btn-ghost btn-sm hist-resp-tab ${i===0?'doc-tab active':''}" onclick="switchHistTab('${id}',this)">${id}</button>`
+  ).join('') : '';
+
+  const tabPanels = hasResponses ? aiNames.map((id, i) =>
+    `<div class="hist-resp-panel ${i===0?'active':''}" id="histresp-${id}">
+      <textarea class="hist-doc-modal-ta" readonly>${esc(responses[id] || '(no response)')}</textarea>
+    </div>`
+  ).join('') : '';
+
   const modal = document.createElement('div');
   modal.id = 'histDocModal';
   modal.className = 'hist-doc-modal';
   modal.innerHTML = `
     <div class="hist-doc-modal-inner">
       <div class="hist-doc-modal-hdr">
-        <span>Round ${h.round} Document — ${PHASES.find(p=>p.id===h.phase)?.label||h.phase} · ${h.timestamp}</span>
+        <span>Round ${h.round === 0 ? 'Original' : h.round} — ${PHASES.find(p=>p.id===h.phase)?.label||h.phase} · ${h.timestamp}</span>
         <div style="display:flex;gap:6px;">
-          <button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('histDocText').value).then(()=>toast('📋 Copied'))">📋 Copy</button>
-          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${idx});document.getElementById('histDocModal').remove()">↩ Restore this version</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyActiveHistTab()">📋 Copy</button>
+          <button class="btn btn-ghost btn-sm" onclick="restoreRound(${idx})">↩ Restore</button>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
         </div>
       </div>
-      <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
+      <div style="display:flex;gap:6px;padding:10px 14px 0;flex-wrap:wrap;background:var(--surface2);flex-shrink:0;">
+        <button class="btn btn-ghost btn-sm hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
+        ${tabButtons}
+      </div>
+      <div class="hist-resp-panel active" id="histresp-__doc__">
+        <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
+      </div>
+      ${tabPanels}
     </div>
   `;
   document.body.appendChild(modal);
+}
+
+function switchHistTab(id, btn) {
+  const modal = document.getElementById('histDocModal');
+  if (!modal) return;
+  modal.querySelectorAll('.hist-resp-panel').forEach(p => p.classList.remove('active'));
+  modal.querySelectorAll('.hist-resp-tab').forEach(b => b.classList.remove('active'));
+  const panel = modal.querySelector(`#histresp-${id}`);
+  if (panel) panel.classList.add('active');
+  if (btn) btn.classList.add('active');
+}
+
+function copyActiveHistTab() {
+  const modal = document.getElementById('histDocModal');
+  if (!modal) return;
+  const active = modal.querySelector('.hist-resp-panel.active textarea');
+  if (active) navigator.clipboard.writeText(active.value).then(() => toast('📋 Copied'));
 }
 
 function toggleHistItem(idx) {
