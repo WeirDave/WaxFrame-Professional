@@ -1777,8 +1777,8 @@ kbd {
   to   { box-shadow: 0 0 24px rgba(245,166,35,0.9); }
 }
 .smoke-btn-img {
-  width: 32px;
-  height: 32px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
   flex-shrink: 0;
