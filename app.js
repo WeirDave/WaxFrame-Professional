@@ -1187,11 +1187,7 @@ function buildPromptForAI(ai, reviewerResponses) {
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
   if (notes) prompt += `USER NOTES FOR THIS ROUND:\n${sep}\n${notes}\n\n`;
 
-  if (isReview) {
-    prompt += doc ? `CURRENT DOCUMENT:\n${sep}\n${doc}\n\n` : '';
-    prompt += `${sep}\n⚠️ SEND TO ${builderAI?.name?.toUpperCase() || 'BUILDER'} ONLY\n${sep}\n\n`;
-    prompt += BUILDER_INSTRUCTIONS.review;
-  } else if (isBuilder && hasResponses) {
+  if (isBuilder && hasResponses) {
     prompt += doc ? `CURRENT DOCUMENT:\n${sep}\n${doc}\n\n` : '';
     reviewerResponses.forEach(r => {
       prompt += `${sep}\nFROM ${r.name.toUpperCase()}:\n${sep}\n${r.response}\n\n`;
@@ -1243,9 +1239,7 @@ async function runRound() {
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
   // ALL AIs including Builder review the document simultaneously
-  const allReviewers = activeAIs.filter(ai =>
-    ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
-  ); // Builder always runs; others only if toggled on
+  const allReviewers = [...activeAIs]; // everyone reviews first
   const reviewerResponses = [];
 
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
@@ -1294,7 +1288,14 @@ async function runRound() {
       const newDoc    = extractDocument(builderResponse);
       const conflicts = extractConflicts(builderResponse);
       window._lastConflicts = conflicts || null;
-      if (conflicts) consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
+      const hasConflictBlock = builderResponse.includes('[CONFLICTS START]');
+      if (!hasConflictBlock) {
+        consoleLog(`⚠️ Builder did not return a [CONFLICTS START] block — ChatGPT may have ignored the format`, 'warn');
+      } else if (conflicts) {
+        consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
+      } else {
+        consoleLog(`✓ Conflicts block found — Builder reported NO CONFLICTS`, 'info');
+      }
       if (newDoc) {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
