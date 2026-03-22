@@ -164,6 +164,8 @@ function clearConsole() {
 // ══════════════════════════════════════
 
 function isLicensed() {
+  // Dev bypass — type this in browser console: localStorage.setItem('aihive_dev','1')
+  if (localStorage.getItem('aihive_dev') === '1') return true;
   try {
     const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
     return data && data.valid === true && data.key;
