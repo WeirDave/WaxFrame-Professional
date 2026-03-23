@@ -1458,24 +1458,6 @@ RULES:
 - If critical information is missing from the project goal, make the fewest necessary assumptions and keep them conservative.
 - Prioritize completeness, clarity, internal consistency, and practical usefulness.`,
 
-  draft_refine: `You are part of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-The user has provided a document above. Your task: review it and give specific, numbered suggestions for improvement.
-
-Begin your response immediately with suggestion number 1. Do not include an introduction, summary, or restatement of the document.
-
-RULES:
-- Do NOT rewrite the document. Do not quote or restate large portions of it.
-- Number every suggestion starting from 1.
-- Each suggestion must identify the exact section or sentence being changed and propose a concrete, concise change. Example: "Line 14: Change 'utilize' to 'use'." or "Section 2, Line 23: Reword for clarity."
-- Focus on content, clarity, accuracy, internal consistency, tone, and logical flow only.
-- Do not suggest formatting, visual layout, or markup changes.
-- Do not add new requirements or sections unless the project goal clearly implies they are missing.
-- Do not include general praise, summaries, or filler.
-- Only suggest changes that materially improve accuracy, professional tone, or clarity.
-- Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
-- Each suggestion must be one sentence maximum — no explanations, no justifications.`,
-
   refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
 Review the current document provided in this message and give specific, numbered suggestions to improve it.
@@ -1653,11 +1635,149 @@ function buildPromptForAI(ai, reviewerResponses) {
   } else {
     prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
     prompt += `${sep}\nSEND TO ALL AIs\n${sep}\n\n`;
-    const key = phase === 'draft' ? 'draft_refine' : phase;
-    prompt += getPrompt(key, DEFAULT_PHASE_INSTRUCTIONS[key] || DEFAULT_PHASE_INSTRUCTIONS.refine);
+    prompt += getPrompt('refine', DEFAULT_PHASE_INSTRUCTIONS.refine);
   }
 
   return prompt;
+}
+
+// ── SEND TO BUILDER ONLY ──
+async function runBuilderOnly() {
+  const btn = document.getElementById('builderOnlyBtn');
+  const smokeBtn = document.getElementById('runRoundBtn');
+
+  if (smokeBtn?.classList.contains('running')) return;
+  if (btn?.disabled) return;
+
+  const notes = document.getElementById('workNotes')?.value.trim() || '';
+  if (!notes) {
+    toast('⚠️ Add a note first — tell the Builder what to change');
+    return;
+  }
+
+  docText = document.getElementById('workDocument')?.value.trim() || '';
+  if (!docText) {
+    toast('⚠️ No document to send to Builder');
+    return;
+  }
+
+  const builderAI = activeAIs.find(ai => ai.id === builder);
+  if (!builderAI) { toast('⚠️ No Builder selected'); return; }
+
+  const cfg = API_CONFIGS[builderAI.provider];
+  if (!cfg?._key) { toast(`⚠️ No API key for ${builderAI.name}`); return; }
+
+  // ── LICENSE CHECK ──
+  if (!isLicensed()) {
+    const used = getTrialRoundsUsed();
+    if (used >= FREE_TRIAL_ROUNDS) { showLicenseModal('trial_expired'); return; }
+  }
+
+  btn.disabled = true;
+  smokeBtn?.classList.add('running');
+  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  setStatus(`🏗️ Sending directly to ${builderAI.name}…`);
+  consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+  consoleLog(`📝 Notes: ${notes}`, 'info');
+  setBeeStatus(builderAI.id, 'sending', 'Building…');
+
+  // Build prompt — no reviewer responses, just the doc + notes → Builder instructions
+  const builderPrompt = buildPromptForAI(builderAI, []);
+  // Swap in builder instructions directly (no reviewer suggestions to compile)
+  // We reuse buildPromptForAI with an empty array which gives reviewer prompt —
+  // instead build the builder prompt manually with empty reviews so notes drive it
+  const sep = '─'.repeat(60);
+  const eq  = '═'.repeat(60);
+  const goal  = document.getElementById('projectGoal')?.value.trim() || '';
+  const name  = document.getElementById('projectName')?.value.trim() || '';
+  const numberedDoc = docText.split('\n').map((line, i) => `${String(i+1).padStart(4,' ')}  ${line}`).join('\n');
+  let prompt = `${eq}\n  AI HIVE — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
+  if (goal) prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0,300)+'…' : goal}\n\n`;
+  prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
+  prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
+  prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
+  const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
+  prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
+
+  let builderHadError = false;
+  try {
+    const builderResponse = await callAPI(builderAI, prompt);
+    const newDoc    = extractDocument(builderResponse);
+    const conflicts = extractConflicts(builderResponse);
+    window._lastConflicts = conflicts || null;
+    const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
+
+    if (!hasConflictBlock) {
+      builderHadError = true;
+      setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+      setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+      consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round not saved.`, 'warn');
+    } else if (conflicts) {
+      consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
+    } else {
+      consoleLog(`✓ Conflicts block found — Builder reported NO CONFLICTS`, 'info');
+    }
+
+    if (!builderHadError && newDoc) {
+      const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
+      const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
+      const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
+      if (prevWords > 0 && newWords > prevWords * 1.15) {
+        builderHadError = true;
+        setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
+        setStatus(`⚠️ Builder output is ${bloatPct}% of original — round rejected`);
+        consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved.`, 'warn');
+      } else {
+        const docTa = document.getElementById('workDocument');
+        if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
+        docText = newDoc;
+        setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
+        setStatus(`✅ Round ${round} complete — Builder applied your instructions`);
+        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
+      }
+    } else if (!builderHadError) {
+      builderHadError = true;
+      setBeeStatus(builderAI.id, 'error', 'Invalid builder output format');
+      setStatus(`⚠️ Builder output missing required delimiters — document unchanged`);
+      consoleLog(`⚠️ Builder response missing %%DOCUMENT_START%%/%%DOCUMENT_END%% — document unchanged`, 'warn');
+    }
+  } catch(e) {
+    builderHadError = true;
+    setBeeStatus(builderAI.id, 'error', e.message);
+    setStatus(`⚠️ Builder failed: ${e.message}`);
+    consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
+  }
+
+  if (!builderHadError) {
+    history.push({
+      round, phase,
+      projectName:    document.getElementById('projectName')?.value.trim()    || '',
+      projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
+      doc:            docText,
+      notes:          notes,
+      conflicts:      window._lastConflicts || null,
+      responses:      {},
+      timestamp:      new Date().toLocaleTimeString(),
+      label:          'Builder Only'
+    });
+    window._lastConflicts = null;
+    round++;
+    updateRoundBadge();
+    renderRoundHistory();
+    renderWorkPhaseBar();
+    renderConflicts();
+    saveSession();
+    if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
+    toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
+  } else {
+    toast('⚠️ Round not saved — Builder output was invalid', 5000);
+  }
+
+  btn.disabled = false;
+  smokeBtn?.classList.remove('running');
+  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  const hiveStatus = document.getElementById('hiveStatus');
+  if (hiveStatus) hiveStatus.textContent = 'Ready';
 }
 
 // ── RUN ROUND ──

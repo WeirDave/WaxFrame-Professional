@@ -1,0 +1,75 @@
+Welcome to the Team
+
+We’re excited to have you here at our small tech company. This guide is designed to help you get settled in on your first day and beyond. Please use it as your go-to reference for logistics, tools, company culture, and key contacts. If you have any questions, don’t hesitate to ask—everyone here is happy to help.
+
+First Day Logistics
+
+Please arrive at our office at [INSERT OFFICE ADDRESS] by 9:00 AM. Head to the front desk and mention you are the new hire starting today. You’ll be greeted by [INSERT HR OR OFFICE MANAGER NAME], who will give you a quick tour, show you to your workspace, and help you with any remaining paperwork.
+
+Items to bring:
+- Government-issued photo ID (for HR paperwork and security)
+- Any signed offer or onboarding documents (if you received them via email)
+- Direct deposit information for payroll
+- A notebook and pen or a personal device for note-taking
+- Any other personal items for your desk
+
+You’ll meet your manager, [INSERT MANAGER NAME], for a welcome conversation and to review your first week’s schedule. An assigned buddy or mentor may also be introduced to help guide you through the first few days. Expect introductions to the immediate team and a tour covering important locations like the kitchen, restrooms, and emergency exits. Lunch on your first day is on us—your manager, teammate, or buddy will join you for a casual meal to get acquainted.
+
+Our dress code is casual, so please wear whatever makes you feel comfortable and productive.
+
+IT Setup
+
+Your company laptop (and necessary peripherals) will be waiting at your desk. [INSERT IT CONTACT NAME] from IT will help you with setup, including logging in with temporary credentials and connecting to the office Wi-Fi. Your buddy or IT will guide you through configuring your main accounts:
+
+- Email ([INSERT EMAIL SYSTEM]) – reset your password on first login
+- Slack (for team chats)—join #general and your team’s channel
+- Google Workspace (docs, calendar, and shared files)
+- Project management tools ([INSERT TOOL NAME, e.g., Jira]) for tracking tasks
+- GitHub (if applicable) for code repositories
+- Internal company wiki or handbook
+
+Make sure to enable strong passwords and set up two-factor authentication where available. Most tools are cloud-based and ready to go. If you encounter any issues with hardware or software access, contact IT at [INSERT IT EMAIL/SLACK], visit their office, or use the IT Help channel on Slack. IT responds promptly to requests.
+
+Company Culture and Communication Norms
+
+We are a close-knit, collaborative team that values open communication, transparency, and mutual respect. Your ideas and questions are always welcome—there are no silly questions here. We have a flat structure, so speak up if you see something we can do better.
+
+Our main communication tool is Slack. Use public team channels for most work-related discussions so info is shared and searchable. Direct messages are for private or sensitive matters. Use email for external communication and formal documentation, and Slack for all internal team collaboration.
+
+You’re encouraged to respond to messages during working hours, but immediate responses aren’t required unless something is urgent (which will be clearly stated). Outside of work hours, feel free to disconnect—we value work-life balance.
+
+We have weekly all-hands check-ins—typically on [INSERT DAY/TIME]—to share updates and celebrate wins. Team meetings happen as needed but we keep them focused and efficient. Social events (lunches, happy hours, game nights) are optional but a great way to connect.
+
+Remote work is available on a flexible basis; coordinate with your manager and team. Read the employee handbook (you’ll get a link or access today) for more details on our values: innovation, kindness, and ownership.
+
+Key Policies
+
+Working Hours
+
+Our standard office hours are 9:00 AM to 5:00 PM, Monday through Friday. There’s flexibility if you need to adjust—just keep your manager in the loop. We trust you to manage your time responsibly. For remote work or alternate hours, discuss with your manager what works best for you and your team.
+
+Time Off
+
+You receive [INSERT NUMBER or “unlimited”] days of paid time off each year. For planned absences (like vacations or personal days), submit your request through [INSERT TIME OFF SYSTEM NAME] or portal with at least two weeks’ notice. For sick days or emergencies, notify your manager via Slack or email as early as possible. All details are in the employee handbook.
+
+Expenses
+
+For work-related expenses (like travel, supplies, or meals), keep your receipts and submit for reimbursement through [INSERT EXPENSE SYSTEM/APP NAME, e.g., Expensify or online portal]. Expenses under [INSERT AUTO-APPROVE AMOUNT, e.g., $50] are typically auto-approved; expenses exceeding the auto-approval threshold must receive written manager authorization before the purchase is made. Submit expense claims within [INSERT TIMEFRAME, e.g., 30 days]. Your manager and HR can guide you through the process, and most reimbursements are processed within two pay periods.
+
+Who to Contact
+
+Here’s who to ask for common needs:
+- Manager ([INSERT MANAGER NAME/EMAIL]): Questions about your role, projects, feedback, day-to-day work, career growth.
+- Assigned Buddy ([INSERT BUDDY NAME/EMAIL], if applicable): First-week support, team introductions, practical tips.
+- HR ([INSERT HR CONTACT NAME & EMAIL]): Payroll, benefits, leave, policies, confidential concerns.
+- IT ([INSERT IT CONTACT NAME/EMAIL/SLACK]): Technical help with your computer, software, system access, or security.
+- Office Manager ([INSERT OFFICE MANAGER CONTACT]): Building access, supplies, logistics.
+- Facilities ([INSERT CONTACT, if separate]): Desk or workspace, badge, any building issues.
+
+If you’re unsure who to contact, post in Slack #help or #general—someone will point you in the right direction. All key contacts are listed in your welcome email and in the company directory.
+
+Final Thoughts
+
+Starting a new job can feel overwhelming, but remember, everyone was new once. Take your time settling in, ask lots of questions, and lean on your team for support. We’re confident you’ll do great things here and look forward to working with you.
+
+Welcome aboard!
