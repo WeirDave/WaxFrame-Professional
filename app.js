@@ -42,11 +42,18 @@ const API_CONFIGS = {
     extractFn: d => d?.content?.[0]?.text || ''
   },
   chatgpt: {
-    label: 'OpenAI (ChatGPT)', model: 'gpt-4o-mini',
+    label: 'OpenAI (ChatGPT)', model: 'gpt-4o',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    bodyFn: (model, prompt) => JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const split  = splitA !== -1 ? splitA : splitB;
+      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
+      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   copilot: {
@@ -54,7 +61,14 @@ const API_CONFIGS = {
     endpoint: 'https://api.openai.com/v1/chat/completions',
     note: '⚠️ Copilot API not available for personal Microsoft 365 accounts. Use Copilot in free/manual mode.',
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    bodyFn: (model, prompt) => JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const split  = splitA !== -1 ? splitA : splitB;
+      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
+      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   gemini: {
@@ -70,7 +84,14 @@ const API_CONFIGS = {
     endpoint: 'https://api.x.ai/v1/chat/completions',
     note: '⚠️ Check console.x.ai for API availability',
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    bodyFn: (model, prompt) => JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const split  = splitA !== -1 ? splitA : splitB;
+      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
+      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   perplexity: {
@@ -78,7 +99,14 @@ const API_CONFIGS = {
     endpoint: 'https://api.perplexity.ai/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    bodyFn: (model, prompt) => JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const split  = splitA !== -1 ? splitA : splitB;
+      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
+      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
   deepseek: {
@@ -86,7 +114,14 @@ const API_CONFIGS = {
     endpoint: 'https://api.deepseek.com/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-    bodyFn: (model, prompt) => JSON.stringify({ model, messages: [{ role: 'user', content: prompt }] }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const split  = splitA !== -1 ? splitA : splitB;
+      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
+      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   }
 };
