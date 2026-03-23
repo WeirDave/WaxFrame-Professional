@@ -251,6 +251,11 @@ function consoleLog(msg, type = 'info') {
   el.prepend(entry);
 }
 
+function toggleConsoleLegend() {
+  const el = document.getElementById('consoleLegend');
+  if (el) el.classList.toggle('show');
+}
+
 function copyConsole() {
   const el = document.getElementById('liveConsole');
   if (!el) return;

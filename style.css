@@ -1253,6 +1253,22 @@ kbd {
 .console-send    { color: #60a5fa; }
 .console-preview { color: #a78bfa; }
 
+/* ── Console Legend ── */
+.console-legend {
+  display: none;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 6px 8px;
+  background: #0a0c12;
+  border: 1px solid #1a7a3a;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.console-legend.show { display: flex; }
+.legend-item { white-space: nowrap; }
+
 /* ── SECTION TITLES (larger headers) ── */
 .work-section-title {
   font-family: var(--font-display);
