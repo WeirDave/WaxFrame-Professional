@@ -871,9 +871,9 @@ html, body {
   resize: none;
   outline: none;
   overflow-y: auto;
-  overflow-x: hidden;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-x: auto;
+  white-space: pre;
+  word-wrap: normal;
 }
 
 /* COL 2: NOTES */
