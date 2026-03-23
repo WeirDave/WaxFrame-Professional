@@ -42,7 +42,7 @@ const API_CONFIGS = {
     extractFn: d => d?.content?.[0]?.text || ''
   },
   chatgpt: {
-    label: 'OpenAI (ChatGPT)', model: 'gpt-4o',
+    label: 'OpenAI (ChatGPT)', model: 'gpt-4o-mini',
     endpoint: 'https://api.openai.com/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
