@@ -1394,11 +1394,11 @@ RULES:
 - Do not add meta-commentary, explanations, or any text that is not part of the document itself.
 - Do not introduce new content, requirements, or changes not already present in the document.
 - Do not place any content outside the required wrapper blocks.
-- Structure your response EXACTLY like this — nothing before [DOCUMENT START], nothing after [DOCUMENT END]:
+- Structure your response EXACTLY like this — nothing before %%DOCUMENT_START%%, nothing after %%DOCUMENT_END%%:
 
-[DOCUMENT START]
+%%DOCUMENT_START%%
 ...the complete document here...
-[DOCUMENT END]`,
+%%DOCUMENT_END%%`,
 
 };
 
@@ -1426,20 +1426,20 @@ RULES:
 - Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
 - If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
-- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
+- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
 - Structure your response EXACTLY like this:
 
-[DOCUMENT START]
+%%DOCUMENT_START%%
 ...the complete updated document here...
-[DOCUMENT END]
+%%DOCUMENT_END%%
 
-[CONFLICTS START]
+%%CONFLICTS_START%%
 For each conflict, state: the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
 Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
 Example: [USER DECISION] 3 reviewers preferred "conclude" while 3 preferred "summarise" — user should decide which tone fits the document.
 Example: [BUILDER DECISION] 2 reviewers wanted a new section added, 2 said remove it — applied the removal as it keeps the document concise.
 If there are no conflicts write exactly: NO CONFLICTS
-[CONFLICTS END]`,
+%%CONFLICTS_END%%`,
 
   draft: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -1455,17 +1455,17 @@ RULES:
 - Ensure the consolidated draft has a single, consistent voice. Eliminate redundant content introduced by merging.
 - If a requirement from the project goal is missing from all drafts, flag it in the conflicts section as a MISSING REQUIREMENT.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
-- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
+- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
 - Structure your response EXACTLY like this:
 
-[DOCUMENT START]
+%%DOCUMENT_START%%
 ...the complete first draft here...
-[DOCUMENT END]
+%%DOCUMENT_END%%
 
-[CONFLICTS START]
+%%CONFLICTS_START%%
 List any conflicting or incompatible approaches between drafts. For each conflict note: what each draft proposed, which you chose, and why in one to two sentences. Flag any MISSING REQUIREMENTS here.
 If there are no conflicts write exactly: NO CONFLICTS
-[CONFLICTS END]`,
+%%CONFLICTS_END%%`,
 
   review: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -1480,17 +1480,17 @@ RULES:
 - Do not introduce new content beyond what the user's edits and reviewer suggestions provide.
 - Preserve the document structure unless the user's edits changed it.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
-- Do not place any content outside the required wrapper blocks. Nothing before [DOCUMENT START], nothing after [CONFLICTS END].
+- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
 - Structure your response EXACTLY like this:
 
-[DOCUMENT START]
+%%DOCUMENT_START%%
 ...the complete updated document here...
-[DOCUMENT END]
+%%DOCUMENT_END%%
 
-[CONFLICTS START]
+%%CONFLICTS_START%%
 List any cases where reviewer suggestions were discarded due to user edits. For each note: what the reviewer suggested, what the user chose, in one to two sentences.
 If there are no conflicts write exactly: NO CONFLICTS
-[CONFLICTS END]`,
+%%CONFLICTS_END%%`,
 
 };
 
@@ -1656,9 +1656,9 @@ async function runRound() {
       const conflicts = extractConflicts(builderResponse);
       window._lastConflicts = conflicts || null;
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
-      const hasConflictBlock = cleanResponse.includes('[CONFLICTS START]');
+      const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
       if (!hasConflictBlock) {
-        consoleLog(`⚠️ Builder did not return a [CONFLICTS START] block — ChatGPT may have ignored the format`, 'warn');
+        consoleLog(`⚠️ Builder did not return a %%CONFLICTS_START%% block — ChatGPT may have ignored the format`, 'warn');
       } else if (conflicts) {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
@@ -1785,24 +1785,22 @@ async function callAPI(ai, prompt) {
 // ── HELPERS ──
 function extractConflicts(text) {
   const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
-  // Use lastIndexOf for BOTH markers — the document itself may contain these
-  // delimiter names as examples, so we want the LAST occurrence of each
-  const start = clean.lastIndexOf('[CONFLICTS START]');
-  const end   = clean.lastIndexOf('[CONFLICTS END]');
+  // %%DELIMITERS%% are unique — document content should never contain them naturally
+  const start = clean.lastIndexOf('%%CONFLICTS_START%%');
+  const end   = clean.lastIndexOf('%%CONFLICTS_END%%');
   if (start === -1 || end === -1 || end <= start) return null;
-  const raw = clean.slice(start + '[CONFLICTS START]'.length, end).trim().replace(/[,\s]+$/, '');
+  const raw = clean.slice(start + '%%CONFLICTS_START%%'.length, end).trim().replace(/[,\s]+$/, '');
   if (!raw || raw.toUpperCase() === 'NO CONFLICTS') return null;
   return raw;
 }
 
 function extractDocument(text) {
   const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
-  // Use lastIndexOf for END — some AIs repeat the delimiter
-  // But use indexOf for START so we get the first real document block
-  const start = clean.indexOf('[DOCUMENT START]');
-  const end   = clean.lastIndexOf('[DOCUMENT END]');
+  // indexOf for START, lastIndexOf for END — handles rare cases where AIs repeat the delimiter
+  const start = clean.indexOf('%%DOCUMENT_START%%');
+  const end   = clean.lastIndexOf('%%DOCUMENT_END%%');
   if (start === -1 || end === -1 || end <= start) return null;
-  return clean.slice(start + '[DOCUMENT START]'.length, end).trim();
+  return clean.slice(start + '%%DOCUMENT_START%%'.length, end).trim();
 }
 
 function renderConflicts() {
