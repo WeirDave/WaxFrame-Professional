@@ -2000,13 +2000,13 @@ function viewRoundDoc(idx) {
       </div>
       <div style="display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;background:var(--surface2);flex-shrink:0;border-bottom:1px solid var(--border);">
         <button class="work-phase-pill hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
-        ${h.notes ? `<button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('__notes__',this)">📝 Notes</button>` : ''}
+        <button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('__notes__',this)">📝 Notes</button>
         ${tabButtons}
       </div>
       <div class="hist-resp-panel active" id="histresp-__doc__">
         <textarea id="histDocText" class="hist-doc-modal-ta" readonly>${esc(h.doc)}</textarea>
       </div>
-      ${h.notes ? `<div class="hist-resp-panel" id="histresp-__notes__"><textarea class="hist-doc-modal-ta" readonly>${esc(h.notes)}</textarea></div>` : ''}
+      <div class="hist-resp-panel" id="histresp-__notes__"><textarea class="hist-doc-modal-ta" readonly>${esc(h.notes || '(no notes saved for this round)')}</textarea></div>
       ${tabPanels}
     </div>
   `;
