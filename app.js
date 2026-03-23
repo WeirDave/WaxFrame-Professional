@@ -1328,7 +1328,7 @@ function syncLineNumberScroll() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
-  ln.scrollTop = ta.scrollTop;
+  requestAnimationFrame(() => { ln.scrollTop = ta.scrollTop; });
 }
 
 function renderWorkPhaseBar() {
