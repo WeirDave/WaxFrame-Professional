@@ -40,13 +40,16 @@ Add API keys for the AIs you want to use and pick your Builder. You need at leas
 **2. Describe your project**
 Give it a name, version, and a detailed goal. The more specific your goal, the better your results from round one.
 
-**3. Shake the Hive**
-All your Reviewer AIs read the document and send numbered suggestions. Your Builder reads every suggestion plus the full document and rewrites it.
+**3. Run the Draft phase — once**
+If you started from scratch, run one Draft round. Every AI writes an independent first draft. Your Builder consolidates them into a single document. That's all Draft is for — one round to get you a starting document. If you uploaded or pasted an existing document, AI Hive skips Draft entirely and starts you in Refine Text automatically.
 
-**4. Iterate**
-Add notes for the next round, keep shaking, watch the document sharpen.
+**4. Switch to Refine Text**
+After your first draft exists, switch the phase selector to **Refine Text**. This is where you'll spend most of your time. Reviewers now send targeted numbered suggestions instead of full rewrites, and your Builder applies the best ones each round.
 
-**5. Export**
+**5. Iterate**
+Add notes before each round to guide the hive. Keep shaking. Watch the document sharpen round by round.
+
+**6. Export**
 When you're done, export the clean final document and the full session transcript.
 
 ---
@@ -82,7 +85,17 @@ Three columns keep everything in view:
 - **Conflicts** — anything the Builder couldn't resolve is flagged here for your review.
 - **Notes for this Round** — optional direction for the Builder before each round. Reference line numbers.
 
-Hit **Shake the Hive** to run a round. Watch the Live Console as each AI responds in real time.
+Hit **Smoke the Hive** to run a round. Watch the Live Console as each AI responds in real time.
+
+### Phases
+
+The phase selector at the top of the screen controls what your AIs do each round.
+
+**Draft** — each AI writes a complete first draft from your project goal. Use this once, for the very first round of a from-scratch project. Your Builder consolidates all the drafts into one document.
+
+**Refine Text** — each AI reads the current document and sends numbered suggestions only. Your Builder applies the best ones and rewrites the full document. This is where you'll spend most of your session — switch to Refine Text after your first draft is ready and stay there.
+
+> If you uploaded or pasted a document at setup, AI Hive starts you in Refine Text automatically. You never need to touch Draft.
 
 ---
 
