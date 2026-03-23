@@ -217,10 +217,11 @@ RULES:
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
-For each conflict, state: the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
+For each conflict, quote the exact text from the document that is affected, then state the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
 Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
-Example: [USER DECISION] 3 reviewers preferred "conclude" while 3 preferred "summarise" — user should decide which tone fits the document.
-Example: [BUILDER DECISION] 2 reviewers wanted a new section added, 2 said remove it — applied the removal as it keeps the document concise.
+IMPORTANT: Always begin each conflict entry with the quoted original text in double quotes so the user can find it in the document. Do not use line numbers.
+Example: [USER DECISION] "You're encouraged to respond to messages during working hours" — 3 reviewers preferred "when possible" added to the end, 3 preferred the original. User should decide.
+Example: [BUILDER DECISION] "notify supervisor" — 2 reviewers suggested "alert team lead", 2 said keep original — applied "alert team lead" for consistency with the rest of the document.
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`
   };
