@@ -442,9 +442,19 @@
         <div class="work-panel-header work-section-border-top">
           <span class="work-section-title">🖥️ Live Console</span>
           <div class="flex-row-sm">
+            <button class="btn btn-ghost btn-sm" onclick="toggleConsoleLegend()" title="Color legend">🎨</button>
             <button class="btn btn-ghost btn-sm" onclick="copyConsole()">📋 Copy</button>
             <button class="btn btn-ghost btn-sm" onclick="clearConsole()">✕ Clear</button>
           </div>
+        </div>
+        <div class="console-legend" id="consoleLegend">
+          <span class="legend-item console-divider">■ Round</span>
+          <span class="legend-item console-send">■ Sending</span>
+          <span class="legend-item console-preview">■ Response</span>
+          <span class="legend-item console-success">■ Success</span>
+          <span class="legend-item console-warn">■ Warning</span>
+          <span class="legend-item console-error">■ Error</span>
+          <span class="legend-item console-info">■ Info</span>
         </div>
         <div class="live-console" id="liveConsole">
           <div class="console-entry console-info">Console ready — shake the hive to begin.</div>
