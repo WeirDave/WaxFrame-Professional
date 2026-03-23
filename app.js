@@ -49,9 +49,12 @@ const API_CONFIGS = {
     bodyFn: (model, prompt) => {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
-      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user (better compliance)
+      // Builder:  document + reviews → system, build instructions → user
+      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
+      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -64,9 +67,12 @@ const API_CONFIGS = {
     bodyFn: (model, prompt) => {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
-      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user (better compliance)
+      // Builder:  document + reviews → system, build instructions → user
+      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
+      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -87,9 +93,12 @@ const API_CONFIGS = {
     bodyFn: (model, prompt) => {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
-      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user (better compliance)
+      // Builder:  document + reviews → system, build instructions → user
+      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
+      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -102,9 +111,12 @@ const API_CONFIGS = {
     bodyFn: (model, prompt) => {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
-      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user (better compliance)
+      // Builder:  document + reviews → system, build instructions → user
+      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
+      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -117,9 +129,12 @@ const API_CONFIGS = {
     bodyFn: (model, prompt) => {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      const sys = split !== -1 ? prompt.slice(0, split).trim() : prompt;
-      const usr = split !== -1 ? prompt.slice(split).trim() : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user (better compliance)
+      // Builder:  document + reviews → system, build instructions → user
+      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
+      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
