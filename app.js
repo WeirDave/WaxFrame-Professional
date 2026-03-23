@@ -1140,6 +1140,12 @@ function initWorkScreen(isNewSession = false) {
   const ps = document.getElementById('phaseSelect');
   if (ps) ps.value = phase;
 
+  // Pre-fill notes with project goal on round 1 of a new session only
+  if (isNewSession && round === 1 && goal) {
+    const notesTa = document.getElementById('workNotes');
+    if (notesTa) notesTa.value = `Project goal: ${goal}`;
+  }
+
   // Reset per-session bee selection to all active AIs
   window.sessionAIs = new Set(activeAIs.map(a => a.id));
 
@@ -1688,6 +1694,12 @@ async function runRound() {
     timestamp:      new Date().toLocaleTimeString()
   });
   window._lastConflicts = null;
+
+  // Clear notes after round 1 so the auto-filled goal doesn't carry forward
+  if (round === 1) {
+    const notesTa = document.getElementById('workNotes');
+    if (notesTa) notesTa.value = '';
+  }
 
   round++;
   updateRoundBadge();
