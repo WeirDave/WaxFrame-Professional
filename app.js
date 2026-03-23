@@ -1685,12 +1685,13 @@ async function runRound() {
     }
   }
 
-  // Save to history — full document + all responses + conflicts
+  // Save to history — full document + all responses + conflicts + notes
   history.push({
     round, phase,
     projectName:    document.getElementById('projectName')?.value.trim()    || '',
     projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
     doc:            docText,
+    notes:          document.getElementById('workNotes')?.value.trim()       || '',
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString()
@@ -1951,6 +1952,8 @@ function restoreRound(idx) {
   docText = h.doc || '';
   const docTa = document.getElementById('workDocument');
   if (docTa) { docTa.value = docText; updateLineNumbers(); }
+  const notesEl = document.getElementById('workNotes');
+  if (notesEl) notesEl.value = h.notes || '';
   const ps = document.getElementById('phaseSelect');
   if (ps) ps.value = phase;
   updateRoundBadge();
