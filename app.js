@@ -50,7 +50,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       // Reviewer: instructions → system, document → user
       // Builder:  instructions → system, document + reviews → user
       let sys, usr;
@@ -76,7 +76,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       // Reviewer: instructions → system, document → user
       // Builder:  instructions → system, document + reviews → user
       let sys, usr;
@@ -102,7 +102,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       if (split === -1) {
         return JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
       }
@@ -126,7 +126,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       // Reviewer: instructions → system, document → user
       // Builder:  instructions → system, document + reviews → user
       let sys, usr;
@@ -152,7 +152,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       // Reviewer: instructions → system, document → user
       // Builder:  instructions → system, document + reviews → user
       let sys, usr;
@@ -178,7 +178,7 @@ const API_CONFIGS = {
       const splitA = prompt.indexOf('SEND TO ALL AIs');
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
-      const split  = splitA !== -1 ? splitA : splitB;
+      const split  = splitB !== -1 ? splitB : splitA;
       // Reviewer: instructions → system, document → user
       // Builder:  instructions → system, document + reviews → user
       let sys, usr;
@@ -1697,6 +1697,7 @@ async function runRound() {
   activeAIs.forEach(ai => setBeeStatus(ai.id, 'waiting', 'Ready'));
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
+  let builderHadError = false;
   // ALL AIs including Builder review the document simultaneously
   const allReviewers = activeAIs.filter(ai =>
     ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
@@ -1782,15 +1783,14 @@ async function runRound() {
         setStatus(`✅ Round ${round} complete — document updated`);
         consoleLog(`✅ Round ${round} complete — document updated (${docText.split(/\s+/).length} words)`, 'success');
       } else {
-        // Builder returned full response, use as-is
-        const docTa = document.getElementById('workDocument');
-        if (docTa) { docTa.value = builderResponse; updateLineNumbers(); }
-        docText = builderResponse;
-        setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
-        setStatus(`✅ Round ${round} complete`);
-        consoleLog(`✅ Round ${round} complete`, 'success');
+        // Extraction failed — keep existing working document unchanged
+        builderHadError = true;
+        setBeeStatus(builderAI.id, 'error', 'Invalid builder output format');
+        setStatus(`⚠️ Builder output missing required document delimiters — document unchanged`);
+        consoleLog(`⚠️ Builder response missing valid %%DOCUMENT_START%%/%%DOCUMENT_END%% block — kept previous document unchanged`, 'warn');
       }
     } catch(e) {
+      builderHadError = true;
       window._lastConflicts = null;
       setBeeStatus(builderAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
@@ -1798,6 +1798,7 @@ async function runRound() {
     }
   }
 
+  if (!builderHadError) {
   // Save to history — full document + all responses + conflicts + notes
   history.push({
     round, phase,
@@ -1833,13 +1834,19 @@ async function runRound() {
     }
   }
 
+  } // end if (!builderHadError)
+
   // Reset button
   if (btn) {
     btn.classList.remove('running');
     btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
-  toast(`✅ Round ${round - 1} complete!`);
+  if (builderHadError) {
+    toast('⚠️ Round not saved — Builder output was invalid', 5000);
+  } else {
+    toast(`✅ Round ${round - 1} complete!`);
+  }
 }
 
 // ── API CALL ──
