@@ -1302,15 +1302,17 @@ function updateProjLineNums(numsId, ta) {
 function updateLineNumbers() {
   const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
+  const rules = document.getElementById('docRules');
   if (!ta || !ln) return;
-  const lineH = 21; // must match CSS line-height of .work-doc-ta (21px)
+  const lineH = 21;
   const lines = ta.value.split('\n').length;
-  // Always show at least enough lines to fill the visible area
   const visibleLines = Math.ceil(ta.clientHeight / lineH);
   const totalLines = Math.max(lines, visibleLines);
   ln.innerHTML = Array.from({length: totalLines}, (_, i) =>
     `<div>${i + 1}</div>`
   ).join('');
+  // Size rules div to exactly match total content height so lines fill the scroll area
+  if (rules) rules.style.height = (totalLines * lineH) + 'px';
   syncLineNumberScroll();
 
   // Update doc stats
@@ -1325,10 +1327,10 @@ function updateLineNumbers() {
 }
 
 function syncLineNumberScroll() {
-  const ta = document.getElementById('workDocument');
+  const scroll = document.querySelector('.work-doc-scroll');
   const ln = document.getElementById('lineNumbers');
-  if (!ta || !ln) return;
-  requestAnimationFrame(() => { ln.scrollTop = ta.scrollTop; });
+  if (!scroll || !ln) return;
+  requestAnimationFrame(() => { ln.scrollTop = scroll.scrollTop; });
 }
 
 function renderWorkPhaseBar() {
@@ -1529,11 +1531,11 @@ RULES:
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
-For each conflict, quote the exact text from the document that is affected, then state the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
+For each conflict, quote the exact text from the document that is affected, then list which AIs suggested each version by name, which you chose (or that the user must decide), and why — in one to two sentences.
 Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
-IMPORTANT: Always begin each conflict entry with the quoted original text in double quotes so the user can find it in the document. Do not use line numbers.
-Example: [USER DECISION] "You're encouraged to respond to messages during working hours" — 3 reviewers preferred "when possible" added to the end, 3 preferred the original. User should decide.
-Example: [BUILDER DECISION] "notify supervisor" — 2 reviewers suggested "alert team lead", 2 said keep original — applied "alert team lead" for consistency with the rest of the document.
+IMPORTANT: Always begin each conflict entry with the quoted original text in double quotes so the user can find it in the document. Always name the specific AIs on each side — never say "a reviewer" or "reviewers". Do not use line numbers.
+Example: [USER DECISION] "You're encouraged to respond to messages during working hours" — Claude, Grok, and DeepSeek preferred adding "when possible" to the end; ChatGPT, Gemini, and Perplexity preferred the original. User should decide.
+Example: [BUILDER DECISION] "notify supervisor" — Claude and Grok suggested "alert team lead"; ChatGPT and DeepSeek said keep original — applied "alert team lead" for consistency with the rest of the document.
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`,
 

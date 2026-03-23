@@ -829,6 +829,31 @@ html, body {
     /* Red margin line at right edge of line-number gutter */
     linear-gradient(to right, transparent 46px, rgba(220,50,50,0.25) 46px, rgba(220,50,50,0.25) 48px, transparent 48px);
 }
+
+/* Shared scroll container — rules + textarea move together */
+.work-doc-scroll {
+  position: relative;
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+/* Ruled lines — absolutely positioned inside scroll container, scrolls with content */
+.work-doc-rules {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 20px,
+    rgba(80,140,220,0.18) 20px,
+    rgba(80,140,220,0.18) 21px
+  );
+  background-size: 100% 21px;
+}
 .work-line-numbers {
   width: 48px;
   flex-shrink: 0;
@@ -849,19 +874,11 @@ html, body {
   height: 21px;
 }
 .work-doc-ta {
+  position: relative;
   width: 90ch;
   min-width: 90ch;
   flex-shrink: 0;
-  background-color: transparent;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0px,
-    transparent 20px,
-    rgba(80,140,220,0.18) 20px,
-    rgba(80,140,220,0.18) 21px
-  );
-  background-size: 100% 21px;
-  background-attachment: local;
+  background: transparent;
   border: none;
   border-radius: var(--radius-sm);
   color: var(--text);
@@ -871,8 +888,7 @@ html, body {
   padding: 0 12px;
   resize: none;
   outline: none;
-  overflow-y: auto;
-  overflow-x: auto;
+  overflow: visible;
   white-space: pre;
   word-wrap: normal;
 }
