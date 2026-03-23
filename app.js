@@ -1075,6 +1075,9 @@ function startSession() {
     return;
   }
 
+  // Auto-select phase: if a document was provided, start in Refine — no need to Draft
+  phase = docText ? 'refine' : 'draft';
+
   saveSettings();
   goToScreen('screen-work');
   initWorkScreen(true);
