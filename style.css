@@ -838,12 +838,13 @@ html, body {
   min-height: 0;
 }
 
-/* Ruled lines — absolutely positioned inside scroll container, scrolls with content */
+/* Ruled lines — behind the textarea, sized by JS to match content height */
 .work-doc-rules {
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
+  z-index: 0;
   pointer-events: none;
   background-image: repeating-linear-gradient(
     to bottom,
@@ -874,10 +875,12 @@ html, body {
   height: 21px;
 }
 .work-doc-ta {
+  display: block;
   position: relative;
   z-index: 1;
   width: 90ch;
   min-width: 90ch;
+  min-height: 100%;
   flex-shrink: 0;
   background: transparent;
   border: none;
