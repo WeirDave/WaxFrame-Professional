@@ -1762,6 +1762,47 @@ kbd {
   transition: all 0.15s;
   flex-shrink: 0;
 }
+
+/* ── Two-button row ── */
+.hive-btn-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  margin-bottom: 4px;
+}
+.btn-shake-half {
+  flex: 1;
+  width: auto;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.btn-builder-only {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 2px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  padding: 14px 12px;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.btn-builder-only:hover {
+  background: var(--accent-dim, rgba(245,166,35,0.12));
+  transform: translateY(-1px);
+}
+.btn-builder-only:active { transform: translateY(0); }
+.btn-builder-only:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.builder-only-label {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
 .btn-shake-wide:hover {
   background: var(--accent-hover);
   transform: translateY(-1px);

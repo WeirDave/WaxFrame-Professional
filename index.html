@@ -419,10 +419,15 @@
         <div class="work-hive-hint">Toggle AIs for this session. Builder always runs. Click 👑 Builder to change.</div>
         <div class="bee-status-grid" id="beeStatusGrid"></div>
 
-        <!-- ── Smoke the Hive ── -->
-        <button class="btn-shake-wide" id="runRoundBtn" onclick="runRound()">
-          <img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">
-        </button>
+        <!-- ── Action Buttons ── -->
+        <div class="hive-btn-row">
+          <button class="btn-builder-only" id="builderOnlyBtn" onclick="runBuilderOnly()">
+            <span class="builder-only-label">Send to Builder</span>
+          </button>
+          <button class="btn-shake-wide btn-shake-half" id="runRoundBtn" onclick="runRound()">
+            <img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">
+          </button>
+        </div>
 
         <!-- ── Phase + Round Controls ── -->
         <div class="work-phase-round-row">

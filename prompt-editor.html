@@ -66,17 +66,6 @@
       <div class="prompt-block">
         <div class="prompt-block-header">
           <div>
-            <div class="prompt-block-label">Draft Phase — Reviewing an Uploaded Document <span class="modified-badge" id="badge-draft_refine">Modified</span></div>
-            <div class="prompt-block-desc">Used in the Draft phase when a document already exists — reviewers give numbered suggestions.</div>
-          </div>
-          <button class="prompt-reset-btn" onclick="resetOne('draft_refine')">Reset</button>
-        </div>
-        <textarea class="prompt-ta" id="ta-draft_refine" oninput="markModified('draft_refine')"></textarea>
-      </div>
-
-      <div class="prompt-block">
-        <div class="prompt-block-header">
-          <div>
             <div class="prompt-block-label">Refine Text Phase <span class="modified-badge" id="badge-refine">Modified</span></div>
             <div class="prompt-block-desc">Used in the Refine Text phase — reviewers give numbered suggestions on the current document.</div>
           </div>
@@ -152,24 +141,6 @@ RULES:
 - Do not invent facts, data, names, or references not supported by the project goal. Use clearly labeled placeholders (e.g., [INSERT DATE]) when specific information is missing.
 - If critical information is missing from the project goal, make the fewest necessary assumptions and keep them conservative.
 - Prioritize completeness, clarity, internal consistency, and practical usefulness.`,
-
-    draft_refine: `You are part of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
-
-The user has provided a document above. Your task: review it and give specific, numbered suggestions for improvement.
-
-Begin your response immediately with suggestion number 1. Do not include an introduction, summary, or restatement of the document.
-
-RULES:
-- Do NOT rewrite the document. Do not quote or restate large portions of it.
-- Number every suggestion starting from 1.
-- Each suggestion must identify the exact section or sentence being changed and propose a concrete, concise change. Example: "Line 14: Change 'utilize' to 'use'." or "Section 2, Line 23: Reword for clarity."
-- Focus on content, clarity, accuracy, internal consistency, tone, and logical flow only.
-- Do not suggest formatting, visual layout, or markup changes.
-- Do not add new requirements or sections unless the project goal clearly implies they are missing.
-- Do not include general praise, summaries, or filler.
-- Only suggest changes that materially improve accuracy, professional tone, or clarity.
-- Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
-- Each suggestion must be one sentence maximum — no explanations, no justifications.`,
 
     refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
