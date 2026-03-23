@@ -494,6 +494,7 @@ function saveSettings() { saveHive(); saveProject(); }
 
 // clearProject — wipe project data only, keep hive intact
 function clearProject() {
+  docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
   localStorage.removeItem('aihive_v2_filename');
@@ -508,6 +509,8 @@ function clearProject() {
   const pasteText = document.getElementById('pasteText');
   if (pasteText) pasteText.value = '';
   updateProjLineNums('projPasteNums', pasteText);
+  const fileStatus = document.getElementById('fileStatus');
+  if (fileStatus) { fileStatus.style.display = 'none'; fileStatus.textContent = ''; }
   docTab = 'upload';
   switchDocTab('upload');
   round = 1; phase = 'draft'; history = []; docText = '';
