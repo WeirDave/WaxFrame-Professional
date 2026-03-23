@@ -488,7 +488,7 @@ function loadSettings() {
       const p = JSON.parse(projRaw);
       if (p.projectName)    { const el = document.getElementById('projectName');    if (el) el.value = p.projectName; }
       if (p.projectVersion) { const el = document.getElementById('projectVersion'); if (el) el.value = p.projectVersion; }
-      if (p.projectGoal)    { const el = document.getElementById('projectGoal');    if (el) el.value = p.projectGoal; }
+      if (p.projectGoal)    { const el = document.getElementById('projectGoal');    if (el) { el.value = p.projectGoal; updateGoalCounter(); } }
       if (p.docTab) docTab = p.docTab;
     }
 
@@ -1161,6 +1161,17 @@ function initWorkScreen(isNewSession = false) {
   updateLineNumbers();
 }
 
+function updateGoalCounter() {
+  const ta = document.getElementById('projectGoal');
+  const el = document.getElementById('goalCounter');
+  if (!ta || !el) return;
+  const len = ta.value.length;
+  const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+  const truncated = len > 300;
+  el.textContent = `${words} words · ${len} chars${truncated ? ' — will be truncated to 300 chars in Refine phase' : ''}`;
+  el.style.color = truncated ? 'var(--amber)' : 'var(--muted)';
+}
+
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
@@ -1503,6 +1514,7 @@ function buildPromptForAI(ai, reviewerResponses) {
   let prompt = `${eq}\n  AI HIVE — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
+  if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
   if (notes) prompt += `USER NOTES FOR THIS ROUND:\n${sep}\n${notes}\n\n`;
 
   if (isBuilder && hasResponses) {
