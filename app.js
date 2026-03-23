@@ -1597,6 +1597,7 @@ async function runRound() {
   // Phase 1: Everyone reviews — Builder gets reviewer prompt too
   const reviewerPromises = allReviewers.map(async ai => {
     const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
+    consoleLog(`🔍 DEBUG ${ai.name} prompt preview: ${prompt.substring(0, 500).replace(/\n/g, '↵')}`, 'warn');
     try {
       const response = await callAPI(ai, prompt);
       const noChanges = response.trim() === 'NO CHANGES NEEDED';
@@ -1645,6 +1646,7 @@ async function runRound() {
     setStatus(`🏗️ ${builderAI.name} is building the updated document…`);
 
     const builderPrompt = buildPromptForAI(builderAI, allForBuilder);
+    consoleLog(`🔍 DEBUG BUILDER (${builderAI.name}) prompt preview: ${builderPrompt.substring(0, 500).replace(/\n/g, '↵')}`, 'warn');
     try {
       const builderResponse = await callAPI(builderAI, builderPrompt);
       const newDoc    = extractDocument(builderResponse);
