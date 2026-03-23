@@ -51,10 +51,18 @@ const API_CONFIGS = {
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      // Reviewer: instructions → system, document → user (better compliance)
-      // Builder:  document + reviews → system, build instructions → user
-      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
-      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nProduce the updated document now.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -69,10 +77,18 @@ const API_CONFIGS = {
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      // Reviewer: instructions → system, document → user (better compliance)
-      // Builder:  document + reviews → system, build instructions → user
-      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
-      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nProduce the updated document now.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -95,10 +111,18 @@ const API_CONFIGS = {
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      // Reviewer: instructions → system, document → user (better compliance)
-      // Builder:  document + reviews → system, build instructions → user
-      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
-      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nProduce the updated document now.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -113,10 +137,18 @@ const API_CONFIGS = {
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      // Reviewer: instructions → system, document → user (better compliance)
-      // Builder:  document + reviews → system, build instructions → user
-      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
-      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nProduce the updated document now.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -131,10 +163,18 @@ const API_CONFIGS = {
       const splitB = prompt.indexOf('⚠️ BUILDER:');
       const isBuilder = splitB !== -1;
       const split  = splitA !== -1 ? splitA : splitB;
-      // Reviewer: instructions → system, document → user (better compliance)
-      // Builder:  document + reviews → system, build instructions → user
-      const sys = split !== -1 ? (isBuilder ? prompt.slice(0, split).trim() : prompt.slice(split).trim()) : prompt;
-      const usr = split !== -1 ? (isBuilder ? prompt.slice(split).trim() : prompt.slice(0, split).trim() + '\n\nBegin your review now.') : 'Begin your response now.';
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nProduce the updated document now.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
       return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
@@ -1131,7 +1171,7 @@ function startSession() {
   saveSettings();
   goToScreen('screen-work');
   initWorkScreen(true);
-  // Save original document as Round 0 so it can always be restored
+  // Save original document as Round 0 — done AFTER initWorkScreen so notes are populated
   if (docText && history.length === 0) {
     history.push({
       round:          0,
@@ -1139,6 +1179,7 @@ function startSession() {
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
+      notes:          document.getElementById('workNotes')?.value.trim()       || '',
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
