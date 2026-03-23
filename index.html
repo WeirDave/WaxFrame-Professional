@@ -228,9 +228,12 @@
             <div>
               <div class="proj-notebook proj-notebook-goal">
                 <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
-                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this)" onscroll="document.getElementById('projGoalNums').scrollTop=this.scrollTop"></textarea>
+                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()" onscroll="document.getElementById('projGoalNums').scrollTop=this.scrollTop"></textarea>
               </div>
-              <button class="field-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));" title="Clear goal">✕ Clear Goal</button>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                <button class="field-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();" title="Clear goal">✕ Clear Goal</button>
+                <span id="goalCounter" style="font-size:11px;color:var(--muted);font-family:var(--font-mono);"></span>
+              </div>
             </div>
           </div>
         </div>
