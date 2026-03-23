@@ -1838,7 +1838,7 @@ async function runRound() {
   const reviewerPromises = allReviewers.map(async ai => {
     const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
     // consoleLog(`🔍 DEBUG ${ai.name} prompt preview: ${prompt.substring(0, 500).replace(/\n/g, '↵')}`, 'warn');
-    consoleLog(`📤 ${ai.name} — sending request (${prompt.length.toLocaleString()} chars)`, 'info');
+    consoleLog(`📤 ${ai.name} — sending request (${prompt.length.toLocaleString()} chars)`, 'send');
     try {
       const response = await callAPI(ai, prompt);
       const noChanges = response.trim() === 'NO CHANGES NEEDED';
@@ -1848,7 +1848,7 @@ async function runRound() {
         consoleLog(`✓ ${ai.name} — no changes needed`, 'success');
       } else {
         const preview = response.trim().substring(0, 80).replace(/\n/g, ' ');
-        consoleLog(`📋 ${ai.name}: ${preview}…`, 'info');
+        consoleLog(`📋 ${ai.name}: ${preview}…`, 'preview');
       }
       reviewerResponses.push({ id: ai.id, name: ai.name, response, noChanges });
       return { ai, response, success: true, noChanges };
@@ -1888,7 +1888,7 @@ async function runRound() {
 
     const builderPrompt = buildPromptForAI(builderAI, allForBuilder);
     // consoleLog(`🔍 DEBUG BUILDER (${builderAI.name}) prompt preview: ${builderPrompt.substring(0, 500).replace(/\n/g, '↵')}`, 'warn');
-    consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars)`, 'info');
+    consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars)`, 'send');
     try {
       const builderResponse = await callAPI(builderAI, builderPrompt);
       const newDoc    = extractDocument(builderResponse);
@@ -2000,7 +2000,7 @@ async function callAPI(ai, prompt) {
   if (!cfg || !cfg._key) throw new Error('No API key');
 
   const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
-  consoleLog(`📤 ${ai.name} — sending request (key: ${keyHint})`, 'info');
+  consoleLog(`📤 ${ai.name} — sending request (key: ${keyHint})`, 'send');
   const t0 = Date.now();
 
   let response;

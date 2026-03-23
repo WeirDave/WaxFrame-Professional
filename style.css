@@ -1245,11 +1245,13 @@ kbd {
 }
 .console-entry { padding: 1px 0; word-break: break-word; }
 .console-time { color: #4a5270; margin-right: 6px; user-select: none; }
-.console-info  { color: #9aa3b8; }
+.console-info    { color: #9aa3b8; }
 .console-success { color: #34d399; }
-.console-warn  { color: #fbbf24; }
-.console-error { color: #f87171; }
+.console-warn    { color: #fbbf24; }
+.console-error   { color: #f87171; }
 .console-divider { color: #f5a623; font-weight: 700; margin: 4px 0 2px; }
+.console-send    { color: #60a5fa; }
+.console-preview { color: #a78bfa; }
 
 /* ── SECTION TITLES (larger headers) ── */
 .work-section-title {
