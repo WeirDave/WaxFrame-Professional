@@ -827,15 +827,7 @@ html, body {
   background-color: var(--surface);
   background-image:
     /* Red margin line at right edge of line-number gutter */
-    linear-gradient(to right, transparent 46px, rgba(220,50,50,0.25) 46px, rgba(220,50,50,0.25) 48px, transparent 48px),
-    /* Blue ruled lines spanning full width */
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0px,
-      transparent 20px,
-      rgba(80,140,220,0.18) 20px,
-      rgba(80,140,220,0.18) 21px
-    );
+    linear-gradient(to right, transparent 46px, rgba(220,50,50,0.25) 46px, rgba(220,50,50,0.25) 48px, transparent 48px);
 }
 .work-line-numbers {
   width: 48px;
@@ -857,10 +849,19 @@ html, body {
   height: 21px;
 }
 .work-doc-ta {
-  width: 80ch;
-  min-width: 80ch;
+  width: 90ch;
+  min-width: 90ch;
   flex-shrink: 0;
-  background: transparent;
+  background-color: transparent;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0px,
+    transparent 20px,
+    rgba(80,140,220,0.18) 20px,
+    rgba(80,140,220,0.18) 21px
+  );
+  background-size: 100% 21px;
+  background-attachment: local;
   border: none;
   border-radius: var(--radius-sm);
   color: var(--text);
