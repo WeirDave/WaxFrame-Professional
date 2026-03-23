@@ -875,6 +875,7 @@ html, body {
 }
 .work-doc-ta {
   position: relative;
+  z-index: 1;
   width: 90ch;
   min-width: 90ch;
   flex-shrink: 0;
