@@ -1471,8 +1471,10 @@ RULES:
 - Focus on content, clarity, accuracy, internal consistency, tone, and logical flow only.
 - Do not suggest formatting, visual layout, or markup changes.
 - Do not add new requirements or sections unless the project goal clearly implies they are missing.
-- Do not include general praise, summaries, or filler. Only note a section requires no changes if it helps explain why you skipped it — keep it to one sentence maximum.
-- Only suggest changes that materially improve accuracy, professional tone, or clarity.`,
+- Do not include general praise, summaries, or filler.
+- Only suggest changes that materially improve accuracy, professional tone, or clarity.
+- Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
+- Each suggestion must be one sentence maximum — no explanations, no justifications.`,
 
   refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -1487,10 +1489,11 @@ RULES:
 - Focus on clarity, precision, internal consistency, tone, and logical flow only.
 - Do not suggest formatting, structural layout, or markup changes.
 - Do not introduce new content that changes the intended meaning of the document.
-- Keep each suggestion concise — one to two sentences maximum.
+- Keep each suggestion to one sentence maximum — no explanations, no justifications.
+- Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
 - If you believe the text needs no further changes, return exactly this and nothing else: NO CHANGES NEEDED
 
-\u26a0\ufe0f IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
+⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
 
   review: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -1768,21 +1771,38 @@ async function runRound() {
       window._lastConflicts = conflicts || null;
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
+
+      // ── GATE 1: Missing conflicts block = hard failure ──
       if (!hasConflictBlock) {
-        consoleLog(`⚠️ Builder did not return a %%CONFLICTS_START%% block — ChatGPT may have ignored the format`, 'warn');
+        builderHadError = true;
+        setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+        setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round not saved. Retry or check your Builder prompt.`, 'warn');
       } else if (conflicts) {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
         consoleLog(`✓ Conflicts block found — Builder reported NO CONFLICTS`, 'info');
       }
-      if (newDoc) {
-        const docTa = document.getElementById('workDocument');
-        if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
-        docText = newDoc;
-        setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
-        setStatus(`✅ Round ${round} complete — document updated`);
-        consoleLog(`✅ Round ${round} complete — document updated (${docText.split(/\s+/).length} words)`, 'success');
-      } else {
+
+      if (!builderHadError && newDoc) {
+        // ── GATE 2: Bloat check — reject if new doc is >120% of prior word count ──
+        const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
+        const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
+        const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
+        if (prevWords > 0 && newWords > prevWords * 1.15) {
+          builderHadError = true;
+          setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
+          setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected to prevent document bloat`);
+          consoleLog(`⚠️ Bloat gate triggered — new doc is ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved. Builder may be appending instead of replacing.`, 'warn');
+        } else {
+          const docTa = document.getElementById('workDocument');
+          if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
+          docText = newDoc;
+          setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
+          setStatus(`✅ Round ${round} complete — document updated`);
+          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
+        }
+      } else if (!builderHadError) {
         // Extraction failed — keep existing working document unchanged
         builderHadError = true;
         setBeeStatus(builderAI.id, 'error', 'Invalid builder output format');
