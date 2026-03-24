@@ -217,11 +217,27 @@ RULES:
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
-For each conflict, quote the exact text from the document that is affected, then state the vote count, what each side proposed, which you chose (or that the user must decide), and why — in one to two sentences.
-Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
-IMPORTANT: Always begin each conflict entry with the quoted original text in double quotes so the user can find it in the document. Do not use line numbers.
-Example: [USER DECISION] "You're encouraged to respond to messages during working hours" — 3 reviewers preferred "when possible" added to the end, 3 preferred the original. User should decide.
-Example: [BUILDER DECISION] "notify supervisor" — 2 reviewers suggested "alert team lead", 2 said keep original — applied "alert team lead" for consistency with the rest of the document.
+For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
+Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
+
+For USER DECISION conflicts: use EXACTLY this structured format so the app can present it as a choice to the user:
+
+[USER DECISION]
+QUESTION: A plain-English question describing what the user needs to decide — one sentence.
+CURRENT: "the exact current text in the document as it stands"
+OPTION_1: "exact proposed text" — AI names who suggested this
+OPTION_2: "exact proposed text" — AI names who suggested this
+OPTION_3: "exact proposed text" — AI names who suggested this (add more options if needed, up to 6)
+END_DECISION
+
+Rules for USER DECISION format:
+- CURRENT must be the verbatim text currently in the document
+- Each OPTION must be the complete replacement text, not a description of a change
+- List only the AIs who specifically suggested that option by name
+- Include as many options as there are genuinely distinct suggestions — minimum 2, maximum 6
+- Do not add commentary outside the structured block
+- Do not combine options that are meaningfully different
+
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`
   };
