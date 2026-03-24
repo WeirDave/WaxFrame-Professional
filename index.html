@@ -351,10 +351,41 @@
       </div>
     </div>
 
-    <!-- ── MAIN 2-COLUMN WORK AREA ── -->
+    <!-- ── MAIN 3-COLUMN WORK AREA ── -->
     <div class="work-main">
 
-      <!-- ── COL 1: Working Document ── -->
+      <!-- ══ COL LEFT: The Hive ══ -->
+      <div class="work-left-panel">
+
+        <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
+          <option value="draft">Draft</option>
+          <option value="refine">Refine Text</option>
+        </select>
+
+        <div class="left-panel-header">
+          <span class="work-section-title">The Hive</span>
+          <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">👑 Builder</button>
+        </div>
+
+        <!-- Hexagon bee grid -->
+        <div class="hex-grid" id="beeStatusGrid"></div>
+
+        <!-- Conflicts -->
+        <div class="left-panel-header left-panel-section-border">
+          <span class="work-section-title">Conflicts</span>
+          <div class="flex-row-center">
+            <span class="work-history-hint" id="conflictsRoundLabel"></span>
+            <button class="btn btn-ghost btn-sm" onclick="copyConflicts()">📋</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearConflicts()">✕</button>
+          </div>
+        </div>
+        <div class="conflicts-panel" id="conflictsPanel">
+          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
+        </div>
+
+      </div><!-- /work-left-panel -->
+
+      <!-- ══ COL CENTER: Working Document ══ -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
           <span class="work-section-title">📄 Working Document</span>
@@ -370,59 +401,30 @@
           <div class="work-doc-scroll" onscroll="syncLineNumberScroll()">
             <div class="work-doc-rules" id="docRules"></div>
             <textarea id="workDocument" class="work-doc-ta"
-              placeholder="Your document appears here. You can paste or edit directly — line numbers update automatically."
+              placeholder="Your document appears here."
               oninput="updateLineNumbers()"></textarea>
           </div>
+          <!-- Right paper margin -->
+          <div class="work-doc-right-margin"></div>
         </div>
-      </div>
+      </div><!-- /work-doc-panel -->
 
-      <!-- ── COL 2: Right Panel ── -->
+      <!-- ══ COL RIGHT: Clock + Console ══ -->
       <div class="work-right-panel">
 
-        <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
-          <option value="draft">Draft</option>
-          <option value="refine">Refine Text</option>
-        </select>
-
-        <!-- ── The Hive ── -->
-        <div class="work-panel-header work-panel-header-first">
-          <span class="work-section-title">🐝 The Hive</span>
-          <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">👑 Builder</button>
-        </div>
-        <div class="bee-status-grid" id="beeStatusGrid"></div>
-
-        <!-- ── Action Buttons ── -->
-        <div class="hive-btn-row">
-          <button class="btn-builder-only" id="builderOnlyBtn" onclick="runBuilderOnly()">
-            <span class="builder-only-label">Send to Builder</span>
-          </button>
-          <button class="btn-shake-wide btn-shake-half" id="runRoundBtn" onclick="runRound()">
-            <img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">
-          </button>
-        </div>
-
-        <!-- ── Round Timer ── -->
-        <div class="round-timer-row">
-          <div class="round-timer-clock" id="roundTimerDisplay">00:00</div>
-          <div class="round-timer-label" id="roundTimerLabel">Ready</div>
-        </div>
-
-        <!-- ── Conflicts ── -->
-        <div class="work-panel-header work-section-border-top">
-          <span class="work-section-title">⚡ Conflicts</span>
-          <div class="flex-row-center">
-            <span class="work-history-hint" id="conflictsRoundLabel"></span>
-            <button class="btn btn-ghost btn-sm" onclick="copyConflicts()">📋 Copy</button>
-            <button class="btn btn-ghost btn-sm" onclick="clearConflicts()">✕ Clear</button>
+        <!-- 3D Digital Clock -->
+        <div class="console-clock-3d">
+          <div class="clock-bezel">
+            <div class="clock-screen">
+              <span class="clock-digit-group" id="roundTimerDisplay">00:00</span>
+            </div>
+            <div class="clock-label" id="roundTimerLabel">READY</div>
           </div>
         </div>
-        <div class="conflicts-panel" id="conflictsPanel">
-          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
-        </div>
 
-        <!-- ── Live Console ── -->
-        <div class="work-panel-header work-section-border-top">
-          <span class="work-section-title">🖥️ Console</span>
+        <!-- Console -->
+        <div class="work-panel-header">
+          <span class="work-section-title">Console</span>
           <div class="flex-row-sm">
             <button class="btn btn-ghost btn-sm" onclick="copyConsole()">📋 Copy</button>
             <button class="btn btn-ghost btn-sm" onclick="clearConsole()">✕ Clear</button>
@@ -441,19 +443,42 @@
           <div class="console-entry console-info">Console ready — shake the hive to begin.</div>
         </div>
 
+        <!-- Right edge margin -->
+        <div class="right-edge-margin"></div>
+
       </div><!-- /work-right-panel -->
+
     </div><!-- /work-main -->
 
-    <!-- ── STATUS BAR ── -->
-    <div class="work-statusbar" id="workStatusBar">
-      <span id="statusText">Standing by — toggle bees above, then Smoke the Hive</span>
-      <div class="flex-row-sm">
-        <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
-        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto mode">⚙️ Auto</button>
-        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+    <!-- ── FOOTER BAR (doubled height, centered buttons) ── -->
+    <div class="work-footer">
+      <span id="statusText" class="footer-status">Standing by — Smoke the Hive to begin</span>
+      <div class="footer-actions">
+        <button class="btn-builder-only footer-btn" id="builderOnlyBtn" onclick="runBuilderOnly()">
+          <span class="builder-only-label">Send to Builder</span>
+        </button>
+        <button class="btn-shake-wide footer-btn-smoke" id="runRoundBtn" onclick="runRound()">
+          <span class="shake-wide-label">Smoke the Hive</span>
+        </button>
+      </div>
+      <div class="footer-right">
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ============================================================
+     SMOKER OVERLAY — shown while a round is running
+     ============================================================ -->
+<div class="smoker-overlay" id="smokerOverlay">
+  <div class="smoker-stage">
+    <div class="smoke-particles" id="smokeParticles"></div>
+    <img src="images/AI_Hive_Smoker_v1.png" alt="Smoking…" class="smoker-hero-img">
+    <div class="smoker-overlay-label" id="smokerOverlayLabel">Smoking…</div>
   </div>
 </div>
 

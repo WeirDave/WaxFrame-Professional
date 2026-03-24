@@ -245,9 +245,9 @@ function startRoundTimer(btn, baseLabel) {
   const clock   = document.getElementById('roundTimerDisplay');
   const labelEl = document.getElementById('roundTimerLabel');
   clock?.classList.add('running');
+  labelEl?.classList.add('running');
   if (clock)   clock.textContent = '00:00';
-  if (labelEl) labelEl.textContent = baseLabel;
-  // Keep button label static
+  if (labelEl) labelEl.textContent = baseLabel.toUpperCase();
   const btnLabel = btn?.querySelector('.shake-wide-label');
   if (btnLabel) btnLabel.textContent = baseLabel;
   _roundTimerInterval = setInterval(() => {
@@ -265,8 +265,9 @@ function stopRoundTimer() {
   const clock   = document.getElementById('roundTimerDisplay');
   const labelEl = document.getElementById('roundTimerLabel');
   clock?.classList.remove('running');
+  labelEl?.classList.remove('running');
   if (clock)   clock.textContent = '00:00';
-  if (labelEl) labelEl.textContent = 'Ready';
+  if (labelEl) labelEl.textContent = 'READY';
 }
 
 
@@ -1460,16 +1461,16 @@ function renderBeeStatusGrid() {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     return `
-    <div class="bee-row ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
+    <div class="hex-cell ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
+      <span class="hex-name">${ai.name}</span>
+      <img src="${ai.icon}" class="hex-icon" onerror="this.style.display='none'">
       ${isB
-        ? `<span class="bee-builder-tag">BUILD</span>`
-        : `<input type="checkbox" class="bee-toggle" id="btog-${ai.id}"
+        ? `<span class="hex-builder-tag">BUILD</span>`
+        : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
             ${isOn ? 'checked' : ''}
             onchange="toggleSessionBee('${ai.id}', this.checked)">`
       }
-      <img src="${ai.icon}" class="bee-row-icon" onerror="this.style.display='none'">
-      <span class="bee-row-name">${ai.name}</span>
-      <span class="bee-row-status" id="blive-${ai.id}">Idle</span>
+      <span class="hex-status" id="blive-${ai.id}">Idle</span>
     </div>`;
   }).join('');
 }
@@ -1765,7 +1766,8 @@ async function runBuilderOnly() {
 
   btn.disabled = true;
   smokeBtn?.classList.add('running');
-  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Building…';
+  showSmokerOverlay('Building…');
   startRoundTimer(smokeBtn, 'Building…');
   setStatus(`🏗️ Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1867,7 +1869,8 @@ async function runBuilderOnly() {
   btn.disabled = false;
   smokeBtn?.classList.remove('running');
   stopRoundTimer();
-  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  hideSmokerOverlay();
+  if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
   const hiveStatus = document.getElementById('hiveStatus');
   if (hiveStatus) hiveStatus.textContent = 'Ready';
 }
@@ -1903,7 +1906,8 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (btn) btn.querySelector('.shake-wide-label').textContent = 'Smoking…';
+  showSmokerOverlay('Smoking…');
   startRoundTimer(btn, 'Smoking…');
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
@@ -2079,7 +2083,8 @@ async function runRound() {
   if (btn) {
     btn.classList.remove('running');
     stopRoundTimer();
-    btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+    hideSmokerOverlay();
+    btn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
   if (builderHadError) {
@@ -2421,6 +2426,41 @@ function renderRoundHistory() {
       </div>
     </div>`;
   }).join('');
+}
+
+function showSmokerOverlay(label = 'Smoking…') {
+  const overlay = document.getElementById('smokerOverlay');
+  const labelEl = document.getElementById('smokerOverlayLabel');
+  const particles = document.getElementById('smokeParticles');
+  if (!overlay) return;
+
+  if (labelEl) labelEl.textContent = label;
+
+  // Generate smoke puffs
+  if (particles) {
+    particles.innerHTML = '';
+    for (let i = 0; i < 6; i++) {
+      const puff = document.createElement('div');
+      puff.className = 'smoke-puff';
+      const size = 30 + Math.random() * 40;
+      puff.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${20 + Math.random() * 60}%;
+        bottom: 0;
+        --dur: ${2 + Math.random() * 1.5}s;
+        --delay: ${Math.random() * 2}s;
+      `;
+      particles.appendChild(puff);
+    }
+  }
+
+  overlay.classList.add('active');
+}
+
+function hideSmokerOverlay() {
+  const overlay = document.getElementById('smokerOverlay');
+  if (overlay) overlay.classList.remove('active');
 }
 
 function openNotesModal() {
