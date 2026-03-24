@@ -1841,9 +1841,9 @@ kbd {
 .btn-builder-only:active { transform: translateY(0); }
 .btn-builder-only:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .builder-only-label {
-  font-family: var(--font-display);
+  font-family: var(--font);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.02em;
   pointer-events: none;
@@ -1874,9 +1874,9 @@ kbd {
 }
 
 .shake-wide-label {
-  font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 800;
+  font-family: var(--font);
+  font-size: 16px;
+  font-weight: 700;
   color: #0a0c12;
   letter-spacing: 0.02em;
   pointer-events: none;
@@ -2149,9 +2149,9 @@ kbd {
   border: none;
   border-radius: var(--radius-sm);
   color: #0a0c12;
-  font-family: var(--font-display);
+  font-family: var(--font);
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
   cursor: pointer;
   margin-bottom: 12px;
   transition: all 0.15s;
