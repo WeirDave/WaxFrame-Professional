@@ -803,14 +803,21 @@ html, body {
 }
 .work-phase-arrow { color: var(--border2); font-size: 12px; margin: 0 2px; }
 .work-round-badge {
-  font-size: 13px;
-  font-weight: 800;
-  background: var(--accent);
-  border: none;
-  border-radius: 20px;
-  padding: 3px 12px;
-  color: #0a0c12;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  background: linear-gradient(145deg, #0a0c12, #151820);
+  border: 1px solid #1a1d2a;
+  border-radius: 6px;
+  padding: 4px 14px;
+  color: var(--accent);
   white-space: nowrap;
+  letter-spacing: 0.08em;
+  box-shadow:
+    inset 0 2px 4px rgba(0,0,0,0.7),
+    0 2px 6px rgba(0,0,0,0.4),
+    0 0 8px rgba(245,166,35,0.15);
+  text-shadow: 0 0 8px rgba(245,166,35,0.4);
 }
 
 /* ══════════════════════════════════════
@@ -827,7 +834,7 @@ html, body {
 /* MAIN 3-COLUMN AREA */
 .work-main {
   display: grid;
-  grid-template-columns: 260px 1fr 320px;
+  grid-template-columns: 1fr 680px 1fr;
   overflow: hidden;
   min-height: 0;
   background: var(--surface2);
@@ -872,8 +879,8 @@ html, body {
 .hex-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  padding: 8px 12px;
+  gap: 10px;
+  padding: 10px 14px;
   flex-shrink: 0;
 }
 .hex-cell {
@@ -881,20 +888,20 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  padding: 10px 6px;
+  gap: 6px;
+  padding: 18px 8px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: var(--surface);
   border: none;
   cursor: default;
   transition: all 0.2s;
-  min-height: 90px;
+  min-height: 130px;
   position: relative;
 }
 .hex-cell::before {
   content: '';
   position: absolute;
-  inset: 2px;
+  inset: 3px;
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   background: var(--surface2);
   z-index: 0;
@@ -914,41 +921,41 @@ html, body {
   to   { filter: brightness(1.2); }
 }
 .hex-name {
-  font-size: 10px;
+  font-size: 13px;
   font-weight: 700;
   color: var(--text);
   text-align: center;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.03em;
   line-height: 1;
 }
 .hex-icon {
-  width: 28px;
-  height: 28px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   border-radius: 4px;
 }
 .hex-status {
-  font-size: 9px;
+  font-size: 11px;
   color: var(--muted);
   text-align: center;
   line-height: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 90px;
+  max-width: 100px;
 }
 .hex-builder-tag {
-  font-size: 8px;
+  font-size: 9px;
   font-weight: 800;
   color: #0a0c12;
   background: var(--accent);
   border-radius: 3px;
-  padding: 1px 4px;
+  padding: 1px 5px;
   letter-spacing: 0.06em;
 }
 .hex-toggle {
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   accent-color: var(--accent);
   cursor: pointer;
 }
@@ -1019,14 +1026,12 @@ html, body {
   background-size: 100% 21px;
 }
 
-/* The textarea — 80ch, word-wraps */
+/* The textarea — fills the scroll container, word-wraps */
 .work-doc-ta {
   display: block;
   position: relative;
   z-index: 1;
-  width: 80ch;
-  min-width: 80ch;
-  max-width: 80ch;
+  width: 100%;
   min-height: 100%;
   background: transparent;
   border: none;
@@ -1041,6 +1046,7 @@ html, body {
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  box-sizing: border-box;
 }
 
 /* Right margin line — mirrors the left red line */
@@ -2231,8 +2237,8 @@ kbd {
 ══════════════════════════════════════ */
 
 .conflicts-panel {
-  max-height: 380px;
-  min-height: 80px;
+  flex: 1;
+  min-height: 200px;
   overflow-y: auto;
   background: #0a0c12;
   border: 1px solid #1a4a7a;
@@ -3273,12 +3279,3 @@ kbd {
   flex-shrink: 0;
 }
 .footer-note { color: var(--muted); font-size: 12px; }
-.footer-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: transparent; border: 1px dashed var(--border2);
-  border-radius: var(--radius-sm); color: var(--text-dim);
-  font-family: var(--font); font-size: 12px; font-weight: 500;
-  padding: 5px 12px; cursor: pointer; transition: all 0.12s;
-  text-decoration: none;
-}
-.footer-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
