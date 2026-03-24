@@ -170,7 +170,11 @@
     <!-- ── Footer ── -->
     <div class="fs-footer">
       <div class="fs-footer-spacer"></div>
-      <div class="setup-footer-note">⚙️ You can change these settings any time from the work screen</div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">To continue you need:</span>
+        <span class="launch-req-item" id="req-keys">✗ At least 2 API keys saved</span>
+        <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
+      </div>
       <button class="btn btn-accent btn-lg" id="setupContinueBtn" onclick="validateAndContinue()">
         <img src="images/AI_Hive_Project_Bee_v2.png" class="bee-btn-img">
         Continue to Project Setup →
@@ -304,9 +308,9 @@
       <div class="fs-footer-spacer"></div>
       <div class="launch-requirements">
         <span class="launch-req-title">To launch you need:</span>
-        <span class="launch-req-item">✓ Project name</span>
-        <span class="launch-req-item">✓ Project goal</span>
-        <span class="launch-req-item">✓ Document — upload a file, paste text, or choose Start from Scratch</span>
+        <span class="launch-req-item" id="req-name">✗ Project name</span>
+        <span class="launch-req-item" id="req-goal">✗ Project goal</span>
+        <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
       </div>
       <button class="btn btn-accent btn-lg" onclick="startSession()">
         <img src="images/AI_Hive_Logo_v4.png" class="bee-btn-img">
