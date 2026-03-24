@@ -816,7 +816,7 @@ html, body {
 /* MAIN 2-COLUMN AREA */
 .work-main {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 440px;
   overflow: hidden;
   min-height: 0;
   background: var(--surface2);
@@ -905,8 +905,8 @@ html, body {
   display: block;
   position: relative;
   z-index: 1;
-  width: 90ch;
-  min-width: 90ch;
+  width: 110ch;
+  min-width: 110ch;
   min-height: 100%;
   flex-shrink: 0;
   background: transparent;
