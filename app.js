@@ -234,7 +234,27 @@ function setStatus(msg) {
   if (el) el.textContent = msg;
 }
 
-// ── LIVE CONSOLE ──
+// ── ROUND TIMER ──
+let _roundTimerInterval = null;
+let _roundTimerStart    = null;
+
+function startRoundTimer(btn, baseLabel) {
+  _roundTimerStart = Date.now();
+  clearInterval(_roundTimerInterval);
+  _roundTimerInterval = setInterval(() => {
+    const secs = Math.floor((Date.now() - _roundTimerStart) / 1000);
+    const label = btn?.querySelector('.shake-wide-label');
+    if (label) label.textContent = `${baseLabel} ${secs}s`;
+  }, 1000);
+}
+
+function stopRoundTimer() {
+  clearInterval(_roundTimerInterval);
+  _roundTimerInterval = null;
+  _roundTimerStart    = null;
+}
+
+
 function consoleLog(msg, type = 'info') {
   const el = document.getElementById('liveConsole');
   if (!el) return;
@@ -1730,7 +1750,8 @@ async function runBuilderOnly() {
 
   btn.disabled = true;
   smokeBtn?.classList.add('running');
-  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building… 0s</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  startRoundTimer(smokeBtn, 'Building…');
   setStatus(`🏗️ Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   consoleLog(`📝 Notes: ${notes}`, 'info');
@@ -1830,6 +1851,7 @@ async function runBuilderOnly() {
 
   btn.disabled = false;
   smokeBtn?.classList.remove('running');
+  stopRoundTimer();
   if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   const hiveStatus = document.getElementById('hiveStatus');
   if (hiveStatus) hiveStatus.textContent = 'Ready';
@@ -1866,7 +1888,8 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking… 0s</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  startRoundTimer(btn, 'Smoking…');
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -2040,6 +2063,7 @@ async function runRound() {
   // Reset button
   if (btn) {
     btn.classList.remove('running');
+    stopRoundTimer();
     btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoke the Hive</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   }
   if (hiveStatus) hiveStatus.textContent = 'Ready';
@@ -2306,6 +2330,12 @@ function applyDecisions() {
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest?.conflicts?.userDecisions) return;
 
+  const applyBtn = document.getElementById('applyDecisionsBtn');
+  if (applyBtn) {
+    applyBtn.disabled = true;
+    applyBtn.textContent = '⏳ Sending to Builder…';
+  }
+
   const decisions = latest.conflicts.userDecisions;
   const lines = [];
 
@@ -2326,7 +2356,10 @@ function applyDecisions() {
     }
   });
 
-  if (lines.length === 0) return;
+  if (lines.length === 0) {
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
+    return;
+  }
 
   const notesTa = document.getElementById('workNotes');
   if (notesTa) {
