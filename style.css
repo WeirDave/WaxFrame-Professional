@@ -2108,6 +2108,30 @@ kbd {
   line-height: 1.5;
   flex: 1;
 }
+.decision-opt-custom {
+  border-style: dashed;
+}
+.decision-custom-wrap {
+  margin-top: 8px;
+}
+.decision-custom-ta {
+  width: 100%;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  min-height: 60px;
+  outline: none;
+  box-sizing: border-box;
+}
+.decision-custom-ta:focus {
+  border-color: var(--accent-hover);
+}
 .decision-opt-ais {
   font-size: 10px;
   color: var(--muted);

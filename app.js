@@ -1,5 +1,5 @@
 // ============================================================
-//  AI Hive v3.0 — app.js
+//  AI Hive v2.1 — app.js
 //  Author: WeirDave | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/AIHive
 //
@@ -2186,20 +2186,31 @@ function renderConflicts() {
   // USER DECISION cards
   if (conflicts.userDecisions && conflicts.userDecisions.length > 0) {
     conflicts.userDecisions.forEach((d, di) => {
+      const total = conflicts.userDecisions.length;
       html += `<div class="decision-card" id="dcard-${di}">
         <div class="decision-card-header">
-          <span class="decision-badge">⚡ USER DECISION ${di + 1} of ${conflicts.userDecisions.length}</span>
+          <span class="decision-badge">⚡ USER DECISION ${di + 1} of ${total}</span>
         </div>
         <div class="decision-question">${esc(d.question)}</div>
         ${d.current ? `<div class="decision-current"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>` : ''}
         <div class="decision-options">
           ${d.options.map((opt, oi) => `
             <button class="decision-opt-btn" id="dopt-${di}-${oi}"
-              onclick="selectDecision(${di}, ${oi}, ${conflicts.userDecisions.length})">
+              onclick="selectDecision(${di}, ${oi}, ${total})">
               <span class="decision-opt-num">${oi + 1}</span>
               <span class="decision-opt-text">"${esc(opt.text)}"</span>
               ${opt.ais ? `<span class="decision-opt-ais">${esc(opt.ais)}</span>` : ''}
             </button>`).join('')}
+          <button class="decision-opt-btn decision-opt-custom" id="dopt-${di}-custom"
+            onclick="selectCustomDecision(${di}, ${total})">
+            <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✎</span>
+            <span class="decision-opt-text" style="color:var(--muted);font-style:italic">Custom — type your own</span>
+          </button>
+        </div>
+        <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
+          <textarea class="decision-custom-ta" id="dcustom-ta-${di}"
+            placeholder="Type your custom text here..."
+            oninput="updateCustomDecision(${di}, ${total})">${esc(d.current || '')}</textarea>
         </div>
       </div>`;
     });
@@ -2231,19 +2242,58 @@ function renderConflicts() {
 }
 
 function selectDecision(decisionIdx, optionIdx, total) {
-  // Store choice
-  window._decisionChoices[decisionIdx] = optionIdx;
+  window._decisionChoices[decisionIdx] = { type: 'option', idx: optionIdx };
 
-  // Update button states for this decision
   const card = document.getElementById(`dcard-${decisionIdx}`);
   if (card) {
-    card.querySelectorAll('.decision-opt-btn').forEach((btn, i) => {
-      btn.classList.toggle('selected', i === optionIdx);
-    });
+    card.querySelectorAll('.decision-opt-btn').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById(`dopt-${decisionIdx}-${optionIdx}`)?.classList.add('selected');
+    // Hide custom input if visible
+    const customWrap = document.getElementById(`dcustom-${decisionIdx}`);
+    if (customWrap) customWrap.style.display = 'none';
     card.classList.add('resolved');
   }
 
-  // Enable Apply button if all decisions are made
+  checkAllDecisionsMade(total);
+}
+
+function selectCustomDecision(decisionIdx, total) {
+  const card = document.getElementById(`dcard-${decisionIdx}`);
+  if (card) {
+    card.querySelectorAll('.decision-opt-btn').forEach(btn => btn.classList.remove('selected'));
+    document.getElementById(`dopt-${decisionIdx}-custom`)?.classList.add('selected');
+    const customWrap = document.getElementById(`dcustom-${decisionIdx}`);
+    if (customWrap) { customWrap.style.display = 'block'; }
+    const ta = document.getElementById(`dcustom-ta-${decisionIdx}`);
+    if (ta) ta.focus();
+  }
+  // Mark as custom but wait for text input before counting as complete
+  const currentText = document.getElementById(`dcustom-ta-${decisionIdx}`)?.value.trim() || '';
+  if (currentText) {
+    window._decisionChoices[decisionIdx] = { type: 'custom', text: currentText };
+    card?.classList.add('resolved');
+  } else {
+    delete window._decisionChoices[decisionIdx];
+    card?.classList.remove('resolved');
+  }
+  checkAllDecisionsMade(total);
+}
+
+function updateCustomDecision(decisionIdx, total) {
+  const ta = document.getElementById(`dcustom-ta-${decisionIdx}`);
+  const text = ta?.value.trim() || '';
+  const card = document.getElementById(`dcard-${decisionIdx}`);
+  if (text) {
+    window._decisionChoices[decisionIdx] = { type: 'custom', text };
+    card?.classList.add('resolved');
+  } else {
+    delete window._decisionChoices[decisionIdx];
+    card?.classList.remove('resolved');
+  }
+  checkAllDecisionsMade(total);
+}
+
+function checkAllDecisionsMade(total) {
   const allMade = Object.keys(window._decisionChoices).length === total;
   const applyBtn = document.getElementById('applyDecisionsBtn');
   if (applyBtn) applyBtn.disabled = !allMade;
@@ -2258,16 +2308,23 @@ function applyDecisions() {
 
   Object.keys(window._decisionChoices).forEach(di => {
     const d = decisions[parseInt(di)];
-    const oi = window._decisionChoices[di];
-    const chosen = d.options[oi];
-    if (d.current && chosen) {
-      lines.push(`Replace "${d.current}" with "${chosen.text}"`);
+    const choice = window._decisionChoices[di];
+    if (!d || !choice) return;
+
+    let chosenText = '';
+    if (choice.type === 'option') {
+      chosenText = d.options[choice.idx]?.text || '';
+    } else if (choice.type === 'custom') {
+      chosenText = choice.text;
+    }
+
+    if (d.current && chosenText) {
+      lines.push(`Replace "${d.current}" with "${chosenText}"`);
     }
   });
 
   if (lines.length === 0) return;
 
-  // Put decisions into notes and fire Send to Builder
   const notesTa = document.getElementById('workNotes');
   if (notesTa) {
     notesTa.value = 'Apply these user decisions:\n' + lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
@@ -2447,7 +2504,7 @@ function exportSession() {
 
   if (history.length === 0 && !doc) { toast('⚠️ Nothing to export'); return; }
 
-  let out = `${eq}\nAI HIVE v2.0 — SESSION TRANSCRIPT\nProject: ${name}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
+  let out = `${eq}\nAI HIVE v2.1 — SESSION TRANSCRIPT\nProject: ${name}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
   history.forEach(h => {
     const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
     out += `${eq}\nROUND ${h.round} · ${phaseLabel} — ${h.timestamp}\n${eq}\n\n`;
