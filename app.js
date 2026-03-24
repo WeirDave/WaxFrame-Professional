@@ -1320,6 +1320,8 @@ function initWorkScreen(isNewSession = false) {
       docTa.value = docText;
     }
     updateLineNumbers();
+    // Also defer to catch after layout paint
+    requestAnimationFrame(() => updateLineNumbers());
   }
 
   const ps = document.getElementById('phaseSelect');
@@ -1378,16 +1380,17 @@ function updateLineNumbers() {
   if (!ta || !ln) return;
   const lineH = 21;
   const lines = ta.value.split('\n').length;
-  const visibleLines = Math.ceil(ta.clientHeight / lineH);
+  const scroll = document.querySelector('.work-doc-scroll');
+  const visibleLines = scroll ? Math.ceil(scroll.clientHeight / lineH) : 40;
   const totalLines = Math.max(lines, visibleLines);
   ln.innerHTML = Array.from({length: totalLines}, (_, i) =>
     `<div>${i + 1}</div>`
   ).join('');
-  // Size rules div to exactly match total content height so lines fill the scroll area
-  if (rules) rules.style.height = (totalLines * lineH) + 'px';
+  // Make rules and line numbers same height as content
+  const contentH = totalLines * lineH;
+  if (rules) rules.style.height = contentH + 'px';
   syncLineNumberScroll();
 
-  // Update doc stats
   const stats = document.getElementById('docStats');
   if (stats && ta.value.trim()) {
     const wordCount = ta.value.trim().split(/\s+/).length;
@@ -1402,7 +1405,7 @@ function syncLineNumberScroll() {
   const scroll = document.querySelector('.work-doc-scroll');
   const ln = document.getElementById('lineNumbers');
   if (!scroll || !ln) return;
-  requestAnimationFrame(() => { ln.scrollTop = scroll.scrollTop; });
+  ln.scrollTop = scroll.scrollTop;
 }
 
 function renderWorkPhaseBar() {
@@ -1462,14 +1465,14 @@ function renderBeeStatusGrid() {
     const isOn = isB || window.sessionAIs.has(ai.id);
     return `
     <div class="hex-cell ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
-      <span class="hex-name">${ai.name}</span>
-      <img src="${ai.icon}" class="hex-icon" onerror="this.style.display='none'">
       ${isB
-        ? `<span class="hex-builder-tag">BUILD</span>`
+        ? `<span class="hex-builder-tag">BUILDER</span>`
         : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
             ${isOn ? 'checked' : ''}
             onchange="toggleSessionBee('${ai.id}', this.checked)">`
       }
+      <img src="${ai.icon}" class="hex-icon" onerror="this.style.display='none'">
+      <span class="hex-name">${ai.name}</span>
       <span class="hex-status" id="blive-${ai.id}">Idle</span>
     </div>`;
   }).join('');

@@ -331,7 +331,6 @@
     <!-- ── TOP BAR ── -->
     <div class="work-topbar">
       <div class="work-topbar-left">
-        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-topbar-logo">
         <div class="work-project-info">
           <span class="work-project-name" id="workProjectName">Project</span>
           <span class="work-project-version" id="workProjectVersion"></span>
@@ -354,7 +353,7 @@
     <!-- ── MAIN 3-COLUMN WORK AREA ── -->
     <div class="work-main">
 
-      <!-- ══ COL LEFT: The Hive ══ -->
+      <!-- ══ COL 1: The Hive ══ -->
       <div class="work-left-panel">
 
         <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
@@ -364,13 +363,11 @@
 
         <div class="left-panel-header">
           <span class="work-section-title">The Hive</span>
-          <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">👑 Builder</button>
+          <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">Change Builder</button>
         </div>
 
-        <!-- Hexagon bee grid -->
         <div class="hex-grid" id="beeStatusGrid"></div>
 
-        <!-- Conflicts -->
         <div class="left-panel-header left-panel-section-border">
           <span class="work-section-title">Conflicts</span>
           <div class="flex-row-center">
@@ -385,7 +382,10 @@
 
       </div><!-- /work-left-panel -->
 
-      <!-- ══ COL CENTER: Working Document ══ -->
+      <!-- ══ COL 2: Left gap ══ -->
+      <div class="work-gap"></div>
+
+      <!-- ══ COL 3: Working Document ══ -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
           <span class="work-section-title">📄 Working Document</span>
@@ -397,20 +397,33 @@
           </div>
         </div>
         <div class="work-doc-editor">
-          <div class="work-line-numbers" id="lineNumbers"></div>
           <div class="work-doc-scroll" onscroll="syncLineNumberScroll()">
-            <div class="work-doc-rules" id="docRules"></div>
-            <textarea id="workDocument" class="work-doc-ta"
-              placeholder="Your document appears here."
-              oninput="updateLineNumbers()"></textarea>
+            <div class="work-line-numbers" id="lineNumbers"></div>
+            <div class="work-doc-inner">
+              <div class="work-doc-rules" id="docRules"></div>
+              <textarea id="workDocument" class="work-doc-ta"
+                placeholder="Your document appears here."
+                oninput="updateLineNumbers()"></textarea>
+            </div>
           </div>
-          <!-- Right paper margin -->
           <div class="work-doc-right-margin"></div>
         </div>
       </div><!-- /work-doc-panel -->
 
-      <!-- ══ COL RIGHT: Clock + Console ══ -->
+      <!-- ══ COL 4: Right gap ══ -->
+      <div class="work-gap"></div>
+
+      <!-- ══ COL 5: Clock + Console ══ -->
       <div class="work-right-panel">
+
+        <!-- ── Logo above clock ── -->
+        <div class="work-right-logo">
+          <div class="work-right-logo-text">
+            <div class="work-right-logo-name">AI Hive</div>
+            <div class="work-right-logo-tag">Orchestrate the Hive</div>
+          </div>
+          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-right-logo-img">
+        </div>
 
         <!-- 3D Digital Clock -->
         <div class="console-clock-3d">
@@ -423,8 +436,8 @@
         </div>
 
         <!-- Console -->
-        <div class="work-panel-header">
-          <span class="work-section-title">Console</span>
+        <div class="work-panel-header honeycomb-header">
+          <span class="work-section-title">🖥️ Live Console</span>
           <div class="flex-row-sm">
             <button class="btn btn-ghost btn-sm" onclick="copyConsole()">📋 Copy</button>
             <button class="btn btn-ghost btn-sm" onclick="clearConsole()">✕ Clear</button>
