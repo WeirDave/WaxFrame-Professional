@@ -1255,19 +1255,25 @@ kbd {
 
 /* ── Console Legend ── */
 .console-legend {
-  display: none;
+  display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 5px 8px;
   background: #0a0c12;
   border: 1px solid #1a7a3a;
   border-radius: var(--radius-sm);
   margin-bottom: 4px;
   font-family: var(--font-mono);
   font-size: 11px;
+  align-items: center;
 }
-.console-legend.show { display: flex; }
-.legend-item { white-space: nowrap; }
+.legend-item {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  line-height: 1;
+}
 
 /* ── SECTION TITLES (larger headers) ── */
 .work-section-title {
