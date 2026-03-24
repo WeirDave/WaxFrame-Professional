@@ -237,14 +237,24 @@ function setStatus(msg) {
 // ── ROUND TIMER ──
 let _roundTimerInterval = null;
 let _roundTimerStart    = null;
+let _clockInterval      = null; // reserved for future use
 
 function startRoundTimer(btn, baseLabel) {
   _roundTimerStart = Date.now();
   clearInterval(_roundTimerInterval);
+  const clock   = document.getElementById('roundTimerDisplay');
+  const labelEl = document.getElementById('roundTimerLabel');
+  clock?.classList.add('running');
+  if (clock)   clock.textContent = '00:00';
+  if (labelEl) labelEl.textContent = baseLabel;
+  // Keep button label static
+  const btnLabel = btn?.querySelector('.shake-wide-label');
+  if (btnLabel) btnLabel.textContent = baseLabel;
   _roundTimerInterval = setInterval(() => {
     const secs = Math.floor((Date.now() - _roundTimerStart) / 1000);
-    const label = btn?.querySelector('.shake-wide-label');
-    if (label) label.textContent = `${baseLabel} ${secs}s`;
+    const m = String(Math.floor(secs / 60)).padStart(2, '0');
+    const s = String(secs % 60).padStart(2, '0');
+    if (clock) clock.textContent = `${m}:${s}`;
   }, 1000);
 }
 
@@ -252,6 +262,11 @@ function stopRoundTimer() {
   clearInterval(_roundTimerInterval);
   _roundTimerInterval = null;
   _roundTimerStart    = null;
+  const clock   = document.getElementById('roundTimerDisplay');
+  const labelEl = document.getElementById('roundTimerLabel');
+  clock?.classList.remove('running');
+  if (clock)   clock.textContent = '00:00';
+  if (labelEl) labelEl.textContent = 'Ready';
 }
 
 
@@ -1750,7 +1765,7 @@ async function runBuilderOnly() {
 
   btn.disabled = true;
   smokeBtn?.classList.add('running');
-  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building… 0s</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (smokeBtn) smokeBtn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Building…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   startRoundTimer(smokeBtn, 'Building…');
   setStatus(`🏗️ Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
@@ -1888,7 +1903,7 @@ async function runRound() {
 
   // Set running state
   btn?.classList.add('running');
-  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking… 0s</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
+  if (btn) btn.innerHTML = '<img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img"><span class="shake-wide-label">Smoking…</span><img src="images/AI_Hive_Smoker_v1.png" class="smoke-btn-img smoke-btn-img-right">';
   startRoundTimer(btn, 'Smoking…');
   if (hiveStatus) hiveStatus.textContent = 'Working…';
   setStatus(`⚡ Round ${round} in progress — AI Hive is thinking…`);
@@ -2406,6 +2421,17 @@ function renderRoundHistory() {
       </div>
     </div>`;
   }).join('');
+}
+
+function openNotesModal() {
+  const modal = document.getElementById('notesModal');
+  if (modal) modal.classList.add('active');
+  setTimeout(() => document.getElementById('workNotes')?.focus(), 100);
+}
+
+function closeNotesModal() {
+  const modal = document.getElementById('notesModal');
+  if (modal) modal.classList.remove('active');
 }
 
 function openRoundHistoryModal() {

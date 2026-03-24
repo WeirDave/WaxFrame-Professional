@@ -331,21 +331,27 @@
     <!-- ── TOP BAR ── -->
     <div class="work-topbar">
       <div class="work-topbar-left">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-topbar-logo">
         <div class="work-project-info">
           <span class="work-project-name" id="workProjectName">Project</span>
           <span class="work-project-version" id="workProjectVersion"></span>
           <span class="work-start-mode" id="workStartMode"></span>
         </div>
       </div>
+      <div class="work-topbar-center">
+        <div class="work-phase-bar" id="workPhaseBar"></div>
+        <span class="work-round-badge" id="workRoundBadge">Round 1</span>
+      </div>
       <div class="work-topbar-right">
-        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">History</button>
+        <button class="btn btn-ghost btn-sm" onclick="openNotesModal()">📝 Notes</button>
+        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">📖 History</button>
         <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ API Keys</button>
         <a class="btn btn-ghost btn-sm" href="prompt-editor.html" target="_blank">✏️ Prompts</a>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
       </div>
     </div>
 
-    <!-- ── MAIN 3-COLUMN WORK AREA ── -->
+    <!-- ── MAIN 2-COLUMN WORK AREA ── -->
     <div class="work-main">
 
       <!-- ── COL 1: Working Document ── -->
@@ -370,48 +376,8 @@
         </div>
       </div>
 
-      <!-- ── COL 2: Conflicts + Notes ── -->
-      <div class="work-notes-panel">
-
-        <!-- ── Conflicts Panel ── -->
-        <div class="work-panel-header">
-          <span class="work-section-title">Conflicts</span>
-          <div class="flex-row-center">
-            <span class="work-history-hint" id="conflictsRoundLabel"></span>
-            <button class="btn btn-ghost btn-sm" onclick="copyConflicts()">📋 Copy</button>
-            <button class="btn btn-ghost btn-sm" onclick="clearConflicts()">✕ Clear</button>
-          </div>
-        </div>
-        <div class="conflicts-panel" id="conflictsPanel">
-          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
-        </div>
-
-        <!-- ── Notes for this Round ── -->
-        <div class="work-panel-header work-section-border-top">
-          <span class="work-section-title">Notes for this Round</span>
-          <div class="flex-row">
-            <button class="btn btn-ghost btn-sm" onclick="copyNotes()">📋 Copy</button>
-            <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value=''">✕ Clear</button>
-          </div>
-        </div>
-        <div class="work-notes-hint">Optional — add directions for the next round. Reference line numbers if helpful.</div>
-        <textarea id="workNotes" class="work-notes-ta"
-          oninput="saveSession()"
-          placeholder="e.g. Line 5: change tone to be more formal&#10;Line 12–15: expand this section&#10;Overall: make it more concise"></textarea>
-
-      </div>
-
-      <!-- ── COL 3: Control Panel ── -->
+      <!-- ── COL 2: Right Panel ── -->
       <div class="work-right-panel">
-
-        <!-- ── Logo ── -->
-        <div class="work-logo-row">
-          <div class="work-logo-text">
-            <div class="work-logo-name">AI Hive</div>
-            <div class="work-logo-tagline">Orchestrate the Hive</div>
-          </div>
-          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-logo">
-        </div>
 
         <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
           <option value="draft">Draft</option>
@@ -419,11 +385,10 @@
         </select>
 
         <!-- ── The Hive ── -->
-        <div class="work-panel-header work-section-header-top">
-          <span class="work-section-title">The Hive</span>
+        <div class="work-panel-header work-panel-header-first">
+          <span class="work-section-title">🐝 The Hive</span>
           <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">👑 Builder</button>
         </div>
-        <div class="work-hive-hint">Toggle AIs for this session. Builder always runs. Click 👑 Builder to change.</div>
         <div class="bee-status-grid" id="beeStatusGrid"></div>
 
         <!-- ── Action Buttons ── -->
@@ -436,15 +401,34 @@
           </button>
         </div>
 
-        <!-- ── Phase + Round Controls ── -->
-        <div class="work-phase-round-row">
-          <div class="work-phase-bar" id="workPhaseBar"></div>
-          <span class="work-round-badge" id="workRoundBadge">Round 1</span>
+        <!-- ── Round Timer ── -->
+        <div class="round-timer-row">
+          <div class="round-timer-clock" id="roundTimerDisplay">00:00</div>
+          <div class="round-timer-label" id="roundTimerLabel">Ready</div>
+        </div>
+
+        <!-- ── Console Clock ── -->
+        <div class="console-clock" id="consoleClock">
+          <span class="console-clock-time" id="consoleClockTime">00:00:00</span>
+          <span class="console-clock-label" id="consoleClockLabel">idle</span>
+        </div>
+
+        <!-- ── Conflicts ── -->
+        <div class="work-panel-header work-section-border-top">
+          <span class="work-section-title">⚡ Conflicts</span>
+          <div class="flex-row-center">
+            <span class="work-history-hint" id="conflictsRoundLabel"></span>
+            <button class="btn btn-ghost btn-sm" onclick="copyConflicts()">📋 Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearConflicts()">✕ Clear</button>
+          </div>
+        </div>
+        <div class="conflicts-panel" id="conflictsPanel">
+          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
         </div>
 
         <!-- ── Live Console ── -->
         <div class="work-panel-header work-section-border-top">
-          <span class="work-section-title">🖥️ Live Console</span>
+          <span class="work-section-title">🖥️ Console</span>
           <div class="flex-row-sm">
             <button class="btn btn-ghost btn-sm" onclick="copyConsole()">📋 Copy</button>
             <button class="btn btn-ghost btn-sm" onclick="clearConsole()">✕ Clear</button>
@@ -476,6 +460,27 @@
       </div>
     </div>
 
+  </div>
+</div>
+
+<!-- ============================================================
+     NOTES MODAL
+     ============================================================ -->
+<div class="notes-modal-overlay" id="notesModal" onclick="if(event.target===this)closeNotesModal()">
+  <div class="notes-modal">
+    <div class="notes-modal-hdr">
+      <div class="notes-modal-title">📝 Notes for this Round</div>
+      <div class="notes-modal-sub">Optional directions for the Builder. Reference line numbers if helpful.</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeNotesModal()">✕ Close</button>
+    </div>
+    <textarea id="workNotes" class="notes-modal-ta"
+      oninput="saveSession()"
+      placeholder="e.g. Line 5: change tone to be more formal&#10;Line 12–15: expand this section&#10;Overall: make it more concise"></textarea>
+    <div class="notes-modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="copyNotes()">📋 Copy</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value='';saveSession()">✕ Clear</button>
+      <button class="btn btn-accent" onclick="closeNotesModal()">Done →</button>
+    </div>
   </div>
 </div>
 
