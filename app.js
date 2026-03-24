@@ -1379,18 +1379,13 @@ function updateLineNumbers() {
   const rules = document.getElementById('docRules');
   if (!ta || !ln) return;
   const lineH = 21;
-  const lines = ta.value.split('\n').length;
-  const scroll = document.querySelector('.work-doc-scroll');
-  const visibleLines = scroll ? Math.ceil(scroll.clientHeight / lineH) : 40;
-  const totalLines = Math.max(lines, visibleLines);
+  const totalLines = Math.max(ta.value.split('\n').length, 1);
   ln.innerHTML = Array.from({length: totalLines}, (_, i) =>
     `<div>${i + 1}</div>`
   ).join('');
-  // Make rules and line numbers same height as content
   const contentH = totalLines * lineH;
   if (rules) rules.style.height = contentH + 'px';
   syncLineNumberScroll();
-
   const stats = document.getElementById('docStats');
   if (stats && ta.value.trim()) {
     const wordCount = ta.value.trim().split(/\s+/).length;
