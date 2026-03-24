@@ -456,6 +456,7 @@ function goToScreen(id) {
   }
   if (id === 'screen-setup') {
     renderBuilderPicker();
+    updateSetupRequirements();
   }
   if (id === 'screen-project') {
     switchDocTab(docTab);
@@ -497,9 +498,35 @@ function saveHive() {
     customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id))
   };
   try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) {}
+  updateSetupRequirements();
 }
 
 // saveProject — project name/version/goal/docTab — cleared per project
+function updateSetupRequirements() {
+  const keyedCount = aiList.filter(ai => API_CONFIGS[ai.provider]?._key).length;
+  const hasBuilder = !!builder;
+
+  const reqKeys    = document.getElementById('req-keys');
+  const reqBuilder = document.getElementById('req-builder');
+
+  if (reqKeys)    { reqKeys.textContent    = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 API keys saved (${keyedCount} saved)`; reqKeys.classList.toggle('met', keyedCount >= 2); }
+  if (reqBuilder) { reqBuilder.textContent = (hasBuilder ? '✓' : '✗') + ' Builder selected';                                      reqBuilder.classList.toggle('met', hasBuilder); }
+}
+
+function updateLaunchRequirements() {
+  const name    = document.getElementById('projectName')?.value.trim()  || '';
+  const goal    = document.getElementById('projectGoal')?.value.trim()  || '';
+  const hasDoc  = docText || docTab === 'scratch';
+
+  const reqName = document.getElementById('req-name');
+  const reqGoal = document.getElementById('req-goal');
+  const reqDoc  = document.getElementById('req-doc');
+
+  if (reqName) { reqName.textContent = (name ? '✓' : '✗') + ' Project name';        reqName.classList.toggle('met', !!name); }
+  if (reqGoal) { reqGoal.textContent = (goal ? '✓' : '✗') + ' Project goal';        reqGoal.classList.toggle('met', !!goal); }
+  if (reqDoc)  { reqDoc.textContent  = (hasDoc ? '✓' : '✗') + ' Document — upload a file, paste text, or choose Start from Scratch'; reqDoc.classList.toggle('met', !!hasDoc); }
+}
+
 function saveProject() {
   const proj = {
     projectName:    document.getElementById('projectName')?.value    || '',
@@ -508,6 +535,7 @@ function saveProject() {
     docTab,
   };
   try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) {}
+  updateLaunchRequirements();
 }
 
 // saveSettings — writes both (convenience wrapper)
@@ -1043,6 +1071,7 @@ function validateAndContinue() {
     goToScreen('screen-work');
   } else {
     goToScreen('screen-project');
+    updateLaunchRequirements();
   }
 }
 
@@ -1058,6 +1087,8 @@ function switchDocTab(tab) {
     const ta = document.getElementById('pasteText');
     if (ta) updateProjLineNums('projPasteNums', ta);
   }
+  saveProject();
+  updateLaunchRequirements();
   saveSettings();
 }
 
