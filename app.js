@@ -1567,11 +1567,27 @@ RULES:
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
-For each conflict, quote the exact text from the document that is affected, then list which AIs suggested each version by name, which you chose (or that the user must decide), and why — in one to two sentences.
-Format each conflict as: [USER DECISION] or [BUILDER DECISION] followed by the explanation.
-IMPORTANT: Always begin each conflict entry with the quoted original text in double quotes so the user can find it in the document. Always name the specific AIs on each side — never say "a reviewer" or "reviewers". Do not use line numbers.
-Example: [USER DECISION] "You're encouraged to respond to messages during working hours" — Claude, Grok, and DeepSeek preferred adding "when possible" to the end; ChatGPT, Gemini, and Perplexity preferred the original. User should decide.
-Example: [BUILDER DECISION] "notify supervisor" — Claude and Grok suggested "alert team lead"; ChatGPT and DeepSeek said keep original — applied "alert team lead" for consistency with the rest of the document.
+For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
+Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
+
+For USER DECISION conflicts: use EXACTLY this structured format so the app can present it as a choice to the user:
+
+[USER DECISION]
+QUESTION: A plain-English question describing what the user needs to decide — one sentence.
+CURRENT: "the exact current text in the document as it stands"
+OPTION_1: "exact proposed text" — AI names who suggested this
+OPTION_2: "exact proposed text" — AI names who suggested this
+OPTION_3: "exact proposed text" — AI names who suggested this (add more options if needed, up to 6)
+END_DECISION
+
+Rules for USER DECISION format:
+- CURRENT must be the verbatim text currently in the document
+- Each OPTION must be the complete replacement text, not a description of a change
+- List only the AIs who specifically suggested that option by name
+- Include as many options as there are genuinely distinct suggestions — minimum 2, maximum 6
+- Do not add commentary outside the structured block
+- Do not combine options that are meaningfully different
+
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`,
 
@@ -2083,13 +2099,51 @@ async function callAPI(ai, prompt) {
 // ── HELPERS ──
 function extractConflicts(text) {
   const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
-  // %%DELIMITERS%% are unique — document content should never contain them naturally
   const start = clean.lastIndexOf('%%CONFLICTS_START%%');
   const end   = clean.lastIndexOf('%%CONFLICTS_END%%');
   if (start === -1 || end === -1 || end <= start) return null;
-  const raw = clean.slice(start + '%%CONFLICTS_START%%'.length, end).trim().replace(/[,\s]+$/, '');
+  const raw = clean.slice(start + '%%CONFLICTS_START%%'.length, end).trim();
   if (!raw || raw.toUpperCase() === 'NO CONFLICTS') return null;
-  return raw;
+
+  // Parse structured USER DECISION blocks and freeform BUILDER DECISION lines
+  const result = { userDecisions: [], builderDecisions: [], raw };
+
+  // Extract USER DECISION blocks between [USER DECISION] and END_DECISION
+  const udRegex = /\[USER DECISION\]([\s\S]*?)END_DECISION/g;
+  let match;
+  while ((match = udRegex.exec(raw)) !== null) {
+    const block = match[1].trim();
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    const decision = { question: '', current: '', options: [] };
+    for (const line of lines) {
+      if (line.startsWith('QUESTION:')) {
+        decision.question = line.replace('QUESTION:', '').trim();
+      } else if (line.startsWith('CURRENT:')) {
+        decision.current = line.replace('CURRENT:', '').trim().replace(/^"|"$/g, '');
+      } else if (/^OPTION_\d+:/.test(line)) {
+        const optText = line.replace(/^OPTION_\d+:/, '').trim();
+        // Split "text" — AI names into text and attributions
+        const dashIdx = optText.lastIndexOf(' — ');
+        if (dashIdx !== -1) {
+          decision.options.push({
+            text: optText.slice(0, dashIdx).trim().replace(/^"|"$/g, ''),
+            ais:  optText.slice(dashIdx + 3).trim()
+          });
+        } else {
+          decision.options.push({ text: optText.replace(/^"|"$/g, ''), ais: '' });
+        }
+      }
+    }
+    if (decision.options.length >= 2) result.userDecisions.push(decision);
+  }
+
+  // Extract BUILDER DECISION lines (freeform, not structured)
+  const bdRegex = /\[BUILDER DECISION\][^\[]+/g;
+  while ((match = bdRegex.exec(raw)) !== null) {
+    result.builderDecisions.push(match[0].replace('[BUILDER DECISION]', '').trim());
+  }
+
+  return result;
 }
 
 function extractDocument(text) {
@@ -2101,26 +2155,127 @@ function extractDocument(text) {
   return clean.slice(start + '%%DOCUMENT_START%%'.length, end).trim();
 }
 
+// Track user's choices for current conflict set
+window._decisionChoices = {};
+
 function renderConflicts() {
   const el    = document.getElementById('conflictsPanel');
   const label = document.getElementById('conflictsRoundLabel');
   if (!el) return;
-  // Always show the most recent completed round — not the most recent round that happened to have conflicts
+
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest) {
     el.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
     if (label) label.textContent = '';
     return;
   }
+
   if (label) label.textContent = `Round ${latest.round === 0 ? 'Original' : latest.round}`;
-  if (!latest.conflicts) {
+  const conflicts = latest.conflicts;
+
+  if (!conflicts) {
     el.innerHTML = '<div class="conflicts-empty">No conflicts from the last round. The Builder resolved everything.</div>';
     return;
   }
-  const html = esc(latest.conflicts)
-    .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
-    .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
-  el.innerHTML = `<div class="conflicts-body">${html}</div>`;
+
+  // Reset choices when new conflicts arrive
+  window._decisionChoices = {};
+
+  let html = '';
+
+  // USER DECISION cards
+  if (conflicts.userDecisions && conflicts.userDecisions.length > 0) {
+    conflicts.userDecisions.forEach((d, di) => {
+      html += `<div class="decision-card" id="dcard-${di}">
+        <div class="decision-card-header">
+          <span class="decision-badge">⚡ USER DECISION ${di + 1} of ${conflicts.userDecisions.length}</span>
+        </div>
+        <div class="decision-question">${esc(d.question)}</div>
+        ${d.current ? `<div class="decision-current"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>` : ''}
+        <div class="decision-options">
+          ${d.options.map((opt, oi) => `
+            <button class="decision-opt-btn" id="dopt-${di}-${oi}"
+              onclick="selectDecision(${di}, ${oi}, ${conflicts.userDecisions.length})">
+              <span class="decision-opt-num">${oi + 1}</span>
+              <span class="decision-opt-text">"${esc(opt.text)}"</span>
+              ${opt.ais ? `<span class="decision-opt-ais">${esc(opt.ais)}</span>` : ''}
+            </button>`).join('')}
+        </div>
+      </div>`;
+    });
+
+    html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" disabled>
+      ✅ Apply My Decisions to Document
+    </button>`;
+  }
+
+  // BUILDER DECISION entries (informational only)
+  if (conflicts.builderDecisions && conflicts.builderDecisions.length > 0) {
+    html += `<div class="builder-decisions-section">
+      <div class="builder-decisions-title">🔨 Builder Decisions (applied automatically)</div>
+      ${conflicts.builderDecisions.map(d =>
+        `<div class="builder-decision-item">${esc(d)}</div>`
+      ).join('')}
+    </div>`;
+  }
+
+  // Fallback: if parser got nothing but there is raw text, show it
+  if (!html && conflicts.raw) {
+    const rawHtml = esc(conflicts.raw)
+      .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
+      .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
+    html = `<div class="conflicts-body">${rawHtml}</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function selectDecision(decisionIdx, optionIdx, total) {
+  // Store choice
+  window._decisionChoices[decisionIdx] = optionIdx;
+
+  // Update button states for this decision
+  const card = document.getElementById(`dcard-${decisionIdx}`);
+  if (card) {
+    card.querySelectorAll('.decision-opt-btn').forEach((btn, i) => {
+      btn.classList.toggle('selected', i === optionIdx);
+    });
+    card.classList.add('resolved');
+  }
+
+  // Enable Apply button if all decisions are made
+  const allMade = Object.keys(window._decisionChoices).length === total;
+  const applyBtn = document.getElementById('applyDecisionsBtn');
+  if (applyBtn) applyBtn.disabled = !allMade;
+}
+
+function applyDecisions() {
+  const latest = history.length > 0 ? history[history.length - 1] : null;
+  if (!latest?.conflicts?.userDecisions) return;
+
+  const decisions = latest.conflicts.userDecisions;
+  const lines = [];
+
+  Object.keys(window._decisionChoices).forEach(di => {
+    const d = decisions[parseInt(di)];
+    const oi = window._decisionChoices[di];
+    const chosen = d.options[oi];
+    if (d.current && chosen) {
+      lines.push(`Replace "${d.current}" with "${chosen.text}"`);
+    }
+  });
+
+  if (lines.length === 0) return;
+
+  // Put decisions into notes and fire Send to Builder
+  const notesTa = document.getElementById('workNotes');
+  if (notesTa) {
+    notesTa.value = 'Apply these user decisions:\n' + lines.map((l, i) => `${i + 1}. ${l}`).join('\n');
+    saveSession();
+  }
+
+  toast('📋 Decisions queued — sending to Builder…');
+  runBuilderOnly();
 }
 
 function extractSummary(text) {
