@@ -1345,11 +1345,10 @@ function initWorkScreen(isNewSession = false) {
   updateLicenseBadge();
   setStatus('Standing by — toggle bees above, then Smoke the Hive');
 
-  // Wire up scroll sync and input handler directly on the textarea
-  const ta = document.getElementById('workDocument');
-  const ln = document.getElementById('lineNumbers');
-  if (ta && ln) {
-    ta.addEventListener('scroll', syncLineNumberScroll);
+  // Wire up scroll sync on the paper div (which now owns the scrollbar)
+  const inner = document.querySelector('.work-doc-inner');
+  if (inner) {
+    inner.addEventListener('scroll', syncLineNumberScroll);
   }
 
   // Keep line numbers filled on resize
@@ -1411,12 +1410,11 @@ function updateLineNumbers() {
 }
 
 function syncLineNumberScroll() {
-  const ta = document.getElementById('workDocument');
-  const ln = document.getElementById('lineNumbers');
   const inner = document.querySelector('.work-doc-inner');
-  if (!ta || !ln || !inner) return;
-  ln.scrollTop = ta.scrollTop;
-  inner.style.backgroundPosition = `0 ${4 - ta.scrollTop}px`;
+  const ln = document.getElementById('lineNumbers');
+  if (!inner || !ln) return;
+  ln.scrollTop = inner.scrollTop;
+  inner.style.backgroundPosition = `0 ${4 - inner.scrollTop % 21}px`;
 }
 
 function handleWorkDocumentInput() {
