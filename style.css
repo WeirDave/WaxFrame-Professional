@@ -1074,19 +1074,10 @@ html, body {
 
 .work-doc-inner {
   flex: 0 0 auto;
-  --doc-scrollbar-width: 30px;
-  --doc-scrollbar-comp: 16px;
-  width: calc(80ch + 8px + var(--doc-scrollbar-width) + var(--doc-scrollbar-comp));
   position: relative;
-  min-width: 0;
-  background: transparent;
-  overflow: hidden;
-}
-.work-doc-inner::before {
-  content: "";
-  position: absolute;
-  inset: 0 var(--doc-scrollbar-width) 0 0;
-  z-index: 0;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
   background-color: #ffffff;
   background-image: repeating-linear-gradient(
     to bottom,
@@ -1097,31 +1088,42 @@ html, body {
   );
   background-size: 100% 21px;
   background-position: 0 4px;
-  pointer-events: none;
+  box-sizing: border-box;
+  /* text(80ch) + left-pad(8px) + right-pad(12px) + white-strip(28px) + scrollbar(12px) */
+  width: calc(80ch + 8px + 12px + 28px + 12px);
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
 }
+
+.work-doc-inner::-webkit-scrollbar { width: 12px; }
+.work-doc-inner::-webkit-scrollbar-track { background: transparent; }
+.work-doc-inner::-webkit-scrollbar-thumb { background: rgba(120,120,140,0.55); border-radius: 8px; }
 
 .work-doc-ta {
   position: relative;
   z-index: 1;
   display: block;
-  width: calc(80ch + var(--doc-scrollbar-width));
-  min-width: calc(80ch + var(--doc-scrollbar-width));
-  max-width: calc(80ch + var(--doc-scrollbar-width));
-  height: 100%;
-  min-height: 0;
+  /* EXACT text box: 80ch + only left/right text padding — white strip lives in parent */
+  width: calc(80ch + 8px + 12px);
+  min-width: calc(80ch + 8px + 12px);
+  max-width: calc(80ch + 8px + 12px);
+  height: auto;
+  min-height: 100%;
   margin: 0;
-  padding: 4px var(--doc-scrollbar-width) 0 8px;
+  padding: 4px 12px 0 8px;
   border: none;
   outline: none;
   resize: none;
-  overflow-y: scroll;
-  overflow-x: hidden;
+  overflow: hidden;
   box-sizing: border-box;
   background: transparent;
   color: #1a1a2e;
   font-family: "JetBrains Mono", monospace;
   font-size: 13px;
   line-height: 21px;
+  letter-spacing: 0;
+  font-variant-ligatures: none;
+  font-feature-settings: "liga" 0, "calt" 0;
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-break: break-word;
