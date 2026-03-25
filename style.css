@@ -1078,6 +1078,9 @@ html, body {
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  /* ch must be computed from the same font as the textarea so 80ch is consistent */
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
   background-color: #ffffff;
   background-image: repeating-linear-gradient(
     to bottom,

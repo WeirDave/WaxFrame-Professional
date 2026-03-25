@@ -1384,6 +1384,10 @@ function updateLineNumbers() {
   const ln = document.getElementById('lineNumbers');
   if (!ta || !ln) return;
 
+  // Keep textarea height in sync with content (enables .work-doc-inner scrollbar)
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
+
   const text = (ta.value || '');
   const logicalLines = text.split('\n');
 
@@ -1421,6 +1425,9 @@ function handleWorkDocumentInput() {
   const ta = document.getElementById('workDocument');
   if (!ta) return;
   docText = ta.value;
+  // Auto-grow textarea so .work-doc-inner overflows and shows its scrollbar
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
   clearTimeout(_lineNumDebounce);
   _lineNumDebounce = setTimeout(updateLineNumbers, 50);
   clearTimeout(workDocSaveTimer);
