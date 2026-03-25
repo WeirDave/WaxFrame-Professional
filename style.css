@@ -1073,7 +1073,8 @@ html, body {
 }
 
 .work-doc-inner {
-  flex: 1;
+  flex: 0 0 auto;
+  width: calc(80ch + 8px + 20px);
   position: relative;
   min-width: 0;
   background-color: #ffffff;
@@ -1094,26 +1095,29 @@ html, body {
   z-index: 1;
   display: block;
   width: 80ch;
+  min-width: 80ch;
   max-width: 80ch;
   height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 0 0 8px;
   border: none;
-  color: #1a1a2e;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  line-height: 21px;
-  padding: 4px 12px 0;
-  resize: none;
   outline: none;
+  resize: none;
   overflow-y: scroll;
   overflow-x: hidden;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow-wrap: break-word;
   box-sizing: content-box;
   background: transparent;
+  color: #1a1a2e;
+  font-family: "JetBrains Mono", monospace;
+  font-size: 13px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  tab-size: 4;
+  scrollbar-gutter: stable;
 }
-.work-doc-ta::-webkit-scrollbar { width: 4px; }
-.work-doc-ta::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
 .work-doc-rules { display: none; }
 .work-doc-right-margin { display: none; }
