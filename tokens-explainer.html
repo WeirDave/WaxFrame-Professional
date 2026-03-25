@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Hive — Understanding Tokens</title>
+  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="helper-body">
+
+<div class="page-header">
+  <div class="page-header-spacer"></div>
+  <div class="page-header-brand">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="page-header-logo">
+    <div>
+      <div class="page-header-name">AI Hive</div>
+      <div class="page-header-tag">Understanding Tokens</div>
+    </div>
+  </div>
+  <button class="close-btn" onclick="window.close()">✕ Close this tab</button>
+</div>
+
+<div class="page-main">
+<div class="two-col">
+
+  <!-- LEFT COLUMN -->
+  <div class="col">
+
+    <img src="images/AI_Hive_Token_Bee_v1.png" alt="" class="col-bee">
+
+    <div class="section-title">The Basics</div>
+
+    <div class="card accent">
+      <h3>What is a token?</h3>
+      <p>Tokens are the unit of measurement AI models use to read and write text. Roughly speaking, <strong>1 token ≈ ¾ of a word</strong>. A typical paragraph is about 100 tokens. A full-page document might be 500–800 tokens.</p>
+      <p>Every time AI Hive runs a round, your Builder AI reads your entire document plus the full prompt, then writes back the updated version. That is a lot of tokens — both in and out — every single round.</p>
+    </div>
+
+    <div class="card amber">
+      <h3>Why does this matter for your Builder?</h3>
+      <p>Free-tier AI accounts have token limits — a cap on how much they can read and write per minute, per hour, or per day. If your Builder hits that limit mid-session, it will either fail or make you wait before it can continue.</p>
+      <p><strong>Reviewers</strong> only send numbered suggestions, so they use far fewer tokens. Free-tier AIs work fine as Reviewers. The Builder is the one that needs headroom.</p>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="col">
+
+    <div class="section-title">Best Builder Choices</div>
+
+    <div class="card green">
+      <table class="ai-table">
+        <tr>
+          <th>AI</th>
+          <th>Token limits</th>
+          <th>Cost</th>
+          <th>Verdict</th>
+        </tr>
+        <tr>
+          <td><strong>Claude</strong></td>
+          <td>Large context window, generous API limits</td>
+          <td>Pay-as-you-go</td>
+          <td><span class="badge badge-green">Excellent Builder</span></td>
+        </tr>
+        <tr>
+          <td><strong>ChatGPT</strong></td>
+          <td>Large context, reliable at high volume</td>
+          <td>Pay-as-you-go</td>
+          <td><span class="badge badge-green">Excellent Builder</span></td>
+        </tr>
+        <tr>
+          <td><strong>Gemini</strong></td>
+          <td>Very large context window, generous free tier</td>
+          <td>Free tier available</td>
+          <td><span class="badge badge-green">Excellent — free option</span></td>
+        </tr>
+        <tr>
+          <td><strong>DeepSeek</strong></td>
+          <td>Large context, very low cost per token</td>
+          <td>Pay-as-you-go (cheap)</td>
+          <td><span class="badge badge-green">Great — budget choice</span></td>
+        </tr>
+        <tr>
+          <td><strong>Grok</strong></td>
+          <td>Good context, API limits vary</td>
+          <td>Pay-as-you-go</td>
+          <td><span class="badge badge-amber">Fine with API key</span></td>
+        </tr>
+        <tr>
+          <td><strong>Perplexity</strong></td>
+          <td>Smaller context, search-focused model</td>
+          <td>Pay-as-you-go</td>
+          <td><span class="badge badge-amber">Better as a Reviewer</span></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>A practical example</h3>
+      <p>Say you are working on a 2,000-word report. That is roughly 2,700 tokens. Your Builder reads the full document plus the prompt (~500 tokens) = about 3,200 tokens in, then writes back the updated version at roughly the same length. That is <strong>~6,000 tokens per round</strong>.</p>
+      <p>Over 5 rounds, that is ~30,000 tokens from your Builder alone. With a paid API key this costs a few cents. On a free tier with strict limits, this could hit the cap by round 2 or 3.</p>
+      <p><strong>Bottom line:</strong> use a paid API key for your Builder, or use Gemini's free tier which is genuinely generous. Keep cost-conscious or free-tier AIs as Reviewers where the token load is light.</p>
+    </div>
+
+    <div class="card">
+      <h3>Tips for managing token costs</h3>
+      <p><strong>Keep your document focused.</strong> The longer your document, the more tokens your Builder uses every round. Trim content that is no longer relevant as the document improves.</p>
+      <p><strong>Use Reviewers wisely.</strong> You can disable individual AIs per session from the work screen. If an AI is consistently unhelpful, turn it off — fewer reviewers means less input for the Builder to process.</p>
+      <p><strong>Start small.</strong> For your first session, try a shorter document or a simpler goal. Once you understand how the rounds work you can take on larger projects confidently.</p>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<div class="page-footer">
+  <span class="footer-note">AI Hive — open source, no server, no tracking.</span>
+  <a href="https://github.com/WeirDave/AIHive" target="_blank" class="footer-btn">⭐ GitHub</a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="footer-btn">📄 AGPL-3.0</a>
+</div>
+
+<script>
+  (function() {
+    const t = localStorage.getItem('aihive_v2_theme') || 'auto';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+</body>
+</html>

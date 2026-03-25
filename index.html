@@ -1,2 +1,600 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="refresh" content="0;url=AI%20Hive.html"></head><body></body></html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Hive</title>
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
+  <link rel="manifest" href="images/site.webmanifest">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=2.1">
+</head>
+<body>
+
+<!-- ============================================================
+     SCREEN 1 — WELCOME
+     ============================================================ -->
+<div class="screen active" id="screen-welcome">
+  <div class="welcome-bg"></div>
+  <div class="welcome-inner">
+    <div class="welcome-logo">
+      <div class="welcome-logo-anim">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="welcome-logo-static">
+        <img src="images/AI_Hive_Worker_Bee_v2.png" alt="Bee" class="welcome-bee-fly">
+      </div>
+      <div class="welcome-brand">
+        <h1>AI Hive</h1>
+        <p>Orchestrate the Hive</p>
+        <span class="welcome-version">v2.1</span>
+      </div>
+    </div>
+    <div class="welcome-pitch">
+      <p>AI Hive puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better.</p>
+    </div>
+    <div class="welcome-choices">
+      <div class="welcome-card free" onclick="goToFree()">
+        <div class="welcome-card-icon">🆓</div>
+        <div class="welcome-card-body">
+          <div class="welcome-card-title">Free Version</div>
+          <div class="welcome-card-desc">Manual copy/paste workflow. No API keys needed — free tier AIs work fine. You copy prompts to each AI tab yourself and paste responses back. Mix paid and free AIs however you like.</div>
+        </div>
+        <div class="welcome-card-arrow">→</div>
+      </div>
+      <div class="welcome-card pro" onclick="goToScreen('screen-setup')">
+        <div class="welcome-card-icon">⚡</div>
+        <div class="welcome-card-body">
+          <div class="welcome-card-title">Pro Version <span class="badge-api">API</span></div>
+          <div class="welcome-card-desc">Fully automated — one button does everything. Each AI you want to use needs its own API key. Start with just 2 if you like, or use all 6. Your Builder AI processes the full document every round.</div>
+        </div>
+        <div class="welcome-card-arrow">→</div>
+      </div>
+    </div>
+    <div class="welcome-footer">
+      <a href="https://github.com/WeirDave/AIHive" target="_blank" class="btn btn-ghost btn-sm">⭐ GitHub</a>
+      <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn btn-ghost btn-sm">📄 AGPL-3.0</a>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+      <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️ Auto</button>
+      <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 2 — SETUP (Worker Bees + Builder, merged, full-width)
+     ============================================================ -->
+<div class="screen" id="screen-setup">
+  <div class="fullscreen-layout">
+
+    <!-- ── Header bar ── -->
+    <div class="fs-header">
+      <button class="back-btn" onclick="goToScreen('screen-welcome')">← Back</button>
+      <div class="fs-header-brand">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">AI Hive</div>
+          <div class="fs-logo-tag">Orchestrate the Hive</div>
+        </div>
+      </div>
+      <div class="setup-step-badge">Setup — Step 1 of 2</div>
+    </div>
+
+    <!-- ── Two-column body ── -->
+    <div class="fs-body">
+
+      <!-- ── LEFT: Worker Bees ── -->
+      <div class="fs-col fs-col-left">
+        <div class="fs-col-main">
+          <img src="images/AI_Hive_Worker_Bee_v2.png" class="setup-card-bee" alt="">
+          <div class="fs-col-scroll">
+            <div class="fs-col-header">
+              <h2 class="fs-col-title">Your Worker Bees</h2>
+              <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
+            </div>
+            <div class="bee-controls-row-setup">
+              <button class="btn btn-sm btn-ghost" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
+              <button class="btn btn-sm btn-ghost" onclick="openAllConsoles()">Open All API Consoles</button>
+              <a class="btn btn-sm btn-ghost" href="api-details.html" target="_blank">API Key Guide</a>
+              <button class="btn btn-sm btn-ghost" onclick="showAddCustomAI()">＋ Add Custom AI</button>
+            </div>
+
+            <!-- ── Custom AI Form ── -->
+            <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
+              <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
+              <div class="custom-ai-form-row">
+                <div class="custom-ai-field-wrap">
+                  <label>URL <span class="field-required">*</span></label>
+                  <input type="text" id="customAIUrl" placeholder="https://chat.deepseek.com" oninput="autoFillAIName(this.value)">
+                </div>
+                <div class="custom-ai-field-wrap">
+                  <label>Name <span class="field-optional">(auto-detected)</span></label>
+                  <input type="text" id="customAIName" placeholder="e.g. DeepSeek" oninput="this.dataset.userTyped='true'">
+                </div>
+              </div>
+              <div class="custom-ai-form-row">
+                <div class="custom-ai-field-wrap">
+                  <label>API Format <span class="field-required">*</span></label>
+                  <select id="customAIFormat" class="custom-ai-select">
+                    <option value="openai">OpenAI compatible (DeepSeek, Mistral, etc.)</option>
+                    <option value="anthropic">Anthropic (Claude)</option>
+                    <option value="google">Google (Gemini)</option>
+                  </select>
+                </div>
+                <div class="custom-ai-field-wrap">
+                  <label>API Key <span class="field-optional">(optional)</span></label>
+                  <input type="password" id="customAIKey" placeholder="Paste key if using API mode">
+                </div>
+              </div>
+              <div class="custom-ai-form-footer">
+                <button class="btn btn-ghost btn-sm" onclick="showAddCustomAI()">Cancel</button>
+                <button class="btn btn-accent btn-sm" onclick="addCustomAI()">Add to Hive</button>
+              </div>
+            </div>
+
+            <div class="ai-setup-grid" id="aiSetupGrid"></div>
+          </div>
+        </div>
+        <div class="setup-col-tip">
+          💡 <strong>Tip:</strong> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.
+        </div>
+      </div>
+
+        <!-- ── Divider ── -->
+      <div class="fs-divider"></div>
+
+      <!-- ── RIGHT: Builder Picker ── -->
+      <div class="fs-col fs-col-right">
+        <div class="fs-col-main">
+          <img src="images/AI_Hive_Builder_v3.png" class="setup-card-bee" alt="">
+          <div class="fs-col-scroll">
+            <div class="fs-col-header">
+              <h2 class="fs-col-title">Choose Your Builder</h2>
+              <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
+            </div>
+            <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+          </div>
+        </div>
+        <div class="setup-col-tip">
+          💡 <strong>Tip:</strong> Claude, ChatGPT, and Gemini handle large documents well. Avoid free-tier AIs as Builder — they run out of tokens fast. <a href="tokens-explainer.html" target="_blank" class="link-accent">Learn about tokens →</a>
+        </div>
+      </div>
+
+    </div><!-- /fs-body -->
+
+    <!-- ── Footer ── -->
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">To continue you need:</span>
+        <span class="launch-req-item" id="req-keys">✗ At least 2 API keys saved</span>
+        <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
+      </div>
+      <button class="btn btn-accent btn-lg" id="setupContinueBtn" onclick="validateAndContinue()">
+        <img src="images/AI_Hive_Project_Bee_v2.png" class="bee-btn-img">
+        Continue to Project Setup →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 3 — PROJECT SETUP (full-width)
+     ============================================================ -->
+<div class="screen" id="screen-project">
+  <div class="fullscreen-layout">
+
+    <!-- ── Header bar ── -->
+    <div class="fs-header">
+      <button class="back-btn" onclick="goToScreen('screen-setup')">← Back</button>
+      <div class="fs-header-brand">
+        <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">AI Hive</div>
+          <div class="fs-logo-tag">Orchestrate the Hive</div>
+        </div>
+      </div>
+      <div class="setup-step-badge">Setup — Step 2 of 2</div>
+    </div>
+
+    <!-- ── Two-column body ── -->
+    <div class="fs-body">
+
+      <!-- ── LEFT: Project Details ── -->
+      <div class="fs-col fs-col-left">
+        <div class="fs-col-main">
+          <img src="images/AI_Hive_Project_Bee_v2.png" class="setup-card-bee" alt="">
+          <div class="fs-col-scroll">
+            <div class="fs-col-header">
+              <h2 class="fs-col-title">Your Project</h2>
+              <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal frames your project — it tells every AI what this document is, what it's trying to achieve, and what direction to take. It is used when generating the first draft and as context throughout the session. The more specific and detailed your goal, the better your results will be from the very first round.</p>
+            </div>
+
+            <div class="project-fields">
+              <div class="project-field-wrap">
+                <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg" oninput="saveProject()">
+                <button class="field-clear-btn" onclick="document.getElementById('projectName').value='';saveProject();" title="Clear">✕</button>
+              </div>
+              <div class="project-field-wrap">
+                <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm" oninput="saveProject()">
+                <button class="field-clear-btn" onclick="document.getElementById('projectVersion').value='';saveProject();" title="Clear">✕</button>
+              </div>
+              <button class="btn btn-ghost" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
+            </div>
+
+            <div>
+              <div class="proj-notebook proj-notebook-goal">
+                <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
+                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()" onscroll="document.getElementById('projGoalNums').scrollTop=this.scrollTop"></textarea>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                <button class="field-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();" title="Clear goal">✕ Clear Goal</button>
+                <span id="goalCounter" style="font-size:11px;color:var(--muted);font-family:var(--font-mono);"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="setup-col-tip">
+          💡 <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
+        </div>
+      </div>
+
+        <!-- ── Divider ── -->
+      <div class="fs-divider"></div>
+
+      <!-- ── RIGHT: Starting Document ── -->
+      <div class="fs-col fs-col-right">
+        <div class="fs-col-main">
+          <div class="fs-col-scroll proj-right-scroll">
+
+            <div class="fs-col-header">
+              <h2 class="fs-col-title">Starting Document</h2>
+              <p class="fs-col-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your goal above.</p>
+            </div>
+
+            <div class="doc-input-tabs">
+              <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
+              <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
+              <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
+            </div>
+
+            <div class="doc-tab-panel active" id="panel-upload">
+              <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+                   ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
+                <div class="drop-zone-icon">📄</div>
+                <div class="drop-zone-text">Drag & drop or click to browse</div>
+                <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), or plain text (.txt)</div>
+                <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt" style="display:none" onchange="handleFileSelect(event)">
+              </div>
+              <div id="fileStatus" class="file-status" style="display:none;"></div>
+            </div>
+
+            <div class="doc-tab-panel" id="panel-paste">
+              <div class="proj-notebook">
+                <div class="proj-notebook-nums" id="projPasteNums"><div>1</div></div>
+                <textarea id="pasteText" class="proj-notebook-ta" placeholder="Paste your existing document text here…"
+                  oninput="updateProjLineNums('projPasteNums', this)"
+                  onscroll="document.getElementById('projPasteNums').scrollTop=this.scrollTop"></textarea>
+              </div>
+            </div>
+
+            <div class="doc-tab-panel" id="panel-scratch">
+              <div class="proj-notebook proj-notebook-scratch">
+                <div class="proj-scratch-inner">
+                  <div class="proj-scratch-icon">✍️</div>
+                  <div class="proj-scratch-title">Starting from Scratch</div>
+                  <div class="proj-scratch-msg">AI Hive will ask all your AIs to create a first draft based on your project goal. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+        <div class="setup-col-tip">
+          💡 <strong>Tip:</strong> Upload or paste an existing draft to refine it, or start from scratch and let your AIs build it from your goal.
+        </div>
+      </div>
+
+    </div><!-- /fs-body -->
+
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">To launch you need:</span>
+        <span class="launch-req-item" id="req-name">✗ Project name</span>
+        <span class="launch-req-item" id="req-goal">✗ Project goal</span>
+        <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
+      </div>
+      <button class="btn btn-accent btn-lg" onclick="startSession()">
+        <img src="images/AI_Hive_Logo_v4.png" class="bee-btn-img">
+        Launch AI Hive →
+      </button>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 4 — WORK
+     ============================================================ -->
+<div class="screen" id="screen-work">
+  <div class="work-layout">
+
+    <!-- ── TOP BAR ── -->
+    <div class="work-topbar">
+      <div class="work-topbar-left">
+        <div class="work-project-info">
+          <span class="work-project-name" id="workProjectName">Project</span>
+          <span class="work-project-version" id="workProjectVersion"></span>
+          <span class="work-start-mode" id="workStartMode"></span>
+        </div>
+      </div>
+      <div class="work-topbar-center">
+        <div class="work-phase-bar" id="workPhaseBar"></div>
+        <span class="work-round-badge" id="workRoundBadge">Round 1</span>
+      </div>
+      <div class="work-topbar-right">
+        <button class="btn btn-ghost btn-sm" onclick="openNotesModal()">📝 Notes</button>
+        <button class="btn btn-ghost btn-sm" onclick="openRoundHistoryModal()">📖 History</button>
+        <button class="btn btn-ghost btn-sm" onclick="openSettings()">⚙️ API Keys</button>
+        <a class="btn btn-ghost btn-sm" href="prompt-editor.html" target="_blank">✏️ Prompts</a>
+        <span class="license-badge" id="licenseBadge" title="License status"></span>
+      </div>
+    </div>
+
+    <!-- ── MAIN 3-COLUMN WORK AREA ── -->
+    <div class="work-main">
+
+      <!-- ══ COL 1: The Hive ══ -->
+      <div class="work-left-panel">
+
+        <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
+          <option value="draft">Draft</option>
+          <option value="refine">Refine Text</option>
+        </select>
+
+        <div class="left-panel-header">
+          <span class="work-section-title">The Hive</span>
+          <button class="btn btn-ghost btn-sm" onclick="openChangeBuilder()">Change Builder</button>
+        </div>
+
+        <div class="hex-grid" id="beeStatusGrid"></div>
+
+        <div class="left-panel-header left-panel-section-border">
+          <span class="work-section-title">Conflicts</span>
+          <div class="flex-row-center">
+            <span class="work-history-hint" id="conflictsRoundLabel"></span>
+            <button class="btn btn-ghost btn-sm" onclick="copyConflicts()">📋</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearConflicts()">✕</button>
+          </div>
+        </div>
+        <div class="conflicts-panel" id="conflictsPanel">
+          <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
+        </div>
+
+      </div><!-- /work-left-panel -->
+
+      <!-- ══ COL 2: Left gap ══ -->
+      <div class="work-gap"></div>
+
+      <!-- ══ COL 3: Working Document ══ -->
+      <div class="work-doc-panel">
+        <div class="work-panel-header">
+          <span class="work-section-title">📄 Working Document</span>
+          <span class="doc-stats" id="docStats"></span>
+          <div class="flex-row">
+            <button class="btn btn-ghost btn-sm" onclick="exportDocument()">💾 Export</button>
+            <button class="btn btn-ghost btn-sm" onclick="copyDocument()">📋 Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearDocument()">✕ Clear</button>
+          </div>
+        </div>
+        <div class="work-doc-editor">
+          <div class="work-doc-scroll">
+            <div class="work-line-numbers" id="lineNumbers"></div>
+            <div class="work-doc-inner" onscroll="syncLineNumberScroll()">
+              <div class="work-doc-rules" id="docRules"></div>
+              <textarea
+                id="workDocument"
+                class="work-doc-ta"
+                placeholder="Your document appears here."
+                oninput="handleWorkDocumentInput()"
+              ></textarea>
+            </div>
+          </div>
+          <div class="work-doc-right-margin"></div>
+        </div>
+      </div><!-- /work-doc-panel -->
+
+      <!-- ══ COL 4: Right gap ══ -->
+      <div class="work-gap"></div>
+
+      <!-- ══ COL 5: Clock + Console ══ -->
+      <div class="work-right-panel">
+
+        <!-- ── Logo above clock ── -->
+        <div class="work-right-logo">
+          <div class="work-right-logo-text">
+            <div class="work-right-logo-name">AI Hive</div>
+            <div class="work-right-logo-tag">Orchestrate the Hive</div>
+          </div>
+          <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="work-right-logo-img">
+        </div>
+
+        <!-- 3D Digital Clock -->
+        <div class="console-clock-3d">
+          <div class="clock-bezel">
+            <div class="clock-screen">
+              <span class="clock-digit-group" id="roundTimerDisplay">00:00</span>
+            </div>
+            <div class="clock-label" id="roundTimerLabel">READY</div>
+          </div>
+        </div>
+
+        <!-- Console -->
+        <div class="work-panel-header honeycomb-header">
+          <span class="work-section-title">🖥️ Live Console</span>
+          <div class="flex-row-sm">
+            <button class="btn btn-ghost btn-sm" onclick="copyConsole()">📋 Copy</button>
+            <button class="btn btn-ghost btn-sm" onclick="clearConsole()">✕ Clear</button>
+          </div>
+        </div>
+        <div class="console-legend">
+          <span class="legend-item console-divider">■ Round</span>
+          <span class="legend-item console-send">■ Sending</span>
+          <span class="legend-item console-preview">■ Response</span>
+          <span class="legend-item console-success">■ Success</span>
+          <span class="legend-item console-warn">■ Warning</span>
+          <span class="legend-item console-error">■ Error</span>
+          <span class="legend-item console-info">■ Info</span>
+        </div>
+        <div class="live-console" id="liveConsole">
+          <div class="console-entry console-info">Console ready — shake the hive to begin.</div>
+        </div>
+
+        <!-- Right edge margin -->
+        <div class="right-edge-margin"></div>
+
+      </div><!-- /work-right-panel -->
+
+    </div><!-- /work-main -->
+
+    <!-- ── FOOTER BAR (doubled height, centered buttons) ── -->
+    <div class="work-footer">
+      <span id="statusText" class="footer-status">Standing by — Smoke the Hive to begin</span>
+      <div class="footer-actions">
+        <button class="footer-btn" id="builderOnlyBtn" onclick="runBuilderOnly()">
+          <span class="builder-only-label">Send to Builder</span>
+        </button>
+        <button class="footer-btn-smoke" id="runRoundBtn" onclick="runRound()">
+          <span class="shake-wide-label">Smoke the Hive</span>
+        </button>
+      </div>
+      <div class="footer-right">
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     SMOKER OVERLAY — shown while a round is running
+     ============================================================ -->
+<div class="smoker-overlay" id="smokerOverlay">
+  <div class="smoker-stage">
+    <div class="smoke-particles" id="smokeParticles"></div>
+    <img src="images/AI_Hive_Smoker_v1.png" alt="Smoking…" class="smoker-hero-img">
+    <div class="smoker-overlay-label" id="smokerOverlayLabel">Smoking…</div>
+  </div>
+</div>
+
+<!-- ============================================================
+     NOTES MODAL
+     ============================================================ -->
+<div class="notes-modal-overlay" id="notesModal" onclick="if(event.target===this)closeNotesModal()">
+  <div class="notes-modal">
+    <div class="notes-modal-hdr">
+      <div class="notes-modal-title">📝 Notes for this Round</div>
+      <div class="notes-modal-sub">Optional directions for the Builder. Reference line numbers if helpful.</div>
+      <button class="btn btn-ghost btn-sm" onclick="closeNotesModal()">✕ Close</button>
+    </div>
+    <textarea id="workNotes" class="notes-modal-ta"
+      oninput="saveSession()"
+      placeholder="e.g. Line 5: change tone to be more formal&#10;Line 12–15: expand this section&#10;Overall: make it more concise"></textarea>
+    <div class="notes-modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="copyNotes()">📋 Copy</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('workNotes').value='';saveSession()">✕ Clear</button>
+      <button class="btn btn-accent" onclick="closeNotesModal()">Done →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     ROUND HISTORY MODAL
+     ============================================================ -->
+<div class="hist-modal-overlay" id="roundHistoryModal" onclick="if(event.target===this)closeRoundHistoryModal()">
+  <div class="hist-modal">
+    <div class="hist-modal-hdr">
+      <div class="hist-modal-brand">
+        <img src="images/AI_Hive_History_Bee_v1.png" alt="" class="hist-modal-bee">
+        <div>
+          <div class="hist-modal-title">Round History</div>
+          <div class="hist-modal-sub">Click any round to restore that version of the document</div>
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="closeRoundHistoryModal()">✕ Close</button>
+    </div>
+    <div class="round-history" id="roundHistory">
+      <div class="round-history-empty">No completed rounds yet. Each round is saved here automatically.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     FINISH MODAL
+     ============================================================ -->
+<div class="finish-modal-overlay" id="finishModal" onclick="if(event.target===this)hideFinishModal()">
+  <div class="finish-modal">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="finish-modal-logo">
+    <h2 class="finish-modal-title">Finish this project?</h2>
+    <p class="finish-modal-msg">Make sure you've saved your document before starting a new project. Your working document and round history will be cleared.</p>
+    <div class="finish-modal-actions">
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">
+        💾 Export Document First
+      </button>
+      <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
+        <img src="images/AI_Hive_Worker_Bee_v2.png" class="finish-modal-bee"> Start New Project
+      </button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideFinishModal()">← Keep working</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     LICENSE MODAL
+     ============================================================ -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="license-modal-logo">
+    <h2 class="license-modal-title">AI Hive Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text"
+      placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"
+      autocomplete="off" spellcheck="false"
+      onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/aihive-pro" target="_blank">Don't have a key? Buy AI Hive Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     CHANGE BUILDER MODAL
+     ============================================================ -->
+<div class="finish-modal-overlay" id="changeBuilderModal" onclick="if(event.target===this)closeChangeBuilder()">
+  <div class="finish-modal change-builder-modal">
+    <h2 class="finish-modal-title" >👑 Change Builder</h2>
+    <p class="finish-modal-msg">The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity.</p>
+    <div class="builder-pick-grid-large" id="changeBuilderGrid" ></div>
+    <button class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
+  </div>
+</div>
+
+<!-- ── Toast Notification ── -->
+<div id="toast"></div>
+
+<script src="app.js?v=2.1"></script>
+</body>
+</html>

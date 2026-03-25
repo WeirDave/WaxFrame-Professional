@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Hive — API Key Guide</title>
+  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="helper-body">
+
+<div class="page-header">
+  <div class="page-header-left-spacer"></div>
+  <div class="page-header-brand">
+    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="page-header-logo">
+    <div>
+      <div class="page-header-name">AI Hive</div>
+      <div class="page-header-tag">API Key Setup Guide</div>
+    </div>
+  </div>
+  <div class="page-header-actions">
+    <button class="action-btn-sm" onclick="openAllConsoles()">🔑 All API Consoles</button>
+    <button class="action-btn-sm" onclick="openAllBilling()">💳 All Billing Pages</button>
+    <button class="close-btn" onclick="window.close()">✕ Close this tab</button>
+  </div>
+</div>
+
+<div class="page-main">
+
+<div class="two-col">
+
+  <!-- LEFT COLUMN -->
+  <div class="col">
+
+    <img src="images/AI_Hive_API_Bee_v1.png" alt="" class="col-bee">
+
+    <div class="section-title">Free or low-cost AIs</div>
+
+    <div class="info-card section-title-top">
+      <h2>What is an API key?</h2>
+      <p>In Pro mode, AI Hive sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets AI Hive talk to each AI on your behalf.</p>
+      <p>Without a key, AI Hive works in Free mode — you copy/paste prompts manually. API keys are only needed for the fully automated Pro experience.</p>
+    </div>
+
+    <div class="info-card green">
+      <h3>Your keys never leave your device</h3>
+      <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. AI Hive has no server — your keys are never shared with any third party.</p>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" onerror="this.style.display='none'">
+        <div class="ai-card-name">Gemini (Google)</div>
+        <span class="badge badge-free">Free tier available</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>gemini-2.0-flash</code>
+          <span class="model-note">Google's fast multimodal model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
+          <li>Click <strong>Create API Key</strong> and copy the key shown.</li>
+          <li>Paste it into the Gemini field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box green">Gemini is completely free — no credit card required. A generous number of requests per day at no cost. Most AI Hive sessions stay within the free limit easily.</div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=64" onerror="this.style.display='none'">
+        <div class="ai-card-name">DeepSeek</div>
+        <span class="badge badge-free">Very affordable</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>deepseek-chat</code>
+          <span class="model-note">DeepSeek's flagship model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a> and sign up.</li>
+          <li>Click <strong>Create new API key</strong> and copy it.</li>
+          <li>Paste it into the DeepSeek field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box green">DeepSeek is 10–20× cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/copilot.ico" onerror="this.style.display='none'">
+        <div class="ai-card-name">Copilot (Microsoft)</div>
+        <span class="badge badge-note">Not yet available for individuals</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Status:</span>
+          <span class="model-note">API in Private Preview — enterprise only as of early 2026</span>
+        </div>
+        <div class="note-box">Copilot API is not currently available for personal Microsoft 365 subscribers. It requires an enterprise license and is still in Private Preview. This is a Microsoft restriction — not an AI Hive limitation.</div>
+        <div class="note-box green">Copilot works great in Free mode. Open <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> in a tab, paste your prompts, and copy responses back into AI Hive.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT COLUMN -->
+  <div class="col">
+
+    <div class="section-title">Pay-as-you-go AIs</div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/chatgpt.ico" onerror="this.style.display='none'">
+        <div class="ai-card-name">ChatGPT (OpenAI)</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>gpt-4o</code>
+          <span class="model-note">OpenAI's flagship model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and sign in.</li>
+          <li>Click <strong>Create new secret key</strong>, give it a name, click Create.</li>
+          <li>Copy the key immediately — it is shown only once.</li>
+          <li>Paste it into the ChatGPT field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box">Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing).</div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/claude.ico" onerror="this.style.display='none'">
+        <div class="ai-card-name">Claude (Anthropic)</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>claude-opus-4-5</code>
+          <span class="model-note">Anthropic's capable everyday model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a> and sign in.</li>
+          <li>Click <strong>Create Key</strong>, give it a name (e.g. "AI Hive"), click Create.</li>
+          <li>Copy the key immediately — shown only once.</li>
+          <li>Paste it into the Claude field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box">Requires credit balance. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank">console.anthropic.com → Billing</a> and add credit (~$5 minimum). You are only charged for what you use.</div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" onerror="this.style.display='none'">
+        <div class="ai-card-name">Grok (xAI)</div>
+        <span class="badge badge-limited">Limited availability</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>grok-3</code>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://console.x.ai" target="_blank">console.x.ai</a> and sign in with your X account.</li>
+          <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
+          <li>Paste it into the Grok field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box">Requires credit balance — add at <a href="https://console.x.ai/billing" target="_blank">console.x.ai → Billing</a>. API availability may vary — check the console for current status.</div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/perplexity.ico" onerror="this.style.display='none'">
+        <div class="ai-card-name">Perplexity</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>sonar-pro</code>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai/settings/api</a> and sign in.</li>
+          <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
+          <li>Paste it into the Perplexity field in AI Hive and press Enter.</li>
+        </ol>
+        <div class="note-box">Requires credit balance — add at <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai → Settings → API → Add Credits</a>.</div>
+      </div>
+    </div>
+
+  </div>
+
+</div><!-- /two-col -->
+</div><!-- /page-main -->
+
+<div class="page-footer">
+  <span class="footer-note">AI Hive — open source, no server, no tracking.</span>
+  <a href="https://github.com/WeirDave/AIHive" target="_blank" class="footer-btn">⭐ GitHub</a>
+  <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="footer-btn">📄 AGPL-3.0</a>
+</div>
+
+<script>
+  (function() {
+    const t = localStorage.getItem('aihive_v2_theme') || 'auto';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+  function openAllConsoles() {
+    ['https://platform.openai.com/api-keys',
+     'https://console.anthropic.com/settings/keys',
+     'https://aistudio.google.com/apikey',
+     'https://console.x.ai',
+     'https://www.perplexity.ai/settings/api',
+     'https://platform.deepseek.com/api_keys'
+    ].forEach(url => window.open(url, '_blank'));
+  }
+  function openAllBilling() {
+    ['https://platform.openai.com/settings/organization/billing/overview',
+     'https://console.anthropic.com/settings/billing',
+     'https://platform.deepseek.com/top_up',
+     'https://console.x.ai/billing',
+     'https://www.perplexity.ai/settings/api'
+    ].forEach(url => window.open(url, '_blank'));
+  }
+</script>
+</body>
+</html>
