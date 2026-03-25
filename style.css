@@ -1074,7 +1074,7 @@ html, body {
 
 .work-doc-inner {
   flex: 0 0 auto;
-  width: calc(80ch + 8px + 20px);
+  width: calc(80ch + 8px + 17px);
   position: relative;
   min-width: 0;
   background-color: #ffffff;
@@ -1094,9 +1094,9 @@ html, body {
   position: relative;
   z-index: 1;
   display: block;
-  width: 80ch;
-  min-width: 80ch;
-  max-width: 80ch;
+  width: calc(80ch + 17px);
+  min-width: calc(80ch + 17px);
+  max-width: calc(80ch + 17px);
   height: 100%;
   min-height: 0;
   margin: 0;
@@ -1116,7 +1116,6 @@ html, body {
   overflow-wrap: break-word;
   word-break: break-word;
   tab-size: 4;
-  scrollbar-gutter: stable;
 }
 
 .work-doc-rules { display: none; }
