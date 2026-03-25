@@ -1074,9 +1074,18 @@ html, body {
 
 .work-doc-inner {
   flex: 0 0 auto;
-  width: calc(80ch + 8px + 17px);
+  --doc-scrollbar-width: 30px;
+  width: calc(80ch + 8px + var(--doc-scrollbar-width));
   position: relative;
   min-width: 0;
+  background: transparent;
+  overflow: hidden;
+}
+.work-doc-inner::before {
+  content: "";
+  position: absolute;
+  inset: 0 var(--doc-scrollbar-width) 0 0;
+  z-index: 0;
   background-color: #ffffff;
   background-image: repeating-linear-gradient(
     to bottom,
@@ -1087,16 +1096,16 @@ html, body {
   );
   background-size: 100% 21px;
   background-position: 0 4px;
-  overflow: hidden;
+  pointer-events: none;
 }
 
 .work-doc-ta {
   position: relative;
   z-index: 1;
   display: block;
-  width: calc(80ch + 17px);
-  min-width: calc(80ch + 17px);
-  max-width: calc(80ch + 17px);
+  width: calc(80ch + var(--doc-scrollbar-width));
+  min-width: calc(80ch + var(--doc-scrollbar-width));
+  max-width: calc(80ch + var(--doc-scrollbar-width));
   height: 100%;
   min-height: 0;
   margin: 0;
