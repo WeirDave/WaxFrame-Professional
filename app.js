@@ -206,6 +206,7 @@ let phase     = 'draft';
 let history   = [];
 let docText   = '';
 let docTab    = 'upload';
+let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
 const LS_HIVE     = 'aihive_v2_hive';      // AI list + API keys — persistent across projects
@@ -1344,9 +1345,15 @@ function initWorkScreen(isNewSession = false) {
   updateLicenseBadge();
   setStatus('Standing by — toggle bees above, then Smoke the Hive');
 
+  // Wire up scroll sync and input handler directly on the textarea
+  const ta = document.getElementById('workDocument');
+  const ln = document.getElementById('lineNumbers');
+  if (ta && ln) {
+    ta.addEventListener('scroll', syncLineNumberScroll);
+  }
+
   // Keep line numbers filled on resize
   if (window._lineNumObserver) window._lineNumObserver.disconnect();
-  const ta = document.getElementById('workDocument');
   if (ta && window.ResizeObserver) {
     window._lineNumObserver = new ResizeObserver(() => updateLineNumbers());
     window._lineNumObserver.observe(ta);
@@ -1370,37 +1377,62 @@ function updateProjLineNums(numsId, ta) {
   if (!ln || !ta) return;
   const lines = Math.max(ta.value.split('\n').length, 20);
   ln.innerHTML = Array.from({length: lines}, (_, i) => `<div>${i + 1}</div>`).join('');
-  ln.scrollTop = ta.scrollTop;
+  ln.style.transform = `translateY(-${ta.scrollTop}px)`;
 }
 
 function updateLineNumbers() {
-  const ta = document.getElementById('workDocument');
-  const ln = document.getElementById('lineNumbers');
-  const rules = document.getElementById('docRules');
-  if (!ta || !ln) return;
-  const lineH = 21;
-  const totalLines = Math.max(ta.value.split('\n').length, 1);
-  ln.innerHTML = Array.from({length: totalLines}, (_, i) =>
-    `<div>${i + 1}</div>`
-  ).join('');
-  const contentH = totalLines * lineH;
-  if (rules) rules.style.height = contentH + 'px';
-  syncLineNumberScroll();
+  const ta   = document.getElementById('workDocument');
+  const nums = document.getElementById('lineNumbers');
+  if (!ta || !nums) return;
+
+  const text = ta.value || '';
+  const logicalLines = text.split('\n');
+
+  let visualCount = 0;
+  for (let line of logicalLines) {
+    visualCount += (line === '' ? 1 : Math.ceil(line.length / 80));
+  }
+  if (visualCount === 0) visualCount = 1;
+
+  let html = '';
+  for (let i = 1; i <= visualCount; i++) {
+    html += `<div>${i}</div>`;
+  }
+  nums.innerHTML = html;
+
   const stats = document.getElementById('docStats');
-  if (stats && ta.value.trim()) {
-    const wordCount = ta.value.trim().split(/\s+/).length;
-    const lineCount = ta.value.split('\n').length;
-    stats.textContent = `${lineCount} lines · ${wordCount.toLocaleString()} words`;
+  if (stats && text.trim()) {
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const lines = logicalLines.length;
+    stats.textContent = `${lines} lines · ${words.toLocaleString()} words`;
   } else if (stats) {
     stats.textContent = '';
   }
 }
 
 function syncLineNumberScroll() {
-  const scroll = document.querySelector('.work-doc-scroll');
+  const ta   = document.getElementById('workDocument');
+  const nums = document.getElementById('lineNumbers');
+  if (ta && nums) nums.scrollTop = ta.scrollTop;
+}
+
+function handleWorkDocumentInput() {
+  const ta = document.getElementById('workDocument');
+  if (!ta) return;
+  docText = ta.value;
+  // Debounce the expensive ghost-div measurement — 50ms feels instant, saves perf on long docs
+  clearTimeout(_lineNumDebounce);
+  _lineNumDebounce = setTimeout(updateLineNumbers, 50);
+  // Autosave debounced separately at 250ms
+  clearTimeout(workDocSaveTimer);
+  workDocSaveTimer = setTimeout(() => saveSession(), 250);
+}
+
+function syncLineNumberScroll() {
+  const ta = document.getElementById('workDocument');
   const ln = document.getElementById('lineNumbers');
-  if (!scroll || !ln) return;
-  ln.scrollTop = scroll.scrollTop;
+  if (!ta || !ln) return;
+  ln.scrollTop = ta.scrollTop;
 }
 
 function renderWorkPhaseBar() {
