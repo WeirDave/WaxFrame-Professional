@@ -1026,26 +1026,30 @@ html, body {
 /* ══ DOC EDITOR ══ */
 .work-doc-editor {
   display: flex;
-  flex-direction: row;
   flex: 1;
   min-height: 0;
   overflow: hidden;
   border-radius: 0 0 12px 12px;
-  background: var(--surface);
+  background: #fdfdfb;
 }
 
 .work-doc-scroll {
   display: flex;
   flex: 1;
-  overflow: hidden;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
+  align-items: stretch;
+  background: #fdfdfb;
 }
 
 .work-line-numbers {
-  width: 50px;
-  flex-shrink: 0;
-  overflow-y: hidden;
+  position: relative;
+  width: 56px;
+  flex: 0 0 56px;
+  overflow-y: scroll;
   overflow-x: hidden;
+  scrollbar-width: none;
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   line-height: 21px;
@@ -1059,6 +1063,7 @@ html, body {
   display: flex;
   flex-direction: column;
 }
+.work-line-numbers::-webkit-scrollbar { display: none; }
 .work-line-numbers div {
   height: 21px;
   line-height: 21px;
@@ -1071,7 +1076,16 @@ html, body {
   flex: 1;
   position: relative;
   min-width: 0;
-  background: #ffffff;
+  background-color: #ffffff;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 20px,
+    rgba(80,140,220,0.25) 20px,
+    rgba(80,140,220,0.25) 21px
+  );
+  background-size: 100% 21px;
+  background-position: 0 4px;
   overflow: hidden;
 }
 
@@ -1096,10 +1110,7 @@ html, body {
   word-wrap: break-word;
   overflow-wrap: break-word;
   box-sizing: content-box;
-  background-color: #ffffff;
-  background-image: linear-gradient(rgba(80,140,220,0.25) 1px, transparent 1px);
-  background-size: 100% 21px;
-  background-attachment: local;
+  background: transparent;
 }
 .work-doc-ta::-webkit-scrollbar { width: 4px; }
 .work-doc-ta::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }

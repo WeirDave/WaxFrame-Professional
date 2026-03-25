@@ -1381,11 +1381,11 @@ function updateProjLineNums(numsId, ta) {
 }
 
 function updateLineNumbers() {
-  const ta   = document.getElementById('workDocument');
-  const nums = document.getElementById('lineNumbers');
-  if (!ta || !nums) return;
+  const ta = document.getElementById('workDocument');
+  const ln = document.getElementById('lineNumbers');
+  if (!ta || !ln) return;
 
-  const text = ta.value || '';
+  const text = (ta.value || '');
   const logicalLines = text.split('\n');
 
   let visualCount = 0;
@@ -1398,7 +1398,7 @@ function updateLineNumbers() {
   for (let i = 1; i <= visualCount; i++) {
     html += `<div>${i}</div>`;
   }
-  nums.innerHTML = html;
+  ln.innerHTML = html;
 
   const stats = document.getElementById('docStats');
   if (stats && text.trim()) {
@@ -1411,28 +1411,22 @@ function updateLineNumbers() {
 }
 
 function syncLineNumberScroll() {
-  const ta   = document.getElementById('workDocument');
-  const nums = document.getElementById('lineNumbers');
-  if (ta && nums) nums.scrollTop = ta.scrollTop;
+  const ta = document.getElementById('workDocument');
+  const ln = document.getElementById('lineNumbers');
+  const inner = document.querySelector('.work-doc-inner');
+  if (!ta || !ln || !inner) return;
+  ln.scrollTop = ta.scrollTop;
+  inner.style.backgroundPosition = `0 ${4 - ta.scrollTop}px`;
 }
 
 function handleWorkDocumentInput() {
   const ta = document.getElementById('workDocument');
   if (!ta) return;
   docText = ta.value;
-  // Debounce the expensive ghost-div measurement — 50ms feels instant, saves perf on long docs
   clearTimeout(_lineNumDebounce);
   _lineNumDebounce = setTimeout(updateLineNumbers, 50);
-  // Autosave debounced separately at 250ms
   clearTimeout(workDocSaveTimer);
   workDocSaveTimer = setTimeout(() => saveSession(), 250);
-}
-
-function syncLineNumberScroll() {
-  const ta = document.getElementById('workDocument');
-  const ln = document.getElementById('lineNumbers');
-  if (!ta || !ln) return;
-  ln.scrollTop = ta.scrollTop;
 }
 
 function renderWorkPhaseBar() {
