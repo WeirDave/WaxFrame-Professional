@@ -1023,88 +1023,89 @@ html, body {
   [data-theme="auto"] .work-panel-header { background: #ffffff; }
   [data-theme="auto"] .work-panel-header .work-section-title { color: var(--text); }
 }
-/* doc editor — flex row: line numbers | paper | right margin */
+/* ══ DOC EDITOR ══ */
 .work-doc-editor {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  border-radius: 0 0 12px 12px;
+  background: var(--surface);
+}
+
+.work-doc-scroll {
   display: flex;
   flex: 1;
   overflow: hidden;
   min-height: 0;
-  background: var(--surface);
-  border-radius: 0 0 12px 12px;
 }
-/* Line numbers — left gutter with red margin line */
+
 .work-line-numbers {
-  width: 56px;
+  width: 50px;
   flex-shrink: 0;
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: 12px;
+  overflow-y: hidden;
+  overflow-x: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
   line-height: 21px;
   color: var(--muted);
   text-align: right;
-  padding: 4px 10px 0 0;
+  padding: 4px 8px 0 0;
   user-select: none;
-  border-right: 2px solid rgba(220,50,50,0.75);
-  background: var(--surface);
+  background: #ffffff;
+  border-right: 2px solid rgba(220,50,50,0.6);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
-.work-line-numbers::-webkit-scrollbar { display: none; }
-.work-line-numbers div { line-height: 21px; font-size: 12px; height: 21px; }
-/* Paper scroll — flexible, both-axis scroll */
-.work-doc-scroll {
-  position: relative;
+.work-line-numbers div {
+  height: 21px;
+  line-height: 21px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+  padding-right: 6px;
+}
+
+.work-doc-inner {
   flex: 1;
-  width: auto;
+  position: relative;
   min-width: 0;
-  overflow: auto;
-  min-height: 0;
-  background: var(--surface);
+  background: #ffffff;
+  overflow: hidden;
 }
-/* Right margin rail removed */
-.work-doc-right-margin {
-  display: none;
-}
-/* Ruled lines */
-.work-doc-rules {
-  position: absolute;
-  top: 0; bottom: 0; left: 0; right: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-image: repeating-linear-gradient(
-    to bottom,
-    transparent 0px, transparent 20px,
-    rgba(100,140,220,0.2) 20px, rgba(100,140,220,0.2) 21px
-  );
-  background-size: 100% 21px;
-}
-/* Textarea — 80ch wide, word-wraps at margin */
+
 .work-doc-ta {
-  display: block;
   position: relative;
   z-index: 1;
-  width: 640px;
-  min-width: 640px;
-  min-height: 100%;
-  background: transparent;
+  display: block;
+  width: 80ch;
+  max-width: 80ch;
+  height: 100%;
   border: none;
-  color: var(--text);
-  font-family: var(--font-mono);
+  color: #1a1a2e;
+  font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   line-height: 21px;
-  padding: 4px 8px 0;
+  padding: 4px 12px 0;
   resize: none;
   outline: none;
-  overflow: visible;
+  overflow-y: scroll;
+  overflow-x: hidden;
   white-space: pre-wrap;
   word-wrap: break-word;
   overflow-wrap: break-word;
-  box-sizing: border-box;
+  box-sizing: content-box;
+  background-color: #ffffff;
+  background-image: linear-gradient(rgba(80,140,220,0.25) 1px, transparent 1px);
+  background-size: 100% 21px;
+  background-attachment: local;
 }
-/* Inner wrapper for rules + textarea */
-.work-doc-inner {
-  position: relative;
-  min-width: 640px;
-  min-height: 100%;
-}
+.work-doc-ta::-webkit-scrollbar { width: 4px; }
+.work-doc-ta::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.work-doc-rules { display: none; }
+.work-doc-right-margin { display: none; }
 
 /* ══ RIGHT PANEL — transparent, body bg shows through ══ */
 .work-right-panel {

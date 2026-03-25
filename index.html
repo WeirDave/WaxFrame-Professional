@@ -397,13 +397,17 @@
           </div>
         </div>
         <div class="work-doc-editor">
-          <div class="work-doc-scroll" onscroll="syncLineNumberScroll()">
+          <div class="work-doc-scroll">
             <div class="work-line-numbers" id="lineNumbers"></div>
             <div class="work-doc-inner">
               <div class="work-doc-rules" id="docRules"></div>
-              <textarea id="workDocument" class="work-doc-ta"
+              <textarea
+                id="workDocument"
+                class="work-doc-ta"
                 placeholder="Your document appears here."
-                oninput="updateLineNumbers()"></textarea>
+                oninput="handleWorkDocumentInput()"
+                onscroll="syncLineNumberScroll()"
+              ></textarea>
             </div>
           </div>
           <div class="work-doc-right-margin"></div>
