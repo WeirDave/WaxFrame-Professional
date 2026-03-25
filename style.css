@@ -1103,13 +1103,13 @@ html, body {
   position: relative;
   z-index: 1;
   display: block;
-  width: calc(80ch + var(--doc-scrollbar-width));
-  min-width: calc(80ch + var(--doc-scrollbar-width));
-  max-width: calc(80ch + var(--doc-scrollbar-width));
+  width: 81ch;
+  min-width: 81ch;
+  max-width: 81ch;
   height: 100%;
   min-height: 0;
   margin: 0;
-  padding: 4px 0 0 8px;
+  padding: 4px var(--doc-scrollbar-width) 0 8px;
   border: none;
   outline: none;
   resize: none;
