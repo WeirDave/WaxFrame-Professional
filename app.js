@@ -955,7 +955,7 @@ function goToScreen(id) {
 }
 
 function goToFree() {
-  window.open('https://weirdave.github.io/AIHive-Free/', '_blank');
+  window.open('https://weirdave.github.io/WaxFrame-Free/', '_blank');
 }
 
 function openNavMenu() {
@@ -2389,7 +2389,7 @@ function finishAndExport() {
   const totalRounds = round - 1;
   const totalMins = Math.round(_projClockSeconds / 60);
   const timeStr = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
-  const byline = `\n\n---\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/AIHive`;
+  const byline = `\n\n---\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
 
   const exportDoc = originalDoc + byline;
   const filename = buildExportName();
@@ -4296,7 +4296,7 @@ function exportSession() {
 
   if (doc) {
     out += `${eq}\nFINAL DOCUMENT\n${eq}\n\n${doc}\n\n`;
-    out += `${sep}\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/AIHive\n`;
+    out += `${sep}\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional\n`;
   }
 
   const blob = new Blob([out], { type: 'text/plain' });
