@@ -11,9 +11,9 @@ WaxFrame orchestrates a team of AIs around your document — every round, all of
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-2.0-orange.svg)](https://github.com/WeirDave/AIHive/releases)
 [![Build](https://img.shields.io/badge/Build-20260330--001-blue.svg)](https://github.com/WeirDave/AIHive)
-[![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/AIHive/)
+[![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
-<a href="https://weirdave.github.io/AIHive/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
+<a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
 
 </div>
 
@@ -168,7 +168,7 @@ WaxFrame runs entirely in your browser — no install, no server, no account req
 > ⚠️ **Desktop only.** WaxFrame is designed for desktop and laptop computers. Mobile phones are not currently supported.
 
 **Option 1 — Hosted version (easiest):**
-👉 [weirdave.github.io/AIHive](https://weirdave.github.io/AIHive/)
+👉 [weirdave.github.io/WaxFrame-Professional](https://weirdave.github.io/WaxFrame-Professional/)
 
 **Option 2 — Run locally:**
 1. Download or clone this repo
@@ -179,7 +179,7 @@ WaxFrame runs entirely in your browser — no install, no server, no account req
 
 ## User Guide
 
-For detailed usage instructions — writing effective goals, handling conflicts, course correcting mid-session, and knowing when you're done — see the **[Working with the Hive](https://weirdave.github.io/AIHive/working-with-the-hive.html)** guide.
+For detailed usage instructions — writing effective goals, handling conflicts, course correcting mid-session, and knowing when you're done — see the **[Working with the Hive](https://weirdave.github.io/WaxFrame-Professional/working-with-the-hive.html)** guide.
 
 ---
 
