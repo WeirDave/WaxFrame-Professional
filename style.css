@@ -3299,8 +3299,8 @@ kbd {
   background: var(--surface3);
 }
 .decision-opt-btn.selected {
-  border-color: #34d399;
-  background: rgba(52, 211, 153, 0.08);
+  border-color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.08) !important;
 }
 .decision-opt-num {
   font-family: var(--font-mono);
@@ -3317,8 +3317,8 @@ kbd {
   margin-top: 1px;
 }
 .decision-opt-btn.selected .decision-opt-num {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.15);
+  color: #34d399 !important;
+  background: rgba(52, 211, 153, 0.15) !important;
 }
 .decision-opt-text {
   font-size: 12px;
