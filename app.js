@@ -2552,9 +2552,9 @@ RULES:
 
   refine: `You are in the text refinement phase of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
-Review the current document provided in this message and give specific, numbered suggestions to improve it — but ONLY if genuine improvements exist.
+Review the current document provided in this message and give specific, numbered suggestions to improve it — but ONLY if critical, high-impact improvements exist. This document may already be in excellent shape.
 
-Begin your response immediately with suggestion number 1. Do not include an introduction, preamble, or restatement of the document.
+Begin your response immediately with suggestion number 1, or with NO CHANGES NEEDED if no critical issues exist. Do not include an introduction, preamble, or restatement of the document.
 
 RULES:
 - Do NOT rewrite the document. Do not quote or restate large portions of it.
@@ -2565,8 +2565,9 @@ RULES:
 - Do not introduce new content that changes the intended meaning of the document.
 - Keep each suggestion to one sentence maximum — no explanations, no justifications.
 - Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
-- ⚠️ Do NOT suggest changes for the sake of suggesting changes. Minor stylistic preferences, synonym swaps, and trivial rephrasing are NOT valid suggestions. Only suggest a change if it meaningfully improves the document.
-- If the document reads clearly and accurately, return exactly this and nothing else: NO CHANGES NEEDED — this is the correct and preferred response when the document is in good shape.
+- ⚠️ STRICT BAR: A suggestion is only valid if a reader would notice a real problem without it. Ask yourself: "Would a reasonable person reading this document find this confusing, inaccurate, or unclear?" If the answer is no — do not suggest it. Synonym swaps, stylistic preferences, minor rephrasing, and personal taste are NOT valid suggestions and must be skipped.
+- ⚠️ If the document is clear, accurate, and serves its purpose well, you MUST return exactly this and nothing else: NO CHANGES NEEDED
+- NO CHANGES NEEDED is not a fallback — it is the correct and expected response for a document that is doing its job. Do not suggest changes simply to appear useful.
 
 ⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
 
@@ -3517,7 +3518,7 @@ function renderConflicts() {
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">
-              <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✓</span>
+              <span class="decision-opt-num" style="background:rgba(52,211,153,0.15);color:#34d399">✓</span>
               <span class="decision-opt-text">Apply this suggestion</span>
             </button>
             <button class="decision-opt-btn decline-btn" id="hopt-${i}-decline"
