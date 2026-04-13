@@ -3104,7 +3104,7 @@ kbd {
 }
 .convergence-header {
   background: rgba(52,211,153,0.08);
-  color: #34d399;
+  color: var(--text);
   border: 1px solid #34d399;
 }
 .convergence-card {
