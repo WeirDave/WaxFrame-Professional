@@ -4928,3 +4928,16 @@ kbd {
 .view-round-tab-bar { display: flex; gap: 6px; padding: 10px 16px; flex-wrap: wrap; background: var(--surface2); flex-shrink: 0; border-bottom: 1px solid var(--border); }
 
 .goal-info-modal-icon-wrap { text-align: center; margin-bottom: 8px; }
+
+/* ── Helper pages — tip icon image (20px, used in wh-tip-icon / kyh-tip-icon) ── */
+.helper-tip-icon-img { width: 20px; height: 20px; display: block; }
+
+/* ── know-your-hive.html — General Tips section ── */
+.info-card-tips      { margin-top: 32px; }
+.kyh-tips-title      { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin-bottom: 12px; }
+.kyh-tips-p          { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 10px; }
+.kyh-tips-p-last     { margin-bottom: 0; }
+.kyh-tips-strong     { color: var(--text); }
+
+/* ── api-details.html — Azure intro paragraph ── */
+.api-azure-intro     { margin: 10px 0 6px; }
