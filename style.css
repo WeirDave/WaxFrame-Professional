@@ -2081,7 +2081,7 @@ kbd {
   border-radius: var(--radius-sm);
   padding: 10px 12px;
 }
-.goal-info-phase {
+.info-label {
   font-size: 10px;
   font-weight: 800;
   padding: 3px 8px;
@@ -2090,10 +2090,10 @@ kbd {
   flex-shrink: 0;
   margin-top: 1px;
   letter-spacing: 0.04em;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent);
 }
-.goal-info-phase.draft  { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); }
-.goal-info-phase.refine { background: var(--blue-dim);   border: 1px solid var(--blue);   color: var(--blue); }
-.goal-info-phase.green  { background: var(--green-dim);  border: 1px solid var(--green);  color: var(--green); }
 .goal-info-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
 .goal-info-tip {
   font-size: 13px;
