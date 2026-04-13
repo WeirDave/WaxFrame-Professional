@@ -3281,10 +3281,9 @@ kbd {
   gap: 6px;
 }
 .decision-opt-btn {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  gap: 2px 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
@@ -3299,8 +3298,8 @@ kbd {
   background: var(--surface3);
 }
 .decision-opt-btn.selected {
-  border-color: #34d399 !important;
-  background: rgba(52, 211, 153, 0.08) !important;
+  border-color: #34d399;
+  background: rgba(52, 211, 153, 0.08);
 }
 .decision-opt-num {
   font-family: var(--font-mono);
@@ -3312,21 +3311,18 @@ kbd {
   padding: 1px 6px;
   flex-shrink: 0;
   line-height: 1.6;
-  grid-row: 1 / span 2;
-  align-self: start;
   margin-top: 1px;
 }
 .decision-opt-btn.selected .decision-opt-num {
-  color: #34d399 !important;
-  background: rgba(52, 211, 153, 0.15) !important;
+  color: #34d399;
+  background: rgba(52, 211, 153, 0.15);
 }
 .decision-opt-text {
   font-size: 12px;
   color: var(--text);
   line-height: 1.5;
   min-width: 0;
-  grid-column: 2;
-  grid-row: 1;
+  flex: 1;
 }
 .decision-opt-custom {
   border-style: dashed;
@@ -3387,13 +3383,10 @@ kbd {
   color: var(--text-dim);
   font-style: italic;
   white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: none;
   line-height: 1.4;
   padding-bottom: 1px;
-  grid-column: 2;
-  grid-row: 2;
+  display: block;
+  margin-top: 2px;
 }
 /* ── APPLY DECISIONS BUTTON ── */
 .btn-apply-decisions {
