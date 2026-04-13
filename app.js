@@ -3639,7 +3639,7 @@ function renderConflicts() {
       .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
       .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
     html = `<div class="conflicts-section-header builder-resolved-header">
-        ✅ Builder Resolution Log — already applied to your document
+        ✅ All conflicts were resolved by the Builder and applied to your document — no action needed.
       </div>
       <div class="conflicts-body">${rawHtml}</div>`;
   }
