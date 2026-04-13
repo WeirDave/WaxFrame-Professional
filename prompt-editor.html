@@ -1,5 +1,5 @@
 <!-- ============================================================
-     AI Hive v2 — prompt-editor.html
+     WaxFrame v2 — prompt-editor.html
      Build: 20260330-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/AIHive
@@ -9,8 +9,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Hive — Prompt Editor</title>
-  <link rel="icon" type="image/png" href="images/AI_Hive_Logo_v4.png">
+  <title>WaxFrame — Prompt Editor</title>
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v18.png">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="helper-body">
@@ -18,9 +18,9 @@
 <div class="page-header">
   <div class="page-header-spacer"></div>
   <div class="page-header-brand">
-    <img src="images/AI_Hive_Logo_v4.png" alt="AI Hive" class="page-header-logo">
+    <img src="images/Waxframe_logo_v18.png" alt="WaxFrame" class="page-header-logo">
     <div>
-      <div class="page-header-name">AI Hive</div>
+      <div class="page-header-name">WaxFrame</div>
       <div class="page-header-tag">Prompt Editor</div>
     </div>
   </div>
@@ -121,7 +121,7 @@
       <div class="prompt-group-header">
         <div>
           <div class="prompt-group-title">System Injections</div>
-          <div class="prompt-group-sub">Added automatically by AI Hive when conditions are met. Edit with care — the format must stay consistent for conflict suppression to work correctly.</div>
+          <div class="prompt-group-sub">Added automatically by WaxFrame when conditions are met. Edit with care — the format must stay consistent for conflict suppression to work correctly.</div>
         </div>
         <span class="prompt-group-badge badge-builder">Admin</span>
       </div>
@@ -166,22 +166,22 @@
 </div>
 
 <div class="page-footer">
-  <span class="footer-note">AI Hive — open source, no server, no tracking.</span>
+  <span class="footer-note">WaxFrame — open source, no server, no tracking.</span>
   <button class="btn" onclick="window.close()">✕ Close this tab</button>
 </div>
 
 <script>
   // ── Theme sync ──
   (function() {
-    const t = localStorage.getItem('aihive_v2_theme') || 'auto';
+    const t = localStorage.getItem('waxframe_v2_theme') || 'auto';
     document.documentElement.setAttribute('data-theme', t);
   })();
 
-  const LS_PROMPTS = 'aihive_v2_prompts';
+  const LS_PROMPTS = 'waxframe_v2_prompts';
 
   // ── Default prompts (mirrors app.js) ──
   const DEFAULTS = {
-    draft_scratch: `You are part of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
+    draft_scratch: `You are part of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
 Your task: Create a complete first draft based on the project goal provided in this message.
 
@@ -189,12 +189,12 @@ RULES:
 - Use plain text only. Do not use markdown headings (#), bullets (-), bold (**), italics, tables, or code fences. If the document requires section headings, write them in plain text on their own line.
 - Do not use ellipses (...) or placeholders — write every word of the document from start to finish.
 - Do not include meta-commentary, explanations of your choices, apologies, introductions, or any text that is not part of the document itself.
-- Do not reference AI Hive, this prompt, or the collaboration process anywhere in the draft.
+- Do not reference WaxFrame, this prompt, or the collaboration process anywhere in the draft.
 - Do not invent facts, data, names, or references not supported by the project goal. Use clearly labeled placeholders (e.g., [INSERT DATE]) when specific information is missing.
 - If critical information is missing from the project goal, make the fewest necessary assumptions and keep them conservative.
 - Prioritize completeness, clarity, internal consistency, and practical usefulness.`,
 
-    refine: `You are in the text refinement phase of a multi-AI collaboration called AI Hive. Do not adopt any additional role, persona, or framing beyond what is stated here.
+    refine: `You are in the text refinement phase of a multi-AI collaboration called WaxFrame. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
 Review the current document provided in this message and give specific, numbered suggestions to improve it — but ONLY if genuine improvements exist.
 
@@ -214,7 +214,7 @@ RULES:
 
 ⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
 
-    builder_draft: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
+    builder_draft: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
 All reviewer drafts are included above. Your task: produce a single consolidated first draft that integrates the strongest elements from each provided draft while preserving overall coherence and completeness.
 
@@ -240,7 +240,7 @@ List any conflicting or incompatible approaches between drafts. For each conflic
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`,
 
-    builder_refine: `You are the Builder in this AI Hive collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
+    builder_refine: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
 All reviewer suggestions are included above. Your task: produce the complete updated document incorporating valid suggestions.
 
