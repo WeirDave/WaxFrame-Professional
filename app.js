@@ -3397,13 +3397,25 @@ try {
 // Generates a stable fingerprint from a conflict's key text
 // so we can detect the same conflict reappearing across rounds
 function fingerprintConflict(d) {
-  // Anchor on the actual texts being debated rather than the question wording
-  // so re-worded re-raises of the same underlying conflict still match
-  const parts = [d.current || '', ...(d.options || []).map(o => o.text || '')];
-  const raw = parts.sort().join('|').toLowerCase()
-    .replace(/[^a-z0-9|]+/g, ' ')
+  // Build fingerprint from the question text + current value.
+  // Normalise aggressively so minor rewordings of the same underlying conflict
+  // (e.g. "2.5 hours" vs "two and a half hours") still produce the same hash.
+  // Option texts are intentionally excluded — they vary too much round-to-round.
+  const normalize = s => (s || '').toLowerCase()
+    .replace(/\b(two and a half|2\.5|2½)\b/g, '2.5')
+    .replace(/\b(one and a half|1\.5|1½)\b/g, '1.5')
+    .replace(/\bapproximately\b/g, '')
+    .replace(/\babout\b/g, '')
+    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  // Primary anchor: normalised question + normalised current value
+  // Secondary: first 6 words of the question as a topic stub
+  const questionStub = normalize(d.question || '').split(' ').slice(0, 6).join(' ');
+  const currentNorm  = normalize(d.current || '');
+  const raw = questionStub + '|' + currentNorm;
+
   let h = 0;
   for (let i = 0; i < raw.length; i++) {
     h = (Math.imul(31, h) + raw.charCodeAt(i)) | 0;
