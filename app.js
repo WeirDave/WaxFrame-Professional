@@ -765,11 +765,11 @@ function openChangeBuilder() {
       const isSelected = ai.id === builder;
       return `<div class="builder-pick-btn btn ${isSelected ? 'selected' : ''}"
         onclick="setBuilderFromModal('${ai.id}')"
-        style="display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px;">
-        <img src="${ai.icon}" style="width:32px;height:32px;object-fit:contain;border-radius:6px;"
+        class="builder-pick-card-inner">
+        <img src="${ai.icon}" class="builder-pick-icon"
           onerror="this.style.display='none'">
-        <span style="font-size:12px;font-weight:700;">${ai.name}</span>
-        ${isSelected ? '<span style="font-size:10px;color:var(--accent);">👑 Current</span>' : ''}
+        <span class="builder-pick-name">${ai.name}</span>
+        ${isSelected ? '<span class="builder-pick-current">👑 Current</span>' : ''}
       </div>`;
     }).join('');
   }
@@ -1645,7 +1645,7 @@ function validateAndContinue() {
     _settingsReturnToWork = false;
     // Reset button text
     const btn = document.getElementById('setupContinueBtn');
-    if (btn) btn.innerHTML = '<img src="images/AI_Hive_Project_Bee_v2.png" style="width:36px;height:36px;object-fit:contain;vertical-align:middle;margin-right:8px;"> Continue to Project Setup →';
+    if (btn) btn.innerHTML = '<img src="images/AI_Hive_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
     renderBeeStatusGrid();
     goToScreen('screen-work');
     showReExtractBanner();
@@ -3511,24 +3511,24 @@ function renderConflicts() {
         html += `<div class="decision-card convergence-card" id="hcard-${i}">
           <div class="decision-card-header">
             <span class="convergence-ai-badge">🐝 ${esc(s.name)}</span>
-            <span class="decision-badge" style="margin-left:8px;color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">Suggestion ${i + 1} of ${total}</span>
+            <span class="decision-badge" class="convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
           <div class="convergence-suggestion">${esc(s.text)}</div>
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">
-              <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✓</span>
+              <span class="decision-opt-num decision-opt-num-apply">✓</span>
               <span class="decision-opt-text">Apply this suggestion</span>
             </button>
             <button class="decision-opt-btn decline-btn" id="hopt-${i}-decline"
               onclick="selectHoldout(${i}, 'decline', ${total})">
-              <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✕</span>
+              <span class="decision-opt-num decision-opt-num-decline">✕</span>
               <span class="decision-opt-text">Decline — skip this one</span>
             </button>
             <button class="decision-opt-btn decision-opt-custom custom-btn" id="hopt-${i}-custom"
               onclick="selectHoldout(${i}, 'custom', ${total})">
-              <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✎</span>
-              <span class="decision-opt-text" style="color:var(--muted);font-style:italic">Custom — type your own</span>
+              <span class="decision-opt-num decision-opt-num-custom">✎</span>
+              <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
             </button>
           </div>
           <div class="decision-custom-wrap" id="hcustom-${i}" style="display:none">
@@ -3601,13 +3601,13 @@ function renderConflicts() {
             </button>`).join('')}
           <button class="decision-opt-btn decision-opt-custom" id="dopt-${di}-custom"
             onclick="selectCustomDecision(${di}, ${total})">
-            <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✎</span>
-            <span class="decision-opt-text" style="color:var(--muted);font-style:italic">Custom — type your own</span>
+            <span class="decision-opt-num decision-opt-num-custom">✎</span>
+            <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
           </button>
           <button class="decision-opt-btn decision-opt-bypass" id="dopt-${di}-bypass"
             onclick="selectBypassDecision(${di}, ${total})">
-            <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✏️</span>
-            <span class="decision-opt-text" style="color:var(--muted);font-style:italic">I edited the document directly — skip this conflict</span>
+            <span class="decision-opt-num decision-opt-num-bypass">✏️</span>
+            <span class="decision-opt-text decision-opt-text-dim">I edited the document directly — skip this conflict</span>
           </button>
         </div>
         <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
@@ -3636,8 +3636,8 @@ function renderConflicts() {
   // Fallback: raw text — wrap in a resolution log header so it's clear this is already done
   if (!html && conflicts.raw) {
     const rawHtml = esc(conflicts.raw)
-      .replace(/\[USER DECISION\]/g,    '<span style="color:var(--amber);font-weight:700">[USER DECISION]</span>')
-      .replace(/\[BUILDER DECISION\]/g, '<span style="color:var(--blue);font-weight:700">[BUILDER DECISION]</span>');
+      .replace(/\[USER DECISION\]/g,    '<span class="raw-conflict-ud">[USER DECISION]</span>')
+      .replace(/\[BUILDER DECISION\]/g, '<span class="raw-conflict-bd">[BUILDER DECISION]</span>');
     html = `<div class="conflicts-section-header builder-resolved-header">
         ✅ All conflicts were resolved by the Builder and applied to your document — no action needed.
       </div>
@@ -4137,13 +4137,13 @@ function viewRoundDoc(idx) {
     <div class="hist-doc-modal-inner">
       <div class="hist-doc-modal-hdr">
         <span>Round ${h.round === 0 ? 'Original' : h.round} — ${PHASES.find(p=>p.id===h.phase)?.label||h.phase} · ${h.timestamp}</span>
-        <div style="display:flex;gap:6px;">
+        <div class="view-round-tab-row">
           <button class="btn btn-ghost btn-sm" onclick="copyActiveHistTab()">📋 Copy</button>
           <button class="btn btn-ghost btn-sm" onclick="restoreRound(${idx})">↩ Restore</button>
           <button class="btn btn-ghost btn-sm" onclick="document.getElementById('histDocModal').remove()">✕ Close</button>
         </div>
       </div>
-      <div style="display:flex;gap:6px;padding:10px 16px;flex-wrap:wrap;background:var(--surface2);flex-shrink:0;border-bottom:1px solid var(--border);">
+      <div class="view-round-tab-bar">
         <button class="work-phase-pill hist-resp-tab active" onclick="switchHistTab('__doc__',this)">📄 Document</button>
         <button class="work-phase-pill hist-resp-tab" onclick="switchHistTab('__notes__',this)">📝 Notes</button>
         ${tabButtons}
