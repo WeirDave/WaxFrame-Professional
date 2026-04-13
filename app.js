@@ -952,24 +952,6 @@ function goToScreen(id) {
       if (clearRow) clearRow.style.display = 'block';
     }
   }
-  if (id === 'screen-work' && (docText || history.length > 0)) {
-    // Returning to an active session mid-run — re-populate the work screen
-    initWorkScreen();
-    idbGet().then(s => {
-      if (s?.consoleHTML) {
-        const el = document.getElementById('liveConsole');
-        if (el) el.innerHTML = s.consoleHTML;
-      }
-    }).catch(() => {
-      try {
-        const s = JSON.parse(localStorage.getItem(LS_SESSION) || '{}');
-        if (s.consoleHTML) {
-          const el = document.getElementById('liveConsole');
-          if (el) el.innerHTML = s.consoleHTML;
-        }
-      } catch(e) {}
-    });
-  }
 }
 
 function goToFree() {
@@ -3535,7 +3517,7 @@ function renderConflicts() {
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">
-              <span class="decision-opt-num" style="background:rgba(52,211,153,0.15);color:#34d399">✓</span>
+              <span class="decision-opt-num" style="background:var(--surface3);color:var(--muted)">✓</span>
               <span class="decision-opt-text">Apply this suggestion</span>
             </button>
             <button class="decision-opt-btn decline-btn" id="hopt-${i}-decline"
