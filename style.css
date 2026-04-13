@@ -3104,7 +3104,7 @@ kbd {
 }
 .convergence-header {
   background: rgba(52,211,153,0.08);
-  color: #34d399;
+  color: var(--text);
   border: 1px solid #34d399;
 }
 .convergence-card {
@@ -3281,10 +3281,9 @@ kbd {
   gap: 6px;
 }
 .decision-opt-btn {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-rows: auto auto;
-  gap: 2px 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
@@ -3312,21 +3311,15 @@ kbd {
   padding: 1px 6px;
   flex-shrink: 0;
   line-height: 1.6;
-  grid-row: 1 / span 2;
-  align-self: start;
   margin-top: 1px;
 }
-.decision-opt-btn.selected .decision-opt-num {
-  color: #34d399;
-  background: rgba(52, 211, 153, 0.15);
-}
+/* decision-opt-num selected colours now handled per-variant below */
 .decision-opt-text {
   font-size: 12px;
   color: var(--text);
   line-height: 1.5;
   min-width: 0;
-  grid-column: 2;
-  grid-row: 1;
+  flex: 1;
 }
 .decision-opt-custom {
   border-style: dashed;
@@ -3335,10 +3328,7 @@ kbd {
   border-color: var(--amber) !important;
   background: rgba(245,166,35,0.08) !important;
 }
-.decision-opt-custom.selected .decision-opt-num {
-  background: rgba(245,166,35,0.15) !important;
-  color: var(--amber) !important;
-}
+
 .decision-opt-bypass {
   border-style: dashed;
   opacity: 0.6;
@@ -3349,10 +3339,7 @@ kbd {
   background: rgba(255,255,255,0.04) !important;
   opacity: 1;
 }
-.decision-opt-bypass.selected .decision-opt-num {
-  background: rgba(255,255,255,0.08) !important;
-  color: var(--text-dim) !important;
-}
+
 .decision-card.bypassed {
   border-color: var(--border2) !important;
   opacity: 0.65;
@@ -3387,13 +3374,10 @@ kbd {
   color: var(--text-dim);
   font-style: italic;
   white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
-  max-width: none;
   line-height: 1.4;
   padding-bottom: 1px;
-  grid-column: 2;
-  grid-row: 2;
+  display: block;
+  margin-top: 2px;
 }
 /* ── APPLY DECISIONS BUTTON ── */
 .btn-apply-decisions {
