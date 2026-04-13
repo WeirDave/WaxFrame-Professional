@@ -1,0 +1,703 @@
+<!-- ============================================================
+     WaxFrame v2 — document-playbooks.html
+     Build: 20260412-001
+     Author: WeirDave (R David Paine III) | License: AGPL-3.0
+     GitHub: github.com/WeirDave/AIHive
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WaxFrame — Document Playbooks</title>
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v18.png">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ── Page intro ── */
+    .dp-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:28px; }
+    .dp-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
+    .dp-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
+    .dp-bee { width:80px; flex-shrink:0; }
+
+    /* ── TOC ── */
+    .dp-toc { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:32px; }
+    .dp-toc-title { font-family:var(--font-display); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:12px; }
+    .dp-toc-grid { display:flex; flex-wrap:wrap; gap:8px; }
+    .dp-toc-link { font-size:13px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
+    .dp-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+    /* ── Content wrapper ── */
+    .dp-content { max-width:860px; margin:0 auto; padding:0 32px 48px; }
+
+    /* ── Playbook card ── */
+    .dp-playbook { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:28px; overflow:hidden; }
+    .dp-playbook-header { display:flex; align-items:center; gap:16px; padding:20px 24px 16px; border-bottom:1px solid var(--border2); }
+    .dp-playbook-icon { font-size:28px; line-height:1; flex-shrink:0; }
+    .dp-playbook-title { font-family:var(--font-display); font-size:18px; font-weight:800; color:var(--text); }
+    .dp-playbook-desc { font-size:13px; color:var(--text-dim); line-height:1.5; margin-top:2px; }
+    .dp-playbook-body { padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
+
+    /* ── Field rows ── */
+    .dp-field { display:flex; gap:12px; align-items:flex-start; }
+    .dp-field-label { font-family:var(--font-display); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); white-space:nowrap; min-width:120px; padding-top:3px; flex-shrink:0; }
+    .dp-field-value { font-size:13px; color:var(--text-dim); line-height:1.6; }
+    .dp-field-value code { font-family:'Courier New', monospace; font-size:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border2); border-radius:4px; padding:1px 6px; color:var(--text); display:inline-block; margin-top:2px; }
+    [data-theme="light"] .dp-field-value code { background:rgba(0,0,0,0.04); }
+    @media (prefers-color-scheme:light) { [data-theme="auto"] .dp-field-value code { background:rgba(0,0,0,0.04); } }
+
+    /* ── Divider between fields ── */
+    .dp-field-divider { height:1px; background:var(--border2); margin:2px 0; }
+
+    /* ── Tip ── */
+    .dp-tip { display:flex; gap:10px; align-items:flex-start; background:var(--accent-dim); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:12px 14px; }
+    .dp-tip-icon { flex-shrink:0; margin-top:1px; }
+    .dp-tip p { font-size:12px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
+
+    /* ── Rounds badge ── */
+    .dp-rounds { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin-top:4px; }
+    .dp-rounds-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+
+    /* ── Tag row ── */
+    .dp-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+    .dp-tag { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; letter-spacing:0.04em; }
+    .dp-tag-amber { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
+    .dp-tag-blue { background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.4); color:#93c5fd; }
+    .dp-tag-green { background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.4); color:#34d399; }
+    .dp-tag-purple { background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; }
+    [data-theme="light"] .dp-tag-blue { color:#2563eb; }
+    [data-theme="light"] .dp-tag-green { color:#059669; }
+    [data-theme="light"] .dp-tag-purple { color:#7c3aed; }
+    @media (prefers-color-scheme:light) {
+      [data-theme="auto"] .dp-tag-blue { color:#2563eb; }
+      [data-theme="auto"] .dp-tag-green { color:#059669; }
+      [data-theme="auto"] .dp-tag-purple { color:#7c3aed; }
+    }
+
+    /* ── Back to top ── */
+    .dp-back-top { display:block; text-align:right; font-size:12px; color:var(--text-dim); text-decoration:none; padding:4px 0 0; transition:color 0.12s; }
+    .dp-back-top:hover { color:var(--accent); }
+
+    /* ── Light theme overrides ── */
+    [data-theme="light"] .dp-intro,
+    [data-theme="light"] .dp-toc,
+    [data-theme="light"] .dp-playbook { background:#ffffff; }
+    @media (prefers-color-scheme:light) {
+      [data-theme="auto"] .dp-intro,
+      [data-theme="auto"] .dp-toc,
+      [data-theme="auto"] .dp-playbook { background:#ffffff; }
+    }
+  </style>
+</head>
+<body class="helper-body">
+
+<div class="page-header">
+  <div class="page-header-spacer"></div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v18.png" alt="WaxFrame" class="page-header-logo">
+    <div>
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Document Playbooks</div>
+    </div>
+  </div>
+  <div class="page-header-spacer"></div>
+</div>
+
+<div class="page-main" id="top">
+  <div class="dp-content">
+
+    <div class="dp-intro">
+      <img src="images/AI_Hive_WorkerBee_v1.png" alt="🐝" class="dp-bee">
+      <div class="dp-intro-text">
+        <h2>Put the hive to work on a real document</h2>
+        <p>Each playbook below gives you a proven setup for a specific document type — what to put in your project goal, how many rounds to expect, which AIs tend to shine, and what to watch out for. You don't have to follow these exactly, but they'll get you a strong result fast.</p>
+      </div>
+    </div>
+
+    <div class="dp-toc">
+      <div class="dp-toc-title">Jump to a playbook</div>
+      <div class="dp-toc-grid">
+        <a href="#resume" class="dp-toc-link">📄 Résumé</a>
+        <a href="#cover-letter" class="dp-toc-link">✉️ Cover Letter</a>
+        <a href="#business-proposal" class="dp-toc-link">💼 Business Proposal</a>
+        <a href="#rfp" class="dp-toc-link">📋 RFP Response</a>
+        <a href="#thank-you" class="dp-toc-link">🙏 Thank-You Letter</a>
+        <a href="#executive-summary" class="dp-toc-link">📊 Executive Summary</a>
+        <a href="#presentation" class="dp-toc-link">🖥️ Presentation Outline</a>
+        <a href="#blog-post" class="dp-toc-link">📝 Blog Post / Article</a>
+        <a href="#job-description" class="dp-toc-link">🔍 Job Description</a>
+        <a href="#email-campaign" class="dp-toc-link">📬 Email / Outreach</a>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RÉSUMÉ -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="resume">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">📄</div>
+        <div>
+          <div class="dp-playbook-title">Résumé</div>
+          <div class="dp-playbook-desc">Polish a draft résumé for a specific role, industry, or seniority level.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this résumé for a <strong>[job title]</strong> role in <strong>[industry]</strong>. Improve clarity, impact, and keyword alignment. Strengthen action verbs and quantify achievements where possible. Do not fabricate experience — only sharpen what's there. Tone should be confident and professional. Target length: <strong>[one page / two pages]</strong>.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your existing résumé text, copied directly — or upload a Word/PDF version. If uploading a PDF, use a clean text-based export (not a designed template) for best results.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>Typically 3–5 rounds to reach convergence</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-amber">ChatGPT — clean rewrites</span>
+              <span class="dp-tag dp-tag-blue">Claude — tone &amp; structure</span>
+              <span class="dp-tag dp-tag-green">Gemini — keyword research</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Add a Notes entry before Round 1 specifying the job description or posting URL — paste in the key requirements so the AIs can target their suggestions to that specific role. This makes a significant difference in relevance.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- COVER LETTER -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="cover-letter">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">✉️</div>
+        <div>
+          <div class="dp-playbook-title">Cover Letter</div>
+          <div class="dp-playbook-desc">Create or refine a cover letter that connects your background to a specific role.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this cover letter for a <strong>[job title]</strong> position at <strong>[company name]</strong>. It should open with a strong hook, connect my experience directly to the role, and close with a confident call to action. Keep it to three short paragraphs. Tone: <strong>[professional / conversational / enthusiastic]</strong>. Do not use generic filler phrases like "I am writing to express my interest."
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft cover letter, or bullet points of key talking points if starting from scratch.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>Typically 2–4 rounds — cover letters converge quickly</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-blue">Claude — voice &amp; authenticity</span>
+              <span class="dp-tag dp-tag-amber">ChatGPT — punchy rewrites</span>
+              <span class="dp-tag dp-tag-purple">Grok — tone calibration</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Paste the full job description into the Notes field before running Round 1. The AIs can't visit URLs, but they'll use the text directly to tune language and emphasis to match what the employer is looking for.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- BUSINESS PROPOSAL -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="business-proposal">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">💼</div>
+        <div>
+          <div class="dp-playbook-title">Business Proposal</div>
+          <div class="dp-playbook-desc">Sharpen a proposal to win a client, secure a partnership, or pitch a new venture.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this business proposal for <strong>[client / audience]</strong>. Strengthen the executive summary, tighten the problem statement, and make the value proposition more compelling. Ensure pricing and deliverables sections are clear and unambiguous. Tone should be confident, credible, and professional. Length: <strong>[stay close to current / trim to X pages]</strong>.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft proposal text. You can use placeholder values like <code>[PRICE]</code> or <code>[TIMELINE]</code> for sensitive details — the AIs will work around them.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>Expect 4–6 rounds — proposals have a lot of moving parts</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-amber">ChatGPT — structure &amp; flow</span>
+              <span class="dp-tag dp-tag-green">Gemini — research backing</span>
+              <span class="dp-tag dp-tag-blue">Claude — persuasive language</span>
+              <span class="dp-tag dp-tag-purple">Perplexity — market context</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Use the Notes field to tell the Builder the most important thing about the client — their pain point, their industry, or a key objection you need to pre-empt. This context shapes how the AIs frame every section.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- RFP RESPONSE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="rfp">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">📋</div>
+        <div>
+          <div class="dp-playbook-title">RFP Response (Request for Proposal)</div>
+          <div class="dp-playbook-desc">Craft a disciplined, structured response to a formal RFP that answers every requirement.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this RFP response for <strong>[issuing organisation / project name]</strong>. Ensure every stated requirement in the RFP is addressed directly and clearly. Strengthen executive summary, methodology, and differentiators. Tone should be formal, precise, and authoritative. Do not add claims that aren't supported by the existing content.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft response. Optionally paste a summary of the RFP requirements in the Notes field before Round 1 so every AI reviewer can check compliance as they review.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>5–8 rounds typical — RFPs are detail-heavy</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-amber">ChatGPT — compliance checklist thinking</span>
+              <span class="dp-tag dp-tag-green">DeepSeek — technical depth</span>
+              <span class="dp-tag dp-tag-blue">Claude — clarity &amp; concision</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>RFPs often have strict page or word limits. Add the limit to your project goal so the AIs flag when sections are running long rather than just improving them in isolation.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- THANK-YOU LETTER -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="thank-you">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">🙏</div>
+        <div>
+          <div class="dp-playbook-title">Thank-You Letter</div>
+          <div class="dp-playbook-desc">Write a warm, genuine thank-you for any professional or personal occasion.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this thank-you letter for <strong>[recipient / occasion]</strong>. It should feel genuine, specific, and not generic. Reference the specific thing being thanked. Keep it short — under 200 words. Tone: <strong>[warm / professional / heartfelt]</strong>.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft letter, or a few bullet points about the person and what you're thanking them for. The AIs will shape it into a full letter.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>2–3 rounds — these converge fast</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-blue">Claude — warmth &amp; authenticity</span>
+              <span class="dp-tag dp-tag-purple">Grok — keeping it real</span>
+              <span class="dp-tag dp-tag-amber">ChatGPT — clean final polish</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Short documents often over-converge — the AIs may agree it's done after Round 2. That's fine. Hit Finish and export. Don't force extra rounds on something that's already working.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- EXECUTIVE SUMMARY -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="executive-summary">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">📊</div>
+        <div>
+          <div class="dp-playbook-title">Executive Summary</div>
+          <div class="dp-playbook-desc">Distil a long report, plan, or proposal into a tight, decision-ready summary for leadership.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this executive summary of <strong>[source document / topic]</strong>. It should answer: what is the situation, what is the recommendation, and why does it matter — in that order. Maximum <strong>[one page / 400 words]</strong>. Strip jargon. Lead with the conclusion. Audience: <strong>[C-suite / board / investors / stakeholders]</strong>.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft summary, or key bullet points from the source document. For long source documents, paste in the key conclusions and recommendations — not the whole thing.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>3–5 rounds — AIs often disagree on what to cut</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-blue">Claude — distillation &amp; structure</span>
+              <span class="dp-tag dp-tag-amber">ChatGPT — executive language</span>
+              <span class="dp-tag dp-tag-green">Gemini — fact checking</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>If the AIs keep wanting to add detail back in, add a note: "Do not expand the document — only tighten and clarify what's already here." Conflict resolution tends to go toward brevity when you're explicit about it.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- PRESENTATION OUTLINE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="presentation">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">🖥️</div>
+        <div>
+          <div class="dp-playbook-title">Presentation Outline</div>
+          <div class="dp-playbook-desc">Build a slide-by-slide narrative outline that's ready to drop into PowerPoint or Keynote.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this presentation outline for a <strong>[X]-minute talk</strong> on <strong>[topic]</strong>, for an audience of <strong>[audience description]</strong>. Structure: opening hook, 3–5 key points, and a strong close with a clear call to action. For each slide, provide: slide title, 3–5 bullet points of speaker notes, and one suggested visual or data point. Keep bullet points brief — this is a speaker outline, not a script.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft outline, or a rough list of the points you want to cover. Even a few messy notes will give the hive enough to build from.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>4–6 rounds — narrative flow takes iteration</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-amber">ChatGPT — slide structure</span>
+              <span class="dp-tag dp-tag-blue">Claude — narrative arc</span>
+              <span class="dp-tag dp-tag-purple">Grok — audience hook</span>
+              <span class="dp-tag dp-tag-green">Perplexity — current stats &amp; data</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>WaxFrame outputs text — you'll copy this outline into your presentation tool. Use the exported document as your script and speaker notes layer. Having Perplexity in your hive is especially useful here since it can suggest real, current statistics to support your slides.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- BLOG POST / ARTICLE -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="blog-post">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">📝</div>
+        <div>
+          <div class="dp-playbook-title">Blog Post / Article</div>
+          <div class="dp-playbook-desc">Publish-ready content with a strong voice, clear structure, and good SEO bones.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this blog post about <strong>[topic]</strong> for publication on <strong>[platform / audience]</strong>. Improve the headline, strengthen the opening hook, and ensure each section flows into the next. Target length: <strong>[X words]</strong>. Tone: <strong>[conversational / authoritative / educational]</strong>. Include a clear call to action at the end. Do not add facts or statistics that aren't already in the draft.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft post or article. If you only have notes, paste those in and tell the hive to draft from them — specify that in your goal.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>3–5 rounds for most posts</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-blue">Claude — voice &amp; readability</span>
+              <span class="dp-tag dp-tag-purple">Grok — edge &amp; personality</span>
+              <span class="dp-tag dp-tag-green">Perplexity — factual grounding</span>
+              <span class="dp-tag dp-tag-amber">ChatGPT — SEO structure</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>If the AIs start homogenising the voice into something bland, add a note describing the author's tone — even a few adjectives like "direct, slightly sarcastic, uses short sentences" will steer the hive back toward a distinct voice.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- JOB DESCRIPTION -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="job-description">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">🔍</div>
+        <div>
+          <div class="dp-playbook-title">Job Description</div>
+          <div class="dp-playbook-desc">Write a job posting that attracts the right candidates and represents your culture accurately.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this job description for a <strong>[job title]</strong> at a <strong>[company type / industry]</strong>. Ensure the responsibilities are realistic and prioritised by importance. Flag any requirements that might unnecessarily limit the candidate pool (degree requirements, years of experience). Tone: <strong>[professional / startup / enterprise]</strong>. Include a brief company culture statement at the end.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft JD, or a bullet list of responsibilities and requirements. The hive will shape it into a full posting.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>3–4 rounds typical</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-amber">ChatGPT — clear structure</span>
+              <span class="dp-tag dp-tag-blue">Claude — inclusive language</span>
+              <span class="dp-tag dp-tag-green">Gemini — role benchmarking</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Ask the AIs to flag anything that reads as a "must-have" but could reasonably be "nice-to-have" — overly restrictive JDs reduce applicant quality by narrowing the pool too early. Use the Notes field to prompt this specifically.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- EMAIL / OUTREACH -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook" id="email-campaign">
+      <div class="dp-playbook-header">
+        <div class="dp-playbook-icon">📬</div>
+        <div>
+          <div class="dp-playbook-title">Email &amp; Outreach</div>
+          <div class="dp-playbook-desc">Sharpen cold outreach, sales emails, or important one-off messages that need to land.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-field">
+          <div class="dp-field-label">Project Goal</div>
+          <div class="dp-field-value">
+            Refine this outreach email to <strong>[recipient type / name]</strong> about <strong>[purpose]</strong>. The subject line should compel an open. The body should be under 150 words. Lead with value to the recipient — not background on the sender. Close with a single, clear ask. No fluff, no jargon. Tone: <strong>[professional / direct / warm]</strong>.
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Paste In</div>
+          <div class="dp-field-value">Your draft email. For cold outreach, include a one-line description of the recipient's role or company in your project goal so the AIs can calibrate the pitch.</div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value">
+            <div class="dp-rounds"><div class="dp-rounds-dot"></div>2–3 rounds — emails are tight documents, converge fast</div>
+          </div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Best AIs For</div>
+          <div class="dp-field-value">
+            <div class="dp-tags">
+              <span class="dp-tag dp-tag-purple">Grok — punchy subject lines</span>
+              <span class="dp-tag dp-tag-blue">Claude — concise body copy</span>
+              <span class="dp-tag dp-tag-amber">ChatGPT — CTA clarity</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dp-tip">
+          <div class="dp-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:18px;height:18px;display:block;"></div>
+          <p>Short documents like emails sometimes produce conflicts over single word choices. If a conflict feels trivial, use the Builder Decision path and let the Builder decide — or bypass it if you've already made your choice directly in the document.</p>
+        </div>
+
+      </div>
+    </div>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+
+  </div>
+</div>
+
+<div class="page-footer">
+  <div class="page-footer-btns">
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
+    <a href="https://github.com/WeirDave/AIHive" target="_blank" class="btn">⭐ GitHub</a>
+  </div>
+  <button class="btn" onclick="window.close()">✕ Close this tab</button>
+</div>
+
+<script>
+  (function() {
+    const t = localStorage.getItem('waxframe_v2_theme') || 'auto';
+    document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+</body>
+</html>
