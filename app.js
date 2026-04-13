@@ -463,7 +463,7 @@ async function checkStorageQuota() {
 }
 
 
-const GUMROAD_PRODUCT_ID = 'WaxFrame';
+const GUMROAD_PRODUCT_ID = 'Iyg5j-ySEnBtA5CKcuVT9A==';
 const FREE_TRIAL_ROUNDS  = 3;
 
 // ── UTILS ──
