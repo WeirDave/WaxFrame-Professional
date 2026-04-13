@@ -4959,8 +4959,8 @@ kbd {
   left: 50%;
   transform: translate(-50%, -50%);
   font-size: 28px;
-  color: #34d399;
-  opacity: 0.25;
+  color: var(--accent);
+  opacity: 0.6;
   pointer-events: none;
   line-height: 1;
 }
