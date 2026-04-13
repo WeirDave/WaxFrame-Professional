@@ -10,7 +10,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WaxFrame — Know Your Hive</title>
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v18.png">
   <link rel="stylesheet" href="style.css">
   <style>
     .kyh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
@@ -107,7 +107,7 @@
           <p>A solid all-rounder for both Builder and Reviewer roles — fast, reliable, and consistent. A strong alternative Builder if DeepSeek is unavailable. As a reviewer, it effectively signals document convergence during final refinement rounds.</p>
         </div>
         <div class="kyh-tip">
-          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:20px;height:20px;display:block;"></span>
+          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <p>When ChatGPT returns NO CHANGES in later rounds, treat this as a sign of document convergence rather than a reason to toggle it off.</p>
         </div>
       </div>
@@ -149,7 +149,7 @@
           <p>A versatile choice for both Builder and Reviewer roles. As a reviewer, Claude excels at catching subtle issues with tone, redundancy, and flow that others miss. As a Builder, it is reliable and format-compliant. Higher cost, but worth it for quality-sensitive projects.</p>
         </div>
         <div class="kyh-tip">
-          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:20px;height:20px;display:block;"></span>
+          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <p>Claude tends to give the most thoughtful reasoning for its suggestions — clarifying the logic behind each change.</p>
         </div>
       </div>
@@ -191,7 +191,7 @@
           <p>The default Builder choice. Rarely deviates from instructions, making it a stable foundation. Fast, cost-effective, and reliable across document types. If you're only paying for one AI, make it your Builder and use Gemini as your free reviewer.</p>
         </div>
         <div class="kyh-tip">
-          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:20px;height:20px;display:block;"></span>
+          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <p>Use DeepSeek for high-iteration projects and large documents to keep costs low.</p>
         </div>
       </div>
@@ -234,7 +234,7 @@
           <p>Your primary free reviewer. Great for catching grammar, word choice, and structural issues. Use it as a reviewer and let a paid AI serve as the Builder.</p>
         </div>
         <div class="kyh-tip">
-          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:20px;height:20px;display:block;"></span>
+          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <p>Gemini + DeepSeek is the minimum viable paid hive — two AIs, one free, total cost often under a cent per round for short documents.</p>
         </div>
       </div>
@@ -317,7 +317,7 @@
           <p>A specialized reviewer for factual or research-heavy documents. Its search-aware training makes it uniquely effective at spotting unsupported claims, though its inconsistent output formatting may complicate document reconstruction.</p>
         </div>
         <div class="kyh-tip">
-          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" style="width:20px;height:20px;display:block;"></span>
+          <span class="kyh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <p>Perplexity is particularly useful early in a project when the document is rough and needs fact-checking input from the hive.</p>
         </div>
       </div>
@@ -326,19 +326,19 @@
   </div>
 
   <!-- GENERAL TIPS -->
-  <div class="info-card" style="margin-top:32px;">
-    <h2 style="font-family:var(--font-display);font-size:18px;font-weight:800;margin-bottom:12px;">General Tips</h2>
-    <p style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:10px;">
-      <strong style="color:var(--text);">You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.
+  <div class="info-card info-card-tips">
+    <h2 class="kyh-tips-title">General Tips</h2>
+    <p class="kyh-tips-p">
+      <strong class="kyh-tips-strong">You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.
     </p>
-    <p style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:10px;">
-      <strong style="color:var(--text);">Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.
+    <p class="kyh-tips-p">
+      <strong class="kyh-tips-strong">Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.
     </p>
-    <p style="font-size:14px;color:var(--text-dim);line-height:1.7;margin-bottom:10px;">
-      <strong style="color:var(--text);">Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.
+    <p class="kyh-tips-p">
+      <strong class="kyh-tips-strong">Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.
     </p>
-    <p style="font-size:14px;color:var(--text-dim);line-height:1.7;margin:0;">
-      <strong style="color:var(--text);">Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.
+    <p class="kyh-tips-p kyh-tips-p-last">
+      <strong class="kyh-tips-strong">Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.
     </p>
   </div>
 
