@@ -657,20 +657,19 @@
     <h2 class="finish-modal-title">🏁 Project Complete!</h2>
     <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do.</p>
     <div class="finish-modal-actions">
-      <button class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">
+      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">
         💾 Export Document
-        <span class="finish-modal-btn-sub">Your final document as a .txt file</span>
       </button>
-      <button class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportSession()">
+      <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportSession()">
         📋 Export Full Transcript
         <span class="finish-modal-btn-sub">Every round, every AI response, and the final document — all in one file</span>
       </button>
-      <button class="finish-modal-btn finish-modal-btn-export finish-modal-btn-snapshot" onclick="exportSnapshot()">
-        📦 Save Session Snapshot
+      <button id="finishBtnSnapshot" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-snapshot" onclick="exportSnapshot()">
+        📷 Save Session Snapshot
         <span class="finish-modal-btn-sub">Save your place as a .json file — reload it later to resume exactly where you left off</span>
       </button>
       <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
-        <img src="images/AI_Hive_Worker_Bee_v2.png" class="finish-modal-bee"> Start New Project
+        <img src="images/AI_Hive_Worker_Bee_v2.png" class="finish-modal-bee"><span>Start New Project</span>
       </button>
     </div>
     <div class="finish-modal-footer-btns">

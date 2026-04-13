@@ -4929,4 +4929,20 @@ kbd {
 /* ── Finish modal button subtitles ── */
 .finish-modal-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .finish-modal-btn-sub { font-size: 11px; font-weight: 400; opacity: 0.7; line-height: 1.4; }
-.finish-modal-btn-snapshot { border-color: var(--green, #34d399) !important; color: var(--green, #34d399) !important; }
+.finish-modal-btn-snapshot { border-color: #34d399 !important; color: #34d399 !important; }
+.finish-modal-btn-new { flex-direction: row; gap: 8px; }
+
+/* ── Finish modal button disabled / done states ── */
+.finish-modal-btn-disabled {
+  border-color: #f87171 !important;
+  color: #f87171 !important;
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.finish-modal-btn-disabled:hover {
+  background: transparent !important;
+}
+.finish-modal-btn-done {
+  opacity: 0.5;
+  cursor: default;
+}
