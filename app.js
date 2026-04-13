@@ -3093,7 +3093,7 @@ async function runRound() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
       notes:          document.getElementById('workNotes')?.value.trim()       || '',
-      conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
+      conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })) },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString()
     });
@@ -3502,14 +3502,8 @@ function renderConflicts() {
     const total    = flatSuggestions.length;
     const aiCount  = conflicts.holdouts.length;
 
-    const satisfied = conflicts.satisfied ?? (conflicts.totalAIs - aiCount);
-    const totalAIs  = conflicts.totalAIs  ?? null;
-    const satisfiedLabel = totalAIs
-      ? `${satisfied} of ${totalAIs} AIs are satisfied with the document`
-      : `${aiCount === 0 ? 'All' : 'Most'} AIs are satisfied`;
-
     let html = `<div class="conflicts-section-header convergence-header">
-      🏁 Hive Converged — ${satisfiedLabel}${total > 0 ? ` — ${aiCount} AI${aiCount!==1?'s':''} still ${aiCount!==1?'have':'has'} suggestions to review:` : ' — document is ready.'}
+      🏁 Hive Converged — ${total > 0 ? `${total} suggestion${total!==1?'s':''} from ${aiCount} AI${aiCount!==1?'s':''} — review each one below:` : 'document is ready.'}
     </div>`;
 
     if (total > 0) {
@@ -3893,13 +3887,11 @@ function selectHoldout(idx, choice, total) {
   const next = document.querySelector('.convergence-card:not(.resolved)');
   if (next) next.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
-  // If all holdouts are now resolved and everything is declined → fanfare then finish
+  // If all holdouts are now resolved and everything is declined → auto-finish
   const allResolved = Object.keys(window._holdoutChoices).length === total;
   const allDeclined = allResolved && Object.values(window._holdoutChoices).every(c => c.type === 'decline');
   if (allDeclined) {
-    playFlyingCarSound();
-    showHiveFinish({ duration: 4000, smokeBursts: 10 });
-    setTimeout(() => showFinishModal(), 1800);
+    setTimeout(() => showFinishModal(), 400);
     return;
   }
 
@@ -3942,11 +3934,9 @@ function applyHoldouts() {
   });
 
   if (lines.length === 0) {
-    // All declined — fanfare then finish
+    // All declined — open finish modal
     window._holdoutChoices = {};
-    playFlyingCarSound();
-    showHiveFinish({ duration: 4000, smokeBursts: 10 });
-    setTimeout(() => showFinishModal(), 1800);
+    showFinishModal();
     return;
   }
 
@@ -4320,6 +4310,146 @@ function exportSession() {
 
   toast('💾 Full transcript exported');
 }
+
+// ── SESSION SNAPSHOT EXPORT ──
+// Saves everything needed to resume a session: project fields, hive config
+// (active AIs + builder — but NOT API keys), round state, document, history,
+// notes, clock, and resolved decisions. API keys stay browser-local for security.
+function exportSnapshot() {
+  const proj = JSON.parse(localStorage.getItem(LS_PROJECT) || '{}');
+
+  const snapshot = {
+    _type:    'waxframe_snapshot',
+    _version: 2,
+    _saved:   new Date().toISOString(),
+    _build:   BUILD,
+
+    // Project fields
+    projectName:    proj.projectName    || '',
+    projectVersion: proj.projectVersion || '',
+    projectGoal:    proj.projectGoal    || '',
+    exportMask:     proj.exportMask     || '',
+    docTab:         proj.docTab         || 'paste',
+
+    // Hive config — AI IDs + builder only (no keys)
+    activeAIIds: activeAIs.map(a => a.id),
+    builder:     builder || null,
+
+    // Session state
+    round:             round,
+    phase:             phase,
+    docText:           docText,
+    history:           history,
+    projClockSeconds:  _projClockSeconds,
+
+    // Notes
+    notes: document.getElementById('workNotes')?.value || '',
+
+    // Conflict state
+    resolvedDecisions: window._resolvedDecisions || [],
+    conflictLedger:    window._conflictLedger    || [],
+  };
+
+  const filename = (proj.projectName || 'WaxFrame').replace(/[^a-z0-9_\-]/gi, '_');
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${filename}_snapshot.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+
+  toast('📦 Session snapshot saved');
+}
+
+// ── SESSION SNAPSHOT IMPORT ──
+// Restores a saved snapshot: project fields, hive config, round state, and
+// history. API keys are left untouched — the user must have them set already.
+// After import, navigates directly to the work screen via a page reload.
+async function importSnapshot(input) {
+  const file = input?.files?.[0];
+  input.value = ''; // reset so same file can be re-selected if needed
+  if (!file) return;
+
+  let snapshot;
+  try {
+    const text = await file.text();
+    snapshot = JSON.parse(text);
+  } catch(e) {
+    toast('❌ Could not read snapshot file');
+    return;
+  }
+
+  if (snapshot._type !== 'waxframe_snapshot' || snapshot._version !== 2) {
+    toast('❌ Not a valid WaxFrame v2 snapshot');
+    return;
+  }
+
+  const savedStr = snapshot._saved ? new Date(snapshot._saved).toLocaleString() : 'unknown';
+  if (!confirm(`Resume snapshot?\n\nProject: ${snapshot.projectName || '(unnamed)'}\nRound: ${snapshot.round}  |  Saved: ${savedStr}\n\nThis will overwrite your current session.`)) return;
+
+  // Restore project fields to localStorage
+  try {
+    const proj = {
+      projectName:    snapshot.projectName    || '',
+      projectVersion: snapshot.projectVersion || '',
+      projectGoal:    snapshot.projectGoal    || '',
+      exportMask:     snapshot.exportMask     || '',
+      docTab:         snapshot.docTab         || 'paste',
+    };
+    localStorage.setItem(LS_PROJECT, JSON.stringify(proj));
+  } catch(e) {}
+
+  // Restore hive config: preserve existing API keys, restore active AIs + builder
+  try {
+    const hiveRaw = localStorage.getItem(LS_HIVE);
+    const existingHive = hiveRaw ? JSON.parse(hiveRaw) : {};
+    const restoredHive = {
+      ...existingHive,
+      activeAIIds: snapshot.activeAIIds || [],
+      builder:     snapshot.builder     || null,
+    };
+    localStorage.setItem(LS_HIVE, JSON.stringify(restoredHive));
+  } catch(e) {}
+
+  // Restore session state into IndexedDB (primary storage)
+  const sessionData = {
+    round:            snapshot.round            || 1,
+    phase:            snapshot.phase            || 'draft',
+    history:          snapshot.history          || [],
+    docText:          snapshot.docText          || '',
+    notes:            snapshot.notes            || '',
+    projClockSeconds: snapshot.projClockSeconds || 0,
+    consoleHTML:      '',
+  };
+  try {
+    await idbSet(sessionData);
+    localStorage.setItem('aihive_v2_session_exists', '1');
+  } catch(e) {
+    // IDB failed — fall back to localStorage
+    try { localStorage.setItem(LS_SESSION, JSON.stringify(sessionData)); } catch(ee) {}
+    try { localStorage.setItem('aihive_v2_session_exists', '1'); } catch(ee) {}
+  }
+
+  // Restore conflict state
+  try {
+    if (snapshot.resolvedDecisions) {
+      localStorage.setItem('aihive_resolved_decisions', JSON.stringify(snapshot.resolvedDecisions));
+      window._resolvedDecisions = snapshot.resolvedDecisions;
+    }
+    if (snapshot.conflictLedger) {
+      localStorage.setItem('aihive_conflict_ledger', JSON.stringify(snapshot.conflictLedger));
+      window._conflictLedger = snapshot.conflictLedger;
+    }
+  } catch(e) {}
+
+  toast('📦 Snapshot loaded — resuming…');
+
+  // Brief delay so toast is visible, then reload — normal init flow restores everything cleanly
+  setTimeout(() => location.reload(), 900);
+}
+
 
 function copyDocument() {
   const text = document.getElementById('workDocument')?.value.trim();

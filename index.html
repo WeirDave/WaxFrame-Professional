@@ -11,7 +11,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="build" content="20260330-001">
   <title>WaxFrame</title>
-  <link rel="icon" type="image/png" href="images/favicon.png">
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+  <link rel="icon" type="image/svg+xml" href="images/favicon.svg">
+  <link rel="icon" type="image/png" sizes="96x96" href="images/favicon-96x96.png">
   <link rel="apple-touch-icon" sizes="180x180" href="images/apple-touch-icon.png">
   <link rel="manifest" href="images/site.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,8 +61,10 @@
     <div class="welcome-footer">
       <a href="https://github.com/WeirDave/AIHive" target="_blank" class="btn">⭐ GitHub</a>
       <a href="working-with-the-hive.html" target="_blank" class="btn">📖 User Guide</a>
+      <button class="btn" onclick="document.getElementById('snapshotFileInput').click()">📦 Resume Snapshot</button>
       <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
     </div>
+    <input type="file" id="snapshotFileInput" accept=".json" style="display:none;" onchange="importSnapshot(this)">
     <div class="theme-toggle">
       <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
       <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️ Auto</button>
@@ -361,13 +365,20 @@
       <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">← Project — Goal &amp; Document</button>
 
       <div class="nav-divider"></div>
-      <div class="nav-section-label">Reference</div>
-      <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()" id="navPromptEditor" style="display:none;">✏️ Prompt Editor</a>
+      <div class="nav-section-label">Settings</div>
       <button class="nav-item" onclick="closeNavMenu();openSettings()">⚙️ API Keys</button>
+
+      <div class="nav-divider"></div>
+      <div class="nav-section-label">Reference</div>
       <a class="nav-item" href="know-your-hive.html" target="_blank" onclick="closeNavMenu()">🐝 Know Your Hive</a>
       <a class="nav-item" href="working-with-the-hive.html" target="_blank" onclick="closeNavMenu()">📖 Working with the Hive</a>
+      <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📚 Document Playbooks</a>
       <a class="nav-item" href="tokens-explainer.html" target="_blank" onclick="closeNavMenu()">🪙 Token Guide</a>
       <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
+
+      <div class="nav-divider"></div>
+      <div class="nav-section-label">About</div>
+      <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()" id="navPromptEditor" style="display:none;">✏️ Prompt Editor</a>
       <button class="nav-item" onclick="closeNavMenu();document.getElementById('aboutModal').classList.add('active')">ℹ️ About WaxFrame</button>
     </div>
 
@@ -660,6 +671,9 @@
       </button>
       <button class="finish-modal-btn finish-modal-btn-export" onclick="exportSession()" style="border-color:var(--blue);color:var(--blue);">
         📋 Export Full Transcript
+      </button>
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="exportSnapshot()" style="border-color:var(--green,#34d399);color:var(--green,#34d399);">
+        📦 Save Session Snapshot
       </button>
       <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
         <img src="images/AI_Hive_Worker_Bee_v2.png" class="finish-modal-bee"> Start New Project
