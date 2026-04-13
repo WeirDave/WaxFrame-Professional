@@ -3524,7 +3524,8 @@ function renderConflicts() {
     const aiCount  = conflicts.holdouts.length;
 
     let html = `<div class="conflicts-section-header convergence-header">
-      🏁 Hive Converged — ${total > 0 ? `${total} suggestion${total!==1?'s':''} from ${aiCount} AI${aiCount!==1?'s':''} — review each one below:` : 'document is ready.'}
+      <div class="convergence-header-title">🏁 Hive Converged${total > 0 ? ` — ${aiCount} AI${aiCount!==1?'s':''} had final suggestions` : ' — document is ready.'}</div>
+      ${total > 0 ? `<div class="convergence-header-sub">The majority is satisfied. Review each suggestion below — apply, decline, or customise. Or hit <strong>Finish</strong> to finalise as-is.</div>` : ''}
     </div>`;
 
     if (total > 0) {
@@ -3566,9 +3567,7 @@ function renderConflicts() {
       </button>`;
     }
 
-    html += `<div class="convergence-footer">
-      The hive is satisfied. Review each suggestion above — apply, decline, or customise individually. Or hit <strong>Finish</strong> to finalise the document as-is.
-    </div>`;
+
     el.innerHTML = html;
     return;
   }
