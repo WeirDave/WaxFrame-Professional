@@ -2368,12 +2368,18 @@ function showFinishModal() {
   const modal = document.getElementById('finishModal');
   if (modal) modal.classList.add('active');
   projectClockPause();
-  const exportBtn = document.querySelector('.finish-modal-btn-export');
-  if (exportBtn) {
-    exportBtn.textContent = '💾 Export Document';
-    exportBtn.disabled = false;
-    exportBtn.style.opacity = '';
-  }
+
+  const hasDoc     = !!(document.getElementById('workDocument')?.value?.trim());
+  const hasHistory = history.length > 0;
+  const hasAnything = hasDoc || hasHistory;
+
+  const btnDoc      = document.getElementById('finishBtnDoc');
+  const btnTranscript = document.getElementById('finishBtnTranscript');
+  const btnSnapshot = document.getElementById('finishBtnSnapshot');
+
+  if (btnDoc)       btnDoc.classList.toggle('finish-modal-btn-disabled', !hasDoc);
+  if (btnTranscript) btnTranscript.classList.toggle('finish-modal-btn-disabled', !hasHistory);
+  if (btnSnapshot)  btnSnapshot.classList.toggle('finish-modal-btn-disabled', !hasAnything);
 }
 
 function hideFinishModal() {
@@ -2400,11 +2406,11 @@ function finishAndExport() {
   a.click();
   toast('💾 Document exported');
 
-  const exportBtn = document.querySelector('.finish-modal-btn-export');
-  if (exportBtn) {
-    exportBtn.textContent = '✅ Exported!';
-    exportBtn.disabled = true;
-    exportBtn.style.opacity = '0.6';
+  const btnDoc = document.getElementById('finishBtnDoc');
+  if (btnDoc) {
+    btnDoc.textContent = '✅ Exported!';
+    btnDoc.disabled = true;
+    btnDoc.classList.add('finish-modal-btn-done');
   }
 }
 
