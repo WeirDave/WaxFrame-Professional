@@ -103,20 +103,21 @@
       <div class="ai-card-header">
         <img src="images/copilot.ico" onerror="this.style.display='none'">
         <div class="ai-card-name">Copilot (Microsoft)</div>
-        <span class="badge badge-limited">Limited availability</span>
+        <span class="badge badge-limited">Azure required</span>
       </div>
       <div class="ai-card-body">
         <div class="model-line">
           <span class="model-label">Model:</span><code>gpt-4o</code>
-          <span class="model-note">Microsoft's AI via Azure OpenAI</span>
+          <span class="model-note">Via Azure OpenAI Service</span>
         </div>
+        <div class="note-box">&#x26A0;&#xFE0F; <strong>Heads up:</strong> Microsoft does not offer a simple API key for Copilot the way other providers do. To use Copilot's models programmatically, you need an <strong>Azure subscription</strong> with access to <strong>Azure OpenAI Service</strong> — which involves a separate sign-up, approval process, and resource setup. It's not quick to get started.</div>
+        <p style="margin:10px 0 6px;">If you already have Azure OpenAI access:</p>
         <ol class="steps">
-          <li>Go to <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> and sign in with your Microsoft account.</li>
-          <li>Navigate to <strong>Settings → API Access</strong> or check <a href="https://aka.ms/CopilotAPI" target="_blank">aka.ms/CopilotAPI</a> for current availability.</li>
-          <li>If access is available, generate a key and paste it into the Copilot field in WaxFrame.</li>
+          <li>Go to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> and open your Azure OpenAI resource.</li>
+          <li>Go to <strong>Keys and Endpoint</strong> and copy your API key.</li>
+          <li>Paste it into the Copilot field in WaxFrame and press Enter.</li>
         </ol>
-        <div class="note-box">API access is not guaranteed for all accounts — availability varies by region, subscription type, and rollout status. It's worth checking. Some users have been able to get access as individuals.</div>
-        <div class="note-box green">No API key yet? Copilot works great in Free mode. Open <a href="https://copilot.microsoft.com" target="_blank">copilot.microsoft.com</a> in a tab, paste your prompts, and copy responses back into WaxFrame.</div>
+        <div class="note-box green">&#x1F4A1; <strong>Most users should skip this one.</strong> The underlying model (GPT-4o) is available directly through ChatGPT with a much simpler setup. Use that instead unless you specifically need Azure.</div>
       </div>
     </div>
 
