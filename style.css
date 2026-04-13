@@ -4946,3 +4946,21 @@ kbd {
   opacity: 0.5;
   cursor: default;
 }
+
+/* ── Bee card — no changes needed star ── */
+.hex-cell.is-clean {
+  border-color: #34d399;
+  position: relative;
+}
+.hex-cell.is-clean::after {
+  content: '★';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 28px;
+  color: #34d399;
+  opacity: 0.25;
+  pointer-events: none;
+  line-height: 1;
+}

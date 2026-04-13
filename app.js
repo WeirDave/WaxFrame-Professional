@@ -2518,7 +2518,7 @@ function setBeeStatus(id, state, summary) {
   const live = document.getElementById('blive-' + id);
   if (!card) return;
 
-  card.classList.remove('is-working', 'is-done', 'is-error');
+  card.classList.remove('is-working', 'is-done', 'is-error', 'is-clean');
 
   if (state === 'sending') {
     card.classList.add('is-working');
@@ -2532,6 +2532,9 @@ function setBeeStatus(id, state, summary) {
   } else if (state === 'done') {
     card.classList.add('is-done');
     if (live) live.textContent = 'Done ✓';
+  } else if (state === 'done-clean') {
+    card.classList.add('is-done', 'is-clean');
+    if (live) live.textContent = 'No changes ★';
   } else if (state === 'error') {
     card.classList.add('is-error');
     if (live) live.textContent = 'Failed';
@@ -3016,7 +3019,7 @@ async function runRound() {
       const response = await callAPI(ai, prompt);
       const noChanges = /^no changes needed/i.test(response.trim());
       const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
-      setBeeStatus(ai.id, 'done', summary);
+      setBeeStatus(ai.id, noChanges ? 'done-clean' : 'done', summary);
       if (noChanges) {
         consoleLog(`✓ ${ai.name} — no changes needed`, 'success');
       } else {
