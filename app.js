@@ -952,6 +952,24 @@ function goToScreen(id) {
       if (clearRow) clearRow.style.display = 'block';
     }
   }
+  if (id === 'screen-work' && (docText || history.length > 0)) {
+    // Returning to an active session mid-run — re-populate the work screen
+    initWorkScreen();
+    idbGet().then(s => {
+      if (s?.consoleHTML) {
+        const el = document.getElementById('liveConsole');
+        if (el) el.innerHTML = s.consoleHTML;
+      }
+    }).catch(() => {
+      try {
+        const s = JSON.parse(localStorage.getItem(LS_SESSION) || '{}');
+        if (s.consoleHTML) {
+          const el = document.getElementById('liveConsole');
+          if (el) el.innerHTML = s.consoleHTML;
+        }
+      } catch(e) {}
+    });
+  }
 }
 
 function goToFree() {
