@@ -1161,15 +1161,14 @@ html, body {
   align-items: center;
   gap: 6px;
   padding: 6px 8px;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
-  border: 1px solid rgba(255,255,255,0.15);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 8px;
   cursor: default;
   min-height: 40px;
   overflow: hidden;
 }
-.hex-cell.is-builder { border-color: rgba(255,255,255,0.15); }
+.hex-cell.is-builder { border-color: var(--border); }
 .hex-cell.is-working    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
 .hex-cell.is-sending    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
 .hex-cell.is-responding { border-color: var(--purple); animation: cardPulse 1s ease-in-out infinite alternate; }
@@ -1219,7 +1218,7 @@ html, body {
 .hex-cell.is-responding .hex-status { color: var(--purple); }
 .hex-cell.is-done    .hex-status { color: #34d399; }
 .hex-cell.is-error   .hex-status { color: #f87171; }
-.hex-cell.is-builder .hex-status { color: var(--accent); }
+/* hex-cell.is-builder status — same as idle, BUILDER tag is sufficient */
 .hex-builder-tag {
   font-size: 8px;
   font-weight: 800;
