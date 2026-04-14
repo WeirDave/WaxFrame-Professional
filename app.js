@@ -3231,7 +3231,7 @@ async function runRound() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
       notes:          document.getElementById('workNotes')?.value.trim()       || '',
-      conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })) },
+      conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString()
     });
@@ -3685,11 +3685,21 @@ function renderConflicts() {
 
     window._flatHoldoutSuggestions = flatSuggestions;
 
-    const total    = flatSuggestions.length;
-    const aiCount  = conflicts.holdouts.length;
+    const total      = flatSuggestions.length;
+    const aiCount    = conflicts.holdouts.length;
+    const satisfied  = conflicts.satisfied  ?? null;
+    const totalAIs   = conflicts.totalAIs   ?? null;
+
+    const satisfiedLabel = (satisfied !== null && totalAIs !== null)
+      ? `${satisfied} of ${totalAIs} AIs satisfied with the document`
+      : 'Majority satisfied';
+
+    const holdoutLabel = total > 0
+      ? `${aiCount} holdout AI${aiCount !== 1 ? 's' : ''} left ${total} suggestion${total !== 1 ? 's' : ''} to review:`
+      : 'document is ready.';
 
     let html = `<div class="conflicts-section-header convergence-header">
-      🏁 Hive Converged — ${total > 0 ? `${total} suggestion${total!==1?'s':''} from ${aiCount} AI${aiCount!==1?'s':''} — review each one below:` : 'document is ready.'}
+      🏁 Hive Converged — ${satisfiedLabel} — ${holdoutLabel}
     </div>`;
 
     if (total > 0) {
