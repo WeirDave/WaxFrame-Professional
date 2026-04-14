@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-2.0-orange.svg)](https://github.com/WeirDave/AIHive/releases)
-[![Build](https://img.shields.io/badge/Build-20260330--001-blue.svg)](https://github.com/WeirDave/AIHive)
+[![Version](https://img.shields.io/badge/Version-3.0-orange.svg)](https://github.com/WeirDave/AIHive/releases)
+[![Build](https://img.shields.io/badge/Build-20260414--001-blue.svg)](https://github.com/WeirDave/AIHive)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>

@@ -375,7 +375,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260330-001';         // build stamp — update each session
+const BUILD       = '20260414-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -452,7 +452,6 @@ async function checkStorageQuota() {
         if (!existing) {
           const btn = document.createElement('button');
           btn.className = 'btn quota-warn-btn';
-          btn.style.cssText = 'margin:4px 0 4px 90px;font-size:11px;';
           btn.textContent = '💾 Export Session Now';
           btn.onclick = exportSession;
           el.prepend(btn);
@@ -480,6 +479,10 @@ function toast(msg, ms = 2800) {
 function setStatus(msg) {
   const el = document.getElementById('statusText');
   if (el) el.textContent = msg;
+}
+function setFileStatusState(el, state) {
+  el.classList.remove('file-status--loading', 'file-status--success', 'file-status--warn', 'file-status--error');
+  if (state) el.classList.add('file-status--' + state);
 }
 
 // ── ROUND COMPLETE SOUND ──
@@ -983,9 +986,7 @@ function goToScreen(id) {
       if (status) {
         status.style.display = 'block';
         status.textContent = `✅ ${docText.length.toLocaleString()} characters loaded from ${fname}`;
-        status.style.background = 'var(--green-dim)';
-        status.style.borderColor = 'var(--green)';
-        status.style.color = 'var(--green)';
+        setFileStatusState(status, 'success');
       }
       const clearRow = document.getElementById('fileClearRow');
       if (clearRow) clearRow.style.display = 'block';
@@ -1282,7 +1283,6 @@ function saveSession() {
           if (!existing) {
             const btn = document.createElement('button');
             btn.className = 'btn quota-warn-btn';
-            btn.style.cssText = 'margin:4px 0 4px 90px;font-size:11px;';
             btn.textContent = '💾 Export Session Now';
             btn.onclick = exportSession;
             el.prepend(btn);
@@ -1418,24 +1418,6 @@ function resetBeesToDefaults() {
   toast('↺ Reset to 6 defaults — your API keys were kept');
 }
 
-function toggleAISetup(id, checked) {
-  const ai = aiList.find(a => a.id === id);
-  if (!ai) return;
-  const row = document.getElementById('airow-' + id);
-  const keyInput = document.getElementById('key-' + id);
-  if (checked) {
-    if (!activeAIs.find(a => a.id === id)) activeAIs.push(ai);
-    row?.classList.add('checked');
-    if (keyInput) keyInput.disabled = false;
-  } else {
-    activeAIs = activeAIs.filter(a => a.id !== id);
-    row?.classList.remove('checked');
-    if (keyInput) keyInput.disabled = true;
-    if (builder === id) { builder = null; }
-  }
-  renderBuilderPicker();
-  saveSettings();
-}
 
 function saveKeyForAI(id, val, inputEl) {
   const ai = aiList.find(a => a.id === id);
@@ -1791,9 +1773,7 @@ async function processFile(file) {
   const ext = file.name.split('.').pop().toLowerCase();
   status.style.display = 'block';
   status.textContent = `⏳ Reading ${file.name}…`;
-  status.style.background = 'var(--blue-dim)';
-  status.style.borderColor = 'var(--blue)';
-  status.style.color = 'var(--blue)';
+  setFileStatusState(status, 'loading');
 
   try {
     let result = { text: '', warnings: [], sourceType: ext };
@@ -1820,23 +1800,19 @@ async function processFile(file) {
     // Show status — green if clean, amber if warnings
     if (result.warnings.length > 0) {
       status.textContent = `⚠️ ${docText.length.toLocaleString()} chars from ${file.name} — ${result.warnings[0]}`;
-      status.style.background = 'var(--accent-dim)';
-      status.style.borderColor = 'var(--accent)';
-      status.style.color = 'var(--accent)';
+      setFileStatusState(status, 'warn');
       // Show all warnings as stacked lines below
       if (result.warnings.length > 1) {
         result.warnings.slice(1).forEach(w => {
           const line = document.createElement('div');
-          line.style.cssText = 'font-size:11px;margin-top:4px;opacity:0.85;';
+          line.className = 'file-status-line';
           line.textContent = '↳ ' + w;
           status.appendChild(line);
         });
       }
     } else {
       status.textContent = `✅ ${docText.length.toLocaleString()} characters extracted from ${file.name}`;
-      status.style.background = 'var(--green-dim)';
-      status.style.borderColor = 'var(--green)';
-      status.style.color = 'var(--green)';
+      setFileStatusState(status, 'success');
     }
 
     const clearRow = document.getElementById('fileClearRow');
@@ -1844,9 +1820,7 @@ async function processFile(file) {
     updateLaunchRequirements();
   } catch(e) {
     status.textContent = `❌ Could not read file: ${e.message}`;
-    status.style.background = 'var(--red-dim)';
-    status.style.borderColor = 'var(--red)';
-    status.style.color = 'var(--red)';
+    setFileStatusState(status, 'error');
   }
 }
 
@@ -1908,9 +1882,7 @@ async function extractPDF(file) {
   const status = document.getElementById('fileStatus');
   if (status) {
     status.textContent = `⏳ ${reason.charAt(0).toUpperCase() + reason.slice(1)} — sending to AI for vision transcription. This may take 15–30 seconds…`;
-    status.style.background = 'var(--blue-dim)';
-    status.style.borderColor = 'var(--blue)';
-    status.style.color = 'var(--blue)';
+    setFileStatusState(status, 'loading');
   }
 
   // Render pages to images for vision and store for re-extract
@@ -2399,7 +2371,6 @@ function showProjectGoalModal() {
     metaEl.textContent = goal.length > 300
       ? `${goal.length} characters — exceeds 300-character Refine limit`
       : `${goal.length} characters`;
-    metaEl.style.color = 'var(--text-dim)';
   }
   if (editTa) editTa.value = goal;
   updateProjectGoalModalPreview();
@@ -4396,13 +4367,6 @@ function copyActiveHistTab() {
   if (active) navigator.clipboard.writeText(active.value).then(() => toast('📋 Copied'));
 }
 
-function toggleHistItem(idx) {
-  const b = document.getElementById('rhb' + idx);
-  const a = document.getElementById('rha' + idx);
-  if (!b) return;
-  b.classList.toggle('open');
-  if (a) a.textContent = b.classList.contains('open') ? '▲' : '▼';
-}
 
 function restoreRound(idx) {
   const h = history[idx];
