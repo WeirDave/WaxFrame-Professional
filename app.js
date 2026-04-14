@@ -1543,7 +1543,7 @@ async function testAllKeys() {
     return;
   }
   const btn = document.getElementById('testAllKeysBtn');
-  if (btn) { btn.textContent = 'Testing…'; btn.disabled = true; }
+  if (btn) { btn.textContent = '⏳ Testing…'; btn.disabled = true; btn.classList.add('testing'); }
   toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'}…`, 2500);
 
   const passed = [];
@@ -1578,7 +1578,7 @@ async function testAllKeys() {
     await new Promise(r => setTimeout(r, 400));
   }
 
-  if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; }
+  if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; btn.classList.remove('testing'); }
 
   if (failed.length === 0) {
     toast(`✅ All ${passed.length} key${passed.length === 1 ? '' : 's'} connected and working`, 5000);
