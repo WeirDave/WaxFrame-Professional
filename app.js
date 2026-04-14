@@ -875,6 +875,131 @@ function saveLicense(key) {
   } catch(e) {}
 }
 
+
+// ── LICENSE UNLOCK SCENE ──
+function playUnlockScene() {
+  const scene   = document.getElementById('unlockScene');
+  const bee     = scene?.querySelector('.unlock-bee');
+  const wax     = scene?.querySelector('.unlock-wax');
+  const stamp   = scene?.querySelector('.unlock-stamp');
+  const smoke   = scene?.querySelector('.unlock-smoke');
+  const stage   = scene?.querySelector('.unlock-stage');
+  const title   = scene?.querySelector('.unlock-title');
+  const sub     = scene?.querySelector('.unlock-sub');
+  if (!scene) return;
+
+  // Reset all elements
+  [wax, stamp, smoke, title, sub].forEach(el => { if (el) el.style.cssText = ''; });
+  if (bee) bee.style.cssText = '';
+
+  // Fade in overlay
+  scene.classList.add('active');
+  scene.style.animation = 'unlock-fade-in 0.4s ease forwards';
+
+  // T+0.3s — bee flies in from right
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.opacity = '1';
+    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards';
+  }, 300);
+
+  // T+1.0s — bee hovers
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards, unlock-bee-hover 1.2s ease-in-out 0.7s infinite';
+  }, 1000);
+
+  // T+1.2s — wax blob pops in
+  setTimeout(() => {
+    if (!wax) return;
+    wax.style.animation = 'unlock-wax-pop 0.5s cubic-bezier(0.2,0.8,0.4,1) forwards';
+  }, 1200);
+
+  // T+1.6s — stamp drops
+  setTimeout(() => {
+    if (!stamp) return;
+    stamp.style.opacity = '1';
+    stamp.style.animation = 'unlock-stamp-drop 0.35s cubic-bezier(0.4,0,0.2,1) forwards';
+  }, 1600);
+
+  // T+1.9s — shake + smoke
+  setTimeout(() => {
+    if (stage) stage.style.animation = 'unlock-shake 0.15s ease 2';
+    if (smoke) smoke.style.animation = 'unlock-smoke-rise 0.9s ease forwards';
+    playUnlockSounds();
+  }, 1900);
+
+  // T+2.1s — stamp retracts
+  setTimeout(() => {
+    if (!stamp) return;
+    stamp.style.animation = 'unlock-stamp-retract 0.3s ease forwards';
+  }, 2100);
+
+  // T+2.3s — text fades in
+  setTimeout(() => {
+    if (title) title.style.animation = 'unlock-text-in 0.5s ease forwards';
+    if (sub)   sub.style.animation   = 'unlock-text-in 0.5s ease 0.15s forwards';
+  }, 2300);
+
+  // T+3.2s — bee exits
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.animation = 'unlock-bee-exit 0.6s cubic-bezier(0.6,0,0.8,0.4) forwards';
+  }, 3200);
+
+  // T+4.5s — fade out and clean up
+  setTimeout(() => {
+    scene.style.animation = 'unlock-fade-out 0.5s ease forwards';
+    setTimeout(() => {
+      scene.classList.remove('active');
+      scene.style.animation = '';
+    }, 500);
+  }, 4500);
+}
+
+function playUnlockSounds() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Soft wax plop
+    const plop = ctx.createOscillator();
+    const plopGain = ctx.createGain();
+    plop.connect(plopGain); plopGain.connect(ctx.destination);
+    plop.type = 'sine';
+    plop.frequency.setValueAtTime(180, ctx.currentTime);
+    plop.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.18);
+    plopGain.gain.setValueAtTime(0.25, ctx.currentTime);
+    plopGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    plop.start(ctx.currentTime); plop.stop(ctx.currentTime + 0.2);
+
+    // Metal thunk
+    const thunk = ctx.createOscillator();
+    const thunkGain = ctx.createGain();
+    thunk.connect(thunkGain); thunkGain.connect(ctx.destination);
+    thunk.type = 'square';
+    thunk.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
+    thunk.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.18);
+    thunkGain.gain.setValueAtTime(0.18, ctx.currentTime + 0.05);
+    thunkGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+    thunk.start(ctx.currentTime + 0.05); thunk.stop(ctx.currentTime + 0.25);
+
+    // Sizzle — short noise burst
+    const bufferSize = ctx.sampleRate * 0.3;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
+    const sizzle = ctx.createBufferSource();
+    const sizzleGain = ctx.createGain();
+    const sizzleFilter = ctx.createBiquadFilter();
+    sizzleFilter.type = 'highpass'; sizzleFilter.frequency.value = 4000;
+    sizzle.buffer = buffer;
+    sizzle.connect(sizzleFilter); sizzleFilter.connect(sizzleGain); sizzleGain.connect(ctx.destination);
+    sizzleGain.gain.setValueAtTime(0.15, ctx.currentTime + 0.08);
+    sizzleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+    sizzle.start(ctx.currentTime + 0.08); sizzle.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
 function showLicenseModal(reason) {
   const modal = document.getElementById('licenseModal');
   const msg   = document.getElementById('licenseModalMsg');
@@ -917,7 +1042,7 @@ async function submitLicenseKey() {
       saveLicense(key);
       hideLicenseModal();
       updateLicenseBadge();
-      toast('✅ License verified — welcome to WaxFrame Pro!', 4000);
+      playUnlockScene();
     } else {
       if (errEl) errEl.textContent = data.message || 'Invalid key. Check your Gumroad receipt and try again.';
     }
@@ -3532,27 +3657,6 @@ function extractConflicts(text) {
     if (decision.options.length >= 2) result.userDecisions.push(decision);
   }
 
-  // Filter out conflicts where current text fuzzy-matches a resolved decision's chosen text.
-  // Catches AIs re-raising the same concept with slightly different wording each round.
-  if (window._resolvedDecisions && window._resolvedDecisions.length > 0) {
-    const fuzzyNorm = s => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
-    const wordOverlap = (a, b) => {
-      const wa = new Set(fuzzyNorm(a).split(' ').filter(w => w.length > 3));
-      const wb = new Set(fuzzyNorm(b).split(' ').filter(w => w.length > 3));
-      if (!wa.size || !wb.size) return 0;
-      let shared = 0;
-      wa.forEach(w => { if (wb.has(w)) shared++; });
-      return shared / Math.min(wa.size, wb.size);
-    };
-    result.userDecisions = result.userDecisions.filter(d => {
-      return !window._resolvedDecisions.some(rd => {
-        const overlapCurrent  = wordOverlap(d.current, rd.chosen);
-        const overlapQuestion = wordOverlap(d.question, rd.original);
-        return overlapCurrent >= 0.75 || (overlapCurrent >= 0.5 && overlapQuestion >= 0.5);
-      });
-    });
-  }
-
   // Extract BUILDER DECISION lines (freeform, not structured)
   const bdRegex = /\[BUILDER DECISION\][^\[]+/g;
   while ((match = bdRegex.exec(raw)) !== null) {
@@ -4028,36 +4132,8 @@ function applyDecisions() {
   const allBypassed = Object.keys(window._decisionChoices).length > 0 &&
     Object.values(window._decisionChoices).every(c => c.type === 'bypass');
 
-  // If every chosen replacement is identical to the current text, it's a no-op — skip Builder
-  const allNoOp = lines.length > 0 && lines.every(l => {
-    const m = l.match(/^Replace "(.+)" with "(.+)"$/s);
-    return m && m[1].trim() === m[2].trim();
-  });
-
   if (lines.length === 0 && !allBypassed) {
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
-    return;
-  }
-
-  if (allNoOp) {
-    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
-    toast('✅ Decisions locked — no text changed, Builder call skipped');
-    // Still lock the resolved decisions so they propagate to future rounds
-    updateConflictLedger(decisions);
-    Object.keys(window._decisionChoices).forEach(di => {
-      const d = decisions[parseInt(di)];
-      const choice = window._decisionChoices[di];
-      if (!d || !choice) return;
-      let chosenText = '';
-      if (choice.type === 'option') chosenText = d.options[choice.idx]?.text || '';
-      else if (choice.type === 'custom') chosenText = choice.text;
-      else if (choice.type === 'bypass') chosenText = d.current || '';
-      if (d.current && chosenText) {
-        window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
-        localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
-      }
-    });
-    clearConflicts();
     return;
   }
 

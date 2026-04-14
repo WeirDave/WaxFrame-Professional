@@ -59,7 +59,7 @@
         <span class="welcome-info-icon">🛒</span>
         <div class="welcome-info-body">
           <strong>License key — one-time purchase, unlimited rounds</strong>
-          <span>No subscription. Get yours at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com</a> — already purchased? <a href="#" class="link-accent" onclick="event.preventDefault();showLicenseModal('')">Enter your license key here.</a></span>
+          <span>No subscription. Get yours at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com</a></span>
         </div>
       </div>
     </div>
@@ -190,7 +190,7 @@
         <span class="launch-req-item" id="req-keys">✗ At least 2 API keys saved</span>
         <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
       </div>
-      <button class="btn btn-lg btn-cta btn-cta-inactive" id="setupContinueBtn" onclick="validateAndContinue()">
+      <button class="btn btn-lg btn-accent btn-cta" id="setupContinueBtn" onclick="validateAndContinue()">
         <img src="images/AI_Hive_Project_Bee_v2.png" class="bee-btn-img">
         Continue to Project Setup →
       </button>
@@ -368,7 +368,7 @@
         <span class="launch-req-item" id="req-goal">✗ Project goal</span>
         <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
       </div>
-      <button class="btn btn-lg btn-cta btn-cta-inactive" id="launchBtn" onclick="startSession()">
+      <button class="btn btn-lg btn-accent btn-cta" id="launchBtn" onclick="startSession()">
         <img src="images/Waxframe_logo_v19.png" class="bee-btn-img">
         Launch WaxFrame →
       </button>
@@ -1063,6 +1063,19 @@
      ============================================================ -->
 <div class="dev-toolbar" id="devToolbar" style="display:none">
   <!-- Dev toolbar — add test buttons here as needed -->
+</div>
+
+<!-- LICENSE UNLOCK SCENE — full screen overlay, triggered after successful key validation -->
+<div class="unlock-scene" id="unlockScene">
+  <div class="unlock-stage">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="unlock-logo">
+    <img src="images/unlock_wax.png"    alt="" class="unlock-wax"   aria-hidden="true">
+    <img src="images/unlock_stamp.png"  alt="" class="unlock-stamp" aria-hidden="true">
+    <img src="images/unlock_smoke.png"  alt="" class="unlock-smoke" aria-hidden="true">
+  </div>
+  <img src="images/unlock_bee.png" alt="" class="unlock-bee" aria-hidden="true">
+  <div class="unlock-title">Hive Unlocked</div>
+  <div class="unlock-sub">Welcome to WaxFrame Pro</div>
 </div>
 
 <!-- Mobile not supported overlay — shown via CSS media query, no JS needed -->
