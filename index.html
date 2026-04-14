@@ -238,25 +238,31 @@
               <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
             </div>
 
-            <div>
-              <div class="goal-counter-row">
-                <h3 class="proj-goal-heading">Project Goal</h3>
-                <span id="goalCounter" class="goal-counter-text"></span>
-              </div>
-              <div class="proj-notebook proj-notebook-goal">
-                <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
-                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
-              </div>
-              <div id="goalRefinePreview" style="display:none;margin-top:8px;border:1px solid var(--accent);border-radius:var(--radius-sm);overflow:hidden;">
-                <div class="goal-refine-preview-hdr">
-                  <span class="goal-refine-preview-label">Refine rounds will receive</span>
-                  <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
+            <!-- ── Goal + Refine Preview side by side ── -->
+            <div class="goal-split-row">
+              <div class="goal-split-left">
+                <div class="goal-counter-row">
+                  <h3 class="proj-goal-heading">Project Goal</h3>
+                  <span id="goalCounter" class="goal-counter-text"></span>
                 </div>
-                <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
+                <div class="proj-notebook proj-notebook-goal">
+                  <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
+                  <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+                </div>
+              </div>
+              <div class="goal-split-right">
+                <div id="goalRefinePreview" class="goal-refine-preview-panel">
+                  <div class="goal-refine-preview-hdr">
+                    <span class="goal-refine-preview-label">Refine rounds will receive</span>
+                    <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
+                  </div>
+                  <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
+                  <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Type your goal to see what Refine rounds will receive.</div>
+                </div>
               </div>
             </div>
 
-            <!-- ── Clear buttons at bottom of scroll area ── -->
+            <!-- ── Clear buttons at bottom ── -->
             <div class="proj-clear-row proj-clear-row--bottom">
               <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
               <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>

@@ -2699,12 +2699,15 @@ kbd {
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 21px;
+  resize: none;
+  height: 100%;
 }
 .proj-notebook-goal {
   display: flex;
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  min-height: 230px;
+  height: 220px;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: flex-start;
@@ -4948,6 +4951,53 @@ kbd {
 .goal-refine-preview-label { font-size: 11px; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; text-transform: uppercase; }
 .goal-refine-preview-count { font-size: 11px; color: var(--accent); font-family: var(--font-mono); }
 .goal-refine-preview-text  { font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-dim); padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
+
+/* ── Goal split layout ── */
+.goal-split-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  margin-bottom: 0;
+}
+.goal-split-left {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.goal-split-right {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
+.goal-refine-preview-panel {
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 220px;
+}
+.goal-refine-preview-panel .goal-refine-preview-text {
+  flex: 1;
+  overflow-y: auto;
+}
+.goal-refine-preview-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.6;
+  text-align: center;
+  font-style: italic;
+  line-height: 1.5;
+}
 
 /* ── Work topbar — project info clickable ── */
 .work-project-info-clickable { cursor: pointer; }
