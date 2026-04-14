@@ -1586,7 +1586,7 @@ async function testAllKeys() {
         body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
       });
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('No response after 20s — may be a CORS or network issue')), 20000)
+        setTimeout(() => reject(new Error('No response after 90s — may be a CORS or network issue')), 90000)
       );
       const response = await Promise.race([fetchPromise, timeoutPromise]);
 
