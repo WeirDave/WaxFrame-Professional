@@ -1554,11 +1554,15 @@ async function testAllKeys() {
     const testBtn = document.getElementById('testbtn-' + ai.id);
     if (testBtn) { testBtn.textContent = '…'; testBtn.disabled = true; }
     try {
-      const response = await fetch(cfg.endpoint, {
+      const fetchPromise = fetch(cfg.endpoint, {
         method: 'POST',
         headers: cfg.headersFn(cfg._key),
         body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
       });
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('No response — possible CORS or network issue')), 20000)
+      );
+      const response = await Promise.race([fetchPromise, timeoutPromise]);
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         const msg = err?.error?.message || `HTTP ${response.status}`;
