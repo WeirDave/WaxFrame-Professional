@@ -419,6 +419,11 @@ html, body {
   color: var(--text-dim);
   line-height: 1.6;
 }
+.welcome-info-note {
+  font-size: 12px;
+  color: var(--accent);
+  margin-top: 4px;
+}
 
 .btn-welcome-cta {
   width: 100%;
