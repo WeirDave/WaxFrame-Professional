@@ -1814,7 +1814,7 @@ html, body {
 /* ── BUILDER PICK GRID LARGE ── */
 .builder-pick-grid-large {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
   gap: 10px;
   margin-bottom: 8px;
 }
@@ -2697,6 +2697,18 @@ kbd {
   transition: border-color 0.12s;
 }
 .round-hist-item:hover { border-color: var(--border2); }
+.round-hist-item--failed {
+  border-color: rgba(251,191,36,0.4);
+  background: rgba(251,191,36,0.05);
+  opacity: 0.85;
+}
+.round-hist-item--failed:hover { border-color: rgba(251,191,36,0.7); opacity: 1; }
+.round-hist-badge--failed {
+  background: rgba(251,191,36,0.15);
+  border-color: rgba(251,191,36,0.6);
+  color: #fbbf24;
+}
+.round-hist-stats--failed { color: #fbbf24; opacity: 0.8; }
 .round-hist-hdr {
   display: flex;
   align-items: center;
@@ -4200,6 +4212,19 @@ kbd {
 .bee-btn-img { width: 48px; height: 48px; object-fit: contain; vertical-align: middle; margin-right: 8px; }
 .full-width         { width: 100%; }
 .change-builder-modal { max-width: 560px; }
+
+/* ── Round Error Modal ── */
+.round-error-modal       { max-width: 520px; }
+.round-error-title       { color: var(--warn, #fbbf24); }
+.round-error-body        { display: flex; flex-direction: column; gap: 14px; margin-bottom: 20px; }
+.round-error-msg         { font-size: 15px; line-height: 1.6; margin: 0; color: var(--text); }
+.round-error-details     { font-family: var(--font-mono); font-size: 12px; background: var(--surface2, rgba(0,0,0,0.2)); border-radius: var(--radius-sm); padding: 10px 12px; color: var(--text-dim); line-height: 1.7; display: none; }
+.round-error-details.visible { display: block; }
+.round-error-note        { font-size: 12px; color: var(--text-dim); background: var(--accent-dim); border-left: 3px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; padding: 10px 12px; line-height: 1.6; }
+.round-error-actions     { display: flex; gap: 10px; margin-bottom: 12px; }
+.round-error-retry-btn   { flex: 1; }
+.round-error-builder-btn { flex: 1; }
+[data-theme="light"] .round-error-details { background: rgba(0,0,0,0.06); }
 
 /* ── LAUNCH REQUIREMENTS ── */
 .launch-requirements {
