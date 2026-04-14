@@ -364,9 +364,10 @@ async function refreshModelsForAI(aiId) {
   renderAIRow(aiId);
   toast(`↺ ${ai.name} models refreshed`, 2000);
 }
-let aiList    = JSON.parse(JSON.stringify(DEFAULT_AIS)); // full list, active = checked ones
-let activeAIs = [];   // AIs selected in setup
-let builder   = null; // id of builder AI
+let aiList           = JSON.parse(JSON.stringify(DEFAULT_AIS)); // full list, active = checked ones
+let activeAIs        = [];   // AIs selected in setup
+let builder          = null; // id of builder AI
+let hiddenDefaultIds = [];   // default AIs hidden from setup (persisted)
 let round     = 1;
 let phase     = 'draft';
 let history   = [];
@@ -1027,8 +1028,9 @@ function saveHive() {
     if (API_CONFIGS[id].model) models[id] = API_CONFIGS[id].model;
   });
   const hive = {
-    activeAIIds:    activeAIs.map(a => a.id),
+    activeAIIds:     activeAIs.map(a => a.id),
     knownDefaultIds: DEFAULT_AIS.map(d => d.id),
+    hiddenDefaultIds,
     builder,
     keys,
     models,
@@ -1200,6 +1202,9 @@ function loadSettings() {
     const h = JSON.parse(hiveData);
 
     aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
+    hiddenDefaultIds = h.hiddenDefaultIds || [];
+    // Remove hidden defaults from aiList
+    aiList = aiList.filter(a => !hiddenDefaultIds.includes(a.id));
     if (h.customAIs) {
       h.customAIs.forEach(ai => {
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
@@ -1353,7 +1358,16 @@ function renderAISetupGrid() {
 
   // Don't auto-fill activeAIs here — let toggleAllBees/init handle that
 
-  grid.innerHTML = aiList.map(ai => {
+  // Hidden defaults banner
+  const hiddenCount = hiddenDefaultIds.length;
+  const banner = hiddenCount > 0
+    ? `<div class="ai-hidden-banner">
+        👁 ${hiddenCount} default AI${hiddenCount > 1 ? 's are' : ' is'} hidden from this list.
+        <button class="btn ai-hidden-restore-btn" onclick="restoreHiddenDefaults()">↺ Restore Hidden</button>
+      </div>`
+    : '';
+
+  grid.innerHTML = banner + aiList.map(ai => {
     const isActive = !!activeAIs.find(a => a.id === ai.id);
     const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
     const cfg = API_CONFIGS[ai.provider];
@@ -1361,6 +1375,10 @@ function renderAISetupGrid() {
     const hasKey = !!key;
     const consoleUrl = ai.apiConsole || '#';
     const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '') : '';
+    // Defaults get a Hide button; custom AIs get the 🗑 remove button
+    const actionBtn = isCustom
+      ? `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`
+      : `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
     return `
     <div class="ai-setup-row" id="airow-${ai.id}">
       <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
@@ -1380,7 +1398,7 @@ function renderAISetupGrid() {
         ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
         ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
         <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
-        <button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>
+        ${actionBtn}
       </div>
       ${modelSelector}
     </div>`;
@@ -1407,6 +1425,7 @@ function resetBeesToDefaults() {
   });
   // Restore default list
   aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
+  hiddenDefaultIds = [];
   activeAIs = [...aiList];
   builder = null;
   // Re-apply saved keys
@@ -1536,108 +1555,6 @@ async function testApiKey(id) {
   }
 }
 
-async function testAllKeys() {
-  const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
-  if (keyed.length === 0) {
-    toast('⚠️ No API keys saved yet — add a key first', 3500);
-    return;
-  }
-
-  const panel   = document.getElementById('testKeysPanel');
-  const title   = document.getElementById('tkpTitle');
-  const rows    = document.getElementById('tkpRows');
-  const dismiss = document.getElementById('tkpDismiss');
-  const btn     = document.getElementById('testAllKeysBtn');
-
-  // Build initial rows
-  rows.innerHTML = keyed.map(ai => `
-    <div class="tkp-row queued" id="tkprow-${ai.id}">
-      <span class="tkp-icon">○</span>
-      <div class="tkp-info">
-        <span class="tkp-name">${ai.name}</span>
-        <span class="tkp-detail">Queued</span>
-      </div>
-    </div>`).join('');
-
-  panel.style.display = 'block';
-  dismiss.style.display = 'none';
-  if (btn) { btn.textContent = '⏳ Testing…'; btn.disabled = true; btn.classList.add('testing'); }
-
-  const passed = [];
-  const failed = [];
-
-  for (let i = 0; i < keyed.length; i++) {
-    const ai  = keyed[i];
-    const cfg = API_CONFIGS[ai.provider];
-    const row = document.getElementById('tkprow-' + ai.id);
-    const testBtn = document.getElementById('testbtn-' + ai.id);
-
-    title.textContent = `Testing API keys — ${i + 1} of ${keyed.length}…`;
-    if (row) {
-      row.className = 'tkp-row testing';
-      row.innerHTML = `<span class="tkp-icon">⏳</span><div class="tkp-info"><span class="tkp-name">${ai.name}</span><span class="tkp-detail">Sending request…</span></div>`;
-    }
-    if (testBtn) { testBtn.textContent = '…'; testBtn.disabled = true; }
-
-    try {
-      const fetchPromise = fetch(cfg.endpoint, {
-        method: 'POST',
-        headers: cfg.headersFn(cfg._key),
-        body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
-      });
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('No response after 90s — may be a CORS or network issue')), 90000)
-      );
-      const response = await Promise.race([fetchPromise, timeoutPromise]);
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const msg = err?.error?.message || `HTTP ${response.status}`;
-        if (row) {
-          row.className = 'tkp-row failed';
-          row.innerHTML = `<span class="tkp-icon">❌</span><div class="tkp-info"><span class="tkp-name">${ai.name} — failed</span><span class="tkp-detail">${msg}</span></div>`;
-        }
-        if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
-        failed.push({ name: ai.name, reason: msg });
-      } else {
-        const data = await response.json();
-        cfg.extractFn(data);
-        if (row) {
-          row.className = 'tkp-row passed';
-          row.innerHTML = `<span class="tkp-icon">✅</span><div class="tkp-info"><span class="tkp-name">${ai.name} — connected</span><span class="tkp-detail">Response received</span></div>`;
-        }
-        if (testBtn) { testBtn.textContent = '✅'; testBtn.disabled = false; }
-        setTimeout(() => { if (testBtn) testBtn.textContent = 'Test'; }, 4000);
-        passed.push(ai.name);
-      }
-    } catch(e) {
-      if (row) {
-        row.className = 'tkp-row failed';
-        row.innerHTML = `<span class="tkp-icon">❌</span><div class="tkp-info"><span class="tkp-name">${ai.name} — failed</span><span class="tkp-detail">${e.message}</span></div>`;
-      }
-      if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
-      failed.push({ name: ai.name, reason: e.message });
-    }
-    await new Promise(r => setTimeout(r, 400));
-  }
-
-  if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; btn.classList.remove('testing'); }
-  dismiss.style.display = 'block';
-
-  if (failed.length === 0) {
-    title.textContent = `✅ All ${passed.length} keys connected and working`;
-  } else if (passed.length === 0) {
-    title.textContent = `❌ All ${failed.length} keys failed — check your keys`;
-  } else {
-    title.textContent = `⚠️ ${passed.length} connected, ${failed.length} failed`;
-  }
-}
-
-function dismissTestPanel() {
-  const panel = document.getElementById('testKeysPanel');
-  if (panel) panel.style.display = 'none';
-}
-
 function removeAI(id) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
@@ -1651,6 +1568,34 @@ function removeAI(id) {
   saveHive();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} removed`);
+}
+
+function hideDefaultAI(id) {
+  const ai = DEFAULT_AIS.find(d => d.id === id);
+  if (!ai) return;
+  if (!confirm(`Hide "${ai.name}" from the setup list? It won't appear or run. You can restore it with ↺ Reset to Defaults.`)) return;
+  hiddenDefaultIds = [...new Set([...hiddenDefaultIds, id])];
+  aiList    = aiList.filter(a => a.id !== id);
+  activeAIs = activeAIs.filter(a => a.id !== id);
+  if (builder === id) builder = null;
+  saveHive();
+  renderAISetupGrid();
+  toast(`👁 ${ai.name} hidden — use ↺ Defaults to restore`);
+}
+
+function restoreHiddenDefaults() {
+  if (!hiddenDefaultIds.length) return;
+  hiddenDefaultIds = [];
+  // Re-add any hidden defaults that aren't already in aiList
+  DEFAULT_AIS.forEach(d => {
+    if (!aiList.find(a => a.id === d.id)) {
+      aiList.push(JSON.parse(JSON.stringify(d)));
+      activeAIs.push(aiList[aiList.length - 1]);
+    }
+  });
+  saveHive();
+  renderAISetupGrid();
+  toast('↺ All default AIs restored');
 }
 
 function clearKeyForAI(id) {
