@@ -2,7 +2,7 @@
 //  WaxFrame v2 — app.js
 //  Build: 20260330-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
-//  GitHub: github.com/WeirDave/AIHive
+//  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
 //  Storage keys:
 //    LS_HIVE    (waxframe_v2_hive)    — AI list + API keys, persistent
@@ -2477,7 +2477,7 @@ function finishAndNew() {
 }
 
 /* =========================================
-   AI HIVE FINISH ANIMATION — Bee Fly-In
+   WAXFRAME FINISH ANIMATION — Bee Fly-In
    ========================================= */
 
 let hiveFinishTimer = null;
@@ -2791,7 +2791,7 @@ function buildPromptForAI(ai, reviewerResponses) {
   // Add line numbers to document so AIs can reference them precisely
   const numberedDoc = doc ? doc.split('\n').map((line, i) => `${String(i + 1).padStart(4, ' ')}  ${line}`).join('\n') : '';
 
-  let prompt = `${eq}\n  AI HIVE — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
+  let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
   if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
@@ -2932,7 +2932,7 @@ async function runBuilderOnly() {
   const goal  = document.getElementById('projectGoal')?.value.trim() || '';
   const name  = document.getElementById('projectName')?.value.trim() || '';
   const numberedDoc = docText.split('\n').map((line, i) => `${String(i+1).padStart(4,' ')}  ${line}`).join('\n');
-  let prompt = `${eq}\n  AI HIVE — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
+  let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
   if (goal) prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0,300)+'…' : goal}\n\n`;
   prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
@@ -4460,7 +4460,7 @@ function exportSession() {
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
 
-  let out = `${eq}\nAI HIVE v2 — SESSION TRANSCRIPT\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
+  let out = `${eq}\nWAXFRAME v2 — SESSION TRANSCRIPT\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
 
   const failLabels = { bloat: 'Output too long — Builder expanded document beyond allowed limit', conflicts: 'Missing conflicts block — Builder response rejected', delimiters: 'Malformed output — Builder response could not be parsed', api: 'API error', unknown: 'Unknown error' };
 
