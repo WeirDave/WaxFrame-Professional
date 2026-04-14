@@ -2603,17 +2603,17 @@ function setBeeStatus(id, state, summary) {
   const live = document.getElementById('blive-' + id);
   if (!card) return;
 
-  card.classList.remove('is-working', 'is-done', 'is-error', 'is-clean');
+  card.classList.remove('is-working', 'is-sending', 'is-responding', 'is-done', 'is-error', 'is-clean');
 
   if (state === 'sending') {
-    card.classList.add('is-working');
-    if (live) live.textContent = 'Reviewing…';
+    card.classList.add('is-sending');
+    if (live) live.textContent = 'Sending…';
   } else if (state === 'thinking') {
-    card.classList.add('is-working');
-    if (live) live.textContent = 'Thinking…';
+    card.classList.add('is-responding');
+    if (live) live.textContent = 'Reviewing…';
   } else if (state === 'streaming') {
-    card.classList.add('is-working');
-    if (live) live.textContent = 'Writing…';
+    card.classList.add('is-responding');
+    if (live) live.textContent = 'Responding…';
   } else if (state === 'done') {
     card.classList.add('is-done');
     if (live) live.textContent = 'Done ✓';
@@ -3503,6 +3503,14 @@ function extractConflicts(text) {
         }
       }
     }
+    // Filter out junk options the Builder sometimes fabricates
+    decision.options = decision.options.filter(o =>
+      o.text &&
+      o.text.length > 0 &&
+      !/original.{0,20}locked/i.test(o.text) &&
+      !/included for completeness/i.test(o.text) &&
+      !/placeholder/i.test(o.text)
+    );
     if (decision.options.length >= 2) result.userDecisions.push(decision);
   }
 
