@@ -2522,8 +2522,9 @@ kbd {
 .fs-footer-spacer {
   display: block;
 }
-.fs-footer .btn-accent {
+.fs-footer .btn-cta {
   justify-self: end;
+  align-self: center;
 }
 
 /* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
