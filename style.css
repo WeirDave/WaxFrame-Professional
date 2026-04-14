@@ -71,8 +71,8 @@ input, textarea, select { font-family: inherit; }
   --blue-dim:     rgba(37,99,235,0.12);
   --purple:       #7c3aed;
   --purple-dim:   rgba(124,58,237,0.10);
-  --green:        #047857;
-  --green-dim:    rgba(4,120,87,0.10);
+  --green:        #059669;
+  --green-dim:    rgba(5,150,105,0.12);
   --red:          #b91c1c;
   --red-dim:      rgba(185,28,28,0.10);
   --amber:        #b45309;
@@ -102,8 +102,8 @@ input, textarea, select { font-family: inherit; }
     --blue-dim:     rgba(29,78,216,0.10);
     --purple:       #7c3aed;
     --purple-dim:   rgba(124,58,237,0.10);
-    --green:        #047857;
-    --green-dim:    rgba(4,120,87,0.10);
+    --green:        #059669;
+    --green-dim:    rgba(5,150,105,0.12);
     --red:          #b91c1c;
     --red-dim:      rgba(185,28,28,0.10);
     --amber:        #b45309;
@@ -5159,6 +5159,8 @@ kbd {
 }
 
 /* ── Bee card — no changes needed star ── */
+.hex-cell.is-clean .hex-status,
+.bee-row.is-done.is-clean .bee-row-status { color: #f5a623; }
 .hex-cell.is-clean {
   border-color: #34d399;
   position: relative;
