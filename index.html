@@ -216,13 +216,30 @@
               <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal frames your project — it tells every AI what this document is, what it's trying to achieve, and what direction to take. It is used when generating the first draft and as context throughout the session. The more specific and detailed your goal, the better your results will be from the very first round.</p>
             </div>
 
+            <!-- ── Length Constraint ── -->
+            <div class="length-constraint-row">
+              <div class="length-constraint-header">
+                <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
+                <span class="length-constraint-hint" id="lengthConstraintHint"></span>
+              </div>
+              <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained documents.</p>
+              <div class="length-constraint-fields">
+                <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject(); updateLengthConstraintHint()">
+                <select id="lengthUnit" class="length-unit-select" onchange="saveProject(); updateLengthConstraintHint()">
+                  <option value="characters">Characters</option>
+                  <option value="words">Words</option>
+                  <option value="pages">Pages</option>
+                </select>
+              </div>
+            </div>
+
             <div class="project-fields">
-              <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject()">
-              <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
               <div class="proj-clear-row">
                 <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
                 <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
               </div>
+              <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject()">
+              <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
             </div>
 
             <div>
@@ -242,26 +259,10 @@
                 <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
               </div>
             </div>
-          </div>
-        </div>
-        <div class="setup-col-tip">
-          <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
-        </div>
 
-        <!-- ── Length Constraint ── -->
-        <div class="length-constraint-row">
-          <div class="length-constraint-header">
-            <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
-            <span class="length-constraint-hint" id="lengthConstraintHint"></span>
-          </div>
-          <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained documents.</p>
-          <div class="length-constraint-fields">
-            <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject(); updateLengthConstraintHint()">
-            <select id="lengthUnit" class="length-unit-select" onchange="saveProject(); updateLengthConstraintHint()">
-              <option value="characters">Characters</option>
-              <option value="words">Words</option>
-              <option value="pages">Pages</option>
-            </select>
+            <div class="setup-col-tip">
+              <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
+            </div>
           </div>
         </div>
       </div>
