@@ -4870,7 +4870,7 @@ kbd {
 .test-keys-panel {
   position: fixed;
   bottom: 24px;
-  right: 24px;
+  left: 24px;
   width: 340px;
   background: var(--surface);
   border: 1px solid var(--border2);
