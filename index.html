@@ -208,21 +208,21 @@
 
       <!-- ── LEFT: Project Details ── -->
       <div class="fs-col fs-col-left">
-        <div class="fs-col-main">
+        <div class="fs-col-main proj-left-main">
           <img src="images/AI_Hive_Project_Bee_v2.png" class="setup-card-bee" alt="">
-          <div class="fs-col-scroll">
+
+          <!-- STATIC top section -->
+          <div class="proj-static-top">
             <div class="fs-col-header">
               <h2 class="fs-col-title">Your Project <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal frames your project — it tells every AI what this document is, what it's trying to achieve, and what direction to take. It is used when generating the first draft and as context throughout the session. The more specific and detailed your goal, the better your results will be from the very first round.</p>
+              <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal tells every AI what this document is, what it's trying to achieve, and what direction to take.</p>
             </div>
-
-            <!-- ── Length Constraint ── -->
             <div class="length-constraint-row">
               <div class="length-constraint-header">
                 <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
                 <span class="length-constraint-hint" id="lengthConstraintHint"></span>
               </div>
-              <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained documents.</p>
+              <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained.</p>
               <div class="length-constraint-fields">
                 <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject(); updateLengthConstraintHint()">
                 <select id="lengthUnit" class="length-unit-select" onchange="saveProject(); updateLengthConstraintHint()">
@@ -232,43 +232,43 @@
                 </select>
               </div>
             </div>
-
             <div class="project-fields">
               <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject()">
               <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
             </div>
-
-            <!-- ── Goal + Refine Preview side by side ── -->
-            <div class="goal-split-row">
-              <div class="goal-split-left">
-                <div class="goal-counter-row">
-                  <h3 class="proj-goal-heading">Project Goal</h3>
-                  <span id="goalCounter" class="goal-counter-text"></span>
-                </div>
-                <div class="proj-notebook proj-notebook-goal">
-                  <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
-                  <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
-                </div>
-              </div>
-              <div class="goal-split-right">
-                <div id="goalRefinePreview" class="goal-refine-preview-panel">
-                  <div class="goal-refine-preview-hdr">
-                    <span class="goal-refine-preview-label">Refine rounds will receive</span>
-                    <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
-                  </div>
-                  <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
-                  <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Type your goal to see what Refine rounds will receive.</div>
-                </div>
-              </div>
+            <div class="goal-counter-row">
+              <h3 class="proj-goal-heading">Project Goal</h3>
+              <span id="goalCounter" class="goal-counter-text"></span>
             </div>
-
-            <!-- ── Clear buttons at bottom ── -->
-            <div class="proj-clear-row proj-clear-row--bottom">
-              <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
-              <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
-            </div>
-
           </div>
+
+          <!-- FLEX: goal textarea left, refine panel right -->
+          <div class="goal-split-row">
+            <div class="goal-split-left">
+              <div class="proj-notebook proj-notebook-goal">
+                <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
+                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-notebook-ta proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+              </div>
+            </div>
+            <div class="goal-split-right">
+              <div id="goalRefinePreview" class="goal-refine-preview-panel">
+                <div class="goal-refine-preview-hdr">
+                  <span class="goal-refine-preview-label">Refine rounds will receive</span>
+                  <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
+                </div>
+                <p class="goal-refine-preview-sub">The first ~300 chars of your goal, trimmed to the nearest sentence, sent as context each refine round.</p>
+                <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
+                <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your goal is under 300 chars — the full text will be sent each refine round.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Clear buttons -->
+          <div class="proj-clear-row proj-clear-row--bottom">
+            <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
+            <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
+          </div>
+
         </div>
         <div class="setup-col-tip">
           <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
