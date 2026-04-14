@@ -5177,7 +5177,9 @@ kbd {
   transform: translate(-50%, -50%);
   font-size: 28px;
   color: var(--accent);
-  opacity: 0.6;
+  opacity: 0.85;
   pointer-events: none;
   line-height: 1;
 }
+[data-theme="light"] .hex-cell.is-clean::after,
+[data-theme="auto"] .hex-cell.is-clean::after { color: #d97706; opacity: 1; }
