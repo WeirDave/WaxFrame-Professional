@@ -2305,21 +2305,25 @@ function updateGoalCounter() {
   const previewWrap = document.getElementById('goalRefinePreview');
   const previewText = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
-  if (previewWrap) previewWrap.style.display = truncated ? 'block' : 'none';
-  if (truncated && previewText && previewCount) {
+  const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
+  if (truncated) {
     const refined = truncateGoalForRefine(ta.value);
-    previewText.textContent = refined;
-    previewCount.textContent = `${refined.length} chars`;
+    if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
+    if (previewCount) previewCount.textContent = `${refined.length} chars`;
+    if (previewEmpty) previewEmpty.style.display = 'none';
+    if (previewWrap)  previewWrap.classList.add('has-content');
+  } else {
+    if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
+    if (previewCount) previewCount.textContent = '';
+    if (previewEmpty) previewEmpty.style.display = 'block';
+    if (previewWrap)  previewWrap.classList.remove('has-content');
   }
 }
 
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // Auto-grow textarea so scrollHeight reflects full content (Gemini method)
-  ta.style.height = 'auto';
-  ta.style.height = ta.scrollHeight + 'px';
-  // Use scrollHeight / line-height for accurate visual line count
+  // Fixed-height textarea — use scrollHeight for line count without auto-growing
   const LINE_HEIGHT = 21;
   const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
   ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
