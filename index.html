@@ -32,28 +32,37 @@
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
         <p>Many minds. One refined result.</p>
-        <span class="welcome-version">v3.0</span>
+        <span class="welcome-version">v3.0 Pro</span>
       </div>
     </div>
     <div class="welcome-pitch">
-      <p>WaxFrame puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better. Whether you're starting from scratch, refining an existing document, or generating the text for a presentation or any other format — the hive handles it.</p>
+      <p>WaxFrame puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better.</p>
     </div>
-    <div class="welcome-choices">
-      <div class="welcome-card free" onclick="goToFree()">
-        <div class="welcome-card-icon">🆓</div>
-        <div class="welcome-card-body">
-          <div class="welcome-card-title">Free Version <button class="welcome-info-btn" onclick="event.stopPropagation();document.getElementById('infoFreeModal').classList.add('active')" title="About the Free Version"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="info-btn-img"></button></div>
+    <div class="welcome-info-card">
+      <div class="welcome-info-label">Before you start</div>
+      <div class="welcome-info-row">
+        <span class="welcome-info-icon">🔑</span>
+        <div class="welcome-info-body">
+          <strong>API keys required</strong>
+          <span>Each AI you use needs its own API key from that provider. You can start with just 2. Keys are stored only in your browser — they go directly to each AI and never touch any server.</span>
         </div>
-        <div class="welcome-card-arrow">→</div>
       </div>
-      <div class="welcome-card pro" onclick="goToScreen('screen-setup')">
-        <div class="welcome-card-icon">⚡</div>
-        <div class="welcome-card-body">
-          <div class="welcome-card-title">Pro Version <span class="badge-api">API</span> <button class="welcome-info-btn" onclick="event.stopPropagation();document.getElementById('infoProModal').classList.add('active')" title="About the Pro Version"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="info-btn-img"></button></div>
+      <div class="welcome-info-row">
+        <span class="welcome-info-icon">🎟️</span>
+        <div class="welcome-info-body">
+          <strong>3 free rounds included</strong>
+          <span>Try it out before committing. After your free rounds, you'll be prompted for a license key to continue.</span>
         </div>
-        <div class="welcome-card-arrow">→</div>
+      </div>
+      <div class="welcome-info-row">
+        <span class="welcome-info-icon">🛒</span>
+        <div class="welcome-info-body">
+          <strong>License key — one-time purchase, unlimited rounds</strong>
+          <span>No subscription. Get yours at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com</a></span>
+        </div>
       </div>
     </div>
+    <button class="btn btn-welcome-cta" onclick="goToScreen('screen-setup')">Let's get started →</button>
     <div class="welcome-footer">
       <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
       <a href="working-with-the-hive.html" target="_blank" class="btn">📖 User Guide</a>
@@ -854,52 +863,6 @@
 <!-- ============================================================
      INFO MODALS — Section explainers
      ============================================================ -->
-
-<!-- FREE VERSION INFO -->
-<div class="finish-modal-overlay" id="infoFreeModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Free Version</h2>
-    <div class="goal-info-body">
-      <p>The Free Version is a fully manual workflow — no API keys required. You copy each prompt yourself and paste the AI responses back.</p>
-      <div class="goal-info-row">
-        <span class="info-label">How It Works</span>
-        <span class="goal-info-desc">WaxFrame generates a structured prompt for each round. You open each AI in its own browser tab, paste the prompt, copy the response, and paste it back. The app handles all the document building and conflict detection.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Free AIs</span>
-        <span class="goal-info-desc">Any AI with a free tier works — ChatGPT, Claude, Gemini, Grok, and others. You can mix free and paid AIs however you like. No accounts or API keys needed on the WaxFrame side.</span>
-      </div>
-      <p class="goal-info-tip">💡 The Free Version is great for trying out the hive workflow before committing to API keys.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoFreeModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- PRO VERSION INFO -->
-<div class="finish-modal-overlay" id="infoProModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Pro Version</h2>
-    <div class="goal-info-body">
-      <p>The Pro Version is fully automated — one button sends prompts to all your AIs simultaneously and compiles their responses into a unified document.</p>
-      <div class="goal-info-row">
-        <span class="info-label">API Keys</span>
-        <span class="goal-info-desc">Each AI you want to use needs its own API key from that provider. You can start with just 2 AIs if you like. Keys are stored locally in your browser and never sent anywhere except the AI provider's own API.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Free Trial</span>
-        <span class="goal-info-desc">Pro includes 3 free rounds to try it out. After your free rounds are used, you'll be prompted to enter a license key to continue.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">License Key</span>
-        <span class="goal-info-desc">License keys are available via <strong>Gumroad</strong>. A one-time purchase unlocks unlimited rounds. Visit <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com</a> to get yours.</span>
-      </div>
-      <p class="goal-info-tip">💡 Your API keys and project data are stored locally in your browser — nothing is sent to any server except the AI APIs you've configured.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoProModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
 
 <!-- EXPORT MASK INFO -->
 <div class="finish-modal-overlay" id="infoExportMaskModal" onclick="if(event.target===this)this.classList.remove('active')">
