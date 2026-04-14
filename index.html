@@ -247,6 +247,23 @@
         <div class="setup-col-tip">
           <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
         </div>
+
+        <!-- ── Length Constraint ── -->
+        <div class="length-constraint-row">
+          <div class="length-constraint-header">
+            <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
+            <span class="length-constraint-hint" id="lengthConstraintHint"></span>
+          </div>
+          <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained documents.</p>
+          <div class="length-constraint-fields">
+            <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject(); updateLengthConstraintHint()">
+            <select id="lengthUnit" class="length-unit-select" onchange="saveProject(); updateLengthConstraintHint()">
+              <option value="characters">Characters</option>
+              <option value="words">Words</option>
+              <option value="pages">Pages</option>
+            </select>
+          </div>
+        </div>
       </div>
 
         <!-- ── Divider ── -->
