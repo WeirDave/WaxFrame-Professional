@@ -2619,7 +2619,7 @@ function setBeeStatus(id, state, summary) {
     if (live) live.textContent = 'Done ✓';
   } else if (state === 'done-clean') {
     card.classList.add('is-done', 'is-clean');
-    if (live) live.textContent = 'No changes ★';
+    if (live) live.textContent = 'No changes needed';
   } else if (state === 'error') {
     card.classList.add('is-error');
     if (live) live.textContent = 'Failed';
