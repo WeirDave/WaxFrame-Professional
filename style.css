@@ -2703,7 +2703,8 @@ kbd {
   display: flex;
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  height: 180px;
+  flex: 1;
+  min-height: 140px;
   overflow-y: auto;
   overflow-x: hidden;
   align-items: flex-start;
@@ -4957,6 +4958,12 @@ kbd {
   flex-shrink: 0;
   padding: 20px 28px 12px;
 }
+.proj-goal-flex {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
 .proj-static-top .fs-col-header { margin-bottom: 12px; }
 .proj-static-top .project-fields { margin-top: 10px; margin-bottom: 8px; }
 .proj-static-top .goal-counter-row { margin-top: 8px; margin-bottom: 4px; }
@@ -4969,13 +4976,14 @@ kbd {
   padding: 0 28px;
 }
 .goal-split-left {
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 .goal-split-right {
-  flex: 1;
-  min-width: 0;
+  width: 240px;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
 }
@@ -4985,8 +4993,8 @@ kbd {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  height: 180px;
   width: 100%;
+  height: 100%;
 }
 .goal-refine-preview-sub {
   font-size: 11px;
