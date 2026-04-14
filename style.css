@@ -222,6 +222,7 @@ html, body {
 
 .btn-sm { font-size: 12px; padding: 5px 11px; }
 .btn-lg { font-size: 15px; padding: 12px 28px; border-radius: var(--radius-md); }
+.btn-cta { min-width: 320px; justify-content: center; }
 
 /* ── THEME TOGGLE ── */
 .theme-opt {
