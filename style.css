@@ -2666,7 +2666,7 @@ kbd {
   text-align: right;
   padding: 0 6px 0 0;
   user-select: none;
-  overflow: visible;
+  overflow: hidden;
 }
 .proj-notebook-nums div { line-height: 21px; height: 21px; font-size: 13px; }
 .proj-notebook-ta {
@@ -2697,9 +2697,8 @@ kbd {
   font-size: 13px;
   line-height: 21px;
   resize: none;
-  overflow: visible;
+  overflow: hidden;
   height: auto;
-  min-height: 100%;
 }
 .proj-notebook-goal {
   display: flex;
@@ -2707,8 +2706,7 @@ kbd {
   border-radius: var(--radius-sm);
   flex: 1;
   min-height: 140px;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   align-items: flex-start;
   font-family: var(--font-mono);
   font-size: 13px;

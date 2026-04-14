@@ -2325,9 +2325,12 @@ function updateGoalCounter() {
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
+  // Auto-grow textarea so scrollHeight reflects full content
+  ta.style.height = 'auto';
+  ta.style.height = ta.scrollHeight + 'px';
   const LINE_HEIGHT = 21;
-  const lineCount = ta.value.split('\n').length;
-  ln.innerHTML = Array.from({length: lineCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+  const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
+  ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
 }
 
 function updateLineNumbers() {
