@@ -3475,26 +3475,28 @@ function extractConflicts(text) {
   // Parse structured USER DECISION blocks and freeform BUILDER DECISION lines
   const result = { userDecisions: [], builderDecisions: [], raw };
 
-  // Extract USER DECISION blocks between [USER DECISION] and END_DECISION
-  const udRegex = /\[USER DECISION\]([\s\S]*?)END_DECISION/g;
+  // Extract USER DECISION blocks — normalise line endings first
+  const normalised = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const udRegex = /\[USER DECISION\]([\s\S]*?)END_DECISION/gi;
   let match;
-  while ((match = udRegex.exec(raw)) !== null) {
+  while ((match = udRegex.exec(normalised)) !== null) {
     const block = match[1].trim();
     const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
     const decision = { question: '', current: '', options: [] };
     for (const line of lines) {
-      if (line.startsWith('QUESTION:')) {
-        decision.question = line.replace('QUESTION:', '').trim();
-      } else if (line.startsWith('CURRENT:')) {
-        decision.current = line.replace('CURRENT:', '').trim().replace(/^"|"$/g, '');
-      } else if (/^OPTION_\d+:/.test(line)) {
-        const optText = line.replace(/^OPTION_\d+:/, '').trim();
-        // Split "text" — AI names into text and attributions
+      if (/^QUESTION:/i.test(line)) {
+        decision.question = line.replace(/^QUESTION:/i, '').trim();
+      } else if (/^CURRENT:/i.test(line)) {
+        decision.current = line.replace(/^CURRENT:/i, '').trim().replace(/^"|"$/g, '');
+      } else if (/^OPTION_\d+:/i.test(line)) {
+        const optText = line.replace(/^OPTION_\d+:/i, '').trim();
         const dashIdx = optText.lastIndexOf(' — ');
-        if (dashIdx !== -1) {
+        const dashIdx2 = optText.lastIndexOf(' - ');
+        const splitAt = dashIdx !== -1 ? dashIdx : dashIdx2;
+        if (splitAt !== -1) {
           decision.options.push({
-            text: optText.slice(0, dashIdx).trim().replace(/^"|"$/g, ''),
-            ais:  optText.slice(dashIdx + 3).trim()
+            text: optText.slice(0, splitAt).trim().replace(/^"|"$/g, ''),
+            ais:  optText.slice(splitAt + 3).trim()
           });
         } else {
           decision.options.push({ text: optText.replace(/^"|"$/g, ''), ais: '' });
@@ -3809,15 +3811,24 @@ function renderConflicts() {
     </div>`;
   }
 
-  // Fallback: raw text — wrap in a resolution log header so it's clear this is already done
+  // Fallback: raw text
   if (!html && conflicts.raw) {
+    const hasUnparsedUD = /\[USER DECISION\]/i.test(conflicts.raw);
     const rawHtml = esc(conflicts.raw)
       .replace(/\[USER DECISION\]/g,    '<span class="raw-conflict-ud">[USER DECISION]</span>')
       .replace(/\[BUILDER DECISION\]/g, '<span class="raw-conflict-bd">[BUILDER DECISION]</span>');
-    html = `<div class="conflicts-section-header builder-resolved-header">
-        ✅ All conflicts were resolved by the Builder and applied to your document — no action needed.
-      </div>
-      <div class="conflicts-body">${rawHtml}</div>`;
+    if (hasUnparsedUD) {
+      // Parser failed to extract structured decisions — show raw with a warning
+      html = `<div class="conflicts-section-header conflict-repeat-warning">
+          ⚠️ Conflicts detected but could not be parsed — shown below for reference. Try running the round again.
+        </div>
+        <div class="conflicts-body">${rawHtml}</div>`;
+    } else {
+      html = `<div class="conflicts-section-header builder-resolved-header">
+          ✅ All conflicts were resolved by the Builder and applied to your document — no action needed.
+        </div>
+        <div class="conflicts-body">${rawHtml}</div>`;
+    }
   }
 
   el.innerHTML = html;
