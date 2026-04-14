@@ -1580,13 +1580,19 @@ async function testAllKeys() {
 
   if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; btn.classList.remove('testing'); }
 
-  if (failed.length === 0) {
-    toast(`✅ All ${passed.length} key${passed.length === 1 ? '' : 's'} connected and working`, 5000);
-  } else if (passed.length === 0) {
-    toast(`❌ All ${failed.length} key${failed.length === 1 ? '' : 's'} failed — check your keys and try again`, 6000);
-  } else {
-    const failNames = failed.map(f => f.name).join(', ');
-    toast(`⚠️ ${passed.length} connected, ${failed.length} failed: ${failNames}`, 6000);
+  console.log('[testAllKeys] passed:', passed, 'failed:', failed);
+  try {
+    if (failed.length === 0) {
+      toast(`✅ All ${passed.length} key${passed.length === 1 ? '' : 's'} connected and working`, 5000);
+    } else if (passed.length === 0) {
+      toast(`❌ All ${failed.length} key${failed.length === 1 ? '' : 's'} failed — check your keys and try again`, 6000);
+    } else {
+      const failNames = failed.map(f => f.name).join(', ');
+      toast(`⚠️ ${passed.length} connected, ${failed.length} failed: ${failNames}`, 6000);
+    }
+  } catch(summaryErr) {
+    console.error('[testAllKeys] summary error:', summaryErr);
+    alert(`Tests done — passed: ${passed.length}, failed: ${failed.length}`);
   }
 }
 
