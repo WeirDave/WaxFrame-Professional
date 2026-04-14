@@ -1545,14 +1545,49 @@ async function testAllKeys() {
   const btn = document.getElementById('testAllKeysBtn');
   if (btn) { btn.textContent = 'Testing…'; btn.disabled = true; }
   toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'}…`, 2500);
-  for (let i = 0; i < keyed.length; i++) {
-    await new Promise(r => setTimeout(r, i * 600));
-    testApiKey(keyed[i].id);
+
+  const passed = [];
+  const failed = [];
+
+  for (const ai of keyed) {
+    const cfg = API_CONFIGS[ai.provider];
+    const testBtn = document.getElementById('testbtn-' + ai.id);
+    if (testBtn) { testBtn.textContent = '…'; testBtn.disabled = true; }
+    try {
+      const response = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: cfg.headersFn(cfg._key),
+        body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        const msg = err?.error?.message || `HTTP ${response.status}`;
+        if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
+        failed.push({ name: ai.name, reason: msg });
+      } else {
+        const data = await response.json();
+        cfg.extractFn(data);
+        if (testBtn) { testBtn.textContent = '✅'; testBtn.disabled = false; }
+        setTimeout(() => { if (testBtn) testBtn.textContent = 'Test'; }, 4000);
+        passed.push(ai.name);
+      }
+    } catch(e) {
+      if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
+      failed.push({ name: ai.name, reason: e.message });
+    }
+    await new Promise(r => setTimeout(r, 400));
   }
-  const total = keyed.length * 600 + 4500;
-  setTimeout(() => {
-    if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; }
-  }, total);
+
+  if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; }
+
+  if (failed.length === 0) {
+    toast(`✅ All ${passed.length} key${passed.length === 1 ? '' : 's'} connected and working`, 5000);
+  } else if (passed.length === 0) {
+    toast(`❌ All ${failed.length} key${failed.length === 1 ? '' : 's'} failed — check your keys and try again`, 6000);
+  } else {
+    const failNames = failed.map(f => f.name).join(', ');
+    toast(`⚠️ ${passed.length} connected, ${failed.length} failed: ${failNames}`, 6000);
+  }
 }
 
 function removeAI(id) {
