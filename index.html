@@ -234,10 +234,6 @@
             </div>
 
             <div class="project-fields">
-              <div class="proj-clear-row">
-                <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
-                <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
-              </div>
               <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject()">
               <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
             </div>
@@ -260,10 +256,16 @@
               </div>
             </div>
 
-            <div class="setup-col-tip">
-              <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
+            <!-- ── Clear buttons at bottom of scroll area ── -->
+            <div class="proj-clear-row proj-clear-row--bottom">
+              <button class="btn proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
+              <button class="btn proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
             </div>
+
           </div>
+        </div>
+        <div class="setup-col-tip">
+          <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
         </div>
       </div>
 
