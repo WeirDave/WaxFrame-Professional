@@ -256,7 +256,7 @@
                   <span class="goal-refine-preview-label">Refine rounds will receive</span>
                   <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
                 </div>
-                <p class="goal-refine-preview-sub">The first ~300 chars of your goal, trimmed to the nearest sentence, sent as context each refine round.</p>
+                <p class="goal-refine-preview-sub" id="goalRefinePreviewSub"></p>
                 <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
                 <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your goal is under 300 chars — the full text will be sent each refine round.</div>
               </div>
@@ -762,8 +762,8 @@
     <div class="goal-modal-name" id="projectGoalModalName"></div>
     <div class="goal-modal-meta" id="projectGoalModalMeta"></div>
     <div class="goal-modal-label">Existing Goal <span class="goal-modal-label-note">(you can edit this for clarity)</span></div>
-    <textarea id="projectGoalModalEdit" class="goal-modal-textarea" oninput="updateProjectGoalModalPreview()" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'"></textarea>
-    <div id="projectGoalModalRefineWrap" style="display:none;margin-top:10px;">
+    <textarea id="projectGoalModalEdit" class="goal-modal-textarea" oninput="updateProjectGoalModalPreview()"></textarea>
+    <div id="projectGoalModalRefineWrap" style="display:none;" class="goal-modal-refine-wrap">
       <div class="goal-modal-refine-label">What AIs receive in Refine rounds</div>
       <div id="projectGoalModalRefineText" class="goal-modal-refine-text"></div>
     </div>
@@ -1035,15 +1035,15 @@
       <p>The console shows you everything happening in real time — which AIs are sending requests, responding, succeeding, or failing, and a preview of what each one said.</p>
       <div class="goal-info-row">
         <span class="info-label">Round Clock</span>
-        <span class="goal-info-desc">Tracks how long the current round is taking. Displays in <strong style="color:#34d399;">green</strong> when running. Resets automatically at the start of each new round.</span>
+        <span class="goal-info-desc">Tracks how long the current round is taking. Displays in <strong class="text-green">green</strong> when running. Resets automatically at the start of each new round.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Project Clock</span>
-        <span class="goal-info-desc">Tracks total time spent on the project since your first round. Displays in <strong style="color:var(--accent);">amber</strong> when running, flashes amber when paused. Persists if you close and reopen the browser. Use the pause button if you need to step away so your time stays accurate.</span>
+        <span class="goal-info-desc">Tracks total time spent on the project since your first round. Displays in <strong class="text-accent">amber</strong> when running, flashes amber when paused. Persists if you close and reopen the browser. Use the pause button if you need to step away so your time stays accurate.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Legend</span>
-        <span class="goal-info-desc">Located directly above the console log. <strong style="color:#34d399;">Green</strong> = success · <strong style="color:#fbbf24;">Amber</strong> = warning · <strong style="color:#f87171;">Red</strong> = error · <strong style="color:#60a5fa;">Blue</strong> = sending · <strong style="color:#a78bfa;">Purple</strong> = AI response preview · <strong style="color:#f5a623;">Orange</strong> = round divider.</span>
+        <span class="goal-info-desc">Located directly above the console log. <strong class="text-green">Green</strong> = success · <strong class="text-warn">Amber</strong> = warning · <strong class="text-error">Red</strong> = error · <strong class="text-send">Blue</strong> = sending · <strong class="text-preview">Purple</strong> = AI response preview · <strong class="text-divider">Orange</strong> = round divider.</span>
       </div>
       <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log at any time — useful for troubleshooting or keeping a record of your session.</p>
     </div>

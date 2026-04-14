@@ -2299,22 +2299,24 @@ function updateGoalCounter() {
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
-    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>` +
-    (truncated ? `<span class="goal-trunc-note"> * Refine sends first ${truncateGoalForRefine(ta.value).length} chars (to sentence boundary)</span>` : '');
-  // Show/hide inline refine preview box
-  const previewWrap = document.getElementById('goalRefinePreview');
-  const previewText = document.getElementById('goalRefinePreviewText');
+    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
+  // Update refine preview panel
+  const previewWrap  = document.getElementById('goalRefinePreview');
+  const previewText  = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
+  const previewSub   = document.getElementById('goalRefinePreviewSub');
   const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
   if (truncated) {
     const refined = truncateGoalForRefine(ta.value);
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
     if (previewCount) previewCount.textContent = `${refined.length} chars`;
+    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
   } else {
     if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
     if (previewCount) previewCount.textContent = '';
+    if (previewSub)   previewSub.textContent = '';
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
   }
