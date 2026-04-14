@@ -1536,6 +1536,25 @@ async function testApiKey(id) {
   }
 }
 
+async function testAllKeys() {
+  const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
+  if (keyed.length === 0) {
+    toast('⚠️ No API keys saved yet — add a key first', 3500);
+    return;
+  }
+  const btn = document.getElementById('testAllKeysBtn');
+  if (btn) { btn.textContent = 'Testing…'; btn.disabled = true; }
+  toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'}…`, 2500);
+  for (let i = 0; i < keyed.length; i++) {
+    await new Promise(r => setTimeout(r, i * 600));
+    testApiKey(keyed[i].id);
+  }
+  const total = keyed.length * 600 + 4500;
+  setTimeout(() => {
+    if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; }
+  }, total);
+}
+
 function removeAI(id) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
