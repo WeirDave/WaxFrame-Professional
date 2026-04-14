@@ -1170,7 +1170,9 @@ html, body {
   overflow: hidden;
 }
 .hex-cell.is-builder { border-color: rgba(255,255,255,0.15); }
-.hex-cell.is-working { border-color: var(--blue); animation: cardPulse 1s ease-in-out infinite alternate; }
+.hex-cell.is-working    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
+.hex-cell.is-sending    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
+.hex-cell.is-responding { border-color: var(--purple); animation: cardPulse 1s ease-in-out infinite alternate; }
 .hex-cell.is-done    { border-color: #34d399; }
 .hex-cell.is-error   { border-color: #f87171; }
 .hex-cell.is-inactive { opacity: 0.4; }
@@ -1204,7 +1206,7 @@ html, body {
 }
 .hex-status {
   font-size: 10px;
-  color: rgba(255,255,255,0.5);
+  color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1212,7 +1214,9 @@ html, body {
   min-width: 0;
   text-align: right;
 }
-.hex-cell.is-working .hex-status { color: var(--blue); }
+.hex-cell.is-working    .hex-status { color: var(--blue); }
+.hex-cell.is-sending    .hex-status { color: var(--blue); }
+.hex-cell.is-responding .hex-status { color: var(--purple); }
 .hex-cell.is-done    .hex-status { color: #34d399; }
 .hex-cell.is-error   .hex-status { color: #f87171; }
 .hex-cell.is-builder .hex-status { color: var(--accent); }
