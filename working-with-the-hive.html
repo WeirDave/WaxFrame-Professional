@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — working-with-the-hive.html
-     Build: 20260330-001
+     Build: 20260414-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WaxFrame — Working with the Hive</title>
+  <title>WaxFrame User Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css">
   <style>
@@ -61,6 +61,40 @@
       [data-theme="auto"] .wh-toc,
       [data-theme="auto"] .wh-block { background:#ffffff; }
     }
+
+    @media print {
+      body { background: #fff !important; color: #111 !important; }
+      .page-header, .page-footer, .wh-back-top { display: none !important; }
+      .page-main { padding: 0 !important; max-width: 100% !important; }
+      .wh-intro, .wh-toc, .wh-block {
+        background: #fff !important;
+        border: 1px solid #ccc !important;
+        box-shadow: none !important;
+        break-inside: avoid;
+      }
+      .wh-section { break-inside: avoid; }
+      .wh-section-title, .wh-block-title { color: #111 !important; }
+      .wh-toc-link { color: #333 !important; border-color: #ccc !important; }
+      .wh-tip { background: #fffbea !important; border-color: #e5c84a !important; }
+      .wh-tip p, .wh-block p, .wh-step { color: #333 !important; }
+      .wh-warn { background: #fff0f0 !important; }
+      .wh-warn p { color: #c00 !important; }
+      .wh-step-num { background: #b87a00 !important; color: #fff !important; }
+      code { background: #f0f0f0 !important; color: #333 !important; }
+      a { color: #333 !important; text-decoration: none !important; }
+
+      /* Print header — shown only when printing */
+      .print-header { display: block !important; }
+    }
+    .print-header {
+      display: none;
+      text-align: center;
+      padding: 16px 0 24px;
+      border-bottom: 2px solid #ccc;
+      margin-bottom: 24px;
+    }
+    .print-header-title { font-size: 22px; font-weight: 800; color: #111; margin-bottom: 4px; }
+    .print-header-sub { font-size: 13px; color: #666; }
   </style>
 </head>
 <body class="helper-body">
@@ -71,7 +105,7 @@
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
     <div>
       <div class="page-header-name">WaxFrame</div>
-      <div class="page-header-tag">Working with the Hive</div>
+      <div class="page-header-tag">User Guide</div>
     </div>
   </div>
   <div class="page-header-spacer"></div>
@@ -79,11 +113,17 @@
 
 <div class="page-main" id="top">
 
+  <!-- Print-only header — hidden on screen, visible in PDF -->
+  <div class="print-header">
+    <div class="print-header-title">WaxFrame User Guide</div>
+    <div class="print-header-sub">weirdave.github.io/WaxFrame-Professional — Many minds, one refined result.</div>
+  </div>
+
   <div class="wh-intro">
     <img src="images/AI_Hive_Worker_Bee_v2.png" alt="" class="wh-bee">
     <div class="wh-intro-text">
-      <h2>Working with the Hive</h2>
-      <p>A practical guide to getting the most out of WaxFrame — from writing a strong project goal to handling conflicts mid-session, course-correcting when the document drifts, and knowing when to call it done.</p>
+      <h2>WaxFrame User Guide</h2>
+      <p>A practical guide to getting the most out of WaxFrame — from writing a strong project goal to handling conflicts mid-session, course-correcting when the document drifts, knowing when to call it done, and using WaxFrame with your organisation's internal AI tools.</p>
     </div>
   </div>
 
@@ -96,6 +136,7 @@
       <a href="#conflicts" class="wh-toc-link">⚡ Working with Conflicts</a>
       <a href="#coursecorrect" class="wh-toc-link">🧭 Course Correcting Mid-Session</a>
       <a href="#notes" class="wh-toc-link">📝 Using Notes Effectively</a>
+      <a href="#internalai" class="wh-toc-link">🏢 Using WaxFrame at Work</a>
       <a href="#convergence" class="wh-toc-link">✅ Knowing When You're Done</a>
     </div>
   </div>
@@ -272,6 +313,77 @@
   </div>
   <a href="#top" class="wh-back-top">↑ Back to top</a>
 
+  <!-- SECTION: INTERNAL/ENTERPRISE AI -->
+  <div class="wh-section" id="internalai">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">🏢</div>
+      <div class="wh-section-title">Using WaxFrame at Work — Internal &amp; Enterprise AI</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">WaxFrame works with your company's internal AI tools</div>
+      <p>If your organisation runs its own internal AI deployment — models hosted on company infrastructure, accessible only on your network or VPN — you can use those models in WaxFrame instead of, or alongside, the public ones. This means your documents stay completely inside your organisation's systems. No data leaves your network.</p>
+      <p>Common setups include enterprise versions of Claude, ChatGPT, and Gemini running through platforms like AWS Bedrock, Azure OpenAI, or a custom internal gateway. If your IT team has given you an API endpoint and a key or token, you're ready to go.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How to add an internal AI</div>
+      <ol class="wh-steps">
+        <li class="wh-step"><span class="wh-step-num">1</span>Go to <strong>Setup → Step 1</strong> and click <strong>＋ Add Custom AI</strong> at the top of the Worker Bees panel.</li>
+        <li class="wh-step"><span class="wh-step-num">2</span>Enter the <strong>API endpoint URL</strong> your IT team provided — this is the full address the app will send requests to, ending in something like <code>/api/chat/completions</code> or <code>/v1/chat/completions</code>.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span>Set the <strong>API Format</strong> to <em>OpenAI compatible</em> — most enterprise deployments use this standard regardless of which underlying model they're running.</li>
+        <li class="wh-step"><span class="wh-step-num">4</span>Enter the exact <strong>model ID string</strong> for the model you want to use. Your IT team or the platform's model list page will have this. It needs to be exact — even a small typo will cause an error.</li>
+        <li class="wh-step"><span class="wh-step-num">5</span>Paste your <strong>API key or bearer token</strong> into the key field and press Enter to save.</li>
+        <li class="wh-step"><span class="wh-step-num">6</span>Repeat for each internal model you want to use. You need at least two AIs with saved keys to run a round — add at least two.</li>
+      </ol>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Your API key or token is stored only in your browser's local storage — it never leaves your machine and is never sent anywhere except directly to the endpoint you configured.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What to ask your IT team for</div>
+      <p>Before you can add an internal AI to WaxFrame, you need three things from your IT department or whoever manages your company's AI platform:</p>
+      <ol class="wh-steps">
+        <li class="wh-step"><span class="wh-step-num">1</span><strong>The API endpoint URL.</strong> This is the web address WaxFrame will send requests to. It will look something like <code>https://ai.yourcompany.com/api/chat/completions</code> or <code>https://internal.yourcompany.com/v1/chat/completions</code>. Ask specifically for "the OpenAI-compatible chat completions endpoint."</li>
+        <li class="wh-step"><span class="wh-step-num">2</span><strong>The model ID string.</strong> This is the exact name of the model you want to use — something like <code>gpt-4o</code>, <code>anthropic.claude-3-7-sonnet-20250219-v1:0</code>, or <code>gemini-2.5-pro</code>. It needs to be exact. Ask your IT team for a list of available model IDs, or check the platform's models page if you have access to it.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span><strong>An API key or bearer token.</strong> This is your personal credential for accessing the API — a long string of characters, sometimes called an access token, personal token, or API key. Some platforms generate one for you automatically when you log in; others require you to request one from IT.</li>
+      </ol>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Most enterprise AI platforms use the OpenAI-compatible API format — it has become the industry standard. If your IT team isn't sure, ask them: "Is the API OpenAI-compatible?" The answer is almost always yes.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Hiding the default public AIs for an internal-only setup</div>
+      <p>By default, WaxFrame shows six public AI providers in the setup list — ChatGPT, Claude, Gemini, Grok, Perplexity, and DeepSeek. If your organisation uses internal models only and you don't want those public options cluttering the screen, you can hide them individually.</p>
+      <p>Each default AI row has a <strong>Hide</strong> button. Clicking it removes that AI from the list and excludes it from all rounds — it won't appear again until you restore it. Hidden AIs are remembered across sessions so your setup stays clean every time you open WaxFrame.</p>
+      <p>If you hide one or more defaults, a banner appears at the top of the setup list showing how many are hidden, with a <strong>↺ Restore Hidden</strong> button to bring them all back. The <strong>↺ Reset to Defaults</strong> button also restores everything at once.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>If you're setting WaxFrame up for colleagues to use internally, hide the public AIs first, add your internal ones via the Custom AI form, and they'll see a clean list with only the tools that work in your environment.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">CORS and running WaxFrame locally</div>
+      <p>If WaxFrame is running from a hosted URL (like GitHub Pages) and your internal API endpoint is on a different domain, your browser may block the request. This is a browser security rule called CORS — it prevents web pages from making requests to domains they weren't served from.</p>
+      <p>The most reliable fix is to run WaxFrame locally. Download the repo as a ZIP file, unzip it, and open <code>index.html</code> directly in your browser. A file opened locally has no cross-origin restrictions and can reach internal endpoints freely.</p>
+      <div class="wh-warn">
+        <p>⚠️ If you see a "Network Error" when testing an internal AI, CORS is almost certainly the cause. Switch to running WaxFrame locally and the error will go away.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Choosing which internal model to use for what</div>
+      <p>Not all models behave identically. For WaxFrame, the most important quality is <strong>instruction-following</strong> — specifically, the ability to return numbered suggestions in a strict format (for reviewers) and to rebuild a document using exact output markers (for the Builder). Models that are fine-tuned for specific internal tools — like a Confluence assistant or a documentation bot — may not follow WaxFrame's general-purpose prompts reliably.</p>
+      <p>As a starting point: use your organisation's most capable general-purpose models. A strong Builder choice is whichever model your IT team describes as the most capable or latest — typically something in the GPT-4 or Claude 3+ family. For reviewers, variety helps — using models from different providers tends to produce more diverse suggestions.</p>
+    </div>
+  </div>
+  <a href="#top" class="wh-back-top">↑ Back to top</a>
+
   <!-- SECTION: CONVERGENCE -->
   <div class="wh-section" id="convergence">
     <div class="wh-section-hdr">
@@ -307,6 +419,7 @@
   <div class="page-footer-btns">
     <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
     <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
+    <button class="btn btn-accent" onclick="window.print()" title="Save as PDF via your browser's print dialog">⬇ Save as PDF</button>
   </div>
   <button class="btn" onclick="window.close()">✕ Close this tab</button>
 </div>
