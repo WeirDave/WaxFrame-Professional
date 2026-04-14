@@ -2107,9 +2107,12 @@ kbd {
 /* ── GOAL HEADING ── */
 /* ── Length Constraint ── */
 .length-constraint-row {
-  margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
+  margin-top: 4px;
+  margin-bottom: 4px;
+  padding: 14px;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
 }
 .length-constraint-header {
   display: flex;
