@@ -2656,7 +2656,7 @@ kbd {
 .proj-notebook-nums {
   width: 44px;
   flex-shrink: 0;
-  align-self: flex-start;
+  align-self: stretch;
   background: transparent;
   border-right: 1px solid var(--border2);
   font-family: var(--font-mono);
@@ -2666,7 +2666,8 @@ kbd {
   text-align: right;
   padding: 0 6px 0 0;
   user-select: none;
-  overflow: hidden;
+  overflow-y: hidden;
+  overflow-x: hidden;
 }
 .proj-notebook-nums div { line-height: 21px; height: 21px; font-size: 13px; }
 .proj-notebook-ta {
@@ -4968,11 +4969,12 @@ kbd {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 4px 28px 0;
+  padding: 0 28px 0;
 }
 .goal-counter-row--flex {
   flex-shrink: 0;
-  margin-bottom: 4px;
+  margin-top: 2px;
+  margin-bottom: 2px;
 }
 
 /* ── Goal split layout ── */
