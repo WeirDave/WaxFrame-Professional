@@ -125,14 +125,14 @@ html, body {
   overflow: hidden;
   background-image:
     linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url('images/WaxFrame_Honeycomb_BG_Dark.png');
+    url('images/AI_Hive_Honeycomb_BG_Dark.png');
   background-size: auto, 300px auto;
   background-repeat: repeat, repeat;
 }
 [data-theme="light"] body {
   background-image:
     linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-    url('images/WaxFrame_Honeycomb_BG_Light.png');
+    url('images/AI_Hive_Honeycomb_BG_Light.png');
   background-size: auto, 300px auto;
   background-repeat: repeat, repeat;
 }
@@ -140,7 +140,7 @@ html, body {
   [data-theme="auto"] body {
     background-image:
       linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-      url('images/WaxFrame_Honeycomb_BG_Light.png');
+      url('images/AI_Hive_Honeycomb_BG_Light.png');
     background-size: auto, 300px auto;
     background-repeat: repeat, repeat;
   }
@@ -4931,3 +4931,129 @@ kbd {
   a { color:#333 !important; text-decoration:none !important; }
   .print-header { display:block !important; }
 }
+
+/* ============================================================
+   DEV TOOLS NAV ITEM
+   ============================================================ */
+.nav-item-dev {
+  color: var(--accent);
+  opacity: 0.6;
+  font-size: 11px;
+}
+.nav-item-dev:hover { opacity: 1; }
+
+/* ============================================================
+   DEV PASSWORD MODAL
+   ============================================================ */
+.dev-pw-modal {
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+}
+.dev-pw-modal .license-modal-input {
+  width: 100%;
+}
+
+/* ============================================================
+   LICENSE UNLOCK SCENE
+   ============================================================ */
+.unlock-scene {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.92);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  gap: 28px;
+}
+.unlock-scene.active { pointer-events: all; }
+.unlock-stage {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.unlock-logo {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+.unlock-wax {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%) scale(0);
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  z-index: 2;
+  opacity: 0;
+}
+.unlock-stamp {
+  position: absolute;
+  top: -120px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  z-index: 3;
+  opacity: 0;
+}
+.unlock-smoke {
+  position: absolute;
+  bottom: 30px;
+  left: 55%;
+  width: 60px;
+  height: 60px;
+  object-fit: contain;
+  z-index: 4;
+  opacity: 0;
+}
+.unlock-bee {
+  position: fixed;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  top: calc(50% - 260px);
+  right: -260px;
+  z-index: 999999;
+  opacity: 0;
+}
+.unlock-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transform: translateY(12px);
+}
+.unlock-sub {
+  font-size: 15px;
+  color: var(--text2);
+  opacity: 0;
+  transform: translateY(8px);
+  margin-top: -16px;
+}
+@keyframes unlock-fade-in       { to { opacity: 1; } }
+@keyframes unlock-fade-out      { to { opacity: 0; } }
+@keyframes unlock-bee-enter     { from { right: -260px; opacity: 0; } to { right: calc(50% - 60px); opacity: 1; } }
+@keyframes unlock-bee-exit      { from { right: calc(50% - 60px); opacity: 1; } to { right: -260px; opacity: 0; } }
+@keyframes unlock-bee-hover     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+@keyframes unlock-wax-pop       { 0% { transform: translateX(-50%) scale(0); opacity:0; } 60% { transform: translateX(-50%) scale(1.15); opacity:1; } 100% { transform: translateX(-50%) scale(1); opacity:1; } }
+@keyframes unlock-stamp-drop    { 0% { top:-120px; opacity:0; } 60% { top:40px; opacity:1; } 75% { top:30px; } 100% { top:36px; opacity:1; } }
+@keyframes unlock-stamp-retract { from { top:36px; opacity:1; } to { top:-120px; opacity:0; } }
+@keyframes unlock-smoke-rise    { 0% { transform:translateY(0); opacity:0.8; } 100% { transform:translateY(-24px); opacity:0; } }
+@keyframes unlock-shake         { 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
+@keyframes unlock-text-in       { to { opacity:1; transform:translateY(0); } }

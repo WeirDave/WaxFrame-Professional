@@ -875,6 +875,173 @@ function saveLicense(key) {
   } catch(e) {}
 }
 
+
+// ── DEV TOOLS ──
+const DEV_PW_HASH = 'c930f4bedafc8f8dc0fc0b00f85851668dd60cc56c39ae8e1b09f5b2ea1e1902';
+
+async function hashString(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+function showDevModal() {
+  const modal = document.getElementById('devModal');
+  const input = document.getElementById('devPwInput');
+  if (modal) modal.classList.add('active');
+  setTimeout(() => input?.focus(), 100);
+}
+
+function hideDevModal() {
+  const modal = document.getElementById('devModal');
+  const input = document.getElementById('devPwInput');
+  if (modal) modal.classList.remove('active');
+  if (input) input.value = '';
+}
+
+async function submitDevPassword() {
+  const input = document.getElementById('devPwInput');
+  const val = input?.value || '';
+  const hash = await hashString(val);
+  if (hash === DEV_PW_HASH) {
+    localStorage.setItem('waxframe_dev', '1');
+    hideDevModal();
+    // Show toolbar immediately without page reload
+    const tb = document.getElementById('devToolbar');
+    if (tb) {
+      tb.style.display = 'flex';
+      const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
+      if (savedPos) { tb.style.top = savedPos.top + 'px'; tb.style.left = savedPos.left + 'px'; tb.style.right = 'auto'; }
+    }
+    const navPromptEditor = document.getElementById('navPromptEditor');
+    if (navPromptEditor) navPromptEditor.style.display = '';
+    toast('🛠 Dev mode enabled');
+  } else {
+    hideDevModal();
+  }
+}
+
+// ── LICENSE UNLOCK SCENE ──
+function playUnlockScene() {
+  const scene  = document.getElementById('unlockScene');
+  const bee    = scene?.querySelector('.unlock-bee');
+  const wax    = scene?.querySelector('.unlock-wax');
+  const stamp  = scene?.querySelector('.unlock-stamp');
+  const smoke  = scene?.querySelector('.unlock-smoke');
+  const stage  = scene?.querySelector('.unlock-stage');
+  const title  = scene?.querySelector('.unlock-title');
+  const sub    = scene?.querySelector('.unlock-sub');
+  if (!scene) return;
+
+  // Reset
+  [wax, stamp, smoke, title, sub].forEach(el => { if (el) el.style.cssText = ''; });
+  if (bee) bee.style.cssText = '';
+  if (stage) stage.style.animation = '';
+
+  // Fade in overlay
+  scene.classList.add('active');
+  scene.style.animation = 'unlock-fade-in 0.4s ease forwards';
+
+  // T+0.3s — bee flies in from right
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.opacity = '1';
+    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards';
+  }, 300);
+
+  // T+1.0s — bee hovers
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards, unlock-bee-hover 1.2s ease-in-out 0.7s infinite';
+  }, 1000);
+
+  // T+1.2s — wax blob pops in
+  setTimeout(() => {
+    if (!wax) return;
+    wax.style.animation = 'unlock-wax-pop 0.5s cubic-bezier(0.2,0.8,0.4,1) forwards';
+  }, 1200);
+
+  // T+1.6s — stamp drops
+  setTimeout(() => {
+    if (!stamp) return;
+    stamp.style.opacity = '1';
+    stamp.style.animation = 'unlock-stamp-drop 0.35s cubic-bezier(0.4,0,0.2,1) forwards';
+  }, 1600);
+
+  // T+1.9s — shake + smoke + sounds
+  setTimeout(() => {
+    if (stage) stage.style.animation = 'unlock-shake 0.15s ease 2';
+    if (smoke) smoke.style.animation = 'unlock-smoke-rise 0.9s ease forwards';
+    playUnlockSounds();
+  }, 1900);
+
+  // T+2.1s — stamp retracts
+  setTimeout(() => {
+    if (!stamp) return;
+    stamp.style.animation = 'unlock-stamp-retract 0.3s ease forwards';
+  }, 2100);
+
+  // T+2.3s — text fades in
+  setTimeout(() => {
+    if (title) title.style.animation = 'unlock-text-in 0.5s ease forwards';
+    if (sub)   sub.style.animation   = 'unlock-text-in 0.5s ease 0.15s forwards';
+  }, 2300);
+
+  // T+3.2s — bee exits right
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.animation = 'unlock-bee-exit 0.6s cubic-bezier(0.6,0,0.8,0.4) forwards';
+  }, 3200);
+
+  // T+4.5s — fade out and clean up
+  setTimeout(() => {
+    scene.style.animation = 'unlock-fade-out 0.5s ease forwards';
+    setTimeout(() => {
+      scene.classList.remove('active');
+      scene.style.animation = '';
+    }, 500);
+  }, 4500);
+}
+
+function playUnlockSounds() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    // Soft wax plop
+    const plop = ctx.createOscillator();
+    const plopGain = ctx.createGain();
+    plop.connect(plopGain); plopGain.connect(ctx.destination);
+    plop.type = 'sine';
+    plop.frequency.setValueAtTime(180, ctx.currentTime);
+    plop.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.18);
+    plopGain.gain.setValueAtTime(0.25, ctx.currentTime);
+    plopGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+    plop.start(ctx.currentTime); plop.stop(ctx.currentTime + 0.2);
+    // Metal thunk
+    const thunk = ctx.createOscillator();
+    const thunkGain = ctx.createGain();
+    thunk.connect(thunkGain); thunkGain.connect(ctx.destination);
+    thunk.type = 'square';
+    thunk.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
+    thunk.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.18);
+    thunkGain.gain.setValueAtTime(0.18, ctx.currentTime + 0.05);
+    thunkGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
+    thunk.start(ctx.currentTime + 0.05); thunk.stop(ctx.currentTime + 0.25);
+    // Sizzle
+    const bufferSize = ctx.sampleRate * 0.3;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
+    const sizzle = ctx.createBufferSource();
+    const sizzleGain = ctx.createGain();
+    const sizzleFilter = ctx.createBiquadFilter();
+    sizzleFilter.type = 'highpass'; sizzleFilter.frequency.value = 4000;
+    sizzle.buffer = buffer;
+    sizzle.connect(sizzleFilter); sizzleFilter.connect(sizzleGain); sizzleGain.connect(ctx.destination);
+    sizzleGain.gain.setValueAtTime(0.15, ctx.currentTime + 0.08);
+    sizzleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
+    sizzle.start(ctx.currentTime + 0.08); sizzle.stop(ctx.currentTime + 0.4);
+  } catch(e) {}
+}
+
 function showLicenseModal(reason) {
   const modal = document.getElementById('licenseModal');
   const msg   = document.getElementById('licenseModalMsg');
@@ -917,7 +1084,7 @@ async function submitLicenseKey() {
       saveLicense(key);
       hideLicenseModal();
       updateLicenseBadge();
-      toast('✅ License verified — welcome to WaxFrame Pro!', 4000);
+      playUnlockScene();
     } else {
       if (errEl) errEl.textContent = data.message || 'Invalid key. Check your Gumroad receipt and try again.';
     }
@@ -1510,7 +1677,7 @@ function renderBuilderPicker() {
       onclick="setBuilder('${ai.id}'); return false;">
       <img src="${ai.icon}" class="builder-pick-icon" onerror="this.style.display='none'">
       <span class="builder-pick-name">${ai.name}</span>
-      ${builder === ai.id ? '<img src="images/WaxFrame_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
+      ${builder === ai.id ? '<img src="images/AI_Hive_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
     </button>
   `).join('');
 }
@@ -1751,7 +1918,7 @@ function validateAndContinue() {
     _settingsReturnToWork = false;
     // Reset button text
     const btn = document.getElementById('setupContinueBtn');
-    if (btn) btn.innerHTML = '<img src="images/WaxFrame_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
+    if (btn) btn.innerHTML = '<img src="images/AI_Hive_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
     renderBeeStatusGrid();
     goToScreen('screen-work');
     showReExtractBanner();
