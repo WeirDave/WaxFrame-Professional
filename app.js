@@ -1053,7 +1053,7 @@ function updateSetupRequirements() {
 
   const allMet = keyedCount >= 2 && hasBuilder;
   const btn = document.getElementById('setupContinueBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); btn.classList.toggle('btn-cta-inactive', !allMet); }
+  if (btn) { btn.classList.toggle('btn-accent', allMet); }
 }
 
 function updateLaunchRequirements() {
@@ -1075,7 +1075,7 @@ function updateLaunchRequirements() {
 
   const allMet = !!name && !!version && !!goal && !!hasDoc;
   const btn = document.getElementById('launchBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); btn.classList.toggle('btn-cta-inactive', !allMet); }
+  if (btn) { btn.classList.toggle('btn-accent', allMet); }
 }
 
 function saveProject() {
@@ -3532,6 +3532,27 @@ function extractConflicts(text) {
     if (decision.options.length >= 2) result.userDecisions.push(decision);
   }
 
+  // Filter out conflicts where current text fuzzy-matches a resolved decision's chosen text.
+  // Catches AIs re-raising the same concept with slightly different wording each round.
+  if (window._resolvedDecisions && window._resolvedDecisions.length > 0) {
+    const fuzzyNorm = s => (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+    const wordOverlap = (a, b) => {
+      const wa = new Set(fuzzyNorm(a).split(' ').filter(w => w.length > 3));
+      const wb = new Set(fuzzyNorm(b).split(' ').filter(w => w.length > 3));
+      if (!wa.size || !wb.size) return 0;
+      let shared = 0;
+      wa.forEach(w => { if (wb.has(w)) shared++; });
+      return shared / Math.min(wa.size, wb.size);
+    };
+    result.userDecisions = result.userDecisions.filter(d => {
+      return !window._resolvedDecisions.some(rd => {
+        const overlapCurrent  = wordOverlap(d.current, rd.chosen);
+        const overlapQuestion = wordOverlap(d.question, rd.original);
+        return overlapCurrent >= 0.75 || (overlapCurrent >= 0.5 && overlapQuestion >= 0.5);
+      });
+    });
+  }
+
   // Extract BUILDER DECISION lines (freeform, not structured)
   const bdRegex = /\[BUILDER DECISION\][^\[]+/g;
   while ((match = bdRegex.exec(raw)) !== null) {
@@ -4007,8 +4028,36 @@ function applyDecisions() {
   const allBypassed = Object.keys(window._decisionChoices).length > 0 &&
     Object.values(window._decisionChoices).every(c => c.type === 'bypass');
 
+  // If every chosen replacement is identical to the current text, it's a no-op — skip Builder
+  const allNoOp = lines.length > 0 && lines.every(l => {
+    const m = l.match(/^Replace "(.+)" with "(.+)"$/s);
+    return m && m[1].trim() === m[2].trim();
+  });
+
   if (lines.length === 0 && !allBypassed) {
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
+    return;
+  }
+
+  if (allNoOp) {
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
+    toast('✅ Decisions locked — no text changed, Builder call skipped');
+    // Still lock the resolved decisions so they propagate to future rounds
+    updateConflictLedger(decisions);
+    Object.keys(window._decisionChoices).forEach(di => {
+      const d = decisions[parseInt(di)];
+      const choice = window._decisionChoices[di];
+      if (!d || !choice) return;
+      let chosenText = '';
+      if (choice.type === 'option') chosenText = d.options[choice.idx]?.text || '';
+      else if (choice.type === 'custom') chosenText = choice.text;
+      else if (choice.type === 'bypass') chosenText = d.current || '';
+      if (d.current && chosenText) {
+        window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
+        localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
+      }
+    });
+    clearConflicts();
     return;
   }
 
