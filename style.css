@@ -1869,6 +1869,28 @@ html, body {
 .ai-test-btn:hover { background: var(--blue-dim); }
 .ai-test-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+#testAllKeysBtn.testing {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  animation: pulse-testing 1.2s ease-in-out infinite;
+}
+@keyframes pulse-testing {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+#testAllKeysBtn.testing {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  animation: pulse-border 1s ease-in-out infinite;
+}
+@keyframes pulse-border {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
 /* ── MODEL SELECTOR ── */
 .model-select-wrap {
   display: flex;
