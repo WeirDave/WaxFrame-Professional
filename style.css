@@ -2019,9 +2019,6 @@ kbd {
   justify-content: flex-start;
 }
 .proj-clear-row--bottom {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--border);
   justify-content: flex-end;
 }
 .proj-clear-btn {
@@ -2706,7 +2703,7 @@ kbd {
   display: flex;
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  height: 220px;
+  flex: 1;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
@@ -4952,22 +4949,36 @@ kbd {
 .goal-refine-preview-count { font-size: 11px; color: var(--accent); font-family: var(--font-mono); }
 .goal-refine-preview-text  { font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-dim); padding: 8px 10px; white-space: pre-wrap; word-break: break-word; }
 
+/* ── Left column layout — static top, flex goal area ── */
+.proj-left-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.proj-static-top {
+  flex-shrink: 0;
+  padding: 20px 28px 12px;
+}
+.proj-static-top .fs-col-header { margin-bottom: 12px; }
+.proj-static-top .project-fields { margin-top: 10px; margin-bottom: 8px; }
+.proj-static-top .goal-counter-row { margin-top: 8px; margin-bottom: 4px; }
+
 /* ── Goal split layout ── */
 .goal-split-row {
   display: flex;
   gap: 10px;
-  align-items: stretch;
-  margin-bottom: 0;
+  flex: 1;
+  min-height: 0;
+  padding: 0 28px;
 }
 .goal-split-left {
   flex: 1;
   min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 .goal-split-right {
-  width: 220px;
+  width: 210px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -4979,24 +4990,33 @@ kbd {
   display: flex;
   flex-direction: column;
   height: 100%;
-  min-height: 220px;
 }
-.goal-refine-preview-panel .goal-refine-preview-text {
-  flex: 1;
-  overflow-y: auto;
-}
-.goal-refine-preview-empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
+.goal-refine-preview-sub {
   font-size: 11px;
   color: var(--text-dim);
-  opacity: 0.6;
-  text-align: center;
-  font-style: italic;
   line-height: 1.5;
+  padding: 6px 10px 4px;
+  margin: 0;
+  border-bottom: 1px dashed rgba(245,166,35,0.2);
+  font-style: italic;
+}
+.goal-refine-preview-panel .goal-refine-preview-text {
+  overflow-y: visible;
+  flex-shrink: 0;
+}
+.goal-refine-preview-empty {
+  padding: 12px 10px;
+  font-size: 11px;
+  color: var(--text-dim);
+  opacity: 0.7;
+  font-style: italic;
+  line-height: 1.6;
+}
+.proj-clear-row--bottom {
+  flex-shrink: 0;
+  padding: 10px 28px 16px;
+  border-top: 1px dashed var(--border);
+  margin-top: 10px;
 }
 
 /* ── Work topbar — project info clickable ── */
