@@ -1053,7 +1053,7 @@ function updateSetupRequirements() {
 
   const allMet = keyedCount >= 2 && hasBuilder;
   const btn = document.getElementById('setupContinueBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); }
+  if (btn) { btn.classList.toggle('btn-accent', allMet); btn.classList.toggle('btn-cta-inactive', !allMet); }
 }
 
 function updateLaunchRequirements() {
@@ -1075,7 +1075,7 @@ function updateLaunchRequirements() {
 
   const allMet = !!name && !!version && !!goal && !!hasDoc;
   const btn = document.getElementById('launchBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); }
+  if (btn) { btn.classList.toggle('btn-accent', allMet); btn.classList.toggle('btn-cta-inactive', !allMet); }
 }
 
 function saveProject() {
