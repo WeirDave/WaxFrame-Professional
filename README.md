@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="images/Waxframe_logo_v18.png" width="140" alt="WaxFrame">
+<img src="images/Waxframe_logo_v19.png" width="140" alt="WaxFrame">
 
 # WaxFrame
 
@@ -237,7 +237,7 @@ WaxFrame is open source under the **AGPL-3.0** license. See [LICENSE](LICENSE) f
 
 <div align="center">
 
-<img src="images/Waxframe_logo_v18.png" width="60" alt="WaxFrame">
+<img src="images/Waxframe_logo_v19.png" width="60" alt="WaxFrame">
 
 Built by **WeirDave** · [github.com/WeirDave](https://github.com/WeirDave)
 
