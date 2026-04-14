@@ -2327,15 +2327,7 @@ function updateProjLineNums(numsId, ta) {
   if (!ln || !ta) return;
   const LINE_HEIGHT = 21;
   const lineCount = ta.value.split('\n').length;
-  const visualCount = Math.max(lineCount, Math.round(ta.scrollHeight / LINE_HEIGHT));
-  ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
-  // Sync gutter scroll to textarea scroll
-  ln.scrollTop = ta.scrollTop;
-  // Attach scroll listener if not already done
-  if (!ta._scrollSynced) {
-    ta._scrollSynced = true;
-    ta.addEventListener('scroll', () => { ln.scrollTop = ta.scrollTop; });
-  }
+  ln.innerHTML = Array.from({length: lineCount}, (_, i) => `<div>${i + 1}</div>`).join('');
 }
 
 function updateLineNumbers() {
