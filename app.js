@@ -5,9 +5,9 @@
 //  GitHub: github.com/WeirDave/AIHive
 //
 //  Storage keys:
-//    LS_HIVE    (aihive_v2_hive)    — AI list + API keys, persistent
-//    LS_PROJECT (aihive_v2_project) — project name/version/goal, per project
-//    LS_SESSION (aihive_v2_session) — round state + document, per session
+//    LS_HIVE    (waxframe_v2_hive)    — AI list + API keys, persistent
+//    LS_PROJECT (waxframe_v2_project) — project name/version/goal, per project
+//    LS_SESSION (waxframe_v2_session) — round state + document, per session
 //
 //  Screen flow:
 //    screen-welcome → screen-setup → screen-project → screen-work
@@ -36,7 +36,7 @@ const DEFAULT_AIS = [
 const API_CONFIGS = {
   claude: {
     label: 'Anthropic (Claude)', model: 'claude-sonnet-4-6',
-    endpoint: 'https://aihive-claude-proxy.weirdave.workers.dev',
+    endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
     bodyFn: (model, prompt) => JSON.stringify({ model, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
@@ -251,7 +251,7 @@ const MODELS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 async function fetchModelsForProvider(provider) {
   if (!MODEL_FILTERS[provider]) return null; // no endpoint for this provider
 
-  const cacheKey = `aihive_models_${provider}`;
+  const cacheKey = `waxframe_models_${provider}`;
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
     if (cached && (Date.now() - cached.ts) < MODELS_CACHE_TTL) return cached.models;
@@ -305,7 +305,7 @@ async function fetchModelsForProvider(provider) {
 }
 
 function getModelsForProvider(provider) {
-  const cacheKey = `aihive_models_${provider}`;
+  const cacheKey = `waxframe_models_${provider}`;
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
     if (cached?.models?.length > 0) return cached.models;
@@ -358,7 +358,7 @@ function saveModelForAI(aiId, modelId) {
 async function refreshModelsForAI(aiId) {
   const ai = aiList.find(a => a.id === aiId);
   if (!ai) return;
-  const cacheKey = `aihive_models_${ai.provider}`;
+  const cacheKey = `waxframe_models_${ai.provider}`;
   localStorage.removeItem(cacheKey);
   await fetchModelsForProvider(ai.provider);
   renderAIRow(aiId);
@@ -376,17 +376,17 @@ let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
 const BUILD       = '20260330-001';         // build stamp — update each session
-const LS_HIVE     = 'aihive_v2_hive';      // AI list + API keys — persistent across projects
-const LS_PROJECT  = 'aihive_v2_project';   // project name/version/goal/docTab — per project
-const LS_SESSION  = 'aihive_v2_session';   // round state — per session
-const LS_SETTINGS = 'aihive_v2_settings';  // legacy key — migrated on first load
-const LS_LICENSE  = 'aihive_v2_license';   // license key — persistent
+const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
+const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
+const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
+const LS_SETTINGS = 'waxframe_v2_settings';  // legacy key — migrated on first load
+const LS_LICENSE  = 'waxframe_v2_license';   // license key — persistent
 
 
 // ── INDEXEDDB SESSION STORAGE ──
 // Session data (history, docText, consoleHTML) lives in IndexedDB — no size limits.
 // localStorage keeps a lightweight 'session exists' flag for fast resume detection.
-const IDB_NAME    = 'aihive_v2_db';
+const IDB_NAME    = 'waxframe_v2_db';
 const IDB_VERSION = 1;
 const IDB_STORE   = 'session';
 const IDB_KEY     = 'current';
@@ -838,8 +838,8 @@ function clearConsole() {
 // ══════════════════════════════════════
 
 function isLicensed() {
-  // Dev bypass — type this in browser console: localStorage.setItem('aihive_dev','1')
-  if (localStorage.getItem('aihive_dev') === '1') return true;
+  // Dev bypass — type this in browser console: localStorage.setItem('waxframe_dev','1')
+  if (localStorage.getItem('waxframe_dev') === '1') return true;
   try {
     const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
     return data && data.valid === true && data.key;
@@ -978,7 +978,7 @@ function goToScreen(id) {
     if (goalTa) updateProjLineNums('projGoalNums', goalTa);
     // Restore file status if we had an uploaded file
     if (docTab === 'upload' && docText) {
-      const fname = localStorage.getItem('aihive_v2_filename') || 'uploaded file';
+      const fname = localStorage.getItem('waxframe_v2_filename') || 'uploaded file';
       const status = document.getElementById('fileStatus');
       if (status) {
         status.style.display = 'block';
@@ -1128,8 +1128,8 @@ function clearProject() {
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
-  localStorage.removeItem('aihive_v2_session_exists');
-  localStorage.removeItem('aihive_v2_filename');
+  localStorage.removeItem('waxframe_v2_session_exists');
+  localStorage.removeItem('waxframe_v2_filename');
   // Clear IndexedDB session
   idbClear().catch(() => {});
   document.getElementById('projectName').value    = '';
@@ -1155,14 +1155,14 @@ function clearProject() {
   switchDocTab('upload');
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
-  localStorage.removeItem('aihive_resolved_decisions');
+  localStorage.removeItem('waxframe_resolved_decisions');
   window._conflictLedger = [];
-  localStorage.removeItem('aihive_conflict_ledger');
+  localStorage.removeItem('waxframe_conflict_ledger');
   window._aiWarnings = {};
-  localStorage.removeItem('aihive_ai_warnings');
+  localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
-  localStorage.removeItem('aihive_v2_source_type');
-  localStorage.removeItem('aihive_v2_has_pdf_pages');
+  localStorage.removeItem('waxframe_v2_source_type');
+  localStorage.removeItem('waxframe_v2_has_pdf_pages');
   projectClockReset();
   toast('🗑 Project cleared — AI keys and settings kept');
 }
@@ -1264,7 +1264,7 @@ function saveSession() {
   // Primary: save to IndexedDB (no size limit)
   idbSet(session).then(() => {
     // Set a lightweight flag in localStorage so resume detection works on page load
-    try { localStorage.setItem('aihive_v2_session_exists', '1'); } catch(e) {}
+    try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
     // Check quota health after every save
     checkStorageQuota();
   }).catch(e => {
@@ -1272,7 +1272,7 @@ function saveSession() {
     consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error');
     try {
       localStorage.setItem(LS_SESSION, JSON.stringify(session));
-      try { localStorage.setItem('aihive_v2_session_exists', '1'); } catch(ee) {}
+      try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(ee) {}
     } catch(lsErr) {
       if (lsErr.name === 'QuotaExceededError') {
         consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error');
@@ -1310,7 +1310,7 @@ async function loadSession() {
         // Migrate to IndexedDB and clean up localStorage
         idbSet(s).then(() => {
           localStorage.removeItem(LS_SESSION);
-          try { localStorage.setItem('aihive_v2_session_exists', '1'); } catch(e) {}
+          try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
         }).catch(() => {});
       }
     }
@@ -1769,7 +1769,7 @@ function handleFileSelect(e) {
 function clearUploadedFile() {
   docText = '';
   saveSession();
-  try { localStorage.removeItem('aihive_v2_filename'); } catch(e) {}
+  try { localStorage.removeItem('waxframe_v2_filename'); } catch(e) {}
   const status = document.getElementById('fileStatus');
   if (status) { status.style.display = 'none'; status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
@@ -1813,8 +1813,8 @@ async function processFile(file) {
     docText = result.text.trim();
     saveSession();
     try {
-      localStorage.setItem('aihive_v2_filename', file.name);
-      localStorage.setItem('aihive_v2_source_type', result.sourceType);
+      localStorage.setItem('waxframe_v2_filename', file.name);
+      localStorage.setItem('waxframe_v2_source_type', result.sourceType);
     } catch(e) {}
 
     // Show status — green if clean, amber if warnings
@@ -1916,7 +1916,7 @@ async function extractPDF(file) {
   // Render pages to images for vision and store for re-extract
   const pageImages = await renderPDFToImages(pdf);
   window._lastPDFPages = pageImages;
-  try { localStorage.setItem('aihive_v2_has_pdf_pages', '1'); } catch(e) {}
+  try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) {}
 
   // Find vision-capable AI — ONLY chatgpt and gemini support vision
   // Do not use Builder if it's not a vision-capable provider
@@ -1961,7 +1961,7 @@ async function renderPDFToImages(pdf) {
 async function storePDFPageImages(pdf) {
   try {
     window._lastPDFPages = await renderPDFToImages(pdf);
-    localStorage.setItem('aihive_v2_has_pdf_pages', '1');
+    localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
   } catch(e) {
     window._lastPDFPages = null;
   }
@@ -2095,8 +2095,8 @@ function loadScript(src) {
 }
 
 function showReExtractBanner() {
-  const sourceType = localStorage.getItem('aihive_v2_source_type') || '';
-  const hasPDFPages = localStorage.getItem('aihive_v2_has_pdf_pages') === '1';
+  const sourceType = localStorage.getItem('waxframe_v2_source_type') || '';
+  const hasPDFPages = localStorage.getItem('waxframe_v2_has_pdf_pages') === '1';
   const banner = document.getElementById('reExtractBanner');
   if (!banner) return;
   // Only show for PDF imports, only before any rounds have run
@@ -2151,7 +2151,7 @@ async function reExtractWithVision() {
     const docTa = document.getElementById('workDocument');
     if (docTa) { docTa.value = transcribed; updateLineNumbers(); }
     saveSession();
-    localStorage.setItem('aihive_v2_source_type', 'pdf-vision');
+    localStorage.setItem('waxframe_v2_source_type', 'pdf-vision');
 
     consoleLog(`✅ Re-extraction complete — ${transcribed.length.toLocaleString()} characters via ${visionCfg.label}`, 'success');
     toast(`✅ Document re-extracted successfully via ${visionCfg.label}`);
@@ -2796,7 +2796,7 @@ If there are no conflicts write exactly: NO CONFLICTS
 
 
 // ── PROMPT LOADER — checks localStorage overrides first ──
-const LS_PROMPTS = 'aihive_v2_prompts';
+const LS_PROMPTS = 'waxframe_v2_prompts';
 function getPrompt(key, fallback) {
   try {
     const saved = JSON.parse(localStorage.getItem(LS_PROMPTS) || '{}');
@@ -3537,7 +3537,7 @@ window._decisionChoices = {};
 // Track resolved USER DECISION conflicts to prevent Builder re-raising them
 // Restored from localStorage so refreshes don't wipe resolved decisions
 try {
-  window._resolvedDecisions = JSON.parse(localStorage.getItem('aihive_resolved_decisions') || '[]');
+  window._resolvedDecisions = JSON.parse(localStorage.getItem('waxframe_resolved_decisions') || '[]');
 } catch(e) {
   window._resolvedDecisions = [];
 }
@@ -3545,7 +3545,7 @@ try {
 // Conflict ledger — tracks how many times each conflict has appeared
 // Used to detect repeat offenders (e.g. Grok re-raising settled points)
 try {
-  window._conflictLedger = JSON.parse(localStorage.getItem('aihive_conflict_ledger') || '[]');
+  window._conflictLedger = JSON.parse(localStorage.getItem('waxframe_conflict_ledger') || '[]');
 } catch(e) {
   window._conflictLedger = [];
 }
@@ -3553,7 +3553,7 @@ try {
 // Per-AI warnings — targeted instructions injected into specific AI prompts
 // when they keep re-raising resolved conflicts
 try {
-  window._aiWarnings = JSON.parse(localStorage.getItem('aihive_ai_warnings') || '{}');
+  window._aiWarnings = JSON.parse(localStorage.getItem('waxframe_ai_warnings') || '{}');
 } catch(e) {
   window._aiWarnings = {};
 }
@@ -3609,7 +3609,7 @@ function updateConflictLedger(userDecisions) {
       });
     }
   });
-  try { localStorage.setItem('aihive_conflict_ledger', JSON.stringify(ledger)); } catch(e) {}
+  try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(ledger)); } catch(e) {}
 }
 
 function getLedgerEntry(d) {
@@ -4002,13 +4002,13 @@ function applyDecisions() {
     }
     if (d.current && chosenText) {
       window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
-      localStorage.setItem('aihive_resolved_decisions', JSON.stringify(window._resolvedDecisions));
+      localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
       // Mark as suppressed in conflict ledger
       const fp = fingerprintConflict(d);
       const entry = window._conflictLedger.find(e => e.fingerprint === fp);
       if (entry) {
         entry.suppressed = true;
-        try { localStorage.setItem('aihive_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) {}
+        try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) {}
 
         // If this conflict has been a repeat offender (3+), issue targeted per-AI warnings
         // to the AIs who kept suggesting the losing option
@@ -4030,7 +4030,7 @@ function applyDecisions() {
               }
             });
           });
-          try { localStorage.setItem('aihive_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) {}
+          try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) {}
         }
       }
     }
@@ -4554,7 +4554,7 @@ function clearDocument() {
 }
 
 // ── THEME ──
-const THEME_KEY = 'aihive_v2_theme';
+const THEME_KEY = 'waxframe_v2_theme';
 
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
@@ -4579,14 +4579,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   updateSetupRequirements();
 
   // Show dev toolbar and admin nav items if dev mode is active
-  if (localStorage.getItem('aihive_dev') === '1') {
+  if (localStorage.getItem('waxframe_dev') === '1') {
     const navPromptEditor = document.getElementById('navPromptEditor');
     if (navPromptEditor) navPromptEditor.style.display = '';
     const tb = document.getElementById('devToolbar');
     if (tb) {
       tb.style.display = 'flex';
       // Restore saved position
-      const savedPos = JSON.parse(localStorage.getItem('aihive_dev_toolbar_pos') || 'null');
+      const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
       if (savedPos) {
         tb.style.top  = savedPos.top  + 'px';
         tb.style.left = savedPos.left + 'px';
@@ -4612,7 +4612,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
             // Save position
-            localStorage.setItem('aihive_dev_toolbar_pos', JSON.stringify({
+            localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
               top:  parseInt(tb.style.top),
               left: parseInt(tb.style.left)
             }));
