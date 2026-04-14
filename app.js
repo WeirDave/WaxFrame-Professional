@@ -1542,17 +1542,43 @@ async function testAllKeys() {
     toast('⚠️ No API keys saved yet — add a key first', 3500);
     return;
   }
-  const btn = document.getElementById('testAllKeysBtn');
+
+  const panel   = document.getElementById('testKeysPanel');
+  const title   = document.getElementById('tkpTitle');
+  const rows    = document.getElementById('tkpRows');
+  const dismiss = document.getElementById('tkpDismiss');
+  const btn     = document.getElementById('testAllKeysBtn');
+
+  // Build initial rows
+  rows.innerHTML = keyed.map(ai => `
+    <div class="tkp-row queued" id="tkprow-${ai.id}">
+      <span class="tkp-icon">○</span>
+      <div class="tkp-info">
+        <span class="tkp-name">${ai.name}</span>
+        <span class="tkp-detail">Queued</span>
+      </div>
+    </div>`).join('');
+
+  panel.style.display = 'block';
+  dismiss.style.display = 'none';
   if (btn) { btn.textContent = '⏳ Testing…'; btn.disabled = true; btn.classList.add('testing'); }
-  toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'} — this may take a minute or two…`, 8000);
 
   const passed = [];
   const failed = [];
 
-  for (const ai of keyed) {
+  for (let i = 0; i < keyed.length; i++) {
+    const ai  = keyed[i];
     const cfg = API_CONFIGS[ai.provider];
+    const row = document.getElementById('tkprow-' + ai.id);
     const testBtn = document.getElementById('testbtn-' + ai.id);
+
+    title.textContent = `Testing API keys — ${i + 1} of ${keyed.length}…`;
+    if (row) {
+      row.className = 'tkp-row testing';
+      row.innerHTML = `<span class="tkp-icon">⏳</span><div class="tkp-info"><span class="tkp-name">${ai.name}</span><span class="tkp-detail">Sending request…</span></div>`;
+    }
     if (testBtn) { testBtn.textContent = '…'; testBtn.disabled = true; }
+
     try {
       const fetchPromise = fetch(cfg.endpoint, {
         method: 'POST',
@@ -1560,43 +1586,56 @@ async function testAllKeys() {
         body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
       });
       const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('No response — possible CORS or network issue')), 20000)
+        setTimeout(() => reject(new Error('No response after 20s — may be a CORS or network issue')), 20000)
       );
       const response = await Promise.race([fetchPromise, timeoutPromise]);
+
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         const msg = err?.error?.message || `HTTP ${response.status}`;
+        if (row) {
+          row.className = 'tkp-row failed';
+          row.innerHTML = `<span class="tkp-icon">❌</span><div class="tkp-info"><span class="tkp-name">${ai.name} — failed</span><span class="tkp-detail">${msg}</span></div>`;
+        }
         if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
         failed.push({ name: ai.name, reason: msg });
-        toast(`❌ ${ai.name}: ${msg}`, 3500);
       } else {
         const data = await response.json();
         cfg.extractFn(data);
+        if (row) {
+          row.className = 'tkp-row passed';
+          row.innerHTML = `<span class="tkp-icon">✅</span><div class="tkp-info"><span class="tkp-name">${ai.name} — connected</span><span class="tkp-detail">Response received</span></div>`;
+        }
         if (testBtn) { testBtn.textContent = '✅'; testBtn.disabled = false; }
         setTimeout(() => { if (testBtn) testBtn.textContent = 'Test'; }, 4000);
         passed.push(ai.name);
-        toast(`✅ ${ai.name} connected`, 2500);
       }
     } catch(e) {
+      if (row) {
+        row.className = 'tkp-row failed';
+        row.innerHTML = `<span class="tkp-icon">❌</span><div class="tkp-info"><span class="tkp-name">${ai.name} — failed</span><span class="tkp-detail">${e.message}</span></div>`;
+      }
       if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
       failed.push({ name: ai.name, reason: e.message });
-      toast(`❌ ${ai.name}: ${e.message}`, 3500);
     }
     await new Promise(r => setTimeout(r, 400));
   }
 
   if (btn) { btn.textContent = '⚡ Test All Keys'; btn.disabled = false; btn.classList.remove('testing'); }
+  dismiss.style.display = 'block';
 
-  setTimeout(() => {
-    if (failed.length === 0) {
-      toast(`✅ All ${passed.length} key${passed.length === 1 ? '' : 's'} connected and working`, 5000);
-    } else if (passed.length === 0) {
-      toast(`❌ All ${failed.length} key${failed.length === 1 ? '' : 's'} failed — check your keys and try again`, 6000);
-    } else {
-      const failNames = failed.map(f => f.name).join(', ');
-      toast(`⚠️ ${passed.length} connected, ${failed.length} failed: ${failNames}`, 6000);
-    }
-  }, 600);
+  if (failed.length === 0) {
+    title.textContent = `✅ All ${passed.length} keys connected and working`;
+  } else if (passed.length === 0) {
+    title.textContent = `❌ All ${failed.length} keys failed — check your keys`;
+  } else {
+    title.textContent = `⚠️ ${passed.length} connected, ${failed.length} failed`;
+  }
+}
+
+function dismissTestPanel() {
+  const panel = document.getElementById('testKeysPanel');
+  if (panel) panel.style.display = 'none';
 }
 
 function removeAI(id) {

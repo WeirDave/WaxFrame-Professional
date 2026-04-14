@@ -819,6 +819,15 @@
 <!-- ── Toast Notification ── -->
 <div id="toast"></div>
 
+<!-- ── Test Keys Status Panel ── -->
+<div id="testKeysPanel" class="test-keys-panel" style="display:none;">
+  <div class="tkp-header">
+    <span id="tkpTitle" class="tkp-title">Testing API keys…</span>
+    <button class="tkp-dismiss" id="tkpDismiss" onclick="dismissTestPanel()" style="display:none;">Dismiss ✕</button>
+  </div>
+  <div id="tkpRows" class="tkp-rows"></div>
+</div>
+
 <script src="app.js?v=2.1"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
