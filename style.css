@@ -2018,6 +2018,12 @@ kbd {
   gap: 8px;
   justify-content: flex-start;
 }
+.proj-clear-row--bottom {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  justify-content: flex-end;
+}
 .proj-clear-btn {
   font-size: 12px;
   padding: 5px 14px;
