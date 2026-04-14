@@ -1,0 +1,489 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — PLAYBOOK ROUND COUNT TEST DOCUMENTS
+════════════════════════════════════════════════════════════
+Instructions: For each test below, paste the PROJECT GOAL
+into WaxFrame's goal field, paste the DOCUMENT into the
+document area, run with your standard hive, and record how
+many rounds it takes to converge. Update the playbook page
+with real numbers when done.
+════════════════════════════════════════════════════════════
+
+
+────────────────────────────────────────────────────────────
+1. RÉSUMÉ
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this résumé for a Senior Marketing Manager role in
+the technology industry. Improve clarity, impact, and keyword
+alignment. Strengthen action verbs and quantify achievements
+where possible. Do not fabricate experience — only sharpen
+what's there. Tone should be confident and professional.
+Target length: one page.
+
+DOCUMENT:
+Jane Doe
+jane.doe@email.com | 555-123-4567 | linkedin.com/in/janedoe
+
+SUMMARY
+Marketing professional with experience in digital campaigns,
+content strategy, and team leadership. Good at managing
+multiple projects and working with cross-functional teams.
+
+EXPERIENCE
+
+Marketing Manager — Acme Corp (2019–present)
+- Ran social media accounts
+- Worked on email campaigns
+- Managed a small team
+- Did some SEO work
+- Helped with product launches
+
+Marketing Coordinator — Bright Agency (2016–2019)
+- Assisted with client campaigns
+- Wrote copy for ads and websites
+- Helped with reporting
+
+EDUCATION
+BA in Communications — State University, 2016
+
+SKILLS
+Social media, email marketing, SEO, Google Analytics,
+content writing, project management, Adobe Creative Suite
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+2. COVER LETTER
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this cover letter for a Product Manager position at
+a mid-size SaaS company. It should open with a strong hook,
+connect my experience directly to the role, and close with
+a confident call to action. Keep it to three short paragraphs.
+Tone: professional. Do not use generic filler phrases like
+"I am writing to express my interest."
+
+DOCUMENT:
+Dear Hiring Manager,
+
+I am writing to apply for the Product Manager position at
+your company. I have several years of experience in product
+roles and think I would be a great fit.
+
+In my current role I work with engineering and design teams
+to ship features. I have done roadmap planning and run sprint
+reviews. I am good at talking to customers and understanding
+what they need. I also do some data analysis to make decisions.
+
+I would love to bring my skills to your team. Please find
+my resume attached. I look forward to hearing from you.
+
+Sincerely,
+Alex Smith
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+3. BUSINESS PROPOSAL
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this business proposal for a corporate wellness
+program being pitched to a mid-size law firm. Strengthen
+the executive summary, clarify the methodology, and sharpen
+the value proposition. Tone: professional and persuasive.
+Do not add claims that aren't already supported by the
+content. Target length: two pages.
+
+DOCUMENT:
+PROPOSAL: EMPLOYEE WELLNESS PROGRAM
+Submitted by: Wellpath Solutions
+
+INTRODUCTION
+We want to help your firm improve employee health and
+reduce burnout. Lawyers have high stress jobs and we
+think our program can help.
+
+WHAT WE OFFER
+We offer a 12-week wellness program that includes yoga
+classes, meditation sessions, and nutrition workshops.
+We also have an app that employees can use to track their
+progress. We've done this with other companies and they
+liked it.
+
+PRICING
+The program costs $500 per employee for the 12-week period.
+Group discounts are available.
+
+WHY CHOOSE US
+We are passionate about wellness. Our team includes
+certified instructors and health coaches. We have been
+in business for five years.
+
+NEXT STEPS
+We would love to set up a call to discuss further.
+Please contact us at info@wellpath.com.
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+4. RFP RESPONSE
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this RFP response for a municipal IT infrastructure
+upgrade contract. Ensure every stated requirement is
+addressed directly and clearly. Strengthen the executive
+summary, technical approach, and differentiators. Tone:
+formal, precise, and authoritative. Do not add claims that
+aren't supported by the existing content. Word limit: 1,000
+words.
+
+DOCUMENT:
+RFP RESPONSE — CITY OF RIVERSIDE IT INFRASTRUCTURE UPGRADE
+Submitted by: TechForward Solutions
+
+EXECUTIVE SUMMARY
+TechForward Solutions is pleased to submit this response to
+the City of Riverside's RFP for IT infrastructure upgrade
+services. We have experience with government contracts and
+believe we can deliver a good result on time and on budget.
+
+COMPANY BACKGROUND
+TechForward was founded in 2010 and has completed IT
+projects for several local government clients. We have a
+team of 45 staff including certified network engineers and
+project managers.
+
+TECHNICAL APPROACH
+We will assess the current infrastructure in the first month.
+After that we will develop a migration plan and present it
+to the city. The actual upgrade work will happen in phases
+to minimise disruption. We use industry standard tools and
+follow best practices for security.
+
+REQUIREMENTS COMPLIANCE
+The RFP listed several requirements. We can meet all of them.
+Our team has the necessary certifications and our project
+manager will serve as the main point of contact throughout.
+
+PRICING
+Phase 1 (Assessment): $25,000
+Phase 2 (Planning): $15,000
+Phase 3 (Implementation): $180,000
+Phase 4 (Testing & Handover): $30,000
+Total: $250,000
+
+TIMELINE
+We estimate the project will take nine months from contract
+signing to final handover.
+
+REFERENCES
+Available upon request.
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+5. THANK-YOU LETTER
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this thank-you letter written after a job interview
+for a Senior Accountant position. It should feel warm and
+genuine, reinforce one key point from the conversation, and
+close with a clear next step. Keep it short — under 200
+words. Tone: professional but human.
+
+DOCUMENT:
+Dear Mr. Johnson,
+
+Thank you for meeting with me yesterday to discuss the Senior
+Accountant position. It was great to learn more about the
+role and the company.
+
+I enjoyed our conversation. The work sounds interesting and
+I am excited about the opportunity. I think my skills in
+financial reporting and team leadership would be a good fit
+for what you are looking for.
+
+Please let me know if you need anything else from me. I look
+forward to hearing from you.
+
+Best regards,
+Maria Chen
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+6. EXECUTIVE SUMMARY
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this executive summary of an annual sustainability
+report for a manufacturing company. It should answer: what
+is the situation, what is the recommendation, and why does
+it matter — in that order. Maximum one page / 400 words.
+Strip jargon. Lead with the conclusion. Audience: board
+members and investors.
+
+DOCUMENT:
+EXECUTIVE SUMMARY — 2025 SUSTAINABILITY REPORT
+
+This report covers our company's environmental, social, and
+governance activities for the calendar year 2025. We have
+been working hard on sustainability and have made some good
+progress in several areas.
+
+In terms of emissions, we reduced our Scope 1 and Scope 2
+emissions compared to the previous year. We also started
+measuring our Scope 3 emissions for the first time which
+was a significant undertaking involving many of our suppliers.
+
+On the social side, we ran some employee engagement programs
+and our survey scores went up. We also did some community
+outreach work in the regions where we operate.
+
+From a governance perspective, we updated our code of conduct
+and ran training for all staff. We also added a new board
+member with sustainability expertise.
+
+Going forward we plan to continue our efforts in all these
+areas and set more formal targets. We believe sustainability
+is important for our long-term business success.
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+7. PRESENTATION OUTLINE
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this presentation outline for a 20-minute talk on
+the future of remote work, for an audience of HR directors
+at a mid-size companies conference. Structure: opening hook,
+3–5 key points, and a strong close with a clear call to
+action. For each slide, provide: slide title, 3–5 bullet
+points of speaker notes, and one suggested visual or data
+point. Keep bullet points brief — this is a speaker outline,
+not a script.
+
+DOCUMENT:
+PRESENTATION: THE FUTURE OF REMOTE WORK
+
+Slide 1 — Introduction
+Talk about how remote work changed after COVID
+
+Slide 2 — Where We Are Now
+Some stats about how many people still work remotely
+Mention that it varies by industry
+
+Slide 3 — What Employees Want
+People like flexibility
+Some people miss the office
+Mental health is a factor
+
+Slide 4 — What Companies Are Doing
+Hybrid models
+Return to office mandates
+Technology investments
+
+Slide 5 — Challenges
+Communication is harder
+Culture is difficult to maintain
+Managing performance remotely
+
+Slide 6 — What Good Looks Like
+Best practice examples
+Policies that work
+
+Slide 7 — Conclusion
+Summary and what HR directors should do next
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+8. BLOG POST / ARTICLE
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this blog post about home coffee brewing for
+publication on a lifestyle and food website targeting
+enthusiastic home cooks aged 30–55. Improve the headline,
+strengthen the opening hook, and ensure each section flows
+into the next. Tone: warm, knowledgeable, not snobby.
+Target length: 600–800 words. Optimise for search around
+"how to make better coffee at home."
+
+DOCUMENT:
+HOW TO MAKE BETTER COFFEE AT HOME
+
+A lot of people don't know that you can make really good
+coffee at home without spending a lot of money. In this
+article I will share some tips.
+
+THE BEANS MATTER
+First of all you should buy good beans. Fresh roasted beans
+are better than old ones. Try to buy from a local roaster
+if you can.
+
+GRIND YOUR OWN
+If you grind your own beans the coffee will taste better.
+A burr grinder is better than a blade grinder. They cost
+more but it's worth it.
+
+WATER QUALITY
+The water you use matters too. If your tap water tastes
+bad your coffee will taste bad. Use filtered water.
+
+TEMPERATURE
+The water shouldn't be boiling. Around 200 degrees
+Fahrenheit is right. Let it sit for 30 seconds after
+boiling.
+
+RATIO
+Use about 1 to 2 tablespoons of coffee per 6 ounces of
+water. Adjust to your taste.
+
+CONCLUSION
+If you follow these tips your coffee will be much better.
+It takes a little practice but it's worth it.
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+9. JOB DESCRIPTION
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this job description for a Customer Success Manager
+role at a B2B software company with around 80 employees.
+It should attract candidates who are proactive, data-driven,
+and genuinely enjoy building long-term client relationships.
+Remove any jargon or vague filler. Tone should represent a
+friendly but professional culture. Include a clear list of
+responsibilities and requirements. Do not invent
+qualifications that aren't already implied by the role.
+
+DOCUMENT:
+CUSTOMER SUCCESS MANAGER
+
+About the Role
+We are looking for a Customer Success Manager to join our
+growing team. You will be responsible for making sure our
+customers are happy and getting value from our product.
+
+Responsibilities
+- Manage a portfolio of accounts
+- Onboard new customers
+- Do regular check-in calls
+- Handle renewals and upsells
+- Work with the product team to share customer feedback
+- Some other stuff as needed
+
+Requirements
+- Experience in a customer-facing role
+- Good communication skills
+- Tech-savvy
+- Team player
+- Bachelor's degree or equivalent experience
+
+What We Offer
+- Competitive salary
+- Health insurance
+- Remote-friendly
+- Good culture
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+10. EMAIL / OUTREACH
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this cold outreach email from a freelance web
+designer to a potential client (a local restaurant that has
+a visibly outdated website). The email should be specific,
+concise, and lead with value rather than credentials. No
+generic opener. Maximum 150 words. Tone: confident and
+friendly, not salesy.
+
+DOCUMENT:
+Subject: Your website
+
+Hi there,
+
+My name is David and I am a freelance web designer. I came
+across your restaurant online and noticed that your website
+might benefit from some updates. I have helped many local
+businesses improve their online presence and I think I could
+help you too.
+
+I specialise in creating modern, mobile-friendly websites
+that help businesses attract more customers. I would love
+to show you some examples of my work and discuss how I
+could help your restaurant.
+
+Would you be open to a quick 15-minute call this week?
+Looking forward to hearing from you.
+
+Best,
+David
+
+Rounds to convergence: ____
+
+
+────────────────────────────────────────────────────────────
+11. RECIPE
+────────────────────────────────────────────────────────────
+PROJECT GOAL:
+Refine this recipe for a classic chocolate chip cookie.
+Improve the clarity of the instructions, check that the
+steps are in a logical order, and ensure ingredient
+quantities are mentioned at first use. Tone: warm and
+beginner-friendly. Add helpful tips where appropriate —
+substitutions, storage, and what to watch for. Do not
+change the core recipe — only clarify and improve what's
+there.
+
+DOCUMENT:
+CHOCOLATE CHIP COOKIES
+
+Ingredients
+2 and 1/4 cups flour
+1 tsp baking soda
+1 tsp salt
+2 sticks butter, softened
+3/4 cup sugar
+3/4 cup brown sugar
+2 eggs
+2 tsp vanilla
+2 cups chocolate chips
+
+Instructions
+Mix the dry stuff together. Cream the butter and sugars.
+Add the eggs and vanilla to the butter mixture. Combine
+wet and dry. Stir in the chips. Drop onto baking sheet.
+Bake at 375 for about 10 minutes or until done. Cool
+before eating.
+
+Rounds to convergence: ____
+
+
+════════════════════════════════════════════════════════════
+RESULTS LOG
+════════════════════════════════════════════════════════════
+
+1.  Résumé                  ____
+2.  Cover Letter            ____
+3.  Business Proposal       ____
+4.  RFP Response            ____
+5.  Thank-You Letter        ____
+6.  Executive Summary       ____
+7.  Presentation Outline    ____
+8.  Blog Post / Article     ____
+9.  Job Description         ____
+10. Email / Outreach        ____
+11. Recipe                  ____
+
+════════════════════════════════════════════════════════════

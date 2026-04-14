@@ -21,12 +21,12 @@ const PHASES = [
 
 // ── DEFAULT AI LIST ──
 const DEFAULT_AIS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/chatgpt.ico',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
-  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/claude.ico',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
-  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64', provider: 'deepseek', apiConsole: 'https://platform.deepseek.com/api_keys' },
-  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64', provider: 'gemini', apiConsole: 'https://aistudio.google.com/apikey' },
-  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'https://www.google.com/s2/favicons?domain=grok.com&sz=64', provider: 'grok', apiConsole: 'https://console.x.ai' },
-  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/perplexity.ico', provider: 'perplexity', apiConsole: 'https://www.perplexity.ai/settings/api' },
+  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
+  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
+  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: 'https://platform.deepseek.com/api_keys' },
+  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: 'https://aistudio.google.com/apikey' },
+  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: 'https://console.x.ai' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: 'https://www.perplexity.ai/settings/api' },
 ];
 
 // ══════════════════════════════════════
@@ -2932,7 +2932,7 @@ async function runBuilderOnly() {
       conflicts:      window._lastConflicts || null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
-      label:          `Round ${round} · Builder Only`
+      label:          'Builder Only'
     });
     window._lastConflicts = null;
     round++;
@@ -4066,10 +4066,10 @@ function showBuilderOverlay() {
     track.innerHTML = '';
     const reviewers = activeAIs.filter(a => a.id !== builder);
     const ais = reviewers.length > 0 ? reviewers : [
-      { id: 'chatgpt', name: 'ChatGPT', icon: 'images/chatgpt.ico' },
-      { id: 'claude',  name: 'Claude',  icon: 'images/claude.ico'  },
-      { id: 'gemini',  name: 'Gemini',  icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64' },
-      { id: 'deepseek',name: 'DeepSeek',icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
+      { id: 'chatgpt', name: 'ChatGPT', icon: 'images/icon-chatgpt.png' },
+      { id: 'claude',  name: 'Claude',  icon: 'images/icon-claude.png'  },
+      { id: 'gemini',  name: 'Gemini',  icon: 'images/icon-gemini.png'  },
+      { id: 'deepseek',name: 'DeepSeek',icon: 'images/icon-deepseek.png'},
     ];
     const count = ais.length;
     const dur = Math.max(7, count * 2.4);
