@@ -1544,7 +1544,7 @@ async function testAllKeys() {
   }
   const btn = document.getElementById('testAllKeysBtn');
   if (btn) { btn.textContent = '⏳ Testing…'; btn.disabled = true; btn.classList.add('testing'); }
-  toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'}…`, 2500);
+  toast(`🔍 Testing ${keyed.length} key${keyed.length === 1 ? '' : 's'} — this may take a minute or two…`, 8000);
 
   const passed = [];
   const failed = [];
@@ -1568,16 +1568,19 @@ async function testAllKeys() {
         const msg = err?.error?.message || `HTTP ${response.status}`;
         if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
         failed.push({ name: ai.name, reason: msg });
+        toast(`❌ ${ai.name}: ${msg}`, 3500);
       } else {
         const data = await response.json();
         cfg.extractFn(data);
         if (testBtn) { testBtn.textContent = '✅'; testBtn.disabled = false; }
         setTimeout(() => { if (testBtn) testBtn.textContent = 'Test'; }, 4000);
         passed.push(ai.name);
+        toast(`✅ ${ai.name} connected`, 2500);
       }
     } catch(e) {
       if (testBtn) { testBtn.textContent = '❌'; testBtn.disabled = false; }
       failed.push({ name: ai.name, reason: e.message });
+      toast(`❌ ${ai.name}: ${e.message}`, 3500);
     }
     await new Promise(r => setTimeout(r, 400));
   }
