@@ -4972,7 +4972,7 @@ kbd {
 }
 .goal-counter-row--flex {
   flex-shrink: 0;
-  margin-bottom: 6px;
+  margin-bottom: 0;
 }
 
 /* ── Goal split layout ── */
@@ -4990,7 +4990,7 @@ kbd {
   flex-direction: column;
 }
 .goal-split-right {
-  width: 320px;
+  width: 450px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
