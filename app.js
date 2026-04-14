@@ -1081,6 +1081,8 @@ function saveProject() {
     projectVersion: document.getElementById('projectVersion')?.value || '',
     projectGoal:    document.getElementById('projectGoal')?.value    || '',
     exportMask:     document.getElementById('exportMask')?.value     || '',
+    lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
+    lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
     docTab,
   };
   try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) {}
@@ -1090,6 +1092,36 @@ function saveProject() {
 
 // saveSettings — writes both (convenience wrapper)
 function saveSettings() { saveHive(); saveProject(); }
+
+// ── Length constraint helpers ──
+const WORDS_PER_PAGE = 500;
+const CHARS_PER_WORD = 5.5; // average chars per word for estimation
+
+function getLengthConstraint() {
+  const limit = parseInt(document.getElementById('lengthLimit')?.value || '0', 10);
+  const unit  = document.getElementById('lengthUnit')?.value || 'characters';
+  if (!limit || limit <= 0) return null;
+  // Normalise everything to a word limit for the bloat gate
+  let wordLimit;
+  if (unit === 'words')      wordLimit = limit;
+  else if (unit === 'pages') wordLimit = limit * WORDS_PER_PAGE;
+  else                       wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
+  return { limit, unit, wordLimit };
+}
+
+function updateLengthConstraintHint() {
+  const hintEl = document.getElementById('lengthConstraintHint');
+  if (!hintEl) return;
+  const c = getLengthConstraint();
+  if (!c) { hintEl.textContent = ''; return; }
+  if (c.unit === 'pages') {
+    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
+  } else if (c.unit === 'characters') {
+    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
+  } else {
+    hintEl.textContent = '';
+  }
+}
 
 // clearProject — wipe project data only, keep hive intact
 function clearProject() {
@@ -1103,8 +1135,11 @@ function clearProject() {
   document.getElementById('projectName').value    = '';
   document.getElementById('projectVersion').value = '';
   document.getElementById('projectGoal').value    = '';
+  const llEl = document.getElementById('lengthLimit'); if (llEl) llEl.value = '';
+  const luEl = document.getElementById('lengthUnit');  if (luEl) luEl.value = 'characters';
   updateProjLineNums('projGoalNums', document.getElementById('projectGoal'));
   updateGoalCounter();
+  updateLengthConstraintHint();
   updateMaskPreview();
   // Clear live work screen fields so the goToScreen auto-save can't resurrect them
   const workDoc = document.getElementById('workDocument');
@@ -1209,6 +1244,9 @@ function loadSettings() {
       if (p.projectVersion) { const el = document.getElementById('projectVersion'); if (el) el.value = p.projectVersion; }
       if (p.projectGoal)    { const el = document.getElementById('projectGoal');    if (el) { el.value = p.projectGoal; updateGoalCounter(); } }
       if (p.exportMask)     { const el = document.getElementById('exportMask');     if (el) { el.value = p.exportMask; updateMaskPreview(); } }
+      if (p.lengthLimit)    { const el = document.getElementById('lengthLimit');    if (el) el.value = p.lengthLimit; }
+      if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
+      if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
     }
 
@@ -2779,6 +2817,18 @@ function buildPromptForAI(ai, reviewerResponses) {
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
   if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
 
+  // Inject length constraint if set
+  const _lc = getLengthConstraint();
+  if (_lc) {
+    if (_lc.unit === 'pages') {
+      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). The final document must not exceed this length. Tighten and consolidate content to fit within this limit.\n\n`;
+    } else if (_lc.unit === 'words') {
+      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} words. The final document must not exceed this word count. Tighten and consolidate content to fit within this limit.\n\n`;
+    } else {
+      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} characters. The final document must not exceed this character count. Tighten and consolidate content to fit within this limit.\n\n`;
+    }
+  }
+
   if (isBuilder && hasResponses) {
     prompt += doc ? `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n` : '';
 
@@ -2938,13 +2988,16 @@ async function runBuilderOnly() {
       const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
       const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
       const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
-      if (prevWords > 0 && newWords > prevWords * 1.15) {
+      const _lcGate   = getLengthConstraint();
+      const bloatLimit = _lcGate ? _lcGate.wordLimit : (prevWords > 0 ? prevWords * 1.5 : Infinity);
+      const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
+      if (bloatFail) {
         builderHadError = true;
         _failedRoundReason = 'bloat';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
         setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
         setStatus(`⚠️ Builder output is ${bloatPct}% of original — round rejected`);
-        consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved.`, 'warn');
+        consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
       } else {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
@@ -3237,13 +3290,15 @@ async function runRound() {
         const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
         const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
         const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
-        if (prevWords > 0 && newWords > prevWords * 1.15) {
+        const _lcGate   = getLengthConstraint();
+        const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
+        if (bloatFail) {
           builderHadError = true;
           _failedRoundReason = 'bloat';
-          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
           setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
           setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected`);
-          consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved.`, 'warn');
+          consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
         } else {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
