@@ -2325,10 +2325,17 @@ function updateGoalCounter() {
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // Fixed-height textarea — use scrollHeight for line count without auto-growing
   const LINE_HEIGHT = 21;
-  const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
+  const lineCount = ta.value.split('\n').length;
+  const visualCount = Math.max(lineCount, Math.round(ta.scrollHeight / LINE_HEIGHT));
   ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+  // Sync gutter scroll to textarea scroll
+  ln.scrollTop = ta.scrollTop;
+  // Attach scroll listener if not already done
+  if (!ta._scrollSynced) {
+    ta._scrollSynced = true;
+    ta.addEventListener('scroll', () => { ln.scrollTop = ta.scrollTop; });
+  }
 }
 
 function updateLineNumbers() {
