@@ -21,12 +21,12 @@ const PHASES = [
 
 // ── DEFAULT AI LIST ──
 const DEFAULT_AIS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
-  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
-  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: 'https://platform.deepseek.com/api_keys' },
-  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: 'https://aistudio.google.com/apikey' },
-  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: 'https://console.x.ai' },
-  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: 'https://www.perplexity.ai/settings/api' },
+  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/chatgpt.ico',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
+  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/claude.ico',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
+  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64', provider: 'deepseek', apiConsole: 'https://platform.deepseek.com/api_keys' },
+  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64', provider: 'gemini', apiConsole: 'https://aistudio.google.com/apikey' },
+  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'https://www.google.com/s2/favicons?domain=grok.com&sz=64', provider: 'grok', apiConsole: 'https://console.x.ai' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/perplexity.ico', provider: 'perplexity', apiConsole: 'https://www.perplexity.ai/settings/api' },
 ];
 
 // ══════════════════════════════════════
@@ -779,6 +779,45 @@ function openChangeBuilder() {
 
 function closeChangeBuilder() {
   const modal = document.getElementById('changeBuilderModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function showRoundErrorModal(reason, details) {
+  const modal   = document.getElementById('roundErrorModal');
+  const msgEl   = document.getElementById('roundErrorMsg');
+  const detEl   = document.getElementById('roundErrorDetails');
+  if (!modal) return;
+
+  const messages = {
+    bloat:    `The Builder returned a document that was significantly longer than the original. This can happen when an AI adds to the document instead of refining it. Your document has not been changed.
+
+You can try running the round again — the result may differ — or switch to a different Builder and try again.`,
+    conflicts:`The Builder's response was missing a required section and could not be processed. Your document has not been changed.
+
+You can try running the round again or switch to a different Builder and try again.`,
+    delimiters:`The Builder's response was not formatted correctly and could not be read. Your document has not been changed.
+
+You can try running the round again or switch to a different Builder and try again.`,
+    api:      `The Builder encountered an error while processing your request. Your document has not been changed.
+
+Check that your API key is valid and that you have sufficient credits, then try again.`
+  };
+
+  if (msgEl) msgEl.textContent = messages[reason] || messages.api;
+
+  if (detEl && details) {
+    detEl.textContent = details;
+    detEl.classList.add('visible');
+  } else if (detEl) {
+    detEl.textContent = '';
+    detEl.classList.remove('visible');
+  }
+
+  modal.classList.add('active');
+}
+
+function closeRoundErrorModal() {
+  const modal = document.getElementById('roundErrorModal');
   if (modal) modal.classList.remove('active');
 }
 
@@ -2873,6 +2912,8 @@ async function runBuilderOnly() {
   prompt += getPrompt(builderKey, BUILDER_INSTRUCTIONS[phase] || BUILDER_INSTRUCTIONS.refine);
 
   let builderHadError = false;
+  let _failedRoundReason = '';
+  let _failedRoundDetails = '';
   try {
     const builderResponse = await callAPI(builderAI, prompt);
     const newDoc    = extractDocument(builderResponse);
@@ -2882,9 +2923,11 @@ async function runBuilderOnly() {
 
     if (!hasConflictBlock) {
       builderHadError = true;
+      _failedRoundReason = 'conflicts';
+      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
       setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
       setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-      consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop). If this keeps happening, try switching to a different Builder.`, 'error');
+      consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
     } else if (conflicts) {
       consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
     } else {
@@ -2897,6 +2940,8 @@ async function runBuilderOnly() {
       const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
       if (prevWords > 0 && newWords > prevWords * 1.15) {
         builderHadError = true;
+        _failedRoundReason = 'bloat';
+        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
         setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
         setStatus(`⚠️ Builder output is ${bloatPct}% of original — round rejected`);
         consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved.`, 'warn');
@@ -2911,12 +2956,16 @@ async function runBuilderOnly() {
       }
     } else if (!builderHadError) {
       builderHadError = true;
+      _failedRoundReason = 'delimiters';
+      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
       setBeeStatus(builderAI.id, 'error', 'Invalid builder output format');
       setStatus(`⚠️ Builder output missing required delimiters — document unchanged`);
       consoleLog(`⚠️ Builder response missing %%DOCUMENT_START%%/%%DOCUMENT_END%% — document unchanged`, 'warn');
     }
   } catch(e) {
     builderHadError = true;
+    _failedRoundReason = 'api';
+    _failedRoundDetails = `Builder: ${builderAI.name} · Error: ${e.message} · Time: ${new Date().toLocaleTimeString()}`;
     setBeeStatus(builderAI.id, 'error', e.message);
     setStatus(`⚠️ Builder failed: ${e.message}`);
     consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
@@ -2947,7 +2996,24 @@ async function runBuilderOnly() {
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
   } else {
-    toast('⚠️ Round not saved — Builder output was invalid', 5000);
+    // Save failed round to history for accurate records and export transcript
+    history.push({
+      round, phase,
+      projectName:    document.getElementById('projectName')?.value.trim()    || '',
+      projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
+      doc:            null,
+      notes:          notes,
+      conflicts:      null,
+      responses:      {},
+      timestamp:      new Date().toLocaleTimeString(),
+      label:          'Builder Only',
+      failed:         true,
+      failReason:     _failedRoundReason || 'unknown',
+      failDetails:    _failedRoundDetails || ''
+    });
+    renderRoundHistory();
+    saveSession();
+    showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
   }
 
   btn.disabled = false;
@@ -2999,6 +3065,8 @@ async function runRound() {
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
   let builderHadError = false;
+  let _failedRoundReason = '';
+  let _failedRoundDetails = '';
   // ALL AIs including Builder review the document simultaneously
   const allReviewers = activeAIs.filter(ai =>
     ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
@@ -3153,9 +3221,11 @@ async function runRound() {
       // ── GATE 1: Missing conflicts block = hard failure ──
       if (!hasConflictBlock) {
         builderHadError = true;
+        _failedRoundReason = 'conflicts';
+        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
         setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
         setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop). If this keeps happening, try switching to a different Builder.`, 'error');
+        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
       } else if (conflicts) {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
@@ -3169,9 +3239,11 @@ async function runRound() {
         const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
         if (prevWords > 0 && newWords > prevWords * 1.15) {
           builderHadError = true;
+          _failedRoundReason = 'bloat';
+          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
           setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
-          setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected to prevent document bloat`);
-          consoleLog(`⚠️ Bloat gate triggered — new doc is ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved. Builder may be appending instead of replacing.`, 'warn');
+          setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected`);
+          consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords} prior (${bloatPct}%). Round not saved.`, 'warn');
         } else {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
@@ -3185,12 +3257,16 @@ async function runRound() {
       } else if (!builderHadError) {
         // Extraction failed — keep existing working document unchanged
         builderHadError = true;
+        _failedRoundReason = 'delimiters';
+        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
         setBeeStatus(builderAI.id, 'error', 'Invalid builder output format');
         setStatus(`⚠️ Builder output missing required document delimiters — document unchanged`);
-        consoleLog(`⚠️ Builder response missing valid %%DOCUMENT_START%%/%%DOCUMENT_END%% block — kept previous document unchanged`, 'warn');
+        consoleLog(`⚠️ Builder response missing valid %%DOCUMENT_START%%/%%DOCUMENT_END%% block — document unchanged`, 'warn');
       }
     } catch(e) {
       builderHadError = true;
+      _failedRoundReason = 'api';
+      _failedRoundDetails = `Builder: ${builderAI.name} · Error: ${e.message} · Time: ${new Date().toLocaleTimeString()}`;
       window._lastConflicts = null;
       setBeeStatus(builderAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
@@ -3252,7 +3328,23 @@ async function runRound() {
     btn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
   }
   if (builderHadError) {
-    toast('⚠️ Round not saved — Builder output was invalid', 5000);
+    // Save failed round to history for accurate records and export transcript
+    history.push({
+      round, phase,
+      projectName:    document.getElementById('projectName')?.value.trim()    || '',
+      projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
+      doc:            null,
+      notes:          document.getElementById('workNotes')?.value.trim()       || '',
+      conflicts:      null,
+      responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
+      timestamp:      new Date().toLocaleTimeString(),
+      failed:         true,
+      failReason:     _failedRoundReason || 'unknown',
+      failDetails:    _failedRoundDetails || ''
+    });
+    renderRoundHistory();
+    saveSession();
+    showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
   } else {
     toast(`✅ Round ${round - 1} complete!`);
   }
@@ -3991,6 +4083,22 @@ function renderRoundHistory() {
     const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
     const wordCount = h.doc ? h.doc.trim().split(/\s+/).length : 0;
     const responseCount = Object.values(h.responses || {}).filter(Boolean).length;
+
+    if (h.failed) {
+      const failLabels = { bloat: 'Output too long', conflicts: 'Missing conflicts block', delimiters: 'Malformed output', api: 'API error', unknown: 'Unknown error' };
+      const failLabel = failLabels[h.failReason] || 'Rejected';
+      return `
+      <div class="round-hist-item round-hist-item--failed">
+        <div class="round-hist-hdr">
+          <div class="round-hist-hdr-left">
+            <span class="round-hist-badge round-hist-badge--failed">⚠️ Round ${h.round} — Failed</span>
+            <span class="round-hist-meta">${h.label || phaseLabel} · ${h.timestamp}</span>
+            <span class="round-hist-stats round-hist-stats--failed">${failLabel} · Document unchanged · API tokens consumed</span>
+          </div>
+        </div>
+      </div>`;
+    }
+
     return `
     <div class="round-hist-item">
       <div class="round-hist-hdr">
@@ -4066,10 +4174,10 @@ function showBuilderOverlay() {
     track.innerHTML = '';
     const reviewers = activeAIs.filter(a => a.id !== builder);
     const ais = reviewers.length > 0 ? reviewers : [
-      { id: 'chatgpt', name: 'ChatGPT', icon: 'images/icon-chatgpt.png' },
-      { id: 'claude',  name: 'Claude',  icon: 'images/icon-claude.png'  },
-      { id: 'gemini',  name: 'Gemini',  icon: 'images/icon-gemini.png'  },
-      { id: 'deepseek',name: 'DeepSeek',icon: 'images/icon-deepseek.png'},
+      { id: 'chatgpt', name: 'ChatGPT', icon: 'images/chatgpt.ico' },
+      { id: 'claude',  name: 'Claude',  icon: 'images/claude.ico'  },
+      { id: 'gemini',  name: 'Gemini',  icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64' },
+      { id: 'deepseek',name: 'DeepSeek',icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
     ];
     const count = ais.length;
     const dur = Math.max(7, count * 2.4);
@@ -4298,11 +4406,28 @@ function exportSession() {
 
   let out = `${eq}\nAI HIVE v2 — SESSION TRANSCRIPT\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
 
+  const failLabels = { bloat: 'Output too long — Builder expanded document beyond allowed limit', conflicts: 'Missing conflicts block — Builder response rejected', delimiters: 'Malformed output — Builder response could not be parsed', api: 'API error', unknown: 'Unknown error' };
+
   if (history.length === 0) {
     out += `(No rounds recorded — document exported as-is)\n\n`;
   } else {
     history.forEach(h => {
       const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
+      if (h.failed) {
+        const roundLabel = `Round ${h.round} — FAILED / NOT SAVED`;
+        out += `${eq}\n${roundLabel} — ${h.timestamp}\n${eq}\n\n`;
+        out += `RESULT: Round rejected — document was not updated\n`;
+        out += `REASON: ${failLabels[h.failReason] || h.failReason}\n`;
+        if (h.failDetails) out += `DETAILS: ${h.failDetails}\n`;
+        out += `NOTE: API tokens were consumed for this attempt\n\n`;
+        Object.keys(h.responses || {}).forEach(id => {
+          if (h.responses[id]) {
+            const ai = activeAIs.find(a => a.id === id);
+            out += `${(ai ? ai.name : id).toUpperCase()} (Reviewer):\n${sep}\n${h.responses[id]}\n\n`;
+          }
+        });
+        return;
+      }
       const roundLabel = h.round === 0 ? 'Original Document' : (h.label || `Round ${h.round} · ${phaseLabel}`);
       out += `${eq}\n${roundLabel} — ${h.timestamp}\n${eq}\n\n`;
       if (h.doc) out += `DOCUMENT:\n${sep}\n${h.doc}\n\n`;
