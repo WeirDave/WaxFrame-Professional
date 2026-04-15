@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.0-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260414--002-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Version](https://img.shields.io/badge/Version-3.2-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260415--002-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -200,7 +200,7 @@ For step-by-step instructions and direct billing links, open the **API Key Guide
 
 ---
 
-## Understanding Tokens
+## What Are Tokens?
 
 If you're using Pro mode, tokens matter — especially for your Builder. Every round, your Builder reads the entire document plus all Worker Bee suggestions and rewrites the full document. On a 2,000-word document with 5 Worker Bees that's roughly **8,000–12,000 tokens per Builder call**.
 
@@ -232,6 +232,12 @@ Open the **Token Guide** inside the app for a full cost breakdown by provider.
 ## License
 
 WaxFrame is open source under the **AGPL-3.0** license. See [LICENSE](LICENSE) for full terms.
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ---
 
