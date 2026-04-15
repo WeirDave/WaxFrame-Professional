@@ -122,95 +122,6 @@
               <button class="btn" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
             </div>
 
-            <!-- ── Custom AI Form ── -->
-            <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
-              <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
-
-              <!-- Quick Add -->
-              <div class="custom-ai-form-row custom-ai-quickadd-row">
-                <div class="custom-ai-field-wrap">
-                  <label>Quick Add <span class="field-optional">(optional)</span></label>
-                  <select id="customAIQuickAdd" class="custom-ai-select" onchange="applyQuickAdd(this.value)">
-                    <option value="">— Select a known provider or fill in manually —</option>
-                    <option value="mistral">Mistral</option>
-                    <option value="together">Together AI</option>
-                    <option value="cohere">Cohere</option>
-                    <option value="ollama">Ollama (local)</option>
-                    <option value="lmstudio">LM Studio (local)</option>
-                  </select>
-                </div>
-                <div class="custom-ai-field-wrap custom-ai-field-wrap--keylinkwrap">
-                  <label>&nbsp;</label>
-                  <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
-                </div>
-              </div>
-
-              <!-- URL + Name -->
-              <div class="custom-ai-form-row">
-                <div class="custom-ai-field-wrap">
-                  <label>URL <span class="field-required">*</span></label>
-                  <input type="text" id="customAIUrl" placeholder="https://your-endpoint.com/api" oninput="autoFillAIName(this.value); resetCustomAITest()">
-                </div>
-                <div class="custom-ai-field-wrap">
-                  <label>Name <span class="field-optional">(auto-detected)</span></label>
-                  <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'">
-                </div>
-              </div>
-
-              <!-- Format + Key -->
-              <div class="custom-ai-form-row">
-                <div class="custom-ai-field-wrap">
-                  <label>API Format <span class="field-required">*</span></label>
-                  <select id="customAIFormat" class="custom-ai-select" onchange="resetCustomAITest()">
-                    <option value="openai">OpenAI compatible (Mistral, DeepSeek, etc.)</option>
-                    <option value="anthropic">Anthropic (Claude)</option>
-                    <option value="google">Google (Gemini)</option>
-                  </select>
-                </div>
-                <div class="custom-ai-field-wrap">
-                  <label>API Key <span class="field-optional">(optional)</span></label>
-                  <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest(); resetModelField()">
-                </div>
-              </div>
-
-              <!-- Model -->
-              <div class="custom-ai-form-row custom-ai-model-row">
-                <div class="custom-ai-field-wrap custom-ai-field-wrap--model">
-                  <label>Model <span class="field-required">*</span></label>
-                  <div class="custom-ai-model-input-wrap">
-                    <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest" oninput="resetCustomAITest()">
-                    <select id="customAIModelSelect" class="custom-ai-select" style="display:none;" onchange="resetCustomAITest()"></select>
-                    <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="custom-ai-form-footer">
-                <span id="customAITestStatus" class="custom-ai-test-status"></span>
-                <button class="btn" onclick="showAddCustomAI()">Cancel</button>
-                <button class="btn btn-accent btn-sm" id="customAITestBtn" onclick="testCustomAIConnection()">Test Connection</button>
-                <button class="btn btn-accent btn-sm" id="customAIAddBtn" style="display:none;" onclick="addCustomAI()">Add to Hive</button>
-              </div>
-              <div id="customAIRawPanel" class="custom-ai-raw-panel" style="display:none;">
-                <div class="custom-ai-raw-row">
-                  <span class="custom-ai-raw-label">Endpoint</span>
-                  <pre class="custom-ai-raw-pre" id="customAIRawEndpoint"></pre>
-                </div>
-                <div class="custom-ai-raw-row">
-                  <span class="custom-ai-raw-label">Sent</span>
-                  <pre class="custom-ai-raw-pre" id="customAIRawSent"></pre>
-                </div>
-                <div class="custom-ai-raw-row">
-                  <span class="custom-ai-raw-label">Status</span>
-                  <pre class="custom-ai-raw-pre" id="customAIRawStatus"></pre>
-                </div>
-                <div class="custom-ai-raw-row">
-                  <span class="custom-ai-raw-label">Received</span>
-                  <pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre>
-                </div>
-              </div>
-            </div>
-
             <div class="ai-setup-grid" id="aiSetupGrid"></div>
           </div>
         </div>
@@ -692,6 +603,104 @@
 <!-- ============================================================
      ROUND HISTORY MODAL
      ============================================================ -->
+<!-- ── Add Custom AI Modal ── -->
+<div class="custom-ai-modal-overlay" id="addCustomAIModal" onclick="if(event.target===this)showAddCustomAI()">
+  <div class="custom-ai-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title">Add a Custom Worker Bee</div>
+        <div class="custom-ai-modal-sub">Connect any OpenAI-compatible, Anthropic, or Google endpoint</div>
+      </div>
+    </div>
+
+    <!-- Quick Add -->
+    <div class="custom-ai-form-row custom-ai-quickadd-row">
+      <div class="custom-ai-field-wrap">
+        <label>Quick Add <span class="field-optional">(optional)</span></label>
+        <select id="customAIQuickAdd" class="custom-ai-select" onchange="applyQuickAdd(this.value)">
+          <option value="">— Select a known provider or fill in manually —</option>
+          <option value="mistral">Mistral</option>
+          <option value="together">Together AI</option>
+          <option value="cohere">Cohere</option>
+          <option value="ollama">Ollama (local)</option>
+          <option value="lmstudio">LM Studio (local)</option>
+        </select>
+      </div>
+      <div class="custom-ai-field-wrap custom-ai-field-wrap--keylinkwrap">
+        <label>&nbsp;</label>
+        <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
+      </div>
+    </div>
+
+    <!-- URL + Name -->
+    <div class="custom-ai-form-row">
+      <div class="custom-ai-field-wrap">
+        <label>URL <span class="field-required">*</span></label>
+        <input type="text" id="customAIUrl" placeholder="https://your-endpoint.com/api" oninput="autoFillAIName(this.value); resetCustomAITest()">
+      </div>
+      <div class="custom-ai-field-wrap">
+        <label>Name <span class="field-optional">(auto-detected)</span></label>
+        <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'">
+      </div>
+    </div>
+
+    <!-- Format + Key -->
+    <div class="custom-ai-form-row">
+      <div class="custom-ai-field-wrap">
+        <label>API Format <span class="field-required">*</span></label>
+        <select id="customAIFormat" class="custom-ai-select" onchange="resetCustomAITest()">
+          <option value="openai">OpenAI compatible (Mistral, DeepSeek, etc.)</option>
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="google">Google (Gemini)</option>
+        </select>
+      </div>
+      <div class="custom-ai-field-wrap">
+        <label>API Key <span class="field-optional">(optional)</span></label>
+        <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest(); resetModelField()">
+      </div>
+    </div>
+
+    <!-- Model -->
+    <div class="custom-ai-form-row custom-ai-model-row">
+      <div class="custom-ai-field-wrap custom-ai-field-wrap--model">
+        <label>Model <span class="field-required">*</span></label>
+        <div class="custom-ai-model-input-wrap">
+          <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest" oninput="resetCustomAITest()">
+          <select id="customAIModelSelect" class="custom-ai-select" style="display:none;" onchange="resetCustomAITest()"></select>
+          <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="custom-ai-form-footer">
+      <span id="customAITestStatus" class="custom-ai-test-status"></span>
+      <button class="btn" onclick="showAddCustomAI()">Cancel</button>
+      <button class="btn btn-accent btn-sm" id="customAITestBtn" onclick="testCustomAIConnection()">Test Connection</button>
+      <button class="btn btn-accent btn-sm" id="customAIAddBtn" style="display:none;" onclick="addCustomAI()">Add to Hive</button>
+    </div>
+
+    <div id="customAIRawPanel" class="custom-ai-raw-panel" style="display:none;">
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Endpoint</span>
+        <pre class="custom-ai-raw-pre" id="customAIRawEndpoint"></pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Sent</span>
+        <pre class="custom-ai-raw-pre" id="customAIRawSent"></pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Status</span>
+        <pre class="custom-ai-raw-pre" id="customAIRawStatus"></pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Received</span>
+        <pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="hist-modal-overlay" id="roundHistoryModal" onclick="if(event.target===this)closeRoundHistoryModal()">
   <div class="hist-modal">
     <div class="hist-modal-hdr">

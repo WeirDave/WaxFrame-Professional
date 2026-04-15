@@ -2136,32 +2136,31 @@ function autoFillAIName(url) {
 }
 
 function showAddCustomAI() {
-  const f = document.getElementById('addCustomAIForm');
-  const isHidden = f.style.display === 'none' || f.style.display === '';
-  if (isHidden) {
-    // Always clear form fresh when opening
-    const urlInput  = document.getElementById('customAIUrl');
-    const nameInput = document.getElementById('customAIName');
-    const keyInput  = document.getElementById('customAIKey');
-    const fmtSelect = document.getElementById('customAIFormat');
-    const modelInput = document.getElementById('customAIModel');
-    const quickAdd   = document.getElementById('customAIQuickAdd');
-    const keyLink    = document.getElementById('customAIKeyLink');
-    if (urlInput)  urlInput.value  = '';
-    if (nameInput) { nameInput.value = ''; nameInput.placeholder = 'e.g. Work AI'; nameInput.dataset.userTyped = 'false'; }
-    if (keyInput)  keyInput.value  = '';
-    if (fmtSelect) fmtSelect.value = 'openai';
-    if (modelInput) modelInput.value = '';
-    if (quickAdd)  quickAdd.value  = '';
-    if (keyLink)   keyLink.style.display = 'none';
-    resetModelField();
-    resetCustomAITest();
-    f.style.display = 'block';
-    document.getElementById('customAIQuickAdd')?.focus();
-    setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  } else {
-    f.style.display = 'none';
+  const modal = document.getElementById('addCustomAIModal');
+  const isOpen = modal.classList.contains('active');
+  if (isOpen) {
+    modal.classList.remove('active');
+    return;
   }
+  // Clear form fresh when opening
+  const urlInput   = document.getElementById('customAIUrl');
+  const nameInput  = document.getElementById('customAIName');
+  const keyInput   = document.getElementById('customAIKey');
+  const fmtSelect  = document.getElementById('customAIFormat');
+  const modelInput = document.getElementById('customAIModel');
+  const quickAdd   = document.getElementById('customAIQuickAdd');
+  const keyLink    = document.getElementById('customAIKeyLink');
+  if (urlInput)   urlInput.value  = '';
+  if (nameInput)  { nameInput.value = ''; nameInput.placeholder = 'e.g. Work AI'; nameInput.dataset.userTyped = 'false'; }
+  if (keyInput)   keyInput.value  = '';
+  if (fmtSelect)  fmtSelect.value = 'openai';
+  if (modelInput) modelInput.value = '';
+  if (quickAdd)   quickAdd.value  = '';
+  if (keyLink)    keyLink.style.display = 'none';
+  resetModelField();
+  resetCustomAITest();
+  modal.classList.add('active');
+  document.getElementById('customAIQuickAdd')?.focus();
 }
 
 // ── Custom AI Quick Add provider presets ──
@@ -2467,8 +2466,8 @@ function addCustomAI() {
   aiList.push(ai);
   activeAIs.push(ai);
 
-  // Clear form
-  document.getElementById('addCustomAIForm').style.display = 'none';
+  // Close modal and clear form
+  document.getElementById('addCustomAIModal').classList.remove('active');
   document.getElementById('customAIName').value   = '';
   document.getElementById('customAIUrl').value    = '';
   document.getElementById('customAIKey').value    = '';
