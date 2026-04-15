@@ -930,6 +930,18 @@ function playUnlockScene() {
   const sub    = document.getElementById('unlockSub');
   if (!scene || !canvas || !logo) return;
 
+  // ── Shared AudioContext — created and resumed immediately while still in the user gesture stack.
+  // Pre-fetching and decoding the MP3 now means the clang fires synchronously at T+1.6s
+  // with no async fetch delay, which was causing the sound to misfire on first play.
+  const sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  sharedAudioCtx.resume();
+  let clangBuffer = null;
+  fetch('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3')
+    .then(r => r.arrayBuffer())
+    .then(buf => sharedAudioCtx.decodeAudioData(buf))
+    .then(decoded => { clangBuffer = decoded; })
+    .catch(() => {});
+
   // ── Reset — everything hidden, logo pre-scaled for stamp ──
   logo.src = 'images/Waxframe_logo_v19.png';
   logo.style.transition = 'none';
@@ -978,7 +990,7 @@ function playUnlockScene() {
   // ── T+1.6s — metal clang, logo stamps in ──
   setTimeout(() => {
     scene.style.transition = 'none'; // lock in black before stamp
-    playMetalClang();
+    playMetalClang(sharedAudioCtx, clangBuffer);
   }, 1600);
 
   // ── T+1.65s — logo stamps in + recoil + sparks ──
@@ -1004,7 +1016,7 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 530px)';
+    bee.style.right = 'calc(50% - 500px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
@@ -1012,8 +1024,8 @@ function playUnlockScene() {
     // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
     if (bee) {
       const beeRect = bee.getBoundingClientRect();
-      nozzleX = beeRect.left + beeRect.width * 0.3 - 35;
-      nozzleY = beeRect.top  + beeRect.height * 0.55;
+      nozzleX = beeRect.left + beeRect.width * 0.3 - 75;
+      nozzleY = beeRect.top  + beeRect.height * 0.55 + 40;
     }
     dripping = true;
     startCanvas();
@@ -1028,7 +1040,7 @@ function playUnlockScene() {
     smokeFill = 1;
     dripping  = false;
     logo.src  = 'images/Waxframe_Logo_Licensed_v1.png';
-    playAnvilSound();
+    playAnvilSound(sharedAudioCtx);
   }, 9550);
 
   // ── T+10.15s — smoke clears ──
@@ -1224,17 +1236,29 @@ function spawnSparks(container) {
   }
 }
 
-function playMetalClang() {
+function playMetalClang(audioCtx, clangBuffer) {
   try {
-    const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
-    audio.volume = 0.85;
-    audio.play();
+    if (clangBuffer && audioCtx) {
+      // Buffer already decoded — plays with zero async delay
+      const src  = audioCtx.createBufferSource();
+      const gain = audioCtx.createGain();
+      src.buffer = clangBuffer;
+      gain.gain.setValueAtTime(0.85, audioCtx.currentTime);
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start(audioCtx.currentTime);
+    } else {
+      // Fallback: buffer not ready yet (e.g. very fast click), use Audio()
+      const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
+      audio.volume = 0.85;
+      audio.play().catch(() => {});
+    }
   } catch(e) {}
 }
 
-function playAnvilSound() {
+function playAnvilSound(audioCtx) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
 
     // Deep anvil thud — low sine boom
     const boom = ctx.createOscillator();
@@ -5023,21 +5047,24 @@ document.addEventListener('DOMContentLoaded', async () => {
       if (label) {
         label.addEventListener('mousedown', function(e) {
           e.preventDefault();
+          // Immediately convert right-anchored position to explicit left/top.
+          // Chrome and Edge both fight the drag if right is still set when left is applied.
           const rect = tb.getBoundingClientRect();
+          tb.style.right  = 'auto';
+          tb.style.bottom = 'auto';
+          tb.style.left   = rect.left + 'px';
+          tb.style.top    = rect.top  + 'px';
           const offX = e.clientX - rect.left;
           const offY = e.clientY - rect.top;
           function onMove(e) {
             const newLeft = Math.max(0, Math.min(window.innerWidth  - tb.offsetWidth,  e.clientX - offX));
             const newTop  = Math.max(0, Math.min(window.innerHeight - tb.offsetHeight, e.clientY - offY));
-            tb.style.left  = newLeft + 'px';
-            tb.style.top   = newTop  + 'px';
-            tb.style.right = 'auto';
-            tb.style.bottom = 'auto';
+            tb.style.left = newLeft + 'px';
+            tb.style.top  = newTop  + 'px';
           }
           function onUp() {
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
-            // Save position
             localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
               top:  parseInt(tb.style.top),
               left: parseInt(tb.style.left)
