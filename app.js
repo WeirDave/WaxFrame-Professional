@@ -5035,6 +5035,51 @@ function exportSession() {
   toast('💾 Full transcript exported');
 }
 
+function backupSession() {
+  const hive    = localStorage.getItem(LS_HIVE)    || null;
+  const project = localStorage.getItem(LS_PROJECT) || null;
+  const session = localStorage.getItem(LS_SESSION) || null;
+  if (!hive && !project && !session) { toast('⚠️ Nothing to back up'); return; }
+  const backup   = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
+  const name     = (() => { try { return JSON.parse(project || '{}').name || 'session'; } catch(e) { return 'session'; } })();
+  const safeName = name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40);
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `WaxFrame-Backup-${safeName}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  closeNavMenu();
+  toast('💾 Session backed up');
+}
+
+function importSession() {
+  const input    = document.createElement('input');
+  input.type     = 'file';
+  input.accept   = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
+        if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
+        if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+        if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+        toast('✅ Backup restored — reloading…');
+        setTimeout(() => location.reload(), 800);
+      } catch(e) {
+        toast('⚠️ Could not read file — is it a WaxFrame backup?');
+      }
+    };
+    reader.readAsText(file);
+  };
+  closeNavMenu();
+  input.click();
+}
+
 function copyDocument() {
   const text = document.getElementById('workDocument')?.value.trim();
   if (!text) { toast('⚠️ No document to copy'); return; }

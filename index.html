@@ -23,6 +23,9 @@
      ============================================================ -->
 <div class="screen active" id="screen-welcome">
   <div class="welcome-bg"></div>
+  <button class="nav-hamburger welcome-hamburger" onclick="openNavMenu()" title="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <div class="welcome-inner">
     <div class="welcome-logo">
       <div class="welcome-logo-anim">
@@ -69,11 +72,6 @@
       Let's get started →
     </button>
 
-    <div class="welcome-footer">
-      <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
-      <a href="working-with-the-hive.html" target="_blank" class="btn">📖 User Guide</a>
-      <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
-    </div>
     <div class="theme-toggle">
       <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
       <button class="theme-opt active" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️ Auto</button>
@@ -383,37 +381,6 @@
      ============================================================ -->
 <div class="screen" id="screen-work">
   <div class="work-layout">
-
-    <!-- ── SLIDE-IN NAV BACKDROP ── -->
-    <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
-
-    <!-- ── SLIDE-IN NAV PANEL ── -->
-    <div class="nav-panel" id="navPanel">
-      <div class="nav-panel-header">
-        <div class="nav-panel-brand">
-          <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
-          <span class="nav-panel-title">WaxFrame</span>
-        </div>
-        <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
-      </div>
-
-      <div class="nav-section-label">Navigate</div>
-      <button class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-      <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-setup')">← Setup — Keys &amp; Builder</button>
-      <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">← Project — Goal &amp; Document</button>
-
-      <div class="nav-divider"></div>
-      <div class="nav-section-label">Reference</div>
-      <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()" id="navPromptEditor" style="display:none;">✏️ Prompt Editor</a>
-      <button class="nav-item" onclick="closeNavMenu();openSettings()">⚙️ API Keys</button>
-      <a class="nav-item" href="know-your-hive.html" target="_blank" onclick="closeNavMenu()">🐝 Know Your Hive</a>
-      <a class="nav-item" href="working-with-the-hive.html" target="_blank" onclick="closeNavMenu()">📖 Working with the Hive</a>
-      <a class="nav-item" href="tokens-explainer.html" target="_blank" onclick="closeNavMenu()">🪙 Token Guide</a>
-      <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
-      <button class="nav-item" onclick="closeNavMenu();document.getElementById('aboutModal').classList.add('active')">ℹ️ About WaxFrame</button>
-      <div class="nav-divider"></div>
-      <button class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
-    </div>
 
     <!-- ── TOP BAR ── -->
     <div class="work-topbar">
@@ -1098,6 +1065,46 @@
     <p class="mobile-overlay-sub">Please open it on a desktop or laptop browser for the full experience.</p>
     <a href="https://weirdave.github.io/WaxFrame-Professional/" class="mobile-overlay-link">weirdave.github.io/WaxFrame-Professional</a>
   </div>
+</div>
+
+<!-- ============================================================
+     SLIDE-IN NAV — shared across all screens
+     ============================================================ -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <span class="nav-panel-title">WaxFrame</span>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-section-label">Navigate</div>
+  <button class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
+  <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-setup')">← Setup — Keys &amp; Builder</button>
+  <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">← Project — Goal &amp; Document</button>
+
+  <div class="nav-divider"></div>
+  <div class="nav-section-label">Reference</div>
+  <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()" id="navPromptEditor" style="display:none;">✏️ Prompt Editor</a>
+  <button class="nav-item" onclick="closeNavMenu();openSettings()">⚙️ API Keys</button>
+  <a class="nav-item" href="know-your-hive.html" target="_blank" onclick="closeNavMenu()">🐝 Know Your Hive</a>
+  <a class="nav-item" href="working-with-the-hive.html" target="_blank" onclick="closeNavMenu()">📖 Working with the Hive</a>
+  <a class="nav-item" href="tokens-explainer.html" target="_blank" onclick="closeNavMenu()">🪙 Token Guide</a>
+  <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
+  <a class="nav-item" href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" onclick="closeNavMenu()">⭐ GitHub</a>
+  <a class="nav-item" href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" onclick="closeNavMenu()">📄 AGPL-3.0</a>
+  <button class="nav-item" onclick="closeNavMenu();document.getElementById('aboutModal').classList.add('active')">ℹ️ About WaxFrame</button>
+
+  <div class="nav-divider"></div>
+  <div class="nav-section-label">Session</div>
+  <button class="nav-item" onclick="importSession()">📂 Import Backup</button>
+  <button class="nav-item" onclick="backupSession()">💾 Backup Session</button>
+
+  <div class="nav-divider"></div>
+  <button class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
 </div>
 
 </body>

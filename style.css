@@ -498,10 +498,7 @@ html, body {
 }
 
 .welcome-footer {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
+  display: none;
 }
 
 /* ══════════════════════════════════════
@@ -922,6 +919,12 @@ html, body {
 }
 .nav-hamburger:hover span {
   background: var(--accent);
+}
+.welcome-hamburger {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
 }
 
 /* Backdrop */
@@ -4911,7 +4914,7 @@ kbd {
 .wh-toc-link { font-size:13px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
 .wh-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-.wh-section { margin-bottom:32px; scroll-margin-top:108px; }
+.wh-section { margin-bottom:32px; scroll-margin-top:72px; }
 .wh-section-hdr { display:flex; align-items:center; gap:14px; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border2); }
 .wh-section-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
 .wh-section-title { font-family:var(--font-display); font-size:17px; font-weight:800; color:var(--text); }
