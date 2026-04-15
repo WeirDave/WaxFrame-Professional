@@ -1,4 +1,5 @@
 // api-links.js — Standalone API URL opener
+// Build: 20260415-001
 // Used by api-details.html and any other helper pages that need to open API consoles or billing pages.
 // The main app (app.js) has its own openAllConsoles() that reads from the live aiList —
 // this file is for standalone pages that don't have access to app.js.
