@@ -989,7 +989,7 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 300px)';
+    bee.style.right = 'calc(50% - 600px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
