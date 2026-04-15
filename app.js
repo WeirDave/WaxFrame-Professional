@@ -912,12 +912,22 @@ async function submitDevPassword() {
       const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
       if (savedPos) { tb.style.top = savedPos.top + 'px'; tb.style.left = savedPos.left + 'px'; tb.style.right = 'auto'; }
     }
-    const navPromptEditor = document.getElementById('navPromptEditor');
-    if (navPromptEditor) navPromptEditor.style.display = '';
+    const navDevSection = document.getElementById('navDevSection');
+    if (navDevSection) navDevSection.classList.add('active');
     toast('🛠 Dev mode enabled');
   } else {
     hideDevModal();
   }
+}
+
+function exitDevMode() {
+  localStorage.removeItem('waxframe_dev');
+  localStorage.removeItem('waxframe_dev_toolbar_pos');
+  const tb = document.getElementById('devToolbar');
+  if (tb) tb.style.display = 'none';
+  const navDevSection = document.getElementById('navDevSection');
+  if (navDevSection) navDevSection.classList.remove('active');
+  toast('Dev mode disabled');
 }
 
 // ── LICENSE UNLOCK SCENE ──
@@ -5133,8 +5143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Show dev toolbar and admin nav items if dev mode is active
   if (localStorage.getItem('waxframe_dev') === '1') {
-    const navPromptEditor = document.getElementById('navPromptEditor');
-    if (navPromptEditor) navPromptEditor.style.display = '';
+    const navDevSection = document.getElementById('navDevSection');
+    if (navDevSection) navDevSection.classList.add('active');
     const tb = document.getElementById('devToolbar');
     if (tb) {
       tb.style.display = 'flex';

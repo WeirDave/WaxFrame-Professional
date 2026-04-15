@@ -4986,6 +4986,14 @@ kbd {
   font-size: 11px;
 }
 .nav-item-dev:hover { opacity: 1; }
+.nav-dev-section { display: none; }
+.nav-dev-section.active { display: block; }
+.nav-item-exit-dev {
+  color: var(--danger, #c0392b);
+  opacity: 0.6;
+  font-size: 11px;
+}
+.nav-item-exit-dev:hover { opacity: 1; }
 
 /* ============================================================
    DEV PASSWORD MODAL
