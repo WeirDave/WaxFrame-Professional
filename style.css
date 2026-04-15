@@ -4338,7 +4338,7 @@ kbd {
   flex-shrink: 0;
 }
 .save-bar-title { font-family: var(--font-display); font-size: 24px; font-weight: 800; color: var(--text); line-height: 1; }
-.save-bar-note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.save-bar-note { font-size: 12px; color: var(--muted); margin-top: 4px; max-width: 500px; }
 
 /* ── Prompt editor groups ── */
 .prompts-grid { display: flex; flex-direction: column; gap: 16px; }
