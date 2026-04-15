@@ -964,13 +964,14 @@ function playUnlockScene() {
   ctx.clearRect(0, 0, sw, sh);
 
   // ── Particle state ──
-  const drips   = [];
-  const splats  = [];
-  const smokes  = [];
-  let dripping  = false;
-  let smokeFill = 0;
-  let smokeMode = 'off';
-  let rafId     = null;
+  const drips    = [];
+  const splats   = [];
+  const smokes   = [];
+  const bigPuffs = [];  // large smoker puffs that fill the screen
+  let dripping   = false;
+  let smokeMode  = 'off';
+  let whiteFill  = 0;   // 0–1, drives the white flash overlay
+  let rafId      = null;
 
   // Nozzle — calculated from bee's actual screen position when dripping starts
   let nozzleX = sw * 0.6;
@@ -1025,40 +1026,43 @@ function playUnlockScene() {
     if (bee) {
       const beeRect = bee.getBoundingClientRect();
       nozzleX = beeRect.left + beeRect.width * 0.3 - 75;
-      nozzleY = beeRect.top  + beeRect.height * 0.55 + 40;
+      nozzleY = beeRect.top  + beeRect.height * 0.55 + 80;
     }
     dripping = true;
     startCanvas();
   }, 5750);
 
-  // ── T+7.75s — smoke starts building ──
-  setTimeout(() => { smokeMode = 'build'; }, 7750);
+  // ── T+7.75s — smoker puffs begin blowing across screen ──
+  setTimeout(() => { smokeMode = 'puff'; }, 7750);
 
-  // ── T+9.55s — full smoke, swap to licensed logo, second clang ──
+  // ── T+9.4s — white flash whiteout (puffs fill enough, now go fully white) ──
   setTimeout(() => {
-    smokeMode = 'full';
-    smokeFill = 1;
+    smokeMode = 'white';
+  }, 9400);
+
+  // ── T+9.8s — swap logo + anvil clang at peak white ──
+  setTimeout(() => {
     dripping  = false;
     logo.src  = 'images/Waxframe_Logo_Licensed_v1.png';
     playAnvilSound(sharedAudioCtx);
-  }, 9550);
+  }, 9800);
 
-  // ── T+10.15s — smoke clears ──
-  setTimeout(() => { smokeMode = 'clear'; }, 10150);
+  // ── T+10.1s — bee exits during white ──
+  setTimeout(() => {
+    if (!bee) return;
+    bee.style.transition = 'right 0.5s cubic-bezier(0.6,0,0.8,0.4), opacity 0.35s ease';
+    bee.style.right = '-400px';
+    bee.style.opacity = '0';
+  }, 10100);
 
-  // ── T+11.55s — text fades in ──
+  // ── T+10.6s — white clears, smoke puffs fade out ──
+  setTimeout(() => { smokeMode = 'clear'; }, 10600);
+
+  // ── T+12.2s — text fades in ──
   setTimeout(() => {
     if (title) { title.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; title.style.opacity = '1'; title.style.transform = 'translateY(0)'; }
     if (sub)   { sub.style.transition   = 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
-  }, 11550);
-
-  // ── T+12.55s — bee exits ──
-  setTimeout(() => {
-    if (!bee) return;
-    bee.style.transition = 'right 0.6s cubic-bezier(0.6,0,0.8,0.4), opacity 0.4s ease';
-    bee.style.right = '-400px';
-    bee.style.opacity = '0';
-  }, 12550);
+  }, 12200);
 
   // ── T+14.05s — fade out scene ──
   setTimeout(() => {
@@ -1167,32 +1171,71 @@ function playUnlockScene() {
         ctx.restore();
       }
 
-      // Full-screen smoke fill using scene overlay
-      if (smokeMode === 'build') {
-        smokeFill = Math.min(1, smokeFill + 0.012);
-        drawFullSmoke(smokeFill);
-      } else if (smokeMode === 'full') {
-        drawFullSmoke(1);
+      // ── Smoker puff system ──
+      // In 'puff' mode: spawn large slow-drifting puffs from nozzle origin that billow
+      // across the screen like a real smoker gun being swept side to side.
+      if (smokeMode === 'puff') {
+        // Spawn a fresh puff every ~3 frames — fast enough to build a thick cloud
+        if (Math.random() < 0.35) {
+          const side = Math.random() < 0.5 ? -1 : 1;
+          bigPuffs.push({
+            x:     nozzleX + (Math.random() - 0.5) * 120,
+            y:     nozzleY + (Math.random() - 0.5) * 80,
+            vx:    (Math.random() - 0.5) * 1.2,
+            vy:    -(0.6 + Math.random() * 1.0),
+            r:     30 + Math.random() * 60,
+            alpha: 0.55 + Math.random() * 0.3,
+            life:  1,
+            decay: 0.003 + Math.random() * 0.003
+          });
+        }
+      }
+
+      // Draw and age big puffs — present in puff AND clear modes
+      for (let i = bigPuffs.length - 1; i >= 0; i--) {
+        const p = bigPuffs[i];
+        p.x    += p.vx;
+        p.y    += p.vy;
+        p.r    += 1.8;           // expand as they rise
+        p.life -= (smokeMode === 'clear') ? p.decay * 4 : p.decay;
+        p.alpha = p.life * 0.65;
+        if (p.life <= 0) { bigPuffs.splice(i, 1); continue; }
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        const pg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
+        pg.addColorStop(0,   'rgba(210,205,195,0.95)');
+        pg.addColorStop(0.4, 'rgba(170,160,145,0.8)');
+        pg.addColorStop(1,   'rgba(90,85,75,0)');
+        ctx.fillStyle = pg;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // White flash overlay — fades in during 'white', fades out during 'clear'
+      if (smokeMode === 'white') {
+        whiteFill = Math.min(1, whiteFill + 0.045);
+        ctx.save();
+        ctx.globalAlpha = whiteFill;
+        ctx.fillStyle = 'rgb(255,255,255)';
+        ctx.fillRect(0, 0, sw, sh);
+        ctx.restore();
       } else if (smokeMode === 'clear') {
-        smokeFill = Math.max(0, smokeFill - 0.022);
-        drawFullSmoke(smokeFill);
-        if (smokeFill <= 0) smokeMode = 'off';
+        whiteFill = Math.max(0, whiteFill - 0.025);
+        if (whiteFill > 0) {
+          ctx.save();
+          ctx.globalAlpha = whiteFill;
+          ctx.fillStyle = 'rgb(255,255,255)';
+          ctx.fillRect(0, 0, sw, sh);
+          ctx.restore();
+        }
+        if (whiteFill <= 0 && bigPuffs.length === 0) smokeMode = 'off';
       }
 
       rafId = requestAnimationFrame(loop);
     }
     rafId = requestAnimationFrame(loop);
-  }
-
-  function drawFullSmoke(alpha) {
-    const cx = sw / 2, cy = sh / 2;
-    const maxR = Math.sqrt(cx*cx + cy*cy) * 1.1;
-    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
-    grad.addColorStop(0, `rgba(100,90,80,${alpha * 0.97})`);
-    grad.addColorStop(0.5, `rgba(60,55,50,${alpha * 0.95})`);
-    grad.addColorStop(1, `rgba(20,18,15,${alpha * 0.9})`);
-    ctx.fillStyle = grad;
-    ctx.fillRect(0, 0, sw, sh);
   }
 }
 
