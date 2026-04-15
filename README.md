@@ -33,7 +33,7 @@ No install. No server. No account. No data leaves your machine. Just open it and
 
 ## How It Works
 
-<img src="images/AI_Hive_Worker_Bee_v2.png" width="160" align="right" alt="Worker Bee">
+<img src="images/WaxFrame_Worker_Bee_v2.png" width="160" align="right" alt="Worker Bee">
 
 **1. Set up your Hive**
 Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round. Start with just Gemini (free tier) and one paid AI if you want to keep costs low.
@@ -120,7 +120,7 @@ The **Live Console** on the right shows everything happening in real time: which
 
 ## Conflicts
 
-<img src="images/AI_Hive_Builder_v3.png" width="140" align="right" alt="Builder Bee">
+<img src="images/WaxFrame_Builder_v3.png" width="140" align="right" alt="Builder Bee">
 
 When AIs disagree, the Builder flags it rather than making an arbitrary call. There are two kinds:
 
