@@ -956,8 +956,8 @@ function playUnlockScene() {
   let smokeMode = 'off';
   let rafId     = null;
 
-  // Nozzle position — top-right of stage, where bee's wax drip sits
-  const nozzleX = stageSize * 0.72;
+  // Nozzle position — tracks bee gun tip over logo top-right
+  const nozzleX = stageSize * 0.95;
   const nozzleY = stageSize * 0.18;
 
   // ── T+0 — scene visible but transparent, fade to black over 1.5s ──
@@ -977,11 +977,22 @@ function playUnlockScene() {
     playMetalClang();
   }, 1600);
 
-  // ── T+1.65s — logo stamps in ──
+  // ── T+1.65s — logo stamps in + recoil + sparks ──
   setTimeout(() => {
     logo.style.transition = 'opacity 0.18s ease-out, transform 0.18s cubic-bezier(0.2,0.8,0.3,1.2)';
     logo.style.opacity = '1';
     logo.style.transform = 'scale(1.0)';
+    // Recoil — nudge up 10px then settle back
+    setTimeout(() => {
+      logo.style.transition = 'transform 0.08s ease-out';
+      logo.style.transform = 'scale(1.0) translateY(-10px)';
+      setTimeout(() => {
+        logo.style.transition = 'transform 0.25s cubic-bezier(0.3,1.4,0.5,1)';
+        logo.style.transform = 'scale(1.0) translateY(0px)';
+      }, 80);
+    }, 160);
+    // Spark burst
+    spawnSparks(scene);
   }, 1650);
 
   // ── T+5.05s — bee flies in ──
@@ -989,7 +1000,7 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 600px)';
+    bee.style.right = 'calc(50% - 570px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
@@ -1175,6 +1186,46 @@ function playUnlockScene() {
     grad.addColorStop(1, `rgba(20,18,15,${alpha * 0.9})`);
     ctx2.fillStyle = grad;
     ctx2.fillRect(0, 0, sw, sh);
+  }
+}
+
+function spawnSparks(container) {
+  const count = 40;
+  const cx = window.innerWidth / 2;
+  const cy = window.innerHeight / 2;
+  for (let i = 0; i < count; i++) {
+    const spark = document.createElement('div');
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 120 + Math.random() * 400;
+    const size  = 2 + Math.random() * 4;
+    const dur   = 400 + Math.random() * 600;
+    const dx    = Math.cos(angle) * speed;
+    const dy    = Math.sin(angle) * speed;
+    const hue   = 30 + Math.random() * 30; // gold to orange
+    spark.style.cssText = `
+      position: fixed;
+      left: ${cx}px;
+      top: ${cy}px;
+      width: ${size}px;
+      height: ${size}px;
+      border-radius: 50%;
+      background: hsl(${hue}, 100%, 65%);
+      pointer-events: none;
+      z-index: 999999;
+      transform: translate(-50%, -50%);
+      transition: left ${dur}ms cubic-bezier(0.2,1,0.4,1),
+                  top ${dur}ms cubic-bezier(0.2,1,0.4,1),
+                  opacity ${dur}ms ease-in;
+    `;
+    container.appendChild(spark);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        spark.style.left = (cx + dx) + 'px';
+        spark.style.top  = (cy + dy + (Math.random() * 100)) + 'px';
+        spark.style.opacity = '0';
+      });
+    });
+    setTimeout(() => spark.remove(), dur + 50);
   }
 }
 

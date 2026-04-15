@@ -5003,7 +5003,7 @@ kbd {
   width: 380px;
   height: 380px;
   object-fit: contain;
-  top: calc(50% - 470px);
+  top: calc(50% - 500px);
   right: -400px;
   z-index: 999999;
   opacity: 0;
