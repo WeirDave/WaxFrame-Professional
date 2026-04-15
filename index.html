@@ -1081,14 +1081,12 @@
 <!-- LICENSE UNLOCK SCENE — full screen overlay, triggered after successful key validation -->
 <div class="unlock-scene" id="unlockScene">
   <div class="unlock-stage">
-    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="unlock-logo">
-    <img src="images/unlock_wax.png"    alt="" class="unlock-wax"   aria-hidden="true">
-    <img src="images/unlock_stamp.png"  alt="" class="unlock-stamp" aria-hidden="true">
-    <img src="images/unlock_smoke.png"  alt="" class="unlock-smoke" aria-hidden="true">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="unlock-logo" id="unlockLogo">
+    <canvas class="unlock-canvas" id="unlockCanvas"></canvas>
   </div>
-  <img src="images/WaxFrame_Waxmaker_v1.png" alt="" class="unlock-bee" aria-hidden="true">
-  <div class="unlock-title">Hive Unlocked</div>
-  <div class="unlock-sub">Welcome to WaxFrame Pro</div>
+  <img src="images/WaxFrame_Waxmaker_v1.png" alt="" class="unlock-bee" id="unlockBee" aria-hidden="true">
+  <div class="unlock-title" id="unlockTitle">Hive Unlocked</div>
+  <div class="unlock-sub" id="unlockSub">Welcome to WaxFrame Pro</div>
 </div>
 
 <!-- Mobile not supported overlay — shown via CSS media query, no JS needed -->
