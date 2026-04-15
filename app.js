@@ -2337,7 +2337,6 @@ async function testCustomAIConnection() {
   testBtn.textContent = '…';
   if (statusEl) { statusEl.textContent = 'Testing…'; statusEl.className = 'custom-ai-test-status testing'; }
   if (addBtn)   addBtn.style.display = 'none';
-  if (rawPanel) rawPanel.style.display = 'none';
 
   const baseConfigs = {
     openai: {
