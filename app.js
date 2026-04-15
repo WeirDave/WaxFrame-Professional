@@ -2694,6 +2694,7 @@ function startSession() {
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Original Document'
     });
     renderRoundHistory();
@@ -3535,6 +3536,7 @@ async function runBuilderOnly() {
       conflicts:      window._lastConflicts || null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Builder Only'
     });
     window._lastConflicts = null;
@@ -3560,6 +3562,7 @@ async function runBuilderOnly() {
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Builder Only',
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
@@ -3686,7 +3689,8 @@ async function runRound() {
       notes:          document.getElementById('workNotes')?.value.trim()       || '',
       conflicts:      { converged: true, holdouts: [] },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
-      timestamp:      new Date().toLocaleTimeString()
+      timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
     });
     window._lastConflicts = null;
     round++;
@@ -3726,7 +3730,8 @@ async function runRound() {
       notes:          document.getElementById('workNotes')?.value.trim()       || '',
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
-      timestamp:      new Date().toLocaleTimeString()
+      timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
     });
     window._lastConflicts = null;
     round++;
@@ -3840,7 +3845,8 @@ async function runRound() {
     notes:          document.getElementById('workNotes')?.value.trim()       || '',
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
-    timestamp:      new Date().toLocaleTimeString()
+    timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
   });
   window._lastConflicts = null;
 
@@ -3894,6 +3900,7 @@ async function runRound() {
       conflicts:      null,
       responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
       failDetails:    _failedRoundDetails || ''
@@ -3974,17 +3981,7 @@ function extractConflicts(text) {
   let match;
   while ((match = udRegex.exec(normalised)) !== null) {
     const block = match[1].trim();
-    // Join continuation lines onto their parent keyword line before parsing.
-    // Prevents multi-line Builder OPTION values from being split into fragments.
-    const rawLines = block.split('\n').map(l => l.trim()).filter(Boolean);
-    const lines = [];
-    for (const l of rawLines) {
-      if (/^(QUESTION|CURRENT|OPTION_\d+):/i.test(l)) {
-        lines.push(l);
-      } else if (lines.length > 0) {
-        lines[lines.length - 1] += ' ' + l;
-      }
-    }
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
     const decision = { question: '', current: '', options: [] };
     for (const line of lines) {
       if (/^QUESTION:/i.test(line)) {
@@ -4911,6 +4908,11 @@ function restoreRound(idx) {
   round = h.round;
   phase = h.phase || 'draft';
   docText = h.doc || '';
+
+  // Restore resolved decisions to the state they were in at this round.
+  // Decisions made in discarded rounds must not carry forward.
+  window._resolvedDecisions = Array.isArray(h.resolvedDecisions) ? JSON.parse(JSON.stringify(h.resolvedDecisions)) : [];
+  localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
   const docTa = document.getElementById('workDocument');
   if (docTa) { docTa.value = docText; updateLineNumbers(); }
   const notesEl = document.getElementById('workNotes');
@@ -4927,11 +4929,6 @@ function restoreRound(idx) {
   const viewModal = document.getElementById('histDocModal');
   if (viewModal) viewModal.remove();
   toast(`↩ Restored to Round ${h.round} — ${history.length - 1} later round${history.length - 1 !== 1 ? 's' : ''} discarded`);
-  consoleLog(`${'═'.repeat(60)}`, 'divider');
-  consoleLog(`↩ Restored to Round ${h.round} — console above reflects discarded rounds`, 'warn');
-  consoleLog(`${'═'.repeat(60)}`, 'divider');
-  const con = document.getElementById('liveConsole');
-  if (con) con.scrollTop = 0;
 }
 
 // ── EXPORT ──
