@@ -5047,7 +5047,7 @@ kbd {
 }
 .unlock-title {
   font-family: 'Syne', sans-serif;
-  font-size: 34px;
+  font-size: 44px;
   font-weight: 800;
   color: var(--accent);
   letter-spacing: 0.04em;
@@ -5055,7 +5055,7 @@ kbd {
   transform: translateY(12px);
 }
 .unlock-sub {
-  font-size: 15px;
+  font-size: 19px;
   color: var(--text2);
   opacity: 0;
   transform: translateY(8px);
