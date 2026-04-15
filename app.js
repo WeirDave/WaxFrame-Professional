@@ -960,22 +960,29 @@ function playUnlockScene() {
   const nozzleX = stageSize * 0.72;
   const nozzleY = stageSize * 0.18;
 
-  // ── T+0 — snap to solid black immediately, no transition ──
+  // ── T+0 — scene visible but transparent, fade to black over 1.5s ──
   scene.style.transition = 'none';
-  scene.style.opacity = '1';
+  scene.style.opacity = '0';
   scene.classList.add('active');
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scene.style.transition = 'opacity 1.5s ease-in';
+      scene.style.opacity = '1';
+    });
+  });
 
-  // ── T+3.0s — anvil clang ──
+  // ── T+1.6s — metal clang, logo stamps in ──
   setTimeout(() => {
-    playAnvilSound();
-  }, 3000);
+    scene.style.transition = 'none'; // lock in black before stamp
+    playMetalClang();
+  }, 1600);
 
-  // ── T+3.05s — logo stamps in ──
+  // ── T+1.65s — logo stamps in ──
   setTimeout(() => {
     logo.style.transition = 'opacity 0.18s ease-out, transform 0.18s cubic-bezier(0.2,0.8,0.3,1.2)';
     logo.style.opacity = '1';
     logo.style.transform = 'scale(1.0)';
-  }, 3050);
+  }, 1650);
 
   // ── T+5.05s — bee flies in ──
   setTimeout(() => {
@@ -1169,6 +1176,14 @@ function playUnlockScene() {
     ctx2.fillStyle = grad;
     ctx2.fillRect(0, 0, sw, sh);
   }
+}
+
+function playMetalClang() {
+  try {
+    const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
+    audio.volume = 0.85;
+    audio.play();
+  } catch(e) {}
 }
 
 function playAnvilSound() {
