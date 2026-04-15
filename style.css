@@ -5015,15 +5015,15 @@ kbd {
 .unlock-scene.active { pointer-events: all; }
 .unlock-stage {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 480px;
+  height: 480px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .unlock-logo {
-  width: 240px;
-  height: 240px;
+  width: 440px;
+  height: 440px;
   object-fit: contain;
   position: relative;
   z-index: 1;
