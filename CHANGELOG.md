@@ -15,6 +15,7 @@ All notable changes to WaxFrame Professional are documented here.
 - Plain-English error hints for common HTTP failure codes: 401/403 (bad key), 404 (wrong endpoint), 405 (method not allowed), 429 (rate limited), and network errors (CORS or unreachable).
 - Hide All Defaults button on the setup screen that hides all six default AIs in a single confirmation step. Intended for internal/work deployments where only custom AIs with internal endpoints are needed. Reset to Defaults restores them.
 - Perplexity tip about the $5/month recurring API subscription added to api-details.html.
+- Added "API Costs & Billing" section to waxframe-user-manual.html covering: direct billing model, monthly rate-check reminder, popup blocker workaround for Open All Billing Pages, Perplexity auto-billing warning, and current default model versions for all six providers.
 - CHANGELOG.md added to the repository.
 
 ### Changed
