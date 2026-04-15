@@ -1017,7 +1017,7 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 500px)';
+    bee.style.right = 'calc(50% - 485px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
@@ -1025,7 +1025,7 @@ function playUnlockScene() {
     // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
     if (bee) {
       const beeRect = bee.getBoundingClientRect();
-      nozzleX = beeRect.left + beeRect.width * 0.3 - 85;
+      nozzleX = beeRect.left + beeRect.width * 0.3 - 100;
       nozzleY = beeRect.top  + beeRect.height * 0.55 + 80;
     }
     dripping = true;
@@ -1178,12 +1178,15 @@ function playUnlockScene() {
         // Spawn a fresh puff every ~3 frames — fast enough to build a thick cloud
         if (Math.random() < 0.35) {
           const side = Math.random() < 0.5 ? -1 : 1;
+          // Puffs bloom from logo center — looks like the logo itself is smoldering
+          const angle = Math.random() * Math.PI * 2;
+          const burst = Math.random() * 60;
           bigPuffs.push({
-            x:     nozzleX + (Math.random() - 0.5) * 120,
-            y:     nozzleY + (Math.random() - 0.5) * 80,
-            vx:    (Math.random() - 0.5) * 1.2,
-            vy:    -(0.6 + Math.random() * 1.0),
-            r:     30 + Math.random() * 60,
+            x:     sw * 0.5 + Math.cos(angle) * burst,
+            y:     sh * 0.5 + Math.sin(angle) * burst,
+            vx:    Math.cos(angle) * (0.4 + Math.random() * 0.8),
+            vy:    Math.sin(angle) * (0.4 + Math.random() * 0.8) - 0.5,
+            r:     25 + Math.random() * 55,
             alpha: 0.55 + Math.random() * 0.3,
             life:  1,
             decay: 0.003 + Math.random() * 0.003
