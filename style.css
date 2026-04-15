@@ -1949,7 +1949,7 @@ html, body {
   background: transparent;
   font-family: 'Courier New', monospace;
   font-size: 11px;
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
   line-height: 1.5;
 }
