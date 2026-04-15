@@ -27,7 +27,7 @@
     <div class="welcome-logo">
       <div class="welcome-logo-anim">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="welcome-logo-static">
-        <img src="images/AI_Hive_Worker_Bee_v2.png" alt="Bee" class="welcome-bee-fly">
+        <img src="images/WaxFrame_Worker_Bee_v2.png" alt="Bee" class="welcome-bee-fly">
       </div>
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
@@ -65,7 +65,7 @@
     </div>
 
     <button class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-setup')">
-      <img src="images/AI_Hive_Worker_Bee_v2.png" class="bee-btn-img">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
       Let's get started →
     </button>
 
@@ -108,12 +108,12 @@
       <!-- ── LEFT: Worker Bees ── -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main">
-          <img src="images/AI_Hive_Worker_Bee_v2.png" class="setup-card-bee" alt="">
+          <img src="images/WaxFrame_Worker_Bee_v2.png" class="setup-card-bee" alt="">
           <div class="fs-col-scroll">
             <div class="fs-col-header">
               <h2 class="fs-col-title">Your Worker Bees</h2>
               <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
-              <p class="fs-col-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
+              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
             </div>
             <div class="bee-controls-row-setup">
               <button class="btn" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
@@ -168,12 +168,12 @@
       <!-- ── RIGHT: Builder Picker ── -->
       <div class="fs-col fs-col-right">
         <div class="fs-col-main">
-          <img src="images/AI_Hive_Builder_v3.png" class="setup-card-bee" alt="">
+          <img src="images/WaxFrame_Builder_v3.png" class="setup-card-bee" alt="">
           <div class="fs-col-scroll">
             <div class="fs-col-header">
               <h2 class="fs-col-title">Choose Your Builder</h2>
               <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-              <p class="fs-col-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. For very large or complex documents, if a round fails with a missing output structure error, try switching to ChatGPT or Gemini as your Builder — some AIs are less reliable at following strict formatting instructions under heavy load. <a href="tokens-explainer.html" target="_blank" class="link-accent">Learn about tokens →</a></p>
+              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. For very large or complex documents, if a round fails with a missing output structure error, try switching to ChatGPT or Gemini as your Builder — some AIs are less reliable at following strict formatting instructions under heavy load. <a href="tokens-explainer.html" target="_blank" class="link-accent">Learn about tokens →</a></p>
             </div>
             <div class="builder-pick-grid-large" id="builderPickGrid"></div>
           </div>
@@ -191,7 +191,7 @@
         <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
       </div>
       <button class="btn btn-lg btn-accent btn-cta" id="setupContinueBtn" onclick="validateAndContinue()">
-        <img src="images/AI_Hive_Project_Bee_v2.png" class="bee-btn-img">
+        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue to Project Setup →
       </button>
     </div>
@@ -225,12 +225,12 @@
       <!-- ── LEFT: Project Details ── -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main proj-left-main">
-          <img src="images/AI_Hive_Project_Bee_v2.png" class="setup-card-bee" alt="">
+          <img src="images/WaxFrame_Project_Bee_v2.png" class="setup-card-bee" alt="">
 
           <!-- STATIC top section -->
           <div class="proj-static-top">
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Your Project <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+              <h2 class="fs-col-title">Your Project <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
               <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal tells every AI what this document is, what it's trying to achieve, and what direction to take.</p>
             </div>
             <div class="length-constraint-row">
@@ -289,7 +289,7 @@
 
         </div>
         <div class="setup-col-tip">
-          <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
         </div>
       </div>
 
@@ -302,7 +302,7 @@
           <div class="fs-col-scroll proj-right-scroll">
 
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+              <h2 class="fs-col-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
               <p class="fs-col-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your goal above.</p>
             </div>
 
@@ -353,7 +353,7 @@
           </div>
         </div>
         <div class="setup-col-tip">
-          <img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Upload or paste an existing draft to refine it, or start from scratch and let your AIs build it from your goal.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Upload or paste an existing draft to refine it, or start from scratch and let your AIs build it from your goal.
         </div>
       </div>
 
@@ -450,14 +450,14 @@
         </select>
 
         <div class="left-panel-header">
-          <span class="work-section-title">The Hive <button class="goal-info-btn" onclick="document.getElementById('infoHiveModal').classList.add('active')" title="About The Hive"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ"></button></span>
+          <span class="work-section-title">The Hive <button class="goal-info-btn" onclick="document.getElementById('infoHiveModal').classList.add('active')" title="About The Hive"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <button class="btn" onclick="openChangeBuilder()">Change Builder</button>
         </div>
 
         <div class="hex-grid" id="beeStatusGrid"></div>
 
         <div class="left-panel-header left-panel-section-border">
-          <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ"></button></span>
+          <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
             <button class="btn" onclick="copyConflicts()">📋 Copy</button>
             <button class="btn" onclick="clearConflicts()">✕ Clear</button>
@@ -475,7 +475,7 @@
       <!-- ══ COL 3: Working Document ══ -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
-          <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ"></button></span>
+          <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row">
             <button class="btn" onclick="exportDocument()">💾 Export</button>
             <button class="btn" onclick="copyDocument()">📋 Copy</button>
@@ -552,7 +552,7 @@
 
         <!-- Console -->
         <div class="work-panel-header honeycomb-header">
-          <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ"></button></span>
+          <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
             <button class="btn" onclick="copyConsole()">📋 Copy</button>
             <button class="btn" onclick="clearConsole()">✕ Clear</button>
@@ -605,7 +605,7 @@
 <div class="smoker-overlay" id="smokerOverlay">
   <div class="smoker-stage">
     <div class="smoke-particles" id="smokeParticles"></div>
-    <img src="images/AI_Hive_Smoker_v2.png" alt="Smoking…" class="smoker-hero-img">
+    <img src="images/WaxFrame_Smoker_v2.png" alt="Smoking…" class="smoker-hero-img">
     <div class="smoker-overlay-label" id="smokerOverlayLabel">Smokin' the Hive…</div>
     <div class="smoker-subtitle">Beekeepers smoke their hives to calm the bees before working with them. We do the same — a little smoke settles the hive so they can focus on your document.</div>
   </div>
@@ -640,7 +640,7 @@
         <span style="--sx:-22px;--fall:46px;"></span>
       </div>
 
-      <img src="images/AI_Hive_Builder_Building_v4.png" alt="Builder bee assembling the document" class="builder-station-img">
+      <img src="images/WaxFrame_Builder_Building_v4.png" alt="Builder bee assembling the document" class="builder-station-img">
 
     </div>
 
@@ -673,7 +673,7 @@
   <div class="hist-modal">
     <div class="hist-modal-hdr">
       <div class="hist-modal-brand">
-        <img src="images/AI_Hive_History_Bee_v1.png" alt="" class="hist-modal-bee">
+        <img src="images/WaxFrame_History_Bee_v1.png" alt="" class="hist-modal-bee">
         <div>
           <div class="hist-modal-title">Round History</div>
           <div class="hist-modal-sub">Click any round to restore that version of the document</div>
@@ -711,7 +711,7 @@
         <span class="finish-modal-btn-sub">Save your place as a .json file — reload it later to resume exactly where you left off</span>
       </button>
       <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
-        <img src="images/AI_Hive_Worker_Bee_v2.png" class="finish-modal-bee"><span>Start New Project</span>
+        <img src="images/WaxFrame_Worker_Bee_v2.png" class="finish-modal-bee"><span>Start New Project</span>
       </button>
     </div>
     <div class="finish-modal-footer-btns">
@@ -800,7 +800,7 @@
 <div class="finish-modal-overlay" id="goalInfoModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-modal-icon-wrap">
-      <img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="goal-info-modal-icon">
+      <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="goal-info-modal-icon">
     </div>
     <h2 class="finish-modal-title">About Your Project Goal</h2>
     <div class="goal-info-body">
@@ -813,7 +813,7 @@
         <span class="info-label">From a Starting Doc</span>
         <span class="goal-info-desc">Only the first <strong>300 characters</strong> are sent, labelled as <em>Project Context</em>. Your document already exists — the AIs are refining it, not creating it. The full goal would consume tokens better spent on the document itself and the reviewer suggestions.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Keep your most important intent in the first 300 characters of your goal. A counter next to the goal field turns amber when you exceed that threshold.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Keep your most important intent in the first 300 characters of your goal. A counter next to the goal field turns amber when you exceed that threshold.</p>
       <div class="goal-info-row">
         <span class="info-label">Live Preview</span>
         <span class="goal-info-desc">When your goal exceeds 300 characters, an amber preview box appears directly below the goal field showing the exact text that will be sent to AIs in Refine rounds — updated live as you type. Use it to fine-tune your opening sentence so the most important context always lands within the limit.</span>
@@ -841,7 +841,7 @@
   <div class="hive-finish-backdrop"></div>
   <div class="hive-finish-stage">
     <div class="hive-finish-smoke" id="hiveFinishSmoke"></div>
-    <img src="images/AI_Hive_Approved_Bee_v1.png" class="hive-finish-bee-img" id="hiveFinishBee" alt="Hive Approved">
+    <img src="images/WaxFrame_Approved_Bee_v1.png" class="hive-finish-bee-img" id="hiveFinishBee" alt="Hive Approved">
     <div class="hive-finish-tagline">HIVE APPROVED</div>
   </div>
 </div>
@@ -872,7 +872,7 @@
         <span class="info-label">Stack</span>
         <span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModal').classList.remove('active')">Got it →</button>
   </div>
@@ -885,7 +885,7 @@
 <!-- EXPORT MASK INFO -->
 <div class="finish-modal-overlay" id="infoExportMaskModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Export Filename Mask</h2>
     <div class="goal-info-body">
       <p>The filename mask lets you customise the name of your exported .txt file using tokens that are replaced automatically at export time.</p>
@@ -910,7 +910,7 @@
 <!-- THE HIVE -->
 <div class="finish-modal-overlay" id="infoHiveModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">The Hive</h2>
     <div class="goal-info-body">
       <p>Your hive is the team of AIs collaborating on your document each round. Every checked AI with a saved API key participates automatically. AIs without a key are skipped silently.</p>
@@ -956,7 +956,7 @@
 <!-- CONFLICTS -->
 <div class="finish-modal-overlay" id="infoConflictsModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Conflicts</h2>
     <div class="goal-info-body">
       <p>This section displays conflicts that occur when AIs disagree on what changes need to be made. When the Builder can't determine the right path forward on its own, it flags it here for you to decide.</p>
@@ -972,7 +972,7 @@
         <span class="info-label">Bypass</span>
         <span class="goal-info-desc">If you've already fixed something directly in the working document, choose "I edited the document directly — skip this conflict" to lock it without triggering another Builder pass. If all conflicts are bypassed, the round advances immediately with no Builder call.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the "Current:" text on any conflict card to scroll the working document directly to that line and highlight it.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the "Current:" text on any conflict card to scroll the working document directly to that line and highlight it.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
   </div>
@@ -981,7 +981,7 @@
 <!-- WORKING DOCUMENT -->
 <div class="finish-modal-overlay" id="infoDocModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Working Document</h2>
     <div class="goal-info-body">
       <p>This is the live document your hive is building and refining. It updates after every round as the Builder applies the reviewer suggestions. You can edit it directly at any time between rounds — your edits are preserved and the hive will continue from wherever you leave it.</p>
@@ -1001,8 +1001,8 @@
         <span class="info-label">Finish Button</span>
         <span class="goal-info-desc">You do not have to wait for the hive to converge on its own. If the document looks good to you at any point, hit the Finish button in the top bar. You can export your document, start a fresh project, or go back and keep refining — the choice is always yours.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Export saves your document as a .txt file with a byline noting the number of rounds it took and how long the session ran.</p>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the <strong>☰ navigation menu</strong> (top left) to go back to Project Setup to change your goal, or to Keys &amp; Builder to swap your AI configuration. Your session is saved automatically when you navigate away.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Export saves your document as a .txt file with a byline noting the number of rounds it took and how long the session ran.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the <strong>☰ navigation menu</strong> (top left) to go back to Project Setup to change your goal, or to Keys &amp; Builder to swap your AI configuration. Your session is saved automatically when you navigate away.</p>
       <p class="goal-info-tip">⚠️ If your document looks garbled — especially after uploading a PDF — the file was likely too design-heavy to extract cleanly. Use the <strong>☰ menu → Project — Goal &amp; Document</strong> to go back, then try the Paste Text option instead and copy your text in manually.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
@@ -1012,7 +1012,7 @@
 <!-- LIVE CONSOLE -->
 <div class="finish-modal-overlay" id="infoConsoleModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Live Console</h2>
     <div class="goal-info-body">
       <p>The console shows you everything happening in real time — which AIs are sending requests, responding, succeeding, or failing, and a preview of what each one said.</p>
@@ -1028,7 +1028,7 @@
         <span class="info-label">Legend</span>
         <span class="goal-info-desc">Located directly above the console log. <strong class="text-green">Green</strong> = success · <strong class="text-warn">Amber</strong> = warning · <strong class="text-error">Red</strong> = error · <strong class="text-send">Blue</strong> = sending · <strong class="text-preview">Purple</strong> = AI response preview · <strong class="text-divider">Orange</strong> = round divider.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log at any time — useful for troubleshooting or keeping a record of your session.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log at any time — useful for troubleshooting or keeping a record of your session.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1037,7 +1037,7 @@
 <!-- STARTING DOCUMENT / UPLOAD -->
 <div class="finish-modal-overlay" id="infoUploadModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/AI_Hive_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Starting Document</h2>
     <div class="goal-info-body">
       <p>Choose how to give the hive its starting point. There are three ways:</p>
@@ -1053,7 +1053,7 @@
         <span class="info-label">Start from Scratch</span>
         <span class="goal-info-desc">Don't have anything yet? The hive will generate a first draft based entirely on your project goal. The more specific your goal, the better the first draft will be.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/AI_Hive_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — like those exported from Word or Google Docs. Heavily designed resumes, scanned documents, or PDFs built from images may produce garbled or incomplete text. If that happens, try copying and pasting the text directly using the Paste Text option instead.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — like those exported from Word or Google Docs. Heavily designed resumes, scanned documents, or PDFs built from images may produce garbled or incomplete text. If that happens, try copying and pasting the text directly using the Paste Text option instead.</p>
       <p class="goal-info-tip">⚠️ <strong>Large file tip:</strong> If you're importing a dense report, a long PowerPoint, or any file that produces a lot of text — and a round fails with a missing output structure error, try switching your Builder to ChatGPT or Gemini and retrying. Some AIs are less consistent at following strict formatting instructions on large or complex documents.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>

@@ -1839,7 +1839,7 @@ function renderBuilderPicker() {
       onclick="setBuilder('${ai.id}'); return false;">
       <img src="${ai.icon}" class="builder-pick-icon" onerror="this.style.display='none'">
       <span class="builder-pick-name">${ai.name}</span>
-      ${builder === ai.id ? '<img src="images/AI_Hive_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
+      ${builder === ai.id ? '<img src="images/WaxFrame_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
     </button>
   `).join('');
 }
@@ -2080,7 +2080,7 @@ function validateAndContinue() {
     _settingsReturnToWork = false;
     // Reset button text
     const btn = document.getElementById('setupContinueBtn');
-    if (btn) btn.innerHTML = '<img src="images/AI_Hive_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
+    if (btn) btn.innerHTML = '<img src="images/WaxFrame_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
     renderBeeStatusGrid();
     goToScreen('screen-work');
     showReExtractBanner();
