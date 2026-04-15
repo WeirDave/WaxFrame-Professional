@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — api-details.html
-     Build: 20260415-001
+     Build: 20260415-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -211,6 +211,7 @@
           <li>Paste it into the Perplexity field in WaxFrame and press Enter.</li>
         </ol>
         <div class="note-box">Requires credit balance — add at <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai → Settings → API → Add Credits</a>.</div>
+        <div class="note-box warn">⚠️ <strong>Important when signing up:</strong> Enable <strong>auto-billing</strong> and set your monthly limit low (e.g. $5) right away. If your credits expire without auto-billing enabled, Perplexity will require a <strong>$50 minimum top-up</strong> to reactivate your account.</div>
       </div>
     </div>
 
@@ -245,13 +246,41 @@
   <div class="page-footer-btns">
     <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
     <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
-    <button class="btn" onclick="openAllBilling()">💳 Open All Billing Pages</button>
-    <button class="btn" onclick="openAllConsoles()">🔑 Open All API Consoles</button>
+    <button class="btn" onclick="handleOpenBilling()">💳 Open All Billing Pages</button>
+    <button class="btn" onclick="handleOpenConsoles()">🔑 Open All API Consoles</button>
   </div>
   <button class="btn" onclick="window.close()">✕ Close this tab</button>
 </div>
 
+<div class="popup-blocked-banner" id="popupBlockedBanner">
+  <span class="popup-blocked-icon">⚠️</span>
+  <span class="popup-blocked-msg" id="popupBlockedMsg"></span>
+  <button class="popup-blocked-close" onclick="document.getElementById('popupBlockedBanner').classList.remove('visible')">✕</button>
+</div>
+
 <script src="theme.js"></script>
 <script src="api-links.js"></script>
+<script>
+function showPopupWarning(result, label) {
+  if (result.opened < result.total) {
+    var blocked = result.total - result.opened;
+    var msg = blocked === result.total
+      ? 'Your browser blocked all ' + result.total + ' ' + label + ' tabs. Allow popups for this page and try again.'
+      : 'Your browser allowed ' + result.opened + ' of ' + result.total + ' ' + label + ' tabs. ' + blocked + ' tab' + (blocked > 1 ? 's were' : ' was') + ' blocked — allow popups for this page and try again.';
+    document.getElementById('popupBlockedMsg').textContent = msg;
+    document.getElementById('popupBlockedBanner').classList.add('visible');
+  } else {
+    document.getElementById('popupBlockedBanner').classList.remove('visible');
+  }
+}
+function handleOpenBilling() {
+  var result = openAllBilling();
+  showPopupWarning(result, 'billing');
+}
+function handleOpenConsoles() {
+  var result = openAllConsoles();
+  showPopupWarning(result, 'console');
+}
+</script>
 </body>
 </html>
