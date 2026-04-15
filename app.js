@@ -4927,6 +4927,11 @@ function restoreRound(idx) {
   const viewModal = document.getElementById('histDocModal');
   if (viewModal) viewModal.remove();
   toast(`↩ Restored to Round ${h.round} — ${history.length - 1} later round${history.length - 1 !== 1 ? 's' : ''} discarded`);
+  consoleLog(`${'═'.repeat(60)}`, 'divider');
+  consoleLog(`↩ Restored to Round ${h.round} — console above reflects discarded rounds`, 'warn');
+  consoleLog(`${'═'.repeat(60)}`, 'divider');
+  const con = document.getElementById('liveConsole');
+  if (con) con.scrollTop = 0;
 }
 
 // ── EXPORT ──
