@@ -57,7 +57,11 @@
       <div class="page-header-tag">Know Your Hive</div>
     </div>
   </div>
-  <button class="close-btn" onclick="window.close()">✕ Close this tab</button>
+  <div class="page-header-controls">
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️ Auto</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+  </div>
 </div>
 
 <div class="page-main">
@@ -346,11 +350,6 @@
 
 <div class="page-footer">
   <div class="page-footer-btns">
-  <div class="theme-toggle">
-    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
-    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️ Auto</button>
-    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
-  </div>
   </div>
   <button class="btn" onclick="window.close()">✕ Close this tab</button>
 </div>
