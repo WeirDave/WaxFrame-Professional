@@ -1,4 +1,5 @@
 // WaxFrame — shared theme utility
+// Build: 20260415-001
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   localStorage.setItem('waxframe_v2_theme', t);
