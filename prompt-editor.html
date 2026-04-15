@@ -166,17 +166,16 @@
 </div>
 
 <div class="page-footer">
+  <div class="theme-toggle">
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️ Auto</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+  </div>
   <span class="footer-note">WaxFrame — open source, no server, no tracking.</span>
   <button class="btn" onclick="window.close()">✕ Close this tab</button>
 </div>
 
 <script>
-  // ── Theme sync ──
-  (function() {
-    const t = localStorage.getItem('waxframe_v2_theme') || 'auto';
-    document.documentElement.setAttribute('data-theme', t);
-  })();
-
   const LS_PROMPTS = 'waxframe_v2_prompts';
 
   // ── Default prompts (mirrors app.js) ──
@@ -374,5 +373,6 @@ You have repeatedly raised the following after the user already resolved them. T
 
   loadPrompts();
 </script>
+<script src="theme.js"></script>
 </body>
 </html>
