@@ -1898,6 +1898,19 @@ function openAllConsoles() {
   toast('🔑 Opening API consoles — if blocked, click "Allow" in your browser bar', 5000);
 }
 
+function openAllBilling() {
+  const billing = [
+    'https://platform.openai.com/settings/organization/billing/overview',
+    'https://console.anthropic.com/settings/billing',
+    'https://platform.deepseek.com/top_up',
+    'https://aistudio.google.com/plan_information',
+    'https://console.x.ai/billing',
+    'https://www.perplexity.ai/settings/api'
+  ];
+  billing.forEach(url => window.open(url, '_blank'));
+  toast('💳 Opening billing pages — if blocked, click "Allow" in your browser bar', 5000);
+}
+
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
 
 
