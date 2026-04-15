@@ -4186,9 +4186,6 @@ kbd {
   justify-content: center;
 }
 .api-intro-bee-wrap {
-  background: rgba(0,0,0,0.82);
-  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
-  padding: 24px;
   flex-shrink: 0;
 }
 .api-intro-text { max-width: 520px; }
