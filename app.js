@@ -1012,7 +1012,7 @@ function playUnlockScene() {
     // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
     if (bee) {
       const beeRect = bee.getBoundingClientRect();
-      nozzleX = beeRect.left + beeRect.width * 0.3;
+      nozzleX = beeRect.left + beeRect.width * 0.3 - 35;
       nozzleY = beeRect.top  + beeRect.height * 0.55;
     }
     dripping = true;
