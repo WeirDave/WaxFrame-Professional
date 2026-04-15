@@ -5040,7 +5040,7 @@ kbd {
   width: 380px;
   height: 380px;
   object-fit: contain;
-  top: calc(50% - 540px);
+  top: calc(50% - 580px);
   right: -400px;
   z-index: 999999;
   opacity: 0;
