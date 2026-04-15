@@ -1,6 +1,6 @@
 <!-- ============================================================
-     WaxFrame v2 — api-details.html
-     Build: 20260415-002
+     WaxFrame v3.3 — api-details.html
+     Build: 20260415-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -12,6 +12,42 @@
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css">
+  <style>
+    .kyh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
+    .kyh-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
+    .kyh-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
+    .kyh-bee { width:80px; flex-shrink:0; }
+    .kyh-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:20px; }
+    .kyh-card { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); overflow:hidden; }
+    .kyh-card-header { display:flex; align-items:center; gap:14px; padding:18px 20px 14px; border-bottom:1px solid var(--border2); }
+    .kyh-card-icon { width:36px; height:36px; object-fit:contain; flex-shrink:0; }
+    .kyh-card-name { font-family:var(--font-display); font-size:16px; font-weight:800; color:var(--text); }
+    .kyh-card-model { font-size:11px; color:var(--text-dim); font-family:var(--font-mono); margin-top:2px; }
+    .kyh-badges { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
+    .kyh-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:0.04em; white-space:nowrap; }
+    .kyh-badge-builder { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
+    .kyh-badge-reviewer { background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.4); color:#34d399; }
+    .kyh-badge-free { background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.4); color:#7ab8ff; }
+    .kyh-body { padding:16px 20px 20px; }
+    .kyh-section { margin-bottom:14px; }
+    .kyh-section:last-child { margin-bottom:0; }
+    .kyh-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:6px; }
+    .kyh-section p { font-size:13px; color:var(--text-dim); line-height:1.6; margin:0; }
+    .kyh-pills { display:flex; flex-wrap:wrap; gap:6px; }
+    .kyh-pill { font-size:12px; padding:3px 10px; border-radius:20px; border:1px dashed var(--border2); color:var(--text-dim); }
+    .kyh-pill-good { border-color:rgba(52,211,153,0.4); color:#34d399; background:rgba(52,211,153,0.08); }
+    .kyh-pill-warn { border-color:rgba(245,166,35,0.4); color:var(--accent); background:var(--accent-dim); }
+    .kyh-pill-bad { border-color:rgba(239,68,68,0.4); color:#f87171; background:rgba(239,68,68,0.08); }
+    .kyh-tip { display:flex; gap:10px; align-items:flex-start; background:var(--surface2); border-radius:var(--radius-md); padding:10px 12px; margin-top:12px; }
+    .kyh-tip-icon { flex-shrink:0; margin-top:1px; display:flex; align-items:center; }
+    .kyh-tip p { font-size:12px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
+    .section-divider { border:none; border-top:1px solid var(--border2); margin:40px 0 32px; }
+    .section-heading { font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text); margin-bottom:8px; }
+    .section-heading-sub { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:28px; }
+    [data-theme="light"] .kyh-card { background:#ffffff; }
+    [data-theme="light"] .kyh-intro { background:#ffffff; }
+    @media (prefers-color-scheme:light) { [data-theme="auto"] .kyh-card { background:#ffffff; } [data-theme="auto"] .kyh-intro { background:#ffffff; } }
+  </style>
 </head>
 <body class="helper-body">
 
@@ -21,17 +57,19 @@
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
     <div>
       <div class="page-header-name">WaxFrame</div>
-      <div class="page-header-tag">API Key Setup Guide</div>
+      <div class="page-header-tag">API Key Guide</div>
     </div>
   </div>
   <div class="page-header-controls">
-    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
-    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️ Auto</button>
-    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">Light</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">Auto</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">Dark</button>
   </div>
 </div>
 
 <div class="page-main">
+
+<!-- ── SECTION 1: API KEY SETUP ── -->
 
 <div class="api-intro-strip">
   <div class="api-intro-bee-wrap">
@@ -101,29 +139,7 @@
           <li>Click <strong>Create new API key</strong> and copy it.</li>
           <li>Paste it into the DeepSeek field in WaxFrame and press Enter.</li>
         </ol>
-        <div class="note-box green">DeepSeek is 10–20× cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</div>
-      </div>
-    </div>
-
-    <div class="ai-card">
-      <div class="ai-card-header">
-        <img src="images/copilot.ico" onerror="this.style.display='none'">
-        <div class="ai-card-name">Copilot (Microsoft)</div>
-        <span class="badge badge-limited">Azure required</span>
-      </div>
-      <div class="ai-card-body">
-        <div class="model-line">
-          <span class="model-label">Model:</span><code>gpt-4o</code>
-          <span class="model-note">Via Azure OpenAI Service</span>
-        </div>
-        <div class="note-box">&#x26A0;&#xFE0F; <strong>Heads up:</strong> Microsoft does not offer a simple API key for Copilot the way other providers do. To use Copilot's models programmatically, you need an <strong>Azure subscription</strong> with access to <strong>Azure OpenAI Service</strong> — which involves a separate sign-up, approval process, and resource setup. It's not quick to get started.</div>
-        <p class="api-azure-intro">If you already have Azure OpenAI access:</p>
-        <ol class="steps">
-          <li>Go to <a href="https://portal.azure.com" target="_blank">portal.azure.com</a> and open your Azure OpenAI resource.</li>
-          <li>Go to <strong>Keys and Endpoint</strong> and copy your API key.</li>
-          <li>Paste it into the Copilot field in WaxFrame and press Enter.</li>
-        </ol>
-        <div class="note-box green">&#x1F4A1; <strong>Most users should skip this one.</strong> The underlying model (GPT-4o) is available directly through ChatGPT with a much simpler setup. Use that instead unless you specifically need Azure.</div>
+        <div class="note-box green">DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</div>
       </div>
     </div>
 
@@ -211,19 +227,302 @@
           <li>Paste it into the Perplexity field in WaxFrame and press Enter.</li>
         </ol>
         <div class="note-box">Requires credit balance — add at <a href="https://www.perplexity.ai/settings/api" target="_blank">perplexity.ai → Settings → API → Add Credits</a>.</div>
-        <div class="note-box warn">⚠️ <strong>Important when signing up:</strong> Enable <strong>auto-billing</strong> and set your monthly limit low (e.g. $5) right away. If your credits expire without auto-billing enabled, Perplexity will require a <strong>$50 minimum top-up</strong> to reactivate your account.</div>
       </div>
     </div>
 
   </div>
 
 </div><!-- /two-col -->
+
+<!-- ── SECTION 2: KNOW YOUR HIVE ── -->
+<hr class="section-divider">
+
+<div class="kyh-intro">
+  <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="kyh-bee">
+  <div class="kyh-intro-text">
+    <h2>Know Your Hive</h2>
+    <p>Every AI in your hive has its own personality, strengths, and quirks. Knowing how each one behaves helps you pick the right Builder, get the most out of your reviewers, and decide when to toggle them off. This guide is based on real-world observations using WaxFrame in production.</p>
+  </div>
+</div>
+
+<div class="kyh-grid">
+
+  <!-- CHATGPT -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/chatgpt.ico" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">ChatGPT</div>
+        <div class="kyh-card-model">gpt-4.1</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast responses</span>
+          <span class="kyh-pill kyh-pill-good">Versatile across doc types</span>
+          <span class="kyh-pill kyh-pill-good">Good at concise rewrites</span>
+          <span class="kyh-pill kyh-pill-good">Reliable format compliance</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Can converge early (NO CHANGES too soon)</span>
+          <span class="kyh-pill kyh-pill-warn">Less distinctive voice than Claude</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A solid all-rounder for both Builder and Reviewer roles — fast, reliable, and consistent. A strong alternative Builder if DeepSeek is unavailable. As a reviewer, it effectively signals document convergence during final refinement rounds.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>When ChatGPT returns NO CHANGES in later rounds, treat this as a sign of document convergence rather than a reason to toggle it off.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLAUDE -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/claude.ico" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Claude</div>
+        <div class="kyh-card-model">claude-sonnet-4-6</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Precise instruction following</span>
+          <span class="kyh-pill kyh-pill-good">Nuanced language suggestions</span>
+          <span class="kyh-pill kyh-pill-good">Mastery of tone and flow</span>
+          <span class="kyh-pill kyh-pill-good">Large context window</span>
+          <span class="kyh-pill kyh-pill-good">Consistent format compliance</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Higher cost per token</span>
+          <span class="kyh-pill kyh-pill-warn">Occasionally verbose in suggestions</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>As a reviewer, Claude excels at catching subtle issues with tone, redundancy, and flow that others miss. As a Builder, it is reliable and format-compliant. Higher cost, but worth it for quality-sensitive projects.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>Claude tends to give the most thoughtful reasoning for its suggestions — clarifying the logic behind each change.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEEPSEEK -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">DeepSeek</div>
+        <div class="kyh-card-model">deepseek-chat</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-builder">Best Builder</span>
+        <span class="kyh-badge kyh-badge-free">Low Cost</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast responses</span>
+          <span class="kyh-pill kyh-pill-good">Strict format compliance</span>
+          <span class="kyh-pill kyh-pill-good">Minimal token cost</span>
+          <span class="kyh-pill kyh-pill-good">High reliability</span>
+          <span class="kyh-pill kyh-pill-good">Efficient handling of large documents</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Can be overly cautious</span>
+          <span class="kyh-pill kyh-pill-warn">May provide redundant feedback</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>The default Builder choice. Rarely deviates from instructions, making it a stable foundation. Fast, cost-effective, and reliable across document types.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>DeepSeek + Gemini is the most cost-effective hive combination — one paid Builder at rock-bottom prices, one free reviewer.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GEMINI -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Gemini</div>
+        <div class="kyh-card-model">gemini-2.5-flash</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+        <span class="kyh-badge kyh-badge-free">Free tier</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Free API tier</span>
+          <span class="kyh-pill kyh-pill-good">Precise grammar corrections</span>
+          <span class="kyh-pill kyh-pill-good">Strong structural suggestions</span>
+          <span class="kyh-pill kyh-pill-good">Large context window</span>
+          <span class="kyh-pill kyh-pill-good">Search-aware context integration</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Slowest responder</span>
+          <span class="kyh-pill kyh-pill-warn">Prone to inconsistent formatting</span>
+          <span class="kyh-pill kyh-pill-warn">Sometimes returns NO CHANGES prematurely</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>Your primary free reviewer. Great for catching grammar, word choice, and structural issues. Use it as a reviewer and let a paid AI serve as the Builder.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>Gemini + DeepSeek is the minimum viable paid hive — two AIs, one free, total cost often under a cent per round for short documents.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GROK -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Grok</div>
+        <div class="kyh-card-model">grok-4</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast responses</span>
+          <span class="kyh-pill kyh-pill-good">Aggressive early-round suggestions</span>
+          <span class="kyh-pill kyh-pill-good">Good at strong action verb improvements</span>
+          <span class="kyh-pill kyh-pill-good">Pushes for precision and impact</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-bad">Stubborn — re-raises resolved decisions</span>
+          <span class="kyh-pill kyh-pill-bad">Confidence bias — pushes its view assertively</span>
+          <span class="kyh-pill kyh-pill-warn">Skims context rather than reading carefully</span>
+          <span class="kyh-pill kyh-pill-warn">Not recommended as Builder</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A valuable reviewer in early rounds, pushing hard for stronger phrasing and action verbs. However, its tendency to revisit resolved points may prolong final convergence.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>Toggle Grok off in later refinement rounds once key decisions are finalized to avoid repetitive suggestions.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- PERPLEXITY -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/perplexity.ico" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Perplexity</div>
+        <div class="kyh-card-model">sonar-pro</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast responses</span>
+          <span class="kyh-pill kyh-pill-good">Good at factual precision</span>
+          <span class="kyh-pill kyh-pill-good">Catches vague or unsupported claims</span>
+          <span class="kyh-pill kyh-pill-good">Search-aware context</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Can over-expand content</span>
+          <span class="kyh-pill kyh-pill-warn">Occasionally suggests adding citations</span>
+          <span class="kyh-pill kyh-pill-bad">Not recommended as Builder</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A specialized reviewer for factual or research-heavy documents. Its search-aware training makes it uniquely effective at spotting unsupported claims, though its inconsistent output formatting may complicate document reconstruction.</p>
+      </div>
+      <div class="kyh-tip">
+        <span class="kyh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="helper-tip-icon-img"></span>
+        <p>Perplexity is particularly useful early in a project when the document is rough and needs fact-checking input from the hive.</p>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /kyh-grid -->
+
+<!-- GENERAL TIPS -->
+<div class="info-card info-card-tips" style="margin-top:32px;">
+  <h2 class="kyh-tips-title">General Tips</h2>
+  <p class="kyh-tips-p">
+    <strong class="kyh-tips-strong">You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.
+  </p>
+  <p class="kyh-tips-p">
+    <strong class="kyh-tips-strong">Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.
+  </p>
+  <p class="kyh-tips-p">
+    <strong class="kyh-tips-strong">Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.
+  </p>
+  <p class="kyh-tips-p kyh-tips-p-last">
+    <strong class="kyh-tips-strong">Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.
+  </p>
+</div>
+
 </div><!-- /page-main -->
 
 <div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon">
-      <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img">
+      <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="helper-info-img">
     </div>
     <h2 class="finish-modal-title">Open Source & Privacy</h2>
     <div class="goal-info-body">
@@ -236,7 +535,7 @@
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">💡 Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">Read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">Read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -244,43 +543,15 @@
 
 <div class="page-footer">
   <div class="page-footer-btns">
-    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
-    <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
-    <button class="btn" onclick="handleOpenBilling()">💳 Open All Billing Pages</button>
-    <button class="btn" onclick="handleOpenConsoles()">🔑 Open All API Consoles</button>
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">AGPL-3.0</a>
+    <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">GitHub</a>
+    <button class="btn" onclick="openAllBilling()">Open All Billing Pages</button>
+    <button class="btn" onclick="openAllConsoles()">Open All API Consoles</button>
   </div>
-  <button class="btn" onclick="window.close()">✕ Close this tab</button>
-</div>
-
-<div class="popup-blocked-banner" id="popupBlockedBanner">
-  <span class="popup-blocked-icon">⚠️</span>
-  <span class="popup-blocked-msg" id="popupBlockedMsg"></span>
-  <button class="popup-blocked-close" onclick="document.getElementById('popupBlockedBanner').classList.remove('visible')">✕</button>
+  <button class="btn" onclick="window.close()">Close this tab</button>
 </div>
 
 <script src="theme.js"></script>
 <script src="api-links.js"></script>
-<script>
-function showPopupWarning(result, label) {
-  if (result.opened < result.total) {
-    var blocked = result.total - result.opened;
-    var msg = blocked === result.total
-      ? 'Your browser blocked all ' + result.total + ' ' + label + ' tabs. Allow popups for this page and try again.'
-      : 'Your browser allowed ' + result.opened + ' of ' + result.total + ' ' + label + ' tabs. ' + blocked + ' tab' + (blocked > 1 ? 's were' : ' was') + ' blocked — allow popups for this page and try again.';
-    document.getElementById('popupBlockedMsg').textContent = msg;
-    document.getElementById('popupBlockedBanner').classList.add('visible');
-  } else {
-    document.getElementById('popupBlockedBanner').classList.remove('visible');
-  }
-}
-function handleOpenBilling() {
-  var result = openAllBilling();
-  showPopupWarning(result, 'billing');
-}
-function handleOpenConsoles() {
-  var result = openAllConsoles();
-  showPopupWarning(result, 'console');
-}
-</script>
 </body>
 </html>

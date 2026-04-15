@@ -2069,6 +2069,22 @@ function hideDefaultAI(id) {
   toast(`👁 ${ai.name} hidden — use ↺ Defaults to restore`);
 }
 
+function hideAllDefaultAIs() {
+  const visible = DEFAULT_AIS.filter(d => !hiddenDefaultIds.includes(d.id) && aiList.find(a => a.id === d.id));
+  if (!visible.length) { toast('All default AIs are already hidden'); return; }
+  if (!confirm(`Hide all ${visible.length} default AIs? Only your custom AIs will remain. You can restore them anytime with Reset to Defaults.`)) return;
+  visible.forEach(d => {
+    hiddenDefaultIds = [...new Set([...hiddenDefaultIds, d.id])];
+    aiList    = aiList.filter(a => a.id !== d.id);
+    activeAIs = activeAIs.filter(a => a.id !== d.id);
+    if (builder === d.id) builder = null;
+  });
+  saveHive();
+  renderAISetupGrid();
+  renderBuilderPicker();
+  toast('All default AIs hidden — use Reset to Defaults to restore');
+}
+
 function restoreHiddenDefaults() {
   if (!hiddenDefaultIds.length) return;
   hiddenDefaultIds = [];
