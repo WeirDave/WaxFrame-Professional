@@ -1061,6 +1061,8 @@ function playUnlockScene() {
       logo.style.transform = '';
       logo.style.transition = '';
       ctx.clearRect(0, 0, sw, sh);
+    }, 650);
+  }, 14050);
 
   // ── Canvas animation loop ──
   function startCanvas() {
