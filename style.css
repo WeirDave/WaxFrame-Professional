@@ -4992,10 +4992,9 @@ kbd {
   transform-origin: center center;
 }
 .unlock-canvas {
-  position: absolute;
-  top: 0;
-  left: 0;
-  z-index: 2;
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
   pointer-events: none;
 }
 .unlock-bee {
@@ -5003,7 +5002,7 @@ kbd {
   width: 380px;
   height: 380px;
   object-fit: contain;
-  top: calc(50% - 500px);
+  top: calc(50% - 540px);
   right: -400px;
   z-index: 999999;
   opacity: 0;
