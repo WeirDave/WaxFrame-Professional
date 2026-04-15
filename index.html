@@ -114,12 +114,12 @@
               <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
             </div>
             <div class="bee-controls-row-setup">
-              <button class="btn" onclick="resetBeesToDefaults()">↺ Reset to Defaults</button>
+              <a class="btn" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
+              <button class="btn" onclick="showAddCustomAI()">Add Custom AI</button>
+              <button class="btn" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
               <button class="btn" onclick="openAllConsoles()">Open API Websites</button>
-              <button class="btn" id="testAllKeysBtn" onclick="testAllKeys()">⚡ Test All Keys</button>
-              <a class="btn" href="api-details.html" target="_blank">API Key Guide</a>
-              <a class="btn" href="know-your-hive.html" target="_blank">🐝 Know Your Hive</a>
-              <button class="btn" onclick="showAddCustomAI()">＋ Add Custom AI</button>
+              <button class="btn" onclick="resetBeesToDefaults()">Reset to Defaults</button>
+              <button class="btn" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
             </div>
 
             <!-- ── Custom AI Form ── -->
@@ -209,7 +209,7 @@
             <div class="fs-col-header">
               <h2 class="fs-col-title">Choose Your Builder</h2>
               <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. For very large or complex documents, if a round fails with a missing output structure error, try switching to ChatGPT or Gemini as your Builder — some AIs are less reliable at following strict formatting instructions under heavy load. <a href="tokens-explainer.html" target="_blank" class="link-accent">Learn about tokens →</a></p>
+              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. For very large or complex documents, if a round fails with a missing output structure error, try switching to ChatGPT or Gemini as your Builder — some AIs are less reliable at following strict formatting instructions under heavy load. <a href="tokens-explainer.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
             </div>
             <div class="builder-pick-grid-large" id="builderPickGrid"></div>
           </div>
@@ -1127,7 +1127,7 @@
   <div class="nav-section-label">Reference</div>
   <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
   <button class="nav-item" onclick="closeNavMenu();openSettings()">⚙️ API Key Setup</button>
-  <a class="nav-item" href="know-your-hive.html" target="_blank" onclick="closeNavMenu()">🐝 Know Your Hive</a>
+  <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">API Key Guide</a>
   <a class="nav-item" href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" onclick="closeNavMenu()">📄 Open Source License</a>
   <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
   <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
