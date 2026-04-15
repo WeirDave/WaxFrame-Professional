@@ -2203,9 +2203,9 @@ function applyQuickAdd(value) {
   const preset = QUICK_ADD_PROVIDERS[value];
   if (!preset) return;
 
-  if (urlInput)  { urlInput.value = preset.url; autoFillAIName(preset.url); }
+  if (urlInput)  { urlInput.value = preset.url; }
   if (fmtSelect) fmtSelect.value = preset.format;
-  if (nameInput && !nameInput.dataset.userTyped === 'true') nameInput.value = preset.name;
+  if (nameInput) { nameInput.value = preset.name; nameInput.dataset.userTyped = 'true'; }
 
   if (keyLink) {
     if (preset.keyLink) {
