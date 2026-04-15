@@ -2094,7 +2094,7 @@ kbd {
   border-radius: 20px;
   white-space: nowrap;
   flex-shrink: 0;
-  min-width: 64px;
+  width: 56px;
   text-align: center;
   margin-top: 1px;
   letter-spacing: 0.04em;
