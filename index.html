@@ -1084,7 +1084,6 @@
 
   <div class="nav-divider"></div>
   <div class="nav-section-label">Reference</div>
-  <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()" id="navPromptEditor" style="display:none;">✏️ Prompt Editor</a>
   <button class="nav-item" onclick="closeNavMenu();openSettings()">⚙️ API Keys</button>
   <a class="nav-item" href="know-your-hive.html" target="_blank" onclick="closeNavMenu()">🐝 Know Your Hive</a>
   <a class="nav-item" href="working-with-the-hive.html" target="_blank" onclick="closeNavMenu()">📖 Working with the Hive</a>
@@ -1101,6 +1100,10 @@
 
   <div class="nav-divider"></div>
   <button class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
+  <div class="nav-dev-section" id="navDevSection">
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <button class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
+  </div>
 </div>
 
 </body>
