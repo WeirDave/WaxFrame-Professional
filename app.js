@@ -914,7 +914,6 @@ async function submitDevPassword() {
     }
     const navPromptEditor = document.getElementById('navPromptEditor');
     if (navPromptEditor) navPromptEditor.style.display = '';
-    initDevToolbarDrag();
     toast('🛠 Dev mode enabled');
   } else {
     hideDevModal();
@@ -931,13 +930,15 @@ function playUnlockScene() {
   const sub    = document.getElementById('unlockSub');
   if (!scene || !canvas || !logo) return;
 
-  // ── Reset ──
+  // ── Reset — everything hidden, logo stamped down ready ──
   logo.src = 'images/Waxframe_logo_v19.png';
+  logo.style.transition = 'none';
+  logo.style.opacity = '0';
+  logo.style.transform = 'scale(1.15)';
   [title, sub].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; } });
   if (bee) { bee.style.opacity = '0'; bee.style.right = '-260px'; bee.style.animation = ''; }
 
   // Size canvas to match stage
-  const stage = scene.querySelector('.unlock-stage');
   const stageSize = 280;
   canvas.width  = stageSize;
   canvas.height = stageSize;
@@ -947,69 +948,79 @@ function playUnlockScene() {
   ctx.clearRect(0, 0, stageSize, stageSize);
 
   // ── Particle state ──
-  const drips    = [];   // falling wax drops
-  const splats   = [];   // landed splat circles
-  const smokes   = [];   // smoke puffs
+  const drips    = [];
+  const splats   = [];
+  const smokes   = [];
   let dripping   = false;
-  let smokeFill  = 0;    // 0-1 full screen smoke opacity
-  let smokeMode  = 'off'; // off | build | full | clear
-  let revealed   = false;
+  let smokeFill  = 0;
+  let smokeMode  = 'off';
   let rafId      = null;
 
   // Nozzle position — top-right of stage, where bee's wax drip sits
   const nozzleX = stageSize * 0.72;
   const nozzleY = stageSize * 0.18;
 
-  // ── Fade in overlay ──
+  // ── T+0 — snap scene on, pure black, nothing visible ──
   scene.classList.add('active');
-  scene.style.opacity = '0';
-  scene.style.transition = 'opacity 0.4s ease';
-  requestAnimationFrame(() => { scene.style.opacity = '1'; });
+  scene.style.opacity = '1';
+  scene.style.transition = 'none';
 
-  // ── T+0.5s — bee flies in ──
+  // ── T+3.0s — anvil clang ──
+  setTimeout(() => {
+    playAnvilSound();
+  }, 3000);
+
+  // ── T+3.05s — logo stamps in ──
+  setTimeout(() => {
+    logo.style.transition = 'opacity 0.18s ease-out, transform 0.18s cubic-bezier(0.2,0.8,0.3,1.2)';
+    logo.style.opacity = '1';
+    logo.style.transform = 'scale(1.0)';
+  }, 3050);
+
+  // ── T+5.05s — bee flies in ──
   setTimeout(() => {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
     bee.style.right = 'calc(50% - 220px)';
-  }, 500);
+  }, 5050);
 
-  // ── T+1.2s — start dripping ──
+  // ── T+5.75s — start dripping ──
   setTimeout(() => {
     dripping = true;
     startCanvas();
-  }, 1200);
+  }, 5750);
 
-  // ── T+3.2s — smoke starts building ──
-  setTimeout(() => { smokeMode = 'build'; }, 3200);
+  // ── T+7.75s — smoke starts building ──
+  setTimeout(() => { smokeMode = 'build'; }, 7750);
 
-  // ── T+5.0s — full smoke coverage, swap logo, play anvil ──
+  // ── T+9.55s — full smoke coverage, swap logo, second anvil clang ──
   setTimeout(() => {
     smokeMode = 'full';
     smokeFill = 1;
     dripping  = false;
     logo.src  = 'images/Waxframe_Logo_Licensed_v1.png';
     playAnvilSound();
-  }, 5000);
+  }, 9550);
 
-  // ── T+5.6s — smoke clears outward ──
-  setTimeout(() => { smokeMode = 'clear'; }, 5600);
+  // ── T+10.15s — smoke clears outward ──
+  setTimeout(() => { smokeMode = 'clear'; }, 10150);
 
-  // ── T+7.0s — text fades in ──
+  // ── T+11.55s — text fades in ──
   setTimeout(() => {
     if (title) { title.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; title.style.opacity = '1'; title.style.transform = 'translateY(0)'; }
     if (sub)   { sub.style.transition   = 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
-  }, 7000);
+  }, 11550);
 
-  // ── T+8.0s — bee exits ──
+  // ── T+12.55s — bee exits ──
   setTimeout(() => {
     if (!bee) return;
     bee.style.transition = 'right 0.6s cubic-bezier(0.6,0,0.8,0.4), opacity 0.4s ease';
     bee.style.right = '-260px';
     bee.style.opacity = '0';
-  }, 8000);
+  }, 12550);
 
-  // ── T+9.5s — fade out scene ──
+  // ── T+14.05s — fade out scene ──
   setTimeout(() => {
     scene.style.transition = 'opacity 0.6s ease';
     scene.style.opacity = '0';
@@ -1018,9 +1029,12 @@ function playUnlockScene() {
       scene.classList.remove('active');
       scene.style.opacity = '';
       scene.style.transition = '';
+      logo.style.opacity = '';
+      logo.style.transform = '';
+      logo.style.transition = '';
       ctx.clearRect(0, 0, stageSize, stageSize);
     }, 650);
-  }, 9500);
+  }, 14050);
 
   // ── Canvas animation loop ──
   function startCanvas() {
@@ -4921,40 +4935,6 @@ function initTheme() {
 }
 
 // ── INIT ──
-function initDevToolbarDrag() {
-  const tb = document.getElementById('devToolbar');
-  if (!tb) return;
-  const label = tb.querySelector('.dev-toolbar-label');
-  if (!label) return;
-  // Remove any existing listener by replacing with a clone
-  const freshLabel = label.cloneNode(true);
-  label.parentNode.replaceChild(freshLabel, label);
-  freshLabel.addEventListener('mousedown', function(e) {
-    e.preventDefault();
-    const rect = tb.getBoundingClientRect();
-    const offX = e.clientX - rect.left;
-    const offY = e.clientY - rect.top;
-    function onMove(e) {
-      const newLeft = Math.max(0, Math.min(window.innerWidth  - tb.offsetWidth,  e.clientX - offX));
-      const newTop  = Math.max(0, Math.min(window.innerHeight - tb.offsetHeight, e.clientY - offY));
-      tb.style.left  = newLeft + 'px';
-      tb.style.top   = newTop  + 'px';
-      tb.style.right = 'auto';
-      tb.style.bottom = 'auto';
-    }
-    function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
-      localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
-        top:  parseInt(tb.style.top),
-        left: parseInt(tb.style.left)
-      }));
-    }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
-  });
-}
-
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
@@ -4977,7 +4957,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         tb.style.left = savedPos.left + 'px';
         tb.style.right = 'auto';
       }
-      initDevToolbarDrag();
+      // Drag by label
+      const label = tb.querySelector('.dev-toolbar-label');
+      if (label) {
+        label.addEventListener('mousedown', function(e) {
+          e.preventDefault();
+          const rect = tb.getBoundingClientRect();
+          const offX = e.clientX - rect.left;
+          const offY = e.clientY - rect.top;
+          function onMove(e) {
+            const newLeft = Math.max(0, Math.min(window.innerWidth  - tb.offsetWidth,  e.clientX - offX));
+            const newTop  = Math.max(0, Math.min(window.innerHeight - tb.offsetHeight, e.clientY - offY));
+            tb.style.left  = newLeft + 'px';
+            tb.style.top   = newTop  + 'px';
+            tb.style.right = 'auto';
+            tb.style.bottom = 'auto';
+          }
+          function onUp() {
+            document.removeEventListener('mousemove', onMove);
+            document.removeEventListener('mouseup', onUp);
+            // Save position
+            localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
+              top:  parseInt(tb.style.top),
+              left: parseInt(tb.style.left)
+            }));
+          }
+          document.addEventListener('mousemove', onMove);
+          document.addEventListener('mouseup', onUp);
+        });
+      }
     }
   }
 
