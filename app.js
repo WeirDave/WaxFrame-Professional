@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260415-002';         // build stamp — update each session
+const BUILD       = '20260415-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2128,10 +2128,13 @@ function showAddCustomAI() {
     const nameInput = document.getElementById('customAIName');
     const keyInput  = document.getElementById('customAIKey');
     const fmtSelect = document.getElementById('customAIFormat');
+    const modelInput = document.getElementById('customAIModel');
     if (urlInput)  urlInput.value  = '';
-    if (nameInput) { nameInput.value = ''; nameInput.placeholder = 'e.g. DeepSeek'; nameInput.dataset.userTyped = 'false'; }
+    if (nameInput) { nameInput.value = ''; nameInput.placeholder = 'e.g. Work AI'; nameInput.dataset.userTyped = 'false'; }
     if (keyInput)  keyInput.value  = '';
     if (fmtSelect) fmtSelect.value = 'openai';
+    if (modelInput) modelInput.value = '';
+    resetCustomAITest();
     f.style.display = 'block';
     urlInput?.focus();
   } else {
@@ -2139,10 +2142,100 @@ function showAddCustomAI() {
   }
 }
 
+function resetCustomAITest() {
+  const statusEl = document.getElementById('customAITestStatus');
+  const addBtn   = document.getElementById('customAIAddBtn');
+  const testBtn  = document.getElementById('customAITestBtn');
+  if (statusEl) { statusEl.textContent = ''; statusEl.className = 'custom-ai-test-status'; }
+  if (addBtn)   addBtn.style.display = 'none';
+  if (testBtn)  { testBtn.style.display = ''; testBtn.disabled = false; testBtn.textContent = 'Test Connection'; }
+}
+
+async function testCustomAIConnection() {
+  const url    = document.getElementById('customAIUrl').value.trim();
+  const format = document.getElementById('customAIFormat').value;
+  const key    = document.getElementById('customAIKey').value.trim();
+  const model  = document.getElementById('customAIModel').value.trim() || 'default';
+
+  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
+
+  const statusEl = document.getElementById('customAITestStatus');
+  const addBtn   = document.getElementById('customAIAddBtn');
+  const testBtn  = document.getElementById('customAITestBtn');
+
+  testBtn.disabled = true;
+  testBtn.textContent = '…';
+  if (statusEl) { statusEl.textContent = 'Testing…'; statusEl.className = 'custom-ai-test-status testing'; }
+  if (addBtn)   addBtn.style.display = 'none';
+
+  const baseConfigs = {
+    openai: {
+      headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
+      extractFn: d => d?.choices?.[0]?.message?.content || '',
+      endpointSuffix: '/v1/chat/completions'
+    },
+    anthropic: {
+      headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 64, messages: [{ role: 'user', content: prompt }] }),
+      extractFn: d => d?.content?.[0]?.text || '',
+      endpointSuffix: ''
+    },
+    google: {
+      headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
+      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || '',
+      endpointSuffix: ''
+    }
+  };
+
+  const cfg      = baseConfigs[format] || baseConfigs.openai;
+  const endpoint = url.replace(/\/$/, '') + cfg.endpointSuffix;
+
+  const setFail = (msg) => {
+    if (statusEl) { statusEl.textContent = `❌ ${msg}`; statusEl.className = 'custom-ai-test-status fail'; }
+    testBtn.disabled = false;
+    testBtn.textContent = 'Test Again';
+  };
+
+  try {
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: cfg.headersFn(key),
+      body: cfg.bodyFn(model, 'Reply with exactly one word: CONNECTED')
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      const msg = err?.error?.message || `HTTP ${response.status}`;
+      const hint =
+        response.status === 401 || response.status === 403 ? ' — check your API key' :
+        response.status === 404 ? ' — endpoint not found, check URL and format' :
+        response.status === 429 ? ' — rate limited, key is valid but quota exceeded' :
+        response.status === 405 ? ' — method not allowed, check URL path' : '';
+      setFail(msg + hint);
+      return;
+    }
+    const data = await response.json();
+    const text = cfg.extractFn(data).trim().substring(0, 50);
+    if (!text) {
+      setFail('Connected but got empty response — check API Format selection');
+      return;
+    }
+    if (statusEl) { statusEl.textContent = `✅ Connected — "${text}"`; statusEl.className = 'custom-ai-test-status pass'; }
+    testBtn.style.display = 'none';
+    if (addBtn) addBtn.style.display = '';
+  } catch(e) {
+    const isCors = e.message.toLowerCase().includes('network') || e.message.toLowerCase().includes('fetch');
+    const msg = isCors ? 'Could not reach endpoint — CORS blocked or network error' : e.message;
+    setFail(msg);
+  }
+}
+
 function addCustomAI() {
   const url    = document.getElementById('customAIUrl').value.trim();
   const format = document.getElementById('customAIFormat').value;
   const key    = document.getElementById('customAIKey').value.trim();
+  const model  = document.getElementById('customAIModel').value.trim() || 'default';
   let   name   = document.getElementById('customAIName').value.trim();
 
   if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
@@ -2164,17 +2257,17 @@ function addCustomAI() {
   const baseConfigs = {
     openai: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-      bodyFn: (model, prompt) => JSON.stringify({ model: 'default', messages: [{ role: 'user', content: prompt }] }),
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => d?.choices?.[0]?.message?.content || ''
     },
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
-      bodyFn: (model, prompt) => JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 4096, messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => d?.content?.[0]?.text || ''
     },
     google: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
-      bodyFn: (model, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
+      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
       extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || ''
     }
   };
@@ -2184,9 +2277,9 @@ function addCustomAI() {
 
   API_CONFIGS[id] = {
     label: name,
-    model: 'default',
+    model,
     endpoint: url.replace(/\/$/, '') + (format === 'openai' ? '/v1/chat/completions' : ''),
-    note: `Format: ${formatLabels[format] || 'OpenAI compatible'}`,
+    note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
     ...base
   };
   if (key) API_CONFIGS[id]._key = key;
@@ -2196,10 +2289,12 @@ function addCustomAI() {
 
   // Clear form
   document.getElementById('addCustomAIForm').style.display = 'none';
-  document.getElementById('customAIName').value  = '';
-  document.getElementById('customAIUrl').value   = '';
-  document.getElementById('customAIKey').value   = '';
+  document.getElementById('customAIName').value   = '';
+  document.getElementById('customAIUrl').value    = '';
+  document.getElementById('customAIKey').value    = '';
   document.getElementById('customAIFormat').value = 'openai';
+  document.getElementById('customAIModel').value  = '';
+  resetCustomAITest();
 
   renderAISetupGrid();
   saveHive();
