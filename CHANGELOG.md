@@ -4,6 +4,35 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.3 — April 15, 2026
+
+### Added
+- Quick Add dropdown in the Add Custom AI form with presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting a provider auto-fills the URL and API format and shows a direct link to that provider's API key console.
+- Model field in the Add Custom AI form. The model name is now explicitly specified and sent in every API request body. Previously hardcoded to the string "default" which caused model not found errors on all real endpoints.
+- Fetch Models button that queries the provider's /v1/models endpoint and populates a dropdown with real model names. Falls back to manual text input if the fetch fails or the endpoint does not support model listing.
+- Test Connection button that fires a real API call before allowing an AI to be added. The Add to Hive button only appears after a passing test.
+- Raw request and response panel displayed after every test pass or fail. Shows the exact endpoint, the JSON body sent, the HTTP status code with response time in milliseconds, and the complete raw JSON response from the server.
+- Plain-English error hints for common HTTP failure codes: 401/403 (bad key), 404 (wrong endpoint), 405 (method not allowed), 429 (rate limited), and network errors (CORS or unreachable).
+- Hide All Defaults button on the setup screen that hides all six default AIs in a single confirmation step. Intended for internal/work deployments where only custom AIs with internal endpoints are needed. Reset to Defaults restores them.
+- Perplexity tip about the $5/month recurring API subscription added to api-details.html.
+- CHANGELOG.md added to the repository.
+
+### Changed
+- Merged know-your-hive.html into api-details.html. Both the API key setup guide and the AI personality profiles now live in one document under one button. know-your-hive.html removed from the repo and all references removed throughout the codebase.
+- Setup screen button bar reordered: API Key Guide first with lightbulb icon, then Add Custom AI, Hide All Defaults, Open API Websites, Reset to Defaults, Test All Keys — alphabetical after the first.
+- Removed all emojis from setup screen buttons.
+- Removed Know Your Hive button from button bar and nav menu.
+- Updated Learn about tokens link text to Learn about tokens and how to save money.
+- Add Custom AI form now scrolls into view and focuses the Quick Add dropdown when opened.
+- Changing any field after a passing test resets the flow so stale results cannot be used to add an AI.
+
+### Fixed
+- cfg.extractFn trim is not a function error when testing connection to Mistral and other providers whose response structure differs from standard OpenAI format.
+- Model name hardcoded to default in custom AI API calls causing failures on all real endpoints.
+- Quick Add name field auto-detection overwriting the preset display name with a URL-parsed hostname.
+
+---
+
 ## v3.2 — April 15, 2026
 
 ### Changed
