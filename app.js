@@ -1025,7 +1025,7 @@ function playUnlockScene() {
     // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
     if (bee) {
       const beeRect = bee.getBoundingClientRect();
-      nozzleX = beeRect.left + beeRect.width * 0.3 - 75;
+      nozzleX = beeRect.left + beeRect.width * 0.3 - 85;
       nozzleY = beeRect.top  + beeRect.height * 0.55 + 80;
     }
     dripping = true;
@@ -1064,7 +1064,7 @@ function playUnlockScene() {
     if (sub)   { sub.style.transition   = 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
   }, 12200);
 
-  // ── T+14.05s — fade out scene ──
+  // ── T+16.05s — fade out scene ──
   setTimeout(() => {
     scene.style.transition = 'opacity 0.6s ease';
     scene.style.opacity = '0';
@@ -1078,7 +1078,7 @@ function playUnlockScene() {
       logo.style.transition = '';
       ctx.clearRect(0, 0, sw, sh);
     }, 650);
-  }, 14050);
+  }, 16050);
 
   // ── Canvas animation loop ──
   function startCanvas() {
