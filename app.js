@@ -120,7 +120,7 @@ const API_CONFIGS = {
     extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || ''
   },
   grok: {
-    label: 'xAI (Grok)', model: 'grok-4',
+    label: 'xAI (Grok)', model: 'grok-4-fast-non-reasoning',
     endpoint: 'https://api.x.ai/v1/chat/completions',
     note: null,
     headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
@@ -216,13 +216,21 @@ const MODEL_LABELS = {
   'gemini-2.5-flash':  { tag: 'Recommended',           note: 'Best balance, free tier available' },
   'gemini-2.5-pro':    { tag: 'Most Capable',          note: 'Higher quality, may cost more' },
   // Grok
-  'grok-4':            { tag: 'Recommended · Latest',  note: 'Current flagship' },
-  'grok-3':            { tag: 'Previous',              note: 'Still works, previous generation' },
+  'grok-4-fast-non-reasoning': { tag: 'Recommended · Fast',    note: 'Best speed/quality balance, low cost' },
+  'grok-4-fast-reasoning':     { tag: 'Reasoning · Fast',      note: 'Adds reasoning for complex tasks' },
+  'grok-4':                    { tag: 'Flagship',              note: 'Full flagship model' },
+  'grok-4.20-0309-non-reasoning': { tag: 'Latest · Fast',     note: 'Newest generation, no reasoning' },
+  'grok-4.20-0309-reasoning':  { tag: 'Latest · Reasoning',   note: 'Newest generation with reasoning' },
+  'grok-3':                    { tag: 'Previous',              note: 'Previous generation' },
+  'grok-3-mini':               { tag: 'Budget',                note: 'Lighter, faster, cheaper' },
   // DeepSeek
   'deepseek-chat':     { tag: 'Recommended · Budget',  note: 'Best value Builder, very low cost' },
   // Perplexity
-  'sonar-pro':         { tag: 'Recommended',           note: 'Best for factual review tasks' },
-  'sonar':             { tag: 'Budget',                note: 'Lighter, faster, cheaper' },
+  'sonar-pro':              { tag: 'Recommended',      note: 'Best for factual review tasks' },
+  'sonar-reasoning-pro':    { tag: 'Reasoning',        note: 'Deep reasoning with web search' },
+  'sonar-reasoning':        { tag: 'Reasoning · Fast', note: 'Lighter reasoning with search' },
+  'sonar-deep-research':    { tag: 'Research',         note: 'Long-form research reports' },
+  'sonar':                  { tag: 'Budget',           note: 'Lighter, faster, cheaper' },
 };
 
 // Static fallback model lists per provider — used when dynamic fetch fails or is offline
@@ -230,9 +238,9 @@ const MODEL_FALLBACKS = {
   chatgpt:    ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5.4', 'gpt-5.4-mini'],
   claude:     ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
   gemini:     ['gemini-2.5-flash', 'gemini-2.5-pro'],
-  grok:       ['grok-4', 'grok-3'],
+  grok:       ['grok-4-fast-non-reasoning', 'grok-4-fast-reasoning', 'grok-4', 'grok-4.20-0309-non-reasoning', 'grok-4.20-0309-reasoning', 'grok-3', 'grok-3-mini'],
   deepseek:   ['deepseek-chat'],
-  perplexity: ['sonar-pro', 'sonar'],
+  perplexity: ['sonar-pro', 'sonar-reasoning-pro', 'sonar-reasoning', 'sonar-deep-research', 'sonar'],
 };
 
 // Filters to keep only chat-relevant models from dynamic lists
