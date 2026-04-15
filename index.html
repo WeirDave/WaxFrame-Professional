@@ -125,6 +125,27 @@
             <!-- ── Custom AI Form ── -->
             <div id="addCustomAIForm" style="display:none;" class="custom-ai-form">
               <div class="custom-ai-form-title">🐝 Add a custom worker bee</div>
+
+              <!-- Quick Add -->
+              <div class="custom-ai-form-row custom-ai-quickadd-row">
+                <div class="custom-ai-field-wrap">
+                  <label>Quick Add <span class="field-optional">(optional)</span></label>
+                  <select id="customAIQuickAdd" class="custom-ai-select" onchange="applyQuickAdd(this.value)">
+                    <option value="">— Select a known provider or fill in manually —</option>
+                    <option value="mistral">Mistral</option>
+                    <option value="together">Together AI</option>
+                    <option value="cohere">Cohere</option>
+                    <option value="ollama">Ollama (local)</option>
+                    <option value="lmstudio">LM Studio (local)</option>
+                  </select>
+                </div>
+                <div class="custom-ai-field-wrap custom-ai-field-wrap--keylinkwrap">
+                  <label>&nbsp;</label>
+                  <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
+                </div>
+              </div>
+
+              <!-- URL + Name -->
               <div class="custom-ai-form-row">
                 <div class="custom-ai-field-wrap">
                   <label>URL <span class="field-required">*</span></label>
@@ -135,26 +156,35 @@
                   <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'">
                 </div>
               </div>
+
+              <!-- Format + Key -->
               <div class="custom-ai-form-row">
                 <div class="custom-ai-field-wrap">
                   <label>API Format <span class="field-required">*</span></label>
                   <select id="customAIFormat" class="custom-ai-select" onchange="resetCustomAITest()">
-                    <option value="openai">OpenAI compatible (DeepSeek, Mistral, etc.)</option>
+                    <option value="openai">OpenAI compatible (Mistral, DeepSeek, etc.)</option>
                     <option value="anthropic">Anthropic (Claude)</option>
                     <option value="google">Google (Gemini)</option>
                   </select>
                 </div>
                 <div class="custom-ai-field-wrap">
                   <label>API Key <span class="field-optional">(optional)</span></label>
-                  <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest()">
+                  <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest(); resetModelField()">
                 </div>
               </div>
-              <div class="custom-ai-form-row">
+
+              <!-- Model -->
+              <div class="custom-ai-form-row custom-ai-model-row">
                 <div class="custom-ai-field-wrap custom-ai-field-wrap--model">
                   <label>Model <span class="field-required">*</span></label>
-                  <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, deepseek-chat" oninput="resetCustomAITest()">
+                  <div class="custom-ai-model-input-wrap">
+                    <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest" oninput="resetCustomAITest()">
+                    <select id="customAIModelSelect" class="custom-ai-select" style="display:none;" onchange="resetCustomAITest()"></select>
+                    <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
+                  </div>
                 </div>
               </div>
+
               <div class="custom-ai-form-footer">
                 <span id="customAITestStatus" class="custom-ai-test-status"></span>
                 <button class="btn" onclick="showAddCustomAI()">Cancel</button>

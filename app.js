@@ -2129,16 +2129,161 @@ function showAddCustomAI() {
     const keyInput  = document.getElementById('customAIKey');
     const fmtSelect = document.getElementById('customAIFormat');
     const modelInput = document.getElementById('customAIModel');
+    const quickAdd   = document.getElementById('customAIQuickAdd');
+    const keyLink    = document.getElementById('customAIKeyLink');
     if (urlInput)  urlInput.value  = '';
     if (nameInput) { nameInput.value = ''; nameInput.placeholder = 'e.g. Work AI'; nameInput.dataset.userTyped = 'false'; }
     if (keyInput)  keyInput.value  = '';
     if (fmtSelect) fmtSelect.value = 'openai';
     if (modelInput) modelInput.value = '';
+    if (quickAdd)  quickAdd.value  = '';
+    if (keyLink)   keyLink.style.display = 'none';
+    resetModelField();
     resetCustomAITest();
     f.style.display = 'block';
     urlInput?.focus();
   } else {
     f.style.display = 'none';
+  }
+}
+
+// ── Custom AI Quick Add provider presets ──
+const QUICK_ADD_PROVIDERS = {
+  mistral: {
+    name: 'Mistral',
+    url: 'https://api.mistral.ai',
+    format: 'openai',
+    keyLink: 'https://console.mistral.ai/api-keys',
+    keyLinkLabel: 'Get your Mistral API key →'
+  },
+  together: {
+    name: 'Together AI',
+    url: 'https://api.together.xyz',
+    format: 'openai',
+    keyLink: 'https://api.together.ai/settings/api-keys',
+    keyLinkLabel: 'Get your Together AI key →'
+  },
+  cohere: {
+    name: 'Cohere',
+    url: 'https://api.cohere.com',
+    format: 'openai',
+    keyLink: 'https://dashboard.cohere.com/api-keys',
+    keyLinkLabel: 'Get your Cohere API key →'
+  },
+  ollama: {
+    name: 'Ollama',
+    url: 'http://localhost:11434',
+    format: 'openai',
+    keyLink: null,
+    keyLinkLabel: null
+  },
+  lmstudio: {
+    name: 'LM Studio',
+    url: 'http://localhost:1234',
+    format: 'openai',
+    keyLink: null,
+    keyLinkLabel: null
+  }
+};
+
+function applyQuickAdd(value) {
+  resetCustomAITest();
+  resetModelField();
+
+  const keyLink = document.getElementById('customAIKeyLink');
+  const urlInput  = document.getElementById('customAIUrl');
+  const fmtSelect = document.getElementById('customAIFormat');
+  const nameInput = document.getElementById('customAIName');
+
+  if (!value) {
+    if (keyLink) keyLink.style.display = 'none';
+    return;
+  }
+
+  const preset = QUICK_ADD_PROVIDERS[value];
+  if (!preset) return;
+
+  if (urlInput)  { urlInput.value = preset.url; autoFillAIName(preset.url); }
+  if (fmtSelect) fmtSelect.value = preset.format;
+  if (nameInput && !nameInput.dataset.userTyped === 'true') nameInput.value = preset.name;
+
+  if (keyLink) {
+    if (preset.keyLink) {
+      keyLink.href = preset.keyLink;
+      keyLink.textContent = preset.keyLinkLabel;
+      keyLink.style.display = '';
+    } else {
+      keyLink.style.display = 'none';
+    }
+  }
+}
+
+function resetModelField() {
+  const textInput   = document.getElementById('customAIModel');
+  const selectEl    = document.getElementById('customAIModelSelect');
+  const fetchBtn    = document.getElementById('customAIFetchModelsBtn');
+  if (textInput)  { textInput.value = ''; textInput.style.display = ''; }
+  if (selectEl)   { selectEl.style.display = 'none'; selectEl.innerHTML = ''; }
+  if (fetchBtn)   { fetchBtn.textContent = 'Fetch Models'; fetchBtn.disabled = false; }
+}
+
+async function fetchCustomAIModels() {
+  const url    = document.getElementById('customAIUrl').value.trim();
+  const format = document.getElementById('customAIFormat').value;
+  const key    = document.getElementById('customAIKey').value.trim();
+  const fetchBtn  = document.getElementById('customAIFetchModelsBtn');
+  const textInput = document.getElementById('customAIModel');
+  const selectEl  = document.getElementById('customAIModelSelect');
+
+  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a URL first'); return; }
+
+  fetchBtn.textContent = '…';
+  fetchBtn.disabled = true;
+
+  try {
+    let modelsEndpoint, headers;
+    if (format === 'anthropic') {
+      modelsEndpoint = 'https://api.anthropic.com/v1/models';
+      headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
+    } else if (format === 'google') {
+      modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`;
+      headers = {};
+    } else {
+      const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+      modelsEndpoint = `${base}/v1/models`;
+      headers = key ? { 'Authorization': `Bearer ${key}` } : {};
+    }
+
+    const resp = await fetch(modelsEndpoint, { headers });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    let models = [];
+    if (format === 'anthropic') {
+      models = (data?.data || []).map(m => m.id);
+    } else if (format === 'google') {
+      models = (data?.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+        .map(m => m.name.replace('models/', ''));
+    } else {
+      models = (data?.data || []).map(m => m.id).sort();
+    }
+
+    if (!models.length) throw new Error('No models returned');
+
+    // Switch to dropdown
+    selectEl.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+    textInput.style.display = 'none';
+    selectEl.style.display = '';
+    fetchBtn.textContent = '↺ Refresh';
+    fetchBtn.disabled = false;
+    resetCustomAITest();
+    toast(`✅ ${models.length} models loaded`);
+
+  } catch(e) {
+    fetchBtn.textContent = 'Fetch Models';
+    fetchBtn.disabled = false;
+    toast(`⚠️ Could not fetch models: ${e.message} — type model name manually`);
   }
 }
 
@@ -2155,7 +2300,8 @@ async function testCustomAIConnection() {
   const url    = document.getElementById('customAIUrl').value.trim();
   const format = document.getElementById('customAIFormat').value;
   const key    = document.getElementById('customAIKey').value.trim();
-  const model  = document.getElementById('customAIModel').value.trim() || 'default';
+  const modelSelect = document.getElementById('customAIModelSelect');
+  const model  = (modelSelect && modelSelect.style.display !== 'none' ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
 
   if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
 
@@ -2235,7 +2381,8 @@ function addCustomAI() {
   const url    = document.getElementById('customAIUrl').value.trim();
   const format = document.getElementById('customAIFormat').value;
   const key    = document.getElementById('customAIKey').value.trim();
-  const model  = document.getElementById('customAIModel').value.trim() || 'default';
+  const modelSelect = document.getElementById('customAIModelSelect');
+  const model  = (modelSelect && modelSelect.style.display !== 'none' ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
   let   name   = document.getElementById('customAIName').value.trim();
 
   if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
@@ -2294,6 +2441,10 @@ function addCustomAI() {
   document.getElementById('customAIKey').value    = '';
   document.getElementById('customAIFormat').value = 'openai';
   document.getElementById('customAIModel').value  = '';
+  document.getElementById('customAIQuickAdd').value = '';
+  const kl = document.getElementById('customAIKeyLink');
+  if (kl) kl.style.display = 'none';
+  resetModelField();
   resetCustomAITest();
 
   renderAISetupGrid();

@@ -1876,6 +1876,27 @@ html, body {
 
 .custom-ai-field-wrap--model { flex: 1; }
 
+.custom-ai-quickadd-row { align-items: flex-end; }
+.custom-ai-field-wrap--keylinkwrap { flex: 0 0 auto; min-width: 0; }
+
+.custom-ai-key-link {
+  display: block;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 0;
+}
+.custom-ai-key-link:hover { text-decoration: underline; }
+
+.custom-ai-model-input-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.custom-ai-model-input-wrap input,
+.custom-ai-model-input-wrap select { flex: 1; min-width: 0; }
+
 .custom-ai-test-status {
   flex: 1;
   font-size: 12px;
