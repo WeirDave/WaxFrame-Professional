@@ -2362,7 +2362,8 @@ async function testCustomAIConnection() {
       return;
     }
     const data = await response.json();
-    const text = cfg.extractFn(data).trim().substring(0, 50);
+    const raw  = cfg.extractFn(data);
+    const text = (raw != null ? String(raw) : '').trim().substring(0, 50);
     if (!text) {
       setFail('Connected but got empty response — check API Format selection');
       return;
