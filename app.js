@@ -2158,6 +2158,7 @@ function showAddCustomAI() {
     resetCustomAITest();
     f.style.display = 'block';
     document.getElementById('customAIQuickAdd')?.focus();
+    setTimeout(() => f.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
   } else {
     f.style.display = 'none';
   }
@@ -2307,9 +2308,11 @@ function resetCustomAITest() {
   const statusEl = document.getElementById('customAITestStatus');
   const addBtn   = document.getElementById('customAIAddBtn');
   const testBtn  = document.getElementById('customAITestBtn');
+  const rawPanel = document.getElementById('customAIRawPanel');
   if (statusEl) { statusEl.textContent = ''; statusEl.className = 'custom-ai-test-status'; }
   if (addBtn)   addBtn.style.display = 'none';
   if (testBtn)  { testBtn.style.display = ''; testBtn.disabled = false; testBtn.textContent = 'Test Connection'; }
+  if (rawPanel) rawPanel.style.display = 'none';
 }
 
 async function testCustomAIConnection() {
@@ -2321,76 +2324,90 @@ async function testCustomAIConnection() {
 
   if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
 
-  const statusEl = document.getElementById('customAITestStatus');
-  const addBtn   = document.getElementById('customAIAddBtn');
-  const testBtn  = document.getElementById('customAITestBtn');
+  const statusEl    = document.getElementById('customAITestStatus');
+  const addBtn      = document.getElementById('customAIAddBtn');
+  const testBtn     = document.getElementById('customAITestBtn');
+  const rawPanel    = document.getElementById('customAIRawPanel');
+  const rawEndpoint = document.getElementById('customAIRawEndpoint');
+  const rawSent     = document.getElementById('customAIRawSent');
+  const rawStatus   = document.getElementById('customAIRawStatus');
+  const rawReceived = document.getElementById('customAIRawReceived');
 
   testBtn.disabled = true;
   testBtn.textContent = '…';
   if (statusEl) { statusEl.textContent = 'Testing…'; statusEl.className = 'custom-ai-test-status testing'; }
   if (addBtn)   addBtn.style.display = 'none';
+  if (rawPanel) rawPanel.style.display = 'none';
 
   const baseConfigs = {
     openai: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
       bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => d?.choices?.[0]?.message?.content || '',
       endpointSuffix: '/v1/chat/completions'
     },
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
       bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 64, messages: [{ role: 'user', content: prompt }] }),
-      extractFn: d => d?.content?.[0]?.text || '',
       endpointSuffix: ''
     },
     google: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
       bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      extractFn: d => d?.candidates?.[0]?.content?.parts?.[0]?.text || '',
       endpointSuffix: ''
     }
   };
 
   const cfg      = baseConfigs[format] || baseConfigs.openai;
   const endpoint = url.replace(/\/$/, '') + cfg.endpointSuffix;
+  const body     = cfg.bodyFn(model, 'Reply with exactly one word: CONNECTED');
 
-  const setFail = (msg) => {
+  const showRaw = (statusCode, statusText, elapsed, receivedObj) => {
+    if (!rawPanel) return;
+    if (rawEndpoint) rawEndpoint.textContent = endpoint;
+    if (rawSent)     rawSent.textContent = JSON.stringify(JSON.parse(body), null, 2);
+    if (rawStatus)   rawStatus.textContent = `${statusCode} ${statusText}  (${elapsed}ms)`;
+    if (rawReceived) rawReceived.textContent = (receivedObj !== null && typeof receivedObj === 'object') ? JSON.stringify(receivedObj, null, 2) : String(receivedObj);
+    rawPanel.style.display = '';
+  };
+
+  const setFail = (msg, statusCode, statusText, elapsed, receivedObj) => {
     if (statusEl) { statusEl.textContent = `❌ ${msg}`; statusEl.className = 'custom-ai-test-status fail'; }
     testBtn.disabled = false;
     testBtn.textContent = 'Test Again';
+    if (statusCode !== undefined) showRaw(statusCode, statusText, elapsed, receivedObj);
   };
 
+  const t0 = Date.now();
   try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: cfg.headersFn(key),
-      body: cfg.bodyFn(model, 'Reply with exactly one word: CONNECTED')
+      body
     });
+    const elapsed = Date.now() - t0;
+    const data = await response.json().catch(() => null);
+
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      const msg = err?.error?.message || `HTTP ${response.status}`;
+      const msg = data?.error?.message || `HTTP ${response.status}`;
       const hint =
         response.status === 401 || response.status === 403 ? ' — check your API key' :
         response.status === 404 ? ' — endpoint not found, check URL and format' :
         response.status === 429 ? ' — rate limited, key is valid but quota exceeded' :
         response.status === 405 ? ' — method not allowed, check URL path' : '';
-      setFail(msg + hint);
+      setFail(msg + hint, response.status, response.statusText, elapsed, data);
       return;
     }
-    const data = await response.json();
-    const raw  = cfg.extractFn(data);
-    const text = (raw != null ? String(raw) : '').trim().substring(0, 50);
-    if (!text) {
-      setFail('Connected but got empty response — check API Format selection');
-      return;
-    }
-    if (statusEl) { statusEl.textContent = `✅ Connected — "${text}"`; statusEl.className = 'custom-ai-test-status pass'; }
+
+    showRaw(response.status, response.statusText, elapsed, data);
+    if (statusEl) { statusEl.textContent = 'Connected successfully'; statusEl.className = 'custom-ai-test-status pass'; }
     testBtn.style.display = 'none';
     if (addBtn) addBtn.style.display = '';
+
   } catch(e) {
+    const elapsed = Date.now() - t0;
     const isCors = e.message.toLowerCase().includes('network') || e.message.toLowerCase().includes('fetch');
     const msg = isCors ? 'Could not reach endpoint — CORS blocked or network error' : e.message;
-    setFail(msg);
+    setFail(msg, '—', e.message, elapsed, e.message);
   }
 }
 

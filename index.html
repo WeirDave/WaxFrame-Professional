@@ -191,6 +191,24 @@
                 <button class="btn btn-accent btn-sm" id="customAITestBtn" onclick="testCustomAIConnection()">Test Connection</button>
                 <button class="btn btn-accent btn-sm" id="customAIAddBtn" style="display:none;" onclick="addCustomAI()">Add to Hive</button>
               </div>
+              <div id="customAIRawPanel" class="custom-ai-raw-panel" style="display:none;">
+                <div class="custom-ai-raw-row">
+                  <span class="custom-ai-raw-label">Endpoint</span>
+                  <pre class="custom-ai-raw-pre" id="customAIRawEndpoint"></pre>
+                </div>
+                <div class="custom-ai-raw-row">
+                  <span class="custom-ai-raw-label">Sent</span>
+                  <pre class="custom-ai-raw-pre" id="customAIRawSent"></pre>
+                </div>
+                <div class="custom-ai-raw-row">
+                  <span class="custom-ai-raw-label">Status</span>
+                  <pre class="custom-ai-raw-pre" id="customAIRawStatus"></pre>
+                </div>
+                <div class="custom-ai-raw-row">
+                  <span class="custom-ai-raw-label">Received</span>
+                  <pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre>
+                </div>
+              </div>
             </div>
 
             <div class="ai-setup-grid" id="aiSetupGrid"></div>
