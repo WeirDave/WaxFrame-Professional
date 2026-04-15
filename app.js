@@ -938,14 +938,18 @@ function playUnlockScene() {
   [title, sub].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; } });
   if (bee) { bee.style.opacity = '0'; bee.style.right = '-400px'; bee.style.animation = ''; }
 
-  // Size canvas to match stage
-  const stageSize = 600;
-  canvas.width  = stageSize;
-  canvas.height = stageSize;
-  canvas.style.width  = stageSize + 'px';
-  canvas.style.height = stageSize + 'px';
+  // Canvas — full screen fixed overlay for drips and smoke
+  const sw = window.innerWidth;
+  const sh = window.innerHeight;
+  canvas.width  = sw;
+  canvas.height = sh;
+  canvas.style.position = 'fixed';
+  canvas.style.inset = '0';
+  canvas.style.width  = sw + 'px';
+  canvas.style.height = sh + 'px';
+  canvas.style.zIndex = '999999';
   const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, stageSize, stageSize);
+  ctx.clearRect(0, 0, sw, sh);
 
   // ── Particle state ──
   const drips   = [];
@@ -956,9 +960,9 @@ function playUnlockScene() {
   let smokeMode = 'off';
   let rafId     = null;
 
-  // Nozzle position — tracks bee gun tip over logo top-right
-  const nozzleX = stageSize * 0.95;
-  const nozzleY = stageSize * 0.18;
+  // Nozzle — calculated from bee's actual screen position when dripping starts
+  let nozzleX = sw * 0.6;
+  let nozzleY = sh * 0.35;
 
   // ── T+0 — scene visible but transparent, fade to black over 1.5s ──
   scene.style.transition = 'none';
@@ -1000,11 +1004,17 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 570px)';
+    bee.style.right = 'calc(50% - 530px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
   setTimeout(() => {
+    // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
+    if (bee) {
+      const beeRect = bee.getBoundingClientRect();
+      nozzleX = beeRect.left + beeRect.width * 0.3;
+      nozzleY = beeRect.top  + beeRect.height * 0.55;
+    }
     dripping = true;
     startCanvas();
   }, 5750);
@@ -1050,15 +1060,13 @@ function playUnlockScene() {
       logo.style.opacity = '';
       logo.style.transform = '';
       logo.style.transition = '';
-      ctx.clearRect(0, 0, stageSize, stageSize);
-    }, 650);
-  }, 14050);
+      ctx.clearRect(0, 0, sw, sh);
 
   // ── Canvas animation loop ──
   function startCanvas() {
     let lastDrip = 0;
     function loop(ts) {
-      ctx.clearRect(0, 0, stageSize, stageSize);
+      ctx.clearRect(0, 0, sw, sh);
 
       // Spawn new drip
       if (dripping && ts - lastDrip > 120) {
@@ -1091,7 +1099,7 @@ function playUnlockScene() {
         ctx.restore();
 
         // Splat on logo surface
-        if (d.y > stageSize * 0.55) {
+        if (d.y > nozzleY + 80) {
           splats.push({ x: d.x + (Math.random()-0.5)*10, y: d.y, r: d.r * 1.6 + Math.random()*4, alpha: 0.9 });
           // Spawn smoke puff at splat
           for (let s = 0; s < 3; s++) {
@@ -1163,29 +1171,14 @@ function playUnlockScene() {
   }
 
   function drawFullSmoke(alpha) {
-    // Draw smoke fill on a full-screen canvas overlay via the scene background
-    // We overdraw on the stage canvas edges — instead use scene opacity trick
-    // Expand canvas to fill whole scene temporarily
-    const sw = window.innerWidth;
-    const sh = window.innerHeight;
-    if (canvas.width !== sw) {
-      canvas.width  = sw;
-      canvas.height = sh;
-      canvas.style.position = 'fixed';
-      canvas.style.inset = '0';
-      canvas.style.width  = sw + 'px';
-      canvas.style.height = sh + 'px';
-      canvas.style.zIndex = '999999';
-    }
     const cx = sw / 2, cy = sh / 2;
     const maxR = Math.sqrt(cx*cx + cy*cy) * 1.1;
-    const ctx2 = canvas.getContext('2d');
-    const grad = ctx2.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+    const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, maxR);
     grad.addColorStop(0, `rgba(100,90,80,${alpha * 0.97})`);
     grad.addColorStop(0.5, `rgba(60,55,50,${alpha * 0.95})`);
     grad.addColorStop(1, `rgba(20,18,15,${alpha * 0.9})`);
-    ctx2.fillStyle = grad;
-    ctx2.fillRect(0, 0, sw, sh);
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, sw, sh);
   }
 }
 
