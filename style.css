@@ -5001,7 +5001,7 @@ kbd {
 .unlock-scene {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.93);
+  background: rgb(0,0,0);
   z-index: 999998;
   display: flex;
   flex-direction: column;
@@ -5056,7 +5056,7 @@ kbd {
 }
 .unlock-sub {
   font-size: 19px;
-  color: var(--text2);
+  color: rgba(255,255,255,0.75);
   opacity: 0;
   transform: translateY(8px);
   margin-top: -20px;
