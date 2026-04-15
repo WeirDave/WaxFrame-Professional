@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.0-orange.svg)](https://github.com/WeirDave/AIHive/releases)
-[![Build](https://img.shields.io/badge/Build-20260414--001-blue.svg)](https://github.com/WeirDave/AIHive)
+[![Version](https://img.shields.io/badge/Version-3.0-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260414--002-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -225,7 +225,7 @@ Open the **Token Guide** inside the app for a full cost breakdown by provider.
 - **No server.** No backend. No tracking. No analytics.
 - **Your documents stay on your machine.** Nothing is ever sent anywhere except directly to the AI providers you choose.
 - **Your API keys stay in your browser.** They are stored in `localStorage` and go directly to each provider — WaxFrame never sees them.
-- **Fully open source.** Read every line at [github.com/WeirDave/AIHive](https://github.com/WeirDave/AIHive).
+- **Fully open source.** Read every line at [github.com/WeirDave/WaxFrame-Professional](https://github.com/WeirDave/WaxFrame-Professional).
 
 ---
 
