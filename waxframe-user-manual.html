@@ -62,6 +62,7 @@
       <a href="#step6" class="wh-toc-link">⑥ Know When You're Done</a>
       <a href="#problems" class="wh-toc-link">🔧 When Things Go Wrong</a>
       <a href="#internalai" class="wh-toc-link">🏢 Using WaxFrame at Work</a>
+      <a href="#billing" class="wh-toc-link">💳 API Costs &amp; Billing</a>
     </div>
   </div>
 
@@ -435,6 +436,59 @@
         <p>⚠️ If you see a "Network Error" when testing an internal AI, CORS is almost certainly the cause. Switch to running WaxFrame locally and the error will go away.</p>
       </div>
     </div>
+  </div>
+  <a href="#top" class="wh-back-top">↑ Back to top</a>
+
+  <div class="wh-section" id="billing">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">💳</div>
+      <div class="wh-section-title">API Costs &amp; Billing</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">You pay the AI providers directly — not WaxFrame</div>
+      <p>WaxFrame is free and open-source. It has no subscription, no credits, and no built-in payments. When you run a round, requests go directly from your browser to each AI provider's API, and each provider bills you separately based on the number of tokens used.</p>
+      <p>This means you need an active account with a payment method on file at each provider you want to use. Most providers offer a small free credit when you sign up, but sustained use will require topping up your balance.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Check your billing rates at least monthly</div>
+      <p>API pricing is not fixed. Providers change their rates, introduce new pricing tiers, and add or remove models on an ongoing basis. What a round costs today may be different next month.</p>
+      <div class="wh-warn">
+        <p>⚠️ Billing rates are set by each AI provider and can change without notice. Check the billing rate page for each provider you're using at least once a month.</p>
+      </div>
+      <p>You can reach each provider's billing and API key pages directly from the <strong>API Key Details</strong> page, linked from the Setup screen via the API Key Guide button. The <strong>Open All Billing Pages</strong> button on that page opens all of them at once.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Popup blocker warning when opening multiple billing pages</div>
+      <p>When you click <strong>Open All Billing Pages</strong> or <strong>Open All API Consoles</strong>, WaxFrame attempts to open one tab per provider simultaneously. Most browsers block this by default and only allow the first tab through.</p>
+      <p>If you see a popup-blocked notification from your browser, click it and choose <strong>Always allow popups from this page</strong>. Then click the button again — all tabs will open. You only need to do this once per browser.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Perplexity — enable auto-billing immediately</div>
+      <p>Perplexity has an unusual billing policy that can catch new users off guard. When you first sign up for Perplexity API access, you are given the option to enable auto-billing with a monthly spending limit.</p>
+      <div class="wh-warn">
+        <p>⚠️ Enable auto-billing when you first sign up and set your monthly limit low — $5 is a reasonable starting point. If your initial credit runs out <em>without</em> auto-billing active, Perplexity will require a minimum top-up of $50 to reactivate your account. Opting in early avoids this.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Which models WaxFrame uses</div>
+      <p>WaxFrame uses specific model versions for each AI provider. These are the defaults as of this version:</p>
+      <ul>
+        <li><strong>ChatGPT</strong> — <code>gpt-4.1</code></li>
+        <li><strong>Claude</strong> — <code>claude-sonnet-4-6</code></li>
+        <li><strong>Gemini</strong> — <code>gemini-2.5-pro-preview-03-25</code></li>
+        <li><strong>Grok</strong> — <code>grok-3</code></li>
+        <li><strong>Perplexity</strong> — <code>sonar-pro</code></li>
+        <li><strong>DeepSeek</strong> — <code>deepseek-chat</code></li>
+      </ul>
+      <p>You can see and change the model for any AI from the Setup screen — click the model name next to any AI to select from the available options. Newer models generally produce better results but may cost more per token.</p>
+      <p>WaxFrame fetches the current model list from each provider when you open the model selector, so the options shown always reflect what's available on your account. The exact model string in use is sent directly to the API.</p>
+    </div>
+
   </div>
   <a href="#top" class="wh-back-top">↑ Back to top</a>
 
