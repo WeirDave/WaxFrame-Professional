@@ -2141,7 +2141,7 @@ function showAddCustomAI() {
     resetModelField();
     resetCustomAITest();
     f.style.display = 'block';
-    urlInput?.focus();
+    document.getElementById('customAIQuickAdd')?.focus();
   } else {
     f.style.display = 'none';
   }
