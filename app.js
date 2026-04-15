@@ -3974,7 +3974,17 @@ function extractConflicts(text) {
   let match;
   while ((match = udRegex.exec(normalised)) !== null) {
     const block = match[1].trim();
-    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    // Join continuation lines onto their parent keyword line before parsing.
+    // Prevents multi-line Builder OPTION values from being split into fragments.
+    const rawLines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    const lines = [];
+    for (const l of rawLines) {
+      if (/^(QUESTION|CURRENT|OPTION_\d+):/i.test(l)) {
+        lines.push(l);
+      } else if (lines.length > 0) {
+        lines[lines.length - 1] += ' ' + l;
+      }
+    }
     const decision = { question: '', current: '', options: [] };
     for (const line of lines) {
       if (/^QUESTION:/i.test(line)) {
@@ -4917,9 +4927,6 @@ function restoreRound(idx) {
   const viewModal = document.getElementById('histDocModal');
   if (viewModal) viewModal.remove();
   toast(`↩ Restored to Round ${h.round} — ${history.length - 1} later round${history.length - 1 !== 1 ? 's' : ''} discarded`);
-  consoleLog(`${'═'.repeat(60)}`, 'divider');
-  consoleLog(`↩ Restored to Round ${h.round} — console above reflects discarded rounds`, 'warn');
-  consoleLog(`${'═'.repeat(60)}`, 'divider');
 }
 
 // ── EXPORT ──
