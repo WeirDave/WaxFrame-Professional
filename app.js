@@ -930,16 +930,16 @@ function playUnlockScene() {
   const sub    = document.getElementById('unlockSub');
   if (!scene || !canvas || !logo) return;
 
-  // ── Reset — everything hidden, logo stamped down ready ──
+  // ── Reset — everything hidden, logo pre-scaled for stamp ──
   logo.src = 'images/Waxframe_logo_v19.png';
   logo.style.transition = 'none';
   logo.style.opacity = '0';
   logo.style.transform = 'scale(1.15)';
   [title, sub].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; } });
-  if (bee) { bee.style.opacity = '0'; bee.style.right = '-260px'; bee.style.animation = ''; }
+  if (bee) { bee.style.opacity = '0'; bee.style.right = '-400px'; bee.style.animation = ''; }
 
   // Size canvas to match stage
-  const stageSize = 280;
+  const stageSize = 600;
   canvas.width  = stageSize;
   canvas.height = stageSize;
   canvas.style.width  = stageSize + 'px';
@@ -948,22 +948,22 @@ function playUnlockScene() {
   ctx.clearRect(0, 0, stageSize, stageSize);
 
   // ── Particle state ──
-  const drips    = [];
-  const splats   = [];
-  const smokes   = [];
-  let dripping   = false;
-  let smokeFill  = 0;
-  let smokeMode  = 'off';
-  let rafId      = null;
+  const drips   = [];
+  const splats  = [];
+  const smokes  = [];
+  let dripping  = false;
+  let smokeFill = 0;
+  let smokeMode = 'off';
+  let rafId     = null;
 
   // Nozzle position — top-right of stage, where bee's wax drip sits
   const nozzleX = stageSize * 0.72;
   const nozzleY = stageSize * 0.18;
 
-  // ── T+0 — snap scene on, pure black, nothing visible ──
-  scene.classList.add('active');
-  scene.style.opacity = '1';
+  // ── T+0 — snap to solid black immediately, no transition ──
   scene.style.transition = 'none';
+  scene.style.opacity = '1';
+  scene.classList.add('active');
 
   // ── T+3.0s — anvil clang ──
   setTimeout(() => {
@@ -982,7 +982,7 @@ function playUnlockScene() {
     if (!bee) return;
     bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 220px)';
+    bee.style.right = 'calc(50% - 300px)';
   }, 5050);
 
   // ── T+5.75s — start dripping ──
@@ -994,7 +994,7 @@ function playUnlockScene() {
   // ── T+7.75s — smoke starts building ──
   setTimeout(() => { smokeMode = 'build'; }, 7750);
 
-  // ── T+9.55s — full smoke coverage, swap logo, second anvil clang ──
+  // ── T+9.55s — full smoke, swap to licensed logo, second clang ──
   setTimeout(() => {
     smokeMode = 'full';
     smokeFill = 1;
@@ -1003,7 +1003,7 @@ function playUnlockScene() {
     playAnvilSound();
   }, 9550);
 
-  // ── T+10.15s — smoke clears outward ──
+  // ── T+10.15s — smoke clears ──
   setTimeout(() => { smokeMode = 'clear'; }, 10150);
 
   // ── T+11.55s — text fades in ──
@@ -1016,7 +1016,7 @@ function playUnlockScene() {
   setTimeout(() => {
     if (!bee) return;
     bee.style.transition = 'right 0.6s cubic-bezier(0.6,0,0.8,0.4), opacity 0.4s ease';
-    bee.style.right = '-260px';
+    bee.style.right = '-400px';
     bee.style.opacity = '0';
   }, 12550);
 

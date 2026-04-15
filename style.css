@@ -4962,7 +4962,7 @@ kbd {
 .unlock-scene {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.93);
+  background: #000;
   z-index: 999998;
   display: flex;
   flex-direction: column;
@@ -4971,20 +4971,19 @@ kbd {
   opacity: 0;
   pointer-events: none;
   gap: 32px;
-  transition: opacity 0.4s ease;
 }
 .unlock-scene.active { pointer-events: all; }
 .unlock-stage {
   position: relative;
-  width: 280px;
-  height: 280px;
+  width: 600px;
+  height: 600px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .unlock-logo {
-  width: 240px;
-  height: 240px;
+  width: 560px;
+  height: 560px;
   object-fit: contain;
   position: relative;
   z-index: 1;
@@ -5001,11 +5000,11 @@ kbd {
 }
 .unlock-bee {
   position: fixed;
-  width: 240px;
-  height: 240px;
+  width: 380px;
+  height: 380px;
   object-fit: contain;
-  top: calc(50% - 280px);
-  right: -260px;
+  top: calc(50% - 420px);
+  right: -400px;
   z-index: 999999;
   opacity: 0;
 }
