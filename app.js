@@ -923,122 +923,284 @@ async function submitDevPassword() {
 // ── LICENSE UNLOCK SCENE ──
 function playUnlockScene() {
   const scene  = document.getElementById('unlockScene');
-  const bee    = scene?.querySelector('.unlock-bee');
-  const wax    = scene?.querySelector('.unlock-wax');
-  const stamp  = scene?.querySelector('.unlock-stamp');
-  const smoke  = scene?.querySelector('.unlock-smoke');
-  const stage  = scene?.querySelector('.unlock-stage');
-  const title  = scene?.querySelector('.unlock-title');
-  const sub    = scene?.querySelector('.unlock-sub');
-  if (!scene) return;
+  const logo   = document.getElementById('unlockLogo');
+  const canvas = document.getElementById('unlockCanvas');
+  const bee    = document.getElementById('unlockBee');
+  const title  = document.getElementById('unlockTitle');
+  const sub    = document.getElementById('unlockSub');
+  if (!scene || !canvas || !logo) return;
 
-  // Reset
-  [wax, stamp, smoke, title, sub].forEach(el => { if (el) el.style.cssText = ''; });
-  if (bee) bee.style.cssText = '';
-  if (stage) stage.style.animation = '';
+  // ── Reset ──
+  logo.src = 'images/Waxframe_logo_v19.png';
+  [title, sub].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; } });
+  if (bee) { bee.style.opacity = '0'; bee.style.right = '-260px'; bee.style.animation = ''; }
 
-  // Fade in overlay
+  // Size canvas to match stage
+  const stage = scene.querySelector('.unlock-stage');
+  const stageSize = 280;
+  canvas.width  = stageSize;
+  canvas.height = stageSize;
+  canvas.style.width  = stageSize + 'px';
+  canvas.style.height = stageSize + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, stageSize, stageSize);
+
+  // ── Particle state ──
+  const drips    = [];   // falling wax drops
+  const splats   = [];   // landed splat circles
+  const smokes   = [];   // smoke puffs
+  let dripping   = false;
+  let smokeFill  = 0;    // 0-1 full screen smoke opacity
+  let smokeMode  = 'off'; // off | build | full | clear
+  let revealed   = false;
+  let rafId      = null;
+
+  // Nozzle position — top-right of stage, where bee's wax drip sits
+  const nozzleX = stageSize * 0.72;
+  const nozzleY = stageSize * 0.18;
+
+  // ── Fade in overlay ──
   scene.classList.add('active');
-  scene.style.animation = 'unlock-fade-in 0.4s ease forwards';
+  scene.style.opacity = '0';
+  scene.style.transition = 'opacity 0.4s ease';
+  requestAnimationFrame(() => { scene.style.opacity = '1'; });
 
-  // T+0.3s — bee flies in from right
+  // ── T+0.5s — bee flies in ──
   setTimeout(() => {
     if (!bee) return;
+    bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
     bee.style.opacity = '1';
-    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards';
-  }, 300);
+    bee.style.right = 'calc(50% - 220px)';
+  }, 500);
 
-  // T+1.0s — bee hovers
+  // ── T+1.2s — start dripping ──
   setTimeout(() => {
-    if (!bee) return;
-    bee.style.animation = 'unlock-bee-enter 0.7s cubic-bezier(0.2,0.8,0.4,1) forwards, unlock-bee-hover 1.2s ease-in-out 0.7s infinite';
-  }, 1000);
-
-  // T+1.2s — wax blob pops in
-  setTimeout(() => {
-    if (!wax) return;
-    wax.style.animation = 'unlock-wax-pop 0.5s cubic-bezier(0.2,0.8,0.4,1) forwards';
+    dripping = true;
+    startCanvas();
   }, 1200);
 
-  // T+1.6s — stamp drops
-  setTimeout(() => {
-    if (!stamp) return;
-    stamp.style.opacity = '1';
-    stamp.style.animation = 'unlock-stamp-drop 0.35s cubic-bezier(0.4,0,0.2,1) forwards';
-  }, 1600);
+  // ── T+3.2s — smoke starts building ──
+  setTimeout(() => { smokeMode = 'build'; }, 3200);
 
-  // T+1.9s — shake + smoke + sounds
+  // ── T+5.0s — full smoke coverage, swap logo, play anvil ──
   setTimeout(() => {
-    if (stage) stage.style.animation = 'unlock-shake 0.15s ease 2';
-    if (smoke) smoke.style.animation = 'unlock-smoke-rise 0.9s ease forwards';
-    playUnlockSounds();
-  }, 1900);
+    smokeMode = 'full';
+    smokeFill = 1;
+    dripping  = false;
+    logo.src  = 'images/Waxframe_Logo_Licensed_v1.png';
+    playAnvilSound();
+  }, 5000);
 
-  // T+2.1s — stamp retracts
+  // ── T+5.6s — smoke clears outward ──
+  setTimeout(() => { smokeMode = 'clear'; }, 5600);
+
+  // ── T+7.0s — text fades in ──
   setTimeout(() => {
-    if (!stamp) return;
-    stamp.style.animation = 'unlock-stamp-retract 0.3s ease forwards';
-  }, 2100);
+    if (title) { title.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; title.style.opacity = '1'; title.style.transform = 'translateY(0)'; }
+    if (sub)   { sub.style.transition   = 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
+  }, 7000);
 
-  // T+2.3s — text fades in
-  setTimeout(() => {
-    if (title) title.style.animation = 'unlock-text-in 0.5s ease forwards';
-    if (sub)   sub.style.animation   = 'unlock-text-in 0.5s ease 0.15s forwards';
-  }, 2300);
-
-  // T+3.2s — bee exits right
+  // ── T+8.0s — bee exits ──
   setTimeout(() => {
     if (!bee) return;
-    bee.style.animation = 'unlock-bee-exit 0.6s cubic-bezier(0.6,0,0.8,0.4) forwards';
-  }, 3200);
+    bee.style.transition = 'right 0.6s cubic-bezier(0.6,0,0.8,0.4), opacity 0.4s ease';
+    bee.style.right = '-260px';
+    bee.style.opacity = '0';
+  }, 8000);
 
-  // T+4.5s — fade out and clean up
+  // ── T+9.5s — fade out scene ──
   setTimeout(() => {
-    scene.style.animation = 'unlock-fade-out 0.5s ease forwards';
+    scene.style.transition = 'opacity 0.6s ease';
+    scene.style.opacity = '0';
+    if (rafId) cancelAnimationFrame(rafId);
     setTimeout(() => {
       scene.classList.remove('active');
-      scene.style.animation = '';
-    }, 500);
-  }, 4500);
+      scene.style.opacity = '';
+      scene.style.transition = '';
+      ctx.clearRect(0, 0, stageSize, stageSize);
+    }, 650);
+  }, 9500);
+
+  // ── Canvas animation loop ──
+  function startCanvas() {
+    let lastDrip = 0;
+    function loop(ts) {
+      ctx.clearRect(0, 0, stageSize, stageSize);
+
+      // Spawn new drip
+      if (dripping && ts - lastDrip > 120) {
+        lastDrip = ts;
+        drips.push({
+          x: nozzleX + (Math.random() - 0.5) * 8,
+          y: nozzleY,
+          vy: 1.5 + Math.random() * 2,
+          r: 4 + Math.random() * 3,
+          alpha: 1
+        });
+      }
+
+      // Update + draw drips
+      for (let i = drips.length - 1; i >= 0; i--) {
+        const d = drips[i];
+        d.y += d.vy;
+        d.vy += 0.18; // gravity
+        // Stretch into teardrop
+        ctx.save();
+        ctx.globalAlpha = d.alpha;
+        const grad = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 1.5);
+        grad.addColorStop(0, '#ffcc44');
+        grad.addColorStop(0.6, '#c87000');
+        grad.addColorStop(1, 'rgba(180,80,0,0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.ellipse(d.x, d.y, d.r * 0.7, d.r * 1.4, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        // Splat on logo surface
+        if (d.y > stageSize * 0.55) {
+          splats.push({ x: d.x + (Math.random()-0.5)*10, y: d.y, r: d.r * 1.6 + Math.random()*4, alpha: 0.9 });
+          // Spawn smoke puff at splat
+          for (let s = 0; s < 3; s++) {
+            smokes.push({
+              x: d.x + (Math.random()-0.5)*16,
+              y: d.y,
+              vx: (Math.random()-0.5)*0.6,
+              vy: -(0.4 + Math.random()*0.8),
+              r: 8 + Math.random()*12,
+              alpha: 0.5 + Math.random()*0.3,
+              life: 1
+            });
+          }
+          drips.splice(i, 1);
+        }
+      }
+
+      // Draw splats
+      splats.forEach(s => {
+        ctx.save();
+        ctx.globalAlpha = s.alpha * 0.85;
+        const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+        g.addColorStop(0, '#ffaa00');
+        g.addColorStop(0.5, '#c06000');
+        g.addColorStop(1, 'rgba(120,40,0,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      });
+
+      // Update + draw smoke puffs
+      for (let i = smokes.length - 1; i >= 0; i--) {
+        const s = smokes[i];
+        s.x  += s.vx;
+        s.y  += s.vy;
+        s.r  += 0.4;
+        s.life -= 0.008;
+        s.alpha = s.life * 0.55;
+        if (s.life <= 0) { smokes.splice(i, 1); continue; }
+        ctx.save();
+        ctx.globalAlpha = s.alpha;
+        const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
+        sg.addColorStop(0, 'rgba(160,140,120,0.9)');
+        sg.addColorStop(1, 'rgba(80,70,60,0)');
+        ctx.fillStyle = sg;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Full-screen smoke fill using scene overlay
+      if (smokeMode === 'build') {
+        smokeFill = Math.min(1, smokeFill + 0.012);
+        drawFullSmoke(smokeFill);
+      } else if (smokeMode === 'full') {
+        drawFullSmoke(1);
+      } else if (smokeMode === 'clear') {
+        smokeFill = Math.max(0, smokeFill - 0.022);
+        drawFullSmoke(smokeFill);
+        if (smokeFill <= 0) smokeMode = 'off';
+      }
+
+      rafId = requestAnimationFrame(loop);
+    }
+    rafId = requestAnimationFrame(loop);
+  }
+
+  function drawFullSmoke(alpha) {
+    // Draw smoke fill on a full-screen canvas overlay via the scene background
+    // We overdraw on the stage canvas edges — instead use scene opacity trick
+    // Expand canvas to fill whole scene temporarily
+    const sw = window.innerWidth;
+    const sh = window.innerHeight;
+    if (canvas.width !== sw) {
+      canvas.width  = sw;
+      canvas.height = sh;
+      canvas.style.position = 'fixed';
+      canvas.style.inset = '0';
+      canvas.style.width  = sw + 'px';
+      canvas.style.height = sh + 'px';
+      canvas.style.zIndex = '999999';
+    }
+    const cx = sw / 2, cy = sh / 2;
+    const maxR = Math.sqrt(cx*cx + cy*cy) * 1.1;
+    const ctx2 = canvas.getContext('2d');
+    const grad = ctx2.createRadialGradient(cx, cy, 0, cx, cy, maxR);
+    grad.addColorStop(0, `rgba(100,90,80,${alpha * 0.97})`);
+    grad.addColorStop(0.5, `rgba(60,55,50,${alpha * 0.95})`);
+    grad.addColorStop(1, `rgba(20,18,15,${alpha * 0.9})`);
+    ctx2.fillStyle = grad;
+    ctx2.fillRect(0, 0, sw, sh);
+  }
 }
 
-function playUnlockSounds() {
+function playAnvilSound() {
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    // Soft wax plop
-    const plop = ctx.createOscillator();
-    const plopGain = ctx.createGain();
-    plop.connect(plopGain); plopGain.connect(ctx.destination);
-    plop.type = 'sine';
-    plop.frequency.setValueAtTime(180, ctx.currentTime);
-    plop.frequency.exponentialRampToValueAtTime(80, ctx.currentTime + 0.18);
-    plopGain.gain.setValueAtTime(0.25, ctx.currentTime);
-    plopGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
-    plop.start(ctx.currentTime); plop.stop(ctx.currentTime + 0.2);
-    // Metal thunk
-    const thunk = ctx.createOscillator();
-    const thunkGain = ctx.createGain();
-    thunk.connect(thunkGain); thunkGain.connect(ctx.destination);
-    thunk.type = 'square';
-    thunk.frequency.setValueAtTime(90, ctx.currentTime + 0.05);
-    thunk.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.18);
-    thunkGain.gain.setValueAtTime(0.18, ctx.currentTime + 0.05);
-    thunkGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.22);
-    thunk.start(ctx.currentTime + 0.05); thunk.stop(ctx.currentTime + 0.25);
-    // Sizzle
-    const bufferSize = ctx.sampleRate * 0.3;
-    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for (let i = 0; i < bufferSize; i++) data[i] = (Math.random() * 2 - 1) * 0.12;
-    const sizzle = ctx.createBufferSource();
-    const sizzleGain = ctx.createGain();
-    const sizzleFilter = ctx.createBiquadFilter();
-    sizzleFilter.type = 'highpass'; sizzleFilter.frequency.value = 4000;
-    sizzle.buffer = buffer;
-    sizzle.connect(sizzleFilter); sizzleFilter.connect(sizzleGain); sizzleGain.connect(ctx.destination);
-    sizzleGain.gain.setValueAtTime(0.15, ctx.currentTime + 0.08);
-    sizzleGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.38);
-    sizzle.start(ctx.currentTime + 0.08); sizzle.stop(ctx.currentTime + 0.4);
+
+    // Deep anvil thud — low sine boom
+    const boom = ctx.createOscillator();
+    const boomGain = ctx.createGain();
+    boom.connect(boomGain); boomGain.connect(ctx.destination);
+    boom.type = 'sine';
+    boom.frequency.setValueAtTime(55, ctx.currentTime);
+    boom.frequency.exponentialRampToValueAtTime(28, ctx.currentTime + 0.6);
+    boomGain.gain.setValueAtTime(0.7, ctx.currentTime);
+    boomGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
+    boom.start(ctx.currentTime); boom.stop(ctx.currentTime + 0.85);
+
+    // Impact transient — short noise burst
+    const bufSize = Math.floor(ctx.sampleRate * 0.12);
+    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+    const bd  = buf.getChannelData(0);
+    for (let i = 0; i < bufSize; i++) bd[i] = (Math.random()*2-1) * (1 - i/bufSize);
+    const crack = ctx.createBufferSource();
+    const crackGain = ctx.createGain();
+    const crackFilter = ctx.createBiquadFilter();
+    crackFilter.type = 'bandpass'; crackFilter.frequency.value = 800; crackFilter.Q.value = 0.8;
+    crack.buffer = buf;
+    crack.connect(crackFilter); crackFilter.connect(crackGain); crackGain.connect(ctx.destination);
+    crackGain.gain.setValueAtTime(0.5, ctx.currentTime);
+    crackGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    crack.start(ctx.currentTime); crack.stop(ctx.currentTime + 0.15);
+
+    // Reverb tail — filtered noise decay
+    const revSize = Math.floor(ctx.sampleRate * 1.2);
+    const revBuf  = ctx.createBuffer(1, revSize, ctx.sampleRate);
+    const rd      = revBuf.getChannelData(0);
+    for (let i = 0; i < revSize; i++) rd[i] = (Math.random()*2-1) * Math.pow(1 - i/revSize, 2);
+    const rev = ctx.createBufferSource();
+    const revGain   = ctx.createGain();
+    const revFilter = ctx.createBiquadFilter();
+    revFilter.type = 'lowpass'; revFilter.frequency.value = 600;
+    rev.buffer = revBuf;
+    rev.connect(revFilter); revFilter.connect(revGain); revGain.connect(ctx.destination);
+    revGain.gain.setValueAtTime(0.18, ctx.currentTime + 0.05);
+    revGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.4);
+    rev.start(ctx.currentTime + 0.05); rev.stop(ctx.currentTime + 1.5);
+
   } catch(e) {}
 }
 

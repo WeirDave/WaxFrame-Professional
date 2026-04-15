@@ -4962,77 +4962,54 @@ kbd {
 .unlock-scene {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.92);
-  z-index: 999999;
+  background: rgba(0,0,0,0.93);
+  z-index: 999998;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   opacity: 0;
   pointer-events: none;
-  gap: 28px;
+  gap: 32px;
+  transition: opacity 0.4s ease;
 }
 .unlock-scene.active { pointer-events: all; }
 .unlock-stage {
   position: relative;
-  width: 180px;
-  height: 180px;
+  width: 280px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .unlock-logo {
-  width: 180px;
-  height: 180px;
+  width: 240px;
+  height: 240px;
   object-fit: contain;
   position: relative;
   z-index: 1;
+  transition: opacity 0.2s ease;
 }
-.unlock-wax {
+.unlock-canvas {
   position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%) scale(0);
-  width: 80px;
-  height: 80px;
-  object-fit: contain;
+  top: 0;
+  left: 0;
   z-index: 2;
-  opacity: 0;
-}
-.unlock-stamp {
-  position: absolute;
-  top: -120px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100px;
-  height: 100px;
-  object-fit: contain;
-  z-index: 3;
-  opacity: 0;
-}
-.unlock-smoke {
-  position: absolute;
-  bottom: 30px;
-  left: 55%;
-  width: 60px;
-  height: 60px;
-  object-fit: contain;
-  z-index: 4;
-  opacity: 0;
+  pointer-events: none;
 }
 .unlock-bee {
   position: fixed;
-  width: 220px;
-  height: 220px;
+  width: 240px;
+  height: 240px;
   object-fit: contain;
-  top: calc(50% - 260px);
+  top: calc(50% - 280px);
   right: -260px;
   z-index: 999999;
   opacity: 0;
 }
 .unlock-title {
   font-family: 'Syne', sans-serif;
-  font-size: 32px;
+  font-size: 34px;
   font-weight: 800;
   color: var(--accent);
   letter-spacing: 0.04em;
@@ -5044,16 +5021,5 @@ kbd {
   color: var(--text2);
   opacity: 0;
   transform: translateY(8px);
-  margin-top: -16px;
+  margin-top: -20px;
 }
-@keyframes unlock-fade-in       { to { opacity: 1; } }
-@keyframes unlock-fade-out      { to { opacity: 0; } }
-@keyframes unlock-bee-enter     { from { right: -260px; opacity: 0; } to { right: calc(50% - 60px); opacity: 1; } }
-@keyframes unlock-bee-exit      { from { right: calc(50% - 60px); opacity: 1; } to { right: -260px; opacity: 0; } }
-@keyframes unlock-bee-hover     { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-@keyframes unlock-wax-pop       { 0% { transform: translateX(-50%) scale(0); opacity:0; } 60% { transform: translateX(-50%) scale(1.15); opacity:1; } 100% { transform: translateX(-50%) scale(1); opacity:1; } }
-@keyframes unlock-stamp-drop    { 0% { top:-120px; opacity:0; } 60% { top:40px; opacity:1; } 75% { top:30px; } 100% { top:36px; opacity:1; } }
-@keyframes unlock-stamp-retract { from { top:36px; opacity:1; } to { top:-120px; opacity:0; } }
-@keyframes unlock-smoke-rise    { 0% { transform:translateY(0); opacity:0.8; } 100% { transform:translateY(-24px); opacity:0; } }
-@keyframes unlock-shake         { 0%,100%{ transform:translateX(0); } 25%{ transform:translateX(-4px); } 75%{ transform:translateX(4px); } }
-@keyframes unlock-text-in       { to { opacity:1; transform:translateY(0); } }
