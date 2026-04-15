@@ -1863,6 +1863,45 @@ html, body {
 }
 .custom-ai-field-wrap input:focus,
 .custom-ai-select:focus { border-color: var(--accent); }
+
+/* ── Add Custom AI Modal ── */
+.custom-ai-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  z-index: 99999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+.custom-ai-modal-overlay.active { display: flex; }
+.custom-ai-modal {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 28px 32px;
+  width: 100%;
+  max-width: 760px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.custom-ai-modal-hdr {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+}
+.custom-ai-modal-bee { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
+.custom-ai-modal-title { font-family: var(--font-display); font-size: 18px; font-weight: 800; color: var(--text); }
+.custom-ai-modal-sub { font-size: 13px; color: var(--text-dim); margin-top: 2px; }
+
 .custom-ai-form-footer {
   display: flex;
   justify-content: flex-end;
