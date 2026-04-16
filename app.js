@@ -2172,35 +2172,35 @@ function showAddCustomAI() {
 const QUICK_ADD_PROVIDERS = {
   mistral: {
     name: 'Mistral',
-    url: 'https://api.mistral.ai',
+    url: 'https://api.mistral.ai/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://console.mistral.ai/api-keys',
     keyLinkLabel: 'Get your Mistral API key →'
   },
   together: {
     name: 'Together AI',
-    url: 'https://api.together.xyz',
+    url: 'https://api.together.xyz/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://api.together.ai/settings/api-keys',
     keyLinkLabel: 'Get your Together AI key →'
   },
   cohere: {
     name: 'Cohere',
-    url: 'https://api.cohere.com',
+    url: 'https://api.cohere.ai/compatibility/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://dashboard.cohere.com/api-keys',
     keyLinkLabel: 'Get your Cohere API key →'
   },
   ollama: {
     name: 'Ollama',
-    url: 'http://localhost:11434',
+    url: 'http://localhost:11434/v1/chat/completions',
     format: 'openai',
     keyLink: null,
     keyLinkLabel: null
   },
   lmstudio: {
     name: 'LM Studio',
-    url: 'http://localhost:1234',
+    url: 'http://localhost:1234/v1/chat/completions',
     format: 'openai',
     keyLink: null,
     keyLinkLabel: null
@@ -2345,23 +2345,21 @@ async function testCustomAIConnection() {
   const baseConfigs = {
     openai: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
-      endpointSuffix: '/v1/chat/completions'
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] })
     },
     anthropic: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 64, messages: [{ role: 'user', content: prompt }] }),
-      endpointSuffix: ''
+      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 64, messages: [{ role: 'user', content: prompt }] })
     },
     google: {
       headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
-      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] }),
-      endpointSuffix: ''
+      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
     }
   };
 
   const cfg      = baseConfigs[format] || baseConfigs.openai;
-  const endpoint = url.replace(/\/$/, '') + cfg.endpointSuffix;
+  const baseUrl  = url.replace(/\/$/, '');
+  const endpoint = baseUrl;
   const body     = cfg.bodyFn(model, 'Reply with exactly one word: CONNECTED');
 
   const showRaw = (statusCode, statusText, elapsed, receivedObj) => {
@@ -2462,7 +2460,7 @@ function addCustomAI() {
   API_CONFIGS[id] = {
     label: name,
     model,
-    endpoint: url.replace(/\/$/, '') + (format === 'openai' ? '/v1/chat/completions' : ''),
+    endpoint: url.replace(/\/$/, ''),
     note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
     ...base
   };
