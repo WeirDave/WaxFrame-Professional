@@ -2116,6 +2116,11 @@ function toggleKeyVis(id) {
   if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
+function toggleCustomAIKeyVis() {
+  const input = document.getElementById('customAIKey');
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
+}
+
 function autoFillAIName(url) {
   const nameInput = document.getElementById('customAIName');
   if (!nameInput) return;
