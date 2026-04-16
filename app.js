@@ -1516,9 +1516,17 @@ function confirmGoHome() {
 function saveHive() {
   const keys = {};
   const models = {};
+  const customAIConfigs = {};
+  const customAIIds = new Set(
+    aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).map(a => a.provider)
+  );
   Object.keys(API_CONFIGS).forEach(id => {
     if (API_CONFIGS[id]._key) keys[id] = API_CONFIGS[id]._key;
     if (API_CONFIGS[id].model) models[id] = API_CONFIGS[id].model;
+    if (customAIIds.has(id)) {
+      const { _key, ...rest } = API_CONFIGS[id];
+      customAIConfigs[id] = rest;
+    }
   });
   const hive = {
     activeAIIds:     activeAIs.map(a => a.id),
@@ -1527,7 +1535,8 @@ function saveHive() {
     builder,
     keys,
     models,
-    customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id))
+    customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)),
+    customAIConfigs
   };
   try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) {}
   updateSetupRequirements();
