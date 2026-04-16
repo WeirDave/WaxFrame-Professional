@@ -2203,16 +2203,15 @@ kbd {
   display: flex;
   gap: 8px;
   justify-content: flex-start;
+  align-items: center;
 }
 .proj-clear-row--bottom {
   justify-content: flex-end;
 }
 .proj-clear-btn {
-  min-width: 320px;
-  justify-content: center;
-  font-size: 15px;
-  padding: 12px 28px;
-  border-radius: var(--radius-md);
+  flex: 0 0 auto;
+  font-size: 12px;
+  padding: 5px 14px;
 }
 
 /* ── GOAL INFO BUTTON & MODAL ── */
@@ -2731,17 +2730,13 @@ kbd {
 
 /* Controls row */
 .bee-controls-row-setup {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
   gap: 6px;
   margin-bottom: 16px;
 }
 .bee-controls-row-setup .btn {
-  min-width: 320px;
-  justify-content: center;
-  font-size: 15px;
-  padding: 12px 28px;
-  border-radius: var(--radius-md);
+  white-space: nowrap;
 }
 /* ── Footer ── */
 .fs-footer {
