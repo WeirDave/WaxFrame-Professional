@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260415-007">
+  <meta name="waxframe-build" content="20260415-009">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
         <p>Many minds. One refined result.</p>
-        <span class="welcome-version">v3.7 Pro</span>
+        <span class="welcome-version">v3.9 Pro</span>
       </div>
     </div>
     <div class="welcome-pitch">
@@ -693,6 +693,7 @@
         <div class="custom-ai-modal-title">Import from Model Server</div>
         <div class="custom-ai-modal-sub">Fetch all models from a local or enterprise AI server and add them in bulk</div>
       </div>
+      <button class="import-server-close-btn" onclick="closeImportServerModal()" title="Close">✕</button>
     </div>
 
     <!-- Quick Add -->
@@ -701,19 +702,27 @@
         <label>Quick Add <span class="field-optional">(optional)</span></label>
         <select id="importServerQuickAdd" class="custom-ai-select" onchange="applyImportServerQuickAdd(this.value)">
           <option value="">— Select a known server or fill in manually —</option>
-          <option value="openwebui">Open WebUI</option>
-          <option value="ollama">Ollama (local)</option>
-          <option value="lmstudio">LM Studio (local)</option>
+          <option value="openwebui">Open WebUI — fills https://your-server.com, fetches /api/models, calls /api/chat/completions</option>
+          <option value="ollama">Ollama (local) — fills http://localhost:11434, fetches /api/tags, calls /v1/chat/completions</option>
+          <option value="lmstudio">LM Studio (local) — fills http://localhost:1234, fetches /v1/models, calls /v1/chat/completions</option>
         </select>
       </div>
     </div>
 
-    <!-- URL + Key -->
+    <!-- Chat Endpoint + Models Endpoint -->
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
-        <label>Server URL <span class="field-required">*</span></label>
-        <input type="text" id="importServerUrl" placeholder="https://your-server.com — base URL only, no path" oninput="resetImportServer()">
+        <label>Chat Endpoint <span class="field-required">*</span></label>
+        <input type="text" id="importServerChatUrl" placeholder="https://your-server.com/api/chat/completions" oninput="resetImportServer(); autoDeriveModelsUrl()">
       </div>
+      <div class="custom-ai-field-wrap">
+        <label>Models Endpoint <span class="field-required">*</span></label>
+        <input type="text" id="importServerUrl" placeholder="https://your-server.com/api/models" oninput="resetImportServer()">
+      </div>
+    </div>
+
+    <!-- Key -->
+    <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>API Key <span class="field-optional">(optional)</span></label>
         <div class="custom-ai-key-wrap">
@@ -721,6 +730,7 @@
           <button class="ai-eye-btn" type="button" onclick="toggleImportServerKeyVis()" title="Show/hide key">👁</button>
         </div>
       </div>
+      <div class="custom-ai-field-wrap"></div>
     </div>
 
     <!-- Fetch button + status -->

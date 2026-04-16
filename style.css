@@ -2109,6 +2109,19 @@ html, body {
   border-radius: 0;
   margin: 0;
 }
+.import-server-close-btn {
+  margin-left: auto;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 14px;
+  padding: 6px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.12s;
+}
+.import-server-close-btn:hover { border-color: var(--accent); color: var(--accent); }
 .import-server-fetch-row {
   display: flex;
   align-items: center;

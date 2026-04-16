@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260415-008';         // build stamp — update each session
+const BUILD       = '20260415-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2500,19 +2500,19 @@ function addCustomAI() {
 
 const IMPORT_SERVER_PRESETS = {
   openwebui: {
-    name: 'Open WebUI',
-    modelsEndpoint: url => url.replace(/\/$/, '') + '/api/models',
-    chatEndpoint:   url => url.replace(/\/$/, '') + '/api/chat/completions'
+    name:           'Open WebUI',
+    chatEndpoint:   url => url.replace(/\/$/, '') + '/api/chat/completions',
+    modelsEndpoint: url => url.replace(/\/$/, '') + '/api/models'
   },
   ollama: {
-    name: 'Ollama',
-    modelsEndpoint: url => 'http://localhost:11434/api/tags',
-    chatEndpoint:   url => 'http://localhost:11434/v1/chat/completions'
+    name:           'Ollama',
+    chatEndpoint:   url => url.replace(/\/$/, '') + '/v1/chat/completions',
+    modelsEndpoint: url => url.replace(/\/$/, '') + '/api/tags'
   },
   lmstudio: {
-    name: 'LM Studio',
-    modelsEndpoint: url => 'http://localhost:1234/v1/models',
-    chatEndpoint:   url => 'http://localhost:1234/v1/chat/completions'
+    name:           'LM Studio',
+    chatEndpoint:   url => url.replace(/\/$/, '') + '/v1/chat/completions',
+    modelsEndpoint: url => url.replace(/\/$/, '') + '/v1/models'
   }
 };
 
@@ -2523,7 +2523,7 @@ function showImportServerModal() {
   const modal = document.getElementById('importServerModal');
   if (modal) modal.classList.add('active');
   resetImportServer(true);
-  document.getElementById('importServerUrl')?.focus();
+  document.getElementById('importServerChatUrl')?.focus();
 }
 
 function closeImportServerModal() {
@@ -2531,6 +2531,9 @@ function closeImportServerModal() {
   if (modal) modal.classList.remove('active');
   resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
+  document.getElementById('importServerChatUrl').value  = '';
+  document.getElementById('importServerUrl').value      = '';
+  document.getElementById('importServerKey').value      = '';
 }
 
 function resetImportServer(full = false) {
@@ -2547,24 +2550,48 @@ function resetImportServer(full = false) {
   _importServerModels = [];
 }
 
+function autoDeriveModelsUrl() {
+  const chatUrl   = document.getElementById('importServerChatUrl')?.value.trim();
+  const modelsEl  = document.getElementById('importServerUrl');
+  if (!chatUrl || !modelsEl || modelsEl.dataset.userEdited === 'true') return;
+  // Derive models URL from chat URL by replacing the path suffix
+  try {
+    const u    = new URL(chatUrl);
+    const base = u.origin;
+    if (chatUrl.includes('/api/chat/completions')) modelsEl.value = base + '/api/models';
+    else if (chatUrl.includes('/v1/chat/completions')) modelsEl.value = base + '/v1/models';
+  } catch(e) {}
+}
+
 function toggleImportServerKeyVis() {
   const input = document.getElementById('importServerKey');
   if (input) input.type = input.type === 'password' ? 'text' : 'password';
 }
 
 function applyImportServerQuickAdd(value) {
-  resetImportServer();
+  resetImportServer(true);
   _importServerPreset = IMPORT_SERVER_PRESETS[value] || null;
-  const urlInput = document.getElementById('importServerUrl');
-  if (!urlInput) return;
-  if (value === 'ollama')   { urlInput.value = 'http://localhost:11434'; }
-  if (value === 'lmstudio') { urlInput.value = 'http://localhost:1234'; }
-  if (value === 'openwebui') { urlInput.value = ''; urlInput.placeholder = 'https://your-openwebui-server.com'; }
+  const chatEl   = document.getElementById('importServerChatUrl');
+  const modelsEl = document.getElementById('importServerUrl');
+  if (!chatEl || !modelsEl) return;
+  if (value === 'openwebui') {
+    chatEl.value   = '';
+    chatEl.placeholder = 'https://your-server.com/api/chat/completions';
+    modelsEl.value = '';
+    modelsEl.placeholder = 'https://your-server.com/api/models';
+  } else if (value === 'ollama') {
+    chatEl.value   = 'http://localhost:11434/v1/chat/completions';
+    modelsEl.value = 'http://localhost:11434/api/tags';
+  } else if (value === 'lmstudio') {
+    chatEl.value   = 'http://localhost:1234/v1/chat/completions';
+    modelsEl.value = 'http://localhost:1234/v1/models';
+  }
+  if (modelsEl) modelsEl.dataset.userEdited = 'false';
 }
 
 async function fetchImportServerModels() {
-  const url    = document.getElementById('importServerUrl').value.trim();
-  const key    = document.getElementById('importServerKey').value.trim();
+  const modelsUrl = document.getElementById('importServerUrl').value.trim();
+  const key       = document.getElementById('importServerKey').value.trim();
   const status   = document.getElementById('importServerFetchStatus');
   const fetchBtn = document.getElementById('importServerFetchBtn');
   const rawPanel    = document.getElementById('importServerRawPanel');
@@ -2572,21 +2599,12 @@ async function fetchImportServerModels() {
   const rawStatus   = document.getElementById('importServerRawStatus');
   const rawReceived = document.getElementById('importServerRawReceived');
 
-  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
+  if (!modelsUrl || !modelsUrl.startsWith('http')) { toast('⚠️ Enter a valid Models Endpoint URL starting with http'); return; }
 
   fetchBtn.disabled = true;
   fetchBtn.textContent = '…';
   if (status) { status.textContent = 'Fetching models…'; status.className = 'custom-ai-test-status testing'; }
   if (rawPanel) rawPanel.style.display = 'none';
-
-  // Determine models endpoint
-  const preset = _importServerPreset;
-  let modelsUrl;
-  if (preset) {
-    modelsUrl = preset.modelsEndpoint(url);
-  } else {
-    modelsUrl = url.replace(/\/$/, '') + '/v1/models';
-  }
 
   const headers = { 'Content-Type': 'application/json' };
   if (key) headers['Authorization'] = `Bearer ${key}`;
@@ -2600,14 +2618,7 @@ async function fetchImportServerModels() {
   };
 
   try {
-    let resp = await fetch(modelsUrl, { headers });
-
-    // If /v1/models 404s and no preset, try /api/models
-    if (!resp.ok && !preset) {
-      modelsUrl = url.replace(/\/$/, '') + '/api/models';
-      resp = await fetch(modelsUrl, { headers });
-    }
-
+    const resp = await fetch(modelsUrl, { headers });
     const data = await resp.json().catch(() => null);
 
     if (!resp.ok) {
@@ -2617,7 +2628,7 @@ async function fetchImportServerModels() {
       return;
     }
 
-    // Parse model list — handle both OpenAI format {data:[]} and Open WebUI format {data:[]} or []
+    // Parse model list — handle OpenAI {data:[]}, Open WebUI {data:[]}, Ollama {models:[]}, or bare []
     let models = [];
     if (Array.isArray(data))             models = data.map(m => m.id || m.name || m).filter(Boolean);
     else if (Array.isArray(data.data))   models = data.data.map(m => m.id || m.name || m).filter(Boolean);
@@ -2632,7 +2643,7 @@ async function fetchImportServerModels() {
     }
 
     _importServerModels = models;
-    renderImportServerChecklist(url, key);
+    renderImportServerChecklist();
     if (status) { status.textContent = `✓ ${models.length} model${models.length !== 1 ? 's' : ''} found`; status.className = 'custom-ai-test-status pass'; }
     fetchBtn.disabled = false; fetchBtn.textContent = 'Refresh';
     document.getElementById('importServerAddBtn').style.display = '';
@@ -2644,7 +2655,7 @@ async function fetchImportServerModels() {
   }
 }
 
-function renderImportServerChecklist(url, key) {
+function renderImportServerChecklist() {
   const checklist = document.getElementById('importServerChecklist');
   const items     = document.getElementById('importServerChecklistItems');
   const count     = document.getElementById('importServerChecklistCount');
@@ -2672,31 +2683,33 @@ function importServerSelectNone() {
 }
 
 function addImportServerModels() {
-  const url    = document.getElementById('importServerUrl').value.trim();
-  const key    = document.getElementById('importServerKey').value.trim();
-  const preset = _importServerPreset;
+  const chatUrl = document.getElementById('importServerChatUrl').value.trim();
+  const key     = document.getElementById('importServerKey').value.trim();
+
+  if (!chatUrl) { toast('⚠️ Enter a Chat Endpoint URL'); return; }
 
   const checked = document.querySelectorAll('.import-server-check:checked');
   if (!checked.length) { toast('⚠️ No models selected'); return; }
 
+  const ts     = Date.now();
+  const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
+  const icon   = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+
   let added = 0;
-  checked.forEach(cb => {
+  checked.forEach((cb, idx) => {
     const i         = cb.id.replace('isc-', '');
     const modelId   = cb.value;
     const nameInput = document.getElementById(`isn-${i}`);
     const name      = (nameInput?.value.trim()) || modelId;
 
-    const id       = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now() + '_' + i;
-    const origin   = (() => { try { return new URL(url).origin; } catch(e) { return url; } })();
-    const icon     = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
-    const endpoint = preset ? preset.chatEndpoint(url) : url.replace(/\/$/, '') + '/api/chat/completions';
+    const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + ts + '_' + idx;
 
-    const ai = { id, name, url, icon, provider: id };
+    const ai = { id, name, url: chatUrl, icon, provider: id };
 
     API_CONFIGS[id] = {
       label:     name,
       model:     modelId,
-      endpoint,
+      endpoint:  chatUrl,
       note:      `Model: ${modelId}`,
       headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
       bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
