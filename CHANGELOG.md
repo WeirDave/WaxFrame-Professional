@@ -4,11 +4,38 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.8 — April 15, 2026
+
+### Fixed
+- Import from Model Server modal — model name labels no longer get cut off. Items now wrap so long model IDs display in full. Label uses flex: 1 1 260px with word-break: break-all instead of a fixed min-width.
+- Raw panel added to Import from Model Server modal matching the Add Custom AI pattern. Shows endpoint called, HTTP status, and full JSON response on both success and failure.
+- URL field placeholder updated to make clear the base URL should be entered with no path suffix.
+
+---
+
+## v3.7 — April 15, 2026
+
+### Added
+- Import from Model Server feature. New button on the setup screen opens a modal where users enter a server URL and key, click Fetch Models, and get a checklist of every model available on that server. Each checked model is added as its own individual AI row in the hive with its own name field. Quick Add presets for Open WebUI, Ollama, and LM Studio auto-fill the URL. Handles both OpenAI-style /v1/models and Open WebUI /api/models response formats.
+
+### Fixed
+- Custom AI config not surviving page reload. saveHive was only persisting keys and model names for custom AIs, dropping the full config on page reload. Now serializes the complete config for each custom AI excluding the key so everything is correctly restored after a refresh.
+
+---
+
+## v3.6 — April 15, 2026
+
+### Fixed
+- Custom AI endpoint double-append fixed. When a user enters a URL that already ends in /v1/chat/completions, the app was appending /v1/chat/completions again, causing 404 errors. Auto-append removed entirely — the URL field is now used exactly as entered.
+- All Quick Add presets (Mistral, Together AI, Cohere, Ollama, LM Studio) updated to include their full correct endpoint paths so they work out of the box without any behind-the-scenes URL manipulation.
+- Cohere preset URL corrected from api.cohere.com to api.cohere.ai/compatibility/v1/chat/completions.
+
+---
+
 ## v3.5 — April 15, 2026
 
 ### Added
 - Eyeball toggle button added to the API Key field in the Add Custom AI modal. Reuses the existing ai-eye-btn style and pattern. Added toggleCustomAIKeyVis() to app.js and custom-ai-key-wrap CSS to style.css.
-- Import from Model Server feature added. New button on the setup screen opens a modal where users enter a server URL and key, click Fetch Models, and get a checklist of every model available on that server. Each checked model is added as its own individual AI row in the hive with its own name field. Quick Add presets for Open WebUI, Ollama, and LM Studio auto-fill the URL. Handles both OpenAI-style /v1/models and Open WebUI /api/models response formats.
 
 ### Changed
 - AI_Hive_-_Prompts_Reference_Document_v2.txt renamed to WaxFrame_Prompts_Reference_v3.txt. All "AI Hive" references replaced with "WaxFrame". Copilot removed from the provider list. Majority Rules description in Prompt 5 rewritten to use strict majority of however many AIs are active — no hardcoded numbers. Version and build stamp updated to v3.0 / 20260415-001.
@@ -17,8 +44,6 @@ All notable changes to WaxFrame Professional are documented here.
 
 ### Fixed
 - Launch WaxFrame and Continue to Project Setup buttons no longer stretch to fill the footer grid column. Fixed by targeting .btn-cta in .fs-footer instead of .btn-accent, and adding width: fit-content. Inactive button state (before requirements are met) now renders as a solid-outlined button matching the active button's size and position.
-- Custom AI endpoint double-append fixed. When a user enters a URL that already ends in /v1/chat/completions, the app was appending /v1/chat/completions again, causing 404 errors. Auto-append removed entirely — the URL field is now used exactly as entered. All Quick Add presets updated to include the full endpoint path. Cohere preset URL corrected from api.cohere.com to api.cohere.ai/compatibility/v1/chat/completions.
-- Custom AI config not surviving page reload fixed. saveHive was only persisting keys and model names for custom AIs, not the full config (endpoint, headersFn, bodyFn, extractFn). After a reload the config was missing so calls would silently fail. saveHive now serializes the full config for each custom AI (excluding the key, which is stored separately) so it is correctly restored on load.
 
 ---
 
