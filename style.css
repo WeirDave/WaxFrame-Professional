@@ -929,6 +929,58 @@ html, body {
   left: 20px;
   z-index: 10;
 }
+.welcome-menu-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  padding: 4px 12px 4px 6px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--bg2);
+  transition: border-color 0.15s, background 0.15s;
+}
+.welcome-menu-btn:hover {
+  border-color: var(--accent);
+  background: var(--bg2);
+}
+.welcome-menu-btn .nav-hamburger {
+  border: none;
+  background: transparent;
+  width: 28px;
+  height: 28px;
+  pointer-events: none;
+  flex-shrink: 0;
+}
+.welcome-menu-btn:hover .nav-hamburger {
+  border: none;
+  background: transparent;
+}
+.welcome-menu-btn:hover .nav-hamburger span {
+  background: var(--accent);
+}
+.welcome-menu-label {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-dim);
+  letter-spacing: 0.03em;
+  transition: color 0.15s;
+}
+.welcome-menu-btn:hover .welcome-menu-label {
+  color: var(--accent);
+}
+.welcome-menu-hint {
+  font-size: 13px;
+  color: var(--text-dim);
+  text-align: center;
+  margin: 0 0 16px 0;
+  opacity: 0.8;
+}
 
 /* Backdrop */
 .nav-backdrop {
