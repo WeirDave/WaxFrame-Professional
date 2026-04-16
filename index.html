@@ -712,7 +712,7 @@
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>Server URL <span class="field-required">*</span></label>
-        <input type="text" id="importServerUrl" placeholder="https://your-server.com" oninput="resetImportServer()">
+        <input type="text" id="importServerUrl" placeholder="https://your-server.com — base URL only, no path" oninput="resetImportServer()">
       </div>
       <div class="custom-ai-field-wrap">
         <label>API Key <span class="field-optional">(optional)</span></label>
@@ -727,6 +727,22 @@
     <div class="import-server-fetch-row">
       <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
       <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
+    </div>
+
+    <!-- Raw panel -->
+    <div id="importServerRawPanel" class="custom-ai-raw-panel" style="display:none;">
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Endpoint</span>
+        <pre class="custom-ai-raw-pre" id="importServerRawEndpoint"></pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Status</span>
+        <pre class="custom-ai-raw-pre" id="importServerRawStatus"></pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Received</span>
+        <pre class="custom-ai-raw-pre" id="importServerRawReceived"></pre>
+      </div>
     </div>
 
     <!-- Model checklist -->

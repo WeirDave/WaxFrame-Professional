@@ -2534,14 +2534,16 @@ function closeImportServerModal() {
 }
 
 function resetImportServer() {
-  const status   = document.getElementById('importServerFetchStatus');
+  const status    = document.getElementById('importServerFetchStatus');
   const checklist = document.getElementById('importServerChecklist');
-  const addBtn   = document.getElementById('importServerAddBtn');
-  const fetchBtn = document.getElementById('importServerFetchBtn');
+  const addBtn    = document.getElementById('importServerAddBtn');
+  const fetchBtn  = document.getElementById('importServerFetchBtn');
+  const rawPanel  = document.getElementById('importServerRawPanel');
   if (status)    { status.textContent = ''; status.className = 'custom-ai-test-status'; }
   if (checklist) checklist.style.display = 'none';
   if (addBtn)    addBtn.style.display = 'none';
   if (fetchBtn)  { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
+  if (rawPanel)  rawPanel.style.display = 'none';
   _importServerModels = [];
 }
 
@@ -2563,14 +2565,19 @@ function applyImportServerQuickAdd(value) {
 async function fetchImportServerModels() {
   const url    = document.getElementById('importServerUrl').value.trim();
   const key    = document.getElementById('importServerKey').value.trim();
-  const status = document.getElementById('importServerFetchStatus');
+  const status   = document.getElementById('importServerFetchStatus');
   const fetchBtn = document.getElementById('importServerFetchBtn');
+  const rawPanel    = document.getElementById('importServerRawPanel');
+  const rawEndpoint = document.getElementById('importServerRawEndpoint');
+  const rawStatus   = document.getElementById('importServerRawStatus');
+  const rawReceived = document.getElementById('importServerRawReceived');
 
   if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
 
   fetchBtn.disabled = true;
   fetchBtn.textContent = '…';
   if (status) { status.textContent = 'Fetching models…'; status.className = 'custom-ai-test-status testing'; }
+  if (rawPanel) rawPanel.style.display = 'none';
 
   // Determine models endpoint
   const preset = _importServerPreset;
@@ -2578,12 +2585,19 @@ async function fetchImportServerModels() {
   if (preset) {
     modelsUrl = preset.modelsEndpoint(url);
   } else {
-    // Default: try OpenAI-style /v1/models, fallback to Open WebUI /api/models
     modelsUrl = url.replace(/\/$/, '') + '/v1/models';
   }
 
   const headers = { 'Content-Type': 'application/json' };
   if (key) headers['Authorization'] = `Bearer ${key}`;
+
+  const showRaw = (endpoint, statusText, receivedObj) => {
+    if (!rawPanel) return;
+    if (rawEndpoint) rawEndpoint.textContent = endpoint;
+    if (rawStatus)   rawStatus.textContent   = statusText;
+    if (rawReceived) rawReceived.textContent  = (receivedObj !== null && typeof receivedObj === 'object') ? JSON.stringify(receivedObj, null, 2) : String(receivedObj);
+    rawPanel.style.display = '';
+  };
 
   try {
     let resp = await fetch(modelsUrl, { headers });
@@ -2594,19 +2608,22 @@ async function fetchImportServerModels() {
       resp = await fetch(modelsUrl, { headers });
     }
 
+    const data = await resp.json().catch(() => null);
+
     if (!resp.ok) {
       if (status) { status.textContent = `❌ HTTP ${resp.status} — could not fetch models`; status.className = 'custom-ai-test-status fail'; }
+      showRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
       fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
       return;
     }
 
-    const data = await resp.json();
-
     // Parse model list — handle both OpenAI format {data:[]} and Open WebUI format {data:[]} or []
     let models = [];
-    if (Array.isArray(data))          models = data.map(m => m.id || m.name || m).filter(Boolean);
-    else if (Array.isArray(data.data)) models = data.data.map(m => m.id || m.name || m).filter(Boolean);
+    if (Array.isArray(data))             models = data.map(m => m.id || m.name || m).filter(Boolean);
+    else if (Array.isArray(data.data))   models = data.data.map(m => m.id || m.name || m).filter(Boolean);
     else if (Array.isArray(data.models)) models = data.models.map(m => m.name || m.id || m).filter(Boolean);
+
+    showRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
 
     if (!models.length) {
       if (status) { status.textContent = '❌ No models found in response'; status.className = 'custom-ai-test-status fail'; }
@@ -2622,6 +2639,7 @@ async function fetchImportServerModels() {
 
   } catch(e) {
     if (status) { status.textContent = `❌ Could not reach server — CORS or network error`; status.className = 'custom-ai-test-status fail'; }
+    showRaw(modelsUrl, '— network error', e.message);
     fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
   }
 }
