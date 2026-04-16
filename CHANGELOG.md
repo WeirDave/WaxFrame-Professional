@@ -16,6 +16,7 @@ All notable changes to WaxFrame Professional are documented here.
 
 ### Fixed
 - Launch WaxFrame and Continue to Project Setup buttons no longer stretch to fill the footer grid column. Fixed by targeting .btn-cta in .fs-footer instead of .btn-accent, and adding width: fit-content. Inactive button state (before requirements are met) now renders as a solid-outlined button matching the active button's size and position.
+- Custom AI endpoint double-append fixed. When a user enters a URL that already ends in /v1/chat/completions, the app was appending /v1/chat/completions again, causing 404 errors. Auto-append removed entirely — the URL field is now used exactly as entered. All Quick Add presets updated to include the full endpoint path. Cohere preset URL corrected from api.cohere.com to api.cohere.ai/compatibility/v1/chat/completions.
 
 ---
 
