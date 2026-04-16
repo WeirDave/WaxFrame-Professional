@@ -19,6 +19,9 @@ All notable changes to WaxFrame Professional are documented here.
 - WaxFrame-Getting-Started.pdf added to the repo root — a short novice-friendly guide covering download, unzip, opening index.html, first API key, and running a first round. Designed to be the first thing someone reads after extracting the ZIP.
 - WaxFrame-README.pdf added to the repo root — a PDF version of the product overview README for users who want a downloadable copy.
 - Three new sections added to waxframe-user-manual.html: "What's in the Folder" (file-by-file explainer for novices, what index.html is, browser explainer, settings storage), "Adding a Custom AI" (full walkthrough of Quick Add, Fetch Models, Test Connection, raw panel, error codes), and "API Costs and Billing" (direct billing model, monthly rate check, popup blocker workaround, Perplexity auto-billing warning, current default model versions).
+- Free Trial and Licensing section added to waxframe-user-manual.html explaining the 3 free rounds, how to purchase a license key, and how to enter it.
+- License section added to the nav menu with Enter License Key (opens license modal) and Buy WaxFrame Pro (links to Gumroad). Displayed as its own labeled section above Reference.
+- nav-item-accent CSS class added for the Buy WaxFrame Pro nav item — amber text, solid amber background on hover.
 - wh-table CSS class added to style.css for the file reference table in the user manual.
 
 ### Changed
