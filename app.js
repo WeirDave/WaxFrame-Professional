@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260415-007';         // build stamp — update each session
+const BUILD       = '20260415-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2522,18 +2522,18 @@ let _importServerPreset   = null;
 function showImportServerModal() {
   const modal = document.getElementById('importServerModal');
   if (modal) modal.classList.add('active');
-  resetImportServer();
+  resetImportServer(true);
   document.getElementById('importServerUrl')?.focus();
 }
 
 function closeImportServerModal() {
   const modal = document.getElementById('importServerModal');
   if (modal) modal.classList.remove('active');
-  resetImportServer();
+  resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
 }
 
-function resetImportServer() {
+function resetImportServer(full = false) {
   const status    = document.getElementById('importServerFetchStatus');
   const checklist = document.getElementById('importServerChecklist');
   const addBtn    = document.getElementById('importServerAddBtn');
@@ -2543,7 +2543,7 @@ function resetImportServer() {
   if (checklist) checklist.style.display = 'none';
   if (addBtn)    addBtn.style.display = 'none';
   if (fetchBtn)  { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
-  if (rawPanel)  rawPanel.style.display = 'none';
+  if (full && rawPanel) rawPanel.style.display = 'none';
   _importServerModels = [];
 }
 
