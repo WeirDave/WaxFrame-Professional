@@ -1988,6 +1988,13 @@ html, body {
 .custom-ai-model-input-wrap input,
 .custom-ai-model-input-wrap select { flex: 1; min-width: 0; }
 
+.custom-ai-key-wrap {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.custom-ai-key-wrap input { flex: 1; min-width: 0; }
+
 .custom-ai-test-status {
   flex: 1;
   font-size: 12px;

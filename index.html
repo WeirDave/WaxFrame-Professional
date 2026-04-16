@@ -636,7 +636,10 @@
       </div>
       <div class="custom-ai-field-wrap">
         <label>API Key <span class="field-optional">(optional)</span></label>
-        <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest(); resetModelField()">
+        <div class="custom-ai-key-wrap">
+          <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetCustomAITest(); resetModelField()">
+          <button class="ai-eye-btn" type="button" onclick="toggleCustomAIKeyVis()" title="Show/hide key">👁</button>
+        </div>
       </div>
     </div>
 

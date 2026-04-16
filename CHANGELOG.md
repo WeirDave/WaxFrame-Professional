@@ -32,6 +32,7 @@ All notable changes to WaxFrame Professional are documented here.
 - AI_Hive_-_Prompts_Reference_Document_v2.txt renamed to WaxFrame_Prompts_Reference_v3.txt. All "AI Hive" references replaced with "WaxFrame". Copilot removed from the provider list. Majority Rules description in Prompt 5 rewritten to use strict majority of however many AIs are active — no hardcoded numbers. Version and build stamp updated to v3.0 / 20260415-001.
 - docs/ subdirectory created. WaxFrame_Playbook_Round_Count_Tests.txt, WaxFrame_Prompts_Reference_v3.txt, WaxFrame-Getting-Started_v2.docx, and WaxFrame-README_v2.docx moved from repo root into docs/. File reference in waxframe-user-manual.html updated to reflect new path.
 - File table in waxframe-user-manual.html updated to list docs/, screenshots/, and sounds/ folders. WaxFrameREADME_v2.pdf added as a listed file alongside the Getting Started PDF.
+- Eyeball toggle button added to the API Key field in the Add Custom AI modal. Reuses the existing ai-eye-btn style and pattern. Added toggleCustomAIKeyVis() to app.js and custom-ai-key-wrap CSS to style.css.
 
 ---
 
