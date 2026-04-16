@@ -54,7 +54,9 @@
     <div class="wh-toc-title">In this guide</div>
     <div class="wh-toc-list">
       <a href="#what-is-it" class="wh-toc-link">🐝 What WaxFrame Does</a>
+      <a href="#your-files" class="wh-toc-link">📁 What's in the Folder</a>
       <a href="#step1" class="wh-toc-link">① Set Up Your AIs</a>
+      <a href="#add-custom-ai" class="wh-toc-link">🔧 Adding a Custom AI</a>
       <a href="#step2" class="wh-toc-link">② Write Your Goal</a>
       <a href="#step3" class="wh-toc-link">③ Start Your First Round</a>
       <a href="#step4" class="wh-toc-link">④ Review &amp; Resolve Conflicts</a>
@@ -95,6 +97,65 @@
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>Your API keys are stored only in your browser. They never leave your machine and are never sent to WaxFrame or anyone else — only directly to the AI provider you're using.</p>
       </div>
+    </div>
+  </div>
+  <a href="#top" class="wh-back-top">↑ Back to top</a>
+
+
+  <!-- SECTION: WHAT'S IN THE FOLDER -->
+  <div class="wh-section" id="your-files">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">📁</div>
+      <div class="wh-section-title">What's in the Folder</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">You downloaded a folder — here's what everything does</div>
+      <p>Whether you're running WaxFrame from the hosted version or a local ZIP download, the same files power the app. If you've opened the folder and are wondering what to click — the answer is <code>index.html</code>. Everything else loads automatically and you never need to open it directly.</p>
+      <table class="wh-table">
+        <thead>
+          <tr><th>File or Folder</th><th>What it is</th><th>Do you open it?</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>index.html</code></td><td>The app itself. This is WaxFrame.</td><td><strong>Yes</strong> — double-click this to launch</td></tr>
+          <tr><td><code>app.js</code></td><td>All the logic that makes WaxFrame work.</td><td>No — never open or edit this</td></tr>
+          <tr><td><code>style.css</code></td><td>Controls how everything looks.</td><td>No — never open or edit this</td></tr>
+          <tr><td><code>theme.js</code></td><td>Handles light/dark mode switching.</td><td>No — never open or edit this</td></tr>
+          <tr><td><code>api-links.js</code></td><td>Stores API console and billing URLs for each provider.</td><td>No — never open or edit this</td></tr>
+          <tr><td><code>waxframe-user-manual.html</code></td><td>This document. Opens from the Menu inside the app.</td><td>No — opens from the app</td></tr>
+          <tr><td><code>api-details.html</code></td><td>API Key Guide — step-by-step key setup and billing links.</td><td>No — opens from the app</td></tr>
+          <tr><td><code>what-are-tokens.html</code></td><td>Explains tokens and how to keep API costs low.</td><td>No — opens from the app</td></tr>
+          <tr><td><code>document-playbooks.html</code></td><td>Pre-written goals for common document types.</td><td>No — opens from the app</td></tr>
+          <tr><td><code>prompt-editor.html</code></td><td>Advanced prompt customisation for power users.</td><td>No — opens from the app</td></tr>
+          <tr><td><code>images/</code></td><td>Icons and graphics used by the app.</td><td>No — leave this folder alone</td></tr>
+          <tr><td><code>WaxFrame-Getting-Started.pdf</code></td><td>Quick-start guide for new users.</td><td>Yes — read this if you need setup help</td></tr>
+        </tbody>
+      </table>
+      <div class="wh-warn">
+        <p>⚠️ Keep all files together inside the same folder. Do not move <code>index.html</code> out on its own — it needs the other files alongside it to work correctly.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What is index.html and why does it open in a browser?</div>
+      <p><code>index.html</code> is a web page file — the same kind of file that makes up every website you visit. Your browser (Chrome, Edge, Firefox, Safari) knows how to open it. The difference is that this one lives on your computer instead of on the internet, so nothing is sent to any server when you open it.</p>
+      <p>Double-click <code>index.html</code> and your browser opens WaxFrame just like any website. If nothing happens, right-click the file and choose <strong>Open With</strong>, then pick your browser from the list. Chrome or Edge work best.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Once WaxFrame is open, bookmark it in your browser. Next time, just click the bookmark — no need to find the file again.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Your settings are saved in your browser, not the folder</div>
+      <p>Your API keys, custom AIs, and preferences are stored in your browser's local storage — not inside the WaxFrame folder. This means:</p>
+      <ul>
+        <li>If you open WaxFrame in Chrome, your keys will still be there next time you open it in Chrome.</li>
+        <li>If you switch to a different browser, you'll need to re-enter your keys — each browser has its own storage.</li>
+        <li>If you copy the folder to another computer, your keys don't travel with it.</li>
+        <li>If you clear your browser's site data, your settings may be erased.</li>
+      </ul>
+      <p>Your documents and round history are stored in IndexedDB, also in the browser. Use the <strong>Export</strong> and <strong>Full Transcript</strong> options to save important work as files outside the browser.</p>
     </div>
   </div>
   <a href="#top" class="wh-back-top">↑ Back to top</a>
@@ -143,6 +204,71 @@
     <div class="wh-block">
       <div class="wh-block-title">When you're ready to continue</div>
       <p>Once you have at least two API keys saved and a Builder selected, the <strong>Continue to Project Setup</strong> button at the bottom will activate. Click it to move on.</p>
+    </div>
+  </div>
+  <a href="#top" class="wh-back-top">↑ Back to top</a>
+
+
+  <!-- SECTION: ADD CUSTOM AI -->
+  <div class="wh-section" id="add-custom-ai">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">🔧</div>
+      <div class="wh-section-title">Adding a Custom AI</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When would you add a custom AI?</div>
+      <p>WaxFrame comes pre-configured for six public AI providers. But you can also connect any AI that uses an OpenAI-compatible API — including local models running on your own machine (like Ollama or LM Studio), third-party providers like Mistral or Together AI, and enterprise AI systems running inside your organisation's network.</p>
+      <p>To add one, go to <strong>Setup</strong> and click <strong>＋ Add Custom AI</strong> at the top of the Worker Bees panel. A form will open.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Add Custom AI form — field by field</div>
+      <ul>
+        <li><strong>Quick Add dropdown</strong> — presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting one auto-fills the endpoint URL and API format, and shows a direct link to that provider's key console. If your provider isn't listed, fill in the fields manually.</li>
+        <li><strong>Display Name</strong> — what WaxFrame calls this AI in the UI. Auto-filled by Quick Add. You can change it to anything.</li>
+        <li><strong>API Endpoint URL</strong> — the full web address WaxFrame will send requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://ai.yourcompany.com/v1/chat/completions</code></li>
+        <li><strong>API Format</strong> — almost always <em>OpenAI compatible</em>. Only change this if your provider explicitly uses a different format.</li>
+        <li><strong>Model</strong> — the exact model ID string the provider expects. It must be exact — even a small typo will cause every call to fail. You can type it manually or use <strong>Fetch Models</strong> (see below).</li>
+        <li><strong>API Key</strong> — your key or bearer token for this provider. Paste it in and press Enter to save.</li>
+      </ul>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Fetch Models</div>
+      <p>Once you've entered your endpoint URL and API key, click <strong>Fetch Models</strong>. WaxFrame queries the provider's <code>/v1/models</code> endpoint and returns a dropdown of available model IDs. Select the one you want.</p>
+      <p>If the fetch fails or the endpoint doesn't support model listing, fall back to typing the model ID manually. Your IT team or the provider's documentation will have the exact string.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Test Connection — always do this before adding</div>
+      <p>Click <strong>Test Connection</strong> to fire a real minimal API call before adding the AI to your hive. WaxFrame shows you:</p>
+      <ul>
+        <li>Pass or fail result with a plain-English summary</li>
+        <li>The HTTP status code and response time in milliseconds</li>
+        <li>The exact JSON body that was sent to the endpoint</li>
+        <li>The complete raw JSON response from the server</li>
+      </ul>
+      <p>If the test fails, WaxFrame shows a plain-English hint for common error codes:</p>
+      <ul>
+        <li><strong>401 / 403</strong> — bad or missing API key</li>
+        <li><strong>404</strong> — wrong endpoint URL</li>
+        <li><strong>405</strong> — method not allowed (endpoint may not support chat completions)</li>
+        <li><strong>429</strong> — rate limited (wait a moment and try again)</li>
+        <li><strong>Network Error</strong> — the endpoint is unreachable, or CORS is blocking the request (see the internal AI section below)</li>
+      </ul>
+      <div class="wh-warn">
+        <p>⚠️ The <strong>Add to Hive</strong> button only appears after a passing test. If you change any field after a passing test — URL, key, model — the result resets and you must test again. This prevents a stale passing result from being used to add a misconfigured AI.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">After adding your custom AI</div>
+      <p>Once added, your custom AI appears in the Worker Bees list alongside the built-in providers. It can be toggled on or off between rounds, used as a Builder, and removed at any time. Custom AIs are saved in your browser and will still be there when you reload WaxFrame.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>You need at least two AIs with saved keys to run a round. If you're using only custom AIs (for example, in an internal-only deployment), add at least two before trying to continue to Project Setup.</p>
+      </div>
     </div>
   </div>
   <a href="#top" class="wh-back-top">↑ Back to top</a>
@@ -457,7 +583,7 @@
       <div class="wh-warn">
         <p>⚠️ Billing rates are set by each AI provider and can change without notice. Check the billing rate page for each provider you're using at least once a month.</p>
       </div>
-      <p>You can reach each provider's billing and API key pages directly from the <strong>API Key Details</strong> page, linked from the Setup screen via the API Key Guide button. The <strong>Open All Billing Pages</strong> button on that page opens all of them at once.</p>
+      <p>You can reach each provider's billing and API key pages directly from the <strong>API Key Guide</strong> in the Menu. The <strong>Open All Billing Pages</strong> button on that page opens all of them at once.</p>
     </div>
 
     <div class="wh-block">
@@ -470,12 +596,12 @@
       <div class="wh-block-title">Perplexity — enable auto-billing immediately</div>
       <p>Perplexity has an unusual billing policy that can catch new users off guard. When you first sign up for Perplexity API access, you are given the option to enable auto-billing with a monthly spending limit.</p>
       <div class="wh-warn">
-        <p>⚠️ Enable auto-billing when you first sign up and set your monthly limit low — $5 is a reasonable starting point. If your initial credit runs out <em>without</em> auto-billing active, Perplexity will require a minimum top-up of $50 to reactivate your account. Opting in early avoids this.</p>
+        <p>⚠️ Enable auto-billing when you first sign up and set your monthly limit low — $5 is a reasonable starting point. If your initial credit runs out <em>without</em> auto-billing active, Perplexity will require a minimum top-up of $50 to reactivate your account. Opting in early avoids this entirely.</p>
       </div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Which models WaxFrame uses</div>
+      <div class="wh-block-title">Which models WaxFrame uses by default</div>
       <p>WaxFrame uses specific model versions for each AI provider. These are the defaults as of this version:</p>
       <ul>
         <li><strong>ChatGPT</strong> — <code>gpt-4.1</code></li>
@@ -485,10 +611,8 @@
         <li><strong>Perplexity</strong> — <code>sonar-pro</code></li>
         <li><strong>DeepSeek</strong> — <code>deepseek-chat</code></li>
       </ul>
-      <p>You can see and change the model for any AI from the Setup screen — click the model name next to any AI to select from the available options. Newer models generally produce better results but may cost more per token.</p>
-      <p>WaxFrame fetches the current model list from each provider when you open the model selector, so the options shown always reflect what's available on your account. The exact model string in use is sent directly to the API.</p>
+      <p>You can see and change the model for any AI from the Setup screen — click the model name next to any AI to select from available options. WaxFrame fetches the current model list from each provider when you open the selector, so the options shown always reflect what's available on your account.</p>
     </div>
-
   </div>
   <a href="#top" class="wh-back-top">↑ Back to top</a>
 
