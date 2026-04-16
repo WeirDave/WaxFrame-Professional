@@ -4,7 +4,25 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.8 — April 15, 2026
+## v3.9 — April 16, 2026
+
+### Added
+- Close button (✕) added to the Import from Model Server modal.
+- Upgrade warning added to the "Your settings are saved in your browser" section of the user manual explaining that settings are tied to the folder path and will not carry over if WaxFrame is opened from a new folder location.
+
+### Changed
+- Import from Model Server modal now has two separate URL fields — Chat Endpoint (used during rounds) and Models Endpoint (used to fetch the model list). Typing a chat endpoint auto-derives the models endpoint when possible. Quick Add presets fill both fields with their correct full paths.
+- Quick Add preset dropdown options now show what URLs they will fill in so users know exactly what will be set before selecting.
+- Import from Model Server presets updated to fill complete endpoint paths in both fields.
+
+### Fixed
+- Bulk-added AI IDs were colliding when many models were added at once because Date.now() returned the same value inside a fast forEach loop. Fixed by capturing the timestamp once before the loop and using the array index to guarantee uniqueness.
+- Chat endpoint for bulk-added AIs was being built incorrectly — the URL entered in the form is now used directly as the endpoint with no path manipulation.
+- Raw panel in Import from Model Server modal now persists after input field changes, only clearing on open and close.
+
+---
+
+
 
 ### Fixed
 - Import from Model Server modal — model name labels no longer get cut off. Items now wrap so long model IDs display in full. Label uses flex: 1 1 260px with word-break: break-all instead of a fixed min-width.
