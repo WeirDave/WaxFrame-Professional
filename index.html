@@ -95,6 +95,7 @@
             <div class="bee-controls-row-setup">
               <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
               <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
+              <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
               <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
               <button class="btn btn-lg" onclick="openAllConsoles()">Open API Websites</button>
               <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
@@ -679,6 +680,71 @@
         <span class="custom-ai-raw-label">Received</span>
         <pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Import from Model Server Modal ── -->
+<div class="custom-ai-modal-overlay" id="importServerModal" onclick="if(event.target===this)closeImportServerModal()">
+  <div class="custom-ai-modal import-server-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title">Import from Model Server</div>
+        <div class="custom-ai-modal-sub">Fetch all models from a local or enterprise AI server and add them in bulk</div>
+      </div>
+    </div>
+
+    <!-- Quick Add -->
+    <div class="custom-ai-form-row custom-ai-quickadd-row">
+      <div class="custom-ai-field-wrap">
+        <label>Quick Add <span class="field-optional">(optional)</span></label>
+        <select id="importServerQuickAdd" class="custom-ai-select" onchange="applyImportServerQuickAdd(this.value)">
+          <option value="">— Select a known server or fill in manually —</option>
+          <option value="openwebui">Open WebUI</option>
+          <option value="ollama">Ollama (local)</option>
+          <option value="lmstudio">LM Studio (local)</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- URL + Key -->
+    <div class="custom-ai-form-row">
+      <div class="custom-ai-field-wrap">
+        <label>Server URL <span class="field-required">*</span></label>
+        <input type="text" id="importServerUrl" placeholder="https://your-server.com" oninput="resetImportServer()">
+      </div>
+      <div class="custom-ai-field-wrap">
+        <label>API Key <span class="field-optional">(optional)</span></label>
+        <div class="custom-ai-key-wrap">
+          <input type="password" id="importServerKey" placeholder="Paste key if required" oninput="resetImportServer()">
+          <button class="ai-eye-btn" type="button" onclick="toggleImportServerKeyVis()" title="Show/hide key">👁</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fetch button + status -->
+    <div class="import-server-fetch-row">
+      <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
+      <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
+    </div>
+
+    <!-- Model checklist -->
+    <div id="importServerChecklist" class="import-server-checklist" style="display:none;">
+      <div class="import-server-checklist-hdr">
+        <span id="importServerChecklistCount"></span>
+        <div class="import-server-checklist-actions">
+          <button class="btn btn-sm" onclick="importServerSelectAll()">Select All</button>
+          <button class="btn btn-sm" onclick="importServerSelectNone()">Select None</button>
+        </div>
+      </div>
+      <div id="importServerChecklistItems" class="import-server-checklist-items"></div>
+    </div>
+
+    <div class="custom-ai-form-footer">
+      <span></span>
+      <button class="btn" onclick="closeImportServerModal()">Cancel</button>
+      <button class="btn btn-accent btn-sm" id="importServerAddBtn" style="display:none;" onclick="addImportServerModels()">Add to Hive</button>
     </div>
   </div>
 </div>

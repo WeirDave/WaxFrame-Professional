@@ -2496,6 +2496,207 @@ function addCustomAI() {
   toast(`🐝 ${name} added to the hive`);
 }
 
+// ── IMPORT FROM MODEL SERVER ──
+
+const IMPORT_SERVER_PRESETS = {
+  openwebui: {
+    name: 'Open WebUI',
+    modelsEndpoint: url => url.replace(/\/$/, '') + '/api/models',
+    chatEndpoint:   url => url.replace(/\/$/, '') + '/api/chat/completions'
+  },
+  ollama: {
+    name: 'Ollama',
+    modelsEndpoint: url => 'http://localhost:11434/api/tags',
+    chatEndpoint:   url => 'http://localhost:11434/v1/chat/completions'
+  },
+  lmstudio: {
+    name: 'LM Studio',
+    modelsEndpoint: url => 'http://localhost:1234/v1/models',
+    chatEndpoint:   url => 'http://localhost:1234/v1/chat/completions'
+  }
+};
+
+let _importServerModels   = [];
+let _importServerPreset   = null;
+
+function showImportServerModal() {
+  const modal = document.getElementById('importServerModal');
+  if (modal) modal.classList.add('active');
+  resetImportServer();
+  document.getElementById('importServerUrl')?.focus();
+}
+
+function closeImportServerModal() {
+  const modal = document.getElementById('importServerModal');
+  if (modal) modal.classList.remove('active');
+  resetImportServer();
+  document.getElementById('importServerQuickAdd').value = '';
+}
+
+function resetImportServer() {
+  const status   = document.getElementById('importServerFetchStatus');
+  const checklist = document.getElementById('importServerChecklist');
+  const addBtn   = document.getElementById('importServerAddBtn');
+  const fetchBtn = document.getElementById('importServerFetchBtn');
+  if (status)    { status.textContent = ''; status.className = 'custom-ai-test-status'; }
+  if (checklist) checklist.style.display = 'none';
+  if (addBtn)    addBtn.style.display = 'none';
+  if (fetchBtn)  { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
+  _importServerModels = [];
+}
+
+function toggleImportServerKeyVis() {
+  const input = document.getElementById('importServerKey');
+  if (input) input.type = input.type === 'password' ? 'text' : 'password';
+}
+
+function applyImportServerQuickAdd(value) {
+  resetImportServer();
+  _importServerPreset = IMPORT_SERVER_PRESETS[value] || null;
+  const urlInput = document.getElementById('importServerUrl');
+  if (!urlInput) return;
+  if (value === 'ollama')   { urlInput.value = 'http://localhost:11434'; }
+  if (value === 'lmstudio') { urlInput.value = 'http://localhost:1234'; }
+  if (value === 'openwebui') { urlInput.value = ''; urlInput.placeholder = 'https://your-openwebui-server.com'; }
+}
+
+async function fetchImportServerModels() {
+  const url    = document.getElementById('importServerUrl').value.trim();
+  const key    = document.getElementById('importServerKey').value.trim();
+  const status = document.getElementById('importServerFetchStatus');
+  const fetchBtn = document.getElementById('importServerFetchBtn');
+
+  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
+
+  fetchBtn.disabled = true;
+  fetchBtn.textContent = '…';
+  if (status) { status.textContent = 'Fetching models…'; status.className = 'custom-ai-test-status testing'; }
+
+  // Determine models endpoint
+  const preset = _importServerPreset;
+  let modelsUrl;
+  if (preset) {
+    modelsUrl = preset.modelsEndpoint(url);
+  } else {
+    // Default: try OpenAI-style /v1/models, fallback to Open WebUI /api/models
+    modelsUrl = url.replace(/\/$/, '') + '/v1/models';
+  }
+
+  const headers = { 'Content-Type': 'application/json' };
+  if (key) headers['Authorization'] = `Bearer ${key}`;
+
+  try {
+    let resp = await fetch(modelsUrl, { headers });
+
+    // If /v1/models 404s and no preset, try /api/models
+    if (!resp.ok && !preset) {
+      modelsUrl = url.replace(/\/$/, '') + '/api/models';
+      resp = await fetch(modelsUrl, { headers });
+    }
+
+    if (!resp.ok) {
+      if (status) { status.textContent = `❌ HTTP ${resp.status} — could not fetch models`; status.className = 'custom-ai-test-status fail'; }
+      fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+      return;
+    }
+
+    const data = await resp.json();
+
+    // Parse model list — handle both OpenAI format {data:[]} and Open WebUI format {data:[]} or []
+    let models = [];
+    if (Array.isArray(data))          models = data.map(m => m.id || m.name || m).filter(Boolean);
+    else if (Array.isArray(data.data)) models = data.data.map(m => m.id || m.name || m).filter(Boolean);
+    else if (Array.isArray(data.models)) models = data.models.map(m => m.name || m.id || m).filter(Boolean);
+
+    if (!models.length) {
+      if (status) { status.textContent = '❌ No models found in response'; status.className = 'custom-ai-test-status fail'; }
+      fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+      return;
+    }
+
+    _importServerModels = models;
+    renderImportServerChecklist(url, key);
+    if (status) { status.textContent = `✓ ${models.length} model${models.length !== 1 ? 's' : ''} found`; status.className = 'custom-ai-test-status pass'; }
+    fetchBtn.disabled = false; fetchBtn.textContent = 'Refresh';
+    document.getElementById('importServerAddBtn').style.display = '';
+
+  } catch(e) {
+    if (status) { status.textContent = `❌ Could not reach server — CORS or network error`; status.className = 'custom-ai-test-status fail'; }
+    fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+  }
+}
+
+function renderImportServerChecklist(url, key) {
+  const checklist = document.getElementById('importServerChecklist');
+  const items     = document.getElementById('importServerChecklistItems');
+  const count     = document.getElementById('importServerChecklistCount');
+  if (!checklist || !items) return;
+
+  if (count) count.textContent = `${_importServerModels.length} models available — check the ones you want to add:`;
+
+  items.innerHTML = _importServerModels.map((modelId, i) => `
+    <div class="import-server-item">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked>
+      <label for="isc-${i}" class="import-server-item-label">${esc(modelId)}</label>
+      <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelId)}" placeholder="Display name">
+    </div>
+  `).join('');
+
+  checklist.style.display = '';
+}
+
+function importServerSelectAll() {
+  document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = true);
+}
+
+function importServerSelectNone() {
+  document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = false);
+}
+
+function addImportServerModels() {
+  const url    = document.getElementById('importServerUrl').value.trim();
+  const key    = document.getElementById('importServerKey').value.trim();
+  const preset = _importServerPreset;
+
+  const checked = document.querySelectorAll('.import-server-check:checked');
+  if (!checked.length) { toast('⚠️ No models selected'); return; }
+
+  let added = 0;
+  checked.forEach(cb => {
+    const i         = cb.id.replace('isc-', '');
+    const modelId   = cb.value;
+    const nameInput = document.getElementById(`isn-${i}`);
+    const name      = (nameInput?.value.trim()) || modelId;
+
+    const id       = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now() + '_' + i;
+    const origin   = (() => { try { return new URL(url).origin; } catch(e) { return url; } })();
+    const icon     = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+    const endpoint = preset ? preset.chatEndpoint(url) : url.replace(/\/$/, '') + '/api/chat/completions';
+
+    const ai = { id, name, url, icon, provider: id };
+
+    API_CONFIGS[id] = {
+      label:     name,
+      model:     modelId,
+      endpoint,
+      note:      `Model: ${modelId}`,
+      headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+      bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
+      extractFn: d => d?.choices?.[0]?.message?.content || ''
+    };
+    if (key) API_CONFIGS[id]._key = key;
+
+    aiList.push(ai);
+    activeAIs.push(ai);
+    added++;
+  });
+
+  closeImportServerModal();
+  renderAISetupGrid();
+  saveHive();
+  toast(`🐝 ${added} model${added !== 1 ? 's' : ''} added to the hive`);
+}
+
 let _settingsReturnToWork = false;
 
 function openSettings() {
