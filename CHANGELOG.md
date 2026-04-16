@@ -15,8 +15,33 @@ All notable changes to WaxFrame Professional are documented here.
 - Plain-English error hints for common HTTP failure codes: 401/403 (bad key), 404 (wrong endpoint), 405 (method not allowed), 429 (rate limited), and network errors (CORS or unreachable).
 - Hide All Defaults button on the setup screen that hides all six default AIs in a single confirmation step. Intended for internal/work deployments where only custom AIs with internal endpoints are needed. Reset to Defaults restores them.
 - Perplexity tip about the $5/month recurring API subscription added to api-details.html.
-- Added "API Costs & Billing" section to waxframe-user-manual.html covering: direct billing model, monthly rate-check reminder, popup blocker workaround for Open All Billing Pages, Perplexity auto-billing warning, and current default model versions for all six providers.
 - CHANGELOG.md added to the repository.
+- WaxFrame-Getting-Started.pdf added to the repo root — a short novice-friendly guide covering download, unzip, opening index.html, first API key, and running a first round. Designed to be the first thing someone reads after extracting the ZIP.
+- WaxFrame-README.pdf added to the repo root — a PDF version of the product overview README for users who want a downloadable copy.
+- Three new sections added to waxframe-user-manual.html: "What's in the Folder" (file-by-file explainer for novices, what index.html is, browser explainer, settings storage), "Adding a Custom AI" (full walkthrough of Quick Add, Fetch Models, Test Connection, raw panel, error codes), and "API Costs and Billing" (direct billing model, monthly rate check, popup blocker workaround, Perplexity auto-billing warning, current default model versions).
+- wh-table CSS class added to style.css for the file reference table in the user manual.
+
+### Changed
+- Merged know-your-hive.html into api-details.html. Both the API key setup guide and the AI personality profiles now live in one document under one button. know-your-hive.html removed from the repo and all references removed throughout the codebase.
+- Setup screen button bar reordered: API Key Guide first with lightbulb icon, then Add Custom AI, Hide All Defaults, Open API Websites, Reset to Defaults, Test All Keys — alphabetical after the first.
+- Removed all emojis from setup screen buttons.
+- Removed Know Your Hive button from button bar and nav menu.
+- Updated Learn about tokens link text to Learn about tokens and how to save money.
+- Add Custom AI form now scrolls into view and focuses the Quick Add dropdown when opened.
+- Changing any field after a passing test resets the flow so stale results cannot be used to add an AI.
+- Welcome screen Before You Start info card removed. Replaced with a single hint line directing new users to the Menu for the User Manual and API setup guide. Keeps the welcome screen clean and unintimidating for first-time users.
+- Welcome screen hamburger button replaced with a labeled Menu pill showing the hamburger icon and the word Menu. Hover highlights the border, lines, and label in amber with no background fill.
+- Welcome screen version badge updated from v3.1 to v3.3.
+- Build meta tag updated to 20260415-003.
+- Duplicate unlabeled API Key Guide entry removed from the nav menu.
+- Both references to tokens-explainer.html in index.html updated to what-are-tokens.html.
+- Helper pages comment in style.css updated to reflect the what-are-tokens.html rename.
+- Orphaned welcome-info CSS classes removed from style.css (welcome-info-btn, welcome-info-label, welcome-info-row, welcome-info-icon, welcome-info-body, welcome-info-note).
+
+### Fixed
+- cfg.extractFn trim is not a function error when testing connection to Mistral and other providers whose response structure differs from standard OpenAI format.
+- Model name hardcoded to default in custom AI API calls causing failures on all real endpoints.
+- Quick Add name field auto-detection overwriting the preset display name with a URL-parsed hostname.
 
 ### Changed
 - Merged know-your-hive.html into api-details.html. Both the API key setup guide and the AI personality profiles now live in one document under one button. know-your-hive.html removed from the repo and all references removed throughout the codebase.
