@@ -29,6 +29,9 @@ All notable changes to WaxFrame Professional are documented here.
 - Spelling errors corrected throughout.
 - Duplicate Changed and Fixed sections in the v3.3 CHANGELOG entry removed.
 - Launch WaxFrame and Continue to Project Setup buttons no longer stretch to fill the footer grid column. Fixed by targeting .btn-cta in .fs-footer instead of .btn-accent, and adding width: fit-content. Inactive button state (before requirements are met) now renders as a solid-outlined button matching the active button's size and position.
+- AI_Hive_-_Prompts_Reference_Document_v2.txt renamed to WaxFrame_Prompts_Reference_v3.txt. All "AI Hive" references replaced with "WaxFrame". Copilot removed from the provider list. Majority Rules description in Prompt 5 rewritten to use strict majority of however many AIs are active — no hardcoded numbers. Version and build stamp updated to v3.0 / 20260415-001.
+- docs/ subdirectory created. WaxFrame_Playbook_Round_Count_Tests.txt, WaxFrame_Prompts_Reference_v3.txt, WaxFrame-Getting-Started_v2.docx, and WaxFrame-README_v2.docx moved from repo root into docs/. File reference in waxframe-user-manual.html updated to reflect new path.
+- File table in waxframe-user-manual.html updated to list docs/, screenshots/, and sounds/ folders. WaxFrameREADME_v2.pdf added as a listed file alongside the Getting Started PDF.
 
 ---
 
