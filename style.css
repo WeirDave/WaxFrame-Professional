@@ -5122,6 +5122,14 @@ kbd {
   font-size: 11px;
 }
 .nav-item-dev:hover { opacity: 1; }
+.nav-item-accent {
+  color: var(--accent);
+  font-weight: 700;
+}
+.nav-item-accent:hover {
+  background: var(--accent) !important;
+  color: #000 !important;
+}
 .nav-dev-section { display: none; }
 .nav-dev-section.active { display: block; }
 .nav-item-exit-dev {
