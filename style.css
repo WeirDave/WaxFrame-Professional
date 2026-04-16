@@ -2208,8 +2208,11 @@ kbd {
   justify-content: flex-end;
 }
 .proj-clear-btn {
-  font-size: 12px;
-  padding: 5px 14px;
+  min-width: 320px;
+  justify-content: center;
+  font-size: 15px;
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
 }
 
 /* ── GOAL INFO BUTTON & MODAL ── */
@@ -2732,6 +2735,13 @@ kbd {
   flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 16px;
+}
+.bee-controls-row-setup .btn {
+  min-width: 320px;
+  justify-content: center;
+  font-size: 15px;
+  padding: 12px 28px;
+  border-radius: var(--radius-md);
 }
 /* ── Footer ── */
 .fs-footer {
