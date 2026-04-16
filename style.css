@@ -2203,13 +2203,11 @@ kbd {
   display: flex;
   gap: 8px;
   justify-content: flex-start;
-  align-items: center;
 }
 .proj-clear-row--bottom {
   justify-content: flex-end;
 }
 .proj-clear-btn {
-  flex: 0 0 auto;
   font-size: 12px;
   padding: 5px 14px;
 }
@@ -2730,13 +2728,10 @@ kbd {
 
 /* Controls row */
 .bee-controls-row-setup {
-  display: grid;
-  grid-template-columns: repeat(3, max-content);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 16px;
-}
-.bee-controls-row-setup .btn {
-  white-space: nowrap;
 }
 /* ── Footer ── */
 .fs-footer {
