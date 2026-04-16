@@ -28,6 +28,7 @@ All notable changes to WaxFrame Professional are documented here.
 - Back-to-top link visibility fixed in light mode on helper pages.
 - Spelling errors corrected throughout.
 - Duplicate Changed and Fixed sections in the v3.3 CHANGELOG entry removed.
+- Launch WaxFrame and Continue to Project Setup buttons no longer stretch to fill the footer grid column. Fixed by targeting .btn-cta in .fs-footer instead of .btn-accent, and adding width: fit-content. Inactive button state (before requirements are met) now renders as a solid-outlined button matching the active button's size and position.
 
 ---
 

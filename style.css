@@ -2746,8 +2746,15 @@ kbd {
 .fs-footer-spacer {
   display: block;
 }
-.fs-footer .btn-accent {
+.fs-footer .btn-cta {
   justify-self: end;
+  width: fit-content;
+}
+.btn-cta:not(.btn-accent) {
+  border: 1px solid var(--border2);
+  border-style: solid;
+  color: var(--text-dim);
+  background: transparent;
 }
 
 /* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
