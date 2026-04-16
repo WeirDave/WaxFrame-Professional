@@ -5141,10 +5141,14 @@ kbd {
 [data-theme="light"] .wh-intro,
 [data-theme="light"] .wh-toc,
 [data-theme="light"] .wh-block { background:#ffffff; }
+[data-theme="light"] .wh-back-top { color:#333; }
+[data-theme="light"] .wh-back-top:hover { color:var(--accent); }
 @media (prefers-color-scheme:light) {
   [data-theme="auto"] .wh-intro,
   [data-theme="auto"] .wh-toc,
   [data-theme="auto"] .wh-block { background:#ffffff; }
+  [data-theme="auto"] .wh-back-top { color:#333; }
+  [data-theme="auto"] .wh-back-top:hover { color:var(--accent); }
 }
 
 @media print {
