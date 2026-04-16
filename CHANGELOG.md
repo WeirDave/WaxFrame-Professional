@@ -4,6 +4,33 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.4 — April 15, 2026
+
+### Added
+- Add Custom AI form converted from inline panel to modal overlay, matching the existing modal pattern throughout the app.
+- Raw response panel in the Add Custom AI modal now stays open between test attempts so users can compare results without it collapsing.
+- Raw response panel max height increased to prevent long responses from being truncated.
+- API Costs and Billing section added to the user manual covering direct billing model, how to check rates, popup blocker workaround, and Perplexity auto-billing warning.
+- Free Trial and Licensing section added to the user manual explaining the 3 free rounds, how to purchase, and how to enter a license key.
+- Two new troubleshooting blocks added to the user manual: "You can't start a round" (two-key minimum and Builder requirement) and "A provider link or signup page has moved" (directs users to the in-app API Key Guide for current links).
+- Bookmark tip in the user manual expanded to include Windows Send To Desktop and macOS/Linux instructions, matching the Getting Started guide.
+- Menu label added to the welcome screen hamburger button — now displays as a pill showing the icon and the word Menu.
+- WaxFrame-Getting-Started.pdf rebuilt and source docx added to repo.
+- WaxFrame-README.pdf rebuilt and source docx added to repo.
+
+### Changed
+- Welcome screen cleaned up — Before You Start info card removed, replaced with a single hint line directing new users to the Menu.
+- Nav menu duplicates and stale links removed. Duplicate unlabeled API Key Guide entry removed.
+- Version badge updated to v3.4. Build stamp updated to 20260415-004.
+
+### Fixed
+- Missing .welcome-hamburger CSS rule added to style.css — hamburger button was present in HTML but had no positioning rule so it was invisible.
+- Back-to-top link visibility fixed in light mode on helper pages.
+- Spelling errors corrected throughout.
+- Duplicate Changed and Fixed sections in the v3.3 CHANGELOG entry removed.
+
+---
+
 ## v3.3 — April 15, 2026
 
 ### Added
@@ -40,20 +67,6 @@ All notable changes to WaxFrame Professional are documented here.
 - Both references to tokens-explainer.html in index.html updated to what-are-tokens.html.
 - Helper pages comment in style.css updated to reflect the what-are-tokens.html rename.
 - Orphaned welcome-info CSS classes removed from style.css (welcome-info-btn, welcome-info-label, welcome-info-row, welcome-info-icon, welcome-info-body, welcome-info-note).
-
-### Fixed
-- cfg.extractFn trim is not a function error when testing connection to Mistral and other providers whose response structure differs from standard OpenAI format.
-- Model name hardcoded to default in custom AI API calls causing failures on all real endpoints.
-- Quick Add name field auto-detection overwriting the preset display name with a URL-parsed hostname.
-
-### Changed
-- Merged know-your-hive.html into api-details.html. Both the API key setup guide and the AI personality profiles now live in one document under one button. know-your-hive.html removed from the repo and all references removed throughout the codebase.
-- Setup screen button bar reordered: API Key Guide first with lightbulb icon, then Add Custom AI, Hide All Defaults, Open API Websites, Reset to Defaults, Test All Keys — alphabetical after the first.
-- Removed all emojis from setup screen buttons.
-- Removed Know Your Hive button from button bar and nav menu.
-- Updated Learn about tokens link text to Learn about tokens and how to save money.
-- Add Custom AI form now scrolls into view and focuses the Quick Add dropdown when opened.
-- Changing any field after a passing test resets the flow so stale results cannot be used to add an AI.
 
 ### Fixed
 - cfg.extractFn trim is not a function error when testing connection to Mistral and other providers whose response structure differs from standard OpenAI format.
