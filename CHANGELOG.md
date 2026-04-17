@@ -4,6 +4,18 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.4 — April 16, 2026
+
+### Fixed
+- Setup Page 2 left column ("Your Project") was not scrollable at laptop viewport sizes — goal field and project fields were unreachable. Left column now scrolls at ≤1480px with tighter padding to recover vertical space.
+- "To launch you need" footer compressed to single line at laptop size — items no longer wrap to three lines.
+
+### Changed
+- Import from Model Server checklist overlay now shows a live selected count. The "Add to Hive" button updates dynamically (e.g. "Add 5 to Hive") and is disabled with a message until at least 2 models are selected, matching the minimum required to run rounds.
+- Setup Page 1 action buttons (API Key Guide, Add Custom AI, Import from Model Server, etc.) are smaller at laptop viewport sizes.
+
+---
+
 ## v3.11.3 — April 16, 2026
 
 ### Fixed
