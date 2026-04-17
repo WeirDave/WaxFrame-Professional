@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-020';         // build stamp — update each session
+const BUILD       = '20260416-021';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -500,13 +500,19 @@ let _isMuted = (localStorage.getItem('waxframe_muted') === 'true');
 function toggleMute() {
   _isMuted = !_isMuted;
   localStorage.setItem('waxframe_muted', _isMuted);
-  const btn = document.getElementById('navMuteBtn');
-  if (btn) btn.textContent = _isMuted ? '🔇 Unmute Sounds' : '🔊 Mute Sounds';
+  _updateMuteBtn();
+}
+
+function _updateMuteBtn() {
+  const btn = document.getElementById('workMuteBtn');
+  if (!btn) return;
+  btn.textContent = _isMuted ? '🔇' : '🔊';
+  btn.title       = _isMuted ? 'Unmute sounds' : 'Mute sounds';
+  btn.classList.toggle('is-muted', _isMuted);
 }
 
 function initMuteBtn() {
-  const btn = document.getElementById('navMuteBtn');
-  if (btn) btn.textContent = _isMuted ? '🔇 Unmute Sounds' : '🔊 Mute Sounds';
+  _updateMuteBtn();
 }
 
 // ── ROUND COMPLETE SOUND ──
