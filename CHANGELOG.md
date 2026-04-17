@@ -4,6 +4,15 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.7 — April 17, 2026
+
+### Changed
+- At laptop viewport (≤1600px), the refine rounds side panel is hidden and replaced by a small amber "▸ Refine Preview" button in the goal counter row. Clicking it toggles a popover below the counter showing the same truncated text. Button only appears when goal exceeds 300 chars. Popover auto-closes if goal drops back under 300.
+- Goal textarea and paste textarea now fill the full available column width instead of being capped at 80ch. Both columns' padding reduced at laptop (fs-body outer padding 16px→4px, fs-divider 32px→8px, fs-col-scroll 20px→8px side padding, proj-static-top and proj-goal-flex padding matched) so both 80ch-wide textareas fit without horizontal scrolling.
+- `proj-ta-scroll` given `width: 100%` so notebook paper background fills the full editor width.
+
+---
+
 ## v3.12.6 — April 17, 2026
 
 ### Changed
