@@ -494,8 +494,24 @@ function setFileStatusState(el, state) {
   if (state) el.classList.add('file-status--' + state);
 }
 
+// ── MUTE STATE ──
+let _isMuted = (localStorage.getItem('waxframe_muted') === 'true');
+
+function toggleMute() {
+  _isMuted = !_isMuted;
+  localStorage.setItem('waxframe_muted', _isMuted);
+  const btn = document.getElementById('navMuteBtn');
+  if (btn) btn.textContent = _isMuted ? '🔇 Unmute Sounds' : '🔊 Mute Sounds';
+}
+
+function initMuteBtn() {
+  const btn = document.getElementById('navMuteBtn');
+  if (btn) btn.textContent = _isMuted ? '🔇 Unmute Sounds' : '🔊 Mute Sounds';
+}
+
 // ── ROUND COMPLETE SOUND ──
 function playRoundCompleteSound() {
+  if (_isMuted) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const now = ctx.currentTime;
@@ -601,6 +617,7 @@ function playBuilderSound() {
 
 // ── ROSIE THE ROBOT — ascending square-wave beeps ──
 function playRosieSound() {
+  if (_isMuted) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     [440, 660, 880, 1100].forEach((freq, i) => {
@@ -1313,6 +1330,7 @@ function playMetalClang(audioCtx, clangBuffer) {
       src.start(audioCtx.currentTime);
     } else {
       // Fallback: buffer not ready yet (e.g. very fast click), use Audio()
+      if (_isMuted) return;
       const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
       audio.volume = 0.85;
       audio.play().catch(() => {});
@@ -1883,24 +1901,26 @@ function renderAISetupGrid() {
       : `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
     return `
     <div class="ai-setup-row" id="airow-${ai.id}">
-      <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
-      <span class="ai-setup-name">${ai.name}</span>
+      <div class="ai-setup-row-top">
+        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display=\'none\'">
+        <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
+        <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
+        ${actionBtn}
+      </div>
       <div class="ai-setup-key-wrap">
-        <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}" 
-          title="${hasKey ? 'API key saved ✅' : 'No API key — free mode only'}">
-          ${hasKey ? '🔑' : '⬜'}
+        <div class="ai-setup-key-status ${hasKey ? \'has-key\' : \'\'}"
+          title="${hasKey ? \'API key saved ✅\' : \'No API key — free mode only\'}">
+          ${hasKey ? \'🔑\' : \'⬜\'}
         </div>
         <input type="password" class="ai-setup-key" id="key-${ai.id}"
           placeholder="Paste key — Enter to save…"
           value="${esc(key)}"
-          ${!isActive ? 'disabled' : ''}
-          onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
-          onchange="saveKeyForAI('${ai.id}',this.value,this)">
-        <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
-        ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
-        ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
-        <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
-        ${actionBtn}
+          ${!isActive ? \'disabled\' : \'\'}
+          onkeydown="if(event.key===\'Enter\'){saveKeyForAI(\'${ai.id}\',this.value,this);}"
+          onchange="saveKeyForAI(\'${ai.id}\',this.value,this)">
+        <button class="ai-eye-btn" onclick="toggleKeyVis(\'${ai.id}\')" title="Show/hide key">👁</button>
+        ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI(\'${ai.id}\')" title="Remove saved API key">✕ Key</button>` : \'\'}
+        ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey(\'${ai.id}\')" title="Test this API key">Test</button>` : \'\'}
       </div>
       ${modelSelector}
     </div>`;
@@ -2048,6 +2068,75 @@ async function testApiKey(id) {
     toast(`❌ ${ai.name}: ${e.message}`, 4000);
     setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 4000);
   }
+}
+
+async function testAllKeys() {
+  const keyed = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return cfg?._key;
+  });
+  if (!keyed.length) { toast('⚠️ No API keys saved yet'); return; }
+
+  const panel   = document.getElementById('testKeysPanel');
+  const title   = document.getElementById('tkpTitle');
+  const rowsEl  = document.getElementById('tkpRows');
+  const dismiss = document.getElementById('tkpDismiss');
+  if (!panel) return;
+
+  // Reset panel
+  rowsEl.innerHTML = '';
+  if (title)   title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
+  if (dismiss) dismiss.classList.remove('tkp-done');
+  panel.classList.add('active');
+
+  // Build a row for each AI
+  keyed.forEach(ai => {
+    const row = document.createElement('div');
+    row.className = 'tkp-row';
+    row.id = `tkprow-${ai.id}`;
+    row.innerHTML = `<span class="tkp-ai-name">${ai.name}</span><span class="tkp-status tkp-pending">…</span>`;
+    rowsEl.appendChild(row);
+  });
+
+  let passed = 0, failed = 0;
+
+  for (const ai of keyed) {
+    const statusEl = document.querySelector(`#tkprow-${ai.id} .tkp-status`);
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg || !cfg._key) { if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; } failed++; continue; }
+
+    try {
+      const response = await fetch(cfg.endpoint, {
+        method: 'POST',
+        headers: cfg.headersFn(cfg._key),
+        body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        const msg = err?.error?.message || `HTTP ${response.status}`;
+        if (statusEl) { statusEl.textContent = `✕ ${msg}`; statusEl.className = 'tkp-status tkp-fail'; }
+        failed++;
+      } else {
+        const data = await response.json();
+        const text = cfg.extractFn(data);
+        if (statusEl) { statusEl.textContent = `✓ ${text.trim().substring(0, 20)}`; statusEl.className = 'tkp-status tkp-pass'; }
+        passed++;
+      }
+    } catch(e) {
+      if (statusEl) { statusEl.textContent = `✕ ${e.message.substring(0, 40)}`; statusEl.className = 'tkp-status tkp-fail'; }
+      failed++;
+    }
+    // Small delay between calls so we don't hammer endpoints
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (title) title.textContent = `Done — ${passed} passed, ${failed} failed`;
+  if (dismiss) dismiss.classList.add('tkp-done');
+}
+
+function dismissTestPanel() {
+  const panel = document.getElementById('testKeysPanel');
+  if (panel) panel.classList.remove('active');
 }
 
 function removeAI(id) {
@@ -5684,6 +5773,7 @@ function initTheme() {
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
+  initMuteBtn();
   // Stamp build number into About modal
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;

@@ -531,9 +531,8 @@ html, body {
 
 .ai-setup-row {
   display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 6px;
+  flex-direction: column;
+  gap: 5px;
   padding: 8px 12px;
   border: 1px dashed var(--border2);
   border-radius: var(--radius-sm);
@@ -548,22 +547,28 @@ html, body {
   border-color: rgba(0,179,0,0.4);
   background: rgba(0,179,0,0.06);
 }
-
+.ai-setup-row-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
 .ai-setup-icon {
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 4px;
   flex-shrink: 0;
 }
 .ai-setup-name {
-  width: 110px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  font-family: var(--font-mono);
 }
 .ai-setup-key-wrap {
   display: flex;
@@ -1944,6 +1949,10 @@ html, body {
   backdrop-filter: blur(4px);
 }
 .custom-ai-modal-overlay.active { display: flex; }
+/* Import server modal overrides overlay padding so it can go full-bleed */
+.custom-ai-modal-overlay:has(.import-server-modal) {
+  padding: 0;
+}
 .custom-ai-modal {
   background: var(--surface);
   border: 1px solid var(--border2);
@@ -2123,6 +2132,9 @@ html, body {
   max-height: 100vh;
   border-radius: 0;
   margin: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .import-server-close-btn {
   margin-left: auto;
@@ -2171,6 +2183,7 @@ html, body {
 .import-server-checklist-items {
   overflow-y: auto;
   flex: 1;
+  max-height: 340px;
 }
 .import-server-item {
   display: flex;
@@ -2211,17 +2224,6 @@ html, body {
 .import-server-name-input:focus { outline: none; border-color: var(--accent); }
 
 /* ── MODEL SELECTOR ── */
-.model-select-wrap {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 0 48px; /* align with key input area */
-  width: 100%;
-  flex-basis: 100%;  /* force to own row */
-  flex-shrink: 0;
-  flex-wrap: wrap;
-  box-sizing: border-box;
-}
 .model-select {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -5398,4 +5400,117 @@ kbd {
   opacity: 0;
   transform: translateY(8px);
   margin-top: -20px;
+}
+
+/* ══ TEST ALL KEYS PANEL ══ */
+.test-keys-panel {
+  position: fixed;
+  bottom: 80px;
+  right: 24px;
+  width: 360px;
+  max-height: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 9000;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+}
+.test-keys-panel.active { display: flex; }
+.tkp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tkp-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+}
+.tkp-dismiss {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 11px;
+  padding: 3px 8px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: none;
+}
+.tkp-dismiss.tkp-done { display: block; }
+.tkp-dismiss:hover { border-color: var(--accent); color: var(--accent); }
+.tkp-rows {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 0;
+}
+.tkp-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 14px;
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
+}
+.tkp-row:last-child { border-bottom: none; }
+.tkp-ai-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+.tkp-status {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tkp-pending { color: var(--text-dim); }
+.tkp-pass { color: var(--green, #00b300); }
+.tkp-fail { color: var(--red, #e53e3e); }
+
+/* ══ SETUP PAGE 2 LAPTOP FIXES ══ */
+@media (max-width: 1480px) {
+  /* Shrink bee on setup pages to recover vertical space */
+  .setup-card-bee {
+    width: 160px;
+    height: 160px;
+    padding-top: 6px;
+  }
+  /* Compress footer padding at laptop size */
+  .fs-footer {
+    padding: 8px 24px;
+  }
+  /* Ensure left scroll column scrolls visibly */
+  .fs-col-scroll {
+    padding: 14px 20px 24px;
+  }
+}
+
+/* ══ AI SETUP ROW — model-select alignment fix ══ */
+/* model-select-wrap now aligns to the key row indent, not the old icon+110px name offset */
+.model-select-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 0 0 24px;
+  width: 100%;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  box-sizing: border-box;
 }

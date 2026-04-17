@@ -4,6 +4,20 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11 — April 16, 2026
+
+### Fixed
+- `testAllKeys` was throwing `ReferenceError: testAllKeys is not defined` — the function was never implemented despite the button existing. Now fully built: loops all AIs with saved keys sequentially, shows a live result panel with per-AI pass/fail status, and displays a summary when done.
+- Import from Model Server checklist was not visibly scrollable after fetching large model lists (e.g. 37 models from the internal gateway). Added `max-height: 340px` with `overflow-y: auto` to the checklist items container so models scroll within the box rather than pushing content off screen.
+- Import from Model Server modal was clipping at the top on laptop viewports. Modal now uses `overflow: hidden` with flex column layout. Overlay `:has(.import-server-modal)` zeroes the padding so the modal is properly full-bleed.
+
+### Changed
+- AI setup row (Setup Page 1) restructured to a two-line layout. Icon and full model name now span the top row with no width cap — previously truncated at 110px, making long enterprise model IDs like `bedrock/us-gov.anthropic.claude-sonnet-4-5-20250929-v1:0` completely unreadable. Key field, eye, clear, and test buttons sit on the second row. Action and link buttons moved to the top row.
+- Setup Page 2 bee images compress to 160×160px at laptop breakpoints (≤1480px) and footer padding reduces to recover vertical space for the form fields.
+- Mute button added to the navigation menu. Toggles all WaxFrame sounds (round complete, Rosie beeps, clang). State persists in localStorage across sessions. Button label reflects current state.
+
+---
+
 ## v3.10 — April 16, 2026
 
 ### Fixed
