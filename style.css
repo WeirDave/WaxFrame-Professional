@@ -1152,11 +1152,11 @@ html, body {
 }
 
 /* MAIN AREA — 5-column grid, body bg shows through.
-   Doc panel is the fixed star (80ch). Side panels compress via minmax as viewport shrinks.
-   Gaps absorb surplus space at ultra-wide (4K/5K). At laptop widths gaps collapse to 0. */
+   Left and right panels are symmetrical (equal min/max). Doc panel is the fixed star (80ch).
+   Gap columns absorb surplus at ultra-wide only after panels reach max. */
 .work-main {
   display: grid;
-  grid-template-columns: minmax(320px, 640px) minmax(0, 1fr) auto minmax(0, 1fr) minmax(280px, 640px);
+  grid-template-columns: minmax(320px, 640px) minmax(0, 0.5fr) auto minmax(0, 0.5fr) minmax(320px, 640px);
   overflow: hidden;
   min-height: 0;
   background: transparent;
@@ -1211,7 +1211,7 @@ html, body {
 }
 
 /* Custom AI slots */
-/* ── BEE CARDS — horizontal row layout ── */
+/* ── BEE CARDS — horizontal two-zone layout (big screen) ── */
 .hex-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1219,30 +1219,75 @@ html, body {
   padding: 6px 10px 4px;
   flex-shrink: 0;
 }
+
 .hex-cell {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  overflow: hidden;
+  min-height: 44px;
+  background: var(--surface2);
+  cursor: default;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+/* Left status strip */
+.hex-cell::before {
+  content: '';
+  display: block;
+  width: 4px;
+  flex-shrink: 0;
+  background: var(--border2);
+  transition: background 0.2s;
+}
+
+/* Body — icon + name + status */
+.hex-cell-body {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 6px 8px;
-  background: var(--surface2);
-  border: 1px solid var(--border2);
-  border-radius: 8px;
-  cursor: default;
-  min-height: 40px;
-  overflow: hidden;
+  padding: 5px 8px;
+  flex: 1;
+  min-width: 0;
 }
-.hex-cell.is-builder { border-color: var(--border2); }
-.hex-cell.is-working    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
-.hex-cell.is-sending    { border-color: var(--blue);   animation: cardPulse 1s ease-in-out infinite alternate; }
-.hex-cell.is-responding { border-color: var(--purple); animation: cardPulse 1s ease-in-out infinite alternate; }
-.hex-cell.is-done    { border-color: #00b300; }
-.hex-cell.is-error   { border-color: #f87171; }
-.hex-cell.is-inactive { opacity: 0.4; }
+
+/* hex-icon-wrap: no-op on big screen — icon sits directly in body */
+.hex-icon-wrap {
+  display: contents;
+}
+
+.hex-cell.is-builder  { border-color: var(--accent); box-shadow: 0 0 8px rgba(245,166,35,0.25); }
+.hex-cell.is-builder::before  { background: var(--accent); }
+.hex-cell.is-active { border-color: var(--border2); }
+.hex-cell.is-active::before { background: var(--border2); }
+.hex-cell.is-working,
+.hex-cell.is-sending {
+  border-color: var(--blue);
+  animation: cardPulse 1s ease-in-out infinite alternate;
+}
+.hex-cell.is-working::before,
+.hex-cell.is-sending::before { background: var(--blue); }
+.hex-cell.is-responding {
+  border-color: var(--purple);
+  animation: cardPulse 1s ease-in-out infinite alternate;
+}
+.hex-cell.is-responding::before { background: var(--purple); }
+.hex-cell.is-done { border-color: #00b300; }
+.hex-cell.is-done::before { background: #00b300; }
+.hex-cell.is-error { border-color: #f87171; }
+.hex-cell.is-error::before { background: #f87171; }
+.hex-cell.is-inactive { opacity: 0.38; }
+.hex-cell.is-inactive::before { background: transparent; }
+
 @keyframes cardPulse {
   from { box-shadow: 0 0 4px rgba(96,165,250,0.3); }
-  to   { box-shadow: 0 0 12px rgba(96,165,250,0.7); }
+  to   { box-shadow: 0 0 14px rgba(96,165,250,0.75); }
 }
+
 .hex-toggle {
   width: 13px;
   height: 13px;
@@ -1251,11 +1296,27 @@ html, body {
   cursor: pointer;
 }
 .hex-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
   border-radius: 3px;
   flex-shrink: 0;
+}
+/* Icon initial avatar — shown when real icon fails or is missing */
+.hex-icon-avatar {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1;
+  text-transform: uppercase;
+  user-select: none;
 }
 .hex-name {
   font-size: 11px;
@@ -1264,25 +1325,26 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 0;
+  flex: 1;
   min-width: 0;
 }
 .hex-status {
-  font-size: 10px;
+  font-size: 9px;
+  font-family: var(--font-mono);
   color: var(--text-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-  text-align: right;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
-.hex-cell.is-working    .hex-status { color: var(--blue); }
+.hex-cell.is-working    .hex-status,
 .hex-cell.is-sending    .hex-status { color: var(--blue); }
 .hex-cell.is-responding .hex-status { color: var(--purple); }
-.hex-cell.is-done    .hex-status { color: var(--green); }
-.hex-cell.is-error   .hex-status { color: var(--red); }
-/* hex-cell.is-builder status — same as idle, BUILDER tag is sufficient */
+.hex-cell.is-done       .hex-status { color: #00b300; }
+.hex-cell.is-error      .hex-status { color: #f87171; }
+.hex-cell.is-builder    .hex-status { color: var(--accent); }
 .hex-builder-tag {
   font-size: 8px;
   font-weight: 800;
@@ -1292,6 +1354,134 @@ html, body {
   padding: 1px 4px;
   letter-spacing: 0.05em;
   flex-shrink: 0;
+}
+
+/* ── Edit Hive button — hidden on big screens ── */
+.hive-edit-btn { display: none; }
+
+/* ── Dot strip — hidden on big screens, shown at laptop ── */
+.bee-dot-strip { display: none; }
+
+/* ── Edit Hive modal ── */
+.edit-hive-modal { max-width: 360px; width: 90vw; }
+.edit-hive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 12px 0 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.edit-hive-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+}
+.edit-hive-row.is-builder-row { border-color: rgba(245,166,35,0.4); }
+.edit-hive-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.edit-hive-avatar-letter {
+  width: 24px;
+  height: 24px;
+  border-radius: 5px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #fff;
+  text-transform: uppercase;
+  user-select: none;
+}
+.edit-hive-name {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+.edit-hive-tag {
+  font-size: 8px;
+  font-weight: 800;
+  color: #0a0c12;
+  background: var(--accent);
+  border-radius: 3px;
+  padding: 2px 5px;
+  letter-spacing: 0.06em;
+  flex-shrink: 0;
+}
+.edit-hive-toggle {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── At laptop viewport: show dot strip + Edit Hive button, hide card grid ── */
+@media (max-width: 1600px) {
+  .hex-grid        { display: none; }
+  .bee-dot-strip   { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 10px 4px; flex-shrink: 0; }
+  .hive-edit-btn   { display: inline-flex; }
+
+  /* Dot — one per AI, icon in a glowing circle */
+  .bee-dot {
+    position: relative;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: default;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    flex-shrink: 0;
+  }
+  .bee-dot img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; display: block; }
+  .bee-dot .bee-dot-avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #fff;
+    text-transform: uppercase;
+  }
+
+  /* State colours for dots */
+  .bee-dot.is-builder  { border-color: var(--accent); box-shadow: 0 0 7px rgba(245,166,35,0.5); }
+  .bee-dot.is-active   { border-color: var(--border2); }
+  .bee-dot.is-inactive { border-color: transparent; opacity: 0.3; }
+  .bee-dot.is-sending,
+  .bee-dot.is-working  { border-color: var(--blue); animation: dotPulse 1s ease-in-out infinite alternate; }
+  .bee-dot.is-responding { border-color: var(--purple); animation: dotPulse 1s ease-in-out infinite alternate; }
+  .bee-dot.is-done     { border-color: #00b300; box-shadow: 0 0 6px rgba(0,179,0,0.5); }
+  .bee-dot.is-error    { border-color: #f87171; }
+
+  @keyframes dotPulse {
+    from { box-shadow: 0 0 3px rgba(96,165,250,0.3); }
+    to   { box-shadow: 0 0 10px rgba(96,165,250,0.85); }
+  }
 }
 
 /* ══ CENTER PANEL — floats as card over honeycomb ══ */
@@ -1527,7 +1717,7 @@ html, body {
 @media (max-width: 1600px) {
   /* At laptop (1470px) — panels compress, setup page 2 optimized */
   .work-main {
-    grid-template-columns: minmax(300px, 380px) 0 auto 0 minmax(260px, 340px);
+    grid-template-columns: minmax(300px, 380px) 0 auto 0 minmax(300px, 380px);
   }
   .work-right-logo-img { width: 56px; height: 56px; }
   .work-right-logo-name { font-size: 15px; }
@@ -1555,6 +1745,49 @@ html, body {
   #req-doc { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   /* Shrink setup page 1 action buttons */
   .bee-controls-row-setup .btn-lg { font-size: 12px; padding: 7px 14px; }
+
+  /* ── Overlay animations — scale to ~50% at laptop viewport ── */
+
+  /* Smoker bee */
+  .smoker-hero-img { width: 210px; height: 210px; margin-top: 20px; }
+  .smoker-overlay-label { font-size: 16px; }
+  .smoker-subtitle { font-size: 11px; max-width: 280px; }
+
+  /* Builder station */
+  .builder-scene-wrap { width: 380px; }
+  .builder-stage { padding: 16px 18px 12px; gap: 6px; }
+  .builder-belt-track { height: 35px; bottom: 30%; }
+  .builder-block { width: 55px; height: 30px; gap: 2px; border-radius: 4px; }
+  .builder-block-icon { width: 12px; height: 12px; }
+  .builder-block-name { font-size: 7px; }
+  .builder-station-sparks { width: 70px; height: 70px; left: calc(80% + 10px); top: 63%; }
+  .builder-station-sparks span { width: 3px; height: 3px; }
+  .builder-station-sparks span:nth-child(1)  { --dx:  9px;  --dy:  30px; }
+  .builder-station-sparks span:nth-child(2)  { --dx:  14px; --dy:  40px; }
+  .builder-station-sparks span:nth-child(3)  { --dx:  32px; --dy:  15px; }
+  .builder-station-sparks span:nth-child(4)  { --dx:  22px; --dy:  35px; }
+  .builder-station-sparks span:nth-child(5)  { --dx:  5px;  --dy:  50px; }
+  .builder-station-sparks span:nth-child(6)  { --dx: -20px; --dy:  22px; }
+  .builder-station-sparks span:nth-child(7)  { --dx:  11px; --dy:  37px; }
+  .builder-station-sparks span:nth-child(8)  { --dx:  17px; --dy:  47px; }
+  .builder-station-sparks span:nth-child(9)  { --dx:  35px; --dy:  12px; }
+  .builder-station-sparks span:nth-child(10) { --dx:  23px; --dy:  55px; }
+  .builder-station-sparks span:nth-child(11) { --dx:  13px; --dy:  32px; }
+  .builder-station-sparks span:nth-child(12) { --dx: -15px; --dy:  27px; }
+  .builder-overlay-label { font-size: 14px; }
+
+  /* Builder belt block exit keyframe scale — blocks start/end positions halved */
+  @keyframes builderBlockExit {
+    from { transform: translateX(330px); opacity: 0; }
+    6%   { opacity: 1; }
+    70%  { opacity: 1; }
+    85%  { opacity: 0; }
+    to   { transform: translateX(-70px); opacity: 0; }
+  }
+
+  /* Hive finish approved bee */
+  .hive-finish-bee-img { width: min(85vw, 290px); }
+  .hive-finish-tagline { font-size: clamp(1rem, 2.5vw, 1.4rem); }
 }
 
 /* ══ UNIFIED DUAL-FACE CLOCK WIDGET ══ */
@@ -2963,11 +3196,15 @@ kbd {
   min-width: 0;
   max-width: 100%;
   flex: 1;
+  min-height: 0;
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 21px;
   resize: none;
-  overflow: hidden;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
   height: auto;
 }
 .proj-notebook-goal {
@@ -5074,6 +5311,7 @@ kbd {
   max-width: 240px;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 .goal-refine-preview-panel {
   border: 1px solid var(--accent);
@@ -5082,7 +5320,8 @@ kbd {
   display: flex;
   flex-direction: column;
   width: 100%;
-  align-self: flex-start;
+  flex: 1;
+  min-height: 0;
 }
 .goal-refine-preview-sub {
   font-size: 11px;
@@ -5095,8 +5334,11 @@ kbd {
   font-style: italic;
 }
 .goal-refine-preview-panel .goal-refine-preview-text {
-  overflow-y: visible;
-  flex-shrink: 0;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245,166,35,0.4) transparent;
 }
 /* ── Inline style replacements ── */
 .goal-modal-textarea:focus  { border-color: var(--accent); }
