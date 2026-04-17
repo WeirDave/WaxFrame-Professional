@@ -3476,17 +3476,22 @@ function updateGoalCounter() {
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
-  // Update refine preview panel
+
+  // Shared computed values
+  const refined  = truncated ? truncateGoalForRefine(ta.value) : null;
+  const countStr = refined ? `${refined.length} chars` : '';
+  const subStr   = refined ? `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.` : '';
+
+  // Update side panel (large screen)
   const previewWrap  = document.getElementById('goalRefinePreview');
   const previewText  = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
   const previewSub   = document.getElementById('goalRefinePreviewSub');
   const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
   if (truncated) {
-    const refined = truncateGoalForRefine(ta.value);
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
-    if (previewCount) previewCount.textContent = `${refined.length} chars`;
-    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
+    if (previewCount) previewCount.textContent = countStr;
+    if (previewSub)   previewSub.textContent = subStr;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
   } else {
@@ -3496,6 +3501,36 @@ function updateGoalCounter() {
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
   }
+
+  // Update laptop popover panel
+  const popoverText  = document.getElementById('refinePopoverText');
+  const popoverCount = document.getElementById('refinePopoverCount');
+  const popoverSub   = document.getElementById('refinePopoverSub');
+  const popoverEmpty = document.getElementById('refinePopoverEmpty');
+  const popoverBtn   = document.getElementById('refinePreviewBtn');
+  if (truncated) {
+    if (popoverText)  { popoverText.textContent = refined; popoverText.style.display = 'block'; }
+    if (popoverCount) popoverCount.textContent = countStr;
+    if (popoverSub)   popoverSub.textContent = subStr;
+    if (popoverEmpty) popoverEmpty.style.display = 'none';
+    // Show button only at laptop breakpoint (CSS handles visibility; JS just un-hides it so CSS can take over)
+    if (popoverBtn)   popoverBtn.style.display = '';
+  } else {
+    if (popoverText)  { popoverText.textContent = ''; popoverText.style.display = 'none'; }
+    if (popoverCount) popoverCount.textContent = '';
+    if (popoverSub)   popoverSub.textContent = '';
+    if (popoverEmpty) popoverEmpty.style.display = 'block';
+    if (popoverBtn)   popoverBtn.style.display = 'none';
+    // Close popover if goal drops back under 300
+    const popover = document.getElementById('refinePopover');
+    if (popover) popover.style.display = 'none';
+  }
+}
+
+function toggleRefinePopover() {
+  const popover = document.getElementById('refinePopover');
+  if (!popover) return;
+  popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
 }
 
 function updateProjLineNums(numsId, ta) {
