@@ -4,6 +4,18 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.2 — April 17, 2026
+
+### Fixed
+- Goal textarea scrolling finally resolved. Root cause was the textarea having both `proj-notebook-ta` and `proj-goal-ta` classes — `proj-notebook-ta` (which comes later in the CSS) was overriding `proj-goal-ta` with `overflow: hidden`, `height: auto`, and `width: 80ch`, silently winning every time. Removed `proj-notebook-ta` from the goal textarea in HTML. The goal textarea now uses only `proj-goal-ta` for all its sizing.
+- Builder belt blocks were crowding together with large hives (8+ AIs). Belt now caps at 5 visible blocks regardless of hive size, and the duration floor increased from 7s to 10s with 3s per block (up from 2.4s). Blocks stay visually separated at all viewport sizes.
+
+### Changed
+- Builder dot (laptop dot strip) now fills solid gold when that AI is the Builder, making it clearly identifiable in both dark and light mode. Previously only the border ring was amber which was invisible against the honeycomb background in light mode.
+- Dot strip container now has a solid semi-transparent dark background so the dots and their state rings are readable regardless of the honeycomb behind them. Adjusts in light mode.
+
+---
+
 ## v3.12.1 — April 16, 2026
 
 ### Fixed

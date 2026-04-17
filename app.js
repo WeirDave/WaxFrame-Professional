@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-021';         // build stamp — update each session
+const BUILD       = '20260417-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5579,13 +5579,16 @@ function showBuilderOverlay() {
       { id: 'deepseek',name: 'DeepSeek',icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
     ];
     const count = ais.length;
-    const dur = Math.max(7, count * 2.4);
-    ais.forEach((ai, i) => {
+    // Cap visible blocks at 5 so they don't crowd at any viewport size.
+    // Cycle through all AIs so everyone gets represented over time.
+    const visible = ais.slice(0, 5);
+    const dur = Math.max(10, visible.length * 3);
+    visible.forEach((ai, i) => {
       const colors = brandColors[ai.id] || brandColors.deepseek;
       const block = document.createElement('div');
       block.className = 'builder-block';
       block.style.setProperty('--belt-dur', `${dur}s`);
-      block.style.setProperty('--belt-delay', `${-(dur / count) * i}s`);
+      block.style.setProperty('--belt-delay', `${-(dur / visible.length) * i}s`);
       block.style.borderColor = colors.border;
       block.style.background = `linear-gradient(180deg, ${colors.bg}, rgba(0,0,0,0.2))`;
       block.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 14px rgba(0,0,0,0.4), 0 0 14px ${colors.glow}`;

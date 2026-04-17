@@ -1454,7 +1454,18 @@ html, body {
 /* ── At laptop viewport: show dot strip + Edit Hive button, hide card grid ── */
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
-  .bee-dot-strip   { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 10px 4px; flex-shrink: 0; }
+  .bee-dot-strip   {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 7px 10px 7px;
+    flex-shrink: 0;
+    background: rgba(0,0,0,0.45);
+    border-radius: 8px;
+    margin: 2px 8px 4px;
+  }
+  [data-theme="light"] .bee-dot-strip,
+  .bee-dot-strip-light { background: rgba(0,0,0,0.12); }
   .hive-edit-btn   { display: inline-flex; }
 
   /* Dot — one per AI, icon in a glowing circle */
@@ -1487,7 +1498,11 @@ html, body {
   }
 
   /* State colours for dots */
-  .bee-dot.is-builder  { border-color: var(--accent); box-shadow: 0 0 7px rgba(245,166,35,0.5); }
+  .bee-dot.is-builder  {
+    background: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 8px rgba(245,166,35,0.6);
+  }
   .bee-dot.is-active   { border-color: var(--border2); }
   .bee-dot.is-inactive { border-color: transparent; opacity: 0.3; }
   .bee-dot.is-sending,
