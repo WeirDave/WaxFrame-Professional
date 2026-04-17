@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260415-009';         // build stamp — update each session
+const BUILD       = '20260416-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1902,25 +1902,25 @@ function renderAISetupGrid() {
     return `
     <div class="ai-setup-row" id="airow-${ai.id}">
       <div class="ai-setup-row-top">
-        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display=\'none\'">
+        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
         <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
-        <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
+        <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗️</a>
         ${actionBtn}
       </div>
       <div class="ai-setup-key-wrap">
-        <div class="ai-setup-key-status ${hasKey ? \'has-key\' : \'\'}"
-          title="${hasKey ? \'API key saved ✅\' : \'No API key — free mode only\'}">
-          ${hasKey ? \'🔑\' : \'⬜\'}
+        <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}"
+          title="${hasKey ? 'API key saved ✅' : 'No API key — free mode only'}">
+          ${hasKey ? '🔑' : '⬜'}
         </div>
         <input type="password" class="ai-setup-key" id="key-${ai.id}"
           placeholder="Paste key — Enter to save…"
           value="${esc(key)}"
-          ${!isActive ? \'disabled\' : \'\'}
-          onkeydown="if(event.key===\'Enter\'){saveKeyForAI(\'${ai.id}\',this.value,this);}"
-          onchange="saveKeyForAI(\'${ai.id}\',this.value,this)">
-        <button class="ai-eye-btn" onclick="toggleKeyVis(\'${ai.id}\')" title="Show/hide key">👁</button>
-        ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI(\'${ai.id}\')" title="Remove saved API key">✕ Key</button>` : \'\'}
-        ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey(\'${ai.id}\')" title="Test this API key">Test</button>` : \'\'}
+          ${!isActive ? 'disabled' : ''}
+          onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
+          onchange="saveKeyForAI('${ai.id}',this.value,this)">
+        <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
+        ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
+        ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
       </div>
       ${modelSelector}
     </div>`;
