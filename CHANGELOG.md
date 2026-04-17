@@ -4,6 +4,14 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.4 — April 17, 2026
+
+### Fixed
+- Goal textarea now shows correct dark/transparent background and notebook paper lines — `background: transparent`, `border: none`, `outline: none`, `color: var(--text)`, and `padding: 0 12px` were missing from `.proj-goal-ta`, causing the browser default white background to show through.
+- Line numbers restored on goal textarea at all viewport sizes. Root cause: `updateProjLineNums` was calling `ta.style.height = scrollHeight + 'px'` on the goal textarea, overriding the CSS `height: 100%` and blowing the container open. Function now splits behaviour — goal textarea keeps fixed height and wires scroll sync to the textarea itself; paste textarea and others continue to grow-to-fit and sync scroll via the notebook container.
+
+---
+
 ## v3.12.3 — April 17, 2026
 
 ### Fixed

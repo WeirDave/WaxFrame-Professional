@@ -3489,18 +3489,29 @@ function updateGoalCounter() {
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // For the goal textarea: grow to content so the notebook container scrolls
-  // For other textareas: same behaviour
-  ta.style.height = 'auto';
-  ta.style.height = ta.scrollHeight + 'px';
-  const LINE_HEIGHT = 21;
-  const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
-  ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
-  // Sync gutter scroll to notebook container scroll
-  const notebook = ta.closest('.proj-notebook-goal, .proj-notebook');
-  if (notebook && !notebook._scrollWired) {
-    notebook._scrollWired = true;
-    notebook.addEventListener('scroll', () => { ln.style.transform = `translateY(-${notebook.scrollTop}px)`; });
+  const isGoal = ta.id === 'projectGoal';
+  if (isGoal) {
+    // Goal textarea: fixed-height container — do NOT grow, scroll internally.
+    const LINE_HEIGHT = 21;
+    const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
+    ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+    if (!ta._lineNumScrollWired) {
+      ta._lineNumScrollWired = true;
+      ta.addEventListener('scroll', () => { ln.style.transform = `translateY(-${ta.scrollTop}px)`; });
+    }
+    ln.style.transform = `translateY(-${ta.scrollTop}px)`;
+  } else {
+    // Paste textarea and others: grow to content height so the notebook container scrolls.
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+    const LINE_HEIGHT = 21;
+    const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
+    ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+    const notebook = ta.closest('.proj-notebook');
+    if (notebook && !notebook._scrollWired) {
+      notebook._scrollWired = true;
+      notebook.addEventListener('scroll', () => { ln.style.transform = `translateY(-${notebook.scrollTop}px)`; });
+    }
   }
 }
 
