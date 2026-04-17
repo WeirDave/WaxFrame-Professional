@@ -3167,7 +3167,7 @@ kbd {
 /* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
 /* .proj-right-scroll reserved */
 
-/* ── PROJECT NOTEBOOK (paste + scratch panels) ── */
+/* ── PROJECT NOTEBOOK (scratch panel only) ── */
 .proj-notebook {
   display: flex;
   border: 1px solid var(--border2);
@@ -3176,12 +3176,9 @@ kbd {
   overflow-x: hidden;
   min-height: 320px;
   align-items: flex-start;
-  /* Notebook paper: blue ruled lines + red margin */
   background-color: var(--surface);
   background-image:
-    /* Red margin line at left edge of text area */
     linear-gradient(to right, transparent 44px, rgba(220,50,50,0.25) 44px, rgba(220,50,50,0.25) 46px, transparent 46px),
-    /* Blue ruled lines */
     repeating-linear-gradient(
       to bottom,
       transparent 0,
@@ -3190,12 +3187,50 @@ kbd {
       rgba(80,140,220,0.18) 21px
     );
 }
-.proj-notebook-nums {
+
+/* ── PROJECT TEXTAREA EDITOR — mirrors work-doc-editor pattern ── */
+/* Outer scroll container */
+.proj-ta-editor {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+.proj-ta-editor::-webkit-scrollbar { width: 8px; }
+.proj-ta-editor::-webkit-scrollbar-track { background: transparent; }
+.proj-ta-editor::-webkit-scrollbar-thumb { background: rgba(120,120,140,0.55); border-radius: 8px; }
+
+/* Inner row — grows to content height, carries notebook paper background */
+.proj-ta-scroll {
+  display: flex;
+  align-items: flex-start;
+  min-height: 100%;
+  background-color: var(--surface);
+  background-image:
+    linear-gradient(to right, transparent 44px, rgba(220,50,50,0.25) 44px, rgba(220,50,50,0.25) 46px, transparent 46px),
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 20px,
+      rgba(80,140,220,0.18) 20px,
+      rgba(80,140,220,0.18) 21px
+    );
+  background-position: 0 0;
+}
+
+/* Gutter — sticky so it stays visible as content scrolls */
+.proj-ta-nums {
+  position: sticky;
+  left: 0;
+  top: 0;
   width: 44px;
-  flex-shrink: 0;
-  align-self: flex-start;
-  background: transparent;
-  border-right: 1px solid var(--border2);
+  flex: 0 0 44px;
+  align-self: stretch;
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 21px;
@@ -3203,68 +3238,51 @@ kbd {
   text-align: right;
   padding: 0 6px 0 0;
   user-select: none;
-  overflow: hidden;
-}
-.proj-notebook-nums div { line-height: 21px; height: 21px; font-size: 13px; }
-.proj-notebook-ta {
-  width: 80ch;
-  min-width: 80ch;
-  max-width: 80ch;
-  flex-shrink: 0;
   background: transparent;
-  border: none;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 21px;
-  padding: 0 12px;
-  resize: none;
-  outline: none;
-  overflow: hidden;
-  height: auto;
-  min-height: 100%;
-}
-/* Goal textarea — full width of container, monospace to match other editors */
-.proj-goal-ta {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
-  height: 100%;
-  background: transparent;
-  border: none;
-  outline: none;
-  color: var(--text);
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 21px;
-  padding: 0 12px;
-  resize: none;
-  overflow-y: auto;
-  overflow-x: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border2) transparent;
-}
-.proj-notebook-goal {
+  border-right: 1px solid var(--border2);
+  box-sizing: border-box;
   display: flex;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-  align-items: stretch;
-  font-family: var(--font-mono);
+  flex-direction: column;
+  overflow: visible;
+  z-index: 1;
+}
+.proj-ta-nums::-webkit-scrollbar { display: none; }
+.proj-ta-nums div { height: 21px; line-height: 21px; font-size: 13px; box-sizing: border-box; flex-shrink: 0; padding-right: 6px; }
+
+/* Inner wrapper — sizes the textarea to 80ch, no scrolling here */
+.proj-ta-inner {
+  flex: 0 0 auto;
+  position: relative;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
-  width: 100%;
-  background-color: var(--surface);
-  background-image:
-    linear-gradient(to right, transparent 44px, rgba(220,50,50,0.25) 44px, rgba(220,50,50,0.25) 46px, transparent 46px),
-    repeating-linear-gradient(
-      to bottom,
-      transparent 0,
-      transparent 20px,
-      rgba(80,140,220,0.18) 20px,
-      rgba(80,140,220,0.18) 21px
-    );
+  background: transparent;
+  box-sizing: border-box;
+  width: calc(80ch + 8px + 12px);
+}
+
+/* Textarea — grows to content, overflow hidden so editor scrolls */
+.proj-ta {
+  display: block;
+  width: calc(80ch + 8px + 12px);
+  min-width: calc(80ch + 8px + 12px);
+  max-width: calc(80ch + 8px + 12px);
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0 12px 0 8px;
+  border: none;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  box-sizing: border-box;
+  background: transparent;
+  color: var(--text);
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 21px;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 .proj-notebook-scratch {
   align-items: center;
