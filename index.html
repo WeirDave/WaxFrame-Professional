@@ -437,28 +437,25 @@
           <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="work-right-logo-img">
         </div>
 
-        <!-- Dual Clocks: Round + Project -->
-        <div class="dual-clocks">
-          <!-- Round Clock -->
-          <div class="console-clock-3d">
-            <div class="clock-bezel">
-              <div class="clock-label-top">ROUND</div>
-              <div class="clock-screen">
-                <span class="clock-digit-group" id="roundTimerDisplay">00:00</span>
+        <!-- Unified Dual-Face Clock -->
+        <div class="dual-clock-widget" id="dualClockWidget">
+          <div class="dcw-bezel">
+            <div class="dcw-face dcw-face-round">
+              <div class="dcw-label-top">ROUND</div>
+              <div class="dcw-screen">
+                <span class="dcw-digits" id="roundTimerDisplay">00:00</span>
               </div>
-              <div class="clock-label" id="roundTimerLabel">READY</div>
+              <div class="dcw-label-bot" id="roundTimerLabel">READY</div>
             </div>
-          </div>
-          <!-- Project Clock -->
-          <div class="console-clock-3d project-clock-wrap">
-            <div class="clock-bezel">
-              <div class="clock-label-top">PROJECT</div>
-              <div class="clock-screen">
-                <span class="clock-digit-group" id="projectTimerDisplay">00:00:00</span>
+            <div class="dcw-divider"></div>
+            <div class="dcw-face dcw-face-project">
+              <div class="dcw-label-top">PROJECT</div>
+              <div class="dcw-screen">
+                <span class="dcw-digits dcw-digits-project" id="projectTimerDisplay">00:00:00</span>
               </div>
-              <div class="clock-project-controls">
-                <button class="clock-ctrl-btn" id="projClockStartBtn" onclick="projectClockStart()" title="Start">&#9654;</button>
-                <button class="clock-ctrl-btn" id="projClockPauseBtn" onclick="projectClockPause()" title="Pause">&#9646;&#9646;</button>
+              <div class="dcw-controls">
+                <button class="dcw-ctrl-btn" id="projClockStartBtn" onclick="projectClockStart()" title="Start">&#9654;</button>
+                <button class="dcw-ctrl-btn" id="projClockPauseBtn" onclick="projectClockPause()" title="Pause">&#9646;&#9646;</button>
               </div>
             </div>
           </div>

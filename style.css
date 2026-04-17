@@ -125,14 +125,14 @@ html, body {
   overflow: hidden;
   background-image:
     linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
-    url('images/AI_Hive_Honeycomb_BG_Dark.png');
+    url('images/WaxFrame_Honeycomb_BG_Dark.png');
   background-size: auto, 300px auto;
   background-repeat: repeat, repeat;
 }
 [data-theme="light"] body {
   background-image:
     linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-    url('images/AI_Hive_Honeycomb_BG_Light.png');
+    url('images/WaxFrame_Honeycomb_BG_Light.png');
   background-size: auto, 300px auto;
   background-repeat: repeat, repeat;
 }
@@ -140,7 +140,7 @@ html, body {
   [data-theme="auto"] body {
     background-image:
       linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
-      url('images/AI_Hive_Honeycomb_BG_Light.png');
+      url('images/WaxFrame_Honeycomb_BG_Light.png');
     background-size: auto, 300px auto;
     background-repeat: repeat, repeat;
   }
@@ -1146,10 +1146,12 @@ html, body {
   overflow: hidden;
 }
 
-/* MAIN AREA — 5-column grid, body bg shows through */
+/* MAIN AREA — 5-column grid, body bg shows through.
+   Doc panel is the fixed star (80ch). Side panels compress via minmax as viewport shrinks.
+   Gaps absorb surplus space at ultra-wide (4K/5K). At laptop widths gaps collapse to 0. */
 .work-main {
   display: grid;
-  grid-template-columns: 640px 1fr auto 1fr 640px;
+  grid-template-columns: minmax(320px, 640px) minmax(0, 1fr) auto minmax(0, 1fr) minmax(280px, 640px);
   overflow: hidden;
   min-height: 0;
   background: transparent;
@@ -1496,8 +1498,44 @@ html, body {
   letter-spacing: 0.1em;
   font-weight: 600;
 }
-.console-clock-3d {
-  padding: 4px 8px 4px;
+/* ══ RESPONSIVE BREAKPOINTS ══
+   Doc panel is the fixed star at all sizes.
+   Side panels compress; gaps absorb surplus at ultra-wide.
+   ══════════════════════════════════════════════════════ */
+
+/* Ultra-wide (4K / 5K / curved widescreen) — let gaps soak up extra space naturally,
+   panels already capped at 640px so nothing stretches beyond that. No overrides needed. */
+
+/* Laptop — panels compress, logo shrinks, gaps collapse */
+@media (max-width: 1700px) {
+  .work-right-logo-img { width: 100px; height: 100px; }
+  .work-right-logo-name { font-size: 22px; }
+  .work-right-logo-tag { font-size: 11px; }
+}
+@media (max-width: 1500px) {
+  .work-right-logo-img { width: 72px; height: 72px; }
+  .work-right-logo-name { font-size: 18px; }
+  .work-right-logo-tag { font-size: 10px; letter-spacing: 0.06em; }
+  .work-right-logo { padding: 8px 10px; margin: 6px 6px 3px; }
+  .left-panel-header { padding: 6px 10px; margin: 5px 6px 2px; }
+}
+@media (max-width: 1480px) {
+  /* At laptop minimum (1470px) — panels at minimum, gaps gone, doc holds 80ch */
+  .work-main {
+    grid-template-columns: minmax(300px, 380px) 0 auto 0 minmax(260px, 340px);
+  }
+  .work-right-logo-img { width: 56px; height: 56px; }
+  .work-right-logo-name { font-size: 15px; }
+  .work-right-logo-tag { display: none; }
+  .work-right-logo { padding: 6px 8px; gap: 8px; margin: 5px 5px 3px; }
+  .dcw-digits { font-size: 16px; }
+  .dcw-label-top { font-size: 9px; }
+  .dcw-label-bot { font-size: 9px; }
+  .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
+}
+
+/* ══ UNIFIED DUAL-FACE CLOCK WIDGET ══ */
+.dual-clock-widget {
   margin: 4px 8px 2px;
   flex-shrink: 0;
   background: rgba(0,0,0,0.55);
@@ -1505,67 +1543,88 @@ html, body {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  padding: 6px 8px;
 }
-.project-clock-wrap {
-  border-color: rgba(255,170,0,0.2);
-}
-.clock-bezel {
+.dcw-bezel {
   background: linear-gradient(145deg, #0a0c12, #151820);
   border-radius: 8px;
-  padding: 10px 14px 8px;
+  border: 1px solid #1a1d2a;
   box-shadow:
     inset 0 2px 6px rgba(0,0,0,0.8),
     inset 0 -1px 2px rgba(255,255,255,0.05),
     0 4px 12px rgba(0,0,0,0.5),
     0 1px 0 rgba(255,255,255,0.08);
-  border: 1px solid #1a1d2a;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 8px 10px;
+  gap: 0;
+}
+.dcw-face {
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  padding: 0 8px;
 }
-.clock-screen {
+.dcw-divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.12), transparent);
+  margin: 2px 0;
+  flex-shrink: 0;
+}
+.dcw-label-top {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: #9aa3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+  text-align: center;
+}
+.dcw-screen {
   background: linear-gradient(180deg, #050608 0%, #0a0d14 100%);
   border-radius: 4px;
-  padding: 6px 16px;
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.9), inset 0 0 20px rgba(245,166,35,0.04);
+  padding: 5px 10px;
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.9), inset 0 0 16px rgba(245,166,35,0.03);
   border: 1px solid #0d0f18;
   width: 100%;
   text-align: center;
 }
-.clock-digit-group {
+/* dcw-digits — JS adds/removes .running and .paused on these by ID */
+.dcw-digits {
   font-family: var(--font-mono);
-  font-size: 28px;
+  font-size: 19px;
   font-weight: 700;
   color: #4a5270;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   transition: color 0.3s, text-shadow 0.3s;
   display: block;
+  white-space: nowrap;
 }
-.clock-digit-group.running {
+.dcw-digits.running {
   color: #00b300;
-  text-shadow: 0 0 10px rgba(0,179,0,0.6), 0 0 30px rgba(0,179,0,0.2);
+  text-shadow: 0 0 10px rgba(0,179,0,0.6), 0 0 28px rgba(0,179,0,0.2);
 }
-.clock-label {
+/* Round clock status label */
+.dcw-label-bot {
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   color: #6a7090;
   text-transform: uppercase;
   transition: color 0.3s;
+  text-align: center;
 }
-.clock-label.running { color: #00b300; }
-
-/* Project clock — amber when running to distinguish from round clock */
-.dual-clocks .console-clock-3d:last-child .clock-digit-group.running {
+.dcw-label-bot.running { color: #00b300; }
+/* Project clock — amber digits when running */
+.dcw-digits-project.running {
   color: var(--accent);
-  text-shadow: 0 0 10px rgba(245,166,35,0.6), 0 0 30px rgba(245,166,35,0.2);
+  text-shadow: 0 0 10px rgba(245,166,35,0.6), 0 0 28px rgba(245,166,35,0.2);
 }
-.dual-clocks .console-clock-3d:last-child .clock-label.running {
-  color: var(--accent);
-}
-/* Project clock paused — slow amber flash to nudge user to resume */
-.dual-clocks .console-clock-3d:last-child .clock-digit-group.paused {
+/* Project clock paused — slow amber flash */
+.dcw-digits-project.paused {
   color: var(--accent);
   animation: projClockPausedFlash 1.4s ease-in-out infinite;
 }
@@ -1574,69 +1633,52 @@ html, body {
   50%  { opacity: 0.25; }
   100% { opacity: 1; }
 }
-
-/* ── Dual clock layout ── */
-.dual-clocks {
-  display: flex;
-  gap: 4px;
-  padding: 4px 8px 2px;
-  margin: 4px 8px 2px;
-  flex-shrink: 0;
-}
-.dual-clocks .console-clock-3d {
-  flex: 1;
-  padding: 0;
-  margin: 0;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  display: flex;
-  flex-direction: column;
-}
-.dual-clocks .clock-bezel {
-  padding: 6px 10px 6px;
-  flex: 1;
-  justify-content: space-between;
-}
-.dual-clocks .clock-digit-group {
-  font-size: 20px;
-}
-.clock-label-top {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  color: #9aa3b8;
-  text-transform: uppercase;
-  text-align: center;
-  margin-bottom: 3px;
-  font-weight: 600;
-}
-
-/* ── Project clock controls ── */
-.clock-project-controls {
+/* Project clock controls */
+.dcw-controls {
   display: flex;
   justify-content: center;
-  gap: 6px;
-  margin-top: 5px;
+  gap: 5px;
 }
-.clock-ctrl-btn {
+.dcw-ctrl-btn {
   background: transparent;
   border: 1px solid #2a2d3a;
   border-radius: 4px;
   color: #4a5270;
   font-size: 11px;
-  padding: 2px 7px;
+  padding: 2px 8px;
   cursor: pointer;
   transition: all 0.12s;
   font-family: var(--font-mono);
   line-height: 1.4;
 }
-.clock-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
-.clock-ctrl-btn.active { border-color: #00b300; color: #00b300; }
+.dcw-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+.dcw-ctrl-btn.active { border-color: #00b300; color: #00b300; }
 
-/* Right edge padding */
+/* Light theme overrides */
+[data-theme="light"] .dual-clock-widget { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
+[data-theme="light"] .dcw-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.1); }
+[data-theme="light"] .dcw-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; box-shadow: inset 0 1px 4px rgba(0,0,0,0.1); }
+[data-theme="light"] .dcw-digits { color: #1a1d2a; }
+[data-theme="light"] .dcw-digits.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
+[data-theme="light"] .dcw-digits-project.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
+[data-theme="light"] .dcw-label-top { color: #384060; }
+[data-theme="light"] .dcw-label-bot { color: #384060; }
+[data-theme="light"] .dcw-label-bot.running { color: #047857; }
+[data-theme="light"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
+[data-theme="light"] .dcw-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+[data-theme="light"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .dual-clock-widget { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
+  [data-theme="auto"] .dcw-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; }
+  [data-theme="auto"] .dcw-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; }
+  [data-theme="auto"] .dcw-digits { color: #1a1d2a; }
+  [data-theme="auto"] .dcw-digits.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
+  [data-theme="auto"] .dcw-digits-project.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
+  [data-theme="auto"] .dcw-label-top { color: #7880a0; }
+  [data-theme="auto"] .dcw-label-bot { color: #7880a0; }
+  [data-theme="auto"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
+  [data-theme="auto"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
+}
 
 /* ── FOOTER BAR ── */
 .work-footer {
@@ -1718,33 +1760,6 @@ html, body {
   [data-theme="auto"] .work-panel-header.honeycomb-header .btn:hover {
     color: #0a0c12; border-color: var(--accent); background: var(--accent);
   }
-}
-[data-theme="light"] .clock-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.1); }
-[data-theme="light"] .clock-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; box-shadow: inset 0 1px 4px rgba(0,0,0,0.1); }
-[data-theme="light"] .clock-digit-group { color: #1a1d2a; }
-[data-theme="light"] .clock-digit-group.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
-[data-theme="light"] .clock-label { color: #384060; background: transparent; border: none; }
-[data-theme="light"] .clock-label-top { color: #384060; font-weight: 700; }
-[data-theme="light"] .clock-label.running { color: #047857; }
-[data-theme="light"] .dual-clocks .console-clock-3d { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
-[data-theme="light"] .dual-clocks .clock-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; border-radius: 10px; }
-[data-theme="light"] .clock-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
-[data-theme="light"] .clock-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
-[data-theme="light"] .dual-clocks .console-clock-3d:last-child .clock-digit-group.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
-[data-theme="light"] .dual-clocks .console-clock-3d:last-child .clock-label.running { color: #a06000; }
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .dual-clocks .console-clock-3d:last-child .clock-digit-group.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
-  [data-theme="auto"] .dual-clocks .console-clock-3d:last-child .clock-label.running { color: #a06000; }
-}
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .clock-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; }
-  [data-theme="auto"] .clock-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; }
-  [data-theme="auto"] .clock-digit-group { color: #1a1d2a; }
-  [data-theme="auto"] .clock-digit-group.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
-  [data-theme="auto"] .clock-label { color: #7880a0; background: transparent; border: none; }
-  [data-theme="auto"] .clock-label-top { color: #7880a0; }
-  [data-theme="auto"] .dual-clocks .console-clock-3d { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
-  [data-theme="auto"] .dual-clocks .clock-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; border-radius: 10px; }
 }
 .footer-status {
   font-size: 13px;
