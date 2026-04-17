@@ -3443,11 +3443,23 @@ function initWorkScreen(isNewSession = false) {
 
 function truncateGoalForRefine(goal) {
   if (!goal || goal.length <= 300) return goal;
-  // Find last sentence boundary at or before 300 chars (must be past 200 to avoid very short context)
+  // Look backward from 300 for a sentence boundary
   const slice = goal.slice(0, 300);
   const lastBoundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf('!'), slice.lastIndexOf('?'));
   if (lastBoundary > 200) return goal.slice(0, lastBoundary + 1).trim();
-  return slice.trim();
+  // Nothing clean before 300 — look forward for the next sentence end (cap at 450)
+  const forwardSlice = goal.slice(300, 450);
+  const nextDot  = forwardSlice.indexOf('.');
+  const nextBang = forwardSlice.indexOf('!');
+  const nextQ    = forwardSlice.indexOf('?');
+  const candidates = [nextDot, nextBang, nextQ].filter(i => i !== -1);
+  if (candidates.length > 0) {
+    const nextBoundary = Math.min(...candidates);
+    return goal.slice(0, 300 + nextBoundary + 1).trim();
+  }
+  // No sentence boundary found either side — trim to last word before 300
+  const wordTrim = slice.replace(/\s+\S*$/, '');
+  return (wordTrim.length > 150 ? wordTrim : slice).trim();
 }
 
 function updateGoalCounter() {
