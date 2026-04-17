@@ -4,6 +4,19 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.1 — April 16, 2026
+
+### Fixed
+- Goal textarea now correctly scrolls. Root cause was the flex chain — `goal-split-left` was missing `min-height: 0`, preventing the notebook container from being height-constrained. Also removed `height: auto` from the textarea (replaced with `align-self: stretch`) and removed the fixed `min-height: 140px` from `proj-notebook-goal` so the container defers to the flex parent for sizing.
+- Refine rounds preview panel now scrolls. Same broken flex chain — `goal-split-left` missing `min-height: 0` was the blocker. The panel CSS was already correct; the chain above it wasn't passing the height constraint down.
+- Nav menu now scrolls on short screens. Nav panel outer shell gets `overflow: hidden`; all items wrapped in a `nav-body` inner div with `flex: 1; overflow-y: auto` so the list scrolls while the header stays fixed.
+- Change Builder modal now scrolls when AI list is too tall for the viewport. Added `max-height: 85vh; overflow-y: auto` to `.change-builder-modal`. Changed `finish-modal-overlay.active` to `align-items: flex-start` so tall modals pin to the top of the overlay rather than being clipped by centering.
+
+### Changed
+- Mute button moved from the nav menu to the work screen footer, sitting to the left of the theme toggle buttons. Same pill shape as the theme buttons. Shows 🔊 when sounds are on, 🔇 when muted, with amber highlight when muted. Mute state still persists in localStorage across sessions.
+
+---
+
 ## v3.12.0 — April 16, 2026
 
 ### Changed
