@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260416-012">
+  <meta name="waxframe-build" content="20260416-013">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
         <p>Many minds. One refined result.</p>
-        <span class="welcome-version">v3.11.2 Pro</span>
+        <span class="welcome-version">v3.11.3 Pro</span>
       </div>
     </div>
     <div class="welcome-pitch">
@@ -734,9 +734,10 @@
     <div class="import-server-fetch-row">
       <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
       <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
+      <button class="btn btn-sm" id="importServerSelectBtn" onclick="openImportChecklist()" style="display:none;">☰ Select Models…</button>
     </div>
 
-    <!-- Raw panel -->
+    <!-- Raw panel (capped height for debugging) -->
     <div id="importServerRawPanel" class="custom-ai-raw-panel" style="display:none;">
       <div class="custom-ai-raw-row">
         <span class="custom-ai-raw-label">Endpoint</span>
@@ -748,26 +749,38 @@
       </div>
       <div class="custom-ai-raw-row">
         <span class="custom-ai-raw-label">Received</span>
-        <pre class="custom-ai-raw-pre" id="importServerRawReceived"></pre>
+        <pre class="custom-ai-raw-pre import-server-raw-received" id="importServerRawReceived"></pre>
       </div>
-    </div>
-
-    <!-- Model checklist -->
-    <div id="importServerChecklist" class="import-server-checklist" style="display:none;">
-      <div class="import-server-checklist-hdr">
-        <span id="importServerChecklistCount"></span>
-        <div class="import-server-checklist-actions">
-          <button class="btn btn-sm" onclick="importServerSelectAll()">Select All</button>
-          <button class="btn btn-sm" onclick="importServerSelectNone()">Select None</button>
-        </div>
-      </div>
-      <div id="importServerChecklistItems" class="import-server-checklist-items"></div>
     </div>
 
     <div class="custom-ai-form-footer">
       <span></span>
       <button class="btn" onclick="closeImportServerModal()">Cancel</button>
-      <button class="btn btn-accent btn-sm" id="importServerAddBtn" style="display:none;" onclick="addImportServerModels()">Add to Hive</button>
+      <button class="btn btn-accent btn-sm" id="importServerAddBtn" style="display:none;" onclick="openImportChecklist()">Select &amp; Add to Hive →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ IMPORT SERVER CHECKLIST OVERLAY (separate layer above everything) ══ -->
+<div class="import-checklist-overlay" id="importChecklistOverlay">
+  <div class="import-checklist-panel">
+    <div class="import-checklist-hdr">
+      <div class="import-checklist-hdr-left">
+        <span class="import-checklist-title">Select Models to Add</span>
+        <span id="importChecklistCount" class="import-checklist-count"></span>
+      </div>
+      <div class="import-checklist-hdr-right">
+        <button class="btn btn-sm" onclick="importServerSelectAll()">Select All</button>
+        <button class="btn btn-sm" onclick="importServerSelectNone()">Select None</button>
+        <button class="import-checklist-close-btn" onclick="closeImportChecklist()">← Back</button>
+      </div>
+    </div>
+    <div class="import-checklist-body">
+      <div id="importServerChecklistItems" class="import-checklist-items"></div>
+    </div>
+    <div class="import-checklist-footer">
+      <button class="btn" onclick="closeImportChecklist()">← Back</button>
+      <button class="btn btn-accent" onclick="addImportServerModels()">Add Selected to Hive</button>
     </div>
   </div>
 </div>
@@ -938,7 +951,7 @@
   <div id="tkpRows" class="tkp-rows"></div>
 </div>
 
-<script src="app.js?v=3.11.2"></script>
+<script src="app.js?v=3.11.3"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
