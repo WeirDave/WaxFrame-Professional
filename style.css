@@ -1524,8 +1524,8 @@ html, body {
   .work-right-logo { padding: 8px 10px; margin: 6px 6px 3px; }
   .left-panel-header { padding: 6px 10px; margin: 5px 6px 2px; }
 }
-@media (max-width: 1480px) {
-  /* At laptop minimum (1470px) — panels at minimum, gaps gone, doc holds 80ch */
+@media (max-width: 1600px) {
+  /* At laptop (1470px) — panels compress, setup page 2 optimized */
   .work-main {
     grid-template-columns: minmax(300px, 380px) 0 auto 0 minmax(260px, 340px);
   }
@@ -1546,7 +1546,7 @@ html, body {
   .length-constraint-header { margin-bottom: 4px; }
   /* Hide refine preview panel — not critical at laptop size */
   .goal-split-right { display: none; }
-  .goal-split-left { flex: 1; }
+  .goal-split-left { flex: 1; min-width: 0; }
   /* Compress launch requirements: smaller text, no wrap, truncate doc label */
   .launch-requirements { gap: 8px; font-size: 12px; flex-wrap: nowrap; overflow: hidden; }
   .launch-req-item { font-size: 11px; white-space: nowrap; }
@@ -5063,14 +5063,15 @@ kbd {
   min-height: 0;
 }
 .goal-split-left {
-  flex: 1;
+  flex: 3;
   min-width: 0;
   display: flex;
   flex-direction: column;
 }
 .goal-split-right {
-  width: 450px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 160px;
+  max-width: 240px;
   display: flex;
   flex-direction: column;
 }
@@ -5517,7 +5518,7 @@ kbd {
 .tkp-fail { color: var(--red, #e53e3e); }
 
 /* ══ SETUP PAGE 2 LAPTOP FIXES ══ */
-@media (max-width: 1480px) {
+@media (max-width: 1600px) {
   /* Shrink bee on setup pages to recover vertical space */
   .setup-card-bee {
     width: 160px;
