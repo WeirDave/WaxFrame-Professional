@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.5 — April 17, 2026
+
+### Fixed
+- `truncateGoalForRefine` now finds the nearest sentence boundary on **either side** of 300 characters instead of only looking backward. If no clean sentence end exists between 200–300 chars, it now looks forward up to 450 chars for the next sentence end. If no boundary is found at all, it trims to the last whole word rather than cutting mid-word. Prevents garbage half-sentences being sent to AIs in refine rounds.
+
+---
+
 ## v3.12.4 — April 17, 2026
 
 ### Fixed
