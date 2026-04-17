@@ -383,8 +383,9 @@ let docText   = '';
 let docTab    = 'upload';
 let workDocSaveTimer = null;
 
-// ── STORAGE KEYS ──
-const BUILD       = '20260417-001';         // build stamp — update each session
+// ── VERSION ──
+const APP_VERSION = 'v3.12.7 Pro';          // human-readable version — bump on release only
+const BUILD       = '20260417-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3443,23 +3444,11 @@ function initWorkScreen(isNewSession = false) {
 
 function truncateGoalForRefine(goal) {
   if (!goal || goal.length <= 300) return goal;
-  // Look backward from 300 for a sentence boundary
+  // Find last sentence boundary at or before 300 chars (must be past 200 to avoid very short context)
   const slice = goal.slice(0, 300);
   const lastBoundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf('!'), slice.lastIndexOf('?'));
   if (lastBoundary > 200) return goal.slice(0, lastBoundary + 1).trim();
-  // Nothing clean before 300 — look forward for the next sentence end (cap at 450)
-  const forwardSlice = goal.slice(300, 450);
-  const nextDot  = forwardSlice.indexOf('.');
-  const nextBang = forwardSlice.indexOf('!');
-  const nextQ    = forwardSlice.indexOf('?');
-  const candidates = [nextDot, nextBang, nextQ].filter(i => i !== -1);
-  if (candidates.length > 0) {
-    const nextBoundary = Math.min(...candidates);
-    return goal.slice(0, 300 + nextBoundary + 1).trim();
-  }
-  // No sentence boundary found either side — trim to last word before 300
-  const wordTrim = slice.replace(/\s+\S*$/, '');
-  return (wordTrim.length > 150 ? wordTrim : slice).trim();
+  return slice.trim();
 }
 
 function updateGoalCounter() {
@@ -3476,22 +3465,17 @@ function updateGoalCounter() {
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
-
-  // Shared computed values
-  const refined  = truncated ? truncateGoalForRefine(ta.value) : null;
-  const countStr = refined ? `${refined.length} chars` : '';
-  const subStr   = refined ? `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.` : '';
-
-  // Update side panel (large screen)
+  // Update refine preview panel
   const previewWrap  = document.getElementById('goalRefinePreview');
   const previewText  = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
   const previewSub   = document.getElementById('goalRefinePreviewSub');
   const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
   if (truncated) {
+    const refined = truncateGoalForRefine(ta.value);
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
-    if (previewCount) previewCount.textContent = countStr;
-    if (previewSub)   previewSub.textContent = subStr;
+    if (previewCount) previewCount.textContent = `${refined.length} chars`;
+    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
   } else {
@@ -3501,49 +3485,24 @@ function updateGoalCounter() {
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
   }
-
-  // Update laptop popover panel
-  const popoverText  = document.getElementById('refinePopoverText');
-  const popoverCount = document.getElementById('refinePopoverCount');
-  const popoverSub   = document.getElementById('refinePopoverSub');
-  const popoverEmpty = document.getElementById('refinePopoverEmpty');
-  const popoverBtn   = document.getElementById('refinePreviewBtn');
-  if (truncated) {
-    if (popoverText)  { popoverText.textContent = refined; popoverText.style.display = 'block'; }
-    if (popoverCount) popoverCount.textContent = countStr;
-    if (popoverSub)   popoverSub.textContent = subStr;
-    if (popoverEmpty) popoverEmpty.style.display = 'none';
-    // Show button only at laptop breakpoint (CSS handles visibility; JS just un-hides it so CSS can take over)
-    if (popoverBtn)   popoverBtn.style.display = '';
-  } else {
-    if (popoverText)  { popoverText.textContent = ''; popoverText.style.display = 'none'; }
-    if (popoverCount) popoverCount.textContent = '';
-    if (popoverSub)   popoverSub.textContent = '';
-    if (popoverEmpty) popoverEmpty.style.display = 'block';
-    if (popoverBtn)   popoverBtn.style.display = 'none';
-    // Close popover if goal drops back under 300
-    const popover = document.getElementById('refinePopover');
-    if (popover) popover.style.display = 'none';
-  }
-}
-
-function toggleRefinePopover() {
-  const popover = document.getElementById('refinePopover');
-  if (!popover) return;
-  popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
 }
 
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // Both goal and paste textareas: grow to content height inside their scroll container.
-  // The outer .proj-ta-editor scrolls; sticky gutter stays visible automatically.
-  // No JS scroll sync or transform needed.
+  // For the goal textarea: grow to content so the notebook container scrolls
+  // For other textareas: same behaviour
   ta.style.height = 'auto';
   ta.style.height = ta.scrollHeight + 'px';
   const LINE_HEIGHT = 21;
   const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
   ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+  // Sync gutter scroll to notebook container scroll
+  const notebook = ta.closest('.proj-notebook-goal, .proj-notebook');
+  if (notebook && !notebook._scrollWired) {
+    notebook._scrollWired = true;
+    notebook.addEventListener('scroll', () => { ln.style.transform = `translateY(-${notebook.scrollTop}px)`; });
+  }
 }
 
 function updateLineNumbers() {
@@ -5979,7 +5938,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
   initMuteBtn();
-  // Stamp build number into About modal
+  // Stamp version and build number into UI
+  const versionEl = document.querySelector('.welcome-version');
+  if (versionEl) versionEl.textContent = APP_VERSION;
+  document.title = 'WaxFrame ' + APP_VERSION;
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
   updateSetupRequirements();

@@ -7,40 +7,7 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.12.7 — April 17, 2026
 
 ### Changed
-- At laptop viewport (≤1600px), the refine rounds side panel is hidden and replaced by a small amber "▸ Refine Preview" button in the goal counter row. Clicking it toggles a popover below the counter showing the same truncated text. Button only appears when goal exceeds 300 chars. Popover auto-closes if goal drops back under 300.
-- Goal textarea and paste textarea now fill the full available column width instead of being capped at 80ch. Both columns' padding reduced at laptop (fs-body outer padding 16px→4px, fs-divider 32px→8px, fs-col-scroll 20px→8px side padding, proj-static-top and proj-goal-flex padding matched) so both 80ch-wide textareas fit without horizontal scrolling.
-- `proj-ta-scroll` given `width: 100%` so notebook paper background fills the full editor width.
-
----
-
-## v3.12.6 — April 17, 2026
-
-### Changed
-- Goal textarea and paste textarea rebuilt to use the same scroll architecture as the working document editor. Both now use an outer scroll container (`.proj-ta-editor`) that scrolls, an inner content row (`.proj-ta-scroll`) that grows to content height and carries the notebook paper background, a sticky gutter (`.proj-ta-nums`) that stays visible without any JS transform, and a fixed 80ch textarea (`.proj-ta`) that grows to content height with overflow hidden. Eliminates all JS scroll sync hacks. Line numbers, notebook lines, and text now all scroll together as one unit on both large and laptop viewports.
-- Removed orphaned CSS classes `proj-notebook-goal`, `proj-notebook-nums`, `proj-notebook-ta`, and `proj-goal-ta`. `proj-notebook` retained for the scratch panel only.
-
----
-
-## v3.12.5 — April 17, 2026
-
-### Fixed
-- `truncateGoalForRefine` now finds the nearest sentence boundary on **either side** of 300 characters instead of only looking backward. If no clean sentence end exists between 200–300 chars, it now looks forward up to 450 chars for the next sentence end. If no boundary is found at all, it trims to the last whole word rather than cutting mid-word. Prevents garbage half-sentences being sent to AIs in refine rounds.
-
----
-
-## v3.12.4 — April 17, 2026
-
-### Fixed
-- Goal textarea now shows correct dark/transparent background and notebook paper lines — `background: transparent`, `border: none`, `outline: none`, `color: var(--text)`, and `padding: 0 12px` were missing from `.proj-goal-ta`, causing the browser default white background to show through.
-- Line numbers restored on goal textarea at all viewport sizes. Root cause: `updateProjLineNums` was calling `ta.style.height = scrollHeight + 'px'` on the goal textarea, overriding the CSS `height: 100%` and blowing the container open. Function now splits behaviour — goal textarea keeps fixed height and wires scroll sync to the textarea itself; paste textarea and others continue to grow-to-fit and sync scroll via the notebook container.
-
----
-
-## v3.12.3 — April 17, 2026
-
-### Fixed
-- Goal textarea and refine rounds panel now scroll correctly at laptop viewport (1470px). Root causes: `proj-goal-flex` had `flex-shrink: 0` and `overflow: visible` so it never participated in the flex height chain; `proj-notebook-goal` had `align-items: flex-start` so the textarea never stretched to fill it; `proj-goal-ta` was using `flex: 1` instead of `height: 100%` inside a non-flex-scroll context. Fixed all three. At laptop breakpoint, `proj-goal-flex` is given a fixed `340px` height so the textarea and refine panel are bounded containers that scroll internally.
-- Refine rounds panel restored at laptop viewport — it was previously hidden entirely (`display: none`) which was incorrect. Panel is now visible at a narrower `140–200px` width alongside the goal textarea at ≤1600px.
+- `APP_VERSION` constant added to `app.js` as the single source of truth for the human-readable version string. On load, it is written into the welcome screen version badge and the browser tab title. The hardcoded version text has been removed from `index.html` — the span is now populated by JavaScript only. To update the version, change `APP_VERSION` in `app.js`; it propagates everywhere automatically.
 
 ---
 
