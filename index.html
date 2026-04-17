@@ -208,9 +208,13 @@
           <div class="proj-goal-flex">
           <div class="goal-split-row">
             <div class="goal-split-left">
-              <div class="proj-notebook proj-notebook-goal">
-                <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
-                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+              <div class="proj-ta-editor">
+                <div class="proj-ta-scroll">
+                  <div class="proj-ta-nums" id="projGoalNums"><div>1</div></div>
+                  <div class="proj-ta-inner">
+                    <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="goal-split-right">
@@ -280,10 +284,14 @@
             </div>
 
             <div class="doc-tab-panel" id="panel-paste">
-              <div class="proj-notebook">
-                <div class="proj-notebook-nums" id="projPasteNums"><div>1</div></div>
-                <textarea id="pasteText" class="proj-notebook-ta" placeholder="Paste your existing document text here…"
-                  oninput="updateProjLineNums('projPasteNums', this); updateLaunchRequirements()"></textarea>
+              <div class="proj-ta-editor">
+                <div class="proj-ta-scroll">
+                  <div class="proj-ta-nums" id="projPasteNums"><div>1</div></div>
+                  <div class="proj-ta-inner">
+                    <textarea id="pasteText" class="proj-ta" placeholder="Paste your existing document text here…"
+                      oninput="updateProjLineNums('projPasteNums', this); updateLaunchRequirements()"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
 

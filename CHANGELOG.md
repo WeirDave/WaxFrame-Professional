@@ -4,6 +4,14 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.6 — April 17, 2026
+
+### Changed
+- Goal textarea and paste textarea rebuilt to use the same scroll architecture as the working document editor. Both now use an outer scroll container (`.proj-ta-editor`) that scrolls, an inner content row (`.proj-ta-scroll`) that grows to content height and carries the notebook paper background, a sticky gutter (`.proj-ta-nums`) that stays visible without any JS transform, and a fixed 80ch textarea (`.proj-ta`) that grows to content height with overflow hidden. Eliminates all JS scroll sync hacks. Line numbers, notebook lines, and text now all scroll together as one unit on both large and laptop viewports.
+- Removed orphaned CSS classes `proj-notebook-goal`, `proj-notebook-nums`, `proj-notebook-ta`, and `proj-goal-ta`. `proj-notebook` retained for the scratch panel only.
+
+---
+
 ## v3.12.5 — April 17, 2026
 
 ### Fixed
