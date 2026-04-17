@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.2 — April 16, 2026
+
+### Fixed
+- Import from Model Server checklist was showing the raw model ID duplicated twice on every row (e.g. `anthropic.claude-3-7-sonnet-20250219-v1:0 anthropic.claude-3-7-sonnet-20250219-v1:0`). The the internal gateway/OpenWebUI response format includes a separate `name` field (e.g. `[Base] Claude-3-7-Sonnet`) alongside the `id`. The parser now extracts both — `id` is stored as the model identifier sent to the API, `name` is used as the display label and pre-fills the editable name input. The checklist now shows friendly names on the left and the raw ID as the checkbox value.
+
+---
+
 ## v3.11.1 — April 16, 2026
 
 ### Fixed

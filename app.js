@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-011';         // build stamp — update each session
+const BUILD       = '20260416-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2718,10 +2718,15 @@ async function fetchImportServerModels() {
     }
 
     // Parse model list — handle OpenAI {data:[]}, Open WebUI {data:[]}, Ollama {models:[]}, or bare []
+    // Store {id, name} objects so we can show friendly display names from the name field
     let models = [];
-    if (Array.isArray(data))             models = data.map(m => m.id || m.name || m).filter(Boolean);
-    else if (Array.isArray(data.data))   models = data.data.map(m => m.id || m.name || m).filter(Boolean);
-    else if (Array.isArray(data.models)) models = data.models.map(m => m.name || m.id || m).filter(Boolean);
+    if (Array.isArray(data)) {
+      models = data.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
+    } else if (Array.isArray(data.data)) {
+      models = data.data.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
+    } else if (Array.isArray(data.models)) {
+      models = data.models.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
+    }
 
     showRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
 
@@ -2752,13 +2757,16 @@ function renderImportServerChecklist() {
 
   if (count) count.textContent = `${_importServerModels.length} models available — check the ones you want to add:`;
 
-  items.innerHTML = _importServerModels.map((modelId, i) => `
+  items.innerHTML = _importServerModels.map((model, i) => {
+    const modelId   = typeof model === 'object' ? model.id   : model;
+    const modelName = typeof model === 'object' ? model.name : model;
+    return `
     <div class="import-server-item">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked>
-      <label for="isc-${i}" class="import-server-item-label">${esc(modelId)}</label>
-      <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelId)}" placeholder="Display name">
-    </div>
-  `).join('');
+      <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
+      <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
+    </div>`;
+  }).join('');
 
   checklist.style.display = '';
 }
