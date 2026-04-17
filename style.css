@@ -1537,14 +1537,22 @@ html, body {
   .dcw-label-top { font-size: 9px; }
   .dcw-label-bot { font-size: 9px; }
   .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
-  /* Setup Page 2 — hide bee to recover vertical space, tighten padding */
+  /* Setup Page 2 — hide bee, tighten padding */
   .proj-left-scroll > .setup-card-bee { display: none; }
   .proj-static-top { padding: 12px 16px 6px; }
   .proj-goal-flex { padding: 0 16px 0; }
-  /* Compress launch requirements to one line */
-  .launch-requirements { gap: 10px; font-size: 13px; flex-wrap: nowrap; overflow: hidden; }
-  .launch-req-item { font-size: 12px; white-space: nowrap; }
-  .launch-req-title { font-size: 12px; }
+  /* Compress length constraint box */
+  .length-constraint-desc { display: none; }
+  .length-constraint-header { margin-bottom: 4px; }
+  /* Hide refine preview panel — not critical at laptop size */
+  .goal-split-right { display: none; }
+  .goal-split-left { flex: 1; }
+  /* Compress launch requirements: smaller text, no wrap, truncate doc label */
+  .launch-requirements { gap: 8px; font-size: 12px; flex-wrap: nowrap; overflow: hidden; }
+  .launch-req-item { font-size: 11px; white-space: nowrap; }
+  .launch-req-title { font-size: 11px; }
+  /* Truncate the long document requirement label */
+  #req-doc { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   /* Shrink setup page 1 action buttons */
   .bee-controls-row-setup .btn-lg { font-size: 12px; padding: 7px 14px; }
 }
