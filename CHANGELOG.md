@@ -4,7 +4,22 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.9 — April 16, 2026
+
+### Fixed
+- Custom AIs imported via Import from Model Server were throwing `cfg.headersFn is not a function` on every round after a page reload. JavaScript functions cannot survive JSON serialization — when the hive is saved to localStorage and restored, `headersFn`, `bodyFn`, and `extractFn` come back as `undefined`. Added a rebuild step in `loadSettings` that detects missing functions and restores the standard OpenAI-compatible implementations, which all Alfredo/OpenWebUI models use.
+
+---
+
 ## v3.11.8 — April 16, 2026
+
+### Fixed
+- Goal textarea now scrolls correctly within its container — the notebook container scrolls, the textarea grows to content height inside it, and the line number gutter syncs its position via a scroll listener.
+- Hive bee cards on the work screen were truncating model names and hiding status text entirely at laptop viewport. Fixed hex-name from flex-shrink:0 to flex:1 so it uses available space. At laptop breakpoint (≤1600px) hex-grid switches to single column so each card has the full panel width, making names and statuses readable. Small 4px gaps restored between doc panel and side panels to fix visual asymmetry.
+
+---
+
+## v3.11.7 — April 16, 2026
 
 ### Fixed
 - Goal textarea was undersized relative to the "Refine rounds will receive" panel — the panel had a fixed wide width making it larger than the goal box itself. Changed to flex: 3 / flex: 1 ratio so the goal textarea always gets three times the horizontal space of the refine panel at all viewport sizes.

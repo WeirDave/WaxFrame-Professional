@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-018';         // build stamp — update each session
+const BUILD       = '20260416-019';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1730,6 +1730,13 @@ function loadSettings() {
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
         if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
           API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
+        }
+        // Functions don't survive JSON — rebuild them if missing
+        const cfg = API_CONFIGS[ai.provider];
+        if (cfg && typeof cfg.headersFn !== 'function') {
+          cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` });
+          cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
+          cfg.extractFn = d => d?.choices?.[0]?.message?.content || '';
         }
       });
     }
@@ -3476,12 +3483,19 @@ function updateGoalCounter() {
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // Auto-grow textarea so scrollHeight reflects full content
+  // For the goal textarea: grow to content so the notebook container scrolls
+  // For other textareas: same behaviour
   ta.style.height = 'auto';
   ta.style.height = ta.scrollHeight + 'px';
   const LINE_HEIGHT = 21;
   const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
   ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
+  // Sync gutter scroll to notebook container scroll
+  const notebook = ta.closest('.proj-notebook-goal, .proj-notebook');
+  if (notebook && !notebook._scrollWired) {
+    notebook._scrollWired = true;
+    notebook.addEventListener('scroll', () => { ln.style.transform = `translateY(-${notebook.scrollTop}px)`; });
+  }
 }
 
 function updateLineNumbers() {
