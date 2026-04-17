@@ -2071,9 +2071,12 @@ html, body {
   background: transparent;
   font-family: 'Courier New', monospace;
   font-size: 11px;
-  max-height: 400px;
+  max-height: 120px;
   overflow-y: auto;
   line-height: 1.5;
+}
+.import-server-raw-received {
+  max-height: 160px;
 }
 
 .ai-setup-key-status {
@@ -5513,4 +5516,87 @@ kbd {
   flex-shrink: 0;
   flex-wrap: wrap;
   box-sizing: border-box;
+}
+
+/* ══ IMPORT SERVER CHECKLIST OVERLAY ══ */
+.import-checklist-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100001;
+  background: var(--bg);
+  display: none;
+  flex-direction: column;
+}
+.import-checklist-overlay.active { display: flex; }
+.import-checklist-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 900px;
+  width: 100%;
+  margin: 0 auto;
+}
+.import-checklist-hdr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
+  flex-shrink: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.import-checklist-hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.import-checklist-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  white-space: nowrap;
+}
+.import-checklist-count {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+}
+.import-checklist-hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.import-checklist-close-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 13px;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.import-checklist-close-btn:hover { border-color: var(--accent); color: var(--accent); }
+.import-checklist-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+.import-checklist-items {
+  display: flex;
+  flex-direction: column;
+}
+.import-checklist-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  background: var(--surface2);
+  border-top: 1px solid var(--border2);
+  flex-shrink: 0;
 }

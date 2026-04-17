@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-012';         // build stamp — update each session
+const BUILD       = '20260416-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2627,15 +2627,16 @@ function closeImportServerModal() {
 
 function resetImportServer(full = false) {
   const status    = document.getElementById('importServerFetchStatus');
-  const checklist = document.getElementById('importServerChecklist');
   const addBtn    = document.getElementById('importServerAddBtn');
+  const selectBtn = document.getElementById('importServerSelectBtn');
   const fetchBtn  = document.getElementById('importServerFetchBtn');
   const rawPanel  = document.getElementById('importServerRawPanel');
   if (status)    { status.textContent = ''; status.className = 'custom-ai-test-status'; }
-  if (checklist) checklist.style.display = 'none';
   if (addBtn)    addBtn.style.display = 'none';
+  if (selectBtn) selectBtn.style.display = 'none';
   if (fetchBtn)  { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
   if (full && rawPanel) rawPanel.style.display = 'none';
+  closeImportChecklist();
   _importServerModels = [];
 }
 
@@ -2741,6 +2742,8 @@ async function fetchImportServerModels() {
     if (status) { status.textContent = `✓ ${models.length} model${models.length !== 1 ? 's' : ''} found`; status.className = 'custom-ai-test-status pass'; }
     fetchBtn.disabled = false; fetchBtn.textContent = 'Refresh';
     document.getElementById('importServerAddBtn').style.display = '';
+    const _selBtn = document.getElementById('importServerSelectBtn');
+    if (_selBtn) _selBtn.style.display = '';
 
   } catch(e) {
     if (status) { status.textContent = `❌ Could not reach server — CORS or network error`; status.className = 'custom-ai-test-status fail'; }
@@ -2749,13 +2752,21 @@ async function fetchImportServerModels() {
   }
 }
 
-function renderImportServerChecklist() {
-  const checklist = document.getElementById('importServerChecklist');
-  const items     = document.getElementById('importServerChecklistItems');
-  const count     = document.getElementById('importServerChecklistCount');
-  if (!checklist || !items) return;
+function openImportChecklist() {
+  const overlay = document.getElementById('importChecklistOverlay');
+  if (overlay) overlay.classList.add('active');
+  const count = document.getElementById('importChecklistCount');
+  if (count) count.textContent = `${_importServerModels.length} model${_importServerModels.length !== 1 ? 's' : ''} — select the ones to add`;
+}
 
-  if (count) count.textContent = `${_importServerModels.length} models available — check the ones you want to add:`;
+function closeImportChecklist() {
+  const overlay = document.getElementById('importChecklistOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+
+function renderImportServerChecklist() {
+  const items = document.getElementById('importServerChecklistItems');
+  if (!items) return;
 
   items.innerHTML = _importServerModels.map((model, i) => {
     const modelId   = typeof model === 'object' ? model.id   : model;
@@ -2767,8 +2778,6 @@ function renderImportServerChecklist() {
       <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
     </div>`;
   }).join('');
-
-  checklist.style.display = '';
 }
 
 function importServerSelectAll() {
@@ -2819,6 +2828,7 @@ function addImportServerModels() {
     added++;
   });
 
+  closeImportChecklist();
   closeImportServerModal();
   renderAISetupGrid();
   saveHive();

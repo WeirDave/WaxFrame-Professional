@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.3 — April 16, 2026
+
+### Fixed
+- Import from Model Server checklist was buried below a massive raw response panel with no usable scroll — on any viewport the received JSON could be 16,000+ lines tall, pushing the checklist so far down the elevator bar would skip past it entirely. The raw panel received section is now height-capped. The checklist has been moved out of the import modal entirely into its own full-screen overlay that opens after a successful fetch. Fetch the models, see the raw debug info in the modal, then click "Select & Add to Hive →" to open the full-screen checklist overlay where you can check/uncheck models with plenty of room.
+
+---
+
 ## v3.11.2 — April 16, 2026
 
 ### Fixed
