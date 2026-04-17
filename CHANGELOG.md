@@ -4,6 +4,20 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.0 — April 16, 2026
+
+### Changed
+- Hive section on work screen is now responsive. At viewport widths above 1600px the existing horizontal two-zone bee cards display unchanged. At 1600px and below (laptop/1470px) the card grid is replaced by a compact dot strip — one small circle per AI, border and glow colour reflects live state (amber = Builder, blue = sending, purple = responding, green = done, red = error). An "Edit Hive" button appears in the Hive header at laptop size, opening a simple modal to toggle AIs on and off without leaving the work screen. "Edit Hive" button is hidden at wide viewports where the toggle checkboxes are visible directly on the cards.
+- All overlay animations (smoker bee, builder station, hive finish) now scale to approximately 50% at 1600px and below so they fit the laptop viewport without being comically oversized. Builder belt block exit keyframe start/end positions scaled to match.
+- Smart icon resolver added. When rendering bee cards, dot strip, or Edit Hive modal, AI icons are matched by name/model keyword against known providers (Claude, ChatGPT/GPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, LLaMA/Meta, Cohere) and the correct local or favicon image is used. AIs that do not match any known provider and would otherwise show a generic globe icon now display a colored initial avatar — a small colored square with the first letter of the AI name, color deterministically derived from the name string.
+- `setBeeStatus` now syncs state classes to both the card grid and the dot strip simultaneously.
+
+### Fixed
+- Goal textarea now scrolls correctly — `overflow: hidden` changed to `overflow-y: auto`.
+- Refine rounds preview panel was collapsed to content height via `align-self: flex-start`, clipping text. Panel is now a flex column that fills available height with `overflow-y: auto` on the text body.
+
+---
+
 ## v3.11.9 — April 16, 2026
 
 ### Fixed

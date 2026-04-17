@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260415-001
+//  Build: 20260416-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-019';         // build stamp — update each session
+const BUILD       = '20260416-020';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3733,19 +3733,120 @@ function renderBeeStatusGrid() {
   grid.innerHTML = activeAIs.map(ai => {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
+    const iconEl = resolveAiIcon(ai, 'hex-icon');
     return `
     <div class="hex-cell ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
-      ${isB
-        ? `<span class="hex-builder-tag">BUILDER</span>`
-        : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
-            ${isOn ? 'checked' : ''}
-            onchange="toggleSessionBee('${ai.id}', this.checked)">`
-      }
-      <img src="${ai.icon}" class="hex-icon" onerror="this.style.display='none'">
-      <span class="hex-name">${ai.name}</span>
-      <span class="hex-status" id="blive-${ai.id}">Idle</span>
+      <div class="hex-cell-body">
+        ${isB
+          ? `<span class="hex-builder-tag">BUILDER</span>`
+          : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
+              ${isOn ? 'checked' : ''}
+              onchange="toggleSessionBee('${ai.id}', this.checked)">`
+        }
+        ${iconEl}
+        <span class="hex-name">${ai.name}</span>
+        <span class="hex-status" id="blive-${ai.id}">Idle</span>
+      </div>
     </div>`;
   }).join('');
+  renderBeeDotStrip();
+}
+
+// Resolve the best icon for an AI — local image if name matches a known provider,
+// colored initial avatar as fallback when the real icon would be a broken globe.
+function resolveAiIcon(ai, cssClass, size) {
+  const sz = size || 20;
+  const name = (ai.name || '').toLowerCase();
+  const model = (ai.id || '').toLowerCase();
+  const combined = name + ' ' + model;
+
+  const known = [
+    { keys: ['claude', 'anthropic'],           src: 'images/icon-claude.png' },
+    { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
+    { keys: ['gemini', 'google'],               src: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64' },
+    { keys: ['grok', 'x.ai', 'xai'],           src: 'https://www.google.com/s2/favicons?domain=grok.com&sz=64' },
+    { keys: ['deepseek'],                       src: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
+    { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
+    { keys: ['mistral'],                        src: 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=64' },
+    { keys: ['llama', 'meta'],                  src: 'https://www.google.com/s2/favicons?domain=meta.ai&sz=64' },
+    { keys: ['cohere', 'command'],              src: 'https://www.google.com/s2/favicons?domain=cohere.com&sz=64' },
+  ];
+
+  for (const entry of known) {
+    if (entry.keys.some(k => combined.includes(k))) {
+      return `<img src="${entry.src}" class="${cssClass}" width="${sz}" height="${sz}" onerror="this.replaceWith(makeAiAvatar('${ai.name}',${sz},'${cssClass}'))" alt="${ai.name}">`;
+    }
+  }
+
+  // No known match — check if the AI already has a non-globe icon URL we should try
+  if (ai.icon && !ai.icon.includes('google.com/s2/favicons')) {
+    return `<img src="${ai.icon}" class="${cssClass}" width="${sz}" height="${sz}" onerror="this.replaceWith(makeAiAvatar('${ai.name}',${sz},'${cssClass}'))" alt="${ai.name}">`;
+  }
+
+  // Fallback: colored initial avatar
+  return makeAiAvatarHTML(ai.name, sz, cssClass);
+}
+
+function makeAiAvatar(name, size, cssClass) {
+  const el = document.createElement('span');
+  el.className = (cssClass || 'hex-icon-avatar') + ' hex-icon-avatar';
+  el.style.cssText = `width:${size}px;height:${size}px;background:${avatarColor(name)};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.55)}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;`;
+  el.textContent = (name || '?')[0];
+  return el;
+}
+
+function makeAiAvatarHTML(name, size, cssClass) {
+  const color = avatarColor(name);
+  const letter = (name || '?')[0].toUpperCase();
+  const fs = Math.round(size * 0.55);
+  return `<span class="${cssClass || 'hex-icon-avatar'} hex-icon-avatar" style="width:${size}px;height:${size}px;background:${color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;">${letter}</span>`;
+}
+
+function avatarColor(name) {
+  // Deterministic color from name string
+  const palette = ['#e05c3a','#3a7de0','#9b5de5','#00b4d8','#f77f00','#06d6a0','#e63946','#457b9d','#8338ec','#fb8500'];
+  let hash = 0;
+  for (let i = 0; i < (name || '').length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return palette[Math.abs(hash) % palette.length];
+}
+
+function renderBeeDotStrip() {
+  const strip = document.getElementById('beeDotStrip');
+  if (!strip) return;
+  if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  strip.innerHTML = activeAIs.map(ai => {
+    const isB  = ai.id === builder;
+    const isOn = isB || window.sessionAIs.has(ai.id);
+    const stateClass = isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive';
+    const iconEl = resolveAiIcon(ai, 'bee-dot-img', 18);
+    return `<div class="bee-dot ${stateClass}" id="bdot-${ai.id}" title="${ai.name}">${iconEl}</div>`;
+  }).join('');
+}
+
+function openEditHive() {
+  const list = document.getElementById('editHiveList');
+  if (!list) return;
+  if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  list.innerHTML = activeAIs.map(ai => {
+    const isB  = ai.id === builder;
+    const isOn = isB || window.sessionAIs.has(ai.id);
+    const iconEl = resolveAiIcon(ai, 'edit-hive-avatar', 24);
+    return `
+    <div class="edit-hive-row${isB ? ' is-builder-row' : ''}">
+      ${iconEl}
+      <span class="edit-hive-name">${ai.name}</span>
+      ${isB
+        ? `<span class="edit-hive-tag">BUILDER</span>`
+        : `<input type="checkbox" class="edit-hive-toggle" ${isOn ? 'checked' : ''}
+             onchange="toggleSessionBee('${ai.id}', this.checked); renderBeeDotStrip();">`
+      }
+    </div>`;
+  }).join('');
+  document.getElementById('editHiveModal').classList.add('active');
+}
+
+function closeEditHive() {
+  document.getElementById('editHiveModal').classList.remove('active');
 }
 
 function toggleSessionBee(id, on) {
@@ -3764,28 +3865,33 @@ function toggleSessionBee(id, on) {
 
 function setBeeStatus(id, state, summary) {
   const card = document.getElementById('bcard-' + id);
+  const dot  = document.getElementById('bdot-' + id);
   const live = document.getElementById('blive-' + id);
-  if (!card) return;
+  if (!card && !dot) return;
 
-  card.classList.remove('is-working', 'is-sending', 'is-responding', 'is-done', 'is-error', 'is-clean');
+  const allStates = ['is-working', 'is-sending', 'is-responding', 'is-done', 'is-error', 'is-clean'];
+  if (card) card.classList.remove(...allStates);
+  if (dot)  dot.classList.remove(...allStates);
+
+  const add = cls => { if (card) card.classList.add(cls); if (dot) dot.classList.add(cls); };
 
   if (state === 'sending') {
-    card.classList.add('is-sending');
+    add('is-sending');
     if (live) live.textContent = 'Sending…';
   } else if (state === 'thinking') {
-    card.classList.add('is-responding');
+    add('is-responding');
     if (live) live.textContent = 'Reviewing…';
   } else if (state === 'streaming') {
-    card.classList.add('is-responding');
+    add('is-responding');
     if (live) live.textContent = 'Responding…';
   } else if (state === 'done') {
-    card.classList.add('is-done');
+    add('is-done');
     if (live) live.textContent = 'Done ✓';
   } else if (state === 'done-clean') {
-    card.classList.add('is-done', 'is-clean');
+    add('is-done'); add('is-clean');
     if (live) live.textContent = 'No changes needed';
   } else if (state === 'error') {
-    card.classList.add('is-error');
+    add('is-error');
     if (live) live.textContent = 'Failed';
   } else {
     if (live) live.textContent = 'Idle';

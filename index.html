@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260416-019">
+  <meta name="waxframe-build" content="20260416-020">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
         <p>Many minds. One refined result.</p>
-        <span class="welcome-version">v3.11.9 Pro</span>
+        <span class="welcome-version">v3.12.0 Pro</span>
       </div>
     </div>
     <div class="welcome-pitch">
@@ -367,10 +367,14 @@
 
         <div class="left-panel-header">
           <span class="work-section-title">The Hive <button class="goal-info-btn" onclick="document.getElementById('infoHiveModal').classList.add('active')" title="About The Hive"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-          <button class="btn" onclick="openChangeBuilder()">Change Builder</button>
+          <div class="flex-row-sm">
+            <button class="btn hive-edit-btn" onclick="openEditHive()" title="Toggle AIs on/off">Edit Hive</button>
+            <button class="btn" onclick="openChangeBuilder()">Change Builder</button>
+          </div>
         </div>
 
         <div class="hex-grid" id="beeStatusGrid"></div>
+        <div class="bee-dot-strip" id="beeDotStrip"></div>
 
         <div class="left-panel-header left-panel-section-border">
           <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
@@ -871,6 +875,18 @@
 </div>
 
 <!-- ============================================================
+     EDIT HIVE MODAL — toggle AIs on/off at laptop viewport
+     ============================================================ -->
+<div class="finish-modal-overlay" id="editHiveModal" onclick="if(event.target===this)closeEditHive()">
+  <div class="finish-modal edit-hive-modal">
+    <h2 class="finish-modal-title">🐝 Edit Hive</h2>
+    <p class="finish-modal-msg">Toggle AIs on or off for this session. AIs without a saved API key are skipped automatically.</p>
+    <div class="edit-hive-list" id="editHiveList"></div>
+    <button class="finish-modal-cancel" onclick="closeEditHive()">← Done</button>
+  </div>
+</div>
+
+<!-- ============================================================
      ROUND ERROR MODAL
      ============================================================ -->
 <div class="finish-modal-overlay" id="roundErrorModal" onclick="if(event.target===this)closeRoundErrorModal()">
@@ -953,7 +969,7 @@
   <div id="tkpRows" class="tkp-rows"></div>
 </div>
 
-<script src="app.js?v=3.11.9"></script>
+<script src="app.js?v=3.12.0"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
