@@ -1763,13 +1763,14 @@ html, body {
   /* Setup Page 2 — hide bee, tighten padding */
   .proj-left-scroll > .setup-card-bee { display: none; }
   .proj-static-top { padding: 12px 16px 6px; }
-  .proj-goal-flex { padding: 0 16px 0; }
   /* Compress length constraint box */
   .length-constraint-desc { display: none; }
   .length-constraint-header { margin-bottom: 4px; }
-  /* Hide refine preview panel — not critical at laptop size */
-  .goal-split-right { display: none; }
-  .goal-split-left { flex: 1; min-width: 0; }
+  /* Goal area: fixed height at laptop so textarea + refine panel scroll internally */
+  .proj-goal-flex { flex: none; height: 340px; overflow: hidden; padding: 0 16px 0; }
+  .goal-split-row { flex: 1; min-height: 0; }
+  .goal-split-left { flex: 3; min-width: 0; min-height: 0; }
+  .goal-split-right { flex: 1; min-width: 140px; max-width: 200px; min-height: 0; }
   /* Compress launch requirements: smaller text, no wrap, truncate doc label */
   .launch-requirements { gap: 8px; font-size: 12px; flex-wrap: nowrap; overflow: hidden; }
   .launch-req-item { font-size: 11px; white-space: nowrap; }
@@ -3228,8 +3229,7 @@ kbd {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  flex: 1;
-  min-height: 0;
+  height: 100%;
   font-family: var(--font-mono);
   font-size: 13px;
   line-height: 21px;
@@ -3238,7 +3238,6 @@ kbd {
   overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  align-self: stretch;
 }
 .proj-notebook-goal {
   display: flex;
@@ -3247,7 +3246,7 @@ kbd {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  align-items: flex-start;
+  align-items: stretch;
   font-family: var(--font-mono);
   font-size: 13px;
   width: 100%;

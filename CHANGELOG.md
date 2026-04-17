@@ -4,6 +4,14 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.3 — April 17, 2026
+
+### Fixed
+- Goal textarea and refine rounds panel now scroll correctly at laptop viewport (1470px). Root causes: `proj-goal-flex` had `flex-shrink: 0` and `overflow: visible` so it never participated in the flex height chain; `proj-notebook-goal` had `align-items: flex-start` so the textarea never stretched to fill it; `proj-goal-ta` was using `flex: 1` instead of `height: 100%` inside a non-flex-scroll context. Fixed all three. At laptop breakpoint, `proj-goal-flex` is given a fixed `340px` height so the textarea and refine panel are bounded containers that scroll internally.
+- Refine rounds panel restored at laptop viewport — it was previously hidden entirely (`display: none`) which was incorrect. Panel is now visible at a narrower `140–200px` width alongside the goal textarea at ≤1600px.
+
+---
+
 ## v3.12.2 — April 17, 2026
 
 ### Fixed
