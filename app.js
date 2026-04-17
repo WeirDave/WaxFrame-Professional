@@ -384,7 +384,7 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── STORAGE KEYS ──
-const BUILD       = '20260416-013';         // build stamp — update each session
+const BUILD       = '20260416-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2755,13 +2755,25 @@ async function fetchImportServerModels() {
 function openImportChecklist() {
   const overlay = document.getElementById('importChecklistOverlay');
   if (overlay) overlay.classList.add('active');
-  const count = document.getElementById('importChecklistCount');
-  if (count) count.textContent = `${_importServerModels.length} model${_importServerModels.length !== 1 ? 's' : ''} — select the ones to add`;
+  updateChecklistCount();
 }
 
 function closeImportChecklist() {
   const overlay = document.getElementById('importChecklistOverlay');
   if (overlay) overlay.classList.remove('active');
+}
+
+function updateChecklistCount() {
+  const checked = document.querySelectorAll('.import-server-check:checked').length;
+  const btn = document.getElementById('importChecklistAddBtn');
+  if (btn) {
+    btn.textContent = checked < 2
+      ? `Select at least 2 (${checked} selected)`
+      : `Add ${checked} to Hive`;
+    btn.disabled = checked < 2;
+  }
+  const countEl = document.getElementById('importChecklistCount');
+  if (countEl) countEl.textContent = `${_importServerModels.length} models — ${checked} selected`;
 }
 
 function renderImportServerChecklist() {
@@ -2773,19 +2785,22 @@ function renderImportServerChecklist() {
     const modelName = typeof model === 'object' ? model.name : model;
     return `
     <div class="import-server-item">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked>
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
       <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
     </div>`;
   }).join('');
+  updateChecklistCount();
 }
 
 function importServerSelectAll() {
   document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = true);
+  updateChecklistCount();
 }
 
 function importServerSelectNone() {
   document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = false);
+  updateChecklistCount();
 }
 
 function addImportServerModels() {
@@ -2796,6 +2811,7 @@ function addImportServerModels() {
 
   const checked = document.querySelectorAll('.import-server-check:checked');
   if (!checked.length) { toast('⚠️ No models selected'); return; }
+  if (checked.length < 2) { toast('⚠️ Select at least 2 models to collaborate'); return; }
 
   const ts     = Date.now();
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
