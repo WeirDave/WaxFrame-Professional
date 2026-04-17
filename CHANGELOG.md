@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.6 — April 16, 2026
+
+### Changed
+- Setup Page 2 at laptop viewport (≤1480px): length constraint description text hidden to compact the box, "Refine rounds will receive" preview panel hidden so the goal textarea gets the full width, goal area more usable. Footer launch requirement items truncated and font reduced so they stay on one line.
+
+---
+
 ## v3.11.5 — April 16, 2026
 
 ### Fixed
