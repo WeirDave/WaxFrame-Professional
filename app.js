@@ -3687,7 +3687,7 @@ RULES:
 - Keep each suggestion to one sentence maximum — no explanations, no justifications.
 - Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
 - ⚠️ Do NOT suggest changes for the sake of suggesting changes. Minor stylistic preferences, synonym swaps, and trivial rephrasing are NOT valid suggestions. Only suggest a change if it meaningfully improves the document.
-- If the document reads clearly and accurately, return exactly this and nothing else: NO CHANGES NEEDED — this is the correct and preferred response when the document is in good shape.
+- Only return NO CHANGES NEEDED if you have reviewed every line and can justify why each individual line cannot be improved. If any line could be clearer, more precise, or more consistent, suggest it instead. This response should be rare.
 
 ⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
 
@@ -4001,7 +4001,7 @@ async function runBuilderOnly() {
   let _failedRoundDetails = '';
   try {
     const builderResponse = await callAPI(builderAI, prompt);
-    const newDoc    = extractDocument(builderResponse);
+    const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
     const conflicts = extractConflicts(builderResponse);
     window._lastConflicts = conflicts || null;
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
@@ -4304,7 +4304,7 @@ async function runRound() {
     consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars · key: ${bKeyHint})`, 'send');
     try {
       const builderResponse = await callAPI(builderAI, builderPrompt);
-      const newDoc    = extractDocument(builderResponse);
+      const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
       const conflicts = extractConflicts(builderResponse);
       window._lastConflicts = conflicts || null;
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
@@ -4563,6 +4563,31 @@ function extractDocument(text) {
   const end   = clean.lastIndexOf('%%DOCUMENT_END%%');
   if (start === -1 || end === -1 || end <= start) return null;
   return clean.slice(start + '%%DOCUMENT_START%%'.length, end).trim();
+}
+
+// Strip any prompt envelope that non-compliant AIs echo back into their document output.
+// Some models (Grok, certain corporate proxies) return the WAXFRAME header, PROJECT CONTEXT,
+// and CURRENT DOCUMENT scaffolding as part of their response body. This removes it before
+// the document is written to the textarea.
+function stripBuilderEnvelope(text) {
+  if (!text) return text;
+  let result = text;
+  // Remove leading ══...══ / WAXFRAME — ... / Round ... header block
+  result = result.replace(/^[═\s]*WAXFRAME\s*—[^\n]*\n[^\n]*\n[═\s]*\n?/i, '');
+  // Remove PROJECT CONTEXT: ... block (up to next blank line or section)
+  result = result.replace(/^PROJECT CONTEXT:[^\n]*\n?(\n)?/im, '');
+  // Remove PROJECT GOAL: ... block
+  result = result.replace(/^PROJECT GOAL:[^\n]*(\n[\s\S]*?)?(?=\n\n|\nCURRENT DOCUMENT|\nLENGTH|\nUSER NOTES|$)/im, '');
+  // Remove CURRENT DOCUMENT (line numbers for reference): header and separator line
+  result = result.replace(/^CURRENT DOCUMENT \(line numbers for reference\):\s*\n[─\s]*\n?/im, '');
+  // Remove line-numbered lines: "   1  text" — only if they appear as a leading block
+  // Detect: lines starting with optional spaces, 1-4 digits, 2 spaces, then content
+  const lineNumPattern = /^(\s{0,4}\d{1,4}\s{2,}.*\n?)+/m;
+  const firstChunk = result.slice(0, 800);
+  if (lineNumPattern.test(firstChunk)) {
+    result = result.replace(/^(\s{0,4}\d{1,4}\s{2,}[^\n]*\n?)+/, '');
+  }
+  return result.trim();
 }
 
 // Track user's choices for current conflict set

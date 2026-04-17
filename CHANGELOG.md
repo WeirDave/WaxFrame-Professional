@@ -4,6 +4,19 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.10 — April 16, 2026
+
+### Fixed
+- Honeycomb background was invisible on the work screen because style.css referenced stale filenames (AI_Hive_Honeycomb_BG_Dark.png / AI_Hive_Honeycomb_BG_Light.png). Updated all three references to the correct filenames (WaxFrame_Honeycomb_BG_Dark.png / WaxFrame_Honeycomb_BG_Light.png).
+- Builder AI output is now sanitized before being written to the working document textarea. Non-compliant models (Grok, certain corporate proxy endpoints) were echoing the WAXFRAME prompt envelope — header, PROJECT CONTEXT block, CURRENT DOCUMENT label, and line-numbered scaffolding — back into the document body. New stripBuilderEnvelope() function strips these patterns after extractDocument() in both Builder code paths.
+
+### Changed
+- NO CHANGES NEEDED reviewer threshold tightened. Previously the refine reviewer prompt invited AIs to return NO CHANGES NEEDED whenever the document "reads clearly and accurately," causing gpt-4o and similar models to converge prematurely. Replaced with a stricter requirement: reviewers must justify why every individual line cannot be improved before returning this response.
+- Dual clock redesign: the two separate ROUND and PROJECT clock widgets have been replaced with a single unified dual-face clock widget (dual-clock-widget). Both faces share one bezel — ROUND on the left with green running state, PROJECT on the right with amber running state and play/pause controls. More compact, cleaner at all viewport sizes.
+- Responsive layout overhaul: work-main grid now uses minmax() column definitions so side panels compress gracefully as viewport shrinks. Doc panel remains fixed at 80ch at all sizes. Breakpoints at 1700px, 1500px, and 1480px progressively compress the right panel logo and clock digits. Supports full range from 1470px laptop to 5120px ultrawide.
+
+---
+
 ## v3.9 — April 16, 2026
 
 ### Added
