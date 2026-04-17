@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.5 — April 16, 2026
+
+### Fixed
+- Setup Page 2 left column still not scrolling — root cause was `proj-left-main` missing `flex: 1; min-height: 0`, so it was growing to fit its content instead of being height-constrained by its parent. Fixed. Also hid the bee image on the project page at laptop viewport (≤1480px) to recover the vertical space it was consuming, and tightened column padding.
+
+---
+
 ## v3.11.4 — April 16, 2026
 
 ### Fixed
