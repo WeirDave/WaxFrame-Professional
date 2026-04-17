@@ -201,6 +201,17 @@
             <div class="goal-counter-row">
               <h3 class="proj-goal-heading">Project Goal</h3>
               <span id="goalCounter" class="goal-counter-text"></span>
+              <button class="btn btn-sm refine-preview-btn" id="refinePreviewBtn" onclick="toggleRefinePopover()" style="display:none" title="Preview what refine rounds will receive">▸ Refine Preview</button>
+            </div>
+            <div class="refine-popover" id="refinePopover" style="display:none">
+              <div class="refine-popover-hdr">
+                <span class="goal-refine-preview-label">Refine rounds will receive</span>
+                <span id="refinePopoverCount" class="goal-refine-preview-count"></span>
+                <button class="refine-popover-close" onclick="toggleRefinePopover()">✕</button>
+              </div>
+              <p class="goal-refine-preview-sub" id="refinePopoverSub"></p>
+              <div id="refinePopoverText" class="goal-refine-preview-text"></div>
+              <div id="refinePopoverEmpty" class="goal-refine-preview-empty">Your goal is under 300 chars — the full text will be sent each refine round.</div>
             </div>
           </div>
 

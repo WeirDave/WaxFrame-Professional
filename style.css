@@ -1762,15 +1762,16 @@ html, body {
   .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
   /* Setup Page 2 — hide bee, tighten padding */
   .proj-left-scroll > .setup-card-bee { display: none; }
-  .proj-static-top { padding: 12px 16px 6px; }
+  .proj-static-top { padding: 10px 8px 6px; }
   /* Compress length constraint box */
   .length-constraint-desc { display: none; }
   .length-constraint-header { margin-bottom: 4px; }
-  /* Goal area: fixed height at laptop so textarea + refine panel scroll internally */
-  .proj-goal-flex { flex: none; height: 340px; overflow: hidden; padding: 0 16px 0; }
+  /* Goal area: fixed height at laptop — full width, refine panel replaced by button+popover */
+  .proj-goal-flex { flex: none; height: 380px; overflow: hidden; padding: 0 8px 0; }
   .goal-split-row { flex: 1; min-height: 0; }
-  .goal-split-left { flex: 3; min-width: 0; min-height: 0; }
-  .goal-split-right { flex: 1; min-width: 140px; max-width: 200px; min-height: 0; }
+  .goal-split-left { flex: 1; min-width: 0; min-height: 0; }
+  .goal-split-right { display: none; }
+  .refine-preview-btn { display: flex !important; }
   /* Compress launch requirements: smaller text, no wrap, truncate doc label */
   .launch-requirements { gap: 8px; font-size: 12px; flex-wrap: nowrap; overflow: hidden; }
   .launch-req-item { font-size: 11px; white-space: nowrap; }
@@ -3205,11 +3206,12 @@ kbd {
 .proj-ta-editor::-webkit-scrollbar-track { background: transparent; }
 .proj-ta-editor::-webkit-scrollbar-thumb { background: rgba(120,120,140,0.55); border-radius: 8px; }
 
-/* Inner row — grows to content height, carries notebook paper background */
+/* Inner row — grows to content height and full width, carries notebook paper background */
 .proj-ta-scroll {
   display: flex;
   align-items: flex-start;
   min-height: 100%;
+  width: 100%;
   background-color: var(--surface);
   background-image:
     linear-gradient(to right, transparent 44px, rgba(220,50,50,0.25) 44px, rgba(220,50,50,0.25) 46px, transparent 46px),
@@ -3249,23 +3251,21 @@ kbd {
 .proj-ta-nums::-webkit-scrollbar { display: none; }
 .proj-ta-nums div { height: 21px; line-height: 21px; font-size: 13px; box-sizing: border-box; flex-shrink: 0; padding-right: 6px; }
 
-/* Inner wrapper — sizes the textarea to 80ch, no scrolling here */
+/* Inner wrapper — fills available width, no scrolling here */
 .proj-ta-inner {
-  flex: 0 0 auto;
+  flex: 1;
+  min-width: 0;
   position: relative;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   background: transparent;
   box-sizing: border-box;
-  width: calc(80ch + 8px + 12px);
 }
 
-/* Textarea — grows to content, overflow hidden so editor scrolls */
+/* Textarea — grows to content, fills full width of inner wrapper */
 .proj-ta {
   display: block;
-  width: calc(80ch + 8px + 12px);
-  min-width: calc(80ch + 8px + 12px);
-  max-width: calc(80ch + 8px + 12px);
+  width: 100%;
   height: auto;
   min-height: 0;
   margin: 0;
@@ -5407,7 +5407,42 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: rgba(245,166,35,0.4) transparent;
 }
-/* ── Inline style replacements ── */
+/* ── LAPTOP REFINE PREVIEW BUTTON + POPOVER ── */
+.refine-preview-btn {
+  font-size: 11px;
+  padding: 3px 10px;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.refine-preview-btn:hover { background: var(--accent); color: #000; }
+.refine-popover {
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  margin-bottom: 8px;
+  flex-shrink: 0;
+}
+.refine-popover-hdr {
+  background: var(--accent-dim);
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.refine-popover-close {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 0 2px;
+  line-height: 1;
+}
+.refine-popover-close:hover { color: var(--text); }
 .goal-modal-textarea:focus  { border-color: var(--accent); }
 .goal-modal-refine-wrap     { margin-top: 10px; }
 .text-green                 { color: #00b300; }
@@ -5840,8 +5875,14 @@ kbd {
   }
   /* Ensure left scroll column scrolls visibly */
   .fs-col-scroll {
-    padding: 14px 20px 24px;
+    padding: 10px 8px 24px;
   }
+  /* Tighten fs-body outer padding so both columns have room for 80ch textareas */
+  .fs-body { padding: 0 4px; }
+  /* Shrink divider between columns */
+  .fs-divider { width: 8px; }
+  /* Tighten right column scroll padding */
+  .proj-right-scroll { padding: 10px 8px 24px; }
 }
 
 /* ══ AI SETUP ROW — model-select alignment fix ══ */
