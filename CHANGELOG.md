@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.1 — April 16, 2026
+
+### Fixed
+- Syntax error in the AI setup row template literal caused by double-escaped backslashes (`\\'`) introduced during the v3.11 row restructure. Prevented `app.js` from parsing entirely — no buttons, menus, or interactions worked on load. Corrected to single-level escapes and verified clean.
+
+---
+
 ## v3.11 — April 16, 2026
 
 ### Fixed
