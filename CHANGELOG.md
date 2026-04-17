@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.11.8 — April 16, 2026
+
+### Fixed
+- Goal textarea was undersized relative to the "Refine rounds will receive" panel — the panel had a fixed wide width making it larger than the goal box itself. Changed to flex: 3 / flex: 1 ratio so the goal textarea always gets three times the horizontal space of the refine panel at all viewport sizes.
+
+---
+
 ## v3.11.6 — April 16, 2026
 
 ### Changed
