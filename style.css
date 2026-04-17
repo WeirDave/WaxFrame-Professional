@@ -1537,10 +1537,10 @@ html, body {
   .dcw-label-top { font-size: 9px; }
   .dcw-label-bot { font-size: 9px; }
   .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
-  /* Setup Page 2 — make left column scrollable */
-  .proj-left-main { overflow-y: auto; }
-  .proj-static-top { padding: 14px 20px 8px; }
-  .proj-goal-flex { padding: 0 20px 0; }
+  /* Setup Page 2 — hide bee to recover vertical space, tighten padding */
+  .proj-left-scroll > .setup-card-bee { display: none; }
+  .proj-static-top { padding: 12px 16px 6px; }
+  .proj-goal-flex { padding: 0 16px 0; }
   /* Compress launch requirements to one line */
   .launch-requirements { gap: 10px; font-size: 13px; flex-wrap: nowrap; overflow: hidden; }
   .launch-req-item { font-size: 12px; white-space: nowrap; }
@@ -5018,6 +5018,17 @@ kbd {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
+}
+.proj-left-scroll {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
 }
 .proj-static-top {
   flex-shrink: 0;
