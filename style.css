@@ -773,6 +773,8 @@ html, body {
 #panel-paste .proj-ta-editor {
   flex: none;
   height: 420px;
+  width: calc(44px + 80ch + 20px);
+  max-width: calc(44px + 80ch + 20px);
 }
 
 /* ── Drop zone ── */
@@ -3181,7 +3183,9 @@ kbd {
   margin-bottom: 16px;
 }
 /* Setup page 1 action buttons — cap at normal btn size regardless of btn-lg class */
-.bee-controls-row-setup .btn { font-size: 13px; padding: 7px 14px; }
+@media (min-width: 1601px) {
+  .bee-controls-row-setup .btn { font-size: 13px; padding: 7px 14px; }
+}
 /* ── Footer ── */
 .fs-footer {
   display: grid;
@@ -5950,11 +5954,15 @@ kbd {
     padding: 10px 8px 24px;
   }
   /* Tighten fs-body outer padding so both columns have room for 80ch textareas */
-  .fs-body { padding: 0; }
-  /* Shrink divider between columns */
-  .fs-divider { width: 4px; }
+  .fs-body { padding: 0 4px; }
+  /* No gutter between columns at laptop — columns fill the space */
+  .fs-divider { width: 0; }
+  /* Small inner padding so fs-col-main border breathes from column edges */
+  .fs-col { padding: 4px; }
   /* Tighten right column scroll padding */
   .proj-right-scroll { padding: 10px 8px 24px; }
+  /* Paste panel: release fixed width at laptop — fill column, internal scroll only */
+  #panel-paste .proj-ta-editor { width: 100%; max-width: 100%; }
 }
 
 /* ══ AI SETUP ROW — model-select alignment fix ══ */

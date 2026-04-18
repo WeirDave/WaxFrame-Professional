@@ -7,10 +7,9 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **Paste-panel textarea horizontal scroll (laptop)** — `#panel-paste .proj-ta-editor` had a fixed `width: calc(44px + 80ch + 20px)` and matching `max-width`, causing the editor element to be wider than its flex column at laptop viewports and triggering unwanted column-level horizontal scroll. Removed both properties; width is now dictated by the flex container, matching the same scroll-inside-editor behaviour as the working document panel.
-- **Setup screen column gutter (laptop)** — Reduced `.fs-body` outer padding from `0 4px` to `0` and `.fs-divider` from `8px` to `4px` at ≤1600px, giving each column an additional ~6px of room so 80ch textareas clear their containers without clipping.
-- **Setup page 1 action buttons oversized** — Buttons in `.bee-controls-row-setup` carry the `.btn-lg` class but should render at normal button size. Added a desktop override (`font-size: 13px; padding: 7px 14px`) and tightened the existing laptop override to `font-size: 11px; padding: 5px 10px`. Only sizing properties changed.
-- **Builder hex-cell card visual parity (desktop work screen)** — Removed the amber `border-color`, `box-shadow`, `::before` strip colour, and `hex-status` colour overrides from `.hex-cell.is-builder`. The Builder card is now visually identical to all other cards at rest; the `BUILDER` badge tag is the sole differentiator. The laptop dot-strip amber builder dot is unchanged.
+- **Laptop buttons still oversized (cascade bug)** — The desktop `.bee-controls-row-setup .btn` override (13px / 7px 14px) was declared after the laptop override (11px / 5px 10px) in the file, so at ≤1600px both rules had equal specificity and the desktop rule won by cascade order regardless of media query. Wrapped the desktop rule in `@media (min-width: 1601px)` so the rules are now mutually exclusive.
+- **Paste panel too wide at desktop** — Restoring the fixed `width: calc(44px + 80ch + 20px)` and `max-width` on `#panel-paste .proj-ta-editor` that was removed in the previous round, which caused the editor to expand to the full right column width. Added a laptop override (`width: 100%; max-width: 100%`) so at ≤1600px the paste panel fills its column and scrolls internally.
+- **Laptop column gutter and card breathing room** — Divider reduced to 0 (no gutter when space is tight), `.fs-body` padding restored to `0 4px` for outer edge breathing room, and `padding: 4px` added to `.fs-col` at ≤1600px so each column's inner card (`fs-col-main` border) has visible breathing room from the column edge, matching the visual treatment of the starting document column.
 
 ---
 
