@@ -5437,7 +5437,7 @@ kbd {
 }
 .proj-static-top {
   flex-shrink: 0;
-  padding: 20px 28px 12px;
+  padding: 10px 0 6px;
 }
 .proj-static-top .fs-col-header { margin-bottom: 12px; }
 .proj-static-top .project-fields { margin-top: 10px; margin-bottom: 8px; }
@@ -5448,7 +5448,7 @@ kbd {
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 0 28px 0;
+  padding: 0;
 }
 
 /* ── Goal split layout ── */
@@ -5460,7 +5460,8 @@ kbd {
   min-height: 0;
 }
 .goal-split-left {
-  flex: 0 0 calc(44px + 80ch + 8px + 12px + 32px);
+  flex: 1;
+  min-width: 0;
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5471,6 +5472,12 @@ kbd {
   display: flex;
   flex-direction: column;
   min-height: 0;
+}
+/* Desktop-only: restore side padding and pin goal-split-left to working-doc width */
+@media (min-width: 1601px) {
+  .proj-static-top { padding: 20px 28px 12px; }
+  .proj-goal-flex { padding: 0 28px 0; }
+  .goal-split-left { flex: 0 0 calc(44px + 80ch + 8px + 12px + 32px); }
 }
 .goal-refine-preview-panel {
   border: 1px solid var(--accent);
