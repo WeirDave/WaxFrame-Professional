@@ -769,13 +769,13 @@ html, body {
 
 .doc-tab-panel { display: none; }
 .doc-tab-panel.active { display: block; }
-/* Paste panel: give the editor a fixed height so it scrolls internally, not the column */
+/* Paste panel: fill column height; width = working doc formula */
 #panel-paste .proj-ta-editor {
   flex: 1;
   height: auto;
   min-height: 0;
-  width: calc(44px + 80ch + 20px);
-  max-width: calc(44px + 80ch + 20px);
+  width: calc(44px + 80ch + 8px + 12px + 32px);
+  max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
 
 /* ── Drop zone ── */
@@ -3263,6 +3263,8 @@ kbd {
   background: var(--surface);
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
 }
 .proj-ta-editor::-webkit-scrollbar { width: 8px; }
 .proj-ta-editor::-webkit-scrollbar-track { background: transparent; }
@@ -5477,7 +5479,11 @@ kbd {
 @media (min-width: 1601px) {
   .proj-static-top { padding: 20px 28px 12px; }
   .proj-goal-flex { padding: 0 28px 0; }
-  .goal-split-left { flex: 0 0 calc(44px + 80ch + 8px + 12px + 32px); }
+  .goal-split-left {
+    flex: 0 0 calc(44px + 80ch + 8px + 12px + 32px);
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 13px;
+  }
 }
 .goal-refine-preview-panel {
   border: 1px solid var(--accent);
