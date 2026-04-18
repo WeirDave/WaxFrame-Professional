@@ -4,7 +4,26 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.13.3 — April 17, 2026
+## v3.14.0 — April 18, 2026
+
+### Added
+- **Pulsing watermark logo** — WaxFrame logo fades in and out (opacity 0 → 0.18, 6s cycle) in the dead space to the right of the fixed-width paste textarea on the Starting Document panel. Appears on all three tab panels (Upload File, Paste Text, Start from Scratch) at desktop viewport. Hidden at laptop where the textarea fills the full column.
+- **Export filename info button** — Wired the existing (but unreachable) `infoExportMaskModal` to a new ⓘ button in the export mask row. Users can now tap it to learn that `{name}` and `{version}` are the two supported tokens, with a live example.
+
+### Fixed
+- **All three text areas now identical width — `ch` unit font mismatch** — The working document panel has `font-family: 'Courier New'` set so `80ch` resolves to Courier New character widths. `proj-ta-editor` had no font set, so `ch` resolved against DM Sans, making the goal and paste boxes significantly wider than the working doc. Added `font-family: 'Courier New', Courier, monospace; font-size: 13px` to `.proj-ta-editor` base rule and to `goal-split-left` in the desktop `@media (min-width: 1601px)` block. Updated paste panel width formula to `calc(44px + 80ch + 8px + 12px + 32px)` — identical to the working document panel.
+- **Setup page 2 desktop — paste/upload/scratch panels fill right column height** — Added flex column chain through `proj-right-scroll`, `.proj-right-scroll > .doc-tab-panel.active`, and each panel. Resolved a specificity bug where `#panel-paste { display: flex }` (ID selector, [1,0,0]) overrode `.doc-tab-panel { display: none }` ([0,1,0]), causing the paste panel and its watermark to always render. Removed `display` from the `#panel-paste` ID rule entirely — class-based show/hide now has full control.
+- **Upload File and Start from Scratch panels** — Drop zone and scratch notebook now match the paste textarea's exact `calc(44px + 80ch + 8px + 12px + 32px)` width (using matching `font-family: 'Courier New'` for correct `ch` resolution) and fill column height via `flex: 1`. Width constraints released to `100%` at laptop.
+- **Setup page 2 laptop — evenly spaced columns, correct padding** — Collapsed the 32px phantom grid track (`grid-template-columns: 1fr 0px 1fr`); added `proj-left-scroll { padding: 0 8px }` mirroring `proj-right-scroll`; fixed multiple cascade ordering bugs where desktop base rules at line ~5440 silently overrode laptop overrides at line ~1808 for `proj-static-top`, `proj-goal-flex`, and `goal-split-left`.
+- **Setup page 2 desktop — goal textarea and paste textarea match working document width** — `goal-split-left` flex-basis uses `calc(44px + 80ch + 8px + 12px + 32px)` with Courier New font. `proj-right-scroll` is a flex column so paste panel fills height at desktop, reverts to fixed `420px` at laptop.
+- **Setup page 1 action buttons — correct sizing at both viewports** — Desktop buttons capped at normal size via `@media (min-width: 1601px)`. Laptop buttons tightened to `11px / 3px 9px`. Fixed cascade ordering bug where the desktop rule at line ~3184 appeared after the laptop rule at line ~1822, causing desktop size to win at all viewports. API Key Guide icon hidden at laptop via CSS.
+- **Builder hex-cell card visual parity (desktop)** — Removed amber `border-color`, `box-shadow`, `::before` strip, and `hex-status` colour from `.hex-cell.is-builder`. The `BUILDER` badge tag is now the sole visual differentiator. Laptop dot-strip amber builder dot unchanged.
+- **Desktop main content container corners** — Removed `border-radius: var(--radius-md)` from `.fs-col`. Cards are now square-cornered at desktop, matching laptop. Tip cards retain their own border-radius.
+- **Info modals — pill labels clipping and modal too narrow** — Removed `width: 56px` from `.info-label` (was clipping "Start from Scratch", "Builder Decision", "How Rounds Work", etc.). Widened `.finish-modal.goal-info-modal` to `max-width: 900px`, `max-height: 92vh`, `padding: 28px 36px`. Fixed another cascade ordering bug — `.finish-modal { max-width: 600px }` at line 4490 was overriding `.goal-info-modal { max-width: 900px }` at line 2681. Resolved by changing to compound selector `.finish-modal.goal-info-modal` (specificity [0,2,0]).
+
+---
+
+
 
 ### Fixed
 - **Laptop setup page 2: left column internal padding mirrors right column** — Replaced piecemeal `proj-static-top` and `proj-goal-flex` horizontal overrides with a single `proj-left-scroll { padding: 0 8px }` at ≤1600px, mirroring exactly how `proj-right-scroll { padding: 10px 8px 24px }` applies uniform spacing on the right. Both columns now get their 8px side margins from the same pattern (scroll-container padding). Individual horizontal padding removed from `proj-static-top` and `proj-goal-flex` to prevent double-padding.
