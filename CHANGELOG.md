@@ -4,6 +4,16 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.12.8 — April 17, 2026
+
+### Changed
+- Version number now displays dynamically across all pages. `APP_VERSION` in `app.js` is the single source of truth — change it once and it propagates everywhere automatically.
+- In `index.html`: all four screens (Welcome, Setup Step 1, Setup Step 2, Work) now show the version via `.app-version-stamp` spans populated by JavaScript on load. The browser tab title also updates to match.
+- In all helper pages (`api-details.html`, `what-are-tokens.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `prompt-editor.html`): version stamp added to the page footer via a small inline script, since these pages do not load `app.js`.
+- `style.css`: `.welcome-version` renamed to `.app-version-stamp` with context variants for the step badge inline display, work topbar, and helper page footer. Added `.page-footer-right` and `.page-footer-left` layout classes to support the new footer structure on helper pages.
+
+---
+
 ## v3.12.7 — April 17, 2026
 
 ### Changed

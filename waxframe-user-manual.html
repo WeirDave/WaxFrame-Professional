@@ -680,9 +680,18 @@
     <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
     <button class="btn btn-accent" onclick="window.print()" title="Save as PDF via your browser's print dialog">⬇ Save as PDF</button>
   </div>
-  <button class="btn" onclick="window.close()">✕ Close this tab</button>
+  <div class="page-footer-right">
+    <button class="btn" onclick="window.close()">✕ Close this tab</button>
+    <span class="app-version-stamp helper-version-stamp"></span>
+  </div>
 </div>
 
 <script src="theme.js"></script>
+<script>
+  (function() {
+    const v = 'v3.12.8 Pro';
+    document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = v; });
+  })();
+</script>
 </body>
 </html>
