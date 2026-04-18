@@ -4,7 +4,16 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.13.2 — April 17, 2026
+## v3.13.3 — April 17, 2026
+
+### Fixed
+- **Project screen textarea widths on full desktop** — On wide monitors the goal textarea and paste-text textarea were expanding to fill their entire flex columns instead of staying at 80ch. Root cause: `.goal-split-left` was `flex: 3` in a `1fr` half-screen column, giving ~700px+ on 1920px displays, and the `.goal-split-left .proj-ta-inner` / `.proj-ta` overrides set `width: 100%` to match. Fixed by pinning `.goal-split-left` to `flex: 0 0 calc(44px + 80ch + 20px)` (exact editor width), reverting the textarea overrides back to the base 80ch fixed values, and adding `width` + `max-width` to `#panel-paste .proj-ta-editor` for the same constraint on the paste tab.
+- **Refine rounds panel now fills available space** — `.goal-split-right` had `max-width: 240px` which capped the refine panel even on large screens where it should absorb all remaining horizontal space. Removed the cap so `flex: 1` correctly takes everything to the right of the 80ch goal editor.
+- **Refine preview button display rule** — Moved `display: none` from the inline `style` attribute on `#refinePreviewBtn` into the CSS base rule for `.refine-preview-btn`. Behaviour is unchanged (hidden on desktop, shown via `!important` in the ≤1600px media query), but the HTML is now cleaner.
+
+---
+
+
 
 ### Fixed
 - **Light mode white artifact** — Removed `border-radius` from `.fs-col-main`. The outer `.fs-col` already clips children at the same radius via `overflow: hidden`, so both elements having `border-radius: 14px` created a double-rounding effect where a thin white slice of `fs-col-main`'s background was visible against the slightly different `surface2` background in light mode. Dark mode was unaffected because the contrast between `surface` and `surface2` is negligible in dark.
