@@ -3224,13 +3224,17 @@ kbd {
 }
 /* Paste panel — display/flex handled by doc-tab-panel class rules above.
    Only non-display properties here so the class-based show/hide keeps control. */
-#panel-paste {
+#panel-paste,
+#panel-upload,
+#panel-scratch {
   position: relative;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
 }
-/* Pulsing logo watermark in dead space right of paste editor (desktop only) */
-#panel-paste::after {
+/* Pulsing logo watermark in dead space right of content (desktop only) */
+#panel-paste::after,
+#panel-upload::after,
+#panel-scratch::after {
   content: '';
   position: absolute;
   top: 0;
@@ -6038,7 +6042,7 @@ kbd {
   .proj-static-top { padding: 10px 0 6px; }
   .proj-goal-flex { padding: 0; }
   /* Restore fixed height paste panel and release fixed width at laptop */
-  #panel-paste::after { display: none; }
+  #panel-paste::after, #panel-upload::after, #panel-scratch::after { display: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
   /* Release upload/scratch width constraints at laptop — fill the column */
   #panel-upload .drop-zone { width: 100%; max-width: 100%; }
