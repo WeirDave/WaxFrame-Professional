@@ -5991,9 +5991,10 @@ kbd {
   .fs-col { padding: 4px; }
   /* Tighten right column scroll padding */
   .proj-right-scroll { display: block; overflow-y: auto; padding: 10px 8px 24px; }
-  /* Left column content padding — matches right column's proj-right-scroll 8px sides */
-  .proj-static-top { padding: 10px 8px 6px; }
-  .proj-goal-flex { padding: 0 8px; }
+  /* Left column: uniform 8px side padding via scroll container — mirrors right column treatment */
+  .proj-left-scroll { padding: 0 8px; }
+  .proj-static-top { padding: 10px 0 6px; }
+  .proj-goal-flex { padding: 0; }
   /* Restore fixed height paste panel and release fixed width at laptop */
   #panel-paste { display: block; flex: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }

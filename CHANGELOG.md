@@ -7,6 +7,13 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
+- **Laptop setup page 2: left column internal padding mirrors right column** — Replaced piecemeal `proj-static-top` and `proj-goal-flex` horizontal overrides with a single `proj-left-scroll { padding: 0 8px }` at ≤1600px, mirroring exactly how `proj-right-scroll { padding: 10px 8px 24px }` applies uniform spacing on the right. Both columns now get their 8px side margins from the same pattern (scroll-container padding). Individual horizontal padding removed from `proj-static-top` and `proj-goal-flex` to prevent double-padding.
+
+---
+
+## v3.13.3 — April 17, 2026
+
+### Fixed
 - **Laptop setup page 2: left column content flush to edges** — `proj-static-top { padding: 10px 8px 6px }` and `proj-goal-flex { padding: 0 8px }` were in the first `@media (max-width: 1600px)` block (~line 1808) but the base rules for those selectors are at ~line 5440. Same cascade ordering bug as buttons and goal-split — base rule came later so it won, giving the left column zero horizontal padding. Added both overrides to the late laptop block (line ~5993) which comes after all base rules and correctly wins. Also restored `fs-col { padding: 4px }` (all sides) so column card borders have visible breathing room on all edges; Courier New ch math confirms 80ch + gutter = 688px which is comfortably under the 707px available content area, so no overflow risk.
 
 ---
