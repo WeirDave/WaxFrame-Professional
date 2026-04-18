@@ -2679,7 +2679,7 @@ kbd {
 .goal-info-btn-img { width: 28px; height: 28px; display: block; flex-shrink: 0; opacity: 0.9; }
 .goal-info-btn:hover { opacity: 1; }
 .goal-info-modal {
-  max-width: 520px;
+  max-width: 680px;
   text-align: left;
   max-height: 85vh;
   overflow-y: auto;
@@ -2712,11 +2712,10 @@ kbd {
 .info-label {
   font-size: 10px;
   font-weight: 800;
-  padding: 3px 8px;
+  padding: 3px 10px;
   border-radius: 20px;
   white-space: nowrap;
   flex-shrink: 0;
-  width: 56px;
   text-align: center;
   margin-top: 1px;
   letter-spacing: 0.04em;
