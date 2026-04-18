@@ -7,7 +7,7 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **Your Project page: 28px left margin and right-side clipping at laptop (cascade bug)** — The desktop rules for `.proj-static-top` (padding: 20px 28px 12px), `.proj-goal-flex` (padding: 0 28px 0), and `.goal-split-left` (flex: 0 0 fixed-width) were all declared after their laptop overrides in the file. At ≤1600px, equal specificity meant the desktop rules won by cascade position, completely nullifying the laptop overrides. Fixed by making the base rules use laptop-safe values (no horizontal padding, `flex: 1` on goal-split-left) and moving the desktop-specific padding and fixed width into a `@media (min-width: 1601px)` block. Existing laptop overrides in the ≤1600px block remain as harmless redundancy.
+- **Laptop setup page 2: 32px phantom middle gap and uneven column padding** — `.fs-divider { width: 0 }` zeroed the element but the grid track was still declared as `32px` in `fs-body`'s `grid-template-columns: 1fr 32px 1fr`, so each content column was only getting `(available − 32px) / 2` width and a 32px dead zone sat between them. Fixed by adding `grid-template-columns: 1fr 0px 1fr` to the `fs-body` laptop override, collapsing the divider track entirely. Also added symmetric `8px` horizontal padding to `proj-static-top` (`10px 8px 6px`) and `proj-goal-flex` (`0 8px`) at ≤1600px so the left column content has the same breathing room as the right column's `proj-right-scroll` padding.
 
 ---
 
