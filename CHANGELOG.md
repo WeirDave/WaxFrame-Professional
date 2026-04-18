@@ -4,13 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.12.8 — April 17, 2026
+## v3.12.9 — April 17, 2026
 
 ### Changed
-- Version number now displays dynamically across all pages. `APP_VERSION` in `app.js` is the single source of truth — change it once and it propagates everywhere automatically.
-- In `index.html`: all four screens (Welcome, Setup Step 1, Setup Step 2, Work) now show the version via `.app-version-stamp` spans populated by JavaScript on load. The browser tab title also updates to match.
-- In all helper pages (`api-details.html`, `what-are-tokens.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `prompt-editor.html`): version stamp added to the page footer via a small inline script, since these pages do not load `app.js`.
-- `style.css`: `.welcome-version` renamed to `.app-version-stamp` with context variants for the step badge inline display, work topbar, and helper page footer. Added `.page-footer-right` and `.page-footer-left` layout classes to support the new footer structure on helper pages.
+- `version.js` added as the single source of truth for `APP_VERSION`. All pages now load this file — `index.html` loads it before `app.js`, and each helper page loads it at the bottom and runs a one-liner stamp loop. To update the version number across the entire app, change one line in `version.js` and commit. Nothing else needs to touch the version string.
+- Version stamp now appears on all four screens in `index.html` (Welcome, Setup Step 1, Setup Step 2, Work topbar) and in the footer of all five helper pages (`api-details.html`, `what-are-tokens.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `prompt-editor.html`).
+- `APP_VERSION` removed from `app.js` — it is now sourced from `version.js`.
+- `style.css`: `.welcome-version` renamed to `.app-version-stamp`. Added `.page-footer-right`, `.page-footer-left`, `.helper-version-stamp`, and `.work-version-stamp` CSS classes. Helper page footers restructured to support the right-aligned version stamp layout.
 
 ---
 

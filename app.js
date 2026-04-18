@@ -384,8 +384,8 @@ let docTab    = 'upload';
 let workDocSaveTimer = null;
 
 // ── VERSION ──
-const APP_VERSION = 'v3.12.8 Pro';          // human-readable version — bump on release only
-const BUILD       = '20260417-003';         // build stamp — update each session
+// APP_VERSION lives in version.js — loaded before app.js on every page.
+const BUILD       = '20260417-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5938,7 +5938,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
   initMuteBtn();
-  // Stamp version and build number into UI — targets all .app-version-stamp elements
+  // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);
   document.title = 'WaxFrame ' + APP_VERSION;
   const buildEl = document.getElementById('aboutBuild');
