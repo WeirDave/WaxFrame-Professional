@@ -7,7 +7,11 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **All three text areas now identical width — ch unit font mismatch** — The working document panel has `font-family: 'Courier New'` on it so `80ch` resolves to Courier New character widths. `proj-ta-editor` had no font set, so `ch` resolved against DM Sans making both the goal and paste boxes wider than the working doc. Added `font-family: 'Courier New', Courier, monospace; font-size: 13px` to the base `.proj-ta-editor` rule and to `.goal-split-left` in the desktop `@media (min-width: 1601px)` block. Updated `#panel-paste .proj-ta-editor` width formula to `calc(44px + 80ch + 8px + 12px + 32px)` — identical to the working document panel formula.
+- **Laptop setup page 2: left column content flush to edges** — `proj-static-top { padding: 10px 8px 6px }` and `proj-goal-flex { padding: 0 8px }` were in the first `@media (max-width: 1600px)` block (~line 1808) but the base rules for those selectors are at ~line 5440. Same cascade ordering bug as buttons and goal-split — base rule came later so it won, giving the left column zero horizontal padding. Added both overrides to the late laptop block (line ~5993) which comes after all base rules and correctly wins. Also restored `fs-col { padding: 4px }` (all sides) so column card borders have visible breathing room on all edges; Courier New ch math confirms 80ch + gutter = 688px which is comfortably under the 707px available content area, so no overflow risk.
+
+---
+
+ — The working document panel has `font-family: 'Courier New'` on it so `80ch` resolves to Courier New character widths. `proj-ta-editor` had no font set, so `ch` resolved against DM Sans making both the goal and paste boxes wider than the working doc. Added `font-family: 'Courier New', Courier, monospace; font-size: 13px` to the base `.proj-ta-editor` rule and to `.goal-split-left` in the desktop `@media (min-width: 1601px)` block. Updated `#panel-paste .proj-ta-editor` width formula to `calc(44px + 80ch + 8px + 12px + 32px)` — identical to the working document panel formula.
 
 ---
 

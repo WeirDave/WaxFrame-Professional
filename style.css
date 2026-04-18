@@ -5987,10 +5987,13 @@ kbd {
   .fs-body { padding: 0 4px; grid-template-columns: 1fr 0px 1fr; }
   /* No gutter between columns at laptop — columns fill the space */
   .fs-divider { width: 0; }
-  /* Vertical breathing room only — no horizontal padding so columns get full width */
-  .fs-col { padding: 4px 0; }
+  /* Vertical and horizontal breathing room so fs-col-main card border is visible */
+  .fs-col { padding: 4px; }
   /* Tighten right column scroll padding */
   .proj-right-scroll { display: block; overflow-y: auto; padding: 10px 8px 24px; }
+  /* Left column content padding — matches right column's proj-right-scroll 8px sides */
+  .proj-static-top { padding: 10px 8px 6px; }
+  .proj-goal-flex { padding: 0 8px; }
   /* Restore fixed height paste panel and release fixed width at laptop */
   #panel-paste { display: block; flex: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
