@@ -773,8 +773,6 @@ html, body {
 #panel-paste .proj-ta-editor {
   flex: none;
   height: 420px;
-  width: calc(44px + 80ch + 20px);
-  max-width: calc(44px + 80ch + 20px);
 }
 
 /* ── Drop zone ── */
@@ -1321,8 +1319,8 @@ html, body {
   display: contents;
 }
 
-.hex-cell.is-builder  { border-color: var(--accent); box-shadow: 0 0 8px rgba(245,166,35,0.25); }
-.hex-cell.is-builder::before  { background: var(--accent); }
+.hex-cell.is-builder  { border-color: var(--border2); }
+.hex-cell.is-builder::before  { background: var(--border2); }
 .hex-cell.is-active { border-color: var(--border2); }
 .hex-cell.is-active::before { background: var(--border2); }
 .hex-cell.is-working,
@@ -1405,7 +1403,6 @@ html, body {
 .hex-cell.is-responding .hex-status { color: var(--purple); }
 .hex-cell.is-done       .hex-status { color: #00b300; }
 .hex-cell.is-error      .hex-status { color: #f87171; }
-.hex-cell.is-builder    .hex-status { color: var(--accent); }
 .hex-builder-tag {
   font-size: 8px;
   font-weight: 800;
@@ -1822,7 +1819,7 @@ html, body {
   /* Truncate the long document requirement label */
   #req-doc { max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
   /* Shrink setup page 1 action buttons */
-  .bee-controls-row-setup .btn-lg { font-size: 12px; padding: 7px 14px; }
+  .bee-controls-row-setup .btn { font-size: 11px; padding: 5px 10px; }
 
   /* ── Overlay animations — scale to ~50% at laptop viewport ── */
 
@@ -3183,6 +3180,8 @@ kbd {
   gap: 6px;
   margin-bottom: 16px;
 }
+/* Setup page 1 action buttons — cap at normal btn size regardless of btn-lg class */
+.bee-controls-row-setup .btn { font-size: 13px; padding: 7px 14px; }
 /* ── Footer ── */
 .fs-footer {
   display: grid;
@@ -5951,9 +5950,9 @@ kbd {
     padding: 10px 8px 24px;
   }
   /* Tighten fs-body outer padding so both columns have room for 80ch textareas */
-  .fs-body { padding: 0 4px; }
+  .fs-body { padding: 0; }
   /* Shrink divider between columns */
-  .fs-divider { width: 8px; }
+  .fs-divider { width: 4px; }
   /* Tighten right column scroll padding */
   .proj-right-scroll { padding: 10px 8px 24px; }
 }
