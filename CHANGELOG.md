@@ -7,9 +7,11 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **Laptop buttons still oversized (cascade bug)** — The desktop `.bee-controls-row-setup .btn` override (13px / 7px 14px) was declared after the laptop override (11px / 5px 10px) in the file, so at ≤1600px both rules had equal specificity and the desktop rule won by cascade order regardless of media query. Wrapped the desktop rule in `@media (min-width: 1601px)` so the rules are now mutually exclusive.
-- **Paste panel too wide at desktop** — Restoring the fixed `width: calc(44px + 80ch + 20px)` and `max-width` on `#panel-paste .proj-ta-editor` that was removed in the previous round, which caused the editor to expand to the full right column width. Added a laptop override (`width: 100%; max-width: 100%`) so at ≤1600px the paste panel fills its column and scrolls internally.
-- **Laptop column gutter and card breathing room** — Divider reduced to 0 (no gutter when space is tight), `.fs-body` padding restored to `0 4px` for outer edge breathing room, and `padding: 4px` added to `.fs-col` at ≤1600px so each column's inner card (`fs-col-main` border) has visible breathing room from the column edge, matching the visual treatment of the starting document column.
+- **Laptop: API Key Guide button icon hidden** — Added `.bee-controls-row-setup .tip-icon-img { display: none }` at ≤1600px. Icon suppressed via CSS only, HTML unchanged.
+- **Laptop: setup page 1 button heights reduced** — Tightened padding to `3px 9px` (was `5px 10px`) at ≤1600px. Font size unchanged at 11px.
+- **Laptop: right column 1px horizontal scroll eliminated** — Changed `fs-col { padding: 4px }` to `padding: 4px 0` (vertical breathing room kept, horizontal padding removed so columns get full track width). Added `overflow-x: hidden` on `#panel-paste .proj-ta-editor` at ≤1600px to prevent any 1px inner content overflow from generating a scrollbar. Restored `proj-right-scroll` to `display: block; overflow-y: auto` and `#panel-paste` to `display: block` at laptop to preserve scroll behaviour.
+- **Desktop: project goal textarea width = working document** — Changed `.goal-split-left` flex-basis from `calc(44px + 80ch + 20px)` to `calc(44px + 80ch + 8px + 12px + 32px)` — matching the working document panel formula exactly. The refine rounds panel now absorbs the additional space to the right.
+- **Desktop: paste panel expands to fill right column height** — Changed `#panel-paste .proj-ta-editor` from `flex: none; height: 420px` to `flex: 1; height: auto; min-height: 0`. Added flex column chain on `proj-right-scroll` (display: flex, overflow: hidden), `.proj-right-scroll > .doc-tab-panel.active` (flex: 1), and `#panel-paste` (flex: 1) so the paste editor fills the available column height to match the project goal panel. All reversed at ≤1600px.
 
 ---
 
