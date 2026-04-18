@@ -172,8 +172,13 @@
 </div>
 
 <div class="page-footer">
-  <span class="footer-note">WaxFrame — open source, no server, no tracking.</span>
-  <button class="btn" onclick="window.close()">✕ Close this tab</button>
+  <div class="page-footer-left">
+    <span class="footer-note">WaxFrame — open source, no server, no tracking.</span>
+  </div>
+  <div class="page-footer-right">
+    <button class="btn" onclick="window.close()">✕ Close this tab</button>
+    <span class="app-version-stamp helper-version-stamp"></span>
+  </div>
 </div>
 
 <script>
@@ -375,5 +380,11 @@ You have repeatedly raised the following after the user already resolved them. T
   loadPrompts();
 </script>
 <script src="theme.js"></script>
+<script>
+  (function() {
+    const v = 'v3.12.8 Pro';
+    document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = v; });
+  })();
+</script>
 </body>
 </html>

@@ -549,10 +549,19 @@
     <button class="btn" onclick="openAllBilling()">Open All Billing Pages</button>
     <button class="btn" onclick="openAllConsoles()">Open All API Consoles</button>
   </div>
-  <button class="btn" onclick="window.close()">Close this tab</button>
+  <div class="page-footer-right">
+    <button class="btn" onclick="window.close()">Close this tab</button>
+    <span class="app-version-stamp helper-version-stamp"></span>
+  </div>
 </div>
 
 <script src="theme.js"></script>
 <script src="api-links.js"></script>
+<script>
+  (function() {
+    const v = 'v3.12.8 Pro';
+    document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = v; });
+  })();
+</script>
 </body>
 </html>

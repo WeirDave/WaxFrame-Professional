@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — index.html
-     Build: 20260417-002
+     Build: 20260417-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260417-002">
+  <meta name="waxframe-build" content="20260417-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,7 @@
       <div class="welcome-brand">
         <h1>WaxFrame</h1>
         <p>Many minds. One refined result.</p>
-        <span class="welcome-version"></span>
+        <span class="app-version-stamp"></span>
       </div>
     </div>
     <div class="welcome-pitch">
@@ -76,7 +76,7 @@
           <div class="fs-logo-tag">Many minds. One refined result.</div>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 1 of 2</div>
+      <div class="setup-step-badge">Setup — Step 1 of 2 <span class="app-version-stamp"></span></div>
     </div>
 
     <!-- ── Two-column body ── -->
@@ -161,7 +161,7 @@
           <div class="fs-logo-tag">Many minds. One refined result.</div>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 2 of 2</div>
+      <div class="setup-step-badge">Setup — Step 2 of 2 <span class="app-version-stamp"></span></div>
     </div>
 
     <!-- ── Two-column body ── -->
@@ -351,6 +351,7 @@
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
+        <span class="app-version-stamp work-version-stamp"></span>
       </div>
     </div>
 
@@ -970,7 +971,7 @@
   <div id="tkpRows" class="tkp-rows"></div>
 </div>
 
-<script src="app.js?v=3.12.7"></script>
+<script src="app.js?v=3.12.8"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
