@@ -771,8 +771,9 @@ html, body {
 .doc-tab-panel.active { display: block; }
 /* Paste panel: give the editor a fixed height so it scrolls internally, not the column */
 #panel-paste .proj-ta-editor {
-  flex: none;
-  height: 420px;
+  flex: 1;
+  height: auto;
+  min-height: 0;
   width: calc(44px + 80ch + 20px);
   max-width: calc(44px + 80ch + 20px);
 }
@@ -3210,8 +3211,24 @@ kbd {
   background: transparent;
 }
 
-/* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
-/* .proj-right-scroll reserved */
+/* proj-right-scroll — desktop: flex column so paste panel can fill height */
+.proj-right-scroll {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.proj-right-scroll > .doc-tab-panel.active {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+#panel-paste {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 
 /* ── PROJECT NOTEBOOK — scratch panel only ── */
 .proj-notebook {
@@ -5443,7 +5460,7 @@ kbd {
   min-height: 0;
 }
 .goal-split-left {
-  flex: 0 0 calc(44px + 80ch + 20px);
+  flex: 0 0 calc(44px + 80ch + 8px + 12px + 32px);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5957,12 +5974,16 @@ kbd {
   .fs-body { padding: 0 4px; }
   /* No gutter between columns at laptop — columns fill the space */
   .fs-divider { width: 0; }
-  /* Small inner padding so fs-col-main border breathes from column edges */
-  .fs-col { padding: 4px; }
+  /* Vertical breathing room only — no horizontal padding so columns get full width */
+  .fs-col { padding: 4px 0; }
   /* Tighten right column scroll padding */
-  .proj-right-scroll { padding: 10px 8px 24px; }
-  /* Paste panel: release fixed width at laptop — fill column, internal scroll only */
-  #panel-paste .proj-ta-editor { width: 100%; max-width: 100%; }
+  .proj-right-scroll { display: block; overflow-y: auto; padding: 10px 8px 24px; }
+  /* Restore fixed height paste panel and release fixed width at laptop */
+  #panel-paste { display: block; flex: none; }
+  #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
+  /* Shrink setup page 1 action buttons height and hide icon on API Key Guide */
+  .bee-controls-row-setup .btn { font-size: 11px; padding: 3px 9px; }
+  .bee-controls-row-setup .tip-icon-img { display: none; }
 }
 
 /* ══ AI SETUP ROW — model-select alignment fix ══ */
