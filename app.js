@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260416-001
+//  Build: 20260417-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260417-004';         // build stamp — update each session
+const BUILD       = '20260417-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3465,44 +3465,63 @@ function updateGoalCounter() {
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
-  // Update refine preview panel
+
+  // Update sidebar refine preview panel (large screen)
   const previewWrap  = document.getElementById('goalRefinePreview');
   const previewText  = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
   const previewSub   = document.getElementById('goalRefinePreviewSub');
   const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
+
+  // Update laptop popover content
+  const popoverText  = document.getElementById('refinePopoverText');
+  const popoverCount = document.getElementById('refinePopoverCount');
+  const popoverSub   = document.getElementById('refinePopoverSub');
+  const popoverBtn   = document.getElementById('refinePreviewBtn');
+  const popover      = document.getElementById('refinePopover');
+
   if (truncated) {
     const refined = truncateGoalForRefine(ta.value);
+    // Sidebar
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
     if (previewCount) previewCount.textContent = `${refined.length} chars`;
     if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
+    // Popover
+    if (popoverText)  popoverText.textContent = refined;
+    if (popoverCount) popoverCount.textContent = `${refined.length} chars`;
+    if (popoverSub)   popoverSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
+    if (popoverBtn)   popoverBtn.style.removeProperty('display');
   } else {
+    // Sidebar
     if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
     if (previewCount) previewCount.textContent = '';
     if (previewSub)   previewSub.textContent = '';
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
+    // Popover — hide button and close popover if goal shrinks below threshold
+    if (popoverBtn)   popoverBtn.style.display = 'none';
+    if (popover)      popover.style.display = 'none';
   }
+}
+
+function toggleRefinePopover() {
+  const popover = document.getElementById('refinePopover');
+  if (!popover) return;
+  popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
 }
 
 function updateProjLineNums(numsId, ta) {
   const ln = document.getElementById(numsId);
   if (!ln || !ta) return;
-  // For the goal textarea: grow to content so the notebook container scrolls
-  // For other textareas: same behaviour
+  // Grow textarea to content height — the outer .proj-ta-editor scrolls.
+  // Sticky gutter stays pinned automatically; no JS scroll sync needed.
   ta.style.height = 'auto';
   ta.style.height = ta.scrollHeight + 'px';
   const LINE_HEIGHT = 21;
   const visualCount = Math.max(1, Math.round(ta.scrollHeight / LINE_HEIGHT));
   ln.innerHTML = Array.from({length: visualCount}, (_, i) => `<div>${i + 1}</div>`).join('');
-  // Sync gutter scroll to notebook container scroll
-  const notebook = ta.closest('.proj-notebook-goal, .proj-notebook');
-  if (notebook && !notebook._scrollWired) {
-    notebook._scrollWired = true;
-    notebook.addEventListener('scroll', () => { ln.style.transform = `translateY(-${notebook.scrollTop}px)`; });
-  }
 }
 
 function updateLineNumbers() {

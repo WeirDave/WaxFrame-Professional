@@ -4,6 +4,18 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.13.0 — April 17, 2026
+
+### Fixed
+- Goal textarea and paste textarea now correctly use the `proj-ta-*` scroll architecture (outer scrolling container, growing inner row with notebook paper, sticky gutter). Previously the HTML still referenced the old `proj-notebook-goal` / `proj-notebook-nums` / `proj-goal-ta` / `proj-notebook-ta` classes which had been partially deleted from CSS, causing both editors to break. HTML restructured to match the correct `proj-ta-editor > proj-ta-scroll > proj-ta-nums + proj-ta-inner > proj-ta` pattern.
+- Orphaned CSS classes `proj-notebook-goal`, `proj-notebook-nums`, `proj-goal-ta`, and `proj-notebook-ta` removed from `style.css`. `proj-notebook` retained for the scratch panel only.
+- `updateProjLineNums` simplified — no longer attempts to wire scroll events to `.proj-notebook-goal` (which no longer exists). Sticky gutter handles visibility automatically.
+
+### Added
+- Laptop refine preview popover: at ≤1600px the `goal-split-right` sidebar panel hides and an amber **▸ Refine Preview** button appears in the Project Goal header row. Clicking it toggles a popover showing the same sentence-trimmed preview content. Button and popover auto-hide when the goal drops back under 300 chars. `toggleRefinePopover()` added to `app.js`. `updateGoalCounter()` updated to sync both the sidebar panel (large screen) and the popover content (laptop).
+
+---
+
 ## v3.12.9 — April 17, 2026
 
 ### Changed
