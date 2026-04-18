@@ -356,6 +356,28 @@ html, body {
   margin-left: 6px;
   opacity: 0.65;
 }
+/* Version stamp below the tagline in the center header brand */
+.fs-header-brand .app-version-stamp {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 3px;
+  opacity: 0.7;
+}
+/* Version stamp below the tagline on helper pages */
+.page-header-brand .app-version-stamp {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin-top: 3px;
+  opacity: 0.7;
+}
 
 .work-version-stamp {
   display: inline;
@@ -3087,7 +3109,6 @@ kbd {
 .fs-col-main {
   background: var(--surface);
   border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
   flex: 1;
   min-height: 0;
   position: relative;
@@ -3280,6 +3301,12 @@ kbd {
   box-sizing: border-box;
   width: calc(80ch + 8px + 12px);
 }
+/* Goal panel: textarea fills available width — refine panel takes space so 80ch won't always fit */
+.goal-split-left .proj-ta-inner {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+}
 
 /* Textarea — exact 80ch text area, grows to content height, mirrors work-doc-ta */
 .proj-ta {
@@ -3304,6 +3331,12 @@ kbd {
   white-space: pre-wrap;
   overflow-wrap: break-word;
   word-break: break-word;
+}
+/* Goal textarea: fill available width, no horizontal overflow */
+.goal-split-left .proj-ta {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 .proj-notebook-scratch {
   align-items: center;
