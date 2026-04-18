@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — index.html
-     Build: 20260417-004
+     Build: 20260417-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260417-004">
+  <meta name="waxframe-build" content="20260417-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.4">
+  <link rel="stylesheet" href="style.css?v=3.5">
 </head>
 <body>
 
@@ -201,6 +201,16 @@
             <div class="goal-counter-row">
               <h3 class="proj-goal-heading">Project Goal</h3>
               <span id="goalCounter" class="goal-counter-text"></span>
+              <button class="btn btn-sm refine-preview-btn" id="refinePreviewBtn" onclick="toggleRefinePopover()" title="Preview what refine rounds will receive" style="display:none">▸ Refine Preview</button>
+            </div>
+            <div class="refine-popover" id="refinePopover" style="display:none">
+              <div class="refine-popover-hdr">
+                <span class="goal-refine-preview-label">Refine rounds will receive</span>
+                <span id="refinePopoverCount" class="goal-refine-preview-count"></span>
+                <button class="refine-popover-close" onclick="toggleRefinePopover()">✕</button>
+              </div>
+              <p class="goal-refine-preview-sub" id="refinePopoverSub"></p>
+              <div id="refinePopoverText" class="goal-refine-preview-text"></div>
             </div>
           </div>
 
@@ -208,9 +218,13 @@
           <div class="proj-goal-flex">
           <div class="goal-split-row">
             <div class="goal-split-left">
-              <div class="proj-notebook proj-notebook-goal">
-                <div class="proj-notebook-nums" id="projGoalNums"><div>1</div></div>
-                <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-goal-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+              <div class="proj-ta-editor">
+                <div class="proj-ta-scroll">
+                  <div class="proj-ta-nums" id="projGoalNums"><div>1</div></div>
+                  <div class="proj-ta-inner">
+                    <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
             <div class="goal-split-right">
@@ -280,10 +294,14 @@
             </div>
 
             <div class="doc-tab-panel" id="panel-paste">
-              <div class="proj-notebook">
-                <div class="proj-notebook-nums" id="projPasteNums"><div>1</div></div>
-                <textarea id="pasteText" class="proj-notebook-ta" placeholder="Paste your existing document text here…"
-                  oninput="updateProjLineNums('projPasteNums', this); updateLaunchRequirements()"></textarea>
+              <div class="proj-ta-editor">
+                <div class="proj-ta-scroll">
+                  <div class="proj-ta-nums" id="projPasteNums"><div>1</div></div>
+                  <div class="proj-ta-inner">
+                    <textarea id="pasteText" class="proj-ta" placeholder="Paste your existing document text here…"
+                      oninput="updateProjLineNums('projPasteNums', this); updateLaunchRequirements()"></textarea>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -972,7 +990,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.12.9"></script>
+<script src="app.js?v=3.13.0"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
