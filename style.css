@@ -773,6 +773,8 @@ html, body {
 #panel-paste .proj-ta-editor {
   flex: none;
   height: 420px;
+  width: calc(44px + 80ch + 20px);
+  max-width: calc(44px + 80ch + 20px);
 }
 
 /* ── Drop zone ── */
@@ -3301,11 +3303,11 @@ kbd {
   box-sizing: border-box;
   width: calc(80ch + 8px + 12px);
 }
-/* Goal panel: textarea fills available width — refine panel takes space so 80ch won't always fit */
+/* Goal panel: textarea stays at 80ch — refine panel takes remaining space */
 .goal-split-left .proj-ta-inner {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
-  width: 100%;
+  width: calc(80ch + 8px + 12px);
 }
 
 /* Textarea — exact 80ch text area, grows to content height, mirrors work-doc-ta */
@@ -3332,11 +3334,11 @@ kbd {
   overflow-wrap: break-word;
   word-break: break-word;
 }
-/* Goal textarea: fill available width, no horizontal overflow */
+/* Goal textarea: fixed 80ch — matches base proj-ta */
 .goal-split-left .proj-ta {
-  width: 100%;
-  min-width: 0;
-  max-width: 100%;
+  width: calc(80ch + 8px + 12px);
+  min-width: calc(80ch + 8px + 12px);
+  max-width: calc(80ch + 8px + 12px);
 }
 .proj-notebook-scratch {
   align-items: center;
@@ -5438,8 +5440,7 @@ kbd {
   min-height: 0;
 }
 .goal-split-left {
-  flex: 3;
-  min-width: 0;
+  flex: 0 0 calc(44px + 80ch + 20px);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -5447,7 +5448,6 @@ kbd {
 .goal-split-right {
   flex: 1;
   min-width: 160px;
-  max-width: 240px;
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -5481,6 +5481,7 @@ kbd {
 }
 /* ── LAPTOP REFINE PREVIEW BUTTON + POPOVER ── */
 .refine-preview-btn {
+  display: none;
   font-size: 11px;
   padding: 3px 10px;
   border-color: var(--accent);
