@@ -1805,12 +1805,12 @@ html, body {
   .left-panel-header { padding: 5px 8px; margin: 4px 5px 2px; }
   /* Setup Page 2 — hide bee, tighten padding */
   .proj-left-scroll > .setup-card-bee { display: none; }
-  .proj-static-top { padding: 10px 0 6px; }
+  .proj-static-top { padding: 10px 8px 6px; }
   /* Compress length constraint box */
   .length-constraint-desc { display: none; }
   .length-constraint-header { margin-bottom: 4px; }
   /* Goal area: fixed height at laptop — full width, refine panel replaced by button+popover */
-  .proj-goal-flex { flex: none; height: 380px; overflow: hidden; padding: 0; }
+  .proj-goal-flex { flex: none; height: 380px; overflow: hidden; padding: 0 8px; }
   .goal-split-row { flex: 1; min-height: 0; }
   .goal-split-left { flex: 1; min-width: 0; min-height: 0; }
   .goal-split-right { display: none !important; width: 0; min-width: 0; max-width: 0; overflow: hidden; }
@@ -5978,7 +5978,7 @@ kbd {
     padding: 10px 8px 24px;
   }
   /* Tighten fs-body outer padding so both columns have room for 80ch textareas */
-  .fs-body { padding: 0 4px; }
+  .fs-body { padding: 0 4px; grid-template-columns: 1fr 0px 1fr; }
   /* No gutter between columns at laptop — columns fill the space */
   .fs-divider { width: 0; }
   /* Vertical breathing room only — no horizontal padding so columns get full width */
