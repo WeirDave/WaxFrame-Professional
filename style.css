@@ -3096,7 +3096,6 @@ kbd {
 /* Each column = surface2 container holding two cards */
 .fs-col {
   background: var(--surface2);
-  border-radius: var(--radius-md);
   min-height: 0;
   display: flex;
   flex-direction: column;
