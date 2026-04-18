@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260415-001
+   Build: 20260417-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -747,6 +747,11 @@ html, body {
 
 .doc-tab-panel { display: none; }
 .doc-tab-panel.active { display: block; }
+/* Paste panel: give the editor a fixed height so it scrolls internally, not the column */
+#panel-paste .proj-ta-editor {
+  flex: none;
+  height: 420px;
+}
 
 /* ── Drop zone ── */
 .drop-zone {
@@ -3182,7 +3187,7 @@ kbd {
 /* proj-right-scroll — same as fs-col-scroll, no bee on right side of step 2 */
 /* .proj-right-scroll reserved */
 
-/* ── PROJECT NOTEBOOK (scratch panel only) ── */
+/* ── PROJECT NOTEBOOK — scratch panel only ── */
 .proj-notebook {
   display: flex;
   border: 1px solid var(--border2);
@@ -3265,21 +3270,23 @@ kbd {
 .proj-ta-nums::-webkit-scrollbar { display: none; }
 .proj-ta-nums div { height: 21px; line-height: 21px; font-size: 13px; box-sizing: border-box; flex-shrink: 0; padding-right: 6px; }
 
-/* Inner wrapper — fills available width, no scrolling here */
+/* Inner wrapper — fixed 80ch wide, mirrors work-doc-inner */
 .proj-ta-inner {
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
   position: relative;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   background: transparent;
   box-sizing: border-box;
+  width: calc(80ch + 8px + 12px);
 }
 
-/* Textarea — grows to content, fills full width of inner wrapper */
+/* Textarea — exact 80ch text area, grows to content height, mirrors work-doc-ta */
 .proj-ta {
   display: block;
-  width: 100%;
+  width: calc(80ch + 8px + 12px);
+  min-width: calc(80ch + 8px + 12px);
+  max-width: calc(80ch + 8px + 12px);
   height: auto;
   min-height: 0;
   margin: 0;

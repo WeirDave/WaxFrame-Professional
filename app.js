@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260417-005';         // build stamp — update each session
+const BUILD       = '20260417-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3444,11 +3444,24 @@ function initWorkScreen(isNewSession = false) {
 
 function truncateGoalForRefine(goal) {
   if (!goal || goal.length <= 300) return goal;
-  // Find last sentence boundary at or before 300 chars (must be past 200 to avoid very short context)
+  // Look backward from 300 for a sentence boundary (must be past 200 to avoid tiny context)
   const slice = goal.slice(0, 300);
   const lastBoundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf('!'), slice.lastIndexOf('?'));
   if (lastBoundary > 200) return goal.slice(0, lastBoundary + 1).trim();
-  return slice.trim();
+  // No good boundary behind 300 — look forward up to 450 chars for the next sentence end
+  const forward = goal.slice(300, 450);
+  const fwdDot  = forward.indexOf('.');
+  const fwdBang = forward.indexOf('!');
+  const fwdQ    = forward.indexOf('?');
+  const fwdBoundary = Math.min(
+    fwdDot  >= 0 ? fwdDot  : Infinity,
+    fwdBang >= 0 ? fwdBang : Infinity,
+    fwdQ    >= 0 ? fwdQ    : Infinity
+  );
+  if (fwdBoundary < Infinity) return goal.slice(0, 300 + fwdBoundary + 1).trim();
+  // Fall back to last whole word before 300
+  const lastSpace = slice.lastIndexOf(' ');
+  return (lastSpace > 200 ? goal.slice(0, lastSpace) : slice).trim();
 }
 
 function updateGoalCounter() {
