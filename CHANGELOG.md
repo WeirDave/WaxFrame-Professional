@@ -7,9 +7,14 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **Project screen textarea widths on full desktop** — On wide monitors the goal textarea and paste-text textarea were expanding to fill their entire flex columns instead of staying at 80ch. Root cause: `.goal-split-left` was `flex: 3` in a `1fr` half-screen column, giving ~700px+ on 1920px displays, and the `.goal-split-left .proj-ta-inner` / `.proj-ta` overrides set `width: 100%` to match. Fixed by pinning `.goal-split-left` to `flex: 0 0 calc(44px + 80ch + 20px)` (exact editor width), reverting the textarea overrides back to the base 80ch fixed values, and adding `width` + `max-width` to `#panel-paste .proj-ta-editor` for the same constraint on the paste tab.
-- **Refine rounds panel now fills available space** — `.goal-split-right` had `max-width: 240px` which capped the refine panel even on large screens where it should absorb all remaining horizontal space. Removed the cap so `flex: 1` correctly takes everything to the right of the 80ch goal editor.
-- **Refine preview button display rule** — Moved `display: none` from the inline `style` attribute on `#refinePreviewBtn` into the CSS base rule for `.refine-preview-btn`. Behaviour is unchanged (hidden on desktop, shown via `!important` in the ≤1600px media query), but the HTML is now cleaner.
+- **Paste-panel textarea horizontal scroll (laptop)** — `#panel-paste .proj-ta-editor` had a fixed `width: calc(44px + 80ch + 20px)` and matching `max-width`, causing the editor element to be wider than its flex column at laptop viewports and triggering unwanted column-level horizontal scroll. Removed both properties; width is now dictated by the flex container, matching the same scroll-inside-editor behaviour as the working document panel.
+- **Setup screen column gutter (laptop)** — Reduced `.fs-body` outer padding from `0 4px` to `0` and `.fs-divider` from `8px` to `4px` at ≤1600px, giving each column an additional ~6px of room so 80ch textareas clear their containers without clipping.
+- **Setup page 1 action buttons oversized** — Buttons in `.bee-controls-row-setup` carry the `.btn-lg` class but should render at normal button size. Added a desktop override (`font-size: 13px; padding: 7px 14px`) and tightened the existing laptop override to `font-size: 11px; padding: 5px 10px`. Only sizing properties changed.
+- **Builder hex-cell card visual parity (desktop work screen)** — Removed the amber `border-color`, `box-shadow`, `::before` strip colour, and `hex-status` colour overrides from `.hex-cell.is-builder`. The Builder card is now visually identical to all other cards at rest; the `BUILDER` badge tag is the sole differentiator. The laptop dot-strip amber builder dot is unchanged.
+
+---
+
+
 
 ---
 
