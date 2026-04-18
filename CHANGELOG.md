@@ -4,7 +4,20 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.13.1 — April 17, 2026
+## v3.13.2 — April 17, 2026
+
+### Fixed
+- **Light mode white artifact** — Removed `border-radius` from `.fs-col-main`. The outer `.fs-col` already clips children at the same radius via `overflow: hidden`, so both elements having `border-radius: 14px` created a double-rounding effect where a thin white slice of `fs-col-main`'s background was visible against the slightly different `surface2` background in light mode. Dark mode was unaffected because the contrast between `surface` and `surface2` is negligible in dark.
+- **Goal textarea side scrolling** — On large monitors the `goal-split-left` panel is narrowed by the refine panel (160–240px) plus gaps and padding, making 80ch + gutter wider than the available space. Added `.goal-split-left .proj-ta-inner` and `.goal-split-left .proj-ta` overrides so the goal textarea fills available width instead of forcing a fixed 80ch that causes horizontal overflow. Paste textarea retains exact 80ch (right column has the full column width available).
+
+### Added
+- **Version stamp below tagline on all screens** — `APP_VERSION` now appears directly below "Many minds. One refined result." in the center header brand on both setup screens. Removed from the right-side step badge (which was the only previous location on setup screens) to avoid redundancy.
+- **Version stamp in header on all helper pages** — `api-details.html`, `what-are-tokens.html`, `waxframe-user-manual.html`, `document-playbooks.html`, and `prompt-editor.html` now show the version stamp below the page title in the header brand block. Previously only appeared in the page footer.
+- New CSS rules: `.fs-header-brand .app-version-stamp` and `.page-header-brand .app-version-stamp` for consistent, small muted version display in all header contexts.
+
+---
+
+
 
 ### Fixed
 - **80ch width on goal and paste textareas** — `proj-ta-inner` and `proj-ta` now mirror `work-doc-inner` and `work-doc-ta` exactly, using `width: calc(80ch + 8px + 12px)` with `flex: 0 0 auto` on the inner wrapper. Previously `width: 100%` with `box-sizing: border-box` was causing the padding to eat into the character count, making both editors wrap short of 80ch.
