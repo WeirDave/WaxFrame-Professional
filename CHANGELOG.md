@@ -7,7 +7,10 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
-- **Laptop: API Key Guide button icon hidden** — Added `.bee-controls-row-setup .tip-icon-img { display: none }` at ≤1600px. Icon suppressed via CSS only, HTML unchanged.
+- **Your Project page: 28px left margin and right-side clipping at laptop (cascade bug)** — The desktop rules for `.proj-static-top` (padding: 20px 28px 12px), `.proj-goal-flex` (padding: 0 28px 0), and `.goal-split-left` (flex: 0 0 fixed-width) were all declared after their laptop overrides in the file. At ≤1600px, equal specificity meant the desktop rules won by cascade position, completely nullifying the laptop overrides. Fixed by making the base rules use laptop-safe values (no horizontal padding, `flex: 1` on goal-split-left) and moving the desktop-specific padding and fixed width into a `@media (min-width: 1601px)` block. Existing laptop overrides in the ≤1600px block remain as harmless redundancy.
+
+---
+
 - **Laptop: setup page 1 button heights reduced** — Tightened padding to `3px 9px` (was `5px 10px`) at ≤1600px. Font size unchanged at 11px.
 - **Laptop: right column 1px horizontal scroll eliminated** — Changed `fs-col { padding: 4px }` to `padding: 4px 0` (vertical breathing room kept, horizontal padding removed so columns get full track width). Added `overflow-x: hidden` on `#panel-paste .proj-ta-editor` at ≤1600px to prevent any 1px inner content overflow from generating a scrollbar. Restored `proj-right-scroll` to `display: block; overflow-y: auto` and `#panel-paste` to `display: block` at laptop to preserve scroll behaviour.
 - **Desktop: project goal textarea width = working document** — Changed `.goal-split-left` flex-basis from `calc(44px + 80ch + 20px)` to `calc(44px + 80ch + 8px + 12px + 32px)` — matching the working document panel formula exactly. The refine rounds panel now absorbs the additional space to the right.
