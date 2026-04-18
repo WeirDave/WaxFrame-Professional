@@ -7,6 +7,13 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.13.3 — April 17, 2026
 
 ### Fixed
+- **All three text areas now identical width — ch unit font mismatch** — The working document panel has `font-family: 'Courier New'` on it so `80ch` resolves to Courier New character widths. `proj-ta-editor` had no font set, so `ch` resolved against DM Sans making both the goal and paste boxes wider than the working doc. Added `font-family: 'Courier New', Courier, monospace; font-size: 13px` to the base `.proj-ta-editor` rule and to `.goal-split-left` in the desktop `@media (min-width: 1601px)` block. Updated `#panel-paste .proj-ta-editor` width formula to `calc(44px + 80ch + 8px + 12px + 32px)` — identical to the working document panel formula.
+
+---
+
+## v3.13.3 — April 17, 2026
+
+### Fixed
 - **Laptop setup page 2: 32px phantom middle gap and uneven column padding** — `.fs-divider { width: 0 }` zeroed the element but the grid track was still declared as `32px` in `fs-body`'s `grid-template-columns: 1fr 32px 1fr`, so each content column was only getting `(available − 32px) / 2` width and a 32px dead zone sat between them. Fixed by adding `grid-template-columns: 1fr 0px 1fr` to the `fs-body` laptop override, collapsing the divider track entirely. Also added symmetric `8px` horizontal padding to `proj-static-top` (`10px 8px 6px`) and `proj-goal-flex` (`0 8px`) at ≤1600px so the left column content has the same breathing room as the right column's `proj-right-scroll` padding.
 
 ---
