@@ -4,7 +4,16 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.13.0 — April 17, 2026
+## v3.13.1 — April 17, 2026
+
+### Fixed
+- **80ch width on goal and paste textareas** — `proj-ta-inner` and `proj-ta` now mirror `work-doc-inner` and `work-doc-ta` exactly, using `width: calc(80ch + 8px + 12px)` with `flex: 0 0 auto` on the inner wrapper. Previously `width: 100%` with `box-sizing: border-box` was causing the padding to eat into the character count, making both editors wrap short of 80ch.
+- **Paste text panel scrolling the whole column** — `proj-ta-editor` inside `#panel-paste` is now given a fixed `height: 420px` with `flex: none`, so the editor scrolls its own content instead of letting the parent column scroll. The right column scroll still handles all other content above the editor.
+- **Refine truncation looking both ways** — `truncateGoalForRefine` now looks backward from 300 chars for a sentence boundary, and if none is found above 200 chars, looks forward up to 450 chars for the next sentence end. Falls back to last whole word before 300 if neither direction finds a boundary. Previously it hard-cut at exactly 300 chars when no backward boundary was found.
+
+---
+
+
 
 ### Fixed
 - Goal textarea and paste textarea now correctly use the `proj-ta-*` scroll architecture (outer scrolling container, growing inner row with notebook paper, sticky gutter). Previously the HTML still referenced the old `proj-notebook-goal` / `proj-notebook-nums` / `proj-goal-ta` / `proj-notebook-ta` classes which had been partially deleted from CSS, causing both editors to break. HTML restructured to match the correct `proj-ta-editor > proj-ta-scroll > proj-ta-nums + proj-ta-inner > proj-ta` pattern.
