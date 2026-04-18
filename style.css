@@ -3222,11 +3222,9 @@ kbd {
   flex: 1;
   min-height: 0;
 }
+/* Paste panel — display/flex handled by doc-tab-panel class rules above.
+   Only non-display properties here so the class-based show/hide keeps control. */
 #panel-paste {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
   position: relative;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
@@ -3248,8 +3246,22 @@ kbd {
   animation: watermarkPulse 6s ease-in-out infinite;
 }
 @keyframes watermarkPulse {
-  0%, 100% { opacity: 0.04; }
-  50%       { opacity: 0.13; }
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 0.18; }
+}
+/* Upload panel: drop zone fills the column height when panel is active */
+#panel-upload .drop-zone {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+/* Scratch panel: notebook fills the column height when panel is active */
+#panel-scratch .proj-notebook-scratch {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ── PROJECT NOTEBOOK — scratch panel only ── */
@@ -6018,7 +6030,6 @@ kbd {
   .proj-static-top { padding: 10px 0 6px; }
   .proj-goal-flex { padding: 0; }
   /* Restore fixed height paste panel and release fixed width at laptop */
-  #panel-paste { display: block; flex: none; }
   #panel-paste::after { display: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
   /* Shrink setup page 1 action buttons height and hide icon on API Key Guide */
