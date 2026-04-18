@@ -277,6 +277,7 @@
 
             <div class="export-mask-row">
               <label class="export-mask-label">💾 Export filename</label>
+              <button class="goal-info-btn" onclick="document.getElementById('infoExportMaskModal').classList.add('active')" title="About export filename tokens"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
               <input type="text" id="exportMask" class="export-mask-input" placeholder="{name}_{version}" oninput="saveProject();updateMaskPreview()" title="Use {name} and {version} as placeholders">
               <span class="export-mask-preview" id="exportMaskPreview"></span>
             </div>
