@@ -3249,7 +3249,7 @@ kbd {
   0%, 100% { opacity: 0; }
   50%       { opacity: 0.18; }
 }
-/* Upload panel: drop zone fills the column height when panel is active */
+/* Upload panel: drop zone matches paste panel width, fills column height */
 #panel-upload .drop-zone {
   flex: 1;
   min-height: 0;
@@ -3257,11 +3257,19 @@ kbd {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  width: calc(44px + 80ch + 8px + 12px + 32px);
+  max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
-/* Scratch panel: notebook fills the column height when panel is active */
+/* Scratch panel: notebook matches paste panel width, fills column height */
 #panel-scratch .proj-notebook-scratch {
   flex: 1;
   min-height: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  width: calc(44px + 80ch + 8px + 12px + 32px);
+  max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
 
 /* ── PROJECT NOTEBOOK — scratch panel only ── */
@@ -6032,6 +6040,9 @@ kbd {
   /* Restore fixed height paste panel and release fixed width at laptop */
   #panel-paste::after { display: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
+  /* Release upload/scratch width constraints at laptop — fill the column */
+  #panel-upload .drop-zone { width: 100%; max-width: 100%; }
+  #panel-scratch .proj-notebook-scratch { width: 100%; max-width: 100%; }
   /* Shrink setup page 1 action buttons height and hide icon on API Key Guide */
   .bee-controls-row-setup .btn { font-size: 11px; padding: 3px 9px; }
   .bee-controls-row-setup .tip-icon-img { display: none; }
