@@ -4,19 +4,10 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.15.2 — April 19, 2026
+## v3.15.3 — April 19, 2026
 
 ### Fixed
-- **Conflict click no longer scrolls to the correct document location** — `scrollToCurrentText()` was calling `scrollTop` on the `workDocument` textarea which has `overflow: hidden`, so nothing moved. Fixed to use `ta.closest('.work-doc-editor')` and scroll the actual scroll container instead. Also corrected the line height default from 20px to 21px to match the CSS value. Build 20260419-008.
-
-### Changed — User Manual
-- **Work screen column layout corrected** — Left column now correctly documented as containing both The Hive and Conflicts stacked vertically. Right column corrected to show the dual-face clock widget (Round timer auto-runs per round, Project timer is manual with Start/Pause) and the Live Console with colour-coded legend. Edit Hive button documented as laptop-only (≤1600px) — on desktop the full AI cards are shown and toggled directly. Desktop vs laptop AI display split into separate entries. All conflict location references corrected from right column to left column throughout including Step 7, Step 9, and troubleshooting rows.
-- **300-character threshold section rewritten** — Now explains the token cost rationale behind goal trimming rather than just stating that trimming occurs. Includes a priority framework for what to put in the first 300 characters: document type and audience first, hardest constraint second, detailed scope last. Includes a plain-English read-it-out-loud test for verifying the anchor is working.
-- **Refine Preview section expanded** — Explains what the preview shows when goal is under vs over 300 characters. Removed "adjust your opening sentence" framing — replaced with structured guidance on how to construct an effective Project Context anchor.
-- **Phase and round-number language removed throughout** — All references to "Draft round", "Refine round", and "which round you are on" replaced with document-exists vs no-document framing. The manual no longer implies the user selects or controls the round type.
-- **First-round document-provided claim corrected** — Removed incorrect statement that uploaded or pasted documents receive the full goal on round 1. Now correctly states the trimmed Project Context is always sent when a document exists, regardless of round number.
-- **Target length removed from goal example** — Removed "Target length is approximately 2,000 words" from the from-scratch example goal. Added tip clarifying that length belongs in the Length Constraint field, not the goal — WaxFrame sends it automatically in a standardised format.
-- **Document Playbooks count corrected** — Changed "dozens" to "11".
+- **Conflict "Current:" text click does nothing** — Two separate bugs both needed fixing. First: `JSON.stringify(d.current)` in the onclick attribute produced `"text here"` with surrounding double quotes inside an HTML double-quoted attribute, causing the attribute to close immediately and the click handler to never register. Fixed by storing conflict current texts in `window._conflictCurrentTexts` keyed by decision index and using `window._conflictCurrentTexts[di]` in the onclick — no string serialisation in the attribute at all. Second: `scrollToCurrentText()` was calling `scrollTop` on the `workDocument` textarea which has `overflow:hidden`, so even when the click fired the document never scrolled. Fixed to use `ta.closest('.work-doc-editor')` and scroll that element instead. Line height default corrected from 20 to 21 to match CSS. Build 20260419-009.
 
 ---
 
