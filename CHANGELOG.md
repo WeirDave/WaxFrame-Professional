@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.3 — April 18, 2026
+
+### Changed
+- **User manual — card colors now match work screen** — Section header cards (`.wh-section-hdr`) updated to `rgba(0,0,0,0.55)` with `backdrop-filter: blur(6px)` and `rgba(255,255,255,0.1)` border, matching `honeycomb-header` on the work screen. Title text set to `#ffffff` (always, both themes). Content blocks (`.wh-block`, `.wh-intro`, `.wh-toc`) updated to `rgba(0,0,0,0.6)` with `backdrop-filter: blur(6px)` and `rgba(255,255,255,0.12)` border in dark mode, matching `work-doc-panel`. In light/auto mode blocks revert to `#ffffff` with standard border. Print media forces solid `#fff` with `backdrop-filter: none` on all cards and restores dark text on section titles. Removed duplicate `wh-section-title` color rule in print block.
+
+---
+
 ## v3.14.2 — April 18, 2026
 
 ### Changed
