@@ -4,55 +4,10 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.14.7 — April 18, 2026
-
-### Fixed
-- **User manual — section header still rendering solid grey** — Root cause: `backdrop-filter` blurs what is visually behind the element. `.wh-section-hdr` sits inside `.wh-section` which had `background: var(--surface)` — a solid opaque color. The blur was compositing against that solid surface, not the honeycomb. Fixed by setting `.wh-section { background: transparent }` so the header's backdrop-filter can reach the honeycomb behind it. Moved solid background to `.wh-block` (dark: `var(--surface)`, light: `#ffffff`). Added `border-radius: 0 0 var(--radius-lg) var(--radius-lg)` to `.wh-block:last-child` to clip the bottom corners against the section border. Light and auto theme overrides updated accordingly.
-
----
-
-## v3.14.6 — April 18, 2026
-
-### Fixed
-- **User manual — section header backdrop-filter blocked by overflow:hidden** — `overflow: hidden` on `.wh-section` was creating a stacking context that prevented `backdrop-filter` on `.wh-section-hdr` from seeing through to the honeycomb background, rendering it as solid grey instead of semi-transparent. Removed `overflow: hidden` from `.wh-section` and applied `border-radius: var(--radius-lg) var(--radius-lg) 0 0` directly to `.wh-section-hdr` to preserve the rounded top corners.
-
----
-
-## v3.14.5 — April 18, 2026
-
-### Fixed
-- **User manual — section title font now matches work screen** — `.wh-section-title` was using `font-family: var(--font-display)` (Syne, 18px 800 weight). Work screen headers use `var(--font)` (DM Sans, 15px 700 weight, uppercase, letter-spacing 0.08em). Updated to match exactly.
-- **User manual — first content block incorrectly retaining border-top** — `.wh-block:first-of-type` was selecting `.wh-section-hdr` (also a div) instead of the first `.wh-block`. Replaced with `.wh-section-hdr + .wh-block { border-top: none }` adjacent sibling selector which targets correctly.
-
----
-
-## v3.14.4 — April 18, 2026
+## v3.14.8 — April 19, 2026
 
 ### Changed
-- **User manual — unified section containers matching work screen layout** — Each manual section is now one container card: `.wh-section` is the outer solid-background card (dark: `var(--surface)`, light: `#ffffff`) with `overflow: hidden`. `.wh-section-hdr` is the semi-transparent header (`rgba(0,0,0,0.55)`, `backdrop-filter: blur(6px)`) that sits flush at the top with only a `border-bottom`. `.wh-block` elements are transparent inside the container, separated by `border-top` dividers. This matches the visual treatment of the work screen panels exactly. `.wh-intro` and `.wh-toc` remain as their own standalone solid cards. Added `padding: 24px 32px` and `max-width: 900px` to `.helper-body .page-main` so sections breathe from viewport edges. Light/auto/print overrides updated for new structure. Print forces solid white on `.wh-section` and `.wh-section-hdr` with dark text.
-
----
-
-## v3.14.3 — April 18, 2026
-
-### Changed
-- **User manual — card colors now match work screen** — Section header cards (`.wh-section-hdr`) updated to `rgba(0,0,0,0.55)` with `backdrop-filter: blur(6px)` and `rgba(255,255,255,0.1)` border, matching `honeycomb-header` on the work screen. Title text set to `#ffffff` (always, both themes). Content blocks (`.wh-block`, `.wh-intro`, `.wh-toc`) updated to `rgba(0,0,0,0.6)` with `backdrop-filter: blur(6px)` and `rgba(255,255,255,0.12)` border in dark mode, matching `work-doc-panel`. In light/auto mode blocks revert to `#ffffff` with standard border. Print media forces solid `#fff` with `backdrop-filter: none` on all cards and restores dark text on section titles. Removed duplicate `wh-section-title` color rule in print block.
-
----
-
-## v3.14.2 — April 18, 2026
-
-### Changed
-- **User manual — section headers now card-styled** — `.wh-section-hdr` previously floated as a bare rule with only a bottom border. Now uses the same `background: var(--surface)`, `border`, and `border-radius` card treatment as `.wh-block`. Added to light, auto, and print background overrides to stay consistent across all themes.
-
----
-
-## v3.14.1 — April 18, 2026
-
-### Fixed
-- **User manual — honeycomb background missing in dark mode** — `helper-body` was using `background: var(--surface2)` (solid color, no image). Replaced with `background-color: var(--bg)` plus the dark honeycomb image, mirroring the main app body rule. Added `[data-theme="light"]` and `@media (prefers-color-scheme: light) [data-theme="auto"]` overrides for the light honeycomb. All three themes now render correctly.
-- **User manual — body text font size inconsistency** — Standardised all manual body text to 14px. Previously a patchwork of 12px (tip/warn boxes, table), 13px (steps, TOC links, block paragraphs), and 14px (intro). Updated: `.wh-toc-link`, `.wh-block p`, `.wh-block ul/li`, `.wh-tip p`, `.wh-warn p`, `.wh-table`, `.wh-step` all → 14px. Table `td code` bumped 11px → 13px. Section titles bumped 17px → 18px. Block titles bumped 14px → 16px. Badge elements (`.wh-step-num`, `.wh-tag`, `.wh-toc-title`) intentionally unchanged.
-- **User manual — list items rendering at base 15px** — `wh-block` had no `ul`, `ol`, or `li` rules, causing bullet lists to fall back to the 15px body font. Added `.wh-block ul`, `.wh-block ol:not(.wh-steps)`, and `.wh-block li:not(.wh-step)` rules. Print media color override patched to include `li`.
+- **Document Playbooks — visual treatment matches user manual** — All inline `<style>` removed from `document-playbooks.html` and migrated to `style.css` as a proper `dp-` rule section. `dp-content` wrapper removed — `helper-body .page-main` (now `padding: 24px 32px 48px`) handles max-width and padding. Playbook cards updated to transparent outer container + semi-transparent dark header (`rgba(0,0,0,0.55)`, `backdrop-filter: blur(6px)`, rounded top corners) + solid `var(--surface)` body with rounded bottom corners — matching the user manual section treatment exactly. Header title updated to DM Sans 15px 700 uppercase with letter-spacing, matching the work screen. Desc text in header set to `rgba(255,255,255,0.7)`. All inline `style=` attributes removed from tip icon `<img>` tags — sizing moved to `.dp-tip-icon img` CSS rule. Font sizes standardised to 14px across field values, tip text, and rounds. Light/auto theme overrides added for playbook body, TOC, intro, tags, and code elements. Build stamps updated to 20260419-001.
 
 ---
 
