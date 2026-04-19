@@ -7,9 +7,16 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.14.10 — April 19, 2026
 
 ### Changed
-- **User manual — TOC restructured into three labeled groups** — Flat pill list replaced with three labeled groups: Before You Start (What WaxFrame Does, Free Trial & Licensing, What's in the Folder), The Steps (①–⑥ plus Adding a Custom AI), and Reference (When Things Go Wrong, Using WaxFrame at Work, API Costs & Billing). Added `.wh-toc-group` and `.wh-toc-group-label` CSS rules. TOC link font size bumped to 14px.
-- **User manual — intro paragraph updated** — Rewritten to accurately reflect the three-part structure (orientation, steps, reference) rather than promising a purely linear step-by-step walkthrough.
-- **User manual — Back to Top links styled as pills** — `.wh-back-top` updated to match TOC link pill treatment: `border: 1px dashed`, `border-radius: 20px`, `padding: 5px 14px`, `width: fit-content`, `margin-left: auto`, hover state matches TOC hover. Font size bumped to 14px. Light and auto theme overrides updated.
+- **User Manual — TOC restructured into three labeled groups** — Replaced the flat `.wh-toc-list` with three `.wh-toc-group` blocks labelled "Before You Start", "The Steps", and "Reference". New `.wh-toc-group-label` class (10px uppercase, `var(--muted)`, `width:100%`) creates a visual row break above each group's pill links. `.wh-toc-list` removed from both HTML and CSS with no stragglers.
+- **User Manual — intro paragraph updated** — Rewritten to describe the guide's structure: setup first, then step-by-step, then reference sections at the end. Removes the "start to finish" framing that implied a strictly linear read.
+- **User Manual — Back to Top links styled as pills** — `.wh-back-top` updated from a plain right-aligned text link to a dashed-border pill (`border-radius:20px`, `padding:5px 14px`, `width:fit-content`, `margin-left:auto`). Hover state now matches `.wh-toc-link:hover` — accent border, accent text, `var(--accent-dim)` background.
+
+---
+
+## v3.14.9 — April 19, 2026
+
+### Added
+- **Cross-links between User Manual and Document Playbooks** — User manual Step 2 (Write Your Goal) now has a second tip box pointing to the Document Playbooks with a direct link. Document Playbooks intro blurb now includes a link back to the User Manual for new users. Both links open in a new tab.
 
 ---
 
