@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260418-001';         // build stamp — update each session
+const BUILD       = '20260419-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2056,32 +2056,97 @@ async function testApiKey(id) {
   const cfg = API_CONFIGS[ai?.provider];
   if (!cfg || !cfg._key) { toast('⚠️ Save a key first'); return; }
 
-  const btn = document.getElementById('testbtn-' + id);
+  const btn       = document.getElementById('testbtn-' + id);
+  const modal     = document.getElementById('testKeyModal');
+  const titleEl   = document.getElementById('testKeyModalTitle');
+  const subEl     = document.getElementById('testKeyModalSub');
+  const epEl      = document.getElementById('testKeyRawEndpoint');
+  const sentEl    = document.getElementById('testKeyRawSent');
+  const statusEl  = document.getElementById('testKeyRawStatus');
+  const rcvEl     = document.getElementById('testKeyRawReceived');
+
+  // Open modal and reset
+  if (titleEl)  titleEl.textContent  = `Testing — ${ai.name}`;
+  if (subEl)    subEl.textContent    = 'Sending a minimal test request…';
+  if (epEl)     epEl.textContent     = cfg.endpoint;
+  if (sentEl)   sentEl.textContent   = '…';
+  if (statusEl) statusEl.textContent = '…';
+  if (rcvEl)    rcvEl.textContent    = '…';
+  if (modal)    modal.classList.add('active');
+
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
 
+  const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
+  if (sentEl) {
+    try { sentEl.textContent = JSON.stringify(JSON.parse(sentBody), null, 2); }
+    catch { sentEl.textContent = sentBody; }
+  }
+
+  const t0 = Date.now();
   try {
     const response = await fetch(cfg.endpoint, {
       method: 'POST',
       headers: cfg.headersFn(cfg._key),
-      body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
+      body: sentBody
     });
+    const ms = Date.now() - t0;
+
+    let rawText = '';
+    try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
+
+    let prettyRaw = rawText;
+    try { prettyRaw = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
+
+    if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms`;
+
     if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      const msg = err?.error?.message || `HTTP ${response.status}`;
+      let errMsg = `HTTP ${response.status}`;
+      try { const errJson = JSON.parse(rawText); errMsg = errJson?.error?.message || errMsg; } catch { /* ignore */ }
+      const hint = testKeyHint(response.status);
+      if (subEl)    subEl.textContent    = `❌ Failed — ${errMsg}${hint ? '\n' + hint : ''}`;
+      if (rcvEl)    rcvEl.textContent    = prettyRaw;
+      if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms  ❌`;
       if (btn) { btn.textContent = '❌'; btn.disabled = false; }
-      toast(`❌ ${ai.name}: ${msg}`, 4000);
+      setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
       return;
     }
-    const data = await response.json();
-    const text = cfg.extractFn(data);
+
+    let extracted = '';
+    try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
+    if (subEl)    subEl.textContent    = `✅ Connected — "${extracted.trim().substring(0, 60)}"`;
+    if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms  ✅`;
+    if (rcvEl)    rcvEl.textContent    = prettyRaw;
     if (btn) { btn.textContent = '✅'; btn.disabled = false; }
-    toast(`✅ ${ai.name} connected — response: "${text.trim().substring(0, 30)}"`, 3500);
-    setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 4000);
+    setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
+
   } catch(e) {
+    const ms = Date.now() - t0;
+    const hint = e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed')
+      ? '\nNetwork error — check the endpoint URL and CORS settings.' : '';
+    if (subEl)    subEl.textContent    = `❌ ${e.message}${hint}`;
+    if (statusEl) statusEl.textContent = `Network Error — ${ms}ms  ❌`;
+    if (rcvEl)    rcvEl.textContent    = e.message;
     if (btn) { btn.textContent = '❌'; btn.disabled = false; }
-    toast(`❌ ${ai.name}: ${e.message}`, 4000);
-    setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 4000);
+    setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
   }
+}
+
+function testKeyHint(status) {
+  const hints = {
+    401: 'Hint: Bad or missing API key.',
+    403: 'Hint: Access denied — check key permissions.',
+    404: 'Hint: Wrong endpoint URL.',
+    405: 'Hint: Method not allowed — endpoint may not support chat completions.',
+    429: 'Hint: Rate limited — wait a moment and try again.',
+    500: 'Hint: Server error on the AI provider side — try again.',
+    503: 'Hint: Service unavailable — the provider may be down.'
+  };
+  return hints[status] || '';
+}
+
+function closeTestKeyModal() {
+  const modal = document.getElementById('testKeyModal');
+  if (modal) modal.classList.remove('active');
 }
 
 async function testAllKeys() {
@@ -2108,36 +2173,80 @@ async function testAllKeys() {
     const row = document.createElement('div');
     row.className = 'tkp-row';
     row.id = `tkprow-${ai.id}`;
-    row.innerHTML = `<span class="tkp-ai-name">${ai.name}</span><span class="tkp-status tkp-pending">…</span>`;
+    row.innerHTML = `
+      <div class="tkp-row-top">
+        <span class="tkp-ai-name">${ai.name}</span>
+        <span class="tkp-status tkp-pending">…</span>
+        <button class="tkp-detail-toggle" id="tkpdetailbtn-${ai.id}" onclick="toggleTkpDetail('${ai.id}')" style="display:none;">▶ Details</button>
+      </div>
+      <div class="tkp-detail" id="tkpdetail-${ai.id}" style="display:none;">
+        <div class="tkp-detail-row"><span class="tkp-detail-label">Endpoint</span><pre class="tkp-detail-pre" id="tkpep-${ai.id}">—</pre></div>
+        <div class="tkp-detail-row"><span class="tkp-detail-label">Sent</span><pre class="tkp-detail-pre" id="tkpsent-${ai.id}">—</pre></div>
+        <div class="tkp-detail-row"><span class="tkp-detail-label">Status</span><pre class="tkp-detail-pre" id="tkpstat-${ai.id}">—</pre></div>
+        <div class="tkp-detail-row"><span class="tkp-detail-label">Received</span><pre class="tkp-detail-pre" id="tkprcv-${ai.id}">—</pre></div>
+      </div>`;
     rowsEl.appendChild(row);
   });
 
   let passed = 0, failed = 0;
 
   for (const ai of keyed) {
-    const statusEl = document.querySelector(`#tkprow-${ai.id} .tkp-status`);
+    const statusEl  = document.querySelector(`#tkprow-${ai.id} .tkp-status`);
+    const detailBtn = document.getElementById(`tkpdetailbtn-${ai.id}`);
+    const epEl      = document.getElementById(`tkpep-${ai.id}`);
+    const sentEl    = document.getElementById(`tkpsent-${ai.id}`);
+    const statEl    = document.getElementById(`tkpstat-${ai.id}`);
+    const rcvEl     = document.getElementById(`tkprcv-${ai.id}`);
     const cfg = API_CONFIGS[ai.provider];
-    if (!cfg || !cfg._key) { if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; } failed++; continue; }
 
+    if (!cfg || !cfg._key) {
+      if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; }
+      failed++;
+      continue;
+    }
+
+    const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
+    if (epEl)   epEl.textContent   = cfg.endpoint;
+    if (sentEl) {
+      try { sentEl.textContent = JSON.stringify(JSON.parse(sentBody), null, 2); }
+      catch { sentEl.textContent = sentBody; }
+    }
+
+    const t0 = Date.now();
     try {
       const response = await fetch(cfg.endpoint, {
         method: 'POST',
         headers: cfg.headersFn(cfg._key),
-        body: cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED')
+        body: sentBody
       });
+      const ms = Date.now() - t0;
+
+      let rawText = '';
+      try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
+      let prettyRaw = rawText;
+      try { prettyRaw = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
+
+      if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms`;
+      if (rcvEl)  rcvEl.textContent  = prettyRaw;
+      if (detailBtn) detailBtn.style.display = '';
+
       if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        const msg = err?.error?.message || `HTTP ${response.status}`;
-        if (statusEl) { statusEl.textContent = `✕ ${msg}`; statusEl.className = 'tkp-status tkp-fail'; }
+        let errMsg = `HTTP ${response.status}`;
+        try { const errJson = JSON.parse(rawText); errMsg = errJson?.error?.message || errMsg; } catch { /* ignore */ }
+        if (statusEl) { statusEl.textContent = `✕ ${errMsg}`; statusEl.className = 'tkp-status tkp-fail'; }
         failed++;
       } else {
-        const data = await response.json();
-        const text = cfg.extractFn(data);
-        if (statusEl) { statusEl.textContent = `✓ ${text.trim().substring(0, 20)}`; statusEl.className = 'tkp-status tkp-pass'; }
+        let extracted = '';
+        try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
+        if (statusEl) { statusEl.textContent = `✓ ${extracted.trim().substring(0, 20)}`; statusEl.className = 'tkp-status tkp-pass'; }
         passed++;
       }
     } catch(e) {
+      const ms = Date.now() - t0;
       if (statusEl) { statusEl.textContent = `✕ ${e.message.substring(0, 40)}`; statusEl.className = 'tkp-status tkp-fail'; }
+      if (statEl)   statEl.textContent   = `Network Error — ${ms}ms`;
+      if (rcvEl)    rcvEl.textContent    = e.message;
+      if (detailBtn) detailBtn.style.display = '';
       failed++;
     }
     // Small delay between calls so we don't hammer endpoints
@@ -2146,6 +2255,15 @@ async function testAllKeys() {
 
   if (title) title.textContent = `Done — ${passed} passed, ${failed} failed`;
   if (dismiss) dismiss.classList.add('tkp-done');
+}
+
+function toggleTkpDetail(id) {
+  const detail = document.getElementById(`tkpdetail-${id}`);
+  const btn    = document.getElementById(`tkpdetailbtn-${id}`);
+  if (!detail) return;
+  const open = detail.style.display !== 'none';
+  detail.style.display = open ? 'none' : 'block';
+  if (btn) btn.textContent = open ? '▶ Details' : '▼ Details';
 }
 
 function dismissTestPanel() {

@@ -6038,8 +6038,8 @@ kbd {
   position: fixed;
   bottom: 80px;
   right: 24px;
-  width: 360px;
-  max-height: 420px;
+  width: 520px;
+  max-height: 520px;
   background: var(--surface);
   border: 1px solid var(--border2);
   border-radius: var(--radius-md);
@@ -6083,14 +6083,17 @@ kbd {
   padding: 6px 0;
 }
 .tkp-row {
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+.tkp-row:last-child { border-bottom: none; }
+.tkp-row-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 6px 14px;
-  border-bottom: 1px solid var(--border);
   gap: 10px;
 }
-.tkp-row:last-child { border-bottom: none; }
 .tkp-ai-name {
   font-size: 12px;
   font-weight: 600;
@@ -6106,7 +6109,7 @@ kbd {
   font-size: 11px;
   font-family: var(--font-mono);
   flex-shrink: 0;
-  max-width: 180px;
+  max-width: 200px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6114,6 +6117,57 @@ kbd {
 .tkp-pending { color: var(--text-dim); }
 .tkp-pass { color: var(--green, #00b300); }
 .tkp-fail { color: var(--red, #e53e3e); }
+.tkp-detail-toggle {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 10px;
+  padding: 2px 7px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.12s;
+  font-family: var(--font-mono);
+}
+.tkp-detail-toggle:hover { border-color: var(--accent); color: var(--accent); }
+.tkp-detail {
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  padding: 8px 14px 10px;
+}
+.tkp-detail-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 8px;
+}
+.tkp-detail-row:last-child { margin-bottom: 0; }
+.tkp-detail-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-family: var(--font-mono);
+}
+.tkp-detail-pre {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 5px 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 120px;
+  overflow-y: auto;
+  margin: 0;
+}
+
+/* Test Key Modal — individual test button modal */
+.test-key-modal { max-width: 640px; }
+.test-key-raw-received { max-height: 200px; overflow-y: auto; }
 
 /* ══ SETUP PAGE 2 LAPTOP FIXES ══ */
 @media (max-width: 1600px) {
