@@ -4,6 +4,24 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.15.1 — April 19, 2026
+
+### Added
+- **Starting Document tab hint line** — A dynamic instruction line now appears below the Upload / Paste Text / Start from Scratch tab buttons, updating per tab: Upload tells users to click or drag onto the drop zone below; Paste tells users to click inside the editor; Scratch explains no action is needed. Addresses new-user confusion where the tab buttons appeared to be action buttons rather than mode selectors.
+- **Refine Preview always visible** — The ▸ Refine Preview button and panel now show content whenever the goal field has text, regardless of character count. Previously the button was hidden when the goal was under 300 characters, leaving users with no feedback. Under 300 characters shows the full goal with a note that it will be sent in full. Over 300 characters shows the sentence-trimmed version as before.
+- **User manual — Starting Document section** — New block in Step 3 explaining that Upload File / Paste Text / Start from Scratch are mode selectors, not action buttons, with a description of each mode.
+- **User manual — Draft vs Refine goal sending** — New block explaining that the Draft round sends the full goal while Refine rounds send a sentence-trimmed version targeting ~300 characters, with a tip to put the most important instruction in the first sentence.
+- **User manual — Refine Preview panel** — New block explaining what the ▸ Refine Preview button does, when to use it, and that it collapses to a button on smaller screens.
+
+### Fixed
+- **`buildPromptForAI` now uses sentence-aware truncation** — Refine round prompts were using a hard `.substring(0, 300)` cut, mismatching what the UI preview showed (sentence-boundary trim). Both now use `truncateGoalForRefine()` consistently.
+- **"chars" spelled out to "characters"** — All user-visible instances of the abbreviation "chars" replaced with "characters" in the goal counter, refine preview panel, work document stats, and empty state text.
+- **`infoUploadModal` rewritten** — Now clearly states the three buttons are mode selectors and explains what to do after selecting each one.
+- **`goalInfoModal` updated** — Rewrote the From Scratch / From a Starting Doc / Live Preview rows to accurately reflect the Draft vs Refine distinction and the always-visible Refine Preview behaviour.
+- **About modal version number** — Hardcoded "v3.4 Pro" replaced with a dynamic `#aboutVersion` span populated from `APP_VERSION` at runtime.
+
+---
+
 ## v3.15.0 — April 19, 2026
 
 ### Added

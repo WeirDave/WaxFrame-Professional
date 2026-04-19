@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-005';         // build stamp — update each session
+const BUILD       = '20260419-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3009,6 +3009,16 @@ function switchDocTab(tab) {
   document.querySelectorAll('.doc-tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'   + tab)?.classList.add('active');
   document.getElementById('panel-' + tab)?.classList.add('active');
+  // Update instruction hint
+  const hint = document.getElementById('docTabHint');
+  if (hint) {
+    const hints = {
+      upload:  'Click the area below to browse for a file, or drag and drop one directly onto it.',
+      paste:   'Paste your existing document text into the editor below.',
+      scratch: 'No document needed — your AIs will generate the first draft from your goal. Fill in your goal above and launch when ready.'
+    };
+    hint.textContent = hints[tab] || '';
+  }
   // Init line numbers when switching to paste tab
   if (tab === 'paste') {
     const ta = document.getElementById('pasteText');
@@ -3573,7 +3583,7 @@ function updateGoalCounter() {
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
-    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
+    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">characters</span></span>`;
 
   // Update sidebar refine preview panel (large screen)
   const previewWrap  = document.getElementById('goalRefinePreview');
@@ -3593,23 +3603,36 @@ function updateGoalCounter() {
     const refined = truncateGoalForRefine(ta.value);
     // Sidebar
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
-    if (previewCount) previewCount.textContent = `${refined.length} chars`;
-    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
+    if (previewCount) previewCount.textContent = `${refined.length} characters — trimmed to nearest sentence`;
+    if (previewSub)   previewSub.textContent = 'AIs receive this in Refine rounds. Draft round always gets your full goal.';
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
     // Popover
     if (popoverText)  popoverText.textContent = refined;
-    if (popoverCount) popoverCount.textContent = `${refined.length} chars`;
-    if (popoverSub)   popoverSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
+    if (popoverCount) popoverCount.textContent = `${refined.length} characters — trimmed to nearest sentence`;
+    if (popoverSub)   popoverSub.textContent = 'AIs receive this in Refine rounds. Draft round always gets your full goal.';
+    if (popoverBtn)   popoverBtn.style.removeProperty('display');
+  } else if (ta.value.trim()) {
+    // Under 300 chars — show full goal with note that it will be sent in full
+    const full = ta.value.trim();
+    // Sidebar
+    if (previewText)  { previewText.textContent = full; previewText.style.display = 'block'; }
+    if (previewCount) previewCount.textContent = `${full.length} characters — full goal`;
+    if (previewSub)   previewSub.textContent = 'Your full goal will be sent to AIs in both Draft and Refine rounds.';
+    if (previewEmpty) previewEmpty.style.display = 'none';
+    if (previewWrap)  previewWrap.classList.add('has-content');
+    // Popover
+    if (popoverText)  popoverText.textContent = full;
+    if (popoverCount) popoverCount.textContent = `${full.length} characters — full goal`;
+    if (popoverSub)   popoverSub.textContent = 'Your full goal will be sent to AIs in both Draft and Refine rounds.';
     if (popoverBtn)   popoverBtn.style.removeProperty('display');
   } else {
-    // Sidebar
+    // Empty goal
     if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
     if (previewCount) previewCount.textContent = '';
     if (previewSub)   previewSub.textContent = '';
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
-    // Popover — hide button and close popover if goal shrinks below threshold
     if (popoverBtn)   popoverBtn.style.display = 'none';
     if (popover)      popover.style.display = 'none';
   }
@@ -3660,7 +3683,7 @@ function updateLineNumbers() {
   if (stats && text.trim()) {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     const chars = text.length;
-    stats.textContent = `${visualCount} lines · ${words.toLocaleString()} words · ${chars.toLocaleString()} chars`;
+    stats.textContent = `${visualCount} lines · ${words.toLocaleString()} words · ${chars.toLocaleString()} characters`;
   } else if (stats) {
     stats.textContent = '';
   }
@@ -4228,7 +4251,10 @@ function buildPromptForAI(ai, reviewerResponses) {
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
-  if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
+  if (goal && phase !== 'draft') {
+    const goalCtx = truncateGoalForRefine(goal);
+    prompt += `PROJECT CONTEXT: ${goalCtx}${goal.length > 300 ? '…' : ''}\n\n`;
+  }
 
   // Inject length constraint if set
   const _lc = getLengthConstraint();
@@ -6090,6 +6116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.title = 'WaxFrame ' + APP_VERSION;
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
+  const verEl = document.getElementById('aboutVersion');
+  if (verEl) verEl.textContent = APP_VERSION;
   updateSetupRequirements();
 
   // Show dev toolbar and admin nav items if dev mode is active

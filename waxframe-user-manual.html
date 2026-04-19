@@ -384,6 +384,50 @@
       <p>Paste your existing document into the document field below the goal. WaxFrame will treat this as your starting point and all rounds will refine what's there — it won't generate a fresh draft from scratch.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Choosing how to start — Upload, Paste, or Scratch</div>
+      <p>The three buttons on the right side of the Project screen — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose your starting method, then interact with the area that appears below them.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Upload File</span>
+        <span class="goal-info-desc">Select Upload mode, then click the drop zone or drag a file onto it. Supported: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), Markdown (.md).</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Paste Text</span>
+        <span class="goal-info-desc">Select Paste mode, then click inside the editor that appears and paste your text.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Start from Scratch</span>
+        <span class="goal-info-desc">No document needed. The hive will generate a first draft based on your goal — just write your goal and launch.</span>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Draft round vs Refine rounds — what your goal sends</div>
+      <p>WaxFrame sends your goal differently depending on which round you're on.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Draft round</span>
+        <span class="goal-info-desc">Your <strong>full goal</strong> is sent to every AI, regardless of length. This is when it matters most — the AIs are building your document from nothing and need all the context you can give them.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Refine rounds</span>
+        <span class="goal-info-desc">Only a trimmed version of your goal is sent, labelled <em>Project Context</em>. The trim targets around 300 characters but always cuts at a sentence boundary so nothing is left mid-thought. Your document already exists — the tokens are better spent on the document and reviewer suggestions than on the full goal.</span>
+      </div>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Put your most important instruction in the first sentence of your goal. That sentence will always make it into refine rounds. The character counter next to the goal field turns amber when you exceed 300 characters.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Refine Preview — see exactly what your AIs will receive</div>
+      <p>The <strong>▸ Refine Preview</strong> button (next to the character counter on the goal field) shows you the exact text that will be sent to your AIs in Refine rounds — updated live as you type. Click it to open the preview panel.</p>
+      <p>If your goal is under 300 characters, the preview shows your full goal with a note that it will be sent in full. If your goal is over 300 characters, the preview shows the trimmed version cut to the nearest sentence. Use it to make sure your most critical instruction lands within what gets sent.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>On smaller screens the Refine Preview panel collapses into the ▸ Refine Preview button automatically. Click it any time to check what your AIs will receive.</p>
+      </div>
+    </div>
   </div>
 
 
@@ -665,7 +709,7 @@
       <ol class="wh-steps">
         <li class="wh-step"><span class="wh-step-num">1</span>Go to <strong>Setup</strong> and click <strong>＋ Add Custom AI</strong> at the top of the Worker Bees panel.</li>
         <li class="wh-step"><span class="wh-step-num">2</span>Enter the <strong>API endpoint URL</strong> your IT team provided.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span>Set the <strong>API Format</strong> to <em>OpenAI compatible</em> <span class="field-optional">(optional — auto-filled if you used Quick Add)</span>.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span>Set the <strong>API Format</strong> to <em>OpenAI compatible</em>.</li>
         <li class="wh-step"><span class="wh-step-num">4</span>Enter the exact <strong>model ID string</strong>.</li>
         <li class="wh-step"><span class="wh-step-num">5</span>Paste your <strong>API key or bearer token</strong> and press Enter to save.</li>
         <li class="wh-step"><span class="wh-step-num">6</span>Repeat for each internal model you want to use. You need at least two AIs with saved keys to run a round.</li>
