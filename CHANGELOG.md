@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.7 — April 18, 2026
+
+### Fixed
+- **User manual — section header still rendering solid grey** — Root cause: `backdrop-filter` blurs what is visually behind the element. `.wh-section-hdr` sits inside `.wh-section` which had `background: var(--surface)` — a solid opaque color. The blur was compositing against that solid surface, not the honeycomb. Fixed by setting `.wh-section { background: transparent }` so the header's backdrop-filter can reach the honeycomb behind it. Moved solid background to `.wh-block` (dark: `var(--surface)`, light: `#ffffff`). Added `border-radius: 0 0 var(--radius-lg) var(--radius-lg)` to `.wh-block:last-child` to clip the bottom corners against the section border. Light and auto theme overrides updated accordingly.
+
+---
+
 ## v3.14.6 — April 18, 2026
 
 ### Fixed
