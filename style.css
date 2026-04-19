@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260417-005
+   Build: 20260418-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5764,6 +5764,9 @@ kbd {
 .wh-block-title { font-family:var(--font-display); font-size:14px; font-weight:700; color:var(--text); margin-bottom:8px; }
 .wh-block p { font-size:13px; color:var(--text-dim); line-height:1.7; margin:0 0 8px; }
 .wh-block p:last-child { margin-bottom:0; }
+.wh-block ul,
+.wh-block ol:not(.wh-steps) { font-size:13px; color:var(--text-dim); line-height:1.7; margin:4px 0 8px; padding-left:20px; }
+.wh-block li:not(.wh-step) { margin-bottom:4px; }
 
 .wh-tip { display:flex; gap:10px; align-items:flex-start; background:var(--accent-dim); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:12px 14px; margin-top:10px; }
 .wh-tip-icon { flex-shrink:0; margin-top:1px; display:flex; align-items:center; }
@@ -5816,7 +5819,7 @@ kbd {
   .wh-section-title, .wh-block-title { color:#111 !important; }
   .wh-toc-link { color:#333 !important; border-color:#ccc !important; }
   .wh-tip { background:#fffbea !important; border-color:#e5c84a !important; }
-  .wh-tip p, .wh-block p, .wh-step { color:#333 !important; }
+  .wh-tip p, .wh-block p, .wh-block li, .wh-step { color:#333 !important; }
   .wh-warn { background:#fff0f0 !important; }
   .wh-warn p { color:#c00 !important; }
   .wh-step-num { background:#b87a00 !important; color:#fff !important; }
