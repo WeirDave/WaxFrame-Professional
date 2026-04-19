@@ -4,10 +4,10 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.14.8 — April 19, 2026
+## v3.14.9 — April 19, 2026
 
-### Changed
-- **Document Playbooks — visual treatment matches user manual** — All inline `<style>` removed from `document-playbooks.html` and migrated to `style.css` as a proper `dp-` rule section. `dp-content` wrapper removed — `helper-body .page-main` (now `padding: 24px 32px 48px`) handles max-width and padding. Playbook cards updated to transparent outer container + semi-transparent dark header (`rgba(0,0,0,0.55)`, `backdrop-filter: blur(6px)`, rounded top corners) + solid `var(--surface)` body with rounded bottom corners — matching the user manual section treatment exactly. Header title updated to DM Sans 15px 700 uppercase with letter-spacing, matching the work screen. Desc text in header set to `rgba(255,255,255,0.7)`. All inline `style=` attributes removed from tip icon `<img>` tags — sizing moved to `.dp-tip-icon img` CSS rule. Font sizes standardised to 14px across field values, tip text, and rounds. Light/auto theme overrides added for playbook body, TOC, intro, tags, and code elements. Build stamps updated to 20260419-001.
+### Added
+- **Cross-links between User Manual and Document Playbooks** — User manual Step 2 (Write Your Goal) now has a second tip box pointing to the Document Playbooks with a direct link. Document Playbooks intro blurb now includes a link back to the User Manual for new users. Both links open in a new tab.
 
 ---
 
