@@ -423,7 +423,11 @@
       <p><span class="wh-tag wh-tag-green">Much better</span> <em>"This is a wireless network infrastructure upgrade proposal for a 950,000 sq ft warehouse. The audience is the IT Director and VP of Facilities — technical on the left, budget-focused on the right. The technical sections and vendor comparison table are solid and must not be changed. Focus all improvements on the executive summary — it is currently too long and too jargon-heavy for the VP — and on the cost justification section, which needs a clearer ROI narrative. Tone must be confident and direct, not salesy. Do not add any new sections."</em></p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for dozens of common document types. Open it from the Menu or the link above.</p>
+        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for 11 common document types. Open it from the Menu or the link above.</p>
+      </div>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Do not include a target length in your goal. Use the <strong>Length Constraint</strong> field above the goal instead — WaxFrame sends it to your AIs automatically in a standardised format every round. Putting length in the goal is redundant and can confuse the instruction.</p>
       </div>
     </div>
 
@@ -431,40 +435,54 @@
       <div class="wh-block-title">Writing your goal when starting from scratch</div>
       <p>When you have no existing document, the AIs generate the first draft entirely from your goal. Be as detailed as possible — include document type, audience, purpose, scope, tone, approximate length, structure, and any specific sections or headings you want included.</p>
       <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Write a report about wireless networking."</em></p>
-      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Create a technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience is our IT infrastructure team evaluating a campus-wide network refresh. Scope is strictly wireless: access points, controllers, cloud management, and licensing models. Explicitly exclude switching, routing, firewalls, and security products. Tone is technical and neutral — this is an internal evaluation document, not a sales pitch. Include a summary comparison table at the top, then a dedicated section for each vendor covering strengths, weaknesses, and pricing model. Close with a shortlist recommendation. Target length is approximately 2,000 words."</em></p>
+      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Create a technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience is our IT infrastructure team evaluating a campus-wide network refresh. Scope is strictly wireless: access points, controllers, cloud management, and licensing models. Explicitly exclude switching, routing, firewalls, and security products. Tone is technical and neutral — this is an internal evaluation document, not a sales pitch. Include a summary comparison table at the top, then a dedicated section for each vendor covering strengths, weaknesses, and pricing model. Close with a shortlist recommendation."</em></p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The character counter and the 300-character threshold</div>
-      <p>To the right of the <strong>Project Goal</strong> heading is a live character counter showing the current line count, word count, and character count of your goal. When your goal exceeds 300 characters, the character count turns amber as a signal that the goal will be trimmed in Refine rounds.</p>
-      <p>Here is why this matters: WaxFrame sends your goal differently depending on which round you are on.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Draft round (Round 1)</span>
-        <span class="goal-info-desc">Your <strong>full goal</strong> is sent to every AI regardless of length. This is the round where the AIs generate or first review the document and they need all the context you can give them.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Refine rounds (Round 2 onward)</span>
-        <span class="goal-info-desc">A trimmed version of your goal is sent, labelled <em>Project Context</em>. The trim targets approximately 300 characters but always cuts at a sentence boundary so nothing is left mid-thought. The document already exists — the token budget is better spent on the document content and reviewer suggestions than on repeating the full goal.</span>
-      </div>
+      <p>To the right of the <strong>Project Goal</strong> heading is a live counter showing the current line count, word count, and character count of your goal as you type. When your goal exceeds 300 characters, the character count turns amber.</p>
+      <p>This amber signal is not telling you to shorten your goal. <strong>Write as much detail as you want — especially when starting from scratch.</strong> The amber is simply a heads-up that WaxFrame will send a trimmed version of your goal whenever a document already exists, and here is the reason why:</p>
+      <p>Every API call costs tokens. When the AIs are generating a first draft from scratch, sending your full goal to every AI is absolutely worth it — they have nothing else to work from. But once a document exists — whether you uploaded it, pasted it, or the AIs generated it — sending thousands of characters of goal context to every AI every round is wasteful. Those tokens are better spent on the document itself and on the reviewer suggestions. So WaxFrame sends only the opening portion of your goal — approximately 300 characters, always cut at a sentence boundary so nothing is left incomplete — labelled as <em>Project Context</em>. This keeps every AI anchored to your intent without burning unnecessary tokens on context they no longer need at full length.</p>
+      <p><strong>What this means for you:</strong> put your single most important instruction in the first sentence of your goal. Everything after that is full context the AIs use when generating from scratch — but the first sentence is what they receive on every run once a document exists.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Put your single most important instruction in the first sentence of your goal. That sentence is guaranteed to be included in every Refine round regardless of goal length.</p>
+        <p>Put your single most important instruction in the first sentence of your goal. That sentence is what your AIs receive every time a document exists, regardless of how long your full goal is.</p>
       </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The Refine Preview button — see exactly what your AIs will receive</div>
-      <p>Next to the character counter is a button labelled <strong>▸ Refine Preview</strong>. Clicking it opens a preview showing the exact text that will be sent to your AIs in Refine rounds, updated live as you type.</p>
+      <p>Next to the character counter is a button labelled <strong>▸ Refine Preview</strong>. Clicking it opens a preview showing the exact text that will be sent to your AIs whenever a document exists, updated live as you type.</p>
       <ul>
-        <li>If your goal is <strong>under 300 characters</strong>, the preview shows your full goal and a note confirming it will be sent in full to every round.</li>
-        <li>If your goal is <strong>over 300 characters</strong>, the preview shows the trimmed version — cut to the nearest sentence boundary — so you can see exactly where the cutoff falls and adjust your opening sentence if needed.</li>
+        <li>If your goal is <strong>under 300 characters</strong>, the preview shows your full goal — the entire thing will be sent every time a document exists.</li>
+        <li>If your goal is <strong>over 300 characters</strong>, the preview shows the trimmed version — cut to the nearest complete sentence boundary at or around 300 characters. This is exactly what your AIs will receive on every run once a document exists.</li>
       </ul>
       <p>The Refine Preview button is always available whenever your goal field contains text. On screens with limited height, the side-by-side preview panel collapses and the button is the only way to access the preview — it is always there.</p>
     </div>
 
     <div class="wh-block">
+      <div class="wh-block-title">What to put in your first 300 characters — and why it matters</div>
+      <p>Think of the first 300 characters of your goal — one to three sentences — as the anchor that keeps every AI pointed at the right target across every run. Once your document exists, this is the only part of your goal your AIs see. Everything after the cutoff is still fully used when generating from scratch, but it does not reach the AIs again once the document is in place.</p>
+      <p>The goal of this anchor is not to repeat your entire brief — it is to prevent drift. Without it, by round five your AIs are reacting purely to what is in the document in front of them with no memory of what it was supposed to be. A clear anchor keeps them aligned to your intent even as the document evolves.</p>
+      <p>Here is what to prioritise in those first 300 characters, in order of importance:</p>
+      <div class="goal-info-row">
+        <span class="info-label">What the document is and who it is for</span>
+        <span class="goal-info-desc">This is the single most valuable thing to anchor. <em>"This is a technical wireless network upgrade proposal for an IT Director and VP of Facilities."</em> That one sentence — under 100 characters — tells every AI the document type, the stakes, and the audience on every run. Without it, the tone and depth will drift.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">The hardest boundary or the most important constraint</span>
+        <span class="goal-info-desc">If there is one thing the document must never become, or one constraint that absolutely cannot slip — include it here. <em>"Tone must be technical and direct, not conversational."</em> or <em>"Do not include pricing under any circumstances."</em> Repeated violations are almost always caused by this boundary not making it into the trimmed context.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">What to leave out of the first 300 characters</span>
+        <span class="goal-info-desc">Specific sections, structure, formatting instructions, detailed scope definitions — these matter enormously for the initial scratch generation but they are low-value repeated context once the document is built. Put them later in your goal where they will be read once and then let go, not repeated in every run consuming tokens that could go toward the document.</span>
+      </div>
+      <p>Use the <strong>▸ Refine Preview</strong> to read your trimmed context out loud. Ask yourself: if an AI saw only this text and then the current document, would it know what the document is supposed to be, who it is for, and what it absolutely cannot do? If yes, you are in good shape. If not, rewrite the opening until the answer is yes.</p>
+    </div>
+
+    <div class="wh-block">
       <div class="wh-block-title">The ⓘ button — About Your Project Goal</div>
-      <p>Next to the <strong>Your Project</strong> heading at the top of the left panel is a small ⓘ info button. Clicking it opens an overlay that summarises how the goal is used in Draft vs Refine rounds, explains the Refine Preview, and reminds you of the 300-character threshold. It is a quick reference to everything in this section of the manual.</p>
+      <p>Next to the <strong>Your Project</strong> heading at the top of the left panel is a small ⓘ info button. Clicking it opens an overlay that summarises how the goal is sent in full when generating from scratch versus trimmed when a document exists, explains the Refine Preview, and reminds you of the 300-character threshold. It is a quick reference to everything in this section of the manual.</p>
     </div>
 
     <div class="wh-block">
@@ -588,7 +606,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Round badge</span>
-        <span class="goal-info-desc">In the centre of the top bar. Shows the current round number and phase — for example <em>Round 1 — Draft</em> or <em>Round 3 — Refine Text</em>. Updates automatically after each round completes.</span>
+        <span class="goal-info-desc">In the centre of the top bar. Shows the current round number — for example <em>Round 1</em> or <em>Round 3</em>. Updates automatically after each round completes.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">📖 History</span>
@@ -609,49 +627,60 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The left column — The Hive</div>
-      <p>The left column is headed <strong>The Hive</strong> with a small ⓘ info button. This panel shows your AI reviewers and their status during each round.</p>
+      <div class="wh-block-title">The left column — The Hive and Conflicts</div>
+      <p>The left column contains two sections stacked vertically: <strong>The Hive</strong> at the top and <strong>Conflicts</strong> below it.</p>
+      <p><strong>The Hive</strong> section has a small ⓘ info button and two buttons in its header:</p>
       <div class="goal-info-row">
         <span class="info-label">Edit Hive button</span>
-        <span class="goal-info-desc">Opens a panel where you can toggle individual AIs on or off for the current session without going back to Setup. Turning an AI off excludes it from the next round only — its key is not deleted. Use this to skip an AI that is giving poor suggestions, or to run a faster round with fewer reviewers.</span>
+        <span class="goal-info-desc">This button only appears on laptop-sized screens (at or below 1600px wide). On those screens the full AI cards are hidden and replaced with a compact dot strip — one small dot per AI — to save space. Clicking <strong>Edit Hive</strong> opens a modal where you can toggle individual AIs on or off for the session. On a full desktop screen this button is not shown — you interact with the AI cards directly instead.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Change Builder button</span>
-        <span class="goal-info-desc">Opens a panel where you can switch which AI is acting as Builder for the current session without going back to Setup. Any AI with a saved key can be selected. Use this if your current Builder produces a structure error or if you want to try a different AI's writing style.</span>
+        <span class="goal-info-desc">Always visible. Opens a panel where you can switch which AI is acting as Builder for the current session without going back to Setup. Any AI with a saved key can be selected. Use this if your current Builder produces a structure error or if you want to try a different AI's writing style.</span>
+      </div>
+      <p>Below the header, the AI status area displays differently depending on your screen size:</p>
+      <div class="goal-info-row">
+        <span class="info-label">Desktop (wider than 1600px)</span>
+        <span class="goal-info-desc">Each active AI is shown as a full card with its name, icon, and live status. During a round each card updates to show the AI's current state — idle, running, complete, or error. After a round you can click any card to view that AI's full reviewer response.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">AI status grid</span>
-        <span class="goal-info-desc">A grid of hexagonal icons, one for each active AI. During a round each icon animates to show the AI's current state: idle, running, complete, or error. After a round completes, you can click any AI's icon to read that specific AI's full reviewer response in the right column.</span>
+        <span class="info-label">Laptop (1600px or narrower)</span>
+        <span class="goal-info-desc">The full cards are hidden and replaced by a compact row of small circular dots — one per active AI — showing colour-coded status. Tap any dot to see which AI it represents. The Edit Hive button appears in the header to compensate for the loss of the card controls.</span>
+      </div>
+      <p>Below the AI status area is the <strong>Conflicts</strong> section, also in the left column:</p>
+      <div class="goal-info-row">
+        <span class="info-label">Conflicts</span>
+        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A 📋 Copy button and a ✕ Clear button appear in the Conflicts header. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. Covered in full in Step 8.</span>
       </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The centre column — Working Document</div>
-      <p>The centre column is headed <strong>📄 Working Document</strong> with a small ⓘ info button. This is where your document lives and updates after each round.</p>
+      <p>The centre column is headed <strong>📄 Working Document</strong> with a small ⓘ info button. This is where your document lives and is updated after each round.</p>
       <div class="goal-info-row">
         <span class="info-label">Document editor</span>
-        <span class="goal-info-desc">The large text area showing your current document. It is fully editable between rounds — click anywhere and type to make direct changes. The AIs will work with whatever is in this area when the next round starts.</span>
+        <span class="goal-info-desc">The large line-numbered text area showing your current document. It is fully editable between rounds — click anywhere and type to make direct changes. The AIs work with whatever is in this editor when the next round starts.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Stats bar</span>
         <span class="goal-info-desc">Below the document editor. Shows the current line count, word count, and character count of the document, updated live as you type or as rounds complete.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">📋 Copy button</span>
-        <span class="goal-info-desc">Copies the entire document text to your clipboard so you can paste it elsewhere without exporting a file.</span>
+        <span class="info-label">💾 Export, 📋 Copy, ✕ Clear</span>
+        <span class="goal-info-desc">Three buttons in the Working Document header. Export downloads the document as a .txt file immediately without opening the Finish panel. Copy puts the full document text on your clipboard. Clear wipes the document editor — use with caution.</span>
       </div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The right column — Conflicts and Reviewer Responses</div>
-      <p>The right column has two labelled sections:</p>
+      <div class="wh-block-title">The right column — Timers and Live Console</div>
+      <p>The right column contains three elements stacked vertically: the WaxFrame logo, the dual-face clock widget, and the Live Console.</p>
       <div class="goal-info-row">
-        <span class="info-label">Conflicts</span>
-        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. Each conflict presents the options your AIs proposed. You resolve each one by choosing an option, writing a custom resolution, or keeping the original. Covered in detail in Step 8.</span>
+        <span class="info-label">Dual-face clock widget</span>
+        <span class="goal-info-desc">Two timers displayed side by side in a single bezel. The left face — labelled <strong>ROUND</strong> — counts up automatically while a round is running and stops when the round completes, showing you how long that round took. It resets when the next round starts. The right face — labelled <strong>PROJECT</strong> — is a manual stopwatch for your overall session. It has a ▶ Start button and a ⏸ Pause button. Use it to track total time spent on a project across multiple rounds and sessions.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🖥️ Live Console</span>
-        <span class="goal-info-desc">A live log of everything happening during a round — when each AI request was sent, what status code was returned, and a confirmation when the response was received. Useful for monitoring progress during a round and for diagnosing problems if something goes wrong. Click the 📋 Copy button above the console to copy the full log to your clipboard.</span>
+        <span class="goal-info-desc">A colour-coded live log of everything happening during a round — when each AI request was sent, the HTTP status code returned, response received, and any errors. A legend at the top of the console identifies what each colour means: Round, Sending, Response, Success, Warning, Error, Info. A 📋 Copy button copies the full log to your clipboard. A ✕ Clear button wipes the console. Use the console to monitor progress during a round and to diagnose problems if something goes wrong.</span>
       </div>
     </div>
 
@@ -699,22 +728,22 @@
       <div class="wh-block-title">What happens during a round</div>
       <ol class="wh-steps">
         <li class="wh-step"><span class="wh-step-num">1</span><span>WaxFrame sends each reviewer AI a prompt containing your goal, the current document, and instructions for their role. All reviewer AIs receive the same prompt simultaneously.</span></li>
-        <li class="wh-step"><span class="wh-step-num">2</span><span>Each reviewer AI returns a numbered list of specific suggestions. You can see these in the Live Console as they arrive, and in full detail in the right column after the round.</span></li>
+        <li class="wh-step"><span class="wh-step-num">2</span><span>Each reviewer AI returns a numbered list of specific suggestions. You can see these in the Live Console as they arrive, and in the Conflicts section of the left column after the round.</span></li>
         <li class="wh-step"><span class="wh-step-num">3</span><span>Once all reviewers complete, WaxFrame sends the Builder AI a prompt containing the current document, all reviewer suggestions, and your goal. The Builder incorporates the strongest suggestions and produces an updated document.</span></li>
-        <li class="wh-step"><span class="wh-step-num">4</span><span>The updated document appears in the Working Document panel. Any significant disagreements between your AIs are flagged as conflicts in the right column for your decision. The round is saved to history automatically.</span></li>
+        <li class="wh-step"><span class="wh-step-num">4</span><span>The updated document appears in the Working Document panel. Any significant disagreements between your AIs are flagged as conflicts in the left column for your decision. The round is saved to history automatically.</span></li>
       </ol>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Draft round vs Refine rounds</div>
-      <p>The round badge in the top bar shows the current phase.</p>
+      <div class="wh-block-title">How WaxFrame handles your goal — two situations, automatically determined</div>
+      <p>WaxFrame decides how to use your goal based on one simple question: does a document exist? You do not choose or configure this — it is handled automatically.</p>
       <div class="goal-info-row">
-        <span class="info-label">Round 1 — Draft</span>
-        <span class="goal-info-desc">Your first round is always a Draft round. Your full project goal is sent to every AI. If you chose Start from Scratch, the AIs produce a first draft. If you provided a document, the AIs review it and the Builder produces an improved version. After Round 1, the phase changes to Refine automatically.</span>
+        <span class="info-label">No document — generating from scratch</span>
+        <span class="goal-info-desc">If you chose <strong>Start from Scratch</strong>, no document exists yet. WaxFrame sends your <strong>full project goal</strong> to every AI. They write independently and the Builder combines the best elements into the initial working document. This is the only situation in which your full goal is sent.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Round 2+ — Refine Text</span>
-        <span class="goal-info-desc">Every subsequent round is a Refine round. The AIs read the current document and give targeted improvement suggestions — tightening language, fixing inconsistencies, strengthening arguments, improving structure. Your goal is sent as a trimmed Project Context (approximately the first 300 characters, cut at a sentence boundary).</span>
+        <span class="info-label">Document exists — always</span>
+        <span class="goal-info-desc">The moment a document exists — whether you uploaded a file, pasted text, or the AIs generated one from scratch in a previous run — WaxFrame sends only a trimmed <em>Project Context</em> to your AIs on every run from that point forward, regardless of what round number you are on. The trim targets approximately 300 characters, always cut at a sentence boundary. This is permanent for the life of the session — it is not a round-1-only thing that changes later.</span>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -789,7 +818,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Adjusting your hive between rounds</div>
-      <p>Click <strong>Edit Hive</strong> in the left column to toggle individual AIs on or off for the current session. Click <strong>Change Builder</strong> to switch which AI is doing the writing. Neither action requires going back to Setup or losing your current session. Both take effect on the next round you run.</p>
+      <p>On desktop screens, toggle individual AIs directly on their cards in the Hive panel. On laptop screens, click <strong>Edit Hive</strong> in the Hive header to open the toggle modal. Click <strong>Change Builder</strong> to switch which AI is doing the writing. Neither action requires going back to Setup or losing your current session. Both take effect on the next round you run.</p>
     </div>
 
     <div class="wh-block">
@@ -1035,7 +1064,7 @@
         <thead><tr><th>Situation</th><th>What to do</th></tr></thead>
         <tbody>
           <tr><td>Tone is wrong throughout</td><td>Open Notes before the next round and write explicitly: <em>"The tone throughout the entire document must be [formal / conversational / technical / plain-English]. Rewrite any passages that do not match this."</em> Be specific about what you want.</td></tr>
-          <tr><td>AIs keep adding content you do not want</td><td>Edit your project goal to explicitly exclude it. Add a Note reinforcing the exclusion. If one specific AI keeps doing it, use Edit Hive to remove that AI for a round or two.</td></tr>
+          <tr><td>AIs keep adding content you do not want</td><td>Edit your project goal to explicitly exclude it. Add a Note reinforcing the exclusion. If one specific AI keeps doing it, use Edit Hive (laptop) or toggle the AI card directly (desktop) to remove that AI for a round or two.</td></tr>
           <tr><td>The document has drifted badly from where you want it</td><td>Click <strong>📖 History</strong> and restore an earlier version. Add a Note explaining the direction the next round should take. If your goal was too vague, edit it on the Project screen before running another round — click the project name in the top bar to open the goal editor without leaving the Work screen.</td></tr>
           <tr><td>It would be faster to start over</td><td>Click <strong>🏁 Finish → Start New Project</strong>. This clears the document and history but keeps your API keys. Return to the Project screen, rewrite your goal with tighter scope, and begin again.</td></tr>
         </tbody>
@@ -1049,7 +1078,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">An AI keeps re-raising a conflict you already resolved</div>
-      <p>Open Notes before the next round and write: <em>"[AI name] is repeatedly re-raising [issue]. This decision is final — [chosen text] is locked and must not be changed. Do not allow any variation of this suggestion."</em> If the problem persists after two rounds of this instruction, use <strong>Edit Hive</strong> to remove that AI from the session.</p>
+      <p>Open Notes before the next round and write: <em>"[AI name] is repeatedly re-raising [issue]. This decision is final — [chosen text] is locked and must not be changed. Do not allow any variation of this suggestion."</em> If the problem persists after two rounds of this instruction, use <strong>Edit Hive</strong> on laptop or toggle the AI card directly on desktop to remove that AI from the session.</p>
     </div>
 
     <div class="wh-block">
