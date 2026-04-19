@@ -4,27 +4,19 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.15.1 — April 19, 2026
-
-### Added
-- **`openAllConsoles()` implemented** — Open API Websites button on the Setup screen now works. Reads live `aiList` and opens the `apiConsole` URL for each AI in the hive. Falls back to all default console URLs if hive is empty. Toasts if tabs are blocked by the browser.
-- **`exportSnapshot()` implemented** — Save Session Snapshot button in the Finish modal now works. Saves full session as `WaxFrame-Snapshot-[name]-[version].json`, closes the Finish modal, toasts reload instructions.
-- **Starting Document tab hint line** — Dynamic instruction line below the Upload / Paste / Scratch tab buttons updates per selection. Tells users to click/drag the drop zone, click the editor, or that no action is needed for Scratch mode.
-- **Refine Preview always visible when goal has text** — Previously the ▸ Refine Preview button was hidden when goal was under 300 characters. Now shows whenever the goal field has content: under 300 shows full goal with note it will be sent in full; over 300 shows sentence-trimmed version. Button only hides when goal is empty.
+## v3.15.2 — April 19, 2026
 
 ### Fixed
-- **`wh-step` flex gap spaces around bold/code/link words** — `.wh-step` uses `display:flex; gap:12px` which made every direct child a flex item, including `<strong>`, `<code>`, and `<a>` tags. The 12px gap applied on both sides of each inline element, producing large spaces around bold words. All step list items in the user manual now wrap their text content in a `<span>`, making exactly two flex items per step. CSS rule `.wh-step > span:not(.wh-step-num) { flex:1; min-width:0 }` added for proper sizing.
-- **`buildPromptForAI` now uses sentence-aware truncation** — Refine round prompts used a hard `.substring(0, 300)` cut, mismatching the UI preview which showed a sentence-boundary trim. Both now use `truncateGoalForRefine()`.
-- **"chars" spelled out to "characters"** — All user-visible instances replaced in the goal counter, refine preview panel, work document stats bar, and empty state text.
-- **`goalInfoModal` updated** — Rewrote rows to accurately reflect Draft vs Refine goal behaviour and the always-visible Refine Preview.
-- **`infoUploadModal` rewritten** — Now clearly states the three buttons are mode selectors and explains what to do after selecting each one.
-- **About modal version** — Hardcoded "v3.4 Pro" replaced with dynamic `#aboutVersion` span populated from `APP_VERSION` at runtime.
-- **Project goal textarea no longer collapses at short viewport heights** — `min-height: 0` → `min-height: 280px` on `.proj-goal-flex`.
-- **Refine Rounds panel converts to popover at short viewport heights** — `@media (max-height: 920px)` hides the inline panel and activates ▸ Refine Preview button.
-- **Paste panel textarea width matches goal and work doc** — Removed `width:100%; max-width:100%; overflow-x:hidden` override from `max-width:1600px` block.
+- **Conflict click no longer scrolls to the correct document location** — `scrollToCurrentText()` was calling `scrollTop` on the `workDocument` textarea which has `overflow: hidden`, so nothing moved. Fixed to use `ta.closest('.work-doc-editor')` and scroll the actual scroll container instead. Also corrected the line height default from 20px to 21px to match the CSS value. Build 20260419-008.
 
-### Changed
-- **User manual — full restructure** — Complete rewrite to follow the exact UI screen order: 8 numbered steps (Worker Bees → Builder → Define Project → Starting Document → Launch → Review Conflicts → More Rounds → Export), 3 appendices (Custom AI, Model Server, Enterprise), 2 reference sections (Troubleshooting, Billing). Custom AI and Model Server moved to appendices. "Start Round" corrected to "Smoke the Hive" throughout. Goal writing expanded with separate guidance and examples for refinement vs from-scratch scenarios. Step 4 is a dedicated Starting Document section.
+### Changed — User Manual
+- **Work screen column layout corrected** — Left column now correctly documented as containing both The Hive and Conflicts stacked vertically. Right column corrected to show the dual-face clock widget (Round timer auto-runs per round, Project timer is manual with Start/Pause) and the Live Console with colour-coded legend. Edit Hive button documented as laptop-only (≤1600px) — on desktop the full AI cards are shown and toggled directly. Desktop vs laptop AI display split into separate entries. All conflict location references corrected from right column to left column throughout including Step 7, Step 9, and troubleshooting rows.
+- **300-character threshold section rewritten** — Now explains the token cost rationale behind goal trimming rather than just stating that trimming occurs. Includes a priority framework for what to put in the first 300 characters: document type and audience first, hardest constraint second, detailed scope last. Includes a plain-English read-it-out-loud test for verifying the anchor is working.
+- **Refine Preview section expanded** — Explains what the preview shows when goal is under vs over 300 characters. Removed "adjust your opening sentence" framing — replaced with structured guidance on how to construct an effective Project Context anchor.
+- **Phase and round-number language removed throughout** — All references to "Draft round", "Refine round", and "which round you are on" replaced with document-exists vs no-document framing. The manual no longer implies the user selects or controls the round type.
+- **First-round document-provided claim corrected** — Removed incorrect statement that uploaded or pasted documents receive the full goal on round 1. Now correctly states the trimmed Project Context is always sent when a document exists, regardless of round number.
+- **Target length removed from goal example** — Removed "Target length is approximately 2,000 words" from the from-scratch example goal. Added tip clarifying that length belongs in the Length Constraint field, not the goal — WaxFrame sends it automatically in a standardised format.
+- **Document Playbooks count corrected** — Changed "dozens" to "11".
 
 ---
 
