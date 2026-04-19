@@ -7,9 +7,9 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.14.12 — April 19, 2026
 
 ### Fixed
-- **Test button modal restored** — Individual AI row Test buttons now open a modal showing the full Endpoint, Sent JSON, HTTP Status with response time, and raw Received JSON. The modal title identifies which AI is being tested and the subtitle updates to show pass/fail result and plain-English error hints for common HTTP error codes (401, 403, 404, 405, 429, 500, 503). The previous implementation that showed only a toast was a regression introduced during a prior refactor.
-- **Test All Keys panel visibility fixed** — Panel was permanently hidden because `style="display:none;"` on the element overrode the `.test-keys-panel.active { display: flex; }` CSS rule. Inline style removed; CSS handles all display states correctly. Panel is now 520px wide to accommodate detail rows.
-- **Test All Keys detail rows restored** — Each AI row in the Test All Keys panel now includes a collapsible Details section showing Endpoint, Sent JSON, HTTP Status with response time, and raw Received JSON. The Details toggle appears after the test completes (pass or fail). Previously the panel only showed AI name and a short status string.
+- **Test All Keys panel now appears** — `style="display:none;"` was set directly on the `#testKeysPanel` element, overriding the `.test-keys-panel.active { display:flex }` CSS rule. Inline style removed; CSS handles all display states. Same fix applied to `#tkpDismiss`.
+- **Test All Keys detail rows added** — Each AI row now includes a collapsible Details section (Endpoint, Sent JSON, HTTP Status + response time, raw Received JSON). Toggle appears after each test completes.
+- **Individual Test button modal restored** — Clicking Test on an AI row now opens a modal showing Endpoint, Sent JSON, Status with response time, and raw Received JSON. Plain-English hints shown for common HTTP error codes. Previous toast-only behavior was a regression.
 
 ---
 
