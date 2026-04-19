@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260418-008
+   Build: 20260419-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4950,7 +4950,7 @@ kbd {
 
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
-.helper-body .page-main { padding: 24px 32px; max-width: 900px; width: 100%; margin: 0 auto; }
+.helper-body .page-main { padding: 24px 32px 48px; max-width: 900px; width: 100%; margin: 0 auto; }
 .api-intro-strip {
   display: flex;
   align-items: center;
@@ -5816,6 +5816,72 @@ kbd {
 
 .wh-back-top { display:block; text-align:right; font-size:12px; color:var(--text-dim); text-decoration:none; padding:6px 0 2px; transition:color 0.12s; }
 .wh-back-top:hover { color:var(--accent); }
+
+/* ══════════════════════════════════════
+   DOCUMENT PLAYBOOKS (document-playbooks.html)
+══════════════════════════════════════ */
+.dp-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:28px; }
+.dp-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.dp-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
+.dp-bee { width:80px; flex-shrink:0; }
+
+.dp-toc { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:32px; }
+.dp-toc-title { font-family:var(--font-display); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:12px; }
+.dp-toc-grid { display:flex; flex-wrap:wrap; gap:8px; }
+.dp-toc-link { font-size:14px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
+.dp-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+
+.dp-playbook { background:transparent; border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:28px; }
+.dp-playbook-header { display:flex; align-items:center; gap:16px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
+.dp-playbook-icon { font-size:28px; line-height:1; flex-shrink:0; }
+.dp-playbook-title { font-family:var(--font); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#ffffff; }
+.dp-playbook-desc { font-size:13px; color:rgba(255,255,255,0.7); line-height:1.5; margin-top:2px; }
+.dp-playbook-body { background:var(--surface); border-radius:0 0 var(--radius-lg) var(--radius-lg); padding:20px 24px; display:flex; flex-direction:column; gap:16px; }
+
+.dp-field { display:flex; gap:12px; align-items:flex-start; }
+.dp-field-label { font-family:var(--font-display); font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); white-space:nowrap; min-width:120px; padding-top:3px; flex-shrink:0; }
+.dp-field-value { font-size:14px; color:var(--text-dim); line-height:1.6; }
+.dp-field-value code { font-family:'Courier New', monospace; font-size:13px; background:rgba(255,255,255,0.05); border:1px solid var(--border2); border-radius:4px; padding:1px 6px; color:var(--text); display:inline-block; margin-top:2px; }
+.dp-field-divider { height:1px; background:var(--border2); margin:2px 0; }
+
+.dp-tip { display:flex; gap:10px; align-items:flex-start; background:var(--accent-dim); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:12px 14px; }
+.dp-tip-icon { flex-shrink:0; margin-top:1px; }
+.dp-tip-icon img { width:20px; height:20px; display:block; }
+.dp-tip p { font-size:14px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
+
+.dp-rounds { display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--muted); margin-top:4px; }
+.dp-rounds-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+
+.dp-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:4px; }
+.dp-tag { font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; letter-spacing:0.04em; }
+.dp-tag-amber { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
+.dp-tag-blue { background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.4); color:#93c5fd; }
+.dp-tag-green { background:rgba(52,211,153,0.1); border:1px solid rgba(52,211,153,0.4); color:#34d399; }
+.dp-tag-purple { background:rgba(167,139,250,0.1); border:1px solid rgba(167,139,250,0.4); color:#c4b5fd; }
+
+.dp-back-top { display:block; text-align:right; font-size:12px; color:var(--text-dim); text-decoration:none; padding:4px 0 0; transition:color 0.12s; }
+.dp-back-top:hover { color:var(--accent); }
+
+[data-theme="light"] .dp-intro,
+[data-theme="light"] .dp-toc { background:#ffffff; }
+[data-theme="light"] .dp-playbook-body { background:#ffffff; }
+[data-theme="light"] .dp-field-value code { background:rgba(0,0,0,0.04); }
+[data-theme="light"] .dp-tag-blue { color:#2563eb; }
+[data-theme="light"] .dp-tag-green { color:#059669; }
+[data-theme="light"] .dp-tag-purple { color:#7c3aed; }
+[data-theme="light"] .dp-back-top { color:#333; }
+[data-theme="light"] .dp-back-top:hover { color:var(--accent); }
+@media (prefers-color-scheme:light) {
+  [data-theme="auto"] .dp-intro,
+  [data-theme="auto"] .dp-toc { background:#ffffff; }
+  [data-theme="auto"] .dp-playbook-body { background:#ffffff; }
+  [data-theme="auto"] .dp-field-value code { background:rgba(0,0,0,0.04); }
+  [data-theme="auto"] .dp-tag-blue { color:#2563eb; }
+  [data-theme="auto"] .dp-tag-green { color:#059669; }
+  [data-theme="auto"] .dp-tag-purple { color:#7c3aed; }
+  [data-theme="auto"] .dp-back-top { color:#333; }
+  [data-theme="auto"] .dp-back-top:hover { color:var(--accent); }
+}
 
 .print-header { display:none; text-align:center; padding:16px 0 24px; border-bottom:2px solid #ccc; margin-bottom:24px; }
 .print-header-title { font-size:22px; font-weight:800; color:#111; margin-bottom:4px; }
