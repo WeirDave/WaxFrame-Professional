@@ -6084,7 +6084,6 @@ kbd {
 }
 .tkp-row {
   border-bottom: 1px solid var(--border);
-  padding: 0;
 }
 .tkp-row:last-child { border-bottom: none; }
 .tkp-row-top {
@@ -6164,8 +6163,6 @@ kbd {
   overflow-y: auto;
   margin: 0;
 }
-
-/* Test Key Modal — individual test button modal */
 .test-key-modal { max-width: 640px; }
 .test-key-raw-received { max-height: 200px; overflow-y: auto; }
 
