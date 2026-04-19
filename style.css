@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260418-004
+   Build: 20260418-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4950,6 +4950,7 @@ kbd {
 
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
+.helper-body .page-main { padding: 24px 32px; max-width: 900px; width: 100%; margin: 0 auto; }
 .api-intro-strip {
   display: flex;
   align-items: center;
@@ -5765,23 +5766,24 @@ kbd {
 
 
 /* ── USER MANUAL PAGE (waxframe-user-manual.html) ── */
-.wh-intro { display:flex; align-items:center; gap:24px; background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
+.wh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
 .wh-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
 .wh-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
 .wh-bee { width:80px; flex-shrink:0; }
 
-.wh-toc { background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:32px; }
+.wh-toc { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:32px; }
 .wh-toc-title { font-family:var(--font-display); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:12px; }
 .wh-toc-list { display:flex; flex-wrap:wrap; gap:8px; }
 .wh-toc-link { font-size:14px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
 .wh-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-.wh-section { margin-bottom:32px; scroll-margin-top:72px; }
-.wh-section-hdr { display:flex; align-items:center; gap:14px; margin-bottom:16px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg); }
+.wh-section { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); overflow:hidden; margin-bottom:32px; scroll-margin-top:72px; }
+.wh-section-hdr { display:flex; align-items:center; gap:14px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); }
 .wh-section-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
-.wh-section-title { font-family:var(--font-display); font-size:18px; font-weight:800; color:#ffffff; }
+.wh-section-title { font-family:var(--font); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#ffffff; }
 
-.wh-block { background:rgba(0,0,0,0.6); backdrop-filter:blur(6px); border:1px solid rgba(255,255,255,0.12); border-radius:var(--radius-lg); padding:18px 22px; margin-bottom:12px; }
+.wh-block { background:transparent; border:none; border-top:1px solid var(--border2); padding:18px 22px; margin-bottom:0; }
+.wh-section-hdr + .wh-block { border-top:none; }
 .wh-block-title { font-family:var(--font-display); font-size:16px; font-weight:700; color:var(--text); margin-bottom:8px; }
 .wh-block p { font-size:14px; color:var(--text-dim); line-height:1.7; margin:0 0 8px; }
 .wh-block p:last-child { margin-bottom:0; }
@@ -5819,15 +5821,15 @@ kbd {
 .print-header-sub { font-size:13px; color:#666; }
 
 [data-theme="light"] .wh-intro,
-[data-theme="light"] .wh-toc,
-[data-theme="light"] .wh-block { background:#ffffff; backdrop-filter:none; border-color:var(--border2); }
+[data-theme="light"] .wh-toc { background:#ffffff; }
+[data-theme="light"] .wh-section { background:#ffffff; border-color:var(--border2); }
 [data-theme="light"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
 [data-theme="light"] .wh-back-top { color:#333; }
 [data-theme="light"] .wh-back-top:hover { color:var(--accent); }
 @media (prefers-color-scheme:light) {
   [data-theme="auto"] .wh-intro,
-  [data-theme="auto"] .wh-toc,
-  [data-theme="auto"] .wh-block { background:#ffffff; backdrop-filter:none; border-color:var(--border2); }
+  [data-theme="auto"] .wh-toc { background:#ffffff; }
+  [data-theme="auto"] .wh-section { background:#ffffff; border-color:var(--border2); }
   [data-theme="auto"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
   [data-theme="auto"] .wh-back-top { color:#333; }
   [data-theme="auto"] .wh-back-top:hover { color:var(--accent); }
@@ -5837,8 +5839,10 @@ kbd {
   body { background:#fff !important; color:#111 !important; }
   .page-header, .page-footer, .wh-back-top { display:none !important; }
   .page-main { padding:0 !important; max-width:100% !important; }
-  .wh-intro, .wh-toc, .wh-section-hdr, .wh-block { background:#fff !important; backdrop-filter:none !important; border:1px solid #ccc !important; box-shadow:none !important; break-inside:avoid; }
-  .wh-section { break-inside:avoid; }
+  .wh-intro, .wh-toc { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; }
+  .wh-section { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; break-inside:avoid; }
+  .wh-section-hdr { background:#fff !important; backdrop-filter:none !important; border-bottom:1px solid #ccc !important; }
+  .wh-block { border-top-color:#ccc !important; }
   .wh-section-title, .wh-block-title { color:#111 !important; }
   .wh-toc-link { color:#333 !important; border-color:#ccc !important; }
   .wh-tip { background:#fffbea !important; border-color:#e5c84a !important; }

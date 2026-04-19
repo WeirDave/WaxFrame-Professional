@@ -4,6 +4,21 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.5 — April 18, 2026
+
+### Fixed
+- **User manual — section title font now matches work screen** — `.wh-section-title` was using `font-family: var(--font-display)` (Syne, 18px 800 weight). Work screen headers use `var(--font)` (DM Sans, 15px 700 weight, uppercase, letter-spacing 0.08em). Updated to match exactly.
+- **User manual — first content block incorrectly retaining border-top** — `.wh-block:first-of-type` was selecting `.wh-section-hdr` (also a div) instead of the first `.wh-block`. Replaced with `.wh-section-hdr + .wh-block { border-top: none }` adjacent sibling selector which targets correctly.
+
+---
+
+## v3.14.4 — April 18, 2026
+
+### Changed
+- **User manual — unified section containers matching work screen layout** — Each manual section is now one container card: `.wh-section` is the outer solid-background card (dark: `var(--surface)`, light: `#ffffff`) with `overflow: hidden`. `.wh-section-hdr` is the semi-transparent header (`rgba(0,0,0,0.55)`, `backdrop-filter: blur(6px)`) that sits flush at the top with only a `border-bottom`. `.wh-block` elements are transparent inside the container, separated by `border-top` dividers. This matches the visual treatment of the work screen panels exactly. `.wh-intro` and `.wh-toc` remain as their own standalone solid cards. Added `padding: 24px 32px` and `max-width: 900px` to `.helper-body .page-main` so sections breathe from viewport edges. Light/auto/print overrides updated for new structure. Print forces solid white on `.wh-section` and `.wh-section-hdr` with dark text.
+
+---
+
 ## v3.14.3 — April 18, 2026
 
 ### Changed
