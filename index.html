@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260419-005">
+  <meta name="waxframe-build" content="20260419-006">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -237,7 +237,7 @@
                 </div>
                 <p class="goal-refine-preview-sub" id="goalRefinePreviewSub"></p>
                 <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
-                <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your goal is under 300 chars — the full text will be sent each refine round.</div>
+                <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your goal is under 300 characters — the full text will be sent each refine round.</div>
               </div>
             </div>
           </div>
@@ -274,6 +274,7 @@
               <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
               <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
             </div>
+            <p id="docTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
 
             <div class="export-mask-row">
               <label class="export-mask-label">💾 Export filename</label>
@@ -964,16 +965,16 @@
       <p>Below you'll fill out your project name, version, and goal. The goal is the most important part — it tells every AI what you're trying to create and what direction to take.</p>
       <div class="goal-info-row">
         <span class="info-label">From Scratch</span>
-        <span class="goal-info-desc">The full goal is sent to every AI. This is when it matters most — the AIs are building your document from scratch and need all the context you can give them.</span>
+        <span class="goal-info-desc">Your full goal is sent to every AI on the first (Draft) round. This is when it matters most — the AIs are building your document from nothing and need all the context you can give them.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">From a Starting Doc</span>
-        <span class="goal-info-desc">Only the first <strong>300 characters</strong> are sent, labelled as <em>Project Context</em>. Your document already exists — the AIs are refining it, not creating it. The full goal would consume tokens better spent on the document itself and the reviewer suggestions.</span>
+        <span class="info-label">Refine Rounds</span>
+        <span class="goal-info-desc">From the second round onward, only a trimmed version of your goal is sent — labelled <em>Project Context</em>. Your document already exists, so the full goal would consume tokens better spent on the document and reviewer suggestions. The trim targets ~300 characters but always cuts at a sentence boundary so nothing is mid-thought.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Keep your most important intent in the first 300 characters of your goal. A counter next to the goal field turns amber when you exceed that threshold.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Keep your most important intent in the first 300 characters. The counter next to the goal field turns amber when you exceed that threshold.</p>
       <div class="goal-info-row">
-        <span class="info-label">Live Preview</span>
-        <span class="goal-info-desc">When your goal exceeds 300 characters, an amber preview box appears directly below the goal field showing the exact text that will be sent to AIs in Refine rounds — updated live as you type. Use it to fine-tune your opening sentence so the most important context always lands within the limit.</span>
+        <span class="info-label">Refine Preview</span>
+        <span class="goal-info-desc">The ▸ Refine Preview button shows you exactly what will be sent to AIs in Refine rounds — updated live as you type. When your goal is under 300 characters your full goal is shown. When it's over, the trimmed version is shown. Use it to make sure your most important instruction lands within the limit.</span>
       </div>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('goalInfoModal').classList.remove('active')">Got it →</button>
@@ -1029,7 +1030,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.15.0"></script>
+<script src="app.js?v=3.15.1"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -1050,7 +1051,7 @@
     <div class="goal-info-body">
       <div class="goal-info-row">
         <span class="info-label">Version</span>
-        <span class="goal-info-desc">v3.4 Pro — Build <strong id="aboutBuild"></strong></span>
+        <span class="goal-info-desc"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">License</span>
@@ -1232,18 +1233,18 @@
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Starting Document</h2>
     <div class="goal-info-body">
-      <p>Choose how to give the hive its starting point. There are three ways:</p>
+      <p>The three buttons — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose how you want to provide your starting document, then interact with the area that appears below them.</p>
       <div class="goal-info-row">
         <span class="info-label">Upload File</span>
-        <span class="goal-info-desc">Upload an existing document and the hive will refine it. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), and Markdown (.md). The file's text is extracted and loaded into the working document automatically.</span>
+        <span class="goal-info-desc">Click this button to select Upload mode, then click the drop zone that appears below (or drag a file directly onto it) to choose your file. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), and Markdown (.md). The file's text is extracted and loaded into the working document automatically.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Paste Text</span>
-        <span class="goal-info-desc">Copy and paste any text directly — from a website, another app, or anywhere else. Useful when you already have content but don't have it as a file.</span>
+        <span class="goal-info-desc">Click this button to select Paste mode, then click inside the editor that appears below and paste your text. Useful when you already have content but don't have it as a file.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Start from Scratch</span>
-        <span class="goal-info-desc">Don't have anything yet? The hive will generate a first draft based entirely on your project goal. The more specific your goal, the better the first draft will be.</span>
+        <span class="goal-info-desc">Click this button if you don't have an existing document. No further action needed here — the hive will generate a first draft based entirely on your project goal. The more specific your goal, the better the first draft will be.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — like those exported from Word or Google Docs. Heavily designed resumes, scanned documents, or PDFs built from images may produce garbled or incomplete text. If that happens, try copying and pasting the text directly using the Paste Text option instead.</p>
       <p class="goal-info-tip">⚠️ <strong>Large file tip:</strong> If you're importing a dense report, a long PowerPoint, or any file that produces a lot of text — and a round fails with a missing output structure error, try switching your Builder to ChatGPT or Gemini and retrying. Some AIs are less consistent at following strict formatting instructions on large or complex documents.</p>
