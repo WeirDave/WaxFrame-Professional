@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-001';         // build stamp — update each session
+const BUILD       = '20260419-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5045,7 +5045,6 @@ function scrollToCurrentText(currentText) {
     toast('⚠️ Text not found in document — it may have changed');
     return;
   }
-  // The textarea has overflow:hidden — the actual scroll container is .work-doc-editor
   const editor     = ta.closest('.work-doc-editor');
   const before     = text.substring(0, idx);
   const lineNumber = before.split('\n').length - 1;
@@ -5172,6 +5171,7 @@ function renderConflicts() {
 
   // Reset choices when new conflicts arrive
   window._decisionChoices = {};
+  window._conflictCurrentTexts = {};
 
   let html = '';
 
@@ -5208,7 +5208,7 @@ function renderConflicts() {
           ${repeatBadge}
         </div>
         <div class="decision-question">${esc(stripLineRefs(d.question))}</div>
-        ${d.current ? `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(${JSON.stringify(d.current)})"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>` : ''}
+        ${d.current ? (() => { window._conflictCurrentTexts[di] = d.current; return `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>`; })() : ''}
         <div class="decision-options">
           ${d.options.map((opt, oi) => `
             <button class="decision-opt-btn" id="dopt-${di}-${oi}"
