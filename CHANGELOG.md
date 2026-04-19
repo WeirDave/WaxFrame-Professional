@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.13 — April 19, 2026
+
+### Fixed
+- **Project goal textarea hidden in Chrome/Edge at short viewport heights** — `proj-goal-flex` had `min-height: 0` which allowed Chrome to collapse it to zero height inside a flex scroll container at viewport heights around 911px. Changed to `min-height: 280px` so Chrome cannot collapse the goal area. `proj-left-scroll` scrolls to accommodate when the viewport is short. Firefox was not affected.
+
+---
+
 ## v3.14.12 — April 19, 2026
 
 ### Fixed
