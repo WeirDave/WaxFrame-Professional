@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-007';         // build stamp — update each session
+const BUILD       = '20260419-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1945,19 +1945,6 @@ function renderAISetupGrid() {
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
 
 
-function openAllConsoles() {
-  const urls = [];
-  aiList.forEach(ai => {
-    const def = DEFAULT_AIS.find(d => d.id === ai.id);
-    if (def?.apiConsole && !urls.includes(def.apiConsole)) urls.push(def.apiConsole);
-  });
-  if (!urls.length) DEFAULT_AIS.forEach(d => { if (d.apiConsole && !urls.includes(d.apiConsole)) urls.push(d.apiConsole); });
-  let opened = 0;
-  urls.forEach(url => { const w = window.open(url, '_blank'); if (w) opened++; });
-  if (opened < urls.length) toast(`⚠️ ${urls.length - opened} tab(s) blocked — allow pop-ups for this site`);
-  else toast(`🔗 Opened ${opened} API console${opened !== 1 ? 's' : ''}`);
-}
-
 function resetBeesToDefaults() {
   if (!confirm('Reset to the 6 default AIs? Your saved API keys will be kept. Custom AIs will be removed.')) return;
   // Save existing keys before reset
@@ -3006,15 +2993,7 @@ function switchDocTab(tab) {
   document.querySelectorAll('.doc-tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'   + tab)?.classList.add('active');
   document.getElementById('panel-' + tab)?.classList.add('active');
-  const hint = document.getElementById('docTabHint');
-  if (hint) {
-    const hints = {
-      upload:  'Click the area below to browse for a file, or drag and drop one directly onto it.',
-      paste:   'Paste your existing document text into the editor below.',
-      scratch: 'No document needed — your AIs will generate the first draft from your goal. Fill in your goal above and launch when ready.'
-    };
-    hint.textContent = hints[tab] || '';
-  }
+  // Init line numbers when switching to paste tab
   if (tab === 'paste') {
     const ta = document.getElementById('pasteText');
     if (ta) updateProjLineNums('projPasteNums', ta);
@@ -3578,7 +3557,7 @@ function updateGoalCounter() {
     `<span class="goal-stat-sep">·</span>` +
     `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
     `<span class="goal-stat-sep">·</span>` +
-    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">characters</span></span>`;
+    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
 
   // Update sidebar refine preview panel (large screen)
   const previewWrap  = document.getElementById('goalRefinePreview');
@@ -3598,35 +3577,23 @@ function updateGoalCounter() {
     const refined = truncateGoalForRefine(ta.value);
     // Sidebar
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
-    if (previewCount) previewCount.textContent = `${refined.length} characters — trimmed to nearest sentence`;
-    if (previewSub)   previewSub.textContent = 'AIs receive this in Refine rounds. Draft round always gets your full goal.';
+    if (previewCount) previewCount.textContent = `${refined.length} chars`;
+    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
     // Popover
     if (popoverText)  popoverText.textContent = refined;
-    if (popoverCount) popoverCount.textContent = `${refined.length} characters — trimmed to nearest sentence`;
-    if (popoverSub)   popoverSub.textContent = 'AIs receive this in Refine rounds. Draft round always gets your full goal.';
-    if (popoverBtn)   popoverBtn.style.removeProperty('display');
-  } else if (ta.value.trim()) {
-    const full = ta.value.trim();
-    // Sidebar
-    if (previewText)  { previewText.textContent = full; previewText.style.display = 'block'; }
-    if (previewCount) previewCount.textContent = `${full.length} characters — full goal`;
-    if (previewSub)   previewSub.textContent = 'Your full goal will be sent to AIs in both Draft and Refine rounds.';
-    if (previewEmpty) previewEmpty.style.display = 'none';
-    if (previewWrap)  previewWrap.classList.add('has-content');
-    // Popover
-    if (popoverText)  popoverText.textContent = full;
-    if (popoverCount) popoverCount.textContent = `${full.length} characters — full goal`;
-    if (popoverSub)   popoverSub.textContent = 'Your full goal will be sent to AIs in both Draft and Refine rounds.';
+    if (popoverCount) popoverCount.textContent = `${refined.length} chars`;
+    if (popoverSub)   popoverSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (popoverBtn)   popoverBtn.style.removeProperty('display');
   } else {
-    // Empty goal
+    // Sidebar
     if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
     if (previewCount) previewCount.textContent = '';
     if (previewSub)   previewSub.textContent = '';
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
+    // Popover — hide button and close popover if goal shrinks below threshold
     if (popoverBtn)   popoverBtn.style.display = 'none';
     if (popover)      popover.style.display = 'none';
   }
@@ -3677,7 +3644,7 @@ function updateLineNumbers() {
   if (stats && text.trim()) {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     const chars = text.length;
-    stats.textContent = `${visualCount} lines · ${words.toLocaleString()} words · ${chars.toLocaleString()} characters`;
+    stats.textContent = `${visualCount} lines · ${words.toLocaleString()} words · ${chars.toLocaleString()} chars`;
   } else if (stats) {
     stats.textContent = '';
   }
@@ -4245,10 +4212,7 @@ function buildPromptForAI(ai, reviewerResponses) {
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
-  if (goal && phase !== 'draft') {
-    const goalCtx = truncateGoalForRefine(goal);
-    prompt += `PROJECT CONTEXT: ${goalCtx}${goal.length > 300 ? '…' : ''}\n\n`;
-  }
+  if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
 
   // Inject length constraint if set
   const _lc = getLengthConstraint();
@@ -5081,11 +5045,13 @@ function scrollToCurrentText(currentText) {
     toast('⚠️ Text not found in document — it may have changed');
     return;
   }
+  // The textarea has overflow:hidden — the actual scroll container is .work-doc-editor
+  const editor     = ta.closest('.work-doc-editor');
   const before     = text.substring(0, idx);
   const lineNumber = before.split('\n').length - 1;
-  const lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 20;
-  const scrollTop  = lineNumber * lineHeight - ta.clientHeight / 3;
-  ta.scrollTop = Math.max(0, scrollTop);
+  const lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 21;
+  const scrollTop  = lineNumber * lineHeight - (editor ? editor.clientHeight / 3 : 0);
+  if (editor) editor.scrollTop = Math.max(0, scrollTop);
   ta.focus();
   ta.setSelectionRange(idx, idx + currentText.length);
   toast('📍 Scrolled to text in document', 2000);
@@ -6006,25 +5972,6 @@ function exportSession() {
   toast('💾 Full transcript exported');
 }
 
-function exportSnapshot() {
-  const hive    = localStorage.getItem(LS_HIVE)    || null;
-  const project = localStorage.getItem(LS_PROJECT) || null;
-  const session = localStorage.getItem(LS_SESSION) || null;
-  if (!hive && !project && !session) { toast('⚠️ Nothing to snapshot'); return; }
-  const backup   = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
-  const name     = (() => { try { return JSON.parse(project || '{}').name || 'session'; } catch(e) { return 'session'; } })();
-  const ver      = (() => { try { return JSON.parse(project || '{}').version || ''; } catch(e) { return ''; } })();
-  const safeName = (name + (ver ? '-' + ver : '')).replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 50);
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `WaxFrame-Snapshot-${safeName}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-  hideFinishModal();
-  toast('📷 Snapshot saved — reload it any time via Menu → Import Backup');
-}
-
 function backupSession() {
   const hive    = localStorage.getItem(LS_HIVE)    || null;
   const project = localStorage.getItem(LS_PROJECT) || null;
@@ -6110,8 +6057,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.title = 'WaxFrame ' + APP_VERSION;
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
-  const verEl = document.getElementById('aboutVersion');
-  if (verEl) verEl.textContent = APP_VERSION;
   updateSetupRequirements();
 
   // Show dev toolbar and admin nav items if dev mode is active
