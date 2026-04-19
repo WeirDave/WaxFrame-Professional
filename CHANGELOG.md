@@ -4,6 +4,20 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.15 — April 19, 2026
+
+### Fixed
+- **Paste panel textarea now matches goal and work doc width at all viewports** — The `max-width: 1600px` responsive block was overriding `#panel-paste .proj-ta-editor` to `width: 100%; max-width: 100%; overflow-x: hidden`, making it fluid while the goal textarea and working document stayed fixed at 80ch. Override removed — the base 80ch width and `overflow-x: auto` now apply consistently across all three editors at all viewport widths.
+
+---
+
+## v3.14.14 — April 19, 2026
+
+### Changed
+- **Refine Rounds panel converts to popover at short viewport heights** — Added `@media (max-height: 920px)` that hides the inline Refine Rounds panel and activates the ▸ Refine Preview button/popover, mirroring the existing behavior already applied at `max-width: 1600px`. Prevents the panel from being cut off at viewport heights around 911px while keeping the goal textarea fully usable.
+
+---
+
 ## v3.14.13 — April 19, 2026
 
 ### Fixed

@@ -6194,9 +6194,9 @@ kbd {
   .proj-left-scroll { padding: 0 8px; }
   .proj-static-top { padding: 10px 0 6px; }
   .proj-goal-flex { padding: 0; }
-  /* Restore fixed height paste panel and release fixed width at laptop */
+  /* Restore fixed height paste panel — width stays at base 80ch, matching goal and work doc */
   #panel-paste::after, #panel-upload::after, #panel-scratch::after { display: none; }
-  #panel-paste .proj-ta-editor { flex: none; height: 420px; width: 100%; max-width: 100%; overflow-x: hidden; }
+  #panel-paste .proj-ta-editor { flex: none; height: 420px; }
   /* Release upload/scratch width constraints at laptop — fill the column */
   #panel-upload .drop-zone { width: 100%; max-width: 100%; }
   #panel-scratch .proj-notebook-scratch { width: 100%; max-width: 100%; }
@@ -6299,4 +6299,11 @@ kbd {
   background: var(--surface2);
   border-top: 1px solid var(--border2);
   flex-shrink: 0;
+}
+
+/* ══ SHORT VIEWPORT — hide refine panel, show button+popover ══ */
+/* Mirrors the max-width:1600px treatment for short browser heights */
+@media (max-height: 920px) {
+  .goal-split-right { display: none !important; width: 0; min-width: 0; max-width: 0; overflow: hidden; }
+  .refine-preview-btn { display: flex !important; }
 }
