@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.6 — April 18, 2026
+
+### Fixed
+- **User manual — section header backdrop-filter blocked by overflow:hidden** — `overflow: hidden` on `.wh-section` was creating a stacking context that prevented `backdrop-filter` on `.wh-section-hdr` from seeing through to the honeycomb background, rendering it as solid grey instead of semi-transparent. Removed `overflow: hidden` from `.wh-section` and applied `border-radius: var(--radius-lg) var(--radius-lg) 0 0` directly to `.wh-section-hdr` to preserve the rounded top corners.
+
+---
+
 ## v3.14.5 — April 18, 2026
 
 ### Fixed
