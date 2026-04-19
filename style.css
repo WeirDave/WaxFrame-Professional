@@ -5515,7 +5515,7 @@ kbd {
 
 .proj-goal-flex {
   flex: 1;
-  min-height: 280px;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
