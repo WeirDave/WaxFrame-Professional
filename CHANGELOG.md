@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.13 — April 19, 2026
+
+### Fixed
+- **Document Playbooks — back-to-top links moved inside sections** — All 11 dp-back-top links relocated from the honeycomb gap between playbook cards to inside the dp-playbook-body of each section, matching the same treatment applied to the user manual.
+
+---
+
 ## v3.14.12 — April 19, 2026
 
 ### Changed
