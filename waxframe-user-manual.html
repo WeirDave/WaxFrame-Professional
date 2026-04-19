@@ -62,12 +62,12 @@
     <div class="wh-toc-group">
       <div class="wh-toc-group-label">The Steps</div>
       <a href="#step1" class="wh-toc-link">① Set Up Your AIs</a>
-      <a href="#add-custom-ai" class="wh-toc-link">🔧 Adding a Custom AI</a>
-      <a href="#step2" class="wh-toc-link">② Write Your Goal</a>
-      <a href="#step3" class="wh-toc-link">③ Start Your First Round</a>
-      <a href="#step4" class="wh-toc-link">④ Review &amp; Resolve Conflicts</a>
-      <a href="#step5" class="wh-toc-link">⑤ Run More Rounds</a>
-      <a href="#step6" class="wh-toc-link">⑥ Know When You're Done</a>
+      <a href="#add-custom-ai" class="wh-toc-link">② Adding a Custom AI</a>
+      <a href="#step2" class="wh-toc-link">③ Write Your Goal</a>
+      <a href="#step3" class="wh-toc-link">④ Start Your First Round</a>
+      <a href="#step4" class="wh-toc-link">⑤ Review &amp; Resolve Conflicts</a>
+      <a href="#step5" class="wh-toc-link">⑥ Run More Rounds</a>
+      <a href="#step6" class="wh-toc-link">⑦ Know When You're Done</a>
     </div>
     <div class="wh-toc-group">
       <div class="wh-toc-group-label">Reference</div>
@@ -93,9 +93,14 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The three parts of the app</div>
-      <p><strong>Setup screen</strong> — where you configure which AIs you're using and enter your API keys. You do this once and your settings are remembered.</p>
-      <p><strong>Project screen</strong> — where you enter the goal for your document and, if you already have a draft, paste it in. This is also where you clear a project and start fresh.</p>
-      <p><strong>Work screen</strong> — where the action happens. You run rounds here, watch the AIs work in real time, review the updated document, and handle any conflicts the Builder couldn't resolve on its own.</p>
+      <table class="wh-table">
+        <thead><tr><th>Screen</th><th>What it's for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Setup</strong></td><td>Configure which AIs you're using and enter your API keys. You do this once and your settings are remembered.</td></tr>
+          <tr><td><strong>Project</strong></td><td>Enter the goal for your document and, if you already have a draft, paste it in. This is also where you clear a project and start fresh.</td></tr>
+          <tr><td><strong>Work</strong></td><td>Where the action happens. Run rounds, watch the AIs work in real time, review the updated document, and handle any conflicts the Builder couldn't resolve on its own.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
@@ -266,8 +271,8 @@
   <!-- SECTION: ADD CUSTOM AI -->
   <div class="wh-section" id="add-custom-ai">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">🔧</div>
-      <div class="wh-section-title">Adding a Custom AI</div>
+      <div class="wh-section-icon">②</div>
+      <div class="wh-section-title">Step 2 — Adding a Custom AI</div>
     </div>
 
     <div class="wh-block">
@@ -278,14 +283,17 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Add Custom AI form — field by field</div>
-      <ul>
-        <li><strong>Quick Add dropdown</strong> — presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting one auto-fills the endpoint URL and API format, and shows a direct link to that provider's key console. If your provider isn't listed, fill in the fields manually.</li>
-        <li><strong>Display Name</strong> — what WaxFrame calls this AI in the UI. Auto-filled by Quick Add. You can change it to anything.</li>
-        <li><strong>API Endpoint URL</strong> — the full web address WaxFrame will send requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://ai.yourcompany.com/v1/chat/completions</code></li>
-        <li><strong>API Format</strong> — almost always <em>OpenAI compatible</em>. Only change this if your provider explicitly uses a different format.</li>
-        <li><strong>Model</strong> — the exact model ID string the provider expects. It must be exact — even a small typo will cause every call to fail. You can type it manually or use <strong>Fetch Models</strong> (see below).</li>
-        <li><strong>API Key</strong> — your key or bearer token for this provider. Paste it in and press Enter to save.</li>
-      </ul>
+      <table class="wh-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Quick Add</strong></td><td>Presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting one auto-fills the endpoint URL and API format, and shows a direct link to that provider's key console. Fill in fields manually if your provider isn't listed.</td></tr>
+          <tr><td><strong>Display Name</strong></td><td>What WaxFrame calls this AI in the UI. Auto-filled by Quick Add. You can change it to anything.</td></tr>
+          <tr><td><strong>API Endpoint URL</strong></td><td>The full address WaxFrame sends requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://ai.yourcompany.com/v1/chat/completions</code></td></tr>
+          <tr><td><strong>API Format</strong></td><td>Almost always <em>OpenAI compatible</em>. Only change this if your provider explicitly uses a different format.</td></tr>
+          <tr><td><strong>Model</strong></td><td>The exact model ID string the provider expects. It must be exact — even a small typo will cause every call to fail. You can type it manually or use <strong>Fetch Models</strong> (see below).</td></tr>
+          <tr><td><strong>API Key</strong></td><td>Your key or bearer token for this provider. Paste it in and press Enter to save.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
@@ -304,13 +312,16 @@
         <li>The complete raw JSON response from the server</li>
       </ul>
       <p>If the test fails, WaxFrame shows a plain-English hint for common error codes:</p>
-      <ul>
-        <li><strong>401 / 403</strong> — bad or missing API key</li>
-        <li><strong>404</strong> — wrong endpoint URL</li>
-        <li><strong>405</strong> — method not allowed (endpoint may not support chat completions)</li>
-        <li><strong>429</strong> — rate limited (wait a moment and try again)</li>
-        <li><strong>Network Error</strong> — the endpoint is unreachable, or CORS is blocking the request (see the internal AI section below)</li>
-      </ul>
+      <table class="wh-table">
+        <thead><tr><th>Error</th><th>What it means</th></tr></thead>
+        <tbody>
+          <tr><td><strong>401 / 403</strong></td><td>Bad or missing API key</td></tr>
+          <tr><td><strong>404</strong></td><td>Wrong endpoint URL</td></tr>
+          <tr><td><strong>405</strong></td><td>Method not allowed — the endpoint may not support chat completions</td></tr>
+          <tr><td><strong>429</strong></td><td>Rate limited — wait a moment and try again</td></tr>
+          <tr><td><strong>Network Error</strong></td><td>The endpoint is unreachable, or CORS is blocking the request (see the enterprise AI section)</td></tr>
+        </tbody>
+      </table>
       <div class="wh-warn">
         <p>⚠️ The <strong>Add to Hive</strong> button only appears after a passing test. If you change any field after a passing test — URL, key, model — the result resets and you must test again. This prevents a stale passing result from being used to add a misconfigured AI.</p>
       </div>
@@ -331,8 +342,8 @@
   <!-- SECTION: STEP 2 -->
   <div class="wh-section" id="step2">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">②</div>
-      <div class="wh-section-title">Step 2 — Write Your Goal</div>
+      <div class="wh-section-icon">③</div>
+      <div class="wh-section-title">Step 3 — Write Your Goal</div>
     </div>
 
     <div class="wh-block">
@@ -343,12 +354,15 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What to include in your goal</div>
-      <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span><strong>What the document is.</strong> State the format clearly — a business proposal, a technical comparison, a cover letter, an executive summary. Be specific.</li>
-        <li class="wh-step"><span class="wh-step-num">2</span><strong>Who will read it.</strong> Your IT team? A potential client? A hiring manager? The audience shapes the language and depth every AI will use.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span><strong>What it should cover — and what it shouldn't.</strong> If your document is about wireless networking only, say so. If it should not include pricing, say that too. AIs will naturally expand into adjacent topics unless you draw the boundary clearly.</li>
-        <li class="wh-step"><span class="wh-step-num">4</span><strong>What you want someone to be able to do after reading it.</strong> Make a decision? Take an action? Understand a concept? Give the AIs a finish line.</li>
-      </ol>
+      <table class="wh-table">
+        <thead><tr><th>#</th><th>What to cover</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><strong>What the document is</strong></td><td>State the format clearly — a business proposal, a technical comparison, a cover letter, an executive summary. Be specific.</td></tr>
+          <tr><td>2</td><td><strong>Who will read it</strong></td><td>Your IT team? A potential client? A hiring manager? The audience shapes the language and depth every AI will use.</td></tr>
+          <tr><td>3</td><td><strong>What it should cover — and what it shouldn't</strong></td><td>If your document is about wireless networking only, say so. If it should not include pricing, say that too. AIs will naturally expand into adjacent topics unless you draw the boundary clearly.</td></tr>
+          <tr><td>4</td><td><strong>What you want the reader to do after</strong></td><td>Make a decision? Take an action? Understand a concept? Give the AIs a finish line.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
@@ -376,8 +390,8 @@
   <!-- SECTION: STEP 3 -->
   <div class="wh-section" id="step3">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">③</div>
-      <div class="wh-section-title">Step 3 — Start Your First Round</div>
+      <div class="wh-section-icon">④</div>
+      <div class="wh-section-title">Step 4 — Start Your First Round</div>
     </div>
 
     <div class="wh-block">
@@ -389,16 +403,20 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you'll see when the round finishes</div>
-      <p><strong>The working document</strong> — your document as it stands after this round. You can read and edit it directly.</p>
-      <p><strong>The Suggestions panel</strong> — a list of what each AI suggested. You can read through these to understand what the reviewers were thinking.</p>
-      <p><strong>The Conflicts panel</strong> — any points the Builder couldn't resolve on its own. These need your attention before the next round. See Step 4.</p>
+      <table class="wh-table">
+        <tbody>
+          <tr><td><strong>The working document</strong></td><td>Your document as it stands after this round. You can read and edit it directly.</td></tr>
+          <tr><td><strong>The Suggestions panel</strong></td><td>A list of what each AI suggested. Read through these to understand what the reviewers were thinking.</td></tr>
+          <tr><td><strong>The Conflicts panel</strong></td><td>Points the Builder couldn't resolve on its own. These need your attention before the next round. See Step 5.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Read the document before doing anything else</div>
       <p>Before you run another round, read the document. Is it going in roughly the right direction? Does the scope look correct? Is the tone right?</p>
       <p>If the first draft is way off — wrong scope, wrong format, wrong tone — don't keep running rounds on a bad foundation. Fix the goal first, then run Round 2. See <a href="#problems" class="link-accent">When Things Go Wrong</a>.</p>
-      <p>If the document looks directionally correct — even if it still needs a lot of work — continue to Step 4.</p>
+      <p>If the document looks directionally correct — even if it still needs a lot of work — continue to Step 5.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -407,8 +425,8 @@
   <!-- SECTION: STEP 4 -->
   <div class="wh-section" id="step4">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">④</div>
-      <div class="wh-section-title">Step 4 — Review &amp; Resolve Conflicts</div>
+      <div class="wh-section-icon">⑤</div>
+      <div class="wh-section-title">Step 5 — Review &amp; Resolve Conflicts</div>
     </div>
 
     <div class="wh-block">
@@ -422,11 +440,14 @@
     <div class="wh-block">
       <div class="wh-block-title">How to resolve a conflict</div>
       <p>Each conflict card shows you the current text and the alternatives the AIs suggested. You have three options:</p>
-      <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span><strong>Pick one of the AI options</strong> — click the option you prefer. The Builder will apply it.</li>
-        <li class="wh-step"><span class="wh-step-num">2</span><strong>Write your own</strong> — select <strong>Custom</strong> and type exactly what you want the document to say. Write the actual sentence or phrase — not an instruction. For example, type <em>"Pricing is subject to change — verify all figures directly with each vendor."</em> rather than <em>"add a note about pricing."</em></li>
-        <li class="wh-step"><span class="wh-step-num">3</span><strong>Decline</strong> — skip this conflict and leave the current text as-is.</li>
-      </ol>
+      <table class="wh-table">
+        <thead><tr><th>Option</th><th>What to do</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Pick an AI option</strong></td><td>Click the option you prefer. The Builder will apply it.</td></tr>
+          <tr><td><strong>Write your own</strong></td><td>Select <strong>Custom</strong> and type exactly what you want the document to say — the actual sentence or phrase, not an instruction. For example: <em>"Pricing is subject to change — verify all figures directly with each vendor."</em></td></tr>
+          <tr><td><strong>Decline</strong></td><td>Skip this conflict and leave the current text as-is.</td></tr>
+        </tbody>
+      </table>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>Click the <strong>Current:</strong> text on any conflict card to jump straight to that line in the working document and highlight it — useful when you need to see the surrounding context before deciding.</p>
@@ -452,8 +473,8 @@
   <!-- SECTION: STEP 5 -->
   <div class="wh-section" id="step5">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑤</div>
-      <div class="wh-section-title">Step 5 — Run More Rounds</div>
+      <div class="wh-section-icon">⑥</div>
+      <div class="wh-section-title">Step 6 — Run More Rounds</div>
     </div>
 
     <div class="wh-block">
@@ -466,10 +487,15 @@
       <div class="wh-block-title">Using Notes to give the Builder specific instructions</div>
       <p>Between rounds, you can type a one-time instruction into the <strong>Notes</strong> field on the Work screen. Notes go directly to the Builder for the next round only — after the round runs, the notes clear automatically.</p>
       <p>Notes are useful for things like:</p>
-      <p><strong>Scope corrections</strong> — <em>"Remove all references to switching and routing. Wireless only."</em></p>
-      <p><strong>Tone adjustments</strong> — <em>"Tighten the language. This is a technical document — cut any marketing-style phrasing."</em></p>
-      <p><strong>Structural changes</strong> — <em>"Move the pricing section to after the feature comparison. Add a summary table at the end."</em></p>
-      <p><strong>One-off additions</strong> — <em>"Add a note in the intro that all pricing is subject to change and should be verified with each vendor."</em></p>
+      <table class="wh-table">
+        <thead><tr><th>Use case</th><th>Example note</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Scope</strong></td><td><em>"Remove all references to switching and routing. Wireless only."</em></td></tr>
+          <tr><td><strong>Tone</strong></td><td><em>"Tighten the language. This is a technical document — cut any marketing-style phrasing."</em></td></tr>
+          <tr><td><strong>Structure</strong></td><td><em>"Move the pricing section to after the feature comparison. Add a summary table at the end."</em></td></tr>
+          <tr><td><strong>One-off addition</strong></td><td><em>"Add a note in the intro that all pricing is subject to change and should be verified with each vendor."</em></td></tr>
+        </tbody>
+      </table>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>If you find yourself typing the same note every round, move it into your goal instead — that's where permanent instructions belong.</p>
@@ -503,16 +529,20 @@
   <!-- SECTION: STEP 6 -->
   <div class="wh-section" id="step6">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑥</div>
-      <div class="wh-section-title">Step 6 — Know When You're Done</div>
+      <div class="wh-section-icon">⑦</div>
+      <div class="wh-section-title">Step 7 — Know When You're Done</div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Watch for these signals</div>
       <p>WaxFrame doesn't have a fixed number of rounds — the hive keeps refining until you stop it. Here's how to tell when the document has reached a natural finishing point:</p>
-      <p><strong>Multiple AIs return "No changes needed"</strong> in the same round. When reviewers start running out of meaningful suggestions, the document has converged.</p>
-      <p><strong>Conflicts become fewer and more stylistic.</strong> Early rounds produce structural debates. Late rounds produce disagreements about individual word choices — a sign you're nearly done.</p>
-      <p><strong>The document looks like something you'd actually send.</strong> Trust your own read. You're always the final editor.</p>
+      <table class="wh-table">
+        <tbody>
+          <tr><td><strong>Multiple AIs return "No changes needed"</strong></td><td>When reviewers start running out of meaningful suggestions, the document has converged.</td></tr>
+          <tr><td><strong>Conflicts become fewer and more stylistic</strong></td><td>Early rounds produce structural debates. Late rounds produce disagreements about word choices — a sign you're nearly done.</td></tr>
+          <tr><td><strong>The document looks like something you'd actually send</strong></td><td>Trust your own read. You're always the final editor.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
@@ -546,10 +576,26 @@
     <div class="wh-block">
       <div class="wh-block-title">The document is going in the wrong direction</div>
       <p>You're a few rounds in and the hive has drifted — scope has crept in, the tone is off, or the AIs filled in gaps their own way. This happens. Here are your options, from lightest touch to nuclear:</p>
-      <p><strong>Tighten the goal + add a Note (lightest):</strong> Go back to the Project screen via the nav menu and add explicit scope or tone instructions to your goal. Then before the next round, add a Note with immediate corrective instructions for the Builder — for example, <em>"Do not include routing or switching. Wireless only. Remove any switching references already in the document."</em> The updated goal sets direction going forward; the Note corrects the current pass.</p>
-      <p><strong>Edit the document directly:</strong> If you can see exactly what needs to come out, remove it yourself, tighten the goal, and run the next round from a cleaner starting point.</p>
-      <p><strong>Redirect through conflicts:</strong> If the drift is showing up as conflicts, handle it right there. Write a Custom resolution with the corrected text, or Decline to suppress the suggestion. Once resolved, it's locked.</p>
-      <p><strong>Start over (nuclear):</strong> If the document has drifted badly enough that fixing it would take longer than starting fresh, use <strong>Clear Project</strong> on the Project screen. This clears the document and round history but keeps your API keys. Rewrite your goal with tighter scope and start again.</p>
+      <table class="wh-table">
+        <tbody>
+          <tr>
+            <td><strong>Tighten the goal + add a Note</strong><br><em>lightest</em></td>
+            <td>Go back to the Project screen and add explicit scope or tone instructions to your goal. Then before the next round, add a Note with immediate corrective instructions for the Builder — for example, <em>"Do not include routing or switching. Wireless only. Remove any switching references already in the document."</em> The updated goal sets direction going forward; the Note corrects the current pass.</td>
+          </tr>
+          <tr>
+            <td><strong>Edit the document directly</strong></td>
+            <td>If you can see exactly what needs to come out, remove it yourself, tighten the goal, and run the next round from a cleaner starting point.</td>
+          </tr>
+          <tr>
+            <td><strong>Redirect through conflicts</strong></td>
+            <td>If the drift is showing up as conflicts, handle it right there. Write a Custom resolution with the corrected text, or Decline to suppress the suggestion. Once resolved, it's locked.</td>
+          </tr>
+          <tr>
+            <td><strong>Start over</strong><br><em>nuclear</em></td>
+            <td>If the document has drifted badly enough that fixing it would take longer than starting fresh, use <strong>Clear Project</strong> on the Project screen. This clears the document and round history but keeps your API keys. Rewrite your goal with tighter scope and start again.</td>
+          </tr>
+        </tbody>
+      </table>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>Starting over isn't a failure. A well-written second goal often produces a better round-one document than five rounds of correcting a draft built on a weak goal.</p>
@@ -600,12 +646,14 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What to ask your IT team for before you start</div>
-      <p>You need three things:</p>
-      <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span><strong>The API endpoint URL.</strong> The web address WaxFrame will send requests to — something like <code>https://ai.yourcompany.com/v1/chat/completions</code>. Ask specifically for "the OpenAI-compatible chat completions endpoint."</li>
-        <li class="wh-step"><span class="wh-step-num">2</span><strong>The model ID string.</strong> The exact name of the model — for example <code>gpt-4o</code>, <code>claude-3-7-sonnet</code>, or <code>gemini-2.5-pro</code>. It must be exact. Ask your IT team for a list of available model IDs.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span><strong>An API key or bearer token.</strong> Your personal credential — a long string of characters, sometimes called an access token or personal token. Some platforms generate one automatically; others require you to request one from IT.</li>
-      </ol>
+      <table class="wh-table">
+        <thead><tr><th>What you need</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr><td><strong>API endpoint URL</strong></td><td>The web address WaxFrame sends requests to — something like <code>https://ai.yourcompany.com/v1/chat/completions</code>. Ask IT specifically for "the OpenAI-compatible chat completions endpoint."</td></tr>
+          <tr><td><strong>Model ID string</strong></td><td>The exact name of the model — for example <code>gpt-4o</code>, <code>claude-3-7-sonnet</code>, or <code>gemini-2.5-pro</code>. It must be exact. Ask your IT team for a list of available model IDs.</td></tr>
+          <tr><td><strong>API key or bearer token</strong></td><td>Your personal credential — a long string of characters, sometimes called an access token or personal token. Some platforms generate one automatically; others require you to request one from IT.</td></tr>
+        </tbody>
+      </table>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>Most enterprise AI platforms use the OpenAI-compatible API format. If your IT team isn't sure, ask: "Is the API OpenAI-compatible?" The answer is almost always yes.</p>
@@ -682,14 +730,17 @@
     <div class="wh-block">
       <div class="wh-block-title">Which models WaxFrame uses by default</div>
       <p>WaxFrame uses specific model versions for each AI provider. These are the defaults as of this version:</p>
-      <ul>
-        <li><strong>ChatGPT</strong> — <code>gpt-4.1</code></li>
-        <li><strong>Claude</strong> — <code>claude-sonnet-4-6</code></li>
-        <li><strong>Gemini</strong> — <code>gemini-2.5-pro-preview-03-25</code></li>
-        <li><strong>Grok</strong> — <code>grok-3</code></li>
-        <li><strong>Perplexity</strong> — <code>sonar-pro</code></li>
-        <li><strong>DeepSeek</strong> — <code>deepseek-chat</code></li>
-      </ul>
+      <table class="wh-table">
+        <thead><tr><th>AI</th><th>Default model</th></tr></thead>
+        <tbody>
+          <tr><td><strong>ChatGPT</strong></td><td><code>gpt-4.1</code></td></tr>
+          <tr><td><strong>Claude</strong></td><td><code>claude-sonnet-4-6</code></td></tr>
+          <tr><td><strong>Gemini</strong></td><td><code>gemini-2.5-pro-preview-03-25</code></td></tr>
+          <tr><td><strong>Grok</strong></td><td><code>grok-3</code></td></tr>
+          <tr><td><strong>Perplexity</strong></td><td><code>sonar-pro</code></td></tr>
+          <tr><td><strong>DeepSeek</strong></td><td><code>deepseek-chat</code></td></tr>
+        </tbody>
+      </table>
       <p>You can see and change the model for any AI from the Setup screen — click the model name next to any AI to select from available options. WaxFrame fetches the current model list from each provider when you open the selector, so the options shown always reflect what's available on your account.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
