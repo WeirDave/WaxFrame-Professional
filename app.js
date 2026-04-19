@@ -2056,24 +2056,22 @@ async function testApiKey(id) {
   const cfg = API_CONFIGS[ai?.provider];
   if (!cfg || !cfg._key) { toast('⚠️ Save a key first'); return; }
 
-  const btn       = document.getElementById('testbtn-' + id);
-  const modal     = document.getElementById('testKeyModal');
-  const titleEl   = document.getElementById('testKeyModalTitle');
-  const subEl     = document.getElementById('testKeyModalSub');
-  const epEl      = document.getElementById('testKeyRawEndpoint');
-  const sentEl    = document.getElementById('testKeyRawSent');
-  const statusEl  = document.getElementById('testKeyRawStatus');
-  const rcvEl     = document.getElementById('testKeyRawReceived');
+  const btn      = document.getElementById('testbtn-' + id);
+  const modal    = document.getElementById('testKeyModal');
+  const titleEl  = document.getElementById('testKeyModalTitle');
+  const subEl    = document.getElementById('testKeyModalSub');
+  const epEl     = document.getElementById('testKeyRawEndpoint');
+  const sentEl   = document.getElementById('testKeyRawSent');
+  const statEl   = document.getElementById('testKeyRawStatus');
+  const rcvEl    = document.getElementById('testKeyRawReceived');
 
-  // Open modal and reset
   if (titleEl)  titleEl.textContent  = `Testing — ${ai.name}`;
   if (subEl)    subEl.textContent    = 'Sending a minimal test request…';
   if (epEl)     epEl.textContent     = cfg.endpoint;
   if (sentEl)   sentEl.textContent   = '…';
-  if (statusEl) statusEl.textContent = '…';
+  if (statEl)   statEl.textContent   = '…';
   if (rcvEl)    rcvEl.textContent    = '…';
   if (modal)    modal.classList.add('active');
-
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
 
   const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
@@ -2090,58 +2088,36 @@ async function testApiKey(id) {
       body: sentBody
     });
     const ms = Date.now() - t0;
-
     let rawText = '';
     try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
-
-    let prettyRaw = rawText;
-    try { prettyRaw = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
-
-    if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms`;
-
+    let pretty = rawText;
+    try { pretty = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
+    if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms`;
+    if (rcvEl)  rcvEl.textContent  = pretty;
     if (!response.ok) {
       let errMsg = `HTTP ${response.status}`;
-      try { const errJson = JSON.parse(rawText); errMsg = errJson?.error?.message || errMsg; } catch { /* ignore */ }
-      const hint = testKeyHint(response.status);
-      if (subEl)    subEl.textContent    = `❌ Failed — ${errMsg}${hint ? '\n' + hint : ''}`;
-      if (rcvEl)    rcvEl.textContent    = prettyRaw;
-      if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms  ❌`;
+      try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
+      const hint = { 401:'Bad or missing API key.', 403:'Access denied — check key permissions.', 404:'Wrong endpoint URL.', 405:'Method not allowed — endpoint may not support chat completions.', 429:'Rate limited — wait and retry.', 500:'Server error on the provider side.', 503:'Service unavailable — provider may be down.' }[response.status] || '';
+      if (subEl) subEl.textContent = `❌ ${errMsg}${hint ? ' — ' + hint : ''}`;
+      if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ❌`;
       if (btn) { btn.textContent = '❌'; btn.disabled = false; }
       setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
       return;
     }
-
     let extracted = '';
     try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
-    if (subEl)    subEl.textContent    = `✅ Connected — "${extracted.trim().substring(0, 60)}"`;
-    if (statusEl) statusEl.textContent = `HTTP ${response.status} — ${ms}ms  ✅`;
-    if (rcvEl)    rcvEl.textContent    = prettyRaw;
+    if (subEl)  subEl.textContent  = `✅ Connected — "${extracted.trim().substring(0, 60)}"`;
+    if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ✅`;
     if (btn) { btn.textContent = '✅'; btn.disabled = false; }
     setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
-
   } catch(e) {
     const ms = Date.now() - t0;
-    const hint = e.message.includes('fetch') || e.message.includes('network') || e.message.includes('Failed')
-      ? '\nNetwork error — check the endpoint URL and CORS settings.' : '';
-    if (subEl)    subEl.textContent    = `❌ ${e.message}${hint}`;
-    if (statusEl) statusEl.textContent = `Network Error — ${ms}ms  ❌`;
-    if (rcvEl)    rcvEl.textContent    = e.message;
+    if (subEl)  subEl.textContent  = `❌ ${e.message}`;
+    if (statEl) statEl.textContent = `Network Error — ${ms}ms  ❌`;
+    if (rcvEl)  rcvEl.textContent  = e.message;
     if (btn) { btn.textContent = '❌'; btn.disabled = false; }
     setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
   }
-}
-
-function testKeyHint(status) {
-  const hints = {
-    401: 'Hint: Bad or missing API key.',
-    403: 'Hint: Access denied — check key permissions.',
-    404: 'Hint: Wrong endpoint URL.',
-    405: 'Hint: Method not allowed — endpoint may not support chat completions.',
-    429: 'Hint: Rate limited — wait a moment and try again.',
-    500: 'Hint: Server error on the AI provider side — try again.',
-    503: 'Hint: Service unavailable — the provider may be down.'
-  };
-  return hints[status] || '';
 }
 
 function closeTestKeyModal() {
@@ -2150,10 +2126,7 @@ function closeTestKeyModal() {
 }
 
 async function testAllKeys() {
-  const keyed = aiList.filter(ai => {
-    const cfg = API_CONFIGS[ai.provider];
-    return cfg?._key;
-  });
+  const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
   if (!keyed.length) { toast('⚠️ No API keys saved yet'); return; }
 
   const panel   = document.getElementById('testKeysPanel');
@@ -2162,13 +2135,11 @@ async function testAllKeys() {
   const dismiss = document.getElementById('tkpDismiss');
   if (!panel) return;
 
-  // Reset panel
   rowsEl.innerHTML = '';
   if (title)   title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
   if (dismiss) dismiss.classList.remove('tkp-done');
   panel.classList.add('active');
 
-  // Build a row for each AI
   keyed.forEach(ai => {
     const row = document.createElement('div');
     row.className = 'tkp-row';
@@ -2201,12 +2172,11 @@ async function testAllKeys() {
 
     if (!cfg || !cfg._key) {
       if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; }
-      failed++;
-      continue;
+      failed++; continue;
     }
 
     const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
-    if (epEl)   epEl.textContent   = cfg.endpoint;
+    if (epEl) epEl.textContent = cfg.endpoint;
     if (sentEl) {
       try { sentEl.textContent = JSON.stringify(JSON.parse(sentBody), null, 2); }
       catch { sentEl.textContent = sentBody; }
@@ -2214,25 +2184,18 @@ async function testAllKeys() {
 
     const t0 = Date.now();
     try {
-      const response = await fetch(cfg.endpoint, {
-        method: 'POST',
-        headers: cfg.headersFn(cfg._key),
-        body: sentBody
-      });
+      const response = await fetch(cfg.endpoint, { method: 'POST', headers: cfg.headersFn(cfg._key), body: sentBody });
       const ms = Date.now() - t0;
-
       let rawText = '';
       try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
-      let prettyRaw = rawText;
-      try { prettyRaw = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
-
+      let pretty = rawText;
+      try { pretty = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
       if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms`;
-      if (rcvEl)  rcvEl.textContent  = prettyRaw;
+      if (rcvEl)  rcvEl.textContent  = pretty;
       if (detailBtn) detailBtn.style.display = '';
-
       if (!response.ok) {
         let errMsg = `HTTP ${response.status}`;
-        try { const errJson = JSON.parse(rawText); errMsg = errJson?.error?.message || errMsg; } catch { /* ignore */ }
+        try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
         if (statusEl) { statusEl.textContent = `✕ ${errMsg}`; statusEl.className = 'tkp-status tkp-fail'; }
         failed++;
       } else {
@@ -2249,11 +2212,10 @@ async function testAllKeys() {
       if (detailBtn) detailBtn.style.display = '';
       failed++;
     }
-    // Small delay between calls so we don't hammer endpoints
     await new Promise(r => setTimeout(r, 300));
   }
 
-  if (title) title.textContent = `Done — ${passed} passed, ${failed} failed`;
+  if (title)   title.textContent = `Done — ${passed} passed, ${failed} failed`;
   if (dismiss) dismiss.classList.add('tkp-done');
 }
 
