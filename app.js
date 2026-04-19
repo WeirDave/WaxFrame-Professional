@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-004';         // build stamp — update each session
+const BUILD       = '20260419-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1944,6 +1944,22 @@ function renderAISetupGrid() {
 
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
 
+
+function openAllConsoles() {
+  const urls = [];
+  aiList.forEach(ai => {
+    const def = DEFAULT_AIS.find(d => d.id === ai.id);
+    if (def?.apiConsole && !urls.includes(def.apiConsole)) urls.push(def.apiConsole);
+  });
+  if (!urls.length) {
+    // Fallback: open all default consoles if hive is empty
+    DEFAULT_AIS.forEach(d => { if (d.apiConsole && !urls.includes(d.apiConsole)) urls.push(d.apiConsole); });
+  }
+  let opened = 0;
+  urls.forEach(url => { const w = window.open(url, '_blank'); if (w) opened++; });
+  if (opened < urls.length) toast(`⚠️ ${urls.length - opened} tab(s) blocked — allow pop-ups for this site`);
+  else toast(`🔗 Opened ${opened} API console${opened !== 1 ? 's' : ''}`);
+}
 
 function resetBeesToDefaults() {
   if (!confirm('Reset to the 6 default AIs? Your saved API keys will be kept. Custom AIs will be removed.')) return;
@@ -5968,6 +5984,25 @@ function exportSession() {
   URL.revokeObjectURL(url);
 
   toast('💾 Full transcript exported');
+}
+
+function exportSnapshot() {
+  const hive    = localStorage.getItem(LS_HIVE)    || null;
+  const project = localStorage.getItem(LS_PROJECT) || null;
+  const session = localStorage.getItem(LS_SESSION) || null;
+  if (!hive && !project && !session) { toast('⚠️ Nothing to snapshot'); return; }
+  const backup   = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
+  const name     = (() => { try { return JSON.parse(project || '{}').name || 'session'; } catch(e) { return 'session'; } })();
+  const ver      = (() => { try { return JSON.parse(project || '{}').version || ''; } catch(e) { return ''; } })();
+  const safeName = (name + (ver ? '-' + ver : '')).replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 50);
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `WaxFrame-Snapshot-${safeName}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+  hideFinishModal();
+  toast('📷 Snapshot saved — reload it any time via Menu → Import Backup');
 }
 
 function backupSession() {
