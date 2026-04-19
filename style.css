@@ -5779,7 +5779,7 @@ kbd {
 .wh-toc-link { font-size:14px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
 .wh-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-.wh-section { background:transparent; border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:32px; scroll-margin-top:72px; }
+.wh-section { background:transparent; border-radius:var(--radius-lg); margin-bottom:32px; scroll-margin-top:72px; }
 .wh-section-hdr { display:flex; align-items:center; gap:14px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
 .wh-section-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
 .wh-section-title { font-family:var(--font); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#ffffff; }
@@ -5891,7 +5891,7 @@ kbd {
 
 [data-theme="light"] .wh-intro,
 [data-theme="light"] .wh-toc { background:#ffffff; }
-[data-theme="light"] .wh-section { background:transparent; border-color:var(--border2); }
+[data-theme="light"] .wh-section { background:transparent; }
 [data-theme="light"] .wh-block { background:#ffffff; border-top-color:var(--border2); }
 [data-theme="light"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
 [data-theme="light"] .wh-back-top { color:#333; }
@@ -5899,7 +5899,7 @@ kbd {
 @media (prefers-color-scheme:light) {
   [data-theme="auto"] .wh-intro,
   [data-theme="auto"] .wh-toc { background:#ffffff; }
-  [data-theme="auto"] .wh-section { background:transparent; border-color:var(--border2); }
+  [data-theme="auto"] .wh-section { background:transparent; }
   [data-theme="auto"] .wh-block { background:#ffffff; border-top-color:var(--border2); }
   [data-theme="auto"] .wh-section-hdr { background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-color:rgba(255,255,255,0.1); }
   [data-theme="auto"] .wh-back-top { color:#333; }
