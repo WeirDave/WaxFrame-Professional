@@ -7,7 +7,9 @@ All notable changes to WaxFrame Professional are documented here.
 ## v3.14.1 — April 18, 2026
 
 ### Fixed
-- **User manual — list item font size inconsistency** — `.wh-block` had explicit `font-size: 13px` on `p` elements but no rules for `ul`, `ol`, or `li`. Those elements fell back to the base `15px` body font, causing sections that use bullet lists ("Your settings are saved in your browser", "The Add Custom AI form", "Test Connection", "Which models WaxFrame uses") to render at a noticeably larger and bolder weight than `p`-only sections. Added `.wh-block ul`, `.wh-block ol:not(.wh-steps)`, and `.wh-block li:not(.wh-step)` rules at `13px` to match. Also patched the `@media print` color override to include `li` elements.
+- **User manual — honeycomb background missing in dark mode** — `helper-body` was using `background: var(--surface2)` (solid color, no image). Replaced with `background-color: var(--bg)` plus the dark honeycomb image, mirroring the main app body rule. Added `[data-theme="light"]` and `@media (prefers-color-scheme: light) [data-theme="auto"]` overrides for the light honeycomb. All three themes now render correctly.
+- **User manual — body text font size inconsistency** — Standardised all manual body text to 14px. Previously a patchwork of 12px (tip/warn boxes, table), 13px (steps, TOC links, block paragraphs), and 14px (intro). Updated: `.wh-toc-link`, `.wh-block p`, `.wh-block ul/li`, `.wh-tip p`, `.wh-warn p`, `.wh-table`, `.wh-step` all → 14px. Table `td code` bumped 11px → 13px. Section titles bumped 17px → 18px. Block titles bumped 14px → 16px. Badge elements (`.wh-step-num`, `.wh-tag`, `.wh-toc-title`) intentionally unchanged.
+- **User manual — list items rendering at base 15px** — `wh-block` had no `ul`, `ol`, or `li` rules, causing bullet lists to fall back to the 15px body font. Added `.wh-block ul`, `.wh-block ol:not(.wh-steps)`, and `.wh-block li:not(.wh-step)` rules. Print media color override patched to include `li`.
 
 ---
 
