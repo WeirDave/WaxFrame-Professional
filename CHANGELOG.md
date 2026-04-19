@@ -4,19 +4,20 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.14.13 — April 19, 2026
+## v3.14.12 — April 19, 2026
 
 ### Fixed
-- **Document Playbooks — back-to-top links moved inside sections** — All 11 dp-back-top links relocated from the honeycomb gap between playbook cards to inside the dp-playbook-body of each section, matching the same treatment applied to the user manual.
+- **Test button modal restored** — Individual AI row Test buttons now open a modal showing the full Endpoint, Sent JSON, HTTP Status with response time, and raw Received JSON. The modal title identifies which AI is being tested and the subtitle updates to show pass/fail result and plain-English error hints for common HTTP error codes (401, 403, 404, 405, 429, 500, 503). The previous implementation that showed only a toast was a regression introduced during a prior refactor.
+- **Test All Keys panel visibility fixed** — Panel was permanently hidden because `style="display:none;"` on the element overrode the `.test-keys-panel.active { display: flex; }` CSS rule. Inline style removed; CSS handles all display states correctly. Panel is now 520px wide to accommodate detail rows.
+- **Test All Keys detail rows restored** — Each AI row in the Test All Keys panel now includes a collapsible Details section showing Endpoint, Sent JSON, HTTP Status with response time, and raw Received JSON. The Details toggle appears after the test completes (pass or fail). Previously the panel only showed AI name and a short status string.
 
 ---
 
-## v3.14.12 — April 19, 2026
+## v3.14.11 — April 19, 2026
 
 ### Changed
-- **User Manual — step numbering corrected** — "Adding a Custom AI" was unnumbered in a numbered sequence, making the TOC read ①, 🔧, ②, ③... Renumbered it as ② and shifted all subsequent steps to ③–⑦ in both TOC pills and section headers. Two inline "See Step 4" references updated to Step 5.
-- **User Manual — back-to-top links moved inside sections** — All 13 wh-back-top pills relocated from the honeycomb gap between cards to inside the last wh-block of each section.
-- **User Manual — bold label/description lists converted to tables** — Nine instances of the unreadable bold-label-then-description pattern replaced with wh-table two-column tables throughout the document. Five wh-steps lists that are genuine sequential actions left unchanged.
+- **User Manual — Back to Top links moved inside sections** — All 13 `wh-back-top` links relocated from the honeycomb gap between cards to inside the last `.wh-block` of each section. The pill now sits at the bottom of the card content, giving readers a natural "done with this section" affordance without leaving the card surface.
+- **User Manual — Section card border removed** — Stripped `border:1px solid var(--border2)` from `.wh-section` and its light/auto theme overrides. The border was visible as a white line in light mode and a grey outline around the transparent header in dark mode. The dark header bar and block separators provide sufficient visual structure without it. Print styles retain the border.
 
 ---
 

@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260418-001">
+  <meta name="waxframe-build" content="20260419-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -984,16 +984,52 @@
 <div id="toast"></div>
 
 <!-- ── Test Keys Status Panel ── -->
-<div id="testKeysPanel" class="test-keys-panel" style="display:none;">
+<div id="testKeysPanel" class="test-keys-panel">
   <div class="tkp-header">
     <span id="tkpTitle" class="tkp-title">Testing API keys…</span>
-    <button class="tkp-dismiss" id="tkpDismiss" onclick="dismissTestPanel()" style="display:none;">Dismiss ✕</button>
+    <button class="tkp-dismiss" id="tkpDismiss" onclick="dismissTestPanel()">Dismiss ✕</button>
   </div>
   <div id="tkpRows" class="tkp-rows"></div>
 </div>
 
+<!-- ── Test Key Modal (individual Test button) ── -->
+<div class="custom-ai-modal-overlay" id="testKeyModal" onclick="if(event.target===this)closeTestKeyModal()">
+  <div class="custom-ai-modal test-key-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title" id="testKeyModalTitle">Testing API Key…</div>
+        <div class="custom-ai-modal-sub" id="testKeyModalSub">Sending a minimal test request</div>
+      </div>
+      <button class="import-server-close-btn" onclick="closeTestKeyModal()" title="Close">✕</button>
+    </div>
+    <div id="testKeyRawPanel" class="custom-ai-raw-panel">
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Endpoint</span>
+        <pre class="custom-ai-raw-pre" id="testKeyRawEndpoint">—</pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Sent</span>
+        <pre class="custom-ai-raw-pre" id="testKeyRawSent">—</pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Status</span>
+        <pre class="custom-ai-raw-pre" id="testKeyRawStatus">—</pre>
+      </div>
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Received</span>
+        <pre class="custom-ai-raw-pre test-key-raw-received" id="testKeyRawReceived">—</pre>
+      </div>
+    </div>
+    <div class="custom-ai-form-footer">
+      <span></span>
+      <button class="btn" onclick="closeTestKeyModal()">← Close</button>
+    </div>
+  </div>
+</div>
+
 <script src="version.js"></script>
-<script src="app.js?v=3.14.0"></script>
+<script src="app.js?v=3.14.1"></script>
 <script src="api-links.js"></script>
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
