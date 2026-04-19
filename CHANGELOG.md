@@ -4,24 +4,16 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.14.15 — April 19, 2026
+## v3.15.0 — April 19, 2026
+
+### Added
+- **`exportSnapshot()` implemented** — The Save Session Snapshot button in the Finish modal was wired to this function but it was never written. Now correctly saves the full session (hive, project, session state) as a `WaxFrame-Snapshot-[name]-[version].json` file, closes the Finish modal, and toasts a reminder to use Menu → Import Backup to reload it. Functionally matches `backupSession()` with the version number included in the filename.
+- **`openAllConsoles()` implemented in app.js** — The Open API Websites button on the Setup screen was calling this function but it did not exist in app.js (only a static version in api-links.js). The live version reads from the current `aiList` and opens API console URLs from each AI's `apiConsole` field in `DEFAULT_AIS`. Falls back to opening all default consoles if the hive is empty. Shows a toast if any tabs are blocked by the browser.
 
 ### Fixed
-- **Paste panel textarea now matches goal and work doc width at all viewports** — The `max-width: 1600px` responsive block was overriding `#panel-paste .proj-ta-editor` to `width: 100%; max-width: 100%; overflow-x: hidden`, making it fluid while the goal textarea and working document stayed fixed at 80ch. Override removed — the base 80ch width and `overflow-x: auto` now apply consistently across all three editors at all viewport widths.
-
----
-
-## v3.14.14 — April 19, 2026
-
-### Changed
-- **Refine Rounds panel converts to popover at short viewport heights** — Added `@media (max-height: 920px)` that hides the inline Refine Rounds panel and activates the ▸ Refine Preview button/popover, mirroring the existing behavior already applied at `max-width: 1600px`. Prevents the panel from being cut off at viewport heights around 911px while keeping the goal textarea fully usable.
-
----
-
-## v3.14.13 — April 19, 2026
-
-### Fixed
-- **Project goal textarea hidden in Chrome/Edge at short viewport heights** — `proj-goal-flex` had `min-height: 0` which allowed Chrome to collapse it to zero height inside a flex scroll container at viewport heights around 911px. Changed to `min-height: 280px` so Chrome cannot collapse the goal area. `proj-left-scroll` scrolls to accommodate when the viewport is short. Firefox was not affected.
+- **Project goal textarea no longer collapses at short viewport heights** — `proj-goal-flex` had `min-height: 0` which allowed any browser to collapse the goal area when viewport height is around 911px or less. Changed to `min-height: 280px`. `proj-left-scroll` scrolls to accommodate on short viewports.
+- **Refine Rounds panel converts to popover at short viewport heights** — Added `@media (max-height: 920px)` that hides the inline Refine Rounds panel and activates the ▸ Refine Preview button/popover, mirroring the existing `max-width: 1600px` behaviour. Prevents the panel being cut off at short browser heights.
+- **Paste panel textarea width now matches goal and work doc at all viewports** — The `max-width: 1600px` responsive block was overriding `#panel-paste .proj-ta-editor` to `width: 100%; max-width: 100%; overflow-x: hidden`, making it fluid while the goal textarea and working document stayed at a fixed 80ch. Override removed — the base 80ch and `overflow-x: auto` now apply consistently across all three editors.
 
 ---
 
