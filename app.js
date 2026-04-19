@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-006';         // build stamp — update each session
+const BUILD       = '20260419-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1951,10 +1951,7 @@ function openAllConsoles() {
     const def = DEFAULT_AIS.find(d => d.id === ai.id);
     if (def?.apiConsole && !urls.includes(def.apiConsole)) urls.push(def.apiConsole);
   });
-  if (!urls.length) {
-    // Fallback: open all default consoles if hive is empty
-    DEFAULT_AIS.forEach(d => { if (d.apiConsole && !urls.includes(d.apiConsole)) urls.push(d.apiConsole); });
-  }
+  if (!urls.length) DEFAULT_AIS.forEach(d => { if (d.apiConsole && !urls.includes(d.apiConsole)) urls.push(d.apiConsole); });
   let opened = 0;
   urls.forEach(url => { const w = window.open(url, '_blank'); if (w) opened++; });
   if (opened < urls.length) toast(`⚠️ ${urls.length - opened} tab(s) blocked — allow pop-ups for this site`);
@@ -3009,7 +3006,6 @@ function switchDocTab(tab) {
   document.querySelectorAll('.doc-tab-panel').forEach(p => p.classList.remove('active'));
   document.getElementById('tab-'   + tab)?.classList.add('active');
   document.getElementById('panel-' + tab)?.classList.add('active');
-  // Update instruction hint
   const hint = document.getElementById('docTabHint');
   if (hint) {
     const hints = {
@@ -3019,7 +3015,6 @@ function switchDocTab(tab) {
     };
     hint.textContent = hints[tab] || '';
   }
-  // Init line numbers when switching to paste tab
   if (tab === 'paste') {
     const ta = document.getElementById('pasteText');
     if (ta) updateProjLineNums('projPasteNums', ta);
@@ -3613,7 +3608,6 @@ function updateGoalCounter() {
     if (popoverSub)   popoverSub.textContent = 'AIs receive this in Refine rounds. Draft round always gets your full goal.';
     if (popoverBtn)   popoverBtn.style.removeProperty('display');
   } else if (ta.value.trim()) {
-    // Under 300 chars — show full goal with note that it will be sent in full
     const full = ta.value.trim();
     // Sidebar
     if (previewText)  { previewText.textContent = full; previewText.style.display = 'block'; }

@@ -769,13 +769,6 @@ html, body {
 
 .doc-tab-panel { display: none; }
 .doc-tab-panel.active { display: block; }
-.doc-tab-hint {
-  font-size: 12px;
-  color: var(--text-dim);
-  font-style: italic;
-  margin: 6px 0 4px;
-  padding: 0 2px;
-}
 /* Paste panel: fill column height; width = working doc formula */
 #panel-paste .proj-ta-editor {
   flex: 1;
@@ -5817,6 +5810,7 @@ kbd {
 .wh-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px; }
 .wh-step { display:flex; gap:12px; align-items:flex-start; font-size:14px; color:var(--text-dim); line-height:1.6; }
 .wh-step-num { background:var(--accent); color:#0a0c12; font-size:11px; font-weight:800; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; font-family:var(--font-display); }
+.wh-step > span:not(.wh-step-num) { flex:1; min-width:0; }
 
 .wh-tag { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:20px; letter-spacing:0.04em; margin-right:4px; }
 .wh-tag-amber { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
@@ -6309,8 +6303,16 @@ kbd {
 }
 
 /* ══ SHORT VIEWPORT — hide refine panel, show button+popover ══ */
-/* Mirrors the max-width:1600px treatment for short browser heights */
 @media (max-height: 920px) {
   .goal-split-right { display: none !important; width: 0; min-width: 0; max-width: 0; overflow: hidden; }
   .refine-preview-btn { display: flex !important; }
+}
+
+/* ══ DOC TAB HINT ══ */
+.doc-tab-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 6px 0 4px;
+  padding: 0 2px;
 }
