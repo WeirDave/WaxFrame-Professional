@@ -4,6 +4,14 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.11 — April 19, 2026
+
+### Changed
+- **User Manual — Back to Top links moved inside sections** — All 13 `wh-back-top` links relocated from the honeycomb gap between cards to inside the last `.wh-block` of each section. The pill now sits at the bottom of the card content, giving readers a natural "done with this section" affordance without leaving the card surface.
+- **User Manual — Section card border removed** — Stripped `border:1px solid var(--border2)` from `.wh-section` and its light/auto theme overrides. The border was visible as a white line in light mode and a grey outline around the transparent header in dark mode. The dark header bar and block separators provide sufficient visual structure without it. Print styles retain the border.
+
+---
+
 ## v3.14.10 — April 19, 2026
 
 ### Changed
