@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.2 — April 18, 2026
+
+### Changed
+- **User manual — section headers now card-styled** — `.wh-section-hdr` previously floated as a bare rule with only a bottom border. Now uses the same `background: var(--surface)`, `border`, and `border-radius` card treatment as `.wh-block`. Added to light, auto, and print background overrides to stay consistent across all themes.
+
+---
+
 ## v3.14.1 — April 18, 2026
 
 ### Fixed
