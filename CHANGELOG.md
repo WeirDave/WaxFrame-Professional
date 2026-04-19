@@ -4,10 +4,12 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
-## v3.14.9 — April 19, 2026
+## v3.14.10 — April 19, 2026
 
-### Added
-- **Cross-links between User Manual and Document Playbooks** — User manual Step 2 (Write Your Goal) now has a second tip box pointing to the Document Playbooks with a direct link. Document Playbooks intro blurb now includes a link back to the User Manual for new users. Both links open in a new tab.
+### Changed
+- **User manual — TOC restructured into three labeled groups** — Flat pill list replaced with three labeled groups: Before You Start (What WaxFrame Does, Free Trial & Licensing, What's in the Folder), The Steps (①–⑥ plus Adding a Custom AI), and Reference (When Things Go Wrong, Using WaxFrame at Work, API Costs & Billing). Added `.wh-toc-group` and `.wh-toc-group-label` CSS rules. TOC link font size bumped to 14px.
+- **User manual — intro paragraph updated** — Rewritten to accurately reflect the three-part structure (orientation, steps, reference) rather than promising a purely linear step-by-step walkthrough.
+- **User manual — Back to Top links styled as pills** — `.wh-back-top` updated to match TOC link pill treatment: `border: 1px dashed`, `border-radius: 20px`, `padding: 5px 14px`, `width: fit-content`, `margin-left: auto`, hover state matches TOC hover. Font size bumped to 14px. Light and auto theme overrides updated.
 
 ---
 
