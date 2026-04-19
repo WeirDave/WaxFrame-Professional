@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — waxframe-user-manual.html
-     Build: 20260415-001
+     Build: 20260419-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260419-001">
+  <meta name="waxframe-build" content="20260419-006">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css">
@@ -36,7 +36,6 @@
 
 <div class="page-main" id="top">
 
-  <!-- Print-only header -->
   <div class="print-header">
     <div class="print-header-title">WaxFrame User Manual</div>
     <div class="print-header-sub">weirdave.github.io/WaxFrame-Professional — Many minds, one refined result.</div>
@@ -45,14 +44,14 @@
   <div class="wh-intro">
     <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="wh-bee">
     <div class="wh-intro-text">
-      <h2>How to Use WaxFrame</h2>
-      <p>WaxFrame gets a team of AIs to work together to write and refine your document. This guide starts with what the app does and how to get set up, then walks you through the process step by step. Reference sections at the end cover troubleshooting, enterprise use, and billing — dip in whenever you need them. No prior AI experience needed.</p>
+      <h2>WaxFrame User Manual</h2>
+      <p>WaxFrame puts a team of AI assistants to work on your document at the same time. One AI writes and refines — the rest review, challenge, and suggest improvements. Round by round, your document gets sharper. This manual walks you through every screen in the exact order you will use them, then covers advanced features and reference material in the appendices.</p>
     </div>
   </div>
 
   <!-- TABLE OF CONTENTS -->
   <div class="wh-toc">
-    <div class="wh-toc-title">In this guide</div>
+    <div class="wh-toc-title">Contents</div>
     <div class="wh-toc-group">
       <div class="wh-toc-group-label">Before You Start</div>
       <a href="#what-is-it" class="wh-toc-link">🐝 What WaxFrame Does</a>
@@ -60,25 +59,34 @@
       <a href="#your-files" class="wh-toc-link">📁 What's in the Folder</a>
     </div>
     <div class="wh-toc-group">
-      <div class="wh-toc-group-label">The Steps</div>
-      <a href="#step1" class="wh-toc-link">① Set Up Your AIs</a>
-      <a href="#add-custom-ai" class="wh-toc-link">② Adding a Custom AI</a>
-      <a href="#step2" class="wh-toc-link">③ Write Your Goal</a>
-      <a href="#step3" class="wh-toc-link">④ Start Your First Round</a>
-      <a href="#step4" class="wh-toc-link">⑤ Review &amp; Resolve Conflicts</a>
-      <a href="#step5" class="wh-toc-link">⑥ Run More Rounds</a>
-      <a href="#step6" class="wh-toc-link">⑦ Know When You're Done</a>
+      <div class="wh-toc-group-label">Step-by-Step Guide</div>
+      <a href="#step1" class="wh-toc-link">① Step 1 — Set Up Your Worker Bees</a>
+      <a href="#step2" class="wh-toc-link">② Step 2 — Choose Your Builder</a>
+      <a href="#step3" class="wh-toc-link">③ Step 3 — Define Your Project</a>
+      <a href="#step4" class="wh-toc-link">④ Step 4 — Provide Your Starting Document</a>
+      <a href="#step5" class="wh-toc-link">⑤ Step 5 — Launch and Run Your First Round</a>
+      <a href="#step6" class="wh-toc-link">⑥ Step 6 — Review Results and Resolve Conflicts</a>
+      <a href="#step7" class="wh-toc-link">⑦ Step 7 — Run More Rounds</a>
+      <a href="#step8" class="wh-toc-link">⑧ Step 8 — Export and Finish</a>
+    </div>
+    <div class="wh-toc-group">
+      <div class="wh-toc-group-label">Appendices</div>
+      <a href="#appendix-custom-ai" class="wh-toc-link">A — Adding a Custom AI</a>
+      <a href="#appendix-model-server" class="wh-toc-link">B — Importing from a Model Server</a>
+      <a href="#appendix-enterprise" class="wh-toc-link">C — Using WaxFrame at Work</a>
     </div>
     <div class="wh-toc-group">
       <div class="wh-toc-group-label">Reference</div>
       <a href="#problems" class="wh-toc-link">🔧 When Things Go Wrong</a>
-      <a href="#internalai" class="wh-toc-link">🏢 Using WaxFrame at Work</a>
       <a href="#billing" class="wh-toc-link">💳 API Costs &amp; Billing</a>
     </div>
   </div>
 
 
-  <!-- SECTION: WHAT IS IT -->
+  <!-- ═══════════════════════════════════════════════════════════
+       BEFORE YOU START
+       ═══════════════════════════════════════════════════════════ -->
+
   <div class="wh-section" id="what-is-it">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">🐝</div>
@@ -87,36 +95,34 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The short version</div>
-      <p>You tell WaxFrame what document you need. Multiple AIs each read it and suggest improvements. A separate AI — the Builder — weighs all the suggestions, applies the best ones, and produces an updated document. You repeat that process — called a <strong>round</strong> — until the document is good enough to use.</p>
-      <p>Think of it like having five sharp colleagues review your draft simultaneously, then one editor incorporate all their notes. Except it takes about two minutes per round instead of two weeks.</p>
+      <p>WaxFrame runs multiple AI assistants on your document at the same time. Some act as <strong>reviewers</strong> — they read your document and give specific, numbered suggestions. One acts as the <strong>Builder</strong> — it reads all the suggestions and rewrites the document incorporating the best ideas. Each time you run a round, the document improves. You decide when it is good enough.</p>
+      <p>You can start from a blank page, paste in existing text, or upload a file. WaxFrame works on any kind of written document — proposals, reports, emails, résumés, blog posts, marketing copy, technical documentation, and more. It works equally well whether you are creating something new or improving something you already have.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The three parts of the app</div>
+      <div class="wh-block-title">The three screens</div>
       <table class="wh-table">
-        <thead><tr><th>Screen</th><th>What it's for</th></tr></thead>
+        <thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
         <tbody>
-          <tr><td><strong>Setup</strong></td><td>Configure which AIs you're using and enter your API keys. You do this once and your settings are remembered.</td></tr>
-          <tr><td><strong>Project</strong></td><td>Enter the goal for your document and, if you already have a draft, paste it in. This is also where you clear a project and start fresh.</td></tr>
-          <tr><td><strong>Work</strong></td><td>Where the action happens. Run rounds, watch the AIs work in real time, review the updated document, and handle any conflicts the Builder couldn't resolve on its own.</td></tr>
+          <tr><td><strong>Setup</strong></td><td>Connect your AI assistants by entering their API keys. Pick which AI will act as the Builder. This only needs to be done once — your settings are saved.</td></tr>
+          <tr><td><strong>Project</strong></td><td>Name your project, write your goal, and tell WaxFrame what to start with — an uploaded file, pasted text, or nothing at all.</td></tr>
+          <tr><td><strong>Work</strong></td><td>Run rounds, review the updated document, resolve any conflicts between AIs, and export when you are done.</td></tr>
         </tbody>
       </table>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">What you'll need before you start</div>
-      <p>WaxFrame talks directly to AI providers on your behalf. To do that, it needs an <strong>API key</strong> from each AI provider you want to use. An API key is simply a password that proves to the provider that you have an account and gives WaxFrame permission to send requests on your behalf.</p>
-      <p>You'll need keys from at least two providers — one for your reviewers and one for your Builder. Most providers let you sign up and get a key in a few minutes, and many offer free credits to get started.</p>
+      <div class="wh-block-title">What you will need before you start</div>
+      <p>WaxFrame connects to AI providers using API keys — unique codes that give WaxFrame permission to use each AI on your behalf. You will need at least two API keys from any combination of the supported providers: ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Grok (xAI), Perplexity, or DeepSeek. You pay each provider directly for what you use — WaxFrame itself is free for your first 3 rounds.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Your API keys are stored only in your browser. They never leave your machine and are never sent to WaxFrame or anyone else — only directly to the AI provider you're using.</p>
+        <p>Not sure which AIs to start with? ChatGPT and Claude are both reliable, widely available, and handle all document types well. DeepSeek is an excellent low-cost option. You only need two to get started.</p>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: LICENSING -->
   <div class="wh-section" id="licensing">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">🎟️</div>
@@ -125,19 +131,12 @@
 
     <div class="wh-block">
       <div class="wh-block-title">You get 3 free rounds — no credit card required</div>
-      <p>When you first open WaxFrame, you can run up to <strong>3 rounds completely free</strong>. No account, no credit card, no sign-up. Just open the app, set up your AIs, and go. The free rounds are a chance to try the full product and see how it works before committing to anything.</p>
-      <p>After your 3 free rounds, WaxFrame will prompt you to enter a license key to continue. You can still view your session history and export your documents — you just can't start new rounds without a key.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Free rounds count from the first time you use the app in a given browser. They don't reset when you start a new project.</p>
-      </div>
+      <p>WaxFrame gives every user 3 free rounds before a license is required. A round is one full cycle — all your AIs review the document and the Builder rewrites it. Three rounds is enough to see meaningful improvement on most documents. The free round count is stored in your browser and does not reset if you clear your project or change your goal.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Getting a license key</div>
-      <p>A WaxFrame Pro license is a one-time purchase — no subscription, no recurring fees. Buy once, use forever. You get a license key that you enter into the app to unlock unlimited rounds.</p>
-      <p>Purchase at: <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com/l/WaxFrame</a></p>
-      <p>You can also reach the purchase page directly from the <strong>Menu</strong> → <strong>Buy WaxFrame Pro</strong>.</p>
+      <p>After your 3 free rounds, purchase a license at <a href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" class="link-accent">weirdave.gumroad.com/l/WaxFrame</a>. Your key is delivered by email immediately after purchase. The license is a one-time purchase — no subscription, no renewal.</p>
     </div>
 
     <div class="wh-block">
@@ -148,13 +147,11 @@
         <li class="wh-step"><span class="wh-step-num">3</span>Paste your key into the field and click <strong>Unlock Pro</strong>.</li>
         <li class="wh-step"><span class="wh-step-num">4</span>WaxFrame verifies the key and unlocks unlimited rounds immediately.</li>
       </ol>
-      <p>Your license is stored in your browser. If you switch to a different browser or computer, you'll need to re-enter your key — the key itself is reusable, so just repeat the steps above.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: WHAT'S IN THE FOLDER -->
   <div class="wh-section" id="your-files">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">📁</div>
@@ -162,123 +159,407 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">You downloaded a folder — here's what everything does</div>
-      <p>Whether you're running WaxFrame from the hosted version or a local ZIP download, the same files power the app. If you've opened the folder and are wondering what to click — the answer is <code>index.html</code>. Everything else loads automatically and you never need to open it directly.</p>
+      <div class="wh-block-title">You downloaded a folder — here is what everything does</div>
       <table class="wh-table">
-        <thead>
-          <tr><th>File or Folder</th><th>What it is</th><th>Do you open it?</th></tr>
-        </thead>
+        <thead><tr><th>File / Folder</th><th>What it is</th></tr></thead>
         <tbody>
-          <tr><td><code>index.html</code></td><td>The app itself. This is WaxFrame.</td><td><strong>Yes</strong> — double-click this to launch</td></tr>
-          <tr><td><code>app.js</code></td><td>All the logic that makes WaxFrame work.</td><td>No — never open or edit this</td></tr>
-          <tr><td><code>style.css</code></td><td>Controls how everything looks.</td><td>No — never open or edit this</td></tr>
-          <tr><td><code>theme.js</code></td><td>Handles light/dark mode switching.</td><td>No — never open or edit this</td></tr>
-          <tr><td><code>api-links.js</code></td><td>Stores API console and billing URLs for each provider.</td><td>No — never open or edit this</td></tr>
-          <tr><td><code>waxframe-user-manual.html</code></td><td>This document. Opens from the Menu inside the app.</td><td>No — opens from the app</td></tr>
-          <tr><td><code>api-details.html</code></td><td>API Key Guide — step-by-step key setup and billing links.</td><td>No — opens from the app</td></tr>
-          <tr><td><code>what-are-tokens.html</code></td><td>Explains tokens and how to keep API costs low.</td><td>No — opens from the app</td></tr>
-          <tr><td><code>document-playbooks.html</code></td><td>Pre-written goals for common document types.</td><td>No — opens from the app</td></tr>
-          <tr><td><code>prompt-editor.html</code></td><td>Advanced prompt customisation for power users.</td><td>No — opens from the app</td></tr>
-          <tr><td><code>images/</code></td><td>Icons and graphics used by the app.</td><td>No — leave this folder alone</td></tr>
-          <tr><td><code>screenshots/</code></td><td>Screenshots used in documentation and marketing.</td><td>No — leave this folder alone</td></tr>
-          <tr><td><code>sounds/</code></td><td>Audio assets used by the app.</td><td>No — leave this folder alone</td></tr>
-          <tr><td><code>docs/</code></td><td>Reference documents and Word source files for the guides.</td><td>No — leave this folder alone</td></tr>
-          <tr><td><code>WaxFrameGettingStarted_v2.pdf</code></td><td>Quick-start guide for new users.</td><td>Yes — read this if you need setup help</td></tr>
-          <tr><td><code>WaxFrameREADME_v2.pdf</code></td><td>Full product overview and feature reference.</td><td>Yes — useful reading before your first session</td></tr>
+          <tr><td><code>index.html</code></td><td>The main app. Open this in your browser to launch WaxFrame.</td></tr>
+          <tr><td><code>style.css</code></td><td>Visual styling. Do not edit.</td></tr>
+          <tr><td><code>app.js</code></td><td>All app logic. Do not edit.</td></tr>
+          <tr><td><code>version.js</code></td><td>Version number. Do not edit.</td></tr>
+          <tr><td><code>api-links.js</code></td><td>API console links used by helper pages.</td></tr>
+          <tr><td><code>api-details.html</code></td><td>The API Key Guide — step-by-step instructions for getting a key from each provider.</td></tr>
+          <tr><td><code>waxframe-user-manual.html</code></td><td>This document.</td></tr>
+          <tr><td><code>document-playbooks.html</code></td><td>Ready-made project goals for common document types.</td></tr>
+          <tr><td><code>what-are-tokens.html</code></td><td>Plain-English explanation of tokens and how to manage API costs.</td></tr>
+          <tr><td><code>images/</code></td><td>All icons and images used by the app.</td></tr>
+          <tr><td><code>sounds/</code></td><td>Sound effects played during rounds.</td></tr>
+          <tr><td><code>docs/</code></td><td>PDF versions of this manual and the Getting Started guide.</td></tr>
         </tbody>
       </table>
-      <div class="wh-warn">
-        <p>⚠️ Keep all files together inside the same folder. Do not move <code>index.html</code> out on its own — it needs the other files alongside it to work correctly.</p>
-      </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">What is index.html and why does it open in a browser?</div>
-      <p><code>index.html</code> is a web page file — the same kind of file that makes up every website you visit. Your browser (Chrome, Edge, Firefox, Safari) knows how to open it. The difference is that this one lives on your computer instead of on the internet, so nothing is sent to any server when you open it.</p>
-      <p>Double-click <code>index.html</code> and your browser opens WaxFrame just like any website. If nothing happens, right-click the file and choose <strong>Open With</strong>, then pick your browser from the list. Chrome or Edge work best.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Once WaxFrame is open, bookmark it in your browser — next time, just click the bookmark. On Windows you can also right-click <code>index.html</code> and choose <strong>Send To → Desktop</strong> to create a shortcut. On macOS or Linux, keep a browser bookmark or create your usual desktop shortcut.</p>
+      <p>WaxFrame is a browser-based application — it runs entirely inside your web browser with no installation required. Double-click <code>index.html</code> to open it. All your settings, API keys, and session data are saved in your browser's local storage — not in the folder itself. This means the files in the folder do not change as you use the app.</p>
+      <div class="wh-warn">
+        <p>⚠️ Clearing your browser's site data or cache will erase your API keys and settings. Use <strong>Menu → Backup Session</strong> regularly to save a copy you can restore.</p>
       </div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Your settings are saved in your browser, not the folder</div>
-      <p>Your API keys, custom AIs, and preferences are stored in your browser's local storage — not inside the WaxFrame folder. This means:</p>
-      <ul>
-        <li>If you open WaxFrame in Chrome, your keys will still be there next time you open it in Chrome.</li>
-        <li>If you switch to a different browser, you'll need to re-enter your keys — each browser has its own storage.</li>
-        <li>If you copy the folder to another computer, your keys don't travel with it.</li>
-        <li>If you clear your browser's site data, your settings may be erased.</li>
-      </ul>
-      <p>Your documents and round history are stored in IndexedDB, also in the browser. Use the <strong>Export</strong> and <strong>Full Transcript</strong> options to save important work as files outside the browser.</p>
-      <div class="wh-warn">
-        <p>⚠️ <strong>Upgrading WaxFrame?</strong> Your API keys and settings are tied to the folder path your browser uses to open WaxFrame. To keep your settings when upgrading, always replace the files inside the same folder rather than creating a new folder with a different name. If you open WaxFrame from a new folder path, your browser will treat it as a completely separate app and your keys will not carry over.</p>
-      </div>
+      <div class="wh-block-title">Bookmark it for easy access</div>
+      <p>Once you have <code>index.html</code> open, bookmark it in your browser (<strong>Ctrl+D</strong> on Windows, <strong>Cmd+D</strong> on Mac). On Windows you can also right-click the file and choose <strong>Send to → Desktop</strong> to create a shortcut. On Mac, drag the file to your Dock.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: STEP 1 -->
+  <!-- ═══════════════════════════════════════════════════════════
+       STEP-BY-STEP GUIDE
+       ═══════════════════════════════════════════════════════════ -->
+
   <div class="wh-section" id="step1">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">①</div>
-      <div class="wh-section-title">Step 1 — Set Up Your AIs</div>
+      <div class="wh-section-title">Step 1 — Set Up Your Worker Bees</div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Open the Setup screen</div>
-      <p>When you first open WaxFrame you'll land on the welcome screen. Click <strong>Let's get started</strong> to go to Setup.</p>
-      <p>The Setup screen has two sections: <strong>Your Worker Bees</strong> (the reviewer AIs) on the left, and <strong>Your Builder</strong> on the right.</p>
+      <div class="wh-block-title">What you are looking at</div>
+      <p>The Setup screen is the first screen after the welcome page. The left side — <strong>Your Worker Bees</strong> — is where you connect your AI assistants by entering their API keys. Each AI with a saved key participates as a reviewer in every round, reading your document and giving numbered suggestions.</p>
+      <p>You need <strong>at least two AIs with saved API keys</strong> before WaxFrame will let you continue. There is no maximum.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Enter your API keys</div>
+      <div class="wh-block-title">What is an API key?</div>
+      <p>An API key is a unique code that gives WaxFrame permission to use an AI on your behalf. Think of it as a password between WaxFrame and the AI provider. Each provider issues its own key — you get one from OpenAI for ChatGPT, a separate one from Anthropic for Claude, and so on. Your keys are stored only in your browser and are never sent anywhere except directly to the provider when a round is running.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Need help getting API keys? Click <strong>API Key Guide</strong> at the top of the Worker Bees panel for step-by-step instructions and direct links to each provider's key console.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Entering your API keys</div>
       <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span>Find the AI you want to use in the Worker Bees list — for example, ChatGPT or Gemini.</li>
+        <li class="wh-step"><span class="wh-step-num">1</span>Find the AI you want to use in the Worker Bees list — for example, <strong>ChatGPT</strong> or <strong>Gemini</strong>.</li>
         <li class="wh-step"><span class="wh-step-num">2</span>Click the <strong>API Key</strong> field next to that AI.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span>Paste your key in and press <strong>Enter</strong>. The field will confirm it's saved.</li>
-        <li class="wh-step"><span class="wh-step-num">4</span>Repeat for at least one more AI. You need a minimum of two AIs with saved keys to run a round.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span>Paste your key and press <strong>Enter</strong>. The field confirms the key is saved.</li>
+        <li class="wh-step"><span class="wh-step-num">4</span>Repeat for at least one more AI. You need a minimum of two.</li>
       </ol>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Testing your keys</div>
+      <p>After entering a key, click the <strong>Test</strong> button next to that AI. WaxFrame sends a minimal test request and opens a result panel showing the exact endpoint used, what was sent, the HTTP status code and response time, and the raw response from the server. A green checkmark means the key is working. A red X means something is wrong — the panel will show the error and a plain-English explanation of what caused it.</p>
+      <p>To test all your saved keys at once, click <strong>Test All Keys</strong> at the top of the panel. Each AI is tested in sequence and a results panel appears. Click <strong>▶ Details</strong> on any row to see the full send and receive for that AI.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Don't have API keys yet? Click the <strong>Get Key</strong> link next to any AI to go directly to that provider's sign-up page. Most providers have a free tier — Gemini in particular is a great starting point at no cost.</p>
+        <p>Always test your keys before your first round. A bad key will cause that AI to fail mid-round and its suggestions will not be included.</p>
       </div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Choose your Builder</div>
-      <p>The Builder is the AI that incorporates all the reviewer suggestions and rewrites the document each round. It does significantly more work than any single reviewer, so choose an AI with a key saved.</p>
-      <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span>Look at the <strong>Builder</strong> section on the right side of Setup.</li>
-        <li class="wh-step"><span class="wh-step-num">2</span>Select whichever AI you want as your Builder from the dropdown. Any AI with a saved key is available.</li>
-      </ol>
+      <div class="wh-block-title">Managing your Worker Bees</div>
+      <p>Each AI row has several controls. <strong>Hide</strong> removes an AI from your active hive without deleting its key — useful if you want to temporarily exclude it. <strong>Remove</strong> deletes the AI and its key entirely. <strong>Open API Websites</strong> opens the billing or key console for every AI in your hive simultaneously. <strong>Reset to Defaults</strong> restores any AIs you previously hidden or removed.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Not sure which to use as Builder? <strong>DeepSeek</strong> is the most cost-effective option by a wide margin. <strong>ChatGPT</strong> and <strong>Gemini</strong> are solid alternatives if you run into issues.</p>
+        <p>Want to connect an AI that is not in the default list — such as a local model, a third-party provider, or your company's internal AI platform? See <a href="#appendix-custom-ai" class="link-accent">Appendix A — Adding a Custom AI</a>.</p>
       </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">When you're ready to continue</div>
-      <p>Once you have at least two API keys saved and a Builder selected, the <strong>Continue to Project Setup</strong> button at the bottom will activate. Click it to move on.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: ADD CUSTOM AI -->
-  <div class="wh-section" id="add-custom-ai">
+  <div class="wh-section" id="step2">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">②</div>
-      <div class="wh-section-title">Step 2 — Adding a Custom AI</div>
+      <div class="wh-section-title">Step 2 — Choose Your Builder</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What the Builder does</div>
+      <p>The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Choose an AI you trust with large documents — the Builder carries more responsibility than any individual reviewer.</p>
+      <p>Because the Builder handles the entire document every round, it uses significantly more tokens than reviewers. <strong>The Builder must have a paid API subscription with sufficient capacity.</strong> Do not use a free-tier AI as your Builder — it will run out of tokens quickly and cause rounds to fail.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How to choose your Builder</div>
+      <ol class="wh-steps">
+        <li class="wh-step"><span class="wh-step-num">1</span>Look at the <strong>Builder</strong> section on the right side of the Setup screen.</li>
+        <li class="wh-step"><span class="wh-step-num">2</span>Click the AI you want to use as your Builder. Only AIs with a saved key appear here.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span>The selected AI is highlighted with a crown icon. You can change your Builder at any time, including from the Work screen during a session.</li>
+      </ol>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek is particularly cost-effective. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini and retry. See <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens?</a> for cost guidance.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Ready to continue</div>
+      <p>Once you have at least two API keys saved and a Builder selected, the <strong>Continue to Project Setup →</strong> button at the bottom of the screen activates. Click it to move to the Project screen. Your keys and Builder selection are saved automatically.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step3">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">③</div>
+      <div class="wh-section-title">Step 3 — Define Your Project</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What you are looking at</div>
+      <p>The Project screen has two sides. The left side — <strong>Your Project</strong> — is where you name your project and write your goal. The right side — <strong>Starting Document</strong> — is covered in Step 4. Fill in the left side first, working top to bottom.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Project Name and Version Number</div>
+      <p>Enter a name for your project in the <strong>Project Name</strong> field — for example, <em>Q3 Executive Summary</em> or <em>Cover Letter — Senior Engineer</em>. Enter a version in the <strong>Version</strong> field — for example, <em>v1</em>. These appear in the export filename and in the round history log. They do not affect how the AIs work.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Length Constraint (optional)</div>
+      <p>If your document must fit within a specific limit — for example a 500-word blog post, a 200-character social media post, or a one-page résumé — enter the limit here and select the unit: characters, words, or pages. The constraint is included in every prompt sent to your AIs and they will actively work to stay within it. Leave it blank for documents with no length requirement.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Export Filename</div>
+      <p>This controls what your downloaded document file will be named. It uses tokens that are replaced automatically at export time. The default — <code>{name}_{version}</code> — produces a filename like <code>Q3_Executive_Summary_v1.txt</code>. You can customise it or leave it as the default. Click the <strong>ⓘ</strong> icon next to the field for a full explanation of available tokens.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Project Goal — the single most important thing you will write</div>
+      <p>Every AI reads your goal before touching your document. It tells them what the document is, who it is for, what it should and should not include, and what outcome you need. <strong>The goal works the same way regardless of whether you are starting from scratch, uploading a file, or pasting text.</strong> The difference is only what the AIs have to work with — not how the goal is used.</p>
+      <p>A vague goal produces a vague document. A specific, detailed goal produces something you can actually use.</p>
+      <table class="wh-table">
+        <thead><tr><th>Cover in your goal</th><th>Guidance</th></tr></thead>
+        <tbody>
+          <tr><td><strong>What the document is</strong></td><td>State the format clearly — a proposal, a comparison, a cover letter, an executive summary. Be specific about type and purpose.</td></tr>
+          <tr><td><strong>Who will read it</strong></td><td>Your IT team? A client? A hiring manager? The audience shapes the tone and depth every AI will use.</td></tr>
+          <tr><td><strong>Scope — what to include and what to exclude</strong></td><td>If the document covers one topic only, say so. If certain content should not appear, state that explicitly. AIs expand into adjacent topics unless you draw clear boundaries.</td></tr>
+          <tr><td><strong>What you want the reader to do</strong></td><td>Make a decision? Take an action? Understand a concept? Give the AIs a finish line.</td></tr>
+          <tr><td><strong>Tone and style</strong></td><td>Formal or conversational? Technical or plain-English? First person or third? The more specific you are, the more consistent the output will be across rounds.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Writing a goal when you already have a document</div>
+      <p>This is one of the most common ways to use WaxFrame — you have a document that exists and you want the hive to make it better. Your goal still matters, but your focus shifts from <em>what to create</em> to <em>what to improve</em>.</p>
+      <p>A strong refinement goal answers: What is this document and what is it trying to achieve? What is working well and should be left alone? What specifically needs to improve — clarity, structure, tone, argument, length? What must not change under any circumstances?</p>
+      <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Make this document better."</em></p>
+      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"This is a proposal for a wireless network infrastructure upgrade at a 950,000 sq ft warehouse facility. The audience is the IT Director and VP of Facilities. The technical sections and the vendor comparison table are solid and should not be changed. Focus improvements on the executive summary — it is currently too long and too technical for a VP audience — and on the cost justification section, which needs stronger ROI language. Tone should be confident and direct. Do not add any new sections."</em></p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Writing a goal when starting from scratch</div>
+      <p>When you have no existing document, your goal is the only context the AIs have. Be as detailed as possible — include the document type, audience, purpose, scope, tone, approximate length if known, and any specific sections or structure you want.</p>
+      <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Write a report about wireless networking."</em></p>
+      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Create a technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience is our IT infrastructure team evaluating a campus-wide refresh. Scope is strictly wireless: access points, controllers, cloud management, and licensing. Do not include switching, routing, or security products. Tone is technical and neutral. Include a summary comparison table at the top followed by a section for each vendor. The output should help the team produce a shortlist recommendation."</em></p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Not sure how to write your goal? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks</a> has ready-made goals for common document types — résumés, proposals, blog posts, RFPs, and more. Open it from the Menu.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How your goal is used — Draft round vs Refine rounds</div>
+      <p>WaxFrame uses your goal differently depending on which round you are on.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Draft round</span>
+        <span class="goal-info-desc">Your <strong>full goal</strong> is sent to every AI regardless of length. This is when the goal matters most — the AIs are producing the first version of your document and need all the context you can give them.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Refine rounds</span>
+        <span class="goal-info-desc">A trimmed version of your goal is sent, labelled <em>Project Context</em>. The trim targets approximately 300 characters and always cuts at a sentence boundary so nothing is left mid-thought. Your document already exists — the tokens are better spent on the document content and reviewer suggestions.</span>
+      </div>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Put your single most important instruction in the first sentence of your goal. That sentence will always be included in Refine rounds. The character counter next to the goal field turns amber when you exceed 300 characters.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Refine Preview — see exactly what your AIs will receive</div>
+      <p>The <strong>▸ Refine Preview</strong> button next to the character counter opens a preview of the exact text that will be sent to your AIs in Refine rounds, updated live as you type. If your goal is under 300 characters, the preview shows your full goal and confirms it will be sent in full. If your goal is over 300 characters, the preview shows the trimmed version cut to the nearest sentence boundary. Use it to verify that your most critical instruction is included within the limit.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>On screens with limited height the Refine Preview panel collapses — the <strong>▸ Refine Preview</strong> button is always available to check what your AIs will receive.</p>
+      </div>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step4">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">④</div>
+      <div class="wh-section-title">Step 4 — Provide Your Starting Document</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What you are looking at</div>
+      <p>The right side of the Project screen — <strong>Starting Document</strong> — is where you tell WaxFrame what to work with. The three buttons at the top — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose your method, then follow the instruction that appears below the buttons.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Upload File — I have a document saved on my computer</div>
+      <p>Use this option when you have an existing document saved as a file. Click the <strong>Upload File</strong> button to select that mode. A drop zone appears below — click anywhere inside it to open your file browser, or drag and drop your file directly onto it.</p>
+      <p>Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), and Markdown (.md). WaxFrame extracts the text from your file and loads it into the working document automatically. A confirmation message appears once the file is processed successfully.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p><strong>PDF tip:</strong> PDF extraction works best with standard digitally-created files — documents exported from Word or Google Docs. Scanned documents or PDFs built from images may produce garbled or incomplete text. If that happens, copy the text from your PDF and use the Paste Text option instead.</p>
+      </div>
+      <div class="wh-warn">
+        <p>⚠️ If a round fails with a structure error after importing a very large file, switch your Builder to ChatGPT or Gemini using <strong>Change Builder</strong> in the Work screen and retry. Some AIs handle very large documents more reliably than others.</p>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Paste Text — I have text I want to copy in</div>
+      <p>Use this option when you have existing text you want to paste — from a website, another application, an email, or anywhere else. Click the <strong>Paste Text</strong> button to select that mode. A text editor appears below it. Click inside the editor and paste your text using <strong>Ctrl+V</strong> on Windows or <strong>Cmd+V</strong> on Mac. You can also type directly into the editor.</p>
+      <p>The editor uses the same fixed-width 80-character format as the working document. This is intentional and ensures consistent line wrapping throughout your session.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Start from Scratch — I do not have a document yet</div>
+      <p>Use this option when you have nothing written yet and want the AIs to produce the first draft. Click <strong>Start from Scratch</strong> to select that mode. Nothing else is needed on this side of the screen. The hive will generate the first draft based entirely on your project goal — so your goal needs to be as detailed as possible before you launch.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Launch WaxFrame</div>
+      <p>The requirements bar at the bottom of the screen shows what is still needed before you can launch — a project name, a version number, a project goal, and a document method selected. All four must show a green checkmark. Once they do, the <strong>Launch WaxFrame →</strong> button activates. Click it to move to the Work screen and begin your session.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step5">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⑤</div>
+      <div class="wh-section-title">Step 5 — Launch and Run Your First Round</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What you are looking at</div>
+      <p>The Work screen has three columns. The left column — <strong>The Hive</strong> — shows your AI reviewers and their status during a round. The center column — <strong>Working Document</strong> — shows your document as it evolves. The right column shows individual reviewer responses and any conflicts that need your decision.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Click "Smoke the Hive" and let it run</div>
+      <p>Click the <strong>Smoke the Hive</strong> button at the bottom of the screen to start a round. All your reviewers run simultaneously — having more AIs does not mean it takes longer. You will see each AI's status update in the Hive panel as it works. Once all reviewers complete, the Builder runs automatically and produces the updated document.</p>
+      <p>Do not close the browser or navigate away while a round is running. If a round is interrupted, the document will not be updated and the round will not be saved to history.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What happens in the first round</div>
+      <p>Your first round is always a <strong>Draft round</strong>. Your full project goal is sent to every AI. If you chose Start from Scratch, each AI produces a first draft. If you provided a document via upload or paste, each AI reviews it and produces numbered suggestions. The Builder then reads all drafts or suggestions, combines the best elements, and produces the first working document.</p>
+      <p>Every subsequent round is a <strong>Refine round</strong>. The AIs read the current document and give targeted improvement suggestions. The Builder incorporates the strongest suggestions and produces an updated version. Your goal is sent as a trimmed Project Context in all Refine rounds.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step6">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⑥</div>
+      <div class="wh-section-title">Step 6 — Review Results and Resolve Conflicts</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Reading the updated document</div>
+      <p>After a round completes, the center column shows the updated document. Read it carefully. Each completed version is saved automatically to your round history — click <strong>History</strong> in the top bar to view or restore any previous version.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What is a conflict?</div>
+      <p>A conflict appears when your AIs disagreed on something significant enough that the Builder flagged it for your decision rather than choosing arbitrarily. Conflicts appear in the right column after a round completes. Examples: one AI suggested removing a section while another suggested expanding it; AIs disagreed on tone or phrasing for a key passage; reviewers proposed incompatible structural changes.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How to resolve a conflict</div>
+      <p>Each conflict shows the original text and two or more options — the different directions your AIs proposed. Read each option and click the one that best matches your intent. You can also select <strong>Custom</strong> and type your own resolution, or <strong>Keep Original</strong> to leave that section unchanged. Once you have resolved all conflicts, click <strong>Apply Decisions</strong> to update the document.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Resolved conflicts are locked</div>
+      <p>Once you apply a decision, it is locked. WaxFrame informs all your AIs about resolved decisions in future rounds and instructs them not to re-raise the same issue. If an AI keeps re-raising a resolved conflict despite this, use the Notes drawer to give the Builder a direct instruction to enforce it.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Using conflicts to steer your document</div>
+      <p>Conflicts are not a sign something went wrong — they are a signal that your AIs found a genuine decision point. Use them deliberately. If you are unsure which direction to take, read each option carefully. The AIs are often surfacing a real question about structure, argument, or tone that you will need to answer to get the document where you want it.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step7">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⑦</div>
+      <div class="wh-section-title">Step 7 — Run More Rounds</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Each round improves on the last</div>
+      <p>The process is the same every round: click <strong>Smoke the Hive</strong>, wait for it to finish, read the updated document, resolve any conflicts, and decide whether to run another round. Most documents reach a strong state in 3 to 5 rounds. Some need more, some need fewer.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Using Notes to give the Builder specific instructions</div>
+      <p>The <strong>Notes</strong> drawer — accessible from the top right of the Work screen — lets you give the Builder direct instructions for the next round only. Use it when you want something specific: <em>"Tighten the third paragraph considerably,"</em> or <em>"The conclusion is weak — rewrite it to be more decisive,"</em> or <em>"Do not add any more bullet points."</em> Notes are cleared after each round so they only apply once.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Editing the document directly between rounds</div>
+      <p>The working document is editable at any time between rounds. If you can see exactly what needs to change, edit it directly. The AIs will refine what is there in the next round. If you remove something and mention the removal in your Notes, the AIs are much less likely to reintroduce it.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Adjusting which AIs run each round</div>
+      <p>Click <strong>Edit Hive</strong> in the Hive panel to toggle individual AIs on or off for the current session. Turning an AI off does not delete its key — it just skips that AI for the next round. Use this to exclude an AI that is giving poor suggestions, or to speed up a round by using fewer reviewers.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Knowing when you are done</div>
+      <p>Watch for these signals: the AIs start agreeing more than disagreeing; conflicts become minor word choices rather than structural issues; you find yourself accepting most suggestions without hesitation; the document reads the way you want it to. When any of these apply, you are probably done. Running more rounds past this point produces diminishing returns.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <div class="wh-section" id="step8">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⑧</div>
+      <div class="wh-section-title">Step 8 — Export and Finish</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Exporting your document</div>
+      <p>Click <strong>🏁 Finish</strong> in the top right of the Work screen to open the Finish panel. From here you have three options.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Export Document</span>
+        <span class="goal-info-desc">Downloads your working document as a .txt file using the export filename you set on the Project screen. Use this when you just need the final text.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Export Full Transcript</span>
+        <span class="goal-info-desc">Downloads every round, every AI response, all conflicts and decisions, and the final document in a single file. Use this for a full audit trail or to review what each AI contributed.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Save Session Snapshot</span>
+        <span class="goal-info-desc">Saves your entire session — API keys, project details, document, and round history — as a .json file. Use this to pause and resume later without losing your work. Load it back via <strong>Menu → Import Backup</strong>.</span>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Starting a new project</div>
+      <p>Click <strong>Start New Project</strong> in the Finish panel to clear the current session and begin again. Your API keys and Builder selection are preserved. Your working document and round history are cleared permanently.</p>
+      <div class="wh-warn">
+        <p>⚠️ Starting a new project cannot be undone. Export your document and save a Session Snapshot before clicking Start New Project if there is any chance you will want to return to this session.</p>
+      </div>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       APPENDICES
+       ═══════════════════════════════════════════════════════════ -->
+
+  <div class="wh-section" id="appendix-custom-ai">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">A</div>
+      <div class="wh-section-title">Appendix A — Adding a Custom AI</div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">When would you add a custom AI?</div>
-      <p>WaxFrame comes pre-configured for six public AI providers. But you can also connect any AI that uses an OpenAI-compatible API — including local models running on your own machine (like Ollama or LM Studio), third-party providers like Mistral or Together AI, and enterprise AI systems running inside your organisation's network.</p>
-      <p>To add one, go to <strong>Setup</strong> and click <strong>＋ Add Custom AI</strong> at the top of the Worker Bees panel. A form will open.</p>
+      <p>WaxFrame comes pre-configured for six public AI providers. If you want to connect a provider not in the default list — such as Mistral, Together AI, Cohere, or Ollama running locally — you can add it using the Add Custom AI form. Any AI that exposes an OpenAI-compatible API, the Anthropic API, or the Google API can be connected.</p>
+      <p>To open the form, go to the Setup screen and click <strong>Add Custom AI</strong> at the top of the Worker Bees panel.</p>
     </div>
 
     <div class="wh-block">
@@ -286,11 +567,11 @@
       <table class="wh-table">
         <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
         <tbody>
-          <tr><td><strong>Quick Add</strong></td><td>Presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting one auto-fills the endpoint URL and API format, and shows a direct link to that provider's key console. Fill in fields manually if your provider isn't listed.</td></tr>
-          <tr><td><strong>Display Name</strong></td><td>What WaxFrame calls this AI in the UI. Auto-filled by Quick Add. You can change it to anything.</td></tr>
-          <tr><td><strong>API Endpoint URL</strong></td><td>The full address WaxFrame sends requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://ai.yourcompany.com/v1/chat/completions</code></td></tr>
-          <tr><td><strong>API Format</strong></td><td>Almost always <em>OpenAI compatible</em>. Only change this if your provider explicitly uses a different format.</td></tr>
-          <tr><td><strong>Model</strong></td><td>The exact model ID string the provider expects. It must be exact — even a small typo will cause every call to fail. You can type it manually or use <strong>Fetch Models</strong> (see below).</td></tr>
+          <tr><td><strong>Quick Add</strong></td><td>Optional. Presets for Mistral, Together AI, Cohere, Ollama, and LM Studio. Selecting one auto-fills the endpoint URL and API format. Fill in fields manually if your provider is not listed.</td></tr>
+          <tr><td><strong>Display Name</strong></td><td>What WaxFrame calls this AI in the UI. Auto-filled by Quick Add. You can change it to anything you like.</td></tr>
+          <tr><td><strong>API Endpoint URL</strong></td><td>The full address WaxFrame sends requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://api.mistral.ai/v1/chat/completions</code></td></tr>
+          <tr><td><strong>API Format</strong></td><td>Optional if using Quick Add — auto-filled. Otherwise select OpenAI compatible for most providers, Anthropic for Claude endpoints, or Google for Gemini endpoints.</td></tr>
+          <tr><td><strong>Model</strong></td><td>The exact model ID string the provider expects. Must be exact — even a minor typo causes every call to fail. Use <strong>Fetch Models</strong> to retrieve the list directly from the provider rather than typing it manually.</td></tr>
           <tr><td><strong>API Key</strong></td><td>Your key or bearer token for this provider. Paste it in and press Enter to save.</td></tr>
         </tbody>
       </table>
@@ -298,319 +579,98 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Fetch Models</div>
-      <p>Once you've entered your endpoint URL and API key, click <strong>Fetch Models</strong>. WaxFrame queries the provider's <code>/v1/models</code> endpoint and returns a dropdown of available model IDs. Select the one you want.</p>
-      <p>If the fetch fails or the endpoint doesn't support model listing, fall back to typing the model ID manually. Your IT team or the provider's documentation will have the exact string.</p>
+      <p>Click <strong>Fetch Models</strong> after entering your endpoint URL and key. WaxFrame queries the provider's models endpoint and returns a list of available models. Select the one you want from the dropdown that appears. This is more reliable than typing a model ID manually and eliminates typo errors.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Test Connection — always do this before adding</div>
-      <p>Click <strong>Test Connection</strong> to fire a real minimal API call before adding the AI to your hive. WaxFrame shows you:</p>
+      <p>Click <strong>Test Connection</strong> to fire a real minimal API call before adding the AI to your hive. WaxFrame shows you the exact endpoint used, the JSON body that was sent, the HTTP status code and response time, and the complete raw response received from the server. If the test fails, a plain-English explanation is shown:</p>
       <ul>
-        <li>Pass or fail result with a plain-English summary</li>
-        <li>The HTTP status code and response time in milliseconds</li>
-        <li>The exact JSON body that was sent to the endpoint</li>
-        <li>The complete raw JSON response from the server</li>
+        <li><strong>401 / 403</strong> — bad or missing API key</li>
+        <li><strong>404</strong> — wrong endpoint URL</li>
+        <li><strong>405</strong> — method not allowed (endpoint may not support chat completions)</li>
+        <li><strong>429</strong> — rate limited (wait a moment and try again)</li>
+        <li><strong>Network Error</strong> — the endpoint is unreachable or a CORS policy is blocking the request</li>
       </ul>
-      <p>If the test fails, WaxFrame shows a plain-English hint for common error codes:</p>
-      <table class="wh-table">
-        <thead><tr><th>Error</th><th>What it means</th></tr></thead>
-        <tbody>
-          <tr><td><strong>401 / 403</strong></td><td>Bad or missing API key</td></tr>
-          <tr><td><strong>404</strong></td><td>Wrong endpoint URL</td></tr>
-          <tr><td><strong>405</strong></td><td>Method not allowed — the endpoint may not support chat completions</td></tr>
-          <tr><td><strong>429</strong></td><td>Rate limited — wait a moment and try again</td></tr>
-          <tr><td><strong>Network Error</strong></td><td>The endpoint is unreachable, or CORS is blocking the request (see the enterprise AI section)</td></tr>
-        </tbody>
-      </table>
       <div class="wh-warn">
-        <p>⚠️ The <strong>Add to Hive</strong> button only appears after a passing test. If you change any field after a passing test — URL, key, model — the result resets and you must test again. This prevents a stale passing result from being used to add a misconfigured AI.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">After adding your custom AI</div>
-      <p>Once added, your custom AI appears in the Worker Bees list alongside the built-in providers. It can be toggled on or off between rounds, used as a Builder, and removed at any time. Custom AIs are saved in your browser and will still be there when you reload WaxFrame.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>You need at least two AIs with saved keys to run a round. If you're using only custom AIs (for example, in an internal-only deployment), add at least two before trying to continue to Project Setup.</p>
+        <p>⚠️ The <strong>Add to Hive</strong> button only appears after a passing test. If you change any field after a passing test, the result resets and you must test again before adding.</p>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: STEP 2 -->
-  <div class="wh-section" id="step2">
+  <div class="wh-section" id="appendix-model-server">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">③</div>
-      <div class="wh-section-title">Step 3 — Write Your Goal</div>
+      <div class="wh-section-icon">B</div>
+      <div class="wh-section-title">Appendix B — Importing from a Model Server</div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Your goal is the most important thing you'll write</div>
-      <p>Every AI reads your goal before touching your document. It tells them what the document is, who it's for, what it should and shouldn't include, and what outcome you need. A vague goal produces a vague document. A specific goal produces something you can actually use.</p>
-      <p>The Project screen is where you enter your goal. You'll also paste your document here if you already have a draft. If you're starting from scratch, leave the document area empty.</p>
+      <div class="wh-block-title">What is a model server?</div>
+      <p>A model server is software that hosts AI models locally on your machine or network — for example, Open WebUI, Ollama, or LM Studio. Instead of sending requests to a cloud provider, requests go to a server running on your own hardware. The Import from Model Server feature lets you fetch the full list of models available on your server and add multiple AIs to your hive at once.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">What to include in your goal</div>
-      <table class="wh-table">
-        <thead><tr><th>#</th><th>What to cover</th><th>Guidance</th></tr></thead>
-        <tbody>
-          <tr><td>1</td><td><strong>What the document is</strong></td><td>State the format clearly — a business proposal, a technical comparison, a cover letter, an executive summary. Be specific.</td></tr>
-          <tr><td>2</td><td><strong>Who will read it</strong></td><td>Your IT team? A potential client? A hiring manager? The audience shapes the language and depth every AI will use.</td></tr>
-          <tr><td>3</td><td><strong>What it should cover — and what it shouldn't</strong></td><td>If your document is about wireless networking only, say so. If it should not include pricing, say that too. AIs will naturally expand into adjacent topics unless you draw the boundary clearly.</td></tr>
-          <tr><td>4</td><td><strong>What you want the reader to do after</strong></td><td>Make a decision? Take an action? Understand a concept? Give the AIs a finish line.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Example — weak vs strong</div>
-      <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Compare wireless platforms for our company."</em></p>
-      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Create a technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience is our IT infrastructure team evaluating a campus refresh. Scope is strictly wireless: access points, controllers, cloud management, and licensing. Do not include switching, routing, or security products. The output should help the team make a shortlist recommendation."</em></p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>The first <strong>300 characters</strong> of your goal are sent to every AI as active context in every round. A counter next to the goal field turns amber when you pass that threshold — put your most essential instructions in those first 300 characters.</p>
-      </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks</a> has ready-made goals for common document types — résumés, proposals, blog posts, RFPs, and more. Open it from the Menu or click the link.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">If you already have a draft</div>
-      <p>Paste your existing document into the document field below the goal. WaxFrame will treat this as your starting point and all rounds will refine what's there — it won't generate a fresh draft from scratch.</p>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Choosing how to start — Upload, Paste, or Scratch</div>
-      <p>The three buttons on the right side of the Project screen — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose your starting method, then interact with the area that appears below them.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Upload File</span>
-        <span class="goal-info-desc">Select Upload mode, then click the drop zone or drag a file onto it. Supported: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), Markdown (.md).</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Paste Text</span>
-        <span class="goal-info-desc">Select Paste mode, then click inside the editor that appears and paste your text.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Start from Scratch</span>
-        <span class="goal-info-desc">No document needed. The hive will generate a first draft based on your goal — just write your goal and launch.</span>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Draft round vs Refine rounds — what your goal sends</div>
-      <p>WaxFrame sends your goal differently depending on which round you're on.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Draft round</span>
-        <span class="goal-info-desc">Your <strong>full goal</strong> is sent to every AI, regardless of length. This is when it matters most — the AIs are building your document from nothing and need all the context you can give them.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Refine rounds</span>
-        <span class="goal-info-desc">Only a trimmed version of your goal is sent, labelled <em>Project Context</em>. The trim targets around 300 characters but always cuts at a sentence boundary so nothing is left mid-thought. Your document already exists — the tokens are better spent on the document and reviewer suggestions than on the full goal.</span>
-      </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Put your most important instruction in the first sentence of your goal. That sentence will always make it into refine rounds. The character counter next to the goal field turns amber when you exceed 300 characters.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">The Refine Preview — see exactly what your AIs will receive</div>
-      <p>The <strong>▸ Refine Preview</strong> button (next to the character counter on the goal field) shows you the exact text that will be sent to your AIs in Refine rounds — updated live as you type. Click it to open the preview panel.</p>
-      <p>If your goal is under 300 characters, the preview shows your full goal with a note that it will be sent in full. If your goal is over 300 characters, the preview shows the trimmed version cut to the nearest sentence. Use it to make sure your most critical instruction lands within what gets sent.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>On smaller screens the Refine Preview panel collapses into the ▸ Refine Preview button automatically. Click it any time to check what your AIs will receive.</p>
-      </div>
-    </div>
-  </div>
-
-
-  <!-- SECTION: STEP 3 -->
-  <div class="wh-section" id="step3">
-    <div class="wh-section-hdr">
-      <div class="wh-section-icon">④</div>
-      <div class="wh-section-title">Step 4 — Start Your First Round</div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Click "Start Round" and let it run</div>
-      <p>Once your goal is written and you've moved to the Work screen, click <strong>Start Round</strong>. You'll see each AI light up as it works — they all run at the same time, so having more AIs doesn't mean it takes longer.</p>
-      <p>Your first round is a <strong>Draft round</strong>. Your complete goal is sent to every AI and they each write a first draft. The Builder then reads all the drafts, combines the best elements, flags anything the AIs disagreed on, and produces the first version of your document.</p>
-      <p>This typically takes 1–3 minutes depending on how many AIs you're using and how large your document is.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">What you'll see when the round finishes</div>
-      <table class="wh-table">
-        <tbody>
-          <tr><td><strong>The working document</strong></td><td>Your document as it stands after this round. You can read and edit it directly.</td></tr>
-          <tr><td><strong>The Suggestions panel</strong></td><td>A list of what each AI suggested. Read through these to understand what the reviewers were thinking.</td></tr>
-          <tr><td><strong>The Conflicts panel</strong></td><td>Points the Builder couldn't resolve on its own. These need your attention before the next round. See Step 5.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Read the document before doing anything else</div>
-      <p>Before you run another round, read the document. Is it going in roughly the right direction? Does the scope look correct? Is the tone right?</p>
-      <p>If the first draft is way off — wrong scope, wrong format, wrong tone — don't keep running rounds on a bad foundation. Fix the goal first, then run Round 2. See <a href="#problems" class="link-accent">When Things Go Wrong</a>.</p>
-      <p>If the document looks directionally correct — even if it still needs a lot of work — continue to Step 5.</p>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
-    </div>
-  </div>
-
-
-  <!-- SECTION: STEP 4 -->
-  <div class="wh-section" id="step4">
-    <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑤</div>
-      <div class="wh-section-title">Step 5 — Review &amp; Resolve Conflicts</div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">What is a conflict?</div>
-      <p>A conflict happens when two or more AIs disagreed on something and the Builder couldn't confidently pick a winner. Rather than make an arbitrary call, it flags it in the Conflicts panel and asks you to decide.</p>
-      <p>There are two types:</p>
-      <p><span class="wh-tag wh-tag-red">User Decision</span> The Builder is stuck and needs your input. It won't proceed on this point until you weigh in — these take priority.</p>
-      <p><span class="wh-tag wh-tag-amber">Builder Decision</span> The Builder made a judgment call and kept moving. It's showing you what it chose in case you disagree.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">How to resolve a conflict</div>
-      <p>Each conflict card shows you the current text and the alternatives the AIs suggested. You have three options:</p>
-      <table class="wh-table">
-        <thead><tr><th>Option</th><th>What to do</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Pick an AI option</strong></td><td>Click the option you prefer. The Builder will apply it.</td></tr>
-          <tr><td><strong>Write your own</strong></td><td>Select <strong>Custom</strong> and type exactly what you want the document to say — the actual sentence or phrase, not an instruction. For example: <em>"Pricing is subject to change — verify all figures directly with each vendor."</em></td></tr>
-          <tr><td><strong>Decline</strong></td><td>Skip this conflict and leave the current text as-is.</td></tr>
-        </tbody>
-      </table>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Click the <strong>Current:</strong> text on any conflict card to jump straight to that line in the working document and highlight it — useful when you need to see the surrounding context before deciding.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Resolved conflicts are permanent</div>
-      <p>Once you resolve a conflict, your decision is locked in. The AIs won't re-raise that point in future rounds — the hive treats your choice as final. This prevents the same debate from surfacing round after round.</p>
-      <div class="wh-warn">
-        <p>⚠️ <strong>Note on Grok:</strong> Grok has a tendency to re-raise points you've already resolved. The conflict system handles most of these automatically. If it keeps looping on a settled point across multiple rounds, toggle Grok off from the Work screen for the rest of the session — its suggestions are most valuable in early rounds anyway.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Using conflicts to steer your document</div>
-      <p>Conflicts aren't just tiebreakers — they're one of your most direct tools for controlling what goes into the document. If a conflict surfaces content that's out of scope or off-tone, use the Custom option to replace it with something correct, or Decline to suppress it entirely. Either way, the decision is locked and the AIs won't push it again.</p>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
-    </div>
-  </div>
-
-
-  <!-- SECTION: STEP 5 -->
-  <div class="wh-section" id="step5">
-    <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑥</div>
-      <div class="wh-section-title">Step 6 — Run More Rounds</div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Each round improves on the last</div>
-      <p>After your first round, all subsequent rounds are <strong>Refine rounds</strong>. Instead of writing a draft from scratch, the AIs now review what's there and suggest targeted improvements — tightening language, fixing inconsistencies, plugging gaps, improving structure.</p>
-      <p>The process is the same each round: click <strong>Start Round</strong>, wait for it to finish, read the updated document, resolve any conflicts, and decide whether to run another round.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Using Notes to give the Builder specific instructions</div>
-      <p>Between rounds, you can type a one-time instruction into the <strong>Notes</strong> field on the Work screen. Notes go directly to the Builder for the next round only — after the round runs, the notes clear automatically.</p>
-      <p>Notes are useful for things like:</p>
-      <table class="wh-table">
-        <thead><tr><th>Use case</th><th>Example note</th></tr></thead>
-        <tbody>
-          <tr><td><strong>Scope</strong></td><td><em>"Remove all references to switching and routing. Wireless only."</em></td></tr>
-          <tr><td><strong>Tone</strong></td><td><em>"Tighten the language. This is a technical document — cut any marketing-style phrasing."</em></td></tr>
-          <tr><td><strong>Structure</strong></td><td><em>"Move the pricing section to after the feature comparison. Add a summary table at the end."</em></td></tr>
-          <tr><td><strong>One-off addition</strong></td><td><em>"Add a note in the intro that all pricing is subject to change and should be verified with each vendor."</em></td></tr>
-        </tbody>
-      </table>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>If you find yourself typing the same note every round, move it into your goal instead — that's where permanent instructions belong.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Locking a line the AIs keep changing</div>
-      <p>Sometimes one sentence gets flagged round after round — the AIs keep nudging it with slightly different wording, and the document never settles. This happens because each small change makes the line look new to the next round's reviewers, even if your intent is already satisfied.</p>
-      <p>The fix: edit the line directly in the working document until it says exactly what you want. Then, before the next round, use the Notes field to tell the Builder it's final. Quote the exact text from the document — don't rely on line numbers alone, because those shift as the document changes.</p>
-      <p><strong>Example note:</strong> <em>"The following sentence is final. Do not change it under any circumstances, regardless of what any reviewer suggests: 'It is best made at least 2 hours ahead or up to 1 day ahead to allow the flavors to meld before serving.'"</em></p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Quoting the exact text is more reliable than citing a line number. If the document shifts between rounds, line numbers drift — the exact quote always anchors it correctly.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">You can edit the document directly between rounds</div>
-      <p>The working document is editable at any time between rounds. If you can see exactly what needs to change — remove a paragraph, fix a heading, correct a fact — just edit it directly. The AIs will refine what's there in the next round and won't reintroduce content you've removed, especially once your goal explicitly excludes it.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">You can adjust which AIs run each round</div>
-      <p>In the Work screen, each Worker Bee has a toggle. If an AI has been consistently returning "No changes needed" for a couple of rounds, you can toggle it off to save API credits — it's done its job. You can also swap your Builder mid-session from the Builder menu if one AI is performing better than another.</p>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
-    </div>
-  </div>
-
-
-  <!-- SECTION: STEP 6 -->
-  <div class="wh-section" id="step6">
-    <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑦</div>
-      <div class="wh-section-title">Step 7 — Know When You're Done</div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Watch for these signals</div>
-      <p>WaxFrame doesn't have a fixed number of rounds — the hive keeps refining until you stop it. Here's how to tell when the document has reached a natural finishing point:</p>
-      <table class="wh-table">
-        <tbody>
-          <tr><td><strong>Multiple AIs return "No changes needed"</strong></td><td>When reviewers start running out of meaningful suggestions, the document has converged.</td></tr>
-          <tr><td><strong>Conflicts become fewer and more stylistic</strong></td><td>Early rounds produce structural debates. Late rounds produce disagreements about word choices — a sign you're nearly done.</td></tr>
-          <tr><td><strong>The document looks like something you'd actually send</strong></td><td>Trust your own read. You're always the final editor.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Optional: one final clean pass</div>
-      <p>Before finishing, toggle off any AIs that have been returning "No changes needed" for two or more rounds, and run one last round with just your most critical reviewers. This often produces the cleanest final pass.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Export your document</div>
-      <p>When you're happy with the result, click <strong>Finish</strong>. WaxFrame will prompt you to export before clearing the session.</p>
+      <div class="wh-block-title">How to import from a model server</div>
       <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span>Click <strong>Export Document</strong> to save your finished document as a <code>.txt</code> file, including a byline showing how many rounds it took and how long the session ran.</li>
-        <li class="wh-step"><span class="wh-step-num">2</span>Optionally, click <strong>Export Full Transcript</strong> to save every round, every AI response, and the final document in a single file — useful for a full audit trail.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span>Click <strong>Start New Project</strong> to clear the session and begin again.</li>
+        <li class="wh-step"><span class="wh-step-num">1</span>Go to the Setup screen and click <strong>Import from Model Server</strong>.</li>
+        <li class="wh-step"><span class="wh-step-num">2</span>Use the <strong>Quick Add</strong> dropdown to select your server type — Open WebUI, Ollama, or LM Studio. This auto-fills the endpoint fields. Fill them in manually if your server is not listed.</li>
+        <li class="wh-step"><span class="wh-step-num">3</span>Confirm or enter your <strong>Chat Endpoint</strong> and <strong>Models Endpoint</strong> URLs.</li>
+        <li class="wh-step"><span class="wh-step-num">4</span>Enter your API key or bearer token if your server requires authentication.</li>
+        <li class="wh-step"><span class="wh-step-num">5</span>Click <strong>Fetch Models</strong>. WaxFrame queries your server and returns the list of available models.</li>
+        <li class="wh-step"><span class="wh-step-num">6</span>Click <strong>Select &amp; Add to Hive →</strong>, check the models you want to add, and click <strong>Add Selected to Hive</strong>.</li>
       </ol>
-      <div class="wh-warn">
-        <p>⚠️ Export your document <strong>before</strong> starting a new project. Your working document and round history are cleared when you do — they cannot be recovered.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>If Fetch Models returns a CORS error, your server may need to be configured to allow requests from file:// origins, or you may need to run WaxFrame from a local web server. Ask your IT team for assistance with this configuration.</p>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
 
-  <!-- SECTION: PROBLEMS -->
+  <div class="wh-section" id="appendix-enterprise">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">C</div>
+      <div class="wh-section-title">Appendix C — Using WaxFrame at Work</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">WaxFrame works with internal enterprise AI platforms</div>
+      <p>Many organisations run their own AI platforms — tools like Open WebUI connected to internally hosted models, or enterprise subscriptions to OpenAI or Anthropic with private endpoints and access controls. WaxFrame can connect to these using the Add Custom AI or Import from Model Server features, provided the platform exposes an API endpoint that accepts chat completion requests.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What to ask your IT team for</div>
+      <table class="wh-table">
+        <thead><tr><th>What you need</th><th>What to ask for</th></tr></thead>
+        <tbody>
+          <tr><td><strong>API endpoint URL</strong></td><td>"What is the chat completions endpoint URL for our AI platform?"</td></tr>
+          <tr><td><strong>API key or token</strong></td><td>"How do I authenticate API requests — is it a bearer token, an API key, or something else?"</td></tr>
+          <tr><td><strong>Model name</strong></td><td>"What is the exact model ID string I should use in my API calls?"</td></tr>
+          <tr><td><strong>API format</strong></td><td>"Is the API OpenAI-compatible?" (The answer is almost always yes for enterprise platforms.)</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Setting up an internal-only hive</div>
+      <p>If your organisation uses internal models only and you do not want the public AI options visible, hide them individually using the <strong>Hide</strong> button on each AI row in the Setup screen. Hidden AIs are excluded from all rounds and the setting is remembered across sessions. A banner at the top of the Worker Bees list shows how many are hidden, with a <strong>↺ Restore Hidden</strong> button to bring them back.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">CORS and running WaxFrame from a local server</div>
+      <p>WaxFrame runs as a local HTML file in your browser. Some internal AI servers block requests from local file origins as a CORS policy. If you see a Network Error or CORS error when testing a connection to an internal endpoint, ask your IT team to allow requests from <code>file://</code> origins on the AI server, or to serve WaxFrame from an internal web server so requests originate from a recognised HTTP address.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════
+       REFERENCE
+       ═══════════════════════════════════════════════════════════ -->
+
   <div class="wh-section" id="problems">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">🔧</div>
@@ -619,122 +679,44 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The document is going in the wrong direction</div>
-      <p>You're a few rounds in and the hive has drifted — scope has crept in, the tone is off, or the AIs filled in gaps their own way. This happens. Here are your options, from lightest touch to nuclear:</p>
       <table class="wh-table">
+        <thead><tr><th>Situation</th><th>What to do</th></tr></thead>
         <tbody>
-          <tr>
-            <td><strong>Tighten the goal + add a Note</strong><br><em>lightest</em></td>
-            <td>Go back to the Project screen and add explicit scope or tone instructions to your goal. Then before the next round, add a Note with immediate corrective instructions for the Builder — for example, <em>"Do not include routing or switching. Wireless only. Remove any switching references already in the document."</em> The updated goal sets direction going forward; the Note corrects the current pass.</td>
-          </tr>
-          <tr>
-            <td><strong>Edit the document directly</strong></td>
-            <td>If you can see exactly what needs to come out, remove it yourself, tighten the goal, and run the next round from a cleaner starting point.</td>
-          </tr>
-          <tr>
-            <td><strong>Redirect through conflicts</strong></td>
-            <td>If the drift is showing up as conflicts, handle it right there. Write a Custom resolution with the corrected text, or Decline to suppress the suggestion. Once resolved, it's locked.</td>
-          </tr>
-          <tr>
-            <td><strong>Start over</strong><br><em>nuclear</em></td>
-            <td>If the document has drifted badly enough that fixing it would take longer than starting fresh, use <strong>Clear Project</strong> on the Project screen. This clears the document and round history but keeps your API keys. Rewrite your goal with tighter scope and start again.</td>
-          </tr>
+          <tr><td>The tone is wrong</td><td>Open the Notes drawer before the next round and write: "The tone throughout must be [formal / conversational / technical]. Adjust the entire document." Be specific about what you want.</td></tr>
+          <tr><td>The AIs keep adding things you do not want</td><td>Edit your goal to explicitly exclude the unwanted content. Reinforce the exclusion in a Note. If one specific AI keeps adding it, use Edit Hive to remove that AI for a round.</td></tr>
+          <tr><td>The document has drifted badly</td><td>Open History and restore an earlier version. Add a Note explaining what direction the next round should take. If the goal was too vague, rewrite it before running another round.</td></tr>
+          <tr><td>Starting fresh is faster</td><td>Use Clear Project on the Project screen. This clears the document and round history but preserves your API keys. Rewrite your goal with tighter scope and start again.</td></tr>
         </tbody>
       </table>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Starting over isn't a failure. A well-written second goal often produces a better round-one document than five rounds of correcting a draft built on a weak goal.</p>
-      </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">A round failed with a structure error</div>
-      <p>Occasionally an AI returns a response that doesn't match the format WaxFrame expects — you'll see a <strong>"Missing output structure"</strong> error on that AI's card. This usually means the AI had trouble following strict formatting instructions on a large or complex document.</p>
-      <p><strong>What to do:</strong> Try switching your Builder to ChatGPT or Gemini and running the round again. Some AIs are more consistent than others at following precise output formats under heavy load.</p>
+      <p>This means the Builder returned output in a format WaxFrame could not parse — usually because the document was too large or complex for that AI to follow the required output format precisely. Click <strong>Change Builder</strong> in the Work screen top bar, switch to ChatGPT or Gemini, and retry the round. Your document was not changed by the failed round.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">An AI keeps re-raising a conflict you already resolved</div>
-      <p>The resolved-decisions system handles most cases automatically. If a particular AI — especially Grok — keeps surfacing a point you've already decided on across multiple rounds, toggle it off from the Work screen for the rest of the session. Its suggestions are most valuable in early rounds.</p>
+      <p>Use the Notes drawer before the next round and write: "[AI name] keeps suggesting [X]. This decision is final — enforce the resolved text and do not allow changes to [Y]." If the problem persists, use Edit Hive to remove that AI from the session.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">An API key isn't working</div>
-      <p>The most common causes: the key was entered with an extra space, the key has been revoked or expired, or the account has run out of credits. Go back to Setup, delete the key, and re-enter it carefully. Check your provider's dashboard to confirm the key is active and your balance isn't zero.</p>
+      <div class="wh-block-title">An API key is not working</div>
+      <p>Click the <strong>Test</strong> button next to the AI on the Setup screen. The result panel shows the exact error. Common causes: the key was entered incorrectly (check for extra spaces or missing characters), the key has been revoked or expired at the provider, the account has run out of credit, or the account is on a free tier that does not include API access.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">You can't start a round</div>
-      <p>WaxFrame requires at least two AIs with saved keys and a Builder selected before it will allow you to run a round. If the Smoke the Hive button isn't active, go back to Setup and check that you have at least two key fields filled in and a Builder chosen on the right side of the screen.</p>
+      <div class="wh-block-title">You cannot start a round</div>
+      <p>WaxFrame requires at least two AIs with saved keys and a Builder selected before the <strong>Smoke the Hive</strong> button activates. Go back to the Setup screen and verify that at least two API key fields show a saved key and that a Builder is selected on the right side of the screen.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">A provider link or signup page has moved</div>
-      <p>AI provider websites change over time. If a URL in this manual or in the Getting Started guide no longer works, open the <strong>API Key Guide</strong> from the Menu inside WaxFrame — it always has the current links for every provider's key console and billing page.</p>
+      <p>Provider websites change their navigation regularly. If a link in WaxFrame leads to a dead page, open the <strong>API Key Guide</strong> from the Menu — it is updated with each WaxFrame release and contains current direct links to each provider's key console.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
 
-
-  <!-- SECTION: INTERNAL/ENTERPRISE AI -->
-  <div class="wh-section" id="internalai">
-    <div class="wh-section-hdr">
-      <div class="wh-section-icon">🏢</div>
-      <div class="wh-section-title">Using WaxFrame at Work — Internal &amp; Enterprise AI</div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">WaxFrame works with your company's internal AI tools</div>
-      <p>If your organisation runs its own internal AI deployment — models hosted on company infrastructure, accessible only on your network or VPN — you can use those models in WaxFrame instead of, or alongside, the public ones. This means your documents stay completely inside your organisation's systems. No data leaves your network.</p>
-      <p>Common setups include enterprise versions of Claude, ChatGPT, and Gemini running through platforms like AWS Bedrock, Azure OpenAI, or a custom internal gateway. If your IT team has given you an API endpoint and a key or token, you're ready to go.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">What to ask your IT team for before you start</div>
-      <table class="wh-table">
-        <thead><tr><th>What you need</th><th>Details</th></tr></thead>
-        <tbody>
-          <tr><td><strong>API endpoint URL</strong></td><td>The web address WaxFrame sends requests to — something like <code>https://ai.yourcompany.com/v1/chat/completions</code>. Ask IT specifically for "the OpenAI-compatible chat completions endpoint."</td></tr>
-          <tr><td><strong>Model ID string</strong></td><td>The exact name of the model — for example <code>gpt-4o</code>, <code>claude-3-7-sonnet</code>, or <code>gemini-2.5-pro</code>. It must be exact. Ask your IT team for a list of available model IDs.</td></tr>
-          <tr><td><strong>API key or bearer token</strong></td><td>Your personal credential — a long string of characters, sometimes called an access token or personal token. Some platforms generate one automatically; others require you to request one from IT.</td></tr>
-        </tbody>
-      </table>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Most enterprise AI platforms use the OpenAI-compatible API format. If your IT team isn't sure, ask: "Is the API OpenAI-compatible?" The answer is almost always yes.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">How to add an internal AI</div>
-      <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span>Go to <strong>Setup</strong> and click <strong>＋ Add Custom AI</strong> at the top of the Worker Bees panel.</li>
-        <li class="wh-step"><span class="wh-step-num">2</span>Enter the <strong>API endpoint URL</strong> your IT team provided.</li>
-        <li class="wh-step"><span class="wh-step-num">3</span>Set the <strong>API Format</strong> to <em>OpenAI compatible</em>.</li>
-        <li class="wh-step"><span class="wh-step-num">4</span>Enter the exact <strong>model ID string</strong>.</li>
-        <li class="wh-step"><span class="wh-step-num">5</span>Paste your <strong>API key or bearer token</strong> and press Enter to save.</li>
-        <li class="wh-step"><span class="wh-step-num">6</span>Repeat for each internal model you want to use. You need at least two AIs with saved keys to run a round.</li>
-      </ol>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Hiding the default public AIs for an internal-only setup</div>
-      <p>By default, WaxFrame shows six public AI providers — ChatGPT, Claude, Gemini, Grok, Perplexity, and DeepSeek. If your organisation uses internal models only, you can hide the public ones individually using the <strong>Hide</strong> button on each AI row. Hidden AIs are excluded from all rounds and remembered across sessions. A banner at the top of the setup list shows how many are hidden, with a <strong>↺ Restore Hidden</strong> button to bring them back.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Setting WaxFrame up for colleagues? Hide the public AIs first, add your internal ones, and they'll see a clean list with only the tools that work in your environment.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">CORS and running WaxFrame locally</div>
-      <p>If WaxFrame is running from a hosted URL (like GitHub Pages) and your internal API endpoint is on a different domain, your browser may block the request due to a security rule called CORS.</p>
-      <p>The fix: run WaxFrame locally. Download the repo as a ZIP file, unzip it, and open <code>index.html</code> directly in your browser. A file opened locally has no cross-origin restrictions and can reach internal endpoints freely.</p>
-      <div class="wh-warn">
-        <p>⚠️ If you see a "Network Error" when testing an internal AI, CORS is almost certainly the cause. Switch to running WaxFrame locally and the error will go away.</p>
-      </div>
-    <a href="#top" class="wh-back-top">↑ Back to top</a>
-    </div>
-  </div>
 
   <div class="wh-section" id="billing">
     <div class="wh-section-hdr">
@@ -744,36 +726,25 @@
 
     <div class="wh-block">
       <div class="wh-block-title">You pay the AI providers directly — not WaxFrame</div>
-      <p>WaxFrame is free and open-source. It has no subscription, no credits, and no built-in payments. When you run a round, requests go directly from your browser to each AI provider's API, and each provider bills you separately based on the number of tokens used.</p>
-      <p>This means you need an active account with a payment method on file at each provider you want to use. Most providers offer a small free credit when you sign up, but sustained use will require topping up your balance.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Check your billing rates at least monthly</div>
-      <p>API pricing is not fixed. Providers change their rates, introduce new pricing tiers, and add or remove models on an ongoing basis. What a round costs today may be different next month.</p>
-      <div class="wh-warn">
-        <p>⚠️ Billing rates are set by each AI provider and can change without notice. Check the billing rate page for each provider you're using at least once a month.</p>
+      <p>WaxFrame itself is free to use for the first 3 rounds; after that a one-time license fee applies. The API calls WaxFrame makes are billed directly to your account at each provider. Costs are measured in tokens — small units of text. A round involving a medium-length document and four AIs typically costs between $0.05 and $0.30 depending on the models used.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>DeepSeek is significantly cheaper than the major US providers and produces high-quality output. It is an excellent choice for the Builder role when cost is a consideration. See <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens?</a> for a full cost breakdown.</p>
       </div>
-      <p>You can reach each provider's billing and API key pages directly from the <strong>API Key Guide</strong> in the Menu. The <strong>Open All Billing Pages</strong> button on that page opens all of them at once.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Popup blocker warning when opening multiple billing pages</div>
-      <p>When you click <strong>Open All Billing Pages</strong> or <strong>Open All API Consoles</strong>, WaxFrame attempts to open one tab per provider simultaneously. Most browsers block this by default and only allow the first tab through.</p>
-      <p>If you see a popup-blocked notification from your browser, click it and choose <strong>Always allow popups from this page</strong>. Then click the button again — all tabs will open. You only need to do this once per browser.</p>
+      <div class="wh-block-title">Monitor your billing regularly</div>
+      <p>Provider pricing changes. Check your usage dashboard at each provider periodically. Click <strong>Open API Websites</strong> on the Setup screen to open all your provider billing consoles at once. Most browsers will block multiple tabs opening simultaneously — allow pop-ups for WaxFrame when prompted.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Perplexity — enable auto-billing immediately</div>
-      <p>Perplexity has an unusual billing policy that can catch new users off guard. When you first sign up for Perplexity API access, you are given the option to enable auto-billing with a monthly spending limit.</p>
-      <div class="wh-warn">
-        <p>⚠️ Enable auto-billing when you first sign up and set your monthly limit low — $5 is a reasonable starting point. If your initial credit runs out <em>without</em> auto-billing active, Perplexity will require a minimum top-up of $50 to reactivate your account. Opting in early avoids this entirely.</p>
-      </div>
+      <div class="wh-block-title">Perplexity — enable auto-billing before use</div>
+      <p>Perplexity requires you to explicitly enable auto-billing in your account settings before API calls will succeed. If Perplexity tests fail with a billing error, log into your Perplexity account, enable auto-billing, then retry.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Which models WaxFrame uses by default</div>
-      <p>WaxFrame uses specific model versions for each AI provider. These are the defaults as of this version:</p>
       <table class="wh-table">
         <thead><tr><th>AI</th><th>Default model</th></tr></thead>
         <tbody>
@@ -785,7 +756,7 @@
           <tr><td><strong>DeepSeek</strong></td><td><code>deepseek-chat</code></td></tr>
         </tbody>
       </table>
-      <p>You can see and change the model for any AI from the Setup screen — click the model name next to any AI to select from available options. WaxFrame fetches the current model list from each provider when you open the selector, so the options shown always reflect what's available on your account.</p>
+      <p>You can view and change the model for any AI from the Setup screen — click the model name next to any AI row to select from available options. WaxFrame fetches the current model list from each provider when you open the selector.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
