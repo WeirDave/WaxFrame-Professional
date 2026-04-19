@@ -4,6 +4,13 @@ All notable changes to WaxFrame Professional are documented here.
 
 ---
 
+## v3.14.1 — April 18, 2026
+
+### Fixed
+- **User manual — list item font size inconsistency** — `.wh-block` had explicit `font-size: 13px` on `p` elements but no rules for `ul`, `ol`, or `li`. Those elements fell back to the base `15px` body font, causing sections that use bullet lists ("Your settings are saved in your browser", "The Add Custom AI form", "Test Connection", "Which models WaxFrame uses") to render at a noticeably larger and bolder weight than `p`-only sections. Added `.wh-block ul`, `.wh-block ol:not(.wh-steps)`, and `.wh-block li:not(.wh-step)` rules at `13px` to match. Also patched the `@media print` color override to include `li` elements.
+
+---
+
 ## v3.14.0 — April 18, 2026
 
 ### Added
