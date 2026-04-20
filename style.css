@@ -51,6 +51,15 @@ input, textarea, select { font-family: inherit; }
   --shadow-md:    0 8px 32px rgba(0,0,0,0.5);
   --shadow-lg:    0 16px 64px rgba(0,0,0,0.6);
   --glow:         0 0 24px rgba(245,166,35,0.15);
+  /* ── Font size scale ── */
+  --fs-xs:   10px;   /* version stamps, tiny badges */
+  --fs-sm:   13px;   /* tips, hints, sub-labels, counter text */
+  --fs-base: 14px;   /* body text, nav items, form labels */
+  --fs-md:   16px;   /* button text, card sub-copy */
+  --fs-lg:   18px;   /* card titles */
+  --fs-xl:   22px;   /* screen-level headings */
+  --fs-2xl:  28px;   /* logo/brand name */
+  --fs-mono: 13px;   /* all Courier New — textarea, code */
 }
 
 /* Light theme */
@@ -6315,4 +6324,236 @@ kbd {
   font-style: italic;
   margin: 6px 0 4px;
   padding: 0 2px;
+}
+
+/* ============================================================
+   4-SCREEN SETUP RESTRUCTURE — new classes
+   ============================================================ */
+
+/* ── fs-header-left: hamburger + back button cluster ── */
+.fs-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.fs-header-left .nav-hamburger {
+  width: 36px;
+  height: 36px;
+  padding: 6px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+}
+.fs-header-left .nav-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--text-dim);
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.fs-header-left .nav-hamburger:hover span { background: var(--text); }
+
+/* ── fs-body-single: full-width single-column scrollable body ── */
+.fs-body-single {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--surface2);
+  padding: 0 16px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border2) transparent;
+}
+
+/* ── setup-single-card: the content card inside fs-body-single ── */
+.setup-single-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: 28px 32px 36px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+.setup-single-card--centered {
+  max-width: 960px;
+  margin: 0 auto;
+  min-height: unset;
+}
+
+/* ── setup-intro: bee image + intro text side by side ── */
+.setup-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+  margin-bottom: 28px;
+}
+.setup-intro-bee {
+  width: 180px;
+  height: 180px;
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
+  pointer-events: none;
+  user-select: none;
+}
+.setup-intro-body {
+  flex: 1;
+  min-width: 0;
+}
+.setup-intro-body .fs-col-header { margin-bottom: 0; }
+
+/* ── goal-fields: the 6 structured goal fields ── */
+.goal-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.goal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.goal-field-label {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+.goal-field-input {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: var(--fs-base);
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.goal-field-input:focus {
+  border-color: var(--accent);
+}
+.goal-field-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: var(--fs-base);
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  box-sizing: border-box;
+  resize: vertical;
+  line-height: 1.6;
+  min-height: 76px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.goal-field-textarea:focus {
+  border-color: var(--accent);
+}
+
+/* placeholder color */
+.goal-field-input::placeholder,
+.goal-field-textarea::placeholder {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── goal-counter-bar: stats + clear button below fields ── */
+.goal-counter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+  margin-bottom: 16px;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+
+/* ── proj-goal-scroll: right column scroll on screen-project ── */
+.proj-goal-scroll {
+  padding: 20px 28px 40px;
+}
+
+/* ── Minimum screen overlay (< 1024px wide) ── */
+.min-screen-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--bg);
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px;
+}
+@media (max-width: 1023px) {
+  .min-screen-overlay { display: flex; }
+}
+.min-screen-card {
+  max-width: 400px;
+}
+.min-screen-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  margin-bottom: 20px;
+  filter: drop-shadow(0 0 12px rgba(245,166,35,0.4));
+}
+.min-screen-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-2xl);
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+.min-screen-msg {
+  font-size: var(--fs-md);
+  color: var(--text);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.min-screen-sub {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Light mode overrides for new classes ── */
+[data-theme="light"] .goal-field-input,
+[data-theme="light"] .goal-field-textarea {
+  background: var(--surface2);
+  color: var(--text);
+}
+
+/* ── Height compact: tighten padding when viewport < 800px tall ── */
+@media (max-height: 800px) {
+  .fs-header { padding: 8px 24px; }
+  .fs-header .fs-logo { width: 56px; height: 56px; }
+  .fs-logo-name { font-size: 22px; }
+  .fs-footer { padding: 8px 24px; }
+  .setup-intro-bee { width: 120px; height: 120px; }
+  .setup-single-card { padding: 18px 24px 24px; }
+  .goal-fields { gap: 12px; }
+  .goal-field-textarea { min-height: 56px; rows: 2; }
+}
+
+/* ── Laptop tier (1024–1600px) adjustments for new screens ── */
+@media (max-width: 1600px) {
+  .setup-intro-bee { width: 140px; height: 140px; }
+  .setup-single-card { padding: 20px 24px 28px; }
+  .proj-goal-scroll { padding: 16px 20px 32px; }
 }

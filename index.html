@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — index.html
-     Build: 20260417-005
+     Build: 20260419-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260419-009">
+  <meta name="waxframe-build" content="20260419-010">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.8">
+  <link rel="stylesheet" href="style.css?v=3.16">
 </head>
 <body>
 
@@ -46,7 +46,7 @@
     </div>
     <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more.</p>
 
-    <button class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-setup')">
+    <button class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
       <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
       Let's get started →
     </button>
@@ -61,14 +61,15 @@
 
 
 <!-- ============================================================
-     SCREEN 2 — SETUP (Worker Bees + Builder, merged, full-width)
+     SCREEN 2 — WORKER BEES  (Step 1 of 4)
      ============================================================ -->
-<div class="screen" id="screen-setup">
+<div class="screen" id="screen-bees">
   <div class="fullscreen-layout">
-
-    <!-- ── Header bar ── -->
     <div class="fs-header">
-      <button class="btn" onclick="goToScreen('screen-welcome')">← Back</button>
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" onclick="goToScreen('screen-welcome')">← Back</button>
+      </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
         <div>
@@ -77,84 +78,59 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 1 of 2</div>
+      <div class="setup-step-badge">Setup — Step 1 of 4</div>
     </div>
 
-    <!-- ── Two-column body ── -->
-    <div class="fs-body">
-
-      <!-- ── LEFT: Worker Bees ── -->
-      <div class="fs-col fs-col-left">
-        <div class="fs-col-main">
-          <img src="images/WaxFrame_Worker_Bee_v2.png" class="setup-card-bee" alt="">
-          <div class="fs-col-scroll">
+    <div class="fs-body-single">
+      <div class="setup-single-card">
+        <div class="setup-intro">
+          <img src="images/WaxFrame_Worker_Bee_v2.png" class="setup-intro-bee" alt="">
+          <div class="setup-intro-body">
             <div class="fs-col-header">
               <h2 class="fs-col-title">Your Worker Bees</h2>
               <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
               <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
             </div>
-            <div class="bee-controls-row-setup">
-              <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
-              <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
-              <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
-              <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
-              <button class="btn btn-lg" onclick="openAllConsoles()">Open API Websites</button>
-              <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
-              <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
-            </div>
-
-            <div class="ai-setup-grid" id="aiSetupGrid"></div>
           </div>
         </div>
-      </div>
-
-        <!-- ── Divider ── -->
-      <div class="fs-divider"></div>
-
-      <!-- ── RIGHT: Builder Picker ── -->
-      <div class="fs-col fs-col-right">
-        <div class="fs-col-main">
-          <img src="images/WaxFrame_Builder_v3.png" class="setup-card-bee" alt="">
-          <div class="fs-col-scroll">
-            <div class="fs-col-header">
-              <h2 class="fs-col-title">Choose Your Builder</h2>
-              <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. For very large or complex documents, if a round fails with a missing output structure error, try switching to ChatGPT or Gemini as your Builder — some AIs are less reliable at following strict formatting instructions under heavy load. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
-            </div>
-            <div class="builder-pick-grid-large" id="builderPickGrid"></div>
-          </div>
+        <div class="bee-controls-row-setup">
+          <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
+          <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
+          <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
+          <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
+          <button class="btn btn-lg" onclick="openAllConsoles()">Open API Websites</button>
+          <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
+          <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
         </div>
+        <div class="ai-setup-grid" id="aiSetupGrid"></div>
       </div>
+    </div>
 
-    </div><!-- /fs-body -->
-
-    <!-- ── Footer ── -->
     <div class="fs-footer">
       <div class="fs-footer-spacer"></div>
       <div class="launch-requirements">
         <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-keys">✗ At least 2 API keys saved</span>
-        <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
       </div>
-      <button class="btn btn-lg btn-accent btn-cta" id="setupContinueBtn" onclick="validateAndContinue()">
-        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
-        Continue to Project Setup →
+      <button class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
+        <img src="images/WaxFrame_Builder_v3.png" class="bee-btn-img">
+        Continue — Choose Builder →
       </button>
     </div>
-
   </div>
 </div>
 
 
 <!-- ============================================================
-     SCREEN 3 — PROJECT SETUP (full-width)
+     SCREEN 3 — BUILDER  (Step 2 of 4)
      ============================================================ -->
-<div class="screen" id="screen-project">
+<div class="screen" id="screen-builder">
   <div class="fullscreen-layout">
-
-    <!-- ── Header bar ── -->
     <div class="fs-header">
-      <button class="btn" onclick="goToScreen('screen-setup')">← Back</button>
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" onclick="goToScreen('screen-bees')">← Back</button>
+      </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
         <div>
@@ -163,197 +139,292 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 2 of 2</div>
+      <div class="setup-step-badge">Setup — Step 2 of 4</div>
     </div>
 
-    <!-- ── Two-column body ── -->
+    <div class="fs-body-single">
+      <div class="setup-single-card setup-single-card--centered">
+        <div class="setup-intro">
+          <img src="images/WaxFrame_Builder_v3.png" class="setup-intro-bee" alt="">
+          <div class="setup-intro-body">
+            <div class="fs-col-header">
+              <h2 class="fs-col-title">Choose Your Builder</h2>
+              <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
+              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
+            </div>
+          </div>
+        </div>
+        <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">To continue you need:</span>
+        <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
+      </div>
+      <button class="btn btn-lg btn-cta" id="builderContinueBtn" onclick="continueFromBuilder()">
+        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
+        Continue — Your Project →
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 4 — PROJECT  (Step 3 of 4)
+     ============================================================ -->
+<div class="screen" id="screen-project">
+  <div class="fullscreen-layout">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" onclick="goToScreen('screen-builder')">← Back</button>
+      </div>
+      <div class="fs-header-brand">
+        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">WaxFrame</div>
+          <div class="fs-logo-tag">Many minds. One refined result.</div>
+          <span class="app-version-stamp"></span>
+        </div>
+      </div>
+      <div class="setup-step-badge">Setup — Step 3 of 4</div>
+    </div>
+
     <div class="fs-body">
 
-      <!-- ── LEFT: Project Details ── -->
+      <!-- LEFT: Project Meta -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main proj-left-main">
-          <div class="proj-left-scroll">
           <img src="images/WaxFrame_Project_Bee_v2.png" class="setup-card-bee" alt="">
-
-          <!-- STATIC top section -->
-          <div class="proj-static-top">
+          <div class="proj-left-scroll">
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Your Project <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">Give your project a name, version, and a detailed goal. The goal tells every AI what this document is, what it's trying to achieve, and what direction to take.</p>
+              <h2 class="fs-col-title">Your Project</h2>
+              <p class="fs-col-sub">Give your project a name and version, then describe your goal using the fields on the right. The more specific you are, the better your results from round one.</p>
             </div>
+
+            <div class="project-fields">
+              <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject();updateProjectRequirements()">
+              <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject();updateProjectRequirements()">
+            </div>
+
             <div class="length-constraint-row">
               <div class="length-constraint-header">
                 <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
                 <span class="length-constraint-hint" id="lengthConstraintHint"></span>
               </div>
-              <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit — e.g. a Google review, a Slack post, or a platform character cap. Leave blank for unconstrained.</p>
+              <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit. Leave blank for unconstrained.</p>
               <div class="length-constraint-fields">
-                <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject(); updateLengthConstraintHint()">
-                <select id="lengthUnit" class="length-unit-select" onchange="saveProject(); updateLengthConstraintHint()">
+                <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject();updateLengthConstraintHint()">
+                <select id="lengthUnit" class="length-unit-select" onchange="saveProject();updateLengthConstraintHint()">
                   <option value="characters">Characters</option>
                   <option value="words">Words</option>
                   <option value="pages">Pages</option>
                 </select>
               </div>
             </div>
-            <div class="project-fields">
-              <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject()">
-              <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject()">
-            </div>
-            <div class="goal-counter-row">
-              <h3 class="proj-goal-heading">Project Goal</h3>
-              <span id="goalCounter" class="goal-counter-text"></span>
-              <button class="btn btn-sm refine-preview-btn" id="refinePreviewBtn" onclick="toggleRefinePopover()" title="Preview what refine rounds will receive">▸ Refine Preview</button>
-            </div>
-            <div class="refine-popover" id="refinePopover" style="display:none">
-              <div class="refine-popover-hdr">
-                <span class="goal-refine-preview-label">Refine rounds will receive</span>
-                <span id="refinePopoverCount" class="goal-refine-preview-count"></span>
-                <button class="refine-popover-close" onclick="toggleRefinePopover()">✕</button>
-              </div>
-              <p class="goal-refine-preview-sub" id="refinePopoverSub"></p>
-              <div id="refinePopoverText" class="goal-refine-preview-text"></div>
+
+            <div class="proj-clear-row proj-clear-row--bottom">
+              <button class="btn btn-lg proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
             </div>
           </div>
-
-          <!-- FLEX: goal textarea left, refine panel right -->
-          <div class="proj-goal-flex">
-          <div class="goal-split-row">
-            <div class="goal-split-left">
-              <div class="proj-ta-editor">
-                <div class="proj-ta-scroll">
-                  <div class="proj-ta-nums" id="projGoalNums"><div>1</div></div>
-                  <div class="proj-ta-inner">
-                    <textarea id="projectGoal" placeholder="Project goal — what are you trying to create or achieve? The more specific and detailed you are, the better your results will be." class="proj-ta" oninput="saveProject();updateProjLineNums('projGoalNums',this);updateGoalCounter()"></textarea>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="goal-split-right">
-              <div id="goalRefinePreview" class="goal-refine-preview-panel">
-                <div class="goal-refine-preview-hdr">
-                  <span class="goal-refine-preview-label">Refine rounds will receive</span>
-                  <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
-                </div>
-                <p class="goal-refine-preview-sub" id="goalRefinePreviewSub"></p>
-                <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
-                <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your goal is under 300 chars — the full text will be sent each refine round.</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Clear buttons -->
-          <div class="proj-clear-row proj-clear-row--bottom">
-            <button class="btn btn-lg proj-clear-btn" onclick="document.getElementById('projectGoal').value='';saveProject();updateProjLineNums('projGoalNums',document.getElementById('projectGoal'));updateGoalCounter();">✕ Clear Goal</button>
-            <button class="btn btn-lg proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
-          </div>
-          </div><!-- /proj-goal-flex -->
-          </div><!-- /proj-left-scroll -->
-
         </div>
         <div class="setup-col-tip">
-          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> The more specific your goal, the better your first draft will be. Include tone, audience, length, and purpose.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Put your most important instruction first — when a document exists, only the first ~300 characters of your assembled goal are sent each refine round.
         </div>
       </div>
 
-        <!-- ── Divider ── -->
       <div class="fs-divider"></div>
 
-      <!-- ── RIGHT: Starting Document ── -->
+      <!-- RIGHT: Goal Fields -->
       <div class="fs-col fs-col-right">
         <div class="fs-col-main">
-          <div class="fs-col-scroll proj-right-scroll">
-
+          <div class="fs-col-scroll proj-goal-scroll">
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your goal above.</p>
+              <h2 class="fs-col-title">Project Goal <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+              <p class="fs-col-sub">Fill in as many fields as apply. Each one gives the AIs more context to work from. The fields are assembled into a structured brief that every AI reads before each round.</p>
             </div>
 
-            <div class="doc-input-tabs">
-              <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
-              <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
-              <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
-            </div>
-            <p id="docTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
+            <div class="goal-fields">
 
-            <div class="export-mask-row">
-              <label class="export-mask-label">💾 Export filename</label>
-              <button class="goal-info-btn" onclick="document.getElementById('infoExportMaskModal').classList.add('active')" title="About export filename tokens"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
-              <input type="text" id="exportMask" class="export-mask-input" placeholder="{name}_{version}" oninput="saveProject();updateMaskPreview()" title="Use {name} and {version} as placeholders">
-              <span class="export-mask-preview" id="exportMaskPreview"></span>
-            </div>
-
-            <div class="doc-tab-panel active" id="panel-upload">
-              <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
-                   ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
-                <div class="drop-zone-icon">📄</div>
-                <div class="drop-zone-text">Drag & drop or click to browse</div>
-                <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), or Markdown (.md)</div>
-                <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleFileSelect(event)">
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalDocType">Document type</label>
+                <input type="text" id="goalDocType" class="goal-field-input" placeholder="e.g. technical comparison, cover letter, executive summary, blog post" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
               </div>
-              <div id="fileStatus" class="file-status" style="display:none;"></div>
-              <div id="fileClearRow" class="file-clear-row" style="display:none;">
-                <button class="btn btn-sm" onclick="clearUploadedFile()">✕ Remove file</button>
+
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalAudience">Target audience</label>
+                <input type="text" id="goalAudience" class="goal-field-input" placeholder="e.g. senior engineers, hiring managers, small business owners, C-suite" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
               </div>
+
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalOutcome">Desired outcome</label>
+                <textarea id="goalOutcome" class="goal-field-textarea" rows="3" placeholder="What should the reader walk away able to do, decide, or understand? Be specific." oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+              </div>
+
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalScope">Scope &amp; constraints</label>
+                <textarea id="goalScope" class="goal-field-textarea" rows="3" placeholder="What must be covered — and what should be excluded? e.g. wireless networking only, no pricing, under 500 words" oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+              </div>
+
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalTone">Tone &amp; voice</label>
+                <input type="text" id="goalTone" class="goal-field-input" placeholder="e.g. professional and direct, conversational, authoritative but accessible" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
+              </div>
+
+              <div class="goal-field">
+                <label class="goal-field-label" for="goalNotes">Additional instructions</label>
+                <textarea id="goalNotes" class="goal-field-textarea" rows="3" placeholder="Anything else the AIs need to know — style preferences, things to avoid, structure requirements." oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+              </div>
+
             </div>
 
-            <div class="doc-tab-panel" id="panel-paste">
-              <div class="proj-ta-editor">
-                <div class="proj-ta-scroll">
-                  <div class="proj-ta-nums" id="projPasteNums"><div>1</div></div>
-                  <div class="proj-ta-inner">
-                    <textarea id="pasteText" class="proj-ta" placeholder="Paste your existing document text here…"
-                      oninput="updateProjLineNums('projPasteNums', this); updateLaunchRequirements()"></textarea>
-                  </div>
-                </div>
-              </div>
+            <div class="goal-counter-bar">
+              <span id="goalCounter"></span>
+              <button class="btn btn-sm proj-clear-btn" onclick="['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});saveProject();updateGoalCounter();updateProjectRequirements();">✕ Clear Goal</button>
             </div>
 
-            <div class="doc-tab-panel" id="panel-scratch">
-              <div class="proj-notebook proj-notebook-scratch">
-                <div class="proj-scratch-inner">
-                  <div class="proj-scratch-icon">✍️</div>
-                  <div class="proj-scratch-title">Starting from Scratch</div>
-                  <div class="proj-scratch-msg">WaxFrame will ask all your AIs to create a first draft based on your project goal. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</div>
-                </div>
+            <div id="goalRefinePreview" class="goal-refine-preview-panel">
+              <div class="goal-refine-preview-hdr">
+                <span class="goal-refine-preview-label">Refine rounds will receive</span>
+                <span id="goalRefinePreviewCount" class="goal-refine-preview-count"></span>
               </div>
+              <p class="goal-refine-preview-sub" id="goalRefinePreviewSub"></p>
+              <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
+              <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your assembled goal is under 300 chars — the full text will be sent each refine round.</div>
             </div>
 
           </div>
         </div>
         <div class="setup-col-tip">
-          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Upload or paste an existing draft to refine it, or start from scratch and let your AIs build it from your goal.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> You don't need to fill every field. Even just Document type and Desired outcome gives the hive a strong foundation.
         </div>
       </div>
 
-    </div><!-- /fs-body -->
+    </div>
 
     <div class="fs-footer">
       <div class="fs-footer-spacer"></div>
       <div class="launch-requirements">
-        <span class="launch-req-title">To launch you need:</span>
+        <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-name">✗ Project name</span>
         <span class="launch-req-item" id="req-version">✗ Version number</span>
-        <span class="launch-req-item" id="req-goal">✗ Project goal</span>
-        <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
+        <span class="launch-req-item" id="req-goal">✗ At least one goal field</span>
       </div>
-      <button class="btn btn-lg btn-accent btn-cta" id="launchBtn" onclick="startSession()">
-        <img src="images/Waxframe_logo_v19.png" class="bee-btn-img">
-        Launch WaxFrame →
+      <button class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
+        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
+        Continue — Starting Document →
       </button>
     </div>
-
   </div>
 </div>
 
 
 <!-- ============================================================
-     SCREEN 4 — WORK
+     SCREEN 5 — DOCUMENT  (Step 4 of 4)
+     ============================================================ -->
+<div class="screen" id="screen-document">
+  <div class="fullscreen-layout">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" onclick="goToScreen('screen-project')">← Back</button>
+      </div>
+      <div class="fs-header-brand">
+        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">WaxFrame</div>
+          <div class="fs-logo-tag">Many minds. One refined result.</div>
+          <span class="app-version-stamp"></span>
+        </div>
+      </div>
+      <div class="setup-step-badge">Setup — Step 4 of 4</div>
+    </div>
+
+    <div class="fs-body-single">
+      <div class="setup-single-card setup-single-card--centered">
+
+        <div class="fs-col-header">
+          <h2 class="fs-col-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+          <p class="fs-col-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your project goal.</p>
+        </div>
+
+        <div class="doc-input-tabs">
+          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
+        </div>
+        <p id="docTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
+
+        <div class="export-mask-row">
+          <label class="export-mask-label">💾 Export filename</label>
+          <button class="goal-info-btn" onclick="document.getElementById('infoExportMaskModal').classList.add('active')" title="About export filename tokens"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
+          <input type="text" id="exportMask" class="export-mask-input" placeholder="{name}_{version}" oninput="saveProject();updateMaskPreview()" title="Use {name} and {version} as placeholders">
+          <span class="export-mask-preview" id="exportMaskPreview"></span>
+        </div>
+
+        <div class="doc-tab-panel active" id="panel-upload">
+          <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+               ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
+            <div class="drop-zone-icon">📄</div>
+            <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
+            <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), or Markdown (.md)</div>
+            <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleFileSelect(event)">
+          </div>
+          <div id="fileStatus" class="file-status" style="display:none;"></div>
+          <div id="fileClearRow" class="file-clear-row" style="display:none;">
+            <button class="btn btn-sm" onclick="clearUploadedFile()">✕ Remove file</button>
+          </div>
+        </div>
+
+        <div class="doc-tab-panel" id="panel-paste">
+          <div class="proj-ta-editor">
+            <div class="proj-ta-scroll">
+              <div class="proj-ta-nums" id="projPasteNums"><div>1</div></div>
+              <div class="proj-ta-inner">
+                <textarea id="pasteText" class="proj-ta" placeholder="Paste your existing document text here…"
+                  oninput="updateProjLineNums('projPasteNums', this); updateDocRequirements()"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="doc-tab-panel" id="panel-scratch">
+          <div class="proj-notebook proj-notebook-scratch">
+            <div class="proj-scratch-inner">
+              <div class="proj-scratch-icon">✍️</div>
+              <div class="proj-scratch-title">Starting from Scratch</div>
+              <div class="proj-scratch-msg">WaxFrame will ask all your AIs to create a first draft based on your project goal. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">To launch you need:</span>
+        <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
+      </div>
+      <button class="btn btn-lg btn-cta" id="launchBtn" onclick="startSession()">
+        <img src="images/Waxframe_logo_v19.png" class="bee-btn-img">
+        Launch WaxFrame →
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 6 — WORK
      ============================================================ -->
 <div class="screen" id="screen-work">
   <div class="work-layout">
-
-    <!-- ── TOP BAR ── -->
     <div class="work-topbar">
       <div class="work-topbar-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation">
@@ -377,17 +448,12 @@
       </div>
     </div>
 
-    <!-- ── MAIN 3-COLUMN WORK AREA ── -->
     <div class="work-main">
-
-      <!-- ══ COL 1: The Hive ══ -->
       <div class="work-left-panel">
-
         <select id="phaseSelect" style="display:none" onchange="setPhase(this.value)">
           <option value="draft">Draft</option>
           <option value="refine">Refine Text</option>
         </select>
-
         <div class="left-panel-header">
           <span class="work-section-title">The Hive <button class="goal-info-btn" onclick="document.getElementById('infoHiveModal').classList.add('active')" title="About The Hive"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
@@ -395,10 +461,8 @@
             <button class="btn" onclick="openChangeBuilder()">Change Builder</button>
           </div>
         </div>
-
         <div class="hex-grid" id="beeStatusGrid"></div>
         <div class="bee-dot-strip" id="beeDotStrip"></div>
-
         <div class="left-panel-header left-panel-section-border">
           <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
@@ -409,13 +473,10 @@
         <div class="conflicts-panel" id="conflictsPanel">
           <div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn't resolve.</div>
         </div>
+      </div>
 
-      </div><!-- /work-left-panel -->
-
-      <!-- ══ COL 2: Left gap ══ -->
       <div class="work-gap"></div>
 
-      <!-- ══ COL 3: Working Document ══ -->
       <div class="work-doc-panel">
         <div class="work-panel-header">
           <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
@@ -428,7 +489,6 @@
         <div class="doc-stats-row">
           <span class="doc-stats" id="docStats"></span>
         </div>
-        <!-- PDF re-extract banner — shown when PDF import may be garbled -->
         <div class="reextract-banner" id="reExtractBanner" style="display:none">
           <span class="reextract-banner-text">📄 Imported from PDF — if the text looks garbled, re-extract it using AI vision.</span>
           <button class="btn btn-sm" id="reExtractBtn" onclick="reExtractWithVision()">🔍 Re-extract with AI Vision</button>
@@ -439,25 +499,16 @@
             <div class="work-line-numbers" id="lineNumbers"></div>
             <div class="work-doc-inner">
               <div class="work-doc-rules" id="docRules"></div>
-              <textarea
-                id="workDocument"
-                class="work-doc-ta"
-                placeholder="Your document appears here."
-                oninput="handleWorkDocumentInput()"
-              ></textarea>
+              <textarea id="workDocument" class="work-doc-ta" placeholder="Your document appears here." oninput="handleWorkDocumentInput()"></textarea>
             </div>
           </div>
           <div class="work-doc-right-margin"></div>
         </div>
-      </div><!-- /work-doc-panel -->
+      </div>
 
-      <!-- ══ COL 4: Right gap ══ -->
       <div class="work-gap"></div>
 
-      <!-- ══ COL 5: Clock + Console ══ -->
       <div class="work-right-panel">
-
-        <!-- ── Logo above clock ── -->
         <div class="work-right-logo">
           <div class="work-right-logo-text">
             <div class="work-right-logo-name">WaxFrame</div>
@@ -465,23 +516,17 @@
           </div>
           <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="work-right-logo-img">
         </div>
-
-        <!-- Unified Dual-Face Clock -->
         <div class="dual-clock-widget" id="dualClockWidget">
           <div class="dcw-bezel">
             <div class="dcw-face dcw-face-round">
               <div class="dcw-label-top">ROUND</div>
-              <div class="dcw-screen">
-                <span class="dcw-digits" id="roundTimerDisplay">00:00</span>
-              </div>
+              <div class="dcw-screen"><span class="dcw-digits" id="roundTimerDisplay">00:00</span></div>
               <div class="dcw-label-bot" id="roundTimerLabel">READY</div>
             </div>
             <div class="dcw-divider"></div>
             <div class="dcw-face dcw-face-project">
               <div class="dcw-label-top">PROJECT</div>
-              <div class="dcw-screen">
-                <span class="dcw-digits dcw-digits-project" id="projectTimerDisplay">00:00:00</span>
-              </div>
+              <div class="dcw-screen"><span class="dcw-digits dcw-digits-project" id="projectTimerDisplay">00:00:00</span></div>
               <div class="dcw-controls">
                 <button class="dcw-ctrl-btn" id="projClockStartBtn" onclick="projectClockStart()" title="Start">&#9654;</button>
                 <button class="dcw-ctrl-btn" id="projClockPauseBtn" onclick="projectClockPause()" title="Pause">&#9646;&#9646;</button>
@@ -489,8 +534,6 @@
             </div>
           </div>
         </div>
-
-        <!-- Console -->
         <div class="work-panel-header honeycomb-header">
           <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
@@ -512,13 +555,10 @@
           <div class="live-console" id="liveConsole">
             <div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>
           </div>
-        </div><!-- /console-body-wrap -->
+        </div>
+      </div>
+    </div>
 
-      </div><!-- /work-right-panel -->
-
-    </div><!-- /work-main -->
-
-    <!-- ── FOOTER BAR (doubled height, centered buttons) ── -->
     <div class="work-footer">
       <span id="statusText" class="footer-status">Standing by — Smoke the Hive to begin</span>
       <div class="footer-actions">
@@ -536,12 +576,11 @@
         <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
       </div>
     </div>
-
   </div>
 </div>
 
 <!-- ============================================================
-     SMOKER OVERLAY — shown while a round is running
+     SMOKER OVERLAY
      ============================================================ -->
 <div class="smoker-overlay" id="smokerOverlay">
   <div class="smoker-stage">
@@ -555,41 +594,24 @@
 <!-- ── BUILDER OVERLAY ── -->
 <div class="builder-overlay" id="builderOverlay" aria-hidden="true">
   <div class="builder-stage">
-
-    <!-- Label at top -->
     <div class="builder-overlay-label" id="builderOverlayLabel">Building your document...</div>
-
-    <!-- Image + output blocks -->
     <div class="builder-scene-wrap">
-
-      <!-- Blocks slide OUT from the right (bee creating them) -->
       <div class="builder-belt-track" id="builderBeltTrack"></div>
-
-      <!-- Sparks at drill tip -->
       <div class="builder-station-sparks" id="builderSparks">
-        <span style="--sx:-18px;--fall:40px;"></span>
-        <span style="--sx:-8px;--fall:55px;"></span>
-        <span style="--sx:4px;--fall:48px;"></span>
-        <span style="--sx:14px;--fall:60px;"></span>
-        <span style="--sx:22px;--fall:44px;"></span>
-        <span style="--sx:-28px;--fall:52px;"></span>
-        <span style="--sx:-14px;--fall:65px;"></span>
-        <span style="--sx:8px;--fall:58px;"></span>
-        <span style="--sx:26px;--fall:50px;"></span>
-        <span style="--sx:-4px;--fall:70px;"></span>
-        <span style="--sx:18px;--fall:62px;"></span>
-        <span style="--sx:-22px;--fall:46px;"></span>
+        <span style="--sx:-18px;--fall:40px;"></span><span style="--sx:-8px;--fall:55px;"></span>
+        <span style="--sx:4px;--fall:48px;"></span><span style="--sx:14px;--fall:60px;"></span>
+        <span style="--sx:22px;--fall:44px;"></span><span style="--sx:-28px;--fall:52px;"></span>
+        <span style="--sx:-14px;--fall:65px;"></span><span style="--sx:8px;--fall:58px;"></span>
+        <span style="--sx:26px;--fall:50px;"></span><span style="--sx:-4px;--fall:70px;"></span>
+        <span style="--sx:18px;--fall:62px;"></span><span style="--sx:-22px;--fall:46px;"></span>
       </div>
-
       <img src="images/WaxFrame_Builder_Building_v4.png" alt="Builder bee assembling the document" class="builder-station-img">
-
     </div>
-
   </div>
 </div>
 
 <!-- ============================================================
-     NOTES DRAWER — slides up from above footer, no overlay
+     NOTES DRAWER
      ============================================================ -->
 <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
@@ -601,15 +623,10 @@
       <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
   </div>
-  <textarea id="workNotes" class="notes-drawer-ta"
-    oninput="saveSession()"
-    placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts. Research anything you need to verify outside WaxFrame first, then paste your findings here as a clear instruction.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
+  <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession()"
+    placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
 </div>
 
-
-<!-- ============================================================
-     ROUND HISTORY MODAL
-     ============================================================ -->
 <!-- ── Add Custom AI Modal ── -->
 <div class="custom-ai-modal-overlay" id="addCustomAIModal" onclick="if(event.target===this)showAddCustomAI()">
   <div class="custom-ai-modal">
@@ -620,8 +637,6 @@
         <div class="custom-ai-modal-sub">Connect any OpenAI-compatible, Anthropic, or Google endpoint</div>
       </div>
     </div>
-
-    <!-- Quick Add -->
     <div class="custom-ai-form-row custom-ai-quickadd-row">
       <div class="custom-ai-field-wrap">
         <label>Quick Add <span class="field-optional">(optional)</span></label>
@@ -639,8 +654,6 @@
         <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
       </div>
     </div>
-
-    <!-- URL + Name -->
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>URL <span class="field-required">*</span></label>
@@ -651,8 +664,6 @@
         <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'">
       </div>
     </div>
-
-    <!-- Format + Key -->
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>API Format <span class="field-required">*</span></label>
@@ -670,8 +681,6 @@
         </div>
       </div>
     </div>
-
-    <!-- Model -->
     <div class="custom-ai-form-row custom-ai-model-row">
       <div class="custom-ai-field-wrap custom-ai-field-wrap--model">
         <label>Model <span class="field-required">*</span></label>
@@ -682,31 +691,17 @@
         </div>
       </div>
     </div>
-
     <div class="custom-ai-form-footer">
       <span id="customAITestStatus" class="custom-ai-test-status"></span>
       <button class="btn" onclick="showAddCustomAI()">Cancel</button>
       <button class="btn btn-accent btn-sm" id="customAITestBtn" onclick="testCustomAIConnection()">Test Connection</button>
       <button class="btn btn-accent btn-sm" id="customAIAddBtn" style="display:none;" onclick="addCustomAI()">Add to Hive</button>
     </div>
-
     <div id="customAIRawPanel" class="custom-ai-raw-panel" style="display:none;">
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Endpoint</span>
-        <pre class="custom-ai-raw-pre" id="customAIRawEndpoint"></pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Sent</span>
-        <pre class="custom-ai-raw-pre" id="customAIRawSent"></pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Status</span>
-        <pre class="custom-ai-raw-pre" id="customAIRawStatus"></pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Received</span>
-        <pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre>
-      </div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="customAIRawEndpoint"></pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Sent</span><pre class="custom-ai-raw-pre" id="customAIRawSent"></pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="customAIRawStatus"></pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre" id="customAIRawReceived"></pre></div>
     </div>
   </div>
 </div>
@@ -722,8 +717,6 @@
       </div>
       <button class="import-server-close-btn" onclick="closeImportServerModal()" title="Close">✕</button>
     </div>
-
-    <!-- Quick Add -->
     <div class="custom-ai-form-row custom-ai-quickadd-row">
       <div class="custom-ai-field-wrap">
         <label>Quick Add <span class="field-optional">(optional)</span></label>
@@ -735,8 +728,6 @@
         </select>
       </div>
     </div>
-
-    <!-- Chat Endpoint + Models Endpoint -->
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>Chat Endpoint <span class="field-required">*</span></label>
@@ -747,8 +738,6 @@
         <input type="text" id="importServerUrl" placeholder="https://your-server.com/api/models" oninput="resetImportServer()">
       </div>
     </div>
-
-    <!-- Key -->
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>API Key <span class="field-optional">(optional)</span></label>
@@ -759,30 +748,16 @@
       </div>
       <div class="custom-ai-field-wrap"></div>
     </div>
-
-    <!-- Fetch button + status -->
     <div class="import-server-fetch-row">
       <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
       <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
       <button class="btn btn-sm" id="importServerSelectBtn" onclick="openImportChecklist()" style="display:none;">☰ Select Models…</button>
     </div>
-
-    <!-- Raw panel (capped height for debugging) -->
     <div id="importServerRawPanel" class="custom-ai-raw-panel" style="display:none;">
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Endpoint</span>
-        <pre class="custom-ai-raw-pre" id="importServerRawEndpoint"></pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Status</span>
-        <pre class="custom-ai-raw-pre" id="importServerRawStatus"></pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Received</span>
-        <pre class="custom-ai-raw-pre import-server-raw-received" id="importServerRawReceived"></pre>
-      </div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="importServerRawEndpoint"></pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="importServerRawStatus"></pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre import-server-raw-received" id="importServerRawReceived"></pre></div>
     </div>
-
     <div class="custom-ai-form-footer">
       <span></span>
       <button class="btn" onclick="closeImportServerModal()">Cancel</button>
@@ -791,7 +766,7 @@
   </div>
 </div>
 
-<!-- ══ IMPORT SERVER CHECKLIST OVERLAY (separate layer above everything) ══ -->
+<!-- ══ IMPORT SERVER CHECKLIST OVERLAY ══ -->
 <div class="import-checklist-overlay" id="importChecklistOverlay">
   <div class="import-checklist-panel">
     <div class="import-checklist-hdr">
@@ -845,9 +820,7 @@
     <h2 class="finish-modal-title">🏁 Project Complete!</h2>
     <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do.</p>
     <div class="finish-modal-actions">
-      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">
-        💾 Export Document
-      </button>
+      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">💾 Export Document</button>
       <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportSession()">
         📋 Export Full Transcript
         <span class="finish-modal-btn-sub">Every round, every AI response, and the final document — all in one file</span>
@@ -867,18 +840,13 @@
   </div>
 </div>
 
-<!-- ============================================================
-     LICENSE MODAL
-     ============================================================ -->
+<!-- LICENSE MODAL -->
 <div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
     <h2 class="license-modal-title">WaxFrame Pro</h2>
     <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
-    <input class="license-modal-input" id="licenseKeyInput" type="text"
-      placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX"
-      autocomplete="off" spellcheck="false"
-      onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
     <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
@@ -886,9 +854,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     CHANGE BUILDER MODAL
-     ============================================================ -->
+<!-- CHANGE BUILDER MODAL -->
 <div class="finish-modal-overlay" id="changeBuilderModal" onclick="if(event.target===this)closeChangeBuilder()">
   <div class="finish-modal change-builder-modal">
     <h2 class="finish-modal-title">👑 Change Builder</h2>
@@ -898,9 +864,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     EDIT HIVE MODAL — toggle AIs on/off at laptop viewport
-     ============================================================ -->
+<!-- EDIT HIVE MODAL -->
 <div class="finish-modal-overlay" id="editHiveModal" onclick="if(event.target===this)closeEditHive()">
   <div class="finish-modal edit-hive-modal">
     <h2 class="finish-modal-title">🐝 Edit Hive</h2>
@@ -910,18 +874,14 @@
   </div>
 </div>
 
-<!-- ============================================================
-     ROUND ERROR MODAL
-     ============================================================ -->
+<!-- ROUND ERROR MODAL -->
 <div class="finish-modal-overlay" id="roundErrorModal" onclick="if(event.target===this)closeRoundErrorModal()">
   <div class="finish-modal round-error-modal">
     <h2 class="finish-modal-title round-error-title">⚠️ Round Not Saved</h2>
     <div class="round-error-body">
       <p class="round-error-msg" id="roundErrorMsg"></p>
       <div class="round-error-details" id="roundErrorDetails"></div>
-      <div class="round-error-note">
-        <strong>Note:</strong> This round was not saved to your history, but your API request was still processed and tokens were consumed. This attempt is recorded in your Round History for your records.
-      </div>
+      <div class="round-error-note"><strong>Note:</strong> This round was not saved to your history, but your API request was still processed and tokens were consumed.</div>
     </div>
     <div class="round-error-actions">
       <button class="finish-modal-btn finish-modal-btn-export round-error-retry-btn" onclick="closeRoundErrorModal()">↩ Try Again</button>
@@ -931,30 +891,26 @@
   </div>
 </div>
 
-<!-- ============================================================
-     PROJECT GOAL VIEWER MODAL
-     ============================================================ -->
+<!-- PROJECT GOAL VIEWER MODAL -->
 <div class="finish-modal-overlay" id="projectGoalModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal finish-modal-goal">
     <h2 class="finish-modal-title finish-modal-title-goal">📋 Project Goal</h2>
     <div class="goal-modal-name" id="projectGoalModalName"></div>
     <div class="goal-modal-meta" id="projectGoalModalMeta"></div>
-    <div class="goal-modal-label">Existing Goal <span class="goal-modal-label-note">(you can edit this for clarity)</span></div>
-    <textarea id="projectGoalModalEdit" class="goal-modal-textarea" oninput="updateProjectGoalModalPreview()"></textarea>
+    <div class="goal-modal-label">Assembled goal <span class="goal-modal-label-note">(read-only — edit fields on the Project screen)</span></div>
+    <textarea id="projectGoalModalEdit" class="goal-modal-textarea" readonly></textarea>
     <div id="projectGoalModalRefineWrap" style="display:none;" class="goal-modal-refine-wrap">
       <div class="goal-modal-refine-label">What AIs receive in Refine rounds</div>
       <div id="projectGoalModalRefineText" class="goal-modal-refine-text"></div>
     </div>
     <div class="goal-modal-footer">
       <button class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
-      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="saveProjectGoalFromModal()">💾 Save & Close</button>
+      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
     </div>
   </div>
 </div>
 
-<!-- ============================================================
-     GOAL INFO MODAL
-     ============================================================ -->
+<!-- GOAL INFO MODAL -->
 <div class="finish-modal-overlay" id="goalInfoModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-modal-icon-wrap">
@@ -962,29 +918,29 @@
     </div>
     <h2 class="finish-modal-title">About Your Project Goal</h2>
     <div class="goal-info-body">
-      <p>Below you'll fill out your project name, version, and goal. The goal is the most important part — it tells every AI what you're trying to create and what direction to take.</p>
+      <p>The six goal fields are assembled into a structured brief that every AI reads before each round. You don't need to fill all of them — even two or three gives the hive a strong foundation.</p>
       <div class="goal-info-row">
         <span class="info-label">Generating from scratch</span>
-        <span class="goal-info-desc">Your full goal is sent to every AI. The AIs have nothing else to work from — give them as much detail as possible.</span>
+        <span class="goal-info-desc">Your full assembled goal is sent to every AI. The AIs have nothing else to work from — give them as much detail as possible, especially Desired outcome and Scope.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Document exists</span>
-        <span class="goal-info-desc">Only a trimmed <em>Project Context</em> is sent — approximately the first 300 characters, cut at a sentence boundary. This applies every time a document exists, regardless of round number. The token budget is better spent on the document and reviewer suggestions.</span>
+        <span class="goal-info-desc">Only a trimmed <em>Project Context</em> is sent — approximately the first 300 characters of your assembled goal, cut at a sentence boundary. The token budget is better spent on the document and reviewer suggestions.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Put your most important instruction in the first sentence of your goal — it will always be included when a document exists.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Put your most important instruction in the Document type or Desired outcome field — these appear first in the assembled brief and will always be included when a document exists.</p>
       <div class="goal-info-row">
         <span class="info-label">Refine Preview</span>
-        <span class="goal-info-desc">The ▸ Refine Preview button shows exactly what will be sent when a document exists — updated live as you type. Always available when the goal field has text.</span>
+        <span class="goal-info-desc">The Refine Preview panel below the goal fields shows exactly what will be sent when a document exists — updated live as you type. It only appears when your assembled goal exceeds 300 characters.</span>
       </div>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('goalInfoModal').classList.remove('active')">Got it →</button>
   </div>
 </div>
 
-<!-- ── Toast Notification ── -->
+<!-- Toast -->
 <div id="toast"></div>
 
-<!-- ── Test Keys Status Panel ── -->
+<!-- Test Keys Panel -->
 <div id="testKeysPanel" class="test-keys-panel">
   <div class="tkp-header">
     <span id="tkpTitle" class="tkp-title">Testing API keys…</span>
@@ -993,7 +949,7 @@
   <div id="tkpRows" class="tkp-rows"></div>
 </div>
 
-<!-- ── Test Key Modal (individual Test button) ── -->
+<!-- Test Key Modal -->
 <div class="custom-ai-modal-overlay" id="testKeyModal" onclick="if(event.target===this)closeTestKeyModal()">
   <div class="custom-ai-modal test-key-modal">
     <div class="custom-ai-modal-hdr">
@@ -1005,22 +961,10 @@
       <button class="import-server-close-btn" onclick="closeTestKeyModal()" title="Close">✕</button>
     </div>
     <div class="custom-ai-raw-panel">
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Endpoint</span>
-        <pre class="custom-ai-raw-pre" id="testKeyRawEndpoint">—</pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Sent</span>
-        <pre class="custom-ai-raw-pre" id="testKeyRawSent">—</pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Status</span>
-        <pre class="custom-ai-raw-pre" id="testKeyRawStatus">—</pre>
-      </div>
-      <div class="custom-ai-raw-row">
-        <span class="custom-ai-raw-label">Received</span>
-        <pre class="custom-ai-raw-pre test-key-raw-received" id="testKeyRawReceived">—</pre>
-      </div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="testKeyRawEndpoint">—</pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Sent</span><pre class="custom-ai-raw-pre" id="testKeyRawSent">—</pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="testKeyRawStatus">—</pre></div>
+      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre test-key-raw-received" id="testKeyRawReceived">—</pre></div>
     </div>
     <div class="custom-ai-form-footer">
       <span></span>
@@ -1029,9 +973,143 @@
   </div>
 </div>
 
+<!-- Info modals for working document and console -->
+<div class="finish-modal-overlay" id="infoDocModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Working Document</h2>
+    <div class="goal-info-body">
+      <p>This is the live version of your document. Every round, the Builder rewrites it in full based on reviewer suggestions. You can edit it directly at any time between rounds — the AIs reference line numbers, so the numbering updates automatically as you make changes.</p>
+      <div class="goal-info-row"><span class="info-label">Editing directly</span><span class="goal-info-desc">Click anywhere in the document and type. The hive will see your changes in the next round.</span></div>
+      <div class="goal-info-row"><span class="info-label">Line numbers</span><span class="goal-info-desc">AIs reference line numbers in their suggestions so the Builder can locate changes precisely. Don't worry about the numbers — they update automatically.</span></div>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="infoConflictsModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Conflicts</h2>
+    <div class="goal-info-body">
+      <p>When AIs disagree on something, the Builder flags it here rather than making an arbitrary call.</p>
+      <div class="goal-info-row"><span class="info-label">User Decision</span><span class="goal-info-desc">The Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own resolution, bypass if you've already fixed it directly, or decline to suppress it entirely. Your decision is applied immediately and locked.</span></div>
+      <div class="goal-info-row"><span class="info-label">Builder Decision</span><span class="goal-info-desc">The Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the <strong>Current:</strong> label on any conflict card to jump directly to that line in the working document.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="infoConsoleModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Live Console</h2>
+    <div class="goal-info-body">
+      <p>The Live Console shows everything happening in real time — which AIs are sending, responding, succeeding, or failing, with timestamps and response previews.</p>
+      <div class="goal-info-row"><span class="info-label">Round entries</span><span class="goal-info-desc">Each round starts with a divider showing the round number and phase. Sending, response, success, and error entries follow for each AI.</span></div>
+      <div class="goal-info-row"><span class="info-label">Errors</span><span class="goal-info-desc">API errors, rate limits, and connection failures appear in red with the HTTP status code and a plain-English explanation.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log for troubleshooting.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="infoHiveModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">The Hive</h2>
+    <div class="goal-info-body">
+      <p>Your hive is the team of AIs collaborating on your document each round. Every checked AI with a saved API key participates automatically. AIs without a key are skipped silently.</p>
+      <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
+      <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds — it reads all reviewer suggestions and rewrites the working document each round. It uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
+      <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoHiveModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="infoExportMaskModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Export Filename Mask</h2>
+    <div class="goal-info-body">
+      <p>The filename mask lets you customise the name of your exported .txt file using tokens replaced automatically at export time.</p>
+      <div class="goal-info-row"><span class="info-label">{name}</span><span class="goal-info-desc">Replaced with your project name, sanitised for use in filenames.</span></div>
+      <div class="goal-info-row"><span class="info-label">{version}</span><span class="goal-info-desc">Replaced with your project version number. If no version is set, defaults to "v1".</span></div>
+      <div class="goal-info-row"><span class="info-label">Example</span><span class="goal-info-desc">A mask of <code>{name}_final_{version}</code> with project name "My Report" and version "v2" produces <code>My_Report_final_v2.txt</code>.</span></div>
+      <p class="goal-info-tip">💡 Leave the mask blank to use the default format: ProjectName_version.txt</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoExportMaskModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<div class="finish-modal-overlay" id="infoUploadModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Starting Document</h2>
+    <div class="goal-info-body">
+      <p>The three buttons — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose how you want to provide your starting document.</p>
+      <div class="goal-info-row"><span class="info-label">Upload File</span><span class="goal-info-desc">Click the drop zone to browse, or drag a file directly onto it. Supported: Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), Markdown (.md).</span></div>
+      <div class="goal-info-row"><span class="info-label">Paste Text</span><span class="goal-info-desc">Click inside the editor that appears and paste your text directly.</span></div>
+      <div class="goal-info-row"><span class="info-label">Start from Scratch</span><span class="goal-info-desc">No further action needed — the hive will generate a first draft from your project goal.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with digitally-created documents. Heavily designed or scanned PDFs may extract poorly — try Paste Text if that happens.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- DEV TOOLBAR -->
+<div class="dev-toolbar" id="devToolbar" style="display:none">
+  <span class="dev-toolbar-label">⚙ DEV</span>
+  <button onclick="playUnlockScene()">▶ Unlock Scene</button>
+</div>
+
+<div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
+  <div class="finish-modal dev-pw-modal">
+    <h2 class="finish-modal-title">Dev Tools</h2>
+    <input class="license-modal-input" id="devPwInput" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')submitDevPassword()">
+    <button class="license-modal-btn" onclick="submitDevPassword()">Unlock</button>
+    <button class="close-btn" onclick="hideDevModal()">✕ Cancel</button>
+  </div>
+</div>
+
+<!-- LICENSE UNLOCK SCENE -->
+<div class="unlock-scene" id="unlockScene">
+  <div class="unlock-stage">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="unlock-logo" id="unlockLogo">
+    <canvas class="unlock-canvas" id="unlockCanvas"></canvas>
+  </div>
+  <img src="images/WaxFrame_Waxmaker_v1.png" alt="" class="unlock-bee" id="unlockBee" aria-hidden="true">
+  <div class="unlock-title" id="unlockTitle">WaxFrame Unlocked!</div>
+  <div class="unlock-sub" id="unlockSub">Welcome to WaxFrame Pro!</div>
+</div>
+
+<!-- Minimum screen width overlay -->
+<div class="min-screen-overlay" id="minScreenOverlay">
+  <div class="min-screen-card">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="min-screen-logo">
+    <h1 class="min-screen-title">WaxFrame</h1>
+    <p class="min-screen-msg">WaxFrame requires a minimum screen width of 1024px.</p>
+    <p class="min-screen-sub">Please resize your browser window or open WaxFrame on a desktop or laptop computer.</p>
+  </div>
+</div>
+
+<!-- Mobile not supported overlay -->
+<div class="mobile-overlay" id="mobileOverlay">
+  <div class="mobile-overlay-card">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="mobile-overlay-logo">
+    <h1 class="mobile-overlay-title">WaxFrame</h1>
+    <p class="mobile-overlay-msg">WaxFrame is designed for desktop and laptop computers.</p>
+    <p class="mobile-overlay-sub">Please open it on a desktop or laptop browser for the full experience.</p>
+    <a href="https://weirdave.github.io/WaxFrame-Professional/" class="mobile-overlay-link">weirdave.github.io/WaxFrame-Professional</a>
+  </div>
+</div>
+
 <script src="version.js"></script>
-<script src="app.js?v=3.15.3"></script>
+<script src="app.js?v=3.16.0"></script>
 <script src="api-links.js"></script>
+
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
   <div class="hive-finish-backdrop"></div>
@@ -1049,248 +1127,13 @@
     <h2 class="finish-modal-title">WaxFrame</h2>
     <p class="about-modal-subtitle">About</p>
     <div class="goal-info-body">
-      <div class="goal-info-row">
-        <span class="info-label">Version</span>
-        <span class="goal-info-desc"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">License</span>
-        <span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Author</span>
-        <span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Stack</span>
-        <span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span>
-      </div>
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution.</span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- ============================================================
-     INFO MODALS — Section explainers
-     ============================================================ -->
-
-<!-- EXPORT MASK INFO -->
-<div class="finish-modal-overlay" id="infoExportMaskModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Export Filename Mask</h2>
-    <div class="goal-info-body">
-      <p>The filename mask lets you customise the name of your exported .txt file using tokens that are replaced automatically at export time.</p>
-      <div class="goal-info-row">
-        <span class="info-label">{name}</span>
-        <span class="goal-info-desc">Replaced with your project name, sanitised for use in filenames (spaces and special characters become underscores).</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">{version}</span>
-        <span class="goal-info-desc">Replaced with your project version number. If no version is set, defaults to "v1".</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Example</span>
-        <span class="goal-info-desc">A mask of <code>{name}_final_{version}</code> with project name "My Report" and version "v2" produces <code>My_Report_final_v2.txt</code>.</span>
-      </div>
-      <p class="goal-info-tip">💡 Leave the mask blank to use the default format: ProjectName_version.txt</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoExportMaskModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- THE HIVE -->
-<div class="finish-modal-overlay" id="infoHiveModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">The Hive</h2>
-    <div class="goal-info-body">
-      <p>Your hive is the team of AIs collaborating on your document each round. Every checked AI with a saved API key participates automatically. AIs without a key are skipped silently.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Reviewers</span>
-        <span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions for improvement.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Builder</span>
-        <span class="goal-info-desc">The AI marked as Builder both reviews and builds — it reads all reviewer suggestions and rewrites the working document each round. The Builder is the only AI that actually changes the document. It uses significantly more tokens than reviewers so it should have a paid API key with enough capacity. DeepSeek is the best value for most documents. If a round fails with a missing output structure error on a large or complex document, try switching to ChatGPT or Gemini — some AIs are less consistent at following strict formatting instructions under heavy load.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Idle</span>
-        <span class="goal-info-desc">The AI is standing by, waiting for the next round to begin.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Reviewing…</span>
-        <span class="goal-info-desc">The AI is actively reading the document and generating its suggestions.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Building…</span>
-        <span class="goal-info-desc">The Builder is reading all reviewer suggestions and rewriting the document. This usually takes longer than reviewing.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Done ✓</span>
-        <span class="goal-info-desc">The AI completed its work for this round successfully.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">No changes ★</span>
-        <span class="goal-info-desc">The AI reviewed the document and found nothing to improve — it's satisfied with the current state. A gold star (★) appears on the card. When enough AIs agree, the hive converges.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Failed</span>
-        <span class="goal-info-desc">The AI encountered an error — usually an expired API key, rate limit, or network issue. Check the Live Console for details.</span>
-      </div>
-      <p>You can toggle individual AIs on or off between rounds using the checkboxes without losing their saved keys. Use <strong>Change Builder</strong> to swap which AI does the building.</p>
-      <p>The <strong>☰ navigation menu</strong> (top left) gives you access to API key setup and navigation back to project or key setup screens. The <strong>📝 Notes</strong> button in the top bar lets you leave instructions that are passed to the Builder at the start of the next round.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoHiveModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- CONFLICTS -->
-<div class="finish-modal-overlay" id="infoConflictsModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Conflicts</h2>
-    <div class="goal-info-body">
-      <p>This section displays conflicts that occur when AIs disagree on what changes need to be made. When the Builder can't determine the right path forward on its own, it flags it here for you to decide.</p>
-      <div class="goal-info-row">
-        <span class="info-label">User Decision</span>
-        <span class="goal-info-desc">The Builder found competing suggestions from different AIs and needs you to choose. Pick one of the options, type your own, or bypass if you've already edited the document directly. Your choice is locked so the AIs won't re-raise it.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Builder Decision</span>
-        <span class="goal-info-desc">The Builder is flagging a judgment call it made on your behalf. Review what it chose and override it by selecting a different option or typing your own — then hit Apply to have the Builder revise the document with your correction.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Bypass</span>
-        <span class="goal-info-desc">If you've already fixed something directly in the working document, choose "I edited the document directly — skip this conflict" to lock it without triggering another Builder pass. If all conflicts are bypassed, the round advances immediately with no Builder call.</span>
-      </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the "Current:" text on any conflict card to scroll the working document directly to that line and highlight it.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- WORKING DOCUMENT -->
-<div class="finish-modal-overlay" id="infoDocModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Working Document</h2>
-    <div class="goal-info-body">
-      <p>This is the live document your hive is building and refining. It updates after every round as the Builder applies the reviewer suggestions. You can edit it directly at any time between rounds — your edits are preserved and the hive will continue from wherever you leave it.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Line Numbers</span>
-        <span class="goal-info-desc">Each line is numbered so reviewers can reference exact locations in their suggestions — e.g. "Line 14: change X to Y." This is how the hive stays coordinated across multiple AIs.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">80 Characters</span>
-        <span class="goal-info-desc">The document is fixed at 80 characters wide. This ensures line number references from AIs stay accurate regardless of your screen size or zoom level.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">How Rounds Work</span>
-        <span class="goal-info-desc">Rounds continue as long as the AIs have suggestions to make. When a majority of your AIs agree the document needs no further changes, the hive converges. Any holdout suggestions — from AIs that still wanted changes — are presented for your review. You can apply them, decline them, or move straight to finishing.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Finish Button</span>
-        <span class="goal-info-desc">You do not have to wait for the hive to converge on its own. If the document looks good to you at any point, hit the Finish button in the top bar. You can export your document, start a fresh project, or go back and keep refining — the choice is always yours.</span>
-      </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Export saves your document as a .txt file with a byline noting the number of rounds it took and how long the session ran.</p>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the <strong>☰ navigation menu</strong> (top left) to go back to Project Setup to change your goal, or to Keys &amp; Builder to swap your AI configuration. Your session is saved automatically when you navigate away.</p>
-      <p class="goal-info-tip">⚠️ If your document looks garbled — especially after uploading a PDF — the file was likely too design-heavy to extract cleanly. Use the <strong>☰ menu → Project — Goal &amp; Document</strong> to go back, then try the Paste Text option instead and copy your text in manually.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- LIVE CONSOLE -->
-<div class="finish-modal-overlay" id="infoConsoleModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Live Console</h2>
-    <div class="goal-info-body">
-      <p>The console shows you everything happening in real time — which AIs are sending requests, responding, succeeding, or failing, and a preview of what each one said.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Round Clock</span>
-        <span class="goal-info-desc">Tracks how long the current round is taking. Displays in <strong class="text-green">green</strong> when running. Resets automatically at the start of each new round.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Project Clock</span>
-        <span class="goal-info-desc">Tracks total time spent on the project since your first round. Displays in <strong class="text-accent">amber</strong> when running, flashes amber when paused. Persists if you close and reopen the browser. Use the pause button if you need to step away so your time stays accurate.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Legend</span>
-        <span class="goal-info-desc">Located directly above the console log. <strong class="text-green">Green</strong> = success · <strong class="text-warn">Amber</strong> = warning · <strong class="text-error">Red</strong> = error · <strong class="text-send">Blue</strong> = sending · <strong class="text-preview">Purple</strong> = AI response preview · <strong class="text-divider">Orange</strong> = round divider.</span>
-      </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log at any time — useful for troubleshooting or keeping a record of your session.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- STARTING DOCUMENT / UPLOAD -->
-<div class="finish-modal-overlay" id="infoUploadModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">Starting Document</h2>
-    <div class="goal-info-body">
-      <p>The three buttons — <strong>Upload File</strong>, <strong>Paste Text</strong>, and <strong>Start from Scratch</strong> — are mode selectors, not action buttons. Click one to choose how you want to provide your starting document, then interact with the area that appears below them.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Upload File</span>
-        <span class="goal-info-desc">Click this button to select Upload mode, then click the drop zone that appears below (or drag a file directly onto it) to choose your file. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), plain text (.txt), and Markdown (.md). The text is extracted and loaded automatically.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Paste Text</span>
-        <span class="goal-info-desc">Click this button to select Paste mode, then click inside the editor that appears below and paste your text.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Start from Scratch</span>
-        <span class="goal-info-desc">Click this button if you have no existing document. No further action needed here — the hive will generate a first draft from your project goal.</span>
-      </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — like those exported from Word or Google Docs. Heavily designed resumes, scanned documents, or PDFs built from images may produce garbled or incomplete text. If that happens, try copying and pasting the text directly using the Paste Text option instead.</p>
-      <p class="goal-info-tip">⚠️ <strong>Large file tip:</strong> If you're importing a dense report, a long PowerPoint, or any file that produces a lot of text — and a round fails with a missing output structure error, try switching your Builder to ChatGPT or Gemini and retrying. Some AIs are less consistent at following strict formatting instructions on large or complex documents.</p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
-<!-- ============================================================
-     DEV TOOLBAR — only visible when waxframe_dev=1 in localStorage
-     ============================================================ -->
-<div class="dev-toolbar" id="devToolbar" style="display:none">
-  <span class="dev-toolbar-label">⚙ DEV</span>
-  <button onclick="playUnlockScene()">▶ Unlock Scene</button>
-</div>
-
-<!-- DEV TOOLS PASSWORD MODAL -->
-<div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
-  <div class="finish-modal dev-pw-modal">
-    <h2 class="finish-modal-title">Dev Tools</h2>
-    <input class="license-modal-input" id="devPwInput" type="password" placeholder="Password"
-      onkeydown="if(event.key==='Enter')submitDevPassword()">
-    <button class="license-modal-btn" onclick="submitDevPassword()">Unlock</button>
-    <button class="close-btn" onclick="hideDevModal()">✕ Cancel</button>
-  </div>
-</div>
-
-<!-- LICENSE UNLOCK SCENE — full screen overlay, triggered after successful key validation -->
-<div class="unlock-scene" id="unlockScene">
-  <div class="unlock-stage">
-    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="unlock-logo" id="unlockLogo">
-    <canvas class="unlock-canvas" id="unlockCanvas"></canvas>
-  </div>
-  <img src="images/WaxFrame_Waxmaker_v1.png" alt="" class="unlock-bee" id="unlockBee" aria-hidden="true">
-  <div class="unlock-title" id="unlockTitle">WaxFrame Unlocked!</div>
-  <div class="unlock-sub" id="unlockSub">Welcome to WaxFrame Pro!</div>
-</div>
-
-<!-- Mobile not supported overlay — shown via CSS media query, no JS needed -->
-<div class="mobile-overlay" id="mobileOverlay">
-  <div class="mobile-overlay-card">
-    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="mobile-overlay-logo">
-    <h1 class="mobile-overlay-title">WaxFrame</h1>
-    <p class="mobile-overlay-msg">WaxFrame is designed for desktop and laptop computers.</p>
-    <p class="mobile-overlay-sub">Please open it on a desktop or laptop browser for the full experience.</p>
-    <a href="https://weirdave.github.io/WaxFrame-Professional/" class="mobile-overlay-link">weirdave.github.io/WaxFrame-Professional</a>
   </div>
 </div>
 
@@ -1307,12 +1150,13 @@
     </div>
     <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
   </div>
-
   <div class="nav-body">
     <div class="nav-section-label">Navigate</div>
     <button class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-setup')">· Setup — Keys &amp; Builder</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Project — Goal &amp; Document</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-builder')">· Setup 2 — Builder</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 3 — Your Project</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 4 — Starting Document</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">License</div>
