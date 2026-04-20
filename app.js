@@ -3194,15 +3194,25 @@ async function extractPDF(file) {
     const content = await page.getTextContent();
     let pageText = '';
     let lastX = null;
+    let lastY = null;
     let lastWidth = 0;
     for (const item of content.items) {
       if (!item.str) continue;
       const x = item.transform ? item.transform[4] : null;
-      if (lastX !== null && x !== null) {
-        const gap = x - (lastX + lastWidth);
-        if (gap > 1) pageText += ' ';
+      const y = item.transform ? item.transform[5] : null;
+      if (lastY !== null && y !== null) {
+        const yDiff = lastY - y; // positive = moved down the page
+        if (yDiff > 20) {
+          pageText += '\n\n'; // large gap = section/paragraph break
+        } else if (yDiff > 2) {
+          pageText += '\n';   // small gap = new line
+        } else if (lastX !== null && x !== null) {
+          const gap = x - (lastX + lastWidth);
+          if (gap > 1) pageText += ' '; // same line, add space if needed
+        }
       }
       pageText += item.str;
+      lastY = y;
       lastX = x;
       lastWidth = item.width || 0;
     }
