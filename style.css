@@ -6366,11 +6366,10 @@ kbd {
   min-height: 0;
   overflow-y: auto;
   background: var(--surface2);
-  padding: 0 16px 16px;
+  padding: 16px;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  display: flex;
-  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ── setup-single-card: the content card inside fs-body-single ── */
@@ -6379,15 +6378,13 @@ kbd {
   border: 1px solid var(--border2);
   border-radius: var(--radius-md);
   padding: 28px 32px 36px;
-  flex: 1;
+  min-height: 100%;
   box-sizing: border-box;
 }
 .setup-single-card--centered {
   max-width: 960px;
-  width: 100%;
   margin: 0 auto;
-  display: flex;
-  flex-direction: column;
+  min-height: auto;
 }
 
 /* ── setup-intro: bee image + intro text side by side ── */
