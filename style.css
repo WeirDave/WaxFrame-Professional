@@ -6379,14 +6379,12 @@ kbd {
   border-radius: var(--radius-md);
   padding: 28px 32px 36px;
   width: 100%;
+  max-width: 1390px;
+  margin: 0 auto;
   box-sizing: border-box;
-  min-height: calc(100% - 0px);
 }
 .setup-single-card--centered {
-  max-width: 960px;
-  width: 960px;
-  margin: 0 auto;
-  min-height: auto;
+  /* inherits max-width and centering from base — no additional constraint */
 }
 
 /* ── setup-intro: bee image + intro text side by side ── */
