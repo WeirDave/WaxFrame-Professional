@@ -6421,7 +6421,7 @@ kbd {
   letter-spacing: 0.06em;
   color: var(--accent);
   white-space: nowrap;
-  min-width: 160px;
+  min-width: 200px;
   flex-shrink: 0;
   padding-top: 1px;
 }
