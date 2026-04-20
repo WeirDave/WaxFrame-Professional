@@ -3242,29 +3242,9 @@ kbd {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
 }
-/* Pulsing logo watermark in dead space right of content (desktop only) */
-#panel-paste::after,
-#panel-upload::after,
-#panel-scratch::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: calc(44px + 80ch + 8px + 12px + 32px + 12px);
-  right: 0;
-  background-image: url('images/Waxframe_logo_v19.png');
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  opacity: 0.07;
-  pointer-events: none;
-  animation: watermarkPulse 6s ease-in-out infinite;
-}
-@keyframes watermarkPulse {
-  0%, 100% { opacity: 0; }
-  50%       { opacity: 0.18; }
-}
-/* Upload panel: drop zone matches paste panel width, fills column height */
+/* Watermark re-enabled — setup-single-card has position:relative as anchor */
+
+/* Upload panel: drop zone matches paste panel width */
 #panel-upload .drop-zone {
   flex: 1;
   min-height: 0;
@@ -3278,13 +3258,11 @@ kbd {
   max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
 /* Scratch panel: notebook matches paste panel width, fills column height */
+/* Scratch panel: notebook fills full card width */
 #panel-scratch .proj-notebook-scratch {
-  flex: 1;
-  min-height: 0;
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 13px;
-  width: calc(44px + 80ch + 8px + 12px + 32px);
-  max-width: calc(44px + 80ch + 8px + 12px + 32px);
+  width: 100%;
+  max-width: 100%;
+  min-height: 200px;
 }
 
 /* ── PROJECT NOTEBOOK — scratch panel only ── */
@@ -6205,11 +6183,7 @@ kbd {
   .proj-static-top { padding: 10px 0 6px; }
   .proj-goal-flex { padding: 0; }
   /* Restore fixed height paste panel — width stays at base 80ch, matching goal and work doc */
-  #panel-paste::after, #panel-upload::after, #panel-scratch::after { display: none; }
   #panel-paste .proj-ta-editor { flex: none; height: 420px; }
-  /* Release upload/scratch width constraints at laptop — fill the column */
-  #panel-upload .drop-zone { width: 100%; max-width: 100%; }
-  #panel-scratch .proj-notebook-scratch { width: 100%; max-width: 100%; }
   /* Shrink setup page 1 action buttons height and hide icon on API Key Guide */
   .bee-controls-row-setup .btn { font-size: 11px; padding: 3px 9px; }
   .bee-controls-row-setup .tip-icon-img { display: none; }
@@ -6367,9 +6341,12 @@ kbd {
   overflow-y: auto;
   background: var(--surface2);
   padding: 16px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  box-sizing: border-box;
 }
 
 /* ── setup-single-card: the content card inside fs-body-single ── */
@@ -6380,11 +6357,12 @@ kbd {
   padding: 28px 32px 36px;
   width: 100%;
   max-width: 1390px;
-  margin: 0 auto;
   box-sizing: border-box;
+  flex: 1;
+  position: relative;
 }
 .setup-single-card--centered {
-  /* inherits max-width and centering from base — no additional constraint */
+  /* inherits all from base */
 }
 
 /* ── setup-intro: bee image + intro text side by side ── */
