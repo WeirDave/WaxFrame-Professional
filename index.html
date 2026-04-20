@@ -610,11 +610,11 @@
     <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyNotes()">📋 Copy</button>
-      <button class="btn" onclick="document.getElementById('workNotes').value='';saveSession()">✕ Clear</button>
+      <button class="btn" onclick="document.getElementById('workNotes').value='';saveSession();updateNotesBtnPriority()">✕ Clear</button>
       <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
   </div>
-  <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession()"
+  <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession();updateNotesBtnPriority()"
     placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
 </div>
 
