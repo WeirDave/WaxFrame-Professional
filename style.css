@@ -6410,3 +6410,19 @@ kbd {
   color: var(--text-dim);
   line-height: 1.6;
 }
+
+/* ── Document Playbooks — project goal field display ── */
+.dp-goal-fields { display: flex; flex-direction: column; gap: 8px; }
+.dp-goal-row { display: flex; gap: 0; align-items: baseline; }
+.dp-goal-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 160px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.dp-goal-val { font-size: 13px; color: var(--text); line-height: 1.5; }
