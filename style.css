@@ -777,7 +777,7 @@ html, body {
 }
 
 .doc-tab-panel { display: none; }
-.doc-tab-panel.active { display: block; }
+.doc-tab-panel.active { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
 /* Paste panel: fill column height; width = working doc formula */
 #panel-paste .proj-ta-editor {
   flex: 1;
@@ -6182,8 +6182,7 @@ kbd {
   .proj-left-scroll { padding: 0 8px; }
   .proj-static-top { padding: 10px 0 6px; }
   .proj-goal-flex { padding: 0; }
-  /* Restore fixed height paste panel — width stays at base 80ch, matching goal and work doc */
-  #panel-paste .proj-ta-editor { flex: none; height: 420px; }
+  /* Paste panel height fills card naturally via flex */
   /* Shrink setup page 1 action buttons height and hide icon on API Key Guide */
   .bee-controls-row-setup .btn { font-size: 11px; padding: 3px 9px; }
   .bee-controls-row-setup .tip-icon-img { display: none; }
@@ -6360,6 +6359,8 @@ kbd {
   box-sizing: border-box;
   flex: 1;
   position: relative;
+  display: flex;
+  flex-direction: column;
 }
 .setup-single-card--centered {
   /* inherits all from base */
