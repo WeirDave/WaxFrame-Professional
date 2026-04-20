@@ -6369,6 +6369,8 @@ kbd {
   padding: 0 16px 16px;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── setup-single-card: the content card inside fs-body-single ── */
@@ -6377,13 +6379,15 @@ kbd {
   border: 1px solid var(--border2);
   border-radius: var(--radius-md);
   padding: 28px 32px 36px;
-  min-height: 100%;
+  flex: 1;
   box-sizing: border-box;
 }
 .setup-single-card--centered {
   max-width: 960px;
+  width: 100%;
   margin: 0 auto;
-  min-height: unset;
+  display: flex;
+  flex-direction: column;
 }
 
 /* ── setup-intro: bee image + intro text side by side ── */
@@ -6487,7 +6491,7 @@ kbd {
   padding: 20px 28px 40px;
 }
 
-/* ── Minimum screen overlay (< 1024px wide) ── */
+/* ── Minimum screen overlay (< 1422px wide or < 811px tall) ── */
 .min-screen-overlay {
   display: none;
   position: fixed;
@@ -6499,7 +6503,7 @@ kbd {
   text-align: center;
   padding: 32px;
 }
-@media (max-width: 1023px) {
+@media (max-width: 1421px), (max-height: 810px) {
   .min-screen-overlay { display: flex; }
 }
 .min-screen-card {
@@ -6540,7 +6544,7 @@ kbd {
 }
 
 /* ── Height compact: tighten padding when viewport < 800px tall ── */
-@media (max-height: 800px) {
+@media (max-height: 900px) {
   .fs-header { padding: 8px 24px; }
   .fs-header .fs-logo { width: 56px; height: 56px; }
   .fs-logo-name { font-size: 22px; }
@@ -6551,9 +6555,81 @@ kbd {
   .goal-field-textarea { min-height: 56px; rows: 2; }
 }
 
-/* ── Laptop tier (1024–1600px) adjustments for new screens ── */
+/* ── Laptop tier (1422–1600px): scale down from 1920 base ── */
 @media (max-width: 1600px) {
   .setup-intro-bee { width: 140px; height: 140px; }
   .setup-single-card { padding: 20px 24px 28px; }
   .proj-goal-scroll { padding: 16px 20px 32px; }
+  .proj-left-top-row { padding: 16px 20px 0; }
+  .proj-left-scroll > .fs-col-sub { padding: 0 20px; }
+  .proj-left-doctype { padding: 0 20px; }
+  .proj-left-scroll .project-fields { padding: 0 20px; }
+  .proj-left-scroll .length-constraint-row { padding: 0 20px; }
+  .proj-goal-intro { padding: 16px 20px 0; }
+}
+
+/* ── proj-left-top-row: title + Clear Project button side by side ── */
+.proj-left-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  padding: 20px 28px 0;
+}
+.proj-left-top-row .fs-col-title { margin-bottom: 0; }
+.proj-clear-top-btn {
+  font-size: var(--fs-sm);
+  padding: 5px 12px;
+  color: var(--text-dim);
+  border-color: var(--border2);
+  flex-shrink: 0;
+}
+.proj-left-scroll > .fs-col-sub {
+  padding: 0 28px;
+  margin-bottom: 16px;
+  flex-shrink: 0;
+}
+
+/* ── proj-field-wrap: label + input stacked ── */
+.proj-field-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.proj-field-label {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── proj-left-doctype: Document type field sitting in left column ── */
+.proj-left-doctype {
+  padding: 0 28px;
+  margin-bottom: 4px;
+}
+
+/* ── proj-goal-intro: brief intro line at top of right column ── */
+.proj-goal-intro {
+  padding: 20px 28px 0;
+  flex-shrink: 0;
+}
+.proj-goal-intro .fs-col-sub { margin-bottom: 16px; }
+.proj-goal-intro .goal-info-btn { vertical-align: middle; margin-left: 4px; }
+
+/* ── req-star: required field asterisk ── */
+.req-star {
+  color: var(--accent);
+  font-weight: 700;
+  margin-left: 1px;
+}
+
+/* ── Left scroll sub and fields consistent padding ── */
+.proj-left-scroll .project-fields {
+  padding: 0 28px;
+  max-width: 100%;
+}
+.proj-left-scroll .length-constraint-row {
+  padding: 0 28px;
 }
