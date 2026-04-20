@@ -196,19 +196,32 @@
 
     <div class="fs-body">
 
-      <!-- LEFT: Project Meta -->
+      <!-- LEFT: Project Meta + Document type -->
       <div class="fs-col fs-col-left">
         <div class="fs-col-main proj-left-main">
           <img src="images/WaxFrame_Project_Bee_v2.png" class="setup-card-bee" alt="">
           <div class="proj-left-scroll">
-            <div class="fs-col-header">
+
+            <div class="proj-left-top-row">
               <h2 class="fs-col-title">Your Project</h2>
-              <p class="fs-col-sub">Give your project a name and version, then describe your goal using the fields on the right. The more specific you are, the better your results from round one.</p>
+              <button class="btn btn-sm proj-clear-top-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
             </div>
+            <p class="fs-col-sub">Name your project, then fill in the goal fields on the right. Fields marked <span class="req-star">*</span> are required to continue.</p>
 
             <div class="project-fields">
-              <input type="text" id="projectName" placeholder="Project name — e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject();updateProjectRequirements()">
-              <input type="text" id="projectVersion" placeholder="Version — e.g. v1" class="field-sm proj-field-ver" oninput="saveProject();updateProjectRequirements()">
+              <div class="proj-field-wrap">
+                <label class="proj-field-label" for="projectName">Project name <span class="req-star">*</span></label>
+                <input type="text" id="projectName" placeholder="e.g. Q3 Executive Summary" class="field-lg proj-field-full" oninput="saveProject();updateProjectRequirements()">
+              </div>
+              <div class="proj-field-wrap">
+                <label class="proj-field-label" for="projectVersion">Version <span class="req-star">*</span></label>
+                <input type="text" id="projectVersion" placeholder="e.g. v1" class="field-sm proj-field-ver" oninput="saveProject();updateProjectRequirements()">
+              </div>
+            </div>
+
+            <div class="goal-field proj-left-doctype">
+              <label class="goal-field-label" for="goalDocType">Document type <span class="req-star">*</span></label>
+              <input type="text" id="goalDocType" class="goal-field-input" placeholder="e.g. technical comparison, cover letter, executive summary, blog post" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
             </div>
 
             <div class="length-constraint-row">
@@ -227,13 +240,10 @@
               </div>
             </div>
 
-            <div class="proj-clear-row proj-clear-row--bottom">
-              <button class="btn btn-lg proj-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
-            </div>
           </div>
         </div>
         <div class="setup-col-tip">
-          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Put your most important instruction first — when a document exists, only the first ~300 characters of your assembled goal are sent each refine round.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Document type appears first in the assembled brief — it's always sent to AIs even when a document exists.
         </div>
       </div>
 
@@ -243,25 +253,20 @@
       <div class="fs-col fs-col-right">
         <div class="fs-col-main">
           <div class="fs-col-scroll proj-goal-scroll">
-            <div class="fs-col-header">
-              <h2 class="fs-col-title">Project Goal <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">Fill in as many fields as apply. Each one gives the AIs more context to work from. The fields are assembled into a structured brief that every AI reads before each round.</p>
+
+            <div class="proj-goal-intro">
+              <p class="fs-col-sub">These fields are assembled into a structured brief every AI reads before each round. Fill in as many as apply — the more specific, the better the output. <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
             </div>
 
             <div class="goal-fields">
 
               <div class="goal-field">
-                <label class="goal-field-label" for="goalDocType">Document type</label>
-                <input type="text" id="goalDocType" class="goal-field-input" placeholder="e.g. technical comparison, cover letter, executive summary, blog post" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
-              </div>
-
-              <div class="goal-field">
-                <label class="goal-field-label" for="goalAudience">Target audience</label>
+                <label class="goal-field-label" for="goalAudience">Target audience <span class="req-star">*</span></label>
                 <input type="text" id="goalAudience" class="goal-field-input" placeholder="e.g. senior engineers, hiring managers, small business owners, C-suite" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
               </div>
 
               <div class="goal-field">
-                <label class="goal-field-label" for="goalOutcome">Desired outcome</label>
+                <label class="goal-field-label" for="goalOutcome">Desired outcome <span class="req-star">*</span></label>
                 <textarea id="goalOutcome" class="goal-field-textarea" rows="3" placeholder="What should the reader walk away able to do, decide, or understand? Be specific." oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
               </div>
 
@@ -300,7 +305,7 @@
           </div>
         </div>
         <div class="setup-col-tip">
-          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> You don't need to fill every field. Even just Document type and Desired outcome gives the hive a strong foundation.
+          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Target audience and Desired outcome lock in the tone and purpose — without them the hive drifts by round three.
         </div>
       </div>
 
@@ -311,8 +316,10 @@
       <div class="launch-requirements">
         <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-name">✗ Project name</span>
-        <span class="launch-req-item" id="req-version">✗ Version number</span>
-        <span class="launch-req-item" id="req-goal">✗ At least one goal field</span>
+        <span class="launch-req-item" id="req-version">✗ Version</span>
+        <span class="launch-req-item" id="req-doctype">✗ Document type</span>
+        <span class="launch-req-item" id="req-audience">✗ Target audience</span>
+        <span class="launch-req-item" id="req-outcome">✗ Desired outcome</span>
       </div>
       <button class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">

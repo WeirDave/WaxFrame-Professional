@@ -1622,16 +1622,22 @@ function updateSetupRequirements() {
 }
 
 function updateProjectRequirements() {
-  const name    = document.getElementById('projectName')?.value.trim()    || '';
-  const version = document.getElementById('projectVersion')?.value.trim() || '';
-  const goal    = assembleProjectGoal();
-  const reqName    = document.getElementById('req-name');
-  const reqVersion = document.getElementById('req-version');
-  const reqGoal    = document.getElementById('req-goal');
-  if (reqName)    { reqName.textContent    = (name    ? '✓' : '✗') + ' Project name';              reqName.classList.toggle('met', !!name); }
-  if (reqVersion) { reqVersion.textContent = (version ? '✓' : '✗') + ' Version number';            reqVersion.classList.toggle('met', !!version); }
-  if (reqGoal)    { reqGoal.textContent    = (goal    ? '✓' : '✗') + ' At least one goal field';   reqGoal.classList.toggle('met', goal.length > 0); }
-  const allMet = !!name && !!version && goal.length > 0;
+  const name     = document.getElementById('projectName')?.value.trim()    || '';
+  const version  = document.getElementById('projectVersion')?.value.trim() || '';
+  const docType  = document.getElementById('goalDocType')?.value.trim()    || '';
+  const audience = document.getElementById('goalAudience')?.value.trim()   || '';
+  const outcome  = document.getElementById('goalOutcome')?.value.trim()    || '';
+  const reqName     = document.getElementById('req-name');
+  const reqVersion  = document.getElementById('req-version');
+  const reqDoctype  = document.getElementById('req-doctype');
+  const reqAudience = document.getElementById('req-audience');
+  const reqOutcome  = document.getElementById('req-outcome');
+  if (reqName)     { reqName.textContent     = (name     ? '✓' : '✗') + ' Project name';    reqName.classList.toggle('met', !!name); }
+  if (reqVersion)  { reqVersion.textContent  = (version  ? '✓' : '✗') + ' Version';         reqVersion.classList.toggle('met', !!version); }
+  if (reqDoctype)  { reqDoctype.textContent  = (docType  ? '✓' : '✗') + ' Document type';   reqDoctype.classList.toggle('met', !!docType); }
+  if (reqAudience) { reqAudience.textContent = (audience ? '✓' : '✗') + ' Target audience'; reqAudience.classList.toggle('met', !!audience); }
+  if (reqOutcome)  { reqOutcome.textContent  = (outcome  ? '✓' : '✗') + ' Desired outcome'; reqOutcome.classList.toggle('met', !!outcome); }
+  const allMet = !!name && !!version && !!docType && !!audience && !!outcome;
   const btn = document.getElementById('projectContinueBtn');
   if (btn) btn.classList.toggle('btn-accent', allMet);
 }
