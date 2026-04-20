@@ -6633,3 +6633,57 @@ kbd {
 .proj-left-scroll .length-constraint-row {
   padding: 0 28px;
 }
+
+/* ── screen-project single-column layout classes ── */
+
+.proj-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.proj-title-row .fs-col-title { margin-bottom: 0; }
+
+.proj-meta-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.proj-field-wrap--name { flex: 1; min-width: 260px; }
+.proj-field-wrap--ver  { width: 160px; flex-shrink: 0; }
+
+.proj-goal-section-hdr {
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+  margin-bottom: 16px;
+}
+.proj-goal-section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.proj-goal-section-sub {
+  font-size: var(--fs-base);
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* tip card inside the centered card (replaces setup-col-tip which was two-column only) */
+.setup-card-tip {
+  margin-top: 20px;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.6;
+}
