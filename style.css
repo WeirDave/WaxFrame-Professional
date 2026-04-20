@@ -3042,6 +3042,7 @@ kbd {
   gap: 16px;
   padding: 14px 32px;
   background: var(--surface2);
+  border-bottom: 1px solid var(--border2);
   flex-shrink: 0;
 }
 .fs-header-brand {
@@ -3453,7 +3454,6 @@ kbd {
 /* Make sure col content sits above the image */
 .fs-col > *:not(.setup-section-img) { position: relative; z-index: 1; }
 .fs-body-single > *:not(.setup-section-img) { position: relative; z-index: 1; }
-.fs-body-single 
 .fs-body-single .fs-col-header {
   max-width: 680px;
   padding: 0 20px;
