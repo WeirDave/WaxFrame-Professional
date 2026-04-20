@@ -3830,7 +3830,7 @@ function finishAndExport() {
 function finishAndNew() {
   hideFinishModal();
   clearProject();
-  goToScreen('screen-bees');
+  goToScreen('screen-project');
 }
 
 /* =========================================
