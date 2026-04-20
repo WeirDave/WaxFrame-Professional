@@ -3199,30 +3199,49 @@ async function extractPDF(file) {
   let text = '';
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
+    const rawContent = await page.getTextContent();
+    // Collect all items with position data
+    const items = [];
+    for (const item of rawContent.items) {
+      if (!item.str || !item.str.trim()) continue;
+      items.push({
+        str: item.str,
+        x: item.transform ? item.transform[4] : 0,
+        y: item.transform ? item.transform[5] : 0,
+        w: item.width || 0
+      });
+    }
+    // Group items into lines by Y value (tolerance 3 units handles slight baseline shifts)
+    const lines = [];
+    for (const item of items) {
+      const line = lines.find(l => Math.abs(l.y - item.y) <= 3);
+      if (line) { line.items.push(item); }
+      else { lines.push({ y: item.y, items: [item] }); }
+    }
+    // Sort lines top-to-bottom (PDF Y coords are bottom-up so descending = top first)
+    lines.sort((a, b) => b.y - a.y);
+    // Sort items within each line left-to-right
+    for (const line of lines) line.items.sort((a, b) => a.x - b.x);
+    // Reconstruct text — insert newline or double newline based on Y gap between lines
     let pageText = '';
-    let lastX = null;
-    let lastY = null;
-    let lastWidth = 0;
-    for (const item of content.items) {
-      if (!item.str) continue;
-      const x = item.transform ? item.transform[4] : null;
-      const y = item.transform ? item.transform[5] : null;
-      if (lastY !== null && y !== null) {
-        const yDiff = lastY - y; // positive = moved down the page
-        if (yDiff > 20) {
-          pageText += '\n\n'; // large gap = section/paragraph break
-        } else if (yDiff > 2) {
-          pageText += '\n';   // small gap = new line
-        } else if (lastX !== null && x !== null) {
-          const gap = x - (lastX + lastWidth);
-          if (gap > 1) pageText += ' '; // same line, add space if needed
-        }
+    for (let li = 0; li < lines.length; li++) {
+      if (li > 0) {
+        const yGap = lines[li - 1].y - lines[li].y;
+        pageText += yGap > 18 ? '\n\n' : '\n';
       }
-      pageText += item.str;
-      lastY = y;
-      lastX = x;
-      lastWidth = item.width || 0;
+      let lineText = '';
+      let lastItemX = null;
+      let lastItemW = 0;
+      for (const item of lines[li].items) {
+        if (lastItemX !== null) {
+          const gap = item.x - (lastItemX + lastItemW);
+          if (gap > 3) lineText += ' ';
+        }
+        lineText += item.str;
+        lastItemX = item.x;
+        lastItemW = item.w;
+      }
+      pageText += lineText;
     }
     text += pageText + '\n';
   }
