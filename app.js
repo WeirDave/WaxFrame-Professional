@@ -10,7 +10,7 @@
 //    LS_SESSION (waxframe_v2_session) — round state + document, per session
 //
 //  Screen flow:
-//    screen-welcome → screen-setup → screen-project → screen-work
+//    screen-welcome → screen-bees → screen-builder → screen-project → screen-document → screen-work
 // ============================================================
 
 // ── PHASES ──
@@ -1483,21 +1483,25 @@ function goToScreen(id) {
     target.style.display = 'flex';
     requestAnimationFrame(() => target.classList.add('active'));
   }
+
   // Render screen-specific content immediately on navigation
-  if (id === 'screen-setup') {
-    // Only default to all active on very first visit ever
+  if (id === 'screen-bees') {
     if (activeAIs.length === 0 && !localStorage.getItem(LS_HIVE)) {
       activeAIs = [...aiList];
     }
     renderAISetupGrid();
+    setTimeout(updateBeesRequirements, 0);
+  }
+  if (id === 'screen-builder') {
     renderBuilderPicker();
-    setTimeout(updateSetupRequirements, 0);
+    setTimeout(updateBuilderRequirements, 0);
   }
   if (id === 'screen-project') {
+    setTimeout(updateProjectRequirements, 0);
+    updateGoalCounter();
+  }
+  if (id === 'screen-document') {
     switchDocTab(docTab);
-    // Init goal line numbers
-    const goalTa = document.getElementById('projectGoal');
-    if (goalTa) updateProjLineNums('projGoalNums', goalTa);
     // Restore file status if we had an uploaded file
     if (docTab === 'upload' && docText) {
       const fname = localStorage.getItem('waxframe_v2_filename') || 'uploaded file';
@@ -1510,6 +1514,7 @@ function goToScreen(id) {
       const clearRow = document.getElementById('fileClearRow');
       if (clearRow) clearRow.style.display = 'block';
     }
+    setTimeout(updateDocRequirements, 0);
   }
 }
 
@@ -1568,48 +1573,97 @@ function saveHive() {
 }
 
 // saveProject — project name/version/goal/docTab — cleared per project
-function updateSetupRequirements() {
-  const keyedCount = aiList.filter(ai => API_CONFIGS[ai.provider]?._key).length;
-  const hasBuilder = !!builder;
 
-  const reqKeys    = document.getElementById('req-keys');
-  const reqBuilder = document.getElementById('req-builder');
-
-  if (reqKeys)    { reqKeys.textContent    = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 API keys saved (${keyedCount} saved)`; reqKeys.classList.toggle('met', keyedCount >= 2); }
-  if (reqBuilder) { reqBuilder.textContent = (hasBuilder ? '✓' : '✗') + ' Builder selected';                                      reqBuilder.classList.toggle('met', hasBuilder); }
-
-  const allMet = keyedCount >= 2 && hasBuilder;
-  const btn = document.getElementById('setupContinueBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); }
+// ── Assembles the structured goal fields into a single prompt string ──
+function assembleProjectGoal() {
+  const docType  = (document.getElementById('goalDocType')?.value  || '').trim();
+  const audience = (document.getElementById('goalAudience')?.value || '').trim();
+  const outcome  = (document.getElementById('goalOutcome')?.value  || '').trim();
+  const scope    = (document.getElementById('goalScope')?.value    || '').trim();
+  const tone     = (document.getElementById('goalTone')?.value     || '').trim();
+  const notes    = (document.getElementById('goalNotes')?.value    || '').trim();
+  const parts = [];
+  if (docType)  parts.push(`Document type: ${docType}`);
+  if (audience) parts.push(`Target audience: ${audience}`);
+  if (outcome)  parts.push(`Desired outcome:\n${outcome}`);
+  if (scope)    parts.push(`Scope and constraints:\n${scope}`);
+  if (tone)     parts.push(`Tone and voice: ${tone}`);
+  if (notes)    parts.push(`Additional instructions:\n${notes}`);
+  return parts.join('\n\n');
 }
 
-function updateLaunchRequirements() {
+function updateBeesRequirements() {
+  const keyedCount = aiList.filter(ai => API_CONFIGS[ai.provider]?._key).length;
+  const reqKeys = document.getElementById('req-keys');
+  if (reqKeys) {
+    reqKeys.textContent = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 API keys saved (${keyedCount} saved)`;
+    reqKeys.classList.toggle('met', keyedCount >= 2);
+  }
+  const btn = document.getElementById('beesContinueBtn');
+  if (btn) btn.classList.toggle('btn-accent', keyedCount >= 2);
+}
+
+function updateBuilderRequirements() {
+  const hasBuilder = !!builder;
+  const builderName = builder ? (aiList.find(a => a.id === builder)?.name || builder) : '';
+  const reqBuilder = document.getElementById('req-builder');
+  if (reqBuilder) {
+    reqBuilder.textContent = (hasBuilder ? '✓' : '✗') + (hasBuilder ? ` Builder: ${builderName}` : ' Builder selected');
+    reqBuilder.classList.toggle('met', hasBuilder);
+  }
+  const btn = document.getElementById('builderContinueBtn');
+  if (btn) btn.classList.toggle('btn-accent', hasBuilder);
+}
+
+// Legacy alias used by renderAISetupGrid / renderBuilderPicker callbacks
+function updateSetupRequirements() {
+  updateBeesRequirements();
+  updateBuilderRequirements();
+}
+
+function updateProjectRequirements() {
   const name    = document.getElementById('projectName')?.value.trim()    || '';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
-  const goal    = document.getElementById('projectGoal')?.value.trim()    || '';
-  const pasteVal = document.getElementById('pasteText')?.value.trim()    || '';
-  const hasDoc  = docText || docTab === 'scratch' || (docTab === 'paste' && pasteVal);
-
+  const goal    = assembleProjectGoal();
   const reqName    = document.getElementById('req-name');
   const reqVersion = document.getElementById('req-version');
   const reqGoal    = document.getElementById('req-goal');
-  const reqDoc     = document.getElementById('req-doc');
+  if (reqName)    { reqName.textContent    = (name    ? '✓' : '✗') + ' Project name';              reqName.classList.toggle('met', !!name); }
+  if (reqVersion) { reqVersion.textContent = (version ? '✓' : '✗') + ' Version number';            reqVersion.classList.toggle('met', !!version); }
+  if (reqGoal)    { reqGoal.textContent    = (goal    ? '✓' : '✗') + ' At least one goal field';   reqGoal.classList.toggle('met', goal.length > 0); }
+  const allMet = !!name && !!version && goal.length > 0;
+  const btn = document.getElementById('projectContinueBtn');
+  if (btn) btn.classList.toggle('btn-accent', allMet);
+}
 
-  if (reqName)    { reqName.textContent    = (name    ? '✓' : '✗') + ' Project name';    reqName.classList.toggle('met', !!name); }
-  if (reqVersion) { reqVersion.textContent = (version ? '✓' : '✗') + ' Version number';  reqVersion.classList.toggle('met', !!version); }
-  if (reqGoal)    { reqGoal.textContent    = (goal    ? '✓' : '✗') + ' Project goal';    reqGoal.classList.toggle('met', !!goal); }
-  if (reqDoc)     { reqDoc.textContent     = (hasDoc  ? '✓' : '✗') + ' Document — upload a file, paste text, or choose Start from Scratch'; reqDoc.classList.toggle('met', !!hasDoc); }
-
-  const allMet = !!name && !!version && !!goal && !!hasDoc;
+function updateDocRequirements() {
+  const pasteVal = document.getElementById('pasteText')?.value.trim() || '';
+  const hasDoc  = !!(docText) || docTab === 'scratch' || (docTab === 'paste' && pasteVal);
+  const reqDoc = document.getElementById('req-doc');
+  if (reqDoc) {
+    reqDoc.textContent = (hasDoc ? '✓' : '✗') + ' Document — upload a file, paste text, or choose Start from Scratch';
+    reqDoc.classList.toggle('met', hasDoc);
+  }
   const btn = document.getElementById('launchBtn');
-  if (btn) { btn.classList.toggle('btn-accent', allMet); }
+  if (btn) btn.classList.toggle('btn-accent', hasDoc);
+}
+
+// Legacy alias — kept for any internal calls that haven't been updated
+function updateLaunchRequirements() {
+  updateProjectRequirements();
+  updateDocRequirements();
 }
 
 function saveProject() {
   const proj = {
     projectName:    document.getElementById('projectName')?.value    || '',
     projectVersion: document.getElementById('projectVersion')?.value || '',
-    projectGoal:    document.getElementById('projectGoal')?.value    || '',
+    goalDocType:    document.getElementById('goalDocType')?.value    || '',
+    goalAudience:   document.getElementById('goalAudience')?.value   || '',
+    goalOutcome:    document.getElementById('goalOutcome')?.value    || '',
+    goalScope:      document.getElementById('goalScope')?.value      || '',
+    goalTone:       document.getElementById('goalTone')?.value       || '',
+    goalNotes:      document.getElementById('goalNotes')?.value      || '',
     exportMask:     document.getElementById('exportMask')?.value     || '',
     lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
     lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
@@ -1664,10 +1718,12 @@ function clearProject() {
   idbClear().catch(() => {});
   document.getElementById('projectName').value    = '';
   document.getElementById('projectVersion').value = '';
-  document.getElementById('projectGoal').value    = '';
+  // Clear all structured goal fields
+  ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
   const llEl = document.getElementById('lengthLimit'); if (llEl) llEl.value = '';
   const luEl = document.getElementById('lengthUnit');  if (luEl) luEl.value = 'characters';
-  updateProjLineNums('projGoalNums', document.getElementById('projectGoal'));
   updateGoalCounter();
   updateLengthConstraintHint();
   updateMaskPreview();
@@ -1782,12 +1838,24 @@ function loadSettings() {
       const p = JSON.parse(projRaw);
       if (p.projectName)    { const el = document.getElementById('projectName');    if (el) el.value = p.projectName; }
       if (p.projectVersion) { const el = document.getElementById('projectVersion'); if (el) el.value = p.projectVersion; }
-      if (p.projectGoal)    { const el = document.getElementById('projectGoal');    if (el) { el.value = p.projectGoal; updateGoalCounter(); } }
+      // Load structured goal fields
+      if (p.goalDocType)  { const el = document.getElementById('goalDocType');  if (el) el.value = p.goalDocType; }
+      if (p.goalAudience) { const el = document.getElementById('goalAudience'); if (el) el.value = p.goalAudience; }
+      if (p.goalOutcome)  { const el = document.getElementById('goalOutcome');  if (el) el.value = p.goalOutcome; }
+      if (p.goalScope)    { const el = document.getElementById('goalScope');    if (el) el.value = p.goalScope; }
+      if (p.goalTone)     { const el = document.getElementById('goalTone');     if (el) el.value = p.goalTone; }
+      if (p.goalNotes)    { const el = document.getElementById('goalNotes');    if (el) el.value = p.goalNotes; }
+      // Legacy migration: if old single projectGoal field exists, move to goalNotes
+      if (p.projectGoal && !p.goalDocType && !p.goalAudience && !p.goalOutcome && !p.goalScope && !p.goalTone && !p.goalNotes) {
+        const el = document.getElementById('goalNotes');
+        if (el) el.value = p.projectGoal;
+      }
       if (p.exportMask)     { const el = document.getElementById('exportMask');     if (el) { el.value = p.exportMask; updateMaskPreview(); } }
       if (p.lengthLimit)    { const el = document.getElementById('lengthLimit');    if (el) el.value = p.lengthLimit; }
       if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
       if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
+      updateGoalCounter();
     }
 
     return true;
@@ -2949,42 +3017,47 @@ let _settingsReturnToWork = false;
 
 function openSettings() {
   _settingsReturnToWork = true;
-  const btn = document.getElementById('setupContinueBtn');
-  if (btn) {
-    btn.innerHTML = '← Back to Work Screen';
-    btn.querySelector('img') && (btn.innerHTML = '← Back to Work Screen');
-  }
-  goToScreen('screen-setup');
+  goToScreen('screen-bees');
   renderAISetupGrid();
-  renderBuilderPicker();
 }
 
-function validateAndContinue() {
-  const keyed = aiList.filter(ai => {
-    const cfg = API_CONFIGS[ai.provider];
-    return cfg?._key;
-  });
+function continueFromBees() {
+  const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
   if (keyed.length < 2) {
-    toast('⚠️ You need API keys for at least 2 AIs to collaborate');
+    toast('⚠️ You need API keys for at least 2 AIs to continue');
     return;
   }
-  if (!builder) { toast('⚠️ Choose a Builder AI on the right'); return; }
   activeAIs = keyed;
   saveHive();
+  goToScreen('screen-builder');
+}
 
+function continueFromBuilder() {
+  if (!builder) { toast('⚠️ Choose a Builder AI before continuing'); return; }
+  saveHive();
   if (_settingsReturnToWork) {
     _settingsReturnToWork = false;
-    // Reset button text
-    const btn = document.getElementById('setupContinueBtn');
-    if (btn) btn.innerHTML = '<img src="images/WaxFrame_Project_Bee_v2.png" class="btn-bee-img"> Continue to Project Setup →';
     renderBeeStatusGrid();
     goToScreen('screen-work');
     showReExtractBanner();
   } else {
     goToScreen('screen-project');
-    updateLaunchRequirements();
   }
 }
+
+function continueFromProject() {
+  const name    = document.getElementById('projectName')?.value.trim();
+  const version = document.getElementById('projectVersion')?.value.trim();
+  const goal    = assembleProjectGoal();
+  if (!name)        { toast('⚠️ Enter a project name'); return; }
+  if (!version)     { toast('⚠️ Enter a version number'); return; }
+  if (!goal)        { toast('⚠️ Fill in at least one goal field'); return; }
+  saveProject();
+  goToScreen('screen-document');
+}
+
+// Legacy alias — kept for any nav-menu calls
+function validateAndContinue() { continueFromBees(); }
 
 // ── SCREEN 3: PROJECT SETUP ──
 function switchDocTab(tab) {
@@ -3409,10 +3482,10 @@ async function reExtractWithVision() {
 
 function startSession() {
   const name = document.getElementById('projectName').value.trim();
-  const goal = document.getElementById('projectGoal').value.trim();
+  const goal = assembleProjectGoal();
 
   if (!name) { toast('⚠️ Enter a project name'); return; }
-  if (!goal) { toast('⚠️ Enter a project goal'); return; }
+  if (!goal) { toast('⚠️ Fill in at least one goal field'); return; }
 
   if (docTab === 'paste') {
     docText = document.getElementById('pasteText').value.trim();
@@ -3456,7 +3529,7 @@ function startSession() {
 function initWorkScreen(isNewSession = false) {
   const name    = document.getElementById('projectName')?.value.trim()    || 'Project';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
-  const goal    = document.getElementById('projectGoal')?.value.trim()    || '';
+  const goal    = assembleProjectGoal();
 
   // Only clear transient panels on a brand new session — not on page refresh
   if (isNewSession) {
@@ -3545,64 +3618,41 @@ function truncateGoalForRefine(goal) {
 }
 
 function updateGoalCounter() {
-  const ta = document.getElementById('projectGoal');
-  const el = document.getElementById('goalCounter');
-  if (!ta || !el) return;
-  const len   = ta.value.length;
-  const words = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
-  const lines = ta.value ? ta.value.split('\n').length : 0;
+  const goal  = assembleProjectGoal();
+  const el    = document.getElementById('goalCounter');
+  const len   = goal.length;
+  const words = goal.trim() ? goal.trim().split(/\s+/).length : 0;
   const truncated = len > 300;
-  el.innerHTML =
-    `<span class="goal-stat">${lines} <span class="goal-stat-label">lines</span></span>` +
-    `<span class="goal-stat-sep">·</span>` +
-    `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
-    `<span class="goal-stat-sep">·</span>` +
-    `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>`;
 
-  // Update sidebar refine preview panel (large screen)
+  if (el) {
+    el.innerHTML =
+      `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
+      `<span class="goal-stat-sep">·</span>` +
+      `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>` +
+      (truncated ? `<span class="goal-stat-sep">·</span><span class="goal-stat goal-stat-warn">first 300 chars sent to refine rounds</span>` : '');
+  }
+
+  // Update refine preview panel
   const previewWrap  = document.getElementById('goalRefinePreview');
   const previewText  = document.getElementById('goalRefinePreviewText');
   const previewCount = document.getElementById('goalRefinePreviewCount');
   const previewSub   = document.getElementById('goalRefinePreviewSub');
   const previewEmpty = document.getElementById('goalRefinePreviewEmpty');
 
-  // Update laptop popover content
-  const popoverText  = document.getElementById('refinePopoverText');
-  const popoverCount = document.getElementById('refinePopoverCount');
-  const popoverSub   = document.getElementById('refinePopoverSub');
-  const popoverBtn   = document.getElementById('refinePreviewBtn');
-  const popover      = document.getElementById('refinePopover');
-
   if (truncated) {
-    const refined = truncateGoalForRefine(ta.value);
-    // Sidebar
+    const refined = truncateGoalForRefine(goal);
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
     if (previewCount) previewCount.textContent = `${refined.length} chars`;
     if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
-    // Popover
-    if (popoverText)  popoverText.textContent = refined;
-    if (popoverCount) popoverCount.textContent = `${refined.length} chars`;
-    if (popoverSub)   popoverSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
-    if (popoverBtn)   popoverBtn.style.removeProperty('display');
   } else {
-    // Sidebar
     if (previewText)  { previewText.textContent = ''; previewText.style.display = 'none'; }
     if (previewCount) previewCount.textContent = '';
     if (previewSub)   previewSub.textContent = '';
     if (previewEmpty) previewEmpty.style.display = 'block';
     if (previewWrap)  previewWrap.classList.remove('has-content');
-    // Popover — hide button and close popover if goal shrinks below threshold
-    if (popoverBtn)   popoverBtn.style.display = 'none';
-    if (popover)      popover.style.display = 'none';
   }
-}
-
-function toggleRefinePopover() {
-  const popover = document.getElementById('refinePopover');
-  if (!popover) return;
-  popover.style.display = popover.style.display === 'none' ? 'block' : 'none';
 }
 
 function updateProjLineNums(numsId, ta) {
@@ -3672,38 +3722,29 @@ function renderWorkPhaseBar() {
 function showProjectGoalModal() {
   const modal = document.getElementById('projectGoalModal');
   if (!modal) return;
-  const goal = document.getElementById('projectGoal')?.value || '';
-  const name = document.getElementById('projectName')?.value.trim() || '';
+  const goal    = assembleProjectGoal();
+  const name    = document.getElementById('projectName')?.value.trim()    || '';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
-  const metaEl = document.getElementById('projectGoalModalMeta');
-  const nameEl = document.getElementById('projectGoalModalName');
-  const editTa = document.getElementById('projectGoalModalEdit');
+  const metaEl  = document.getElementById('projectGoalModalMeta');
+  const nameEl  = document.getElementById('projectGoalModalName');
+  const editTa  = document.getElementById('projectGoalModalEdit');
   if (nameEl) nameEl.textContent = [name, version].filter(Boolean).join(' · ');
   if (metaEl) {
     metaEl.textContent = goal.length > 300
       ? `${goal.length} characters — exceeds 300-character Refine limit`
       : `${goal.length} characters`;
   }
-  if (editTa) editTa.value = goal;
+  if (editTa) { editTa.value = goal; editTa.readOnly = true; }
   updateProjectGoalModalPreview();
   modal.classList.add('active');
-  setTimeout(() => {
-    if (editTa) {
-      editTa.focus();
-      editTa.setSelectionRange(0, 0);
-      editTa.scrollTop = 0;
-    }
-  }, 100);
 }
 
 function updateProjectGoalModalPreview() {
-  const editTa = document.getElementById('projectGoalModalEdit');
+  const goal = assembleProjectGoal();
   const refineWrap = document.getElementById('projectGoalModalRefineWrap');
   const refineText = document.getElementById('projectGoalModalRefineText');
-  const metaEl = document.getElementById('projectGoalModalMeta');
-  if (!editTa) return;
-  const goal = editTa.value;
-  const truncated = goal.length > 300;
+  const metaEl     = document.getElementById('projectGoalModalMeta');
+  const truncated  = goal.length > 300;
   if (metaEl) {
     metaEl.textContent = truncated
       ? `${goal.length} characters — exceeds 300-character Refine limit`
@@ -3719,17 +3760,15 @@ function updateProjectGoalModalPreview() {
   }
 }
 
-function saveProjectGoalFromModal() {
-  const editTa = document.getElementById('projectGoalModalEdit');
-  const goalTa = document.getElementById('projectGoal');
-  if (editTa && goalTa) {
-    goalTa.value = editTa.value;
-    saveProject();
-    updateGoalCounter();
-    updateProjLineNums('projGoalNums', goalTa);
-  }
+function editGoalFromModal() {
   document.getElementById('projectGoalModal')?.classList.remove('active');
-  toast('✅ Project goal updated');
+  goToScreen('screen-project');
+}
+
+// saveProjectGoalFromModal — no longer used (goal editing happens on screen-project)
+// kept as a stub to avoid any stale HTML onclick references throwing errors
+function saveProjectGoalFromModal() {
+  document.getElementById('projectGoalModal')?.classList.remove('active');
 }
 
 function showFinishModal() {
@@ -3785,7 +3824,7 @@ function finishAndExport() {
 function finishAndNew() {
   hideFinishModal();
   clearProject();
-  goToScreen('screen-project');
+  goToScreen('screen-bees');
 }
 
 /* =========================================
@@ -4195,7 +4234,7 @@ function getPrompt(key, fallback) {
 
 function buildPromptForAI(ai, reviewerResponses) {
   const doc      = document.getElementById('workDocument')?.value.trim() || '';
-  const goal     = document.getElementById('projectGoal')?.value.trim()  || '';
+  const goal     = assembleProjectGoal();
   const name     = document.getElementById('projectName')?.value.trim()  || '';
   const notes    = document.getElementById('workNotes')?.value.trim()    || '';
   const sep      = '─'.repeat(60);
@@ -4347,7 +4386,7 @@ async function runBuilderOnly() {
   // instead build the builder prompt manually with empty reviews so notes drive it
   const sep = '─'.repeat(60);
   const eq  = '═'.repeat(60);
-  const goal  = document.getElementById('projectGoal')?.value.trim() || '';
+  const goal  = assembleProjectGoal();
   const name  = document.getElementById('projectName')?.value.trim() || '';
   const numberedDoc = docText.split('\n').map((line, i) => `${String(i+1).padStart(4,' ')}  ${line}`).join('\n');
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
@@ -6140,15 +6179,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     _projClockRender();
     projectClockStart();
   } else if (projectName) {
-    // Named project in progress — resume at project setup
-    goToScreen('screen-project');
+    // Named project in progress — resume at document screen
+    goToScreen('screen-document');
   } else {
     // Fresh start — always show welcome screen
     goToScreen('screen-welcome');
   }
 
-  // Render API setup if starting on that screen
-  if (document.getElementById('screen-setup')?.classList.contains('active')) {
+  // Render API setup if starting on bees screen
+  if (document.getElementById('screen-bees')?.classList.contains('active')) {
     if (activeAIs.length === 0) activeAIs = [...aiList];
     renderAISetupGrid();
   }
