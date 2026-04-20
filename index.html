@@ -87,7 +87,7 @@
           <img src="images/WaxFrame_Worker_Bee_v2.png" class="setup-intro-bee" alt="">
           <div class="setup-intro-body">
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Your Worker Bees</h2>
+              <h2 class="fs-col-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
               <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
               <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
             </div>
@@ -148,7 +148,7 @@
           <img src="images/WaxFrame_Builder_v3.png" class="setup-intro-bee" alt="">
           <div class="setup-intro-body">
             <div class="fs-col-header">
-              <h2 class="fs-col-title">Choose Your Builder</h2>
+              <h2 class="fs-col-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
               <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
               <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
             </div>
@@ -964,7 +964,61 @@
   </div>
 </div>
 
-<!-- Info modals for working document and console -->
+<!-- WORKER BEES INFO -->
+<div class="finish-modal-overlay" id="infoBeesModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Your Worker Bees</h2>
+    <div class="goal-info-body">
+      <p>Your Worker Bees are the AI assistants that act as <strong>reviewers</strong> each round. They each read your document independently and submit a numbered list of specific suggestions for improvement. The Builder then reads all of those suggestions and rewrites the document.</p>
+      <div class="goal-info-row">
+        <span class="info-label">How many do you need?</span>
+        <span class="goal-info-desc">At least two AIs with saved API keys. WaxFrame won't let you proceed until this requirement is met. The more reviewers you have, the more perspectives the Builder has to work with — but even two gives strong results.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">API keys</span>
+        <span class="goal-info-desc">Each AI requires its own API key from its provider. WaxFrame connects directly to each AI on your behalf using these keys. You are billed by each provider for the tokens you use — WaxFrame itself does not charge per use.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">AIs without keys</span>
+        <span class="goal-info-desc">AIs without a saved key are displayed but skipped automatically every round. They stay in your hive and are ready to use as soon as you add a key.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Toggling AIs per session</span>
+        <span class="goal-info-desc">On the Work screen you can toggle individual AIs on or off for the current session using the Edit Hive button — without losing their saved keys. Useful if you want a faster round or are testing specific reviewers.</span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoBeesModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- BUILDER INFO -->
+<div class="finish-modal-overlay" id="infoBuilderModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">The Builder</h2>
+    <div class="goal-info-body">
+      <p>The Builder is the AI that actually <strong>rewrites your document</strong> each round. While your reviewers each read the document and give numbered suggestions, the Builder reads all of those suggestions plus the full document and produces the updated version.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Why it uses more tokens</span>
+        <span class="goal-info-desc">Every round, the Builder processes the entire document plus every reviewer's suggestions in a single request. This is significantly more tokens than any individual reviewer uses. A paid API subscription with sufficient capacity is required — free-tier accounts will fail mid-round.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Which AI should I choose?</span>
+        <span class="goal-info-desc">Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek is the most cost-effective option by a wide margin. If a round fails with a missing output structure error, switch to ChatGPT or Gemini — they tend to be the most consistent at following strict formatting instructions under heavy load.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Can I change it later?</span>
+        <span class="goal-info-desc">Yes — you can change your Builder at any time from the Work screen using the Change Builder button. You are not locked in.</span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> See <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a> for a full breakdown of token costs across providers and how to keep your usage costs low.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoBuilderModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- WORKER BEES INFO (OLD) -->
 <div class="finish-modal-overlay" id="infoDocModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
