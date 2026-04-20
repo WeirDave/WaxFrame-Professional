@@ -1738,6 +1738,7 @@ function clearProject() {
   if (workDoc) workDoc.value = '';
   const workNotes = document.getElementById('workNotes');
   if (workNotes) workNotes.value = '';
+  updateNotesBtnPriority();
   const pasteText = document.getElementById('pasteText');
   if (pasteText) pasteText.value = '';
   updateProjLineNums('projPasteNums', pasteText);
@@ -1938,7 +1939,7 @@ async function loadSession() {
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
-      if (notesEl) notesEl.value = s.notes;
+      if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority(); }
     }
     return true;
   } catch(e) {
@@ -5809,6 +5810,27 @@ function hideBuilderOverlay() {
   overlay.setAttribute('aria-hidden', 'true');
 }
 
+function updateNotesBtnPriority() {
+  const notes = document.getElementById('workNotes');
+  const smokeBtn = document.getElementById('runRoundBtn');
+  const builderBtn = document.getElementById('builderOnlyBtn');
+  if (!notes || !smokeBtn || !builderBtn) return;
+  const hasNotes = notes.value.trim().length > 0;
+  if (hasNotes) {
+    // Notes present — Send to Builder is the suggested action
+    smokeBtn.classList.remove('footer-btn-smoke');
+    smokeBtn.classList.add('footer-btn');
+    builderBtn.classList.remove('footer-btn');
+    builderBtn.classList.add('footer-btn-smoke');
+  } else {
+    // No notes — Smoke the Hive is the suggested action
+    smokeBtn.classList.remove('footer-btn');
+    smokeBtn.classList.add('footer-btn-smoke');
+    builderBtn.classList.remove('footer-btn-smoke');
+    builderBtn.classList.add('footer-btn');
+  }
+}
+
 function openNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.add('active');
@@ -5818,6 +5840,7 @@ function openNotesModal() {
 function closeNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.remove('active');
+  updateNotesBtnPriority();
 }
 
 function openRoundHistoryModal() {
