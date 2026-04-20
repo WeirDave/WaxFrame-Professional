@@ -6569,6 +6569,9 @@ kbd {
   .proj-left-scroll .project-fields { padding: 0 20px; }
   .proj-left-scroll .length-constraint-row { padding: 0 20px; }
   .proj-goal-intro { padding: 16px 20px 0; }
+  #panel-paste::after,
+  #panel-upload::after,
+  #panel-scratch::after { background-size: 150px; }
 }
 
 /* ── proj-left-top-row: title + Clear Project button side by side ── */
