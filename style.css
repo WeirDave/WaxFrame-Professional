@@ -3255,7 +3255,7 @@ kbd {
   background-image: url('images/Waxframe_logo_v19.png');
   background-repeat: no-repeat;
   background-position: center;
-  background-size: contain;
+  background-size: 50%;
   opacity: 0;
   pointer-events: none;
   animation: watermarkPulse 16s ease-in-out infinite;
