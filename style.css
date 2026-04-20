@@ -3258,12 +3258,13 @@ kbd {
   background-size: contain;
   opacity: 0;
   pointer-events: none;
-  animation: watermarkPulse 6s ease-in-out infinite;
+  animation: watermarkPulse 10s ease-in-out infinite;
 }
 @keyframes watermarkPulse {
   0%   { opacity: 0; }
-  20%  { opacity: 0.9; }
-  70%  { opacity: 0.9; }
+  10%  { opacity: 0.9; }
+  90%  { opacity: 0.9; }
+  95%  { opacity: 0; }
   100% { opacity: 0; }
 }
 
