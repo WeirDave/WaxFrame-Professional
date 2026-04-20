@@ -3242,7 +3242,28 @@ kbd {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
 }
-/* Watermark re-enabled — setup-single-card has position:relative as anchor */
+/* Pulsing logo watermark in dead space right of content — anchors to active panel */
+#panel-paste::after,
+#panel-upload::after,
+#panel-scratch::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: calc(44px + 80ch + 8px + 12px + 32px + 12px);
+  right: 0;
+  background-image: url('images/Waxframe_logo_v19.png');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  opacity: 0;
+  pointer-events: none;
+  animation: watermarkPulse 6s ease-in-out infinite;
+}
+@keyframes watermarkPulse {
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 0.18; }
+}
 
 /* Upload panel: drop zone matches paste panel width */
 #panel-upload .drop-zone {
@@ -3257,12 +3278,14 @@ kbd {
   width: calc(44px + 80ch + 8px + 12px + 32px);
   max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
-/* Scratch panel: notebook matches paste panel width, fills column height */
-/* Scratch panel: notebook fills full card width */
+/* Scratch panel: notebook matches paste panel width, fills panel height */
 #panel-scratch .proj-notebook-scratch {
-  width: 100%;
-  max-width: 100%;
-  min-height: 200px;
+  flex: 1;
+  min-height: 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  width: calc(44px + 80ch + 8px + 12px + 32px);
+  max-width: calc(44px + 80ch + 8px + 12px + 32px);
 }
 
 /* ── PROJECT NOTEBOOK — scratch panel only ── */
