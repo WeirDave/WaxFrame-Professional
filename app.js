@@ -3114,9 +3114,17 @@ function clearUploadedFile() {
 
 async function processFile(file) {
   // Guard: if a session is already running, warn before overwriting the live document
-  if (history.length > 0 || docText) {
+  // Skip on Setup 4 — user is still in setup, not an active session
+  const onSetupScreen = document.getElementById('screen-document')?.classList.contains('active');
+  if (!onSetupScreen && (history.length > 0 || docText)) {
     const proceed = confirm(
-      `⚠️ You have an active session with a working document.\n\nLoading a new file will replace your current document. This cannot be undone.\n\nIf you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.\n\nProceed and replace the document?`
+      `⚠️ You have an active session with a working document.
+
+Loading a new file will replace your current document. This cannot be undone.
+
+If you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.
+
+Proceed and replace the document?`
     );
     if (!proceed) return;
   }
