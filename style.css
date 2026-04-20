@@ -3261,8 +3261,10 @@ kbd {
   animation: watermarkPulse 6s ease-in-out infinite;
 }
 @keyframes watermarkPulse {
-  0%, 100% { opacity: 0; }
-  50%       { opacity: 0.18; }
+  0%   { opacity: 0; }
+  20%  { opacity: 0.18; }
+  70%  { opacity: 0.18; }
+  100% { opacity: 0; }
 }
 
 /* Upload panel: drop zone matches paste panel width */
