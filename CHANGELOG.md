@@ -2,6 +2,34 @@
 
 ---
 
+## v3.17.1 Pro — Build `20260419-011`
+**Released:** April 19, 2026
+
+### Bug Fixes
+
+**Notes panel — Send to Builder / Smoke the Hive button flip**
+When the Notes textarea has content, Send to Builder is now highlighted as the primary action and Smoke the Hive goes to secondary. Clears back to default when Notes is empty. Wired into `oninput`, Clear button, `closeNotesModal()`, programmatic clear on project reset, and session restore so the state is always correct.
+
+**PDF extraction — rewritten to sort items by position**
+Previous extraction iterated through the PDF content stream in order, which is not guaranteed to be top-to-bottom. Items are now collected per page, grouped into lines by Y position (±3 unit tolerance), sorted top-to-bottom and left-to-right within each line, then reconstructed with proper newlines and paragraph breaks. Fixes résumés and structured documents extracting as a wall of jammed text.
+
+**Upload file warning — suppressed on Setup 4 screen**
+`processFile()` was triggering the "active session" overwrite warning even when the user was on Setup 4 before launching. Warning now only fires when `screen-document` is not the active screen (i.e. during a live work session).
+
+**Start New Project — navigates to Setup 3 (Your Project)**
+`finishAndNew()` was sending the user to Setup 1 Worker Bees after clearing a project. Since API keys persist, it now drops straight to Setup 3 Your Project.
+
+**Document Playbooks — Additional Instructions label spacing**
+`dp-goal-label` min-width increased from 160px to 200px so the longest label (ADDITIONAL INSTRUCTIONS) no longer runs into the value text.
+
+**About modal — Testing credit added**
+Candy added as Tester in the About modal.
+
+### Files Changed
+`index.html` · `app.js` · `style.css`
+
+---
+
 ## v3.17.0 Pro — Build `20260419-010`
 **Released:** April 19, 2026
 
