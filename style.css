@@ -3262,8 +3262,8 @@ kbd {
 }
 @keyframes watermarkPulse {
   0%   { opacity: 0; }
-  20%  { opacity: 0.18; }
-  70%  { opacity: 0.18; }
+  20%  { opacity: 0.9; }
+  70%  { opacity: 0.9; }
   100% { opacity: 0; }
 }
 
