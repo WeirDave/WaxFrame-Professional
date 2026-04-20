@@ -3258,15 +3258,15 @@ kbd {
   background-size: contain;
   opacity: 0;
   pointer-events: none;
-  animation: watermarkPulse 18s ease-in-out infinite;
+  animation: watermarkPulse 16s ease-in-out infinite;
 }
 @keyframes watermarkPulse {
   0%     { opacity: 0; }   /* start dark */
-  11.11% { opacity: 0; }   /* 2s dark holds */
-  44.44% { opacity: 0.9; } /* 6s fade in complete */
-  55.56% { opacity: 0.9; } /* 2s full hold */
-  88.89% { opacity: 0; }   /* 6s fade out complete */
-  100%   { opacity: 0; }   /* 2s dark before restart */
+  6.25%  { opacity: 0; }   /* 1s dark holds */
+  43.75% { opacity: 0.9; } /* 6s fade in complete */
+  56.25% { opacity: 0.9; } /* 2s full hold */
+  93.75% { opacity: 0; }   /* 6s fade out complete */
+  100%   { opacity: 0; }   /* 1s dark before restart */
 }
 
 /* Upload panel: drop zone matches paste panel width */
