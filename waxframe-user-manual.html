@@ -377,7 +377,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Project Name field</div>
-      <p>The first field at the top of the left panel has the placeholder text <em>Project name — e.g. Q3 Executive Summary</em>. Type a name for your project here. This name is used in the export filename and appears in the round history. It has no effect on how the AIs work — it is purely for your own organisation. Examples: <em>Q3 Board Report</em>, <em>Marketing Email — Product Launch</em>, <em>Cover Letter — Senior Engineer Role</em>.</p>
+      <p>At the top of the screen, below the intro, is the project name field. Type a name for your project here. This name is used in the export filename and appears in the round history. It has no effect on how the AIs work — it is purely for your own organisation. Examples: <em>Q3 Board Report</em>, <em>Marketing Email — Product Launch</em>, <em>Cover Letter — Senior Engineer Role</em>.</p>
     </div>
 
     <div class="wh-block">
@@ -387,7 +387,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Length Constraint (optional)</div>
-      <p>Below the name and version fields is a section headed <strong>Length Constraint (optional)</strong>. This lets you set a maximum length for your finished document. Use it when your document must fit within a specific limit — for example, a 500-word blog post, a 200-character social media caption, or a one-page résumé.</p>
+      <p>Below the six goal fields, near the bottom of the screen, is a section headed <strong>Length Constraint (optional)</strong>. This lets you set a maximum length for your finished document. Use it when your document must fit within a specific limit — for example, a 500-word blog post, a 200-character social media caption, or a one-page résumé.</p>
       <p>The section contains two inputs:</p>
       <ul>
         <li>A number field with the placeholder <em>e.g. 200</em> — enter your maximum here.</li>
@@ -398,7 +398,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Project Goal — six structured fields</div>
-      <p>The right column of the Project screen contains six labelled fields. Together they are assembled into a structured brief that every AI reads before each round. You do not need to fill all six — even two or three give the hive a strong foundation. Here is what each field is for:</p>
+      <p>Below the project name and version is the <strong>Project Goal</strong> section — six labelled fields assembled into a structured brief that every AI reads before each round. You do not need to fill all six — even two or three give the hive a strong foundation. Here is what each field is for:</p>
       <table class="wh-table">
         <thead><tr><th>Field</th><th>What to write</th></tr></thead>
         <tbody>
@@ -425,7 +425,7 @@
       </div>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Do not include a target length in your goal. Use the <strong>Length Constraint</strong> field above the goal instead — WaxFrame sends it to your AIs automatically in a standardised format every round. Putting length in the goal is redundant and can confuse the instruction.</p>
+        <p>Do not include a target length in your goal. Use the <strong>Length Constraint</strong> field below the goal instead — WaxFrame sends it to your AIs automatically in a standardised format every round. Putting length in the goal is redundant and can confuse the instruction.</p>
       </div>
     </div>
 
@@ -449,38 +449,37 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The Refine Preview button — see exactly what your AIs will receive</div>
-      <p>Next to the character counter is a button labelled <strong>▸ Refine Preview</strong>. Clicking it opens a preview showing the exact text that will be sent to your AIs whenever a document exists, updated live as you type.</p>
+      <div class="wh-block-title">The Refine Preview panel</div>
+      <p>Below the goal counter, a <strong>Refine Preview</strong> panel appears automatically when your assembled goal exceeds 300 characters. It shows the exact text that will be sent to your AIs whenever a document exists, updated live as you type.</p>
       <ul>
-        <li>If your goal is <strong>under 300 characters</strong>, the preview shows your full goal — the entire thing will be sent every time a document exists.</li>
-        <li>If your goal is <strong>over 300 characters</strong>, the preview shows the trimmed version — cut to the nearest complete sentence boundary at or around 300 characters. This is exactly what your AIs will receive on every run once a document exists.</li>
+        <li>If your assembled goal is <strong>under 300 characters</strong>, the panel shows a message confirming the full text will be sent every time a document exists.</li>
+        <li>If your assembled goal is <strong>over 300 characters</strong>, the panel shows the trimmed version — cut to the nearest complete sentence boundary at or around 300 characters. This is exactly what your AIs will receive on every run once a document exists.</li>
       </ul>
-      <p>The Refine Preview button is always available whenever your goal field contains text. On screens with limited height, the side-by-side preview panel collapses and the button is the only way to access the preview — it is always there.</p>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">What to put in your first 300 characters — and why it matters</div>
-      <p>Think of the first 300 characters of your goal — one to three sentences — as the anchor that keeps every AI pointed at the right target across every run. Once your document exists, this is the only part of your goal your AIs see. Everything after the cutoff is still fully used when generating from scratch, but it does not reach the AIs again once the document is in place.</p>
-      <p>The goal of this anchor is not to repeat your entire brief — it is to prevent drift. Without it, by round five your AIs are reacting purely to what is in the document in front of them with no memory of what it was supposed to be. A clear anchor keeps them aligned to your intent even as the document evolves.</p>
-      <p>Here is what to prioritise in those first 300 characters, in order of importance:</p>
+      <div class="wh-block-title">What gets included in the 300-character trimmed brief</div>
+      <p>When WaxFrame assembles your goal into a brief, the fields appear in this order: Document type, Target audience, Desired outcome, Scope &amp; constraints, Tone &amp; voice, Additional instructions. The trimmed version sent during refine rounds cuts at approximately 300 characters, always at a sentence boundary.</p>
+      <p>This means <strong>Document type and Target audience are always included</strong> — they appear first and are short enough to fit within the cut. Desired outcome may or may not be included depending on how much you have written. Everything after that may be trimmed.</p>
+      <p>Think of the trimmed brief as the anchor that keeps every AI pointed at the right target across every run. Its goal is not to repeat your entire brief — it is to prevent drift. Without it, by round five your AIs are reacting purely to what is in the document with no memory of what it was supposed to be.</p>
       <div class="goal-info-row">
-        <span class="info-label">What the document is and who it is for</span>
-        <span class="goal-info-desc">This is the single most valuable thing to anchor. <em>"This is a technical wireless network upgrade proposal for an IT Director and VP of Facilities."</em> That one sentence — under 100 characters — tells every AI the document type, the stakes, and the audience on every run. Without it, the tone and depth will drift.</span>
+        <span class="info-label">Document type</span>
+        <span class="goal-info-desc">Always first, always included. Be specific — <em>"technical comparison"</em> or <em>"cover letter"</em> not just <em>"document"</em>. This one field sets the format, tone conventions, and depth every AI will aim for on every single round.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">The hardest boundary or the most important constraint</span>
-        <span class="goal-info-desc">If there is one thing the document must never become, or one constraint that absolutely cannot slip — include it here. <em>"Tone must be technical and direct, not conversational."</em> or <em>"Do not include pricing under any circumstances."</em> Repeated violations are almost always caused by this boundary not making it into the trimmed context.</span>
+        <span class="info-label">Target audience</span>
+        <span class="goal-info-desc">Always second, usually included. This is what prevents tone drift. <em>"IT Director and VP of Facilities"</em> keeps the language calibrated round after round. Without it, the writing style gradually wanders.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">What to leave out of the first 300 characters</span>
-        <span class="goal-info-desc">Specific sections, structure, formatting instructions, detailed scope definitions — these matter enormously for the initial scratch generation but they are low-value repeated context once the document is built. Put them later in your goal where they will be read once and then let go, not repeated in every run consuming tokens that could go toward the document.</span>
+        <span class="info-label">What to put in Additional instructions</span>
+        <span class="goal-info-desc">Hard constraints that must not slip — things like <em>"do not add new sections"</em> or <em>"tone must be direct, not salesy"</em>. These matter most when a document exists. If a constraint keeps getting violated, move it to the top of Additional instructions so it has the best chance of making it into the trimmed brief.</span>
       </div>
-      <p>Use the <strong>▸ Refine Preview</strong> to read your trimmed context out loud. Ask yourself: if an AI saw only this text and then the current document, would it know what the document is supposed to be, who it is for, and what it absolutely cannot do? If yes, you are in good shape. If not, rewrite the opening until the answer is yes.</p>
+      <p>Use the Refine Preview panel to check what will actually be sent. Ask yourself: if an AI saw only this text and then the current document, would it know what the document is supposed to be, who it is for, and what it absolutely cannot do? If yes, you are in good shape.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The ⓘ button — About Your Project Goal</div>
-      <p>Next to the <strong>Your Project</strong> heading at the top of the left panel is a small ⓘ info button. Clicking it opens an overlay that summarises how the goal is sent in full when generating from scratch versus trimmed when a document exists, explains the Refine Preview, and reminds you of the 300-character threshold. It is a quick reference to everything in this section of the manual.</p>
+      <p>Next to the <strong>Project Goal</strong> section heading is a small ⓘ info button. Clicking it opens an overlay that summarises how the goal is sent in full when generating from scratch versus trimmed when a document exists, explains the Refine Preview panel, and reminds you of the 300-character threshold. It is a quick reference to everything in this section of the manual.</p>
     </div>
 
     <div class="wh-block">
