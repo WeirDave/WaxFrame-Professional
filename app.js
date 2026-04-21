@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260419-010
+//  Build: 20260421-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,12 +385,16 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260420-001';         // build stamp — update each session
+const BUILD       = '20260421-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
 const LS_SETTINGS = 'waxframe_v2_settings';  // legacy key — migrated on first load
 const LS_LICENSE  = 'waxframe_v2_license';   // license key — persistent
+
+// ── CONSOLE ERROR DETAIL STORE ──
+// Keyed by entry ID — stores raw API response data for the error detail modal
+window._consoleErrorData = {};
 
 
 // ── INDEXEDDB SESSION STORAGE ──
@@ -753,7 +757,7 @@ function projectClockReset() {
   _projClockUpdateButtons();
 }
 
-function consoleLog(msg, type = 'info') {
+function consoleLog(msg, type = 'info', rawData = null) {
   const el = document.getElementById('liveConsole');
   if (!el) return;
   const entry = document.createElement('div');
@@ -766,6 +770,17 @@ function consoleLog(msg, type = 'info') {
   msgSpan.textContent = msg.replace(/<[^>]+>/g, '');
   entry.appendChild(timeSpan);
   entry.appendChild(msgSpan);
+  // Clickable arrow for error/warn entries that carry raw response data
+  if (rawData && (type === 'error' || type === 'warn')) {
+    const entryId = 'cle_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
+    window._consoleErrorData[entryId] = rawData;
+    const arrowBtn = document.createElement('button');
+    arrowBtn.className = 'console-err-arrow';
+    arrowBtn.textContent = '→';
+    arrowBtn.title = 'Show raw response';
+    arrowBtn.setAttribute('onclick', `openConsoleErrorDetail('${entryId}')`);
+    entry.appendChild(arrowBtn);
+  }
   el.prepend(entry);
 }
 
@@ -2204,16 +2219,16 @@ async function testAllKeys() {
   const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
   if (!keyed.length) { toast('⚠️ No API keys saved yet'); return; }
 
-  const panel   = document.getElementById('testKeysPanel');
-  const title   = document.getElementById('tkpTitle');
-  const rowsEl  = document.getElementById('tkpRows');
-  const dismiss = document.getElementById('tkpDismiss');
-  if (!panel) return;
+  const modal  = document.getElementById('testKeysModal');
+  const title  = document.getElementById('tkpTitle');
+  const rowsEl = document.getElementById('tkpRows');
+  const closeBtn = document.getElementById('tkpDismiss');
+  if (!modal) return;
 
   rowsEl.innerHTML = '';
-  if (title)   title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
-  if (dismiss) dismiss.classList.remove('tkp-done');
-  panel.classList.add('active');
+  if (title) title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
+  if (closeBtn) { closeBtn.disabled = true; closeBtn.textContent = 'Testing…'; }
+  modal.classList.add('active');
 
   keyed.forEach(ai => {
     const row = document.createElement('div');
@@ -2229,7 +2244,7 @@ async function testAllKeys() {
         <div class="tkp-detail-row"><span class="tkp-detail-label">Endpoint</span><pre class="tkp-detail-pre" id="tkpep-${ai.id}">—</pre></div>
         <div class="tkp-detail-row"><span class="tkp-detail-label">Sent</span><pre class="tkp-detail-pre" id="tkpsent-${ai.id}">—</pre></div>
         <div class="tkp-detail-row"><span class="tkp-detail-label">Status</span><pre class="tkp-detail-pre" id="tkpstat-${ai.id}">—</pre></div>
-        <div class="tkp-detail-row"><span class="tkp-detail-label">Received</span><pre class="tkp-detail-pre" id="tkprcv-${ai.id}">—</pre></div>
+        <div class="tkp-detail-row"><span class="tkp-detail-label">Received</span><pre class="tkp-detail-pre tkp-detail-pre--received" id="tkprcv-${ai.id}">—</pre></div>
       </div>`;
     rowsEl.appendChild(row);
   });
@@ -2290,8 +2305,8 @@ async function testAllKeys() {
     await new Promise(r => setTimeout(r, 300));
   }
 
-  if (title)   title.textContent = `Done — ${passed} passed, ${failed} failed`;
-  if (dismiss) dismiss.classList.add('tkp-done');
+  if (title) title.textContent = `Done — ${passed} passed, ${failed} failed`;
+  if (closeBtn) { closeBtn.disabled = false; closeBtn.textContent = '✕ Close'; }
 }
 
 function toggleTkpDetail(id) {
@@ -2304,8 +2319,51 @@ function toggleTkpDetail(id) {
 }
 
 function dismissTestPanel() {
-  const panel = document.getElementById('testKeysPanel');
-  if (panel) panel.classList.remove('active');
+  const modal = document.getElementById('testKeysModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function openConsoleErrorDetail(id) {
+  const data = window._consoleErrorData && window._consoleErrorData[id];
+  if (!data) return;
+  const modal    = document.getElementById('consoleErrorDetailModal');
+  const titleEl  = document.getElementById('cedTitle');
+  const statusEl = document.getElementById('cedStatus');
+  const rawEl    = document.getElementById('cedRaw');
+  const linkEl   = document.getElementById('cedBillingLink');
+  if (!modal) return;
+  if (titleEl)  titleEl.textContent  = data.aiName ? `${data.aiName} — Error Detail` : 'Error Detail';
+  if (statusEl) statusEl.textContent = data.status || '—';
+  if (rawEl)    rawEl.textContent    = data.rawJson || '(no response body)';
+  if (linkEl) {
+    if (data.consoleUrl) {
+      linkEl.href        = data.consoleUrl;
+      linkEl.textContent = `Open ${data.aiName || 'provider'} billing console →`;
+      linkEl.style.display = '';
+    } else {
+      linkEl.style.display = 'none';
+    }
+  }
+  modal.classList.add('active');
+}
+
+function applyNotesTemplate(template) {
+  const ta = document.getElementById('workNotes');
+  if (!ta) return;
+  const current = ta.value.trim();
+  const newText = current ? current + '\n\n' + template : template;
+  ta.value = newText;
+  ta.focus();
+  // Select the first [PLACEHOLDER] in the inserted text so user can type right away
+  const pStart = newText.lastIndexOf('[');
+  const pEnd   = newText.lastIndexOf(']');
+  if (pStart !== -1 && pEnd !== -1 && pEnd > pStart) {
+    ta.setSelectionRange(pStart, pEnd + 1);
+  } else {
+    ta.setSelectionRange(newText.length, newText.length);
+  }
+  saveSession();
+  updateNotesBtnPriority();
 }
 
 function removeAI(id) {
@@ -4613,6 +4671,8 @@ async function runRound() {
   allReviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Reviewing…'));
 
   // Phase 1: Everyone reviews — Builder gets reviewer prompt too
+  const t_reviewStart = Date.now();
+  window._roundTimings = {};
   const reviewerPromises = allReviewers.map(async ai => {
     const prompt = buildPromptForAI(ai, []); // everyone gets reviewer prompt
     const cfg = API_CONFIGS[ai.provider];
@@ -4620,6 +4680,7 @@ async function runRound() {
     consoleLog(`📤 ${ai.name} — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint})`, 'send');
     try {
       const response = await callAPI(ai, prompt);
+      window._roundTimings[ai.id] = (Date.now() - t_reviewStart) / 1000;
       const noChanges = /^no changes needed/i.test(response.trim());
       const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
       setBeeStatus(ai.id, noChanges ? 'done-clean' : 'done', summary);
@@ -4632,6 +4693,7 @@ async function runRound() {
       reviewerResponses.push({ id: ai.id, name: ai.name, response, noChanges });
       return { ai, response, success: true, noChanges };
     } catch(e) {
+      window._roundTimings[ai.id] = (Date.now() - t_reviewStart) / 1000;
       if (e.message.startsWith('RATE_LIMITED:')) {
         setBeeStatus(ai.id, 'error', `⏳ Rate limited`);
         toast(`⏳ ${ai.name} hit a usage limit — skipped`, 4000);
@@ -4645,6 +4707,20 @@ async function runRound() {
   });
 
   await Promise.all(reviewerPromises);
+
+  // ── SLOW RESPONDER CHECK ──
+  const _timings = window._roundTimings || {};
+  const _timingVals = Object.values(_timings).filter(t => t > 0);
+  if (_timingVals.length > 1) {
+    const _avg = _timingVals.reduce((a, b) => a + b, 0) / _timingVals.length;
+    allReviewers.forEach(ai => {
+      const _t = _timings[ai.id];
+      if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
+        consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
+      }
+    });
+  }
+  window._roundTimings = {};
 
   const successfulReviews = reviewerResponses.filter(r => r.response);
   const noChangesCount = reviewerResponses.filter(r => r.noChanges).length;
@@ -4924,12 +5000,18 @@ async function callAPI(ai, prompt) {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     const msg = err?.error?.message || `HTTP ${response.status}`;
+    const rawData = {
+      aiName:     ai.name,
+      status:     `HTTP ${response.status} ${response.statusText}`,
+      rawJson:    JSON.stringify(err, null, 2),
+      consoleUrl: ai.apiConsole || null
+    };
     if (response.status === 429 || msg.toLowerCase().includes('rate limit') ||
         msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')) {
-      consoleLog(`⏳ ${ai.name} — Rate limited / quota exceeded: ${msg}`, 'warn');
+      consoleLog(`⏳ ${ai.name} — Rate limited / quota exceeded: ${msg}`, 'warn', rawData);
       throw new Error('RATE_LIMITED:' + msg);
     }
-    consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error');
+    consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error', rawData);
     throw new Error(msg);
   }
 
