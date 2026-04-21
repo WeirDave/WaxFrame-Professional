@@ -5650,7 +5650,7 @@ kbd {
 .dp-toc-link { font-size:14px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
 .dp-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
 
-.dp-playbook { background:transparent; border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:28px; }
+.dp-playbook { background:transparent; border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:28px; scroll-margin-top: 116px; }
 .dp-playbook-header { display:flex; align-items:center; gap:16px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
 .dp-playbook-icon { font-size:28px; line-height:1; flex-shrink:0; }
 .dp-playbook-title { font-family:var(--font); font-size:15px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#ffffff; }
