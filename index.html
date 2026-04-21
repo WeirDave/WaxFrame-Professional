@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — index.html
-     Build: 20260419-010
+     Build: 20260421-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260420-001">
+  <meta name="waxframe-build" content="20260421-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.16.19">
+  <link rel="stylesheet" href="style.css?v=3.18.0">
 </head>
 <body>
 
@@ -229,31 +229,37 @@
           <div class="goal-field">
             <label class="goal-field-label" for="goalDocType">Document type <span class="req-star">*</span></label>
             <input type="text" id="goalDocType" class="goal-field-input" placeholder="e.g. technical comparison, cover letter, executive summary, blog post" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
+            <p class="goal-field-hint">What kind of document is this? Be specific — <em>cover letter</em> not <em>document</em>. This is the first thing every AI reads and it sets the format, length, and tone for the whole session. If there is one thing the AIs should never forget, put it here.</p>
           </div>
 
           <div class="goal-field">
             <label class="goal-field-label" for="goalAudience">Target audience <span class="req-star">*</span></label>
             <input type="text" id="goalAudience" class="goal-field-input" placeholder="e.g. senior engineers, hiring managers, small business owners, C-suite" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
+            <p class="goal-field-hint">Who will read this? The AIs use this to calibrate tone, vocabulary, and how much to explain. <em>IT Director and VP of Facilities</em> gives very different results than <em>general public</em>. The more specific you are, the more consistent every round will be.</p>
           </div>
 
           <div class="goal-field">
             <label class="goal-field-label" for="goalOutcome">Desired outcome <span class="req-star">*</span></label>
             <textarea id="goalOutcome" class="goal-field-textarea" rows="3" placeholder="What should the reader walk away able to do, decide, or understand? Be specific." oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+            <p class="goal-field-hint">What do you want to happen after someone reads this? <em>Approve the budget</em>, <em>schedule an interview</em>, <em>understand the three options and pick one</em>. This is the finish line the AIs are working toward. Vague here means vague everywhere — this field has more impact on quality than any other.</p>
           </div>
 
           <div class="goal-field">
             <label class="goal-field-label" for="goalScope">Scope &amp; constraints</label>
             <textarea id="goalScope" class="goal-field-textarea" rows="3" placeholder="What must be covered — and what should be excluded? e.g. wireless networking only, no competitor names, no nutrition facts, southern style not mayo-only" oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+            <p class="goal-field-hint">Draw the fence. AIs expand into adjacent topics unless you explicitly stop them. Cover both sides — what <em>must</em> be included and what <em>must not</em> be included. Example: <em>wireless networking only — no switching, routing, or security products</em>.</p>
           </div>
 
           <div class="goal-field">
             <label class="goal-field-label" for="goalTone">Tone &amp; voice</label>
             <input type="text" id="goalTone" class="goal-field-input" placeholder="e.g. formal vs casual, technical vs plain English, confident vs cautious, warm and conversational, dry and direct" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
+            <p class="goal-field-hint">How should it sound? Pick two or three words — <em>confident, direct, jargon-free</em> or <em>warm, conversational, no bullet points</em>. Without this, different AIs will drift toward different styles and the document becomes inconsistent across rounds.</p>
           </div>
 
           <div class="goal-field">
             <label class="goal-field-label" for="goalNotes">Additional instructions</label>
             <textarea id="goalNotes" class="goal-field-textarea" rows="3" placeholder="Anything that does not fit above — e.g. do not change the executive summary, always use Oxford commas, write in British English, go straight to the recipe with no personal anecdote" oninput="saveProject();updateGoalCounter();updateProjectRequirements()"></textarea>
+            <p class="goal-field-hint">Hard rules that must survive every round — things the AIs should always or never do. Example: <em>do not add new sections</em>, <em>always use Oxford commas</em>, <em>never change the numbers in the cost table</em>. You can also use the Notes drawer on the Work screen for one-round-only instructions.</p>
           </div>
 
         </div>
@@ -601,10 +607,7 @@
   </div>
 </div>
 
-<!-- ============================================================
-     NOTES DRAWER
-     ============================================================ -->
-<div class="notes-drawer" id="notesModal">
+  <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
     <span class="notes-drawer-title">📝 Notes for this Round</span>
     <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers.</span>
@@ -613,6 +616,14 @@
       <button class="btn" onclick="document.getElementById('workNotes').value='';saveSession();updateNotesBtnPriority()">✕ Clear</button>
       <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
+  </div>
+  <div class="notes-templates">
+    <span class="notes-templates-label">Templates:</span>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('I have applied my conflict decision. Do not re-raise or undo this change.')">✅ Applied my decision</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
   </div>
   <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession();updateNotesBtnPriority()"
     placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
@@ -931,13 +942,47 @@
 <!-- Toast -->
 <div id="toast"></div>
 
-<!-- Test Keys Panel -->
-<div id="testKeysPanel" class="test-keys-panel">
-  <div class="tkp-header">
-    <span id="tkpTitle" class="tkp-title">Testing API keys…</span>
-    <button class="tkp-dismiss" id="tkpDismiss" onclick="dismissTestPanel()">Dismiss ✕</button>
+<!-- TEST ALL KEYS MODAL -->
+<div class="custom-ai-modal-overlay" id="testKeysModal" onclick="if(event.target===this)dismissTestPanel()">
+  <div class="custom-ai-modal test-keys-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title" id="tkpTitle">Testing API keys…</div>
+        <div class="custom-ai-modal-sub">Sending a minimal test request to each saved AI</div>
+      </div>
+      <button class="import-server-close-btn" id="tkpDismiss" onclick="dismissTestPanel()" title="Close">✕</button>
+    </div>
+    <div id="tkpRows" class="tkp-rows"></div>
+    <div class="custom-ai-form-footer">
+      <span></span>
+      <button class="btn" onclick="dismissTestPanel()">← Close</button>
+    </div>
   </div>
-  <div id="tkpRows" class="tkp-rows"></div>
+</div>
+
+<!-- CONSOLE ERROR DETAIL MODAL -->
+<div class="custom-ai-modal-overlay" id="consoleErrorDetailModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="custom-ai-modal console-error-detail-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title" id="cedTitle">Error Detail</div>
+        <div class="custom-ai-modal-sub" id="cedStatus"></div>
+      </div>
+      <button class="import-server-close-btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')" title="Close">✕</button>
+    </div>
+    <div class="custom-ai-raw-panel ced-raw-panel">
+      <div class="custom-ai-raw-row">
+        <span class="custom-ai-raw-label">Raw API Response</span>
+        <pre class="custom-ai-raw-pre ced-raw-pre" id="cedRaw"></pre>
+      </div>
+    </div>
+    <div class="custom-ai-form-footer">
+      <a id="cedBillingLink" class="link-accent" href="#" target="_blank" style="display:none;"></a>
+      <button class="btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')">← Close</button>
+    </div>
+  </div>
 </div>
 
 <!-- Test Key Modal -->
@@ -1152,7 +1197,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.17.2"></script>
+<script src="app.js?v=3.18.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

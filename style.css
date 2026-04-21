@@ -4277,6 +4277,45 @@ kbd {
 }
 .notes-drawer-ta:focus { background: var(--surface3); }
 
+/* ── notes-templates: quick-fill template buttons in the Notes drawer ── */
+.notes-templates {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+.notes-templates-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.notes-template-btn {
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 3px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.notes-template-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+
 /* ── ROUND HISTORY MODAL ── */
 .hist-modal-overlay {
   position: fixed;
@@ -5812,52 +5851,14 @@ kbd {
 }
 
 /* ══ TEST ALL KEYS PANEL ══ */
-.test-keys-panel {
-  position: fixed;
-  bottom: 80px;
-  right: 24px;
-  width: 520px;
-  max-height: 520px;
-  background: var(--surface);
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-md);
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-  z-index: 9000;
-  display: none;
-  flex-direction: column;
-  overflow: hidden;
+/* ── Test Keys Modal ── */
+.test-keys-modal {
+  max-width: 660px;
+  width: 100%;
 }
-.test-keys-panel.active { display: flex; }
-.tkp-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.tkp-title {
-  font-size: 13px;
-  font-weight: 700;
-  color: var(--text);
-}
-.tkp-dismiss {
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--text-dim);
-  font-size: 11px;
-  padding: 3px 8px;
-  cursor: pointer;
-  transition: all 0.12s;
-  display: none;
-}
-.tkp-dismiss.tkp-done { display: block; }
-.tkp-dismiss:hover { border-color: var(--accent); color: var(--accent); }
-.tkp-rows {
+.test-keys-modal .tkp-rows {
   overflow-y: auto;
-  flex: 1;
+  max-height: 55vh;
   padding: 6px 0;
 }
 .tkp-row {
@@ -5868,11 +5869,11 @@ kbd {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 14px;
+  padding: 8px 24px;
   gap: 10px;
 }
 .tkp-ai-name {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--text);
   flex: 1;
@@ -5883,24 +5884,24 @@ kbd {
   font-family: var(--font-mono);
 }
 .tkp-status {
-  font-size: 11px;
+  font-size: 12px;
   font-family: var(--font-mono);
   flex-shrink: 0;
-  max-width: 200px;
+  max-width: 240px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .tkp-pending { color: var(--text-dim); }
-.tkp-pass { color: var(--green, #00b300); }
+.tkp-pass { color: var(--green, #22c55e); }
 .tkp-fail { color: var(--red, #e53e3e); }
 .tkp-detail-toggle {
   background: transparent;
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
-  font-size: 10px;
-  padding: 2px 7px;
+  font-size: 11px;
+  padding: 3px 8px;
   cursor: pointer;
   flex-shrink: 0;
   transition: all 0.12s;
@@ -5910,13 +5911,13 @@ kbd {
 .tkp-detail {
   background: var(--surface2);
   border-top: 1px solid var(--border);
-  padding: 8px 14px 10px;
+  padding: 10px 24px 12px;
 }
 .tkp-detail-row {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  margin-bottom: 8px;
+  gap: 3px;
+  margin-bottom: 10px;
 }
 .tkp-detail-row:last-child { margin-bottom: 0; }
 .tkp-detail-label {
@@ -5929,18 +5930,53 @@ kbd {
 }
 .tkp-detail-pre {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 11px;
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 5px 8px;
+  padding: 6px 10px;
   white-space: pre-wrap;
   word-break: break-all;
-  max-height: 120px;
+  max-height: 140px;
   overflow-y: auto;
   margin: 0;
 }
+.tkp-detail-pre--received { max-height: 200px; }
+
+/* ── Console error arrow button ── */
+.console-err-arrow {
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: inherit;
+  font-size: 10px;
+  padding: 1px 5px;
+  margin-left: 8px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.12s;
+  vertical-align: middle;
+  font-family: var(--font-mono);
+  flex-shrink: 0;
+}
+.console-err-arrow:hover { opacity: 1; }
+
+/* ── Console Error Detail Modal ── */
+.console-error-detail-modal {
+  max-width: 700px;
+  width: 100%;
+}
+.ced-raw-panel {
+  padding: 0 24px 8px;
+}
+.ced-raw-pre {
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 11px;
+}
+
+/* ── test-key-modal (individual key test, kept for compatibility) ── */
 .test-key-modal { max-width: 640px; }
 .test-key-raw-received { max-height: 200px; overflow-y: auto; }
 
@@ -6219,6 +6255,15 @@ kbd {
 .goal-field-textarea::placeholder {
   color: var(--muted);
   font-style: italic;
+}
+
+/* ── goal-field-hint: persistent helper text below each goal field ── */
+.goal-field-hint {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+  padding: 0 2px;
 }
 
 /* ── goal-counter-bar: stats + clear button below fields ── */
