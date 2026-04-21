@@ -3782,6 +3782,7 @@ kbd {
 }
 .decision-opt-btn {
   display: flex;
+  flex-wrap: wrap;
   align-items: flex-start;
   gap: 8px;
   background: var(--surface);
@@ -3880,6 +3881,9 @@ kbd {
   padding-bottom: 1px;
   display: block;
   margin-top: 2px;
+  flex-basis: 100%;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 /* ── APPLY DECISIONS BUTTON ── */
 .btn-apply-decisions {
@@ -5637,7 +5641,6 @@ kbd {
 
 .dp-back-top { display:block; text-align:right; font-size:12px; color:var(--text-dim); text-decoration:none; padding:4px 0 0; transition:color 0.12s; }
 .dp-back-top:hover { color:var(--accent); }
-.dp-field-label--scratch { color:#34d399; }
 
 [data-theme="light"] .dp-intro,
 [data-theme="light"] .dp-toc { background:#ffffff; }
@@ -5648,7 +5651,6 @@ kbd {
 [data-theme="light"] .dp-tag-purple { color:#7c3aed; }
 [data-theme="light"] .dp-back-top { color:#333; }
 [data-theme="light"] .dp-back-top:hover { color:var(--accent); }
-[data-theme="light"] .dp-field-label--scratch { color:#059669; }
 @media (prefers-color-scheme:light) {
   [data-theme="auto"] .dp-intro,
   [data-theme="auto"] .dp-toc { background:#ffffff; }
@@ -5659,7 +5661,6 @@ kbd {
   [data-theme="auto"] .dp-tag-purple { color:#7c3aed; }
   [data-theme="auto"] .dp-back-top { color:#333; }
   [data-theme="auto"] .dp-back-top:hover { color:var(--accent); }
-  [data-theme="auto"] .dp-field-label--scratch { color:#059669; }
 }
 
 .print-header { display:none; text-align:center; padding:16px 0 24px; border-bottom:2px solid #ccc; margin-bottom:24px; }
@@ -6413,3 +6414,19 @@ kbd {
   color: var(--text-dim);
   line-height: 1.6;
 }
+
+/* ── Document Playbooks — project goal field display ── */
+.dp-goal-fields { display: flex; flex-direction: column; gap: 8px; }
+.dp-goal-row { display: flex; gap: 0; align-items: baseline; }
+.dp-goal-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  white-space: nowrap;
+  min-width: 200px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+.dp-goal-val { font-size: 13px; color: var(--text); line-height: 1.5; }
