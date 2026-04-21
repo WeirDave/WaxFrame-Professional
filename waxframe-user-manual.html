@@ -415,71 +415,36 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Writing your goal when you already have a document</div>
-      <p>If you are uploading or pasting an existing document, your goal still matters — but your focus shifts from <em>what to create</em> to <em>what to improve</em>. Tell the AIs what already exists, what works and should be preserved, and what specifically needs to get better.</p>
+      <div class="wh-block-title">Writing a goal that gets results</div>
+      <p>The goal works the same whether you are uploading an existing document, pasting text, or starting from scratch. The AIs have nothing else to work from — no access to the internet, no knowledge of your organisation, no understanding of what you want unless you tell them. The more you put in, the better every round will be.</p>
+      <p>The most common mistake is writing a goal so short and vague that the AIs have to guess. They will guess — and they will all guess differently, which produces drift and conflicts that never resolve.</p>
       <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Make this proposal better."</em></p>
-      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"This is a wireless network infrastructure upgrade proposal for a 950,000 sq ft warehouse. The audience is the IT Director and VP of Facilities — technical on the left, budget-focused on the right. The technical sections and vendor comparison table are solid and must not be changed. Focus all improvements on the executive summary — it is currently too long and too jargon-heavy for the VP — and on the cost justification section, which needs a clearer ROI narrative. Tone must be confident and direct, not salesy. Do not add any new sections."</em></p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for 11 common document types. Open it from the Menu or the link above.</p>
-      </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Do not include a target length in your goal. Use the <strong>Length Constraint</strong> field below the goal instead — WaxFrame sends it to your AIs automatically in a standardised format every round. Putting length in the goal is redundant and can confuse the instruction.</p>
-      </div>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Writing your goal when starting from scratch</div>
-      <p>When you have no existing document, the AIs generate the first draft entirely from your goal. Be as detailed as possible — include document type, audience, purpose, scope, tone, approximate length, structure, and any specific sections or headings you want included.</p>
+      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"This is a wireless network infrastructure upgrade proposal for a 950,000 sq ft warehouse. Audience: IT Director (technical) and VP of Facilities (budget-focused). The technical sections and vendor comparison table are solid — do not change them. Focus all improvements on the executive summary, which is too long and too jargon-heavy for the VP, and on the cost justification section, which needs a clearer ROI narrative. Tone: confident and direct, not salesy. Do not add any new sections."</em></p>
       <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Write a report about wireless networking."</em></p>
-      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Create a technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience is our IT infrastructure team evaluating a campus-wide network refresh. Scope is strictly wireless: access points, controllers, cloud management, and licensing models. Explicitly exclude switching, routing, firewalls, and security products. Tone is technical and neutral — this is an internal evaluation document, not a sales pitch. Include a summary comparison table at the top, then a dedicated section for each vendor covering strengths, weaknesses, and pricing model. Close with a shortlist recommendation."</em></p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">The goal counter and the 300-character threshold</div>
-      <p>Below the six goal fields is a counter showing the total character count of your assembled goal. When the assembled total exceeds 300 characters, the count turns amber.</p>
-      <p>This amber signal is not telling you to shorten your goal. <strong>Fill the fields with as much detail as you want — especially when starting from scratch.</strong> The amber is simply a heads-up that WaxFrame will send a trimmed version of your assembled goal whenever a document already exists, and here is the reason why:</p>
-      <p>Every API call costs tokens. When the AIs are generating a first draft from scratch, sending your full brief to every AI is absolutely worth it — they have nothing else to work from. But once a document exists — whether you uploaded it, pasted it, or the AIs generated it — sending thousands of characters of goal context to every AI every round is wasteful. Those tokens are better spent on the document itself and on the reviewer suggestions. So WaxFrame sends only the opening portion of your assembled goal — approximately 300 characters, always cut at a sentence boundary so nothing is left incomplete — labelled as <em>Project Context</em>.</p>
-      <p><strong>What this means for you:</strong> the Document type and Desired outcome fields appear first in the assembled brief. Put your single most important instruction there — it will always be included when a document exists.</p>
+      <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience: IT infrastructure team evaluating a campus-wide refresh. Scope: strictly wireless — APs, controllers, cloud management, licensing. Exclude switching, routing, firewalls. Tone: technical and neutral. Include a summary comparison table at the top, a dedicated section per vendor covering strengths, weaknesses, and pricing, then a shortlist recommendation."</em></p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>The Document type field is always first in the assembled brief. A clear, specific document type keeps your AIs anchored to your intent on every refine round.</p>
+        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for common document types. Open it from the Menu.</p>
+      </div>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>Do not put a target length in the goal. Use the <strong>Length Constraint</strong> field below the goal instead — WaxFrame sends it automatically in a standardised format every round.</p>
       </div>
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">The Refine Preview panel</div>
-      <p>Below the goal counter, a <strong>Refine Preview</strong> panel appears automatically when your assembled goal exceeds 300 characters. It shows the exact text that will be sent to your AIs whenever a document exists, updated live as you type.</p>
-      <ul>
-        <li>If your assembled goal is <strong>under 300 characters</strong>, the panel shows a message confirming the full text will be sent every time a document exists.</li>
-        <li>If your assembled goal is <strong>over 300 characters</strong>, the panel shows the trimmed version — cut to the nearest complete sentence boundary at or around 300 characters. This is exactly what your AIs will receive on every run once a document exists.</li>
-      </ul>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">What gets included in the 300-character trimmed brief</div>
-      <p>When WaxFrame assembles your goal into a brief, the fields appear in this order: Document type, Target audience, Desired outcome, Scope &amp; constraints, Tone &amp; voice, Additional instructions. The trimmed version sent during refine rounds cuts at approximately 300 characters, always at a sentence boundary.</p>
-      <p>This means <strong>Document type and Target audience are always included</strong> — they appear first and are short enough to fit within the cut. Desired outcome may or may not be included depending on how much you have written. Everything after that may be trimmed.</p>
-      <p>Think of the trimmed brief as the anchor that keeps every AI pointed at the right target across every run. Its goal is not to repeat your entire brief — it is to prevent drift. Without it, by round five your AIs are reacting purely to what is in the document with no memory of what it was supposed to be.</p>
-      <div class="goal-info-row">
-        <span class="info-label">Document type</span>
-        <span class="goal-info-desc">Always first, always included. Be specific — <em>"technical comparison"</em> or <em>"cover letter"</em> not just <em>"document"</em>. This one field sets the format, tone conventions, and depth every AI will aim for on every single round.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">Target audience</span>
-        <span class="goal-info-desc">Always second, usually included. This is what prevents tone drift. <em>"IT Director and VP of Facilities"</em> keeps the language calibrated round after round. Without it, the writing style gradually wanders.</span>
-      </div>
-      <div class="goal-info-row">
-        <span class="info-label">What to put in Additional instructions</span>
-        <span class="goal-info-desc">Hard constraints that must not slip — things like <em>"do not add new sections"</em> or <em>"tone must be direct, not salesy"</em>. These matter most when a document exists. If a constraint keeps getting violated, move it to the top of Additional instructions so it has the best chance of making it into the trimmed brief.</span>
-      </div>
-      <p>Use the Refine Preview panel to check what will actually be sent. Ask yourself: if an AI saw only this text and then the current document, would it know what the document is supposed to be, who it is for, and what it absolutely cannot do? If yes, you are in good shape.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">The ⓘ button — About Your Project Goal</div>
-      <p>Next to the <strong>Project Goal</strong> section heading is a small ⓘ info button. Clicking it opens an overlay that summarises how the goal is sent in full when generating from scratch versus trimmed when a document exists, explains the Refine Preview panel, and reminds you of the 300-character threshold. It is a quick reference to everything in this section of the manual.</p>
+      <div class="wh-block-title">What each field does — and what to put in it</div>
+      <table class="wh-table">
+        <thead><tr><th>Field</th><th>What it controls</th><th>Tips</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Document type</strong></td><td>Sets the format, length conventions, and depth every AI aims for on every round. This is the first thing assembled into the brief and is always sent.</td><td>Be specific. <em>Cover letter</em> not <em>document</em>. If there is one thing the AIs should never forget, make it part of this field.</td></tr>
+          <tr><td><strong>Target audience</strong></td><td>Calibrates tone, vocabulary, and how much to explain. Without it, different AIs write for different audiences and the document becomes inconsistent.</td><td><em>IT Director and VP of Facilities</em> is better than <em>business audience</em>. Specify seniority, technical level, and any split audience.</td></tr>
+          <tr><td><strong>Desired outcome</strong></td><td>Gives the AIs a finish line. The most impactful field — this is what every suggestion and every rewrite is ultimately working toward.</td><td><em>Approve the budget</em>, <em>schedule an interview</em>, <em>understand the three options and pick one</em>. Vague here means vague everywhere.</td></tr>
+          <tr><td><strong>Scope &amp; constraints</strong></td><td>Draws the fence. AIs expand into adjacent topics unless you stop them explicitly.</td><td>Cover both sides — what must be included and what must not. <em>Wireless only — no switching, routing, or security products.</em></td></tr>
+          <tr><td><strong>Tone &amp; voice</strong></td><td>Prevents tone drift across rounds when multiple AIs are writing in different styles.</td><td>Two or three words is enough. <em>Confident, direct, no jargon</em> or <em>warm, conversational, no bullet points</em>.</td></tr>
+          <tr><td><strong>Additional instructions</strong></td><td>Hard rules that must survive every round — things the AIs must always or never do regardless of what the document looks like.</td><td><em>Do not add new sections</em>. <em>Never change the numbers in the cost table</em>. <em>Always use Oxford commas</em>. For one-round-only instructions, use the Notes drawer on the Work screen instead.</td></tr>
+        </tbody>
+      </table>
     </div>
 
     <div class="wh-block">
@@ -758,29 +723,44 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What is a conflict?</div>
-      <p>A conflict appears in the right column when your AIs gave the Builder genuinely incompatible suggestions — recommendations that point in different directions strongly enough that the Builder flagged the decision for you rather than choosing arbitrarily. Common conflict scenarios: one AI suggested removing a section while another suggested expanding it; AIs disagreed on tone, phrasing, or structure for a key passage; reviewers proposed different conclusions.</p>
-      <p>Conflicts are not a sign something went wrong. They are a signal that your AIs found a real decision point in the document — one that genuinely depends on your intent and cannot be resolved by the AI alone.</p>
+      <p>A conflict appears in the left column when your AIs gave the Builder genuinely incompatible suggestions — recommendations that point in different directions strongly enough that the Builder flagged the decision for you rather than choosing arbitrarily. Common scenarios: one AI suggested removing a section while another suggested expanding it; reviewers proposed different conclusions; AIs disagreed on tone, phrasing, or structure for a key passage.</p>
+      <p>Conflicts are not a sign something went wrong. They are a signal that your AIs found a real decision point — one that genuinely depends on your intent and cannot be resolved by the AI alone. When you see conflicts, the hive is working correctly.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Resolving conflicts</div>
-      <p>Each conflict in the left column shows:</p>
+      <p>Each conflict card shows:</p>
       <ul>
-        <li>The original text that was in dispute, labelled <strong>Current:</strong> — <strong>click this text to jump directly to that exact location in the Working Document</strong>. The document scrolls to the passage and highlights it so you can read it in full context before deciding. This is especially important on long documents where finding the relevant passage manually would be impractical.</li>
+        <li>The original text in dispute, labelled <strong>Current:</strong> — click this text to jump directly to that passage in the Working Document. Essential on long documents.</li>
         <li>Two or more options proposed by your AIs, each clearly labelled</li>
-        <li>A <strong>Custom</strong> option where you can type your own resolution</li>
-        <li>A <strong>Keep Original</strong> option to leave that section exactly as it is</li>
+        <li>A <strong>Custom</strong> option where you type your own resolution</li>
+        <li>A <strong>Keep Original</strong> option to leave that passage unchanged</li>
       </ul>
-      <p>Read the current text in context, read each option, and click the one that best matches your intent. Once you have made a selection for every conflict, click <strong>Apply Decisions</strong> to update the document. Resolved conflicts are locked — WaxFrame informs all AIs about your decisions in future rounds and instructs them not to re-raise the same issues.</p>
+      <p>Read the current text in context, read each option, and click the one that best matches your intent. Once you have selected every conflict, click <strong>Apply Decisions</strong> to update the document. Resolved conflicts are locked — WaxFrame tells the Builder about your decisions in future rounds and instructs it not to re-raise them.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When the Builder ignores your resolution</div>
+      <p>This happens. Some AIs — particularly those running under a proxy or enterprise gateway — do not consistently carry resolution instructions into the next round. The conflict card disappears, but the next round produces the same issue. Here is what to do, in order:</p>
+      <p><strong>Step 1 — Reinforce it in Notes.</strong> Before the next round, open the Notes drawer and write the resolution explicitly. Do not paraphrase — quote the exact text you want locked:</p>
+      <p><em>"This line is final and must not be changed under any circumstances: "The recommended solution is a cloud-managed architecture." Do not re-raise this as a conflict. Do not offer alternatives."</em></p>
+      <p>The Notes drawer has a <strong>🔒 Lock a line</strong> template button that pre-fills this format for you. Paste the exact text into the placeholder and run the round.</p>
+      <p><strong>Step 2 — Add it to your Project Goal.</strong> If the same issue returns after two rounds of Notes reinforcement, it means the AI is not reading the resolution at all — it needs the instruction in the permanent brief. Open the Project screen via the Menu, add the constraint to <strong>Additional instructions</strong>, and return to the Work screen. The goal is sent every round; Notes are cleared after each round.</p>
+      <p><strong>Step 3 — Remove the offending AI.</strong> If one specific AI keeps re-raising a resolved conflict after both Notes and goal reinforcement, it is not reading your instructions. Use <strong>Edit Hive</strong> (laptop) or toggle its card directly (desktop) to remove it from the session. The hive will converge faster without it.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>On large documents — long reports, RFPs, technical proposals — the click-to-scroll on the Current text is essential. Without it you would be hunting through dozens of pages to find where each conflict is located. Click the Current text first, read it in context, then make your decision.</p>
+        <p>When quoting text to lock it, use the exact words from the document — not a paraphrase. The Builder pattern-matches against what it sees in the document. A near-match may not trigger the lock.</p>
       </div>
     </div>
 
     <div class="wh-block">
+      <div class="wh-block-title">When conflicts do not appear but the document is not improving</div>
+      <p>No conflicts does not always mean convergence — it can mean the AIs are making changes that do not produce disagreement, or that the Builder is silently overriding suggestions. If the document is drifting in a direction you do not want but no conflicts are flagged, use Notes to give the Builder explicit direction: what to fix, what to leave alone, and what the next round must accomplish. Then run the round and check the console to see which AIs responded and what they said.</p>
+    </div>
+
+    <div class="wh-block">
       <div class="wh-block-title">Using conflicts to steer the document</div>
-      <p>Rather than treating conflicts as a problem to dismiss quickly, use them as a tool. They often surface real questions about the document's direction — questions about emphasis, tone, structure, or argument that you will need to answer to get the document where you want it. A conflict is your AIs showing you where they genuinely disagree, and your resolution tells the entire hive which direction to take in future rounds.</p>
+      <p>Rather than treating conflicts as a problem to dismiss quickly, use them as a tool. They surface real decisions about the document's direction — questions about emphasis, tone, structure, or argument that you will need to answer to get the document where you want it. Each resolution tells the entire hive which direction to take. A well-resolved conflict round is often the most productive round in a session.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -799,15 +779,39 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Using the Notes drawer for targeted direction</div>
-      <p>Click <strong>📝 Notes</strong> in the top bar to open the Notes drawer. This is a plain-text area where you write direct instructions for the Builder for the next round only. Notes are not sent to reviewers — only the Builder receives them. They are cleared automatically after each round so they do not carry over unintentionally.</p>
-      <p>Use Notes when you want something specific to happen in the next round that your goal alone would not produce:</p>
-      <ul>
-        <li><em>"Tighten the executive summary — it should be no more than three sentences."</em></li>
-        <li><em>"The third paragraph in the Cost section is redundant — remove it and tighten the section."</em></li>
-        <li><em>"The conclusion is weak. Rewrite it to be more decisive and action-oriented."</em></li>
-        <li><em>"Do not change the Technical Specifications section under any circumstances."</em></li>
-      </ul>
-      <p>The Notes drawer has a <strong>📋 Copy</strong> button to copy your notes and a <strong>✕ Clear</strong> button to erase them before a round if you change your mind. Close the drawer with the <strong>✕ Close</strong> button when you are done.</p>
+      <p>Click <strong>📝 Notes</strong> in the top bar to open the Notes drawer. This is where you write direct instructions for the Builder for the next round only. Notes are not sent to reviewers — only the Builder receives them. They are cleared automatically after each round so they do not carry over unintentionally.</p>
+      <p>Use Notes when you want something specific to happen in the next round that your goal alone would not produce — a targeted fix, a section to protect, a direction to push toward.</p>
+      <p>The Notes drawer has a row of <strong>template buttons</strong> that pre-fill common instructions for you. Click one and the textarea fills with a ready-made instruction — the placeholder text is automatically selected so you can type your replacement immediately.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What to write in Notes — examples</div>
+      <p>Notes work best when they are specific and direct. The Builder reads them as instruction, not suggestion.</p>
+      <table class="wh-table">
+        <thead><tr><th>Situation</th><th>What to write in Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Tighten a section</td><td><em>"The executive summary is too long. Rewrite it so it is no more than three sentences."</em></td></tr>
+          <tr><td>Remove something specific</td><td><em>"Remove the third paragraph in the Cost section — it repeats what was already said in paragraph one."</em></td></tr>
+          <tr><td>Strengthen a weak part</td><td><em>"The conclusion is weak and non-committal. Rewrite it to be decisive and action-oriented."</em></td></tr>
+          <tr><td>Lock a line</td><td><em>"This line is final — do not change it: "The recommended solution is a cloud-managed architecture.""</em></td></tr>
+          <tr><td>Lock a section</td><td><em>"Do not change anything in the Technical Specifications section. The section begins with: "The proposed system consists of…""</em></td></tr>
+          <tr><td>Block new content</td><td><em>"Do not add any new sections or headings. Work only with the existing structure."</em></td></tr>
+          <tr><td>After applying a conflict</td><td><em>"I have applied my conflict decision. Do not re-raise or undo this change."</em></td></tr>
+          <tr><td>After reverting the document</td><td><em>"I have reverted the document to a previous version. Ignore any changes from the previous round and work from what is here now."</em></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Locking a line the AIs keep changing</div>
+      <p>If the Builder or reviewers keep modifying a line you need to preserve — a specific metric, a name, a legal phrase, a date — quote the exact text in your Notes instruction. Do not paraphrase it. The Builder pattern-matches against what it sees in the document and needs the exact wording to recognise what you are protecting.</p>
+      <p>Use the <strong>🔒 Lock a line</strong> template button in the Notes drawer. It pre-fills:</p>
+      <p><em>"Lock this line exactly as written — do not change it: "[PASTE THE EXACT LINE HERE]""</em></p>
+      <p>Replace the placeholder with the exact text from your document — copy and paste it directly. Then run the round. If the issue persists after two rounds of this, add the same instruction to your <strong>Additional instructions</strong> goal field so it is sent permanently, not just for one round.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>The Notes field is cleared after every round. If a constraint needs to survive every round permanently, put it in <strong>Additional instructions</strong> on the Project screen — not in Notes.</p>
+      </div>
     </div>
 
     <div class="wh-block">
@@ -1077,7 +1081,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">An AI keeps re-raising a conflict you already resolved</div>
-      <p>Open Notes before the next round and write: <em>"[AI name] is repeatedly re-raising [issue]. This decision is final — [chosen text] is locked and must not be changed. Do not allow any variation of this suggestion."</em> If the problem persists after two rounds of this instruction, use <strong>Edit Hive</strong> on laptop or toggle the AI card directly on desktop to remove that AI from the session.</p>
+      <p>Open the Notes drawer before the next round and quote the exact text you resolved. Do not paraphrase — use the <strong>🔒 Lock a line</strong> template button and paste the exact passage from your document into the placeholder. Write clearly that this decision is final and must not be re-raised. If the problem persists after two rounds, add the same instruction to <strong>Additional instructions</strong> on the Project screen so it is sent every round permanently. If it still continues after that, toggle the offending AI off via <strong>Edit Hive</strong> (laptop) or directly on its card (desktop).</p>
     </div>
 
     <div class="wh-block">
