@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260419-010';         // build stamp — update each session
+const BUILD       = '20260420-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -644,7 +644,6 @@ function playRosieSound() {
 
 // ── FLYING CAR ARRIVAL — doppler-style descending swoop ──
 function playFlyingCarSound() {
-  if (_isMuted) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const o = ctx.createOscillator(), o2 = ctx.createOscillator();
@@ -1326,7 +1325,6 @@ function spawnSparks(container) {
 }
 
 function playMetalClang(audioCtx, clangBuffer) {
-  if (_isMuted) return;
   try {
     if (clangBuffer && audioCtx) {
       // Buffer already decoded — plays with zero async delay
@@ -1339,6 +1337,7 @@ function playMetalClang(audioCtx, clangBuffer) {
       src.start(audioCtx.currentTime);
     } else {
       // Fallback: buffer not ready yet (e.g. very fast click), use Audio()
+      if (_isMuted) return;
       const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
       audio.volume = 0.85;
       audio.play().catch(() => {});
@@ -1347,7 +1346,6 @@ function playMetalClang(audioCtx, clangBuffer) {
 }
 
 function playAnvilSound(audioCtx) {
-  if (_isMuted) return;
   try {
     const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
 
@@ -1740,6 +1738,7 @@ function clearProject() {
   if (workDoc) workDoc.value = '';
   const workNotes = document.getElementById('workNotes');
   if (workNotes) workNotes.value = '';
+  updateNotesBtnPriority();
   const pasteText = document.getElementById('pasteText');
   if (pasteText) pasteText.value = '';
   updateProjLineNums('projPasteNums', pasteText);
@@ -1940,7 +1939,7 @@ async function loadSession() {
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
-      if (notesEl) notesEl.value = s.notes;
+      if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority(); }
     }
     return true;
   } catch(e) {
@@ -3116,9 +3115,17 @@ function clearUploadedFile() {
 
 async function processFile(file) {
   // Guard: if a session is already running, warn before overwriting the live document
-  if (history.length > 0 || docText) {
+  // Skip on Setup 4 — user is still in setup, not an active session
+  const onSetupScreen = document.getElementById('screen-document')?.classList.contains('active');
+  if (!onSetupScreen && (history.length > 0 || docText)) {
     const proceed = confirm(
-      `⚠️ You have an active session with a working document.\n\nLoading a new file will replace your current document. This cannot be undone.\n\nIf you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.\n\nProceed and replace the document?`
+      `⚠️ You have an active session with a working document.
+
+Loading a new file will replace your current document. This cannot be undone.
+
+If you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.
+
+Proceed and replace the document?`
     );
     if (!proceed) return;
   }
@@ -3193,20 +3200,49 @@ async function extractPDF(file) {
   let text = '';
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
-    const content = await page.getTextContent();
+    const rawContent = await page.getTextContent();
+    // Collect all items with position data
+    const items = [];
+    for (const item of rawContent.items) {
+      if (!item.str || !item.str.trim()) continue;
+      items.push({
+        str: item.str,
+        x: item.transform ? item.transform[4] : 0,
+        y: item.transform ? item.transform[5] : 0,
+        w: item.width || 0
+      });
+    }
+    // Group items into lines by Y value (tolerance 3 units handles slight baseline shifts)
+    const lines = [];
+    for (const item of items) {
+      const line = lines.find(l => Math.abs(l.y - item.y) <= 3);
+      if (line) { line.items.push(item); }
+      else { lines.push({ y: item.y, items: [item] }); }
+    }
+    // Sort lines top-to-bottom (PDF Y coords are bottom-up so descending = top first)
+    lines.sort((a, b) => b.y - a.y);
+    // Sort items within each line left-to-right
+    for (const line of lines) line.items.sort((a, b) => a.x - b.x);
+    // Reconstruct text — insert newline or double newline based on Y gap between lines
     let pageText = '';
-    let lastX = null;
-    let lastWidth = 0;
-    for (const item of content.items) {
-      if (!item.str) continue;
-      const x = item.transform ? item.transform[4] : null;
-      if (lastX !== null && x !== null) {
-        const gap = x - (lastX + lastWidth);
-        if (gap > 1) pageText += ' ';
+    for (let li = 0; li < lines.length; li++) {
+      if (li > 0) {
+        const yGap = lines[li - 1].y - lines[li].y;
+        pageText += yGap > 18 ? '\n\n' : '\n';
       }
-      pageText += item.str;
-      lastX = x;
-      lastWidth = item.width || 0;
+      let lineText = '';
+      let lastItemX = null;
+      let lastItemW = 0;
+      for (const item of lines[li].items) {
+        if (lastItemX !== null) {
+          const gap = item.x - (lastItemX + lastItemW);
+          if (gap > 3) lineText += ' ';
+        }
+        lineText += item.str;
+        lastItemX = item.x;
+        lastItemW = item.w;
+      }
+      pageText += lineText;
     }
     text += pageText + '\n';
   }
@@ -3832,7 +3868,7 @@ function finishAndExport() {
 function finishAndNew() {
   hideFinishModal();
   clearProject();
-  goToScreen('screen-bees');
+  goToScreen('screen-project');
 }
 
 /* =========================================
@@ -5774,6 +5810,27 @@ function hideBuilderOverlay() {
   overlay.setAttribute('aria-hidden', 'true');
 }
 
+function updateNotesBtnPriority() {
+  const notes = document.getElementById('workNotes');
+  const smokeBtn = document.getElementById('runRoundBtn');
+  const builderBtn = document.getElementById('builderOnlyBtn');
+  if (!notes || !smokeBtn || !builderBtn) return;
+  const hasNotes = notes.value.trim().length > 0;
+  if (hasNotes) {
+    // Notes present — Send to Builder is the suggested action
+    smokeBtn.classList.remove('footer-btn-smoke');
+    smokeBtn.classList.add('footer-btn');
+    builderBtn.classList.remove('footer-btn');
+    builderBtn.classList.add('footer-btn-smoke');
+  } else {
+    // No notes — Smoke the Hive is the suggested action
+    smokeBtn.classList.remove('footer-btn');
+    smokeBtn.classList.add('footer-btn-smoke');
+    builderBtn.classList.remove('footer-btn-smoke');
+    builderBtn.classList.add('footer-btn');
+  }
+}
+
 function openNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.add('active');
@@ -5783,6 +5840,7 @@ function openNotesModal() {
 function closeNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.remove('active');
+  updateNotesBtnPriority();
 }
 
 function openRoundHistoryModal() {
