@@ -4,4 +4,4 @@
 //  Update APP_VERSION here and it propagates to every page.
 // ============================================================
 
-const APP_VERSION = 'v3.19.7 Pro';
+const APP_VERSION = 'v3.19.8 Pro';

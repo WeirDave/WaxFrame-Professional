@@ -2,6 +2,28 @@
 
 ---
 
+## v3.19.8 Pro — Build `20260421-018`
+**Released:** April 21, 2026
+
+### Polish
+
+**Single-key Test modal — side-by-side Sent/Received panes for consistency with Test All Keys**
+The single-AI Test button (the per-row `Test` button beside each saved key) still used the legacy stacked four-row layout: Endpoint / Sent / Status / Received rendered top-to-bottom as rows inside `.custom-ai-raw-panel`. Now that Test All Keys is a three-column layout (v3.19.7), the mismatch read as inconsistent. Rebuilt the single-test modal to use the same two-pane visual language:
+
+- **Sent pane (left)** — Endpoint label + value, Request body label + pretty-printed JSON.
+- **Received pane (right)** — Status label + value, Response body label + pretty-printed JSON.
+
+Modal widened from `max-width: 640px` to `max-width: 1100px` with `width: 95vw`, sized `height: 60vh` with a `360px` minimum. Added a new `.tkp-two-col` grid layout in `style.css` (mirrors `.tkp-three-col` but without the rows column). Reused the existing `.tkp-col`, `.tkp-col-hdr`, `.tkp-col-body`, `.tkp-detail-label`, `.tkp-detail-pre`, and `.tkp-detail-pre--grow` classes so both test modals share the same Pro-level typography and scroll behavior.
+
+**No JS changes** — the four element IDs (`testKeyRawEndpoint`, `testKeyRawSent`, `testKeyRawStatus`, `testKeyRawReceived`) are preserved in the new markup, so the existing `testApiKey()` function writes to them unchanged.
+
+**Cleanup.** Dropped the stale `.test-key-raw-received { max-height: 200px; ... }` rule (no longer needed now that the new pane provides its own scroll container). Left `.custom-ai-raw-panel` and its children alone — still used by the Custom AI modal, Import Server modal, and Console Error Detail modal.
+
+### Files Changed
+`index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.7 Pro — Build `20260421-017`
 **Released:** April 21, 2026
 
