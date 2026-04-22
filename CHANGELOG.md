@@ -2,6 +2,40 @@
 
 ---
 
+## v3.19.0 Pro — Build `20260421-010`
+**Released:** April 21, 2026
+
+### New Features
+
+**Unanimous Convergence Scene — full-screen reveal for the hive's biggest moment**
+When every AI in the hive agrees the document is done, unanimous convergence now triggers a dedicated full-screen scene instead of the shared fly-in overlay. Timeline: black backdrop fades in over 800ms, then 28 large fog puffs rise across the full screen with Kai's fly-in whirr sound (5.2s), fog clears over 500ms, then `WaxFrame_Hive_Converged_Unanimously_03.png` reveals centered with a 900ms spring-eased zoom while a synthesized fanfare plays (C5–E5–G5–C6 major arpeggio with square+triangle oscillators for brass-ish tone, capped by a C7 sparkle ping) and a multicolor fireworks burst erupts from center (90 particles, 8-hue palette — gold, orange, red, magenta, purple, blue, cyan, green — canvas-rendered with gravity and air drag). Image holds ~4.5s then the scene fades out. **Escape key or click dismisses early** at any point in the timeline — all scheduled timers cancel, keydown listener removes itself, fog and image reset.
+
+**Viewport-aware rendering.** Image sized with `min(78vh, 78vw, 820px)` so it fits any supported viewport from 1024×768 up through 4K desktops. Fog puffs positioned in percentage units for natural scaling. Canvas is **DPR-aware** — backing bitmap sized at `sw * devicePixelRatio × sh * devicePixelRatio` with the context pre-scaled so sparks render crisply on Retina / high-DPI screens (iMac M4, 4K monitors) instead of the blurry-on-Retina default you'd get from a 1:1 canvas.
+
+Majority convergence is unchanged and still uses the smaller fly-in overlay with the `N of M AIs agree` subline. The new scene is reserved for the full-agreement moment.
+
+`playUnanimousScene()`, `closeUnanimousScene()`, `playUnanimousFanfare()`, and `spawnUnanimousFireworks()` added to `app.js` between `hiveRand` and the dev-toolbar helpers. HTML overlay (`#unanimousScene` with backdrop, fog, image, sparks canvas) added to `index.html` after the existing unlock scene. CSS block added to `style.css` between the hive-finish reduced-motion rule and the dev toolbar section — includes `prefers-reduced-motion` support that skips all animation and reveals the image immediately.
+
+Dev toolbar `▶ Unanimous` button rewired to fire the new scene so the 11-second sequence can be previewed without running a real round.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md` · `images/WaxFrame_Hive_Converged_Unanimously_03.png` *(new asset, drop into `images/`)*
+
+---
+
+## v3.18.7 Pro — Build `20260421-008`
+**Released:** April 21, 2026
+
+### Polish
+
+**Hive convergence count — flipped to amber for cohesion**
+Count subline changed from white (`rgba(255,255,255,0.95)`) to `var(--accent)` (`#f5a623` dark / `#c97c06` light) so both lines share the site brand color. Given the two lines now share identical typography (font-size, weight, letter-spacing), keeping them in different colors was visually inconsistent — the count reads as a continuation of **HIVE APPROVED**, not as a separate data chip. Text-shadow also matched to the headline's amber glow for full cohesion.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.18.6 Pro — Build `20260421-007`
 **Released:** April 21, 2026
 
