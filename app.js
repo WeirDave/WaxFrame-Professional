@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-018
+//  Build: 20260421-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-018';         // build stamp — update each session
+const BUILD       = '20260421-020';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2203,13 +2203,17 @@ async function testApiKey(id) {
   const sentEl   = document.getElementById('testKeyRawSent');
   const statEl   = document.getElementById('testKeyRawStatus');
   const rcvEl    = document.getElementById('testKeyRawReceived');
+  const rowNameEl   = document.getElementById('testKeySingleName');
+  const rowStatusEl = document.getElementById('testKeySingleStatus');
 
-  if (titleEl)  titleEl.textContent  = `Testing — ${ai.name}`;
-  if (subEl)    subEl.textContent    = 'Sending a minimal test request…';
-  if (epEl)     epEl.textContent     = cfg.endpoint;
-  if (sentEl)   sentEl.textContent   = '…';
-  if (statEl)   statEl.textContent   = '…';
-  if (rcvEl)    rcvEl.textContent    = '…';
+  if (titleEl)     titleEl.textContent     = `Testing — ${ai.name}`;
+  if (subEl)       subEl.textContent       = 'Sending a minimal test request…';
+  if (epEl)        epEl.textContent        = cfg.endpoint;
+  if (sentEl)      sentEl.textContent      = '…';
+  if (statEl)      statEl.textContent      = '…';
+  if (rcvEl)       rcvEl.textContent       = '…';
+  if (rowNameEl)   rowNameEl.textContent   = ai.name;
+  if (rowStatusEl) { rowStatusEl.textContent = '…'; rowStatusEl.className = 'tkp-status tkp-pending'; }
   if (modal)    modal.classList.add('active');
   if (btn) { btn.textContent = '…'; btn.disabled = true; }
 
@@ -2239,6 +2243,7 @@ async function testApiKey(id) {
       const hint = { 401:'Bad or missing API key.', 403:'Access denied — check key permissions.', 404:'Wrong endpoint URL.', 405:'Method not allowed — endpoint may not support chat completions.', 429:'Rate limited — wait and retry.', 500:'Server error on the provider side.', 503:'Service unavailable — provider may be down.' }[response.status] || '';
       if (subEl) subEl.textContent = `❌ ${errMsg}${hint ? ' — ' + hint : ''}`;
       if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ❌`;
+      if (rowStatusEl) { rowStatusEl.textContent = '✕'; rowStatusEl.className = 'tkp-status tkp-fail'; rowStatusEl.title = errMsg; }
       if (btn) { btn.textContent = '❌'; btn.disabled = false; }
       setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
       return;
@@ -2247,6 +2252,7 @@ async function testApiKey(id) {
     try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
     if (subEl)  subEl.textContent  = `✅ Connected — "${extracted.trim().substring(0, 60)}"`;
     if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms  ✅`;
+    if (rowStatusEl) { rowStatusEl.textContent = '✓'; rowStatusEl.className = 'tkp-status tkp-pass'; rowStatusEl.title = extracted.trim().substring(0, 60); }
     if (btn) { btn.textContent = '✅'; btn.disabled = false; }
     setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
   } catch(e) {
@@ -2254,6 +2260,7 @@ async function testApiKey(id) {
     if (subEl)  subEl.textContent  = `❌ ${e.message}`;
     if (statEl) statEl.textContent = `Network Error — ${ms}ms  ❌`;
     if (rcvEl)  rcvEl.textContent  = e.message;
+    if (rowStatusEl) { rowStatusEl.textContent = '✕'; rowStatusEl.className = 'tkp-status tkp-fail'; rowStatusEl.title = e.message; }
     if (btn) { btn.textContent = '❌'; btn.disabled = false; }
     setTimeout(() => { if (btn) btn.textContent = 'Test'; }, 5000);
   }
