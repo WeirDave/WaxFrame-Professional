@@ -5263,6 +5263,20 @@ function getLedgerEntry(d) {
   return window._conflictLedger.find(e => e.fingerprint === fingerprintConflict(d));
 }
 
+// Extract the "before" text from a reviewer suggestion like:
+// "Line 9: Change 'either one (or both) of us' to 'one or both of us'."
+// so we can scroll to it in the document.
+function scrollToHoldoutLine(suggestionText) {
+  if (!suggestionText) return;
+  // Try to extract text inside single quotes after "Change "
+  const match = suggestionText.match(/Change\s+["'](.+?)["']\s+to/i);
+  if (match && match[1]) {
+    scrollToCurrentText(match[1]);
+  } else {
+    toast('⚠️ Could not find text to scroll to');
+  }
+}
+
 function scrollToCurrentText(currentText) {
   const ta = document.getElementById('workDocument');
   if (!ta || !currentText) return;
@@ -5357,7 +5371,7 @@ function renderConflicts() {
             <span class="convergence-ai-badge">🐝 ${esc(s.name)}</span>
             <span class="decision-badge" class="convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
-          <div class="convergence-suggestion">${esc(s.text)}</div>
+          <div class="convergence-suggestion decision-current-clickable" title="Click to scroll document to this text" data-suggestion="${esc(s.text)}" onclick="scrollToHoldoutLine(this.dataset.suggestion)">${esc(stripLineRefs(s.text))}</div>
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">
