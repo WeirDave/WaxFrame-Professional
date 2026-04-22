@@ -4507,22 +4507,24 @@ kbd {
 
 .finish-modal-btn-export {
   border: 1px dashed var(--accent);
-  color: var(--accent);
+  color: var(--text);
 }
 .finish-modal-btn-export:hover {
   background: var(--accent-dim);
   border-style: solid;
+  color: var(--accent);
 }
 
 .finish-modal-btn-new {
   border: 1px dashed var(--green);
-  color: var(--green);
+  color: var(--text);
   flex-direction: column;
   gap: 3px;
 }
 .finish-modal-btn-new:hover {
   background: var(--green-dim);
   border-style: solid;
+  color: var(--green);
 }
 .finish-modal-btn-new-sub {
   font-size: 11px;
@@ -5236,7 +5238,7 @@ kbd {
 }
 .hive-smoke-particle {
   position: absolute;
-  bottom: 10%;
+  bottom: calc(10% + 100px); /* shifted up for jet-exhaust feel */
   left: 50%;
   width: var(--size);
   height: var(--size);
@@ -5261,7 +5263,7 @@ kbd {
 }
 .hive-finish-tagline {
   position: absolute;
-  bottom: 20%;
+  bottom: 22%;
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-display, sans-serif);
@@ -5274,8 +5276,27 @@ kbd {
   opacity: 0;
   white-space: nowrap;
 }
+.hive-finish-count {
+  position: absolute;
+  bottom: 17%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-display, sans-serif);
+  font-size: clamp(0.85rem, 1.5vw, 1.15rem);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.88);
+  text-shadow: 0 0 12px rgba(244,185,66,0.4), 0 2px 6px rgba(0,0,0,0.85);
+  opacity: 0;
+  white-space: nowrap;
+  display: none;
+}
 .hive-finish-overlay.is-active .hive-finish-tagline {
   animation: hiveTaglineFade 600ms ease-out 700ms forwards;
+}
+.hive-finish-overlay.is-active .hive-finish-count {
+  animation: hiveTaglineFade 600ms ease-out 950ms forwards;
 }
 @keyframes hiveBeeSwingIn {
   0%   { opacity: 0; transform: translateX(-120vw) rotate(-12deg) scale(0.8); }

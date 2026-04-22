@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-005
+//  Build: 20260421-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-005';         // build stamp — update each session
+const BUILD       = '20260421-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -646,26 +646,15 @@ function playRosieSound() {
   } catch(e) { /* audio not supported — fail silently */ }
 }
 
-// ── FLYING CAR ARRIVAL — doppler-style descending swoop ──
+// ── FLYING CAR ARRIVAL — plays Kai's WaxFrame hive-approved fly-in sound ──
+// File lives at sounds/waxframe_hive_approved_flyin.wav. If the file is
+// missing or audio is blocked, fails silently.
 function playFlyingCarSound() {
   if (_isMuted) return;
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const o = ctx.createOscillator(), o2 = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g); o2.connect(g); g.connect(ctx.destination);
-    o.type = 'sine'; o2.type = 'triangle';
-    const t = ctx.currentTime;
-    o.frequency.setValueAtTime(900, t);
-    o.frequency.exponentialRampToValueAtTime(200, t + 0.8);
-    o2.frequency.setValueAtTime(1100, t);
-    o2.frequency.exponentialRampToValueAtTime(220, t + 0.9);
-    g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.25, t + 0.05);
-    g.gain.linearRampToValueAtTime(0.15, t + 0.7);
-    g.gain.linearRampToValueAtTime(0, t + 1.3);
-    o.start(t); o2.start(t); o.stop(t + 1.4); o2.stop(t + 1.4);
-    setTimeout(() => ctx.close(), 1800);
+    const audio = new Audio('sounds/waxframe_hive_approved_flyin.wav');
+    audio.volume = 0.85;
+    audio.play().catch(() => {});
   } catch(e) { /* audio not supported — fail silently */ }
 }
 
@@ -4073,11 +4062,26 @@ function exportSnapshot() {
 let hiveFinishTimer = null;
 
 function showHiveFinish(options = {}) {
-  const { duration = 4000, smokeBursts = 10 } = options;
+  const { duration = 4000, smokeBursts = 10, satisfied = null, total = null } = options;
   const overlay = document.getElementById('hiveFinishOverlay');
   const smokeWrap = document.getElementById('hiveFinishSmoke');
+  const subEl = document.getElementById('hiveFinishCount');
   if (!overlay) return;
   clearTimeout(hiveFinishTimer);
+
+  // Set the count subline — "4 of 6 AIs agree" for majority, "Unanimous · 6 of 6" for full
+  if (subEl) {
+    if (satisfied !== null && total !== null) {
+      subEl.textContent = (satisfied === total)
+        ? `Unanimous · ${satisfied} of ${total}`
+        : `${satisfied} of ${total} AIs agree`;
+      subEl.style.display = 'block';
+    } else {
+      subEl.textContent = '';
+      subEl.style.display = 'none';
+    }
+  }
+
   if (smokeWrap) {
     smokeWrap.innerHTML = '';
     for (let i = 0; i < smokeBursts; i++) {
@@ -4088,7 +4092,7 @@ function showHiveFinish(options = {}) {
       puff.style.setProperty('--y', `${hiveRand(-150, -300)}px`);
       puff.style.setProperty('--dur', `${hiveRand(1500, 2800)}ms`);
       puff.style.setProperty('--opacity', (Math.random() * 0.3 + 0.15).toFixed(2));
-      puff.style.left = `${50 + hiveRand(-8, 8)}%`;
+      puff.style.left = `calc(50% - 100px + ${hiveRand(-8, 8)}%)`;
       puff.style.animationDelay = `${hiveRand(0, 600)}ms`;
       smokeWrap.appendChild(puff);
     }
@@ -4116,24 +4120,21 @@ function hiveRand(min, max) {
 function devTestFlyInOnly() {
   // Bee fly-in overlay with no audio — for previewing the animation in silence.
   toast('🐝 Dev: fly-in only (no sound)');
-  showHiveFinish({ duration: 4000, smokeBursts: 10 });
+  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 4, total: 6 });
 }
 
 function devTestMajorityConverge() {
-  // Majority convergence: some AIs still have suggestions, Builder is skipped.
-  // Matches the real call site in runRound() when hasMajorityConvergence is true.
-  toast('🏁 Dev: majority convergence');
+  // Majority convergence: 4 of 6 agree, 2 still have suggestions.
+  toast('🏁 Dev: majority convergence (4 of 6)');
   playFlyingCarSound();
-  showHiveFinish({ duration: 4000, smokeBursts: 10 });
+  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 4, total: 6 });
 }
 
 function devTestUnanimous() {
-  // Unanimous: every AI agrees no changes needed. Finish modal opens at +1.8s.
-  // Matches the real call site when noChangesCount === successfulReviews.length.
-  toast('🏁 Dev: unanimous — finish modal will open');
+  // Unanimous: all 6 AIs agree — same end-state as majority, no auto-modal.
+  toast('🏁 Dev: unanimous (6 of 6)');
   playFlyingCarSound();
-  showHiveFinish({ duration: 5000, smokeBursts: 14 });
-  setTimeout(() => showFinishModal(), 1800);
+  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 6, total: 6 });
 }
 
 function setPhase(id) {
@@ -4927,10 +4928,10 @@ async function runRound() {
     if (runBtnU) runBtnU.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
     stopRoundTimer();
     hideSmokerOverlay();
-    // 🎉 Full unanimous agreement — biggest moment, show the overlay then the finish modal
+    // 🎉 Hive converged — same end-state regardless of holdout count.
+    // User decides when to finish via the Finish button; no auto-popup.
     playFlyingCarSound();
-    showHiveFinish({ duration: 5000, smokeBursts: 14 });
-    setTimeout(() => showFinishModal(), 1800);
+    showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
     return;
   } else if (noChangesCount > 0) {
     consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
@@ -4970,7 +4971,7 @@ async function runRound() {
     hideSmokerOverlay();
     // 🎉 Hive Approved — majority convergence earns the fanfare
     playFlyingCarSound();
-    showHiveFinish({ duration: 4000, smokeBursts: 10 });
+    showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
     return;
   }
 
