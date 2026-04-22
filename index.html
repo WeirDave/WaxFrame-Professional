@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260421-017">
+  <meta name="waxframe-build" content="20260421-018">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.19.7">
+  <link rel="stylesheet" href="style.css?v=3.19.8">
 </head>
 <body>
 
@@ -1014,11 +1014,25 @@
       </div>
       <button class="import-server-close-btn" onclick="closeTestKeyModal()" title="Close">✕</button>
     </div>
-    <div class="custom-ai-raw-panel">
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="testKeyRawEndpoint">—</pre></div>
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Sent</span><pre class="custom-ai-raw-pre" id="testKeyRawSent">—</pre></div>
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="testKeyRawStatus">—</pre></div>
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre test-key-raw-received" id="testKeyRawReceived">—</pre></div>
+    <div class="tkp-two-col">
+      <div class="tkp-col tkp-col-sent">
+        <div class="tkp-col-hdr">Sent</div>
+        <div class="tkp-col-body">
+          <div class="tkp-detail-label">Endpoint</div>
+          <pre class="tkp-detail-pre" id="testKeyRawEndpoint">—</pre>
+          <div class="tkp-detail-label">Request body</div>
+          <pre class="tkp-detail-pre tkp-detail-pre--grow" id="testKeyRawSent">—</pre>
+        </div>
+      </div>
+      <div class="tkp-col tkp-col-rcv">
+        <div class="tkp-col-hdr">Received</div>
+        <div class="tkp-col-body">
+          <div class="tkp-detail-label">Status</div>
+          <pre class="tkp-detail-pre" id="testKeyRawStatus">—</pre>
+          <div class="tkp-detail-label">Response body</div>
+          <pre class="tkp-detail-pre tkp-detail-pre--grow" id="testKeyRawReceived">—</pre>
+        </div>
+      </div>
     </div>
     <div class="custom-ai-form-footer">
       <span></span>
@@ -1227,7 +1241,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.7"></script>
+<script src="app.js?v=3.19.8"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
