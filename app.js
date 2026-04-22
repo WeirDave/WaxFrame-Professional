@@ -1674,7 +1674,17 @@ function updateDocRequirements() {
     reqDoc.classList.toggle('met', hasDoc);
   }
   const btn = document.getElementById('launchBtn');
-  if (btn) btn.classList.toggle('btn-accent', hasDoc);
+  if (!btn) return;
+  const hasActiveSession = history.length > 0 || (docText && round > 1);
+  if (hasActiveSession) {
+    btn.classList.add('btn-accent');
+    btn.querySelector('.launch-label').textContent = '↩ Return to Work Screen';
+    btn.onclick = () => goToScreen('screen-work');
+  } else {
+    btn.classList.toggle('btn-accent', hasDoc);
+    btn.querySelector('.launch-label').textContent = 'Launch WaxFrame →';
+    btn.onclick = () => startSession();
+  }
 }
 
 // Legacy alias — kept for any internal calls that haven't been updated
@@ -3619,6 +3629,11 @@ function startSession() {
 
   if (!name) { toast('⚠️ Enter a project name'); return; }
   if (!goal) { toast('⚠️ Fill in at least one goal field'); return; }
+
+  // Guard: if an active session exists, warn before overwriting it
+  if (history.length > 0 || (docText && round > 1)) {
+    if (!confirm(`You have an active session (${round - 1} round${round - 1 !== 1 ? 's' : ''} completed). Launching again will clear your current document and round history. Continue?`)) return;
+  }
 
   if (docTab === 'paste') {
     docText = document.getElementById('pasteText').value.trim();
