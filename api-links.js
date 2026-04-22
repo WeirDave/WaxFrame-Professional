@@ -11,7 +11,7 @@ function openAllConsoles() {
     'https://platform.deepseek.com/api_keys',
     'https://aistudio.google.com/apikey',
     'https://console.x.ai',
-    'https://www.perplexity.ai/settings/api'
+    'https://console.perplexity.ai'
   ];
   var opened = 0;
   consoles.forEach(function(url) {
@@ -28,7 +28,7 @@ function openAllBilling() {
     'https://platform.deepseek.com/top_up',
     'https://aistudio.google.com/apikey',
     'https://console.x.ai',
-    'https://www.perplexity.ai/settings/api'
+    'https://console.perplexity.ai'
   ];
   var opened = 0;
   billing.forEach(function(url) {

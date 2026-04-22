@@ -2738,6 +2738,15 @@ kbd {
   padding-top: 10px;
   margin-top: 4px;
 }
+.goal-info-manual-link {
+  font-size: 15px;
+  text-align: center;
+  margin: 2px 0 0;
+  padding-top: 10px;
+}
+.goal-info-manual-link a {
+  font-weight: 600;
+}
 
 /* ── GOAL HEADING ── */
 /* ── Length Constraint ── */
@@ -4876,6 +4885,21 @@ kbd {
   position: sticky; top: 0; z-index: 100;
   flex-shrink: 0;
 }
+/* Explicit light-theme override — defensive against any cascade failure.
+   var(--surface2) SHOULD flip automatically via the [data-theme="light"]
+   block at the top of the file, but a user report showed the header
+   staying dark while the body flipped, so we hardcode the light value
+   here to guarantee the flip regardless of cascade quirks or stale caches. */
+[data-theme="light"] .page-header {
+  background: #f0f2f8;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .page-header {
+    background: #f0f2f8;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.06);
+  }
+}
 .page-header-brand {
   flex: 1;
   display: flex;
@@ -5135,6 +5159,17 @@ kbd {
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
   flex-shrink: 0;
 }
+/* Explicit light-theme override — see matching comment on .page-header above. */
+[data-theme="light"] .page-footer {
+  background: #f0f2f8;
+  box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .page-footer {
+    background: #f0f2f8;
+    box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
+  }
+}
 .page-footer-btns {
   display: flex;
   align-items: center;
@@ -5158,7 +5193,7 @@ kbd {
   display: inline;
   margin-top: 0;
   font-size: 10px;
-  opacity: 0.5;
+  color: var(--text-dim);
   letter-spacing: 0.06em;
 }
 .api-intro-title {
