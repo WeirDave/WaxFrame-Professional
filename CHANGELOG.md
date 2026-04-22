@@ -2,6 +2,31 @@
 
 ---
 
+## v3.19.3 Pro — Build `20260421-013`
+**Released:** April 21, 2026
+
+### Polish
+
+**Unanimous Scene — three-burst firework sequence, anvil launch thump, and image hold**
+The reveal used to fire a single 90-particle burst simultaneously with the fanfare, which buried the image under too much visual noise all at once — users couldn't register what the image actually said. Rebuilt the reveal into a proper firework cadence:
+
+- **T+6.5s** — image reveals + **anvil drop** (deep sine-wave boom with noise-burst impact and filtered-noise reverb tail, reusing the existing `playAnvilSound()`). This reads as the mortar-launch thump that precedes a real firework.
+- **T+7.0s** — first burst fires center-screen (60 particles) + fanfare starts (the explosion).
+- **T+7.7s** — second burst offset left (40 particles).
+- **T+8.4s** — third burst offset right (40 particles).
+- **T+8.4 → 11s** — ~2.6 seconds of image-hold time for the user to actually read and register the reveal. Sparks fade through this window but don't dominate it.
+
+`spawnUnanimousFireworks()` rewritten to accept an optional `bursts` array `[{ at, x, y, count }, ...]` and run a single shared RAF loop that particles from each burst feed into. Default schedule is the three bursts above; canvas context is still pre-scaled for DPR so all coords are CSS pixels. Loop terminates when all particles die AND no pending bursts remain.
+
+**Mute compliance audit.** Verified `playFlyingCarSound()`, `playUnanimousFanfare()`, and `playAnvilSound()` all have `if (_isMuted) return;` as their first statement — the mute toggle silences the entire scene soundscape cleanly.
+
+Total scene length extended from 11s to 11.9s (scene close moved from T+11s through a 900ms fade).
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.2 Pro — Build `20260421-012`
 **Released:** April 21, 2026
 
