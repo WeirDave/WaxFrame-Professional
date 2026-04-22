@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260422-002';         // build stamp — update each session
+const BUILD       = '20260422-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1820,6 +1820,18 @@ function clearProject() {
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
   localStorage.removeItem('waxframe_v2_has_pdf_pages');
+
+  // Reset Finish modal export buttons to their pristine innerHTML captured on
+  // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
+  // state carries over to the next session's Finish modal.
+  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (!btn || !btn.dataset.originalHtml) return;
+    btn.innerHTML = btn.dataset.originalHtml;
+    btn.disabled = false;
+    btn.classList.remove('finish-modal-btn-done');
+  });
+
   projectClockReset();
   toast('🗑 Project cleared — AI keys and settings kept');
 }
@@ -4015,15 +4027,12 @@ function showFinishModal() {
 
   const hasDoc     = !!(document.getElementById('workDocument')?.value?.trim());
   const hasHistory = history.length > 0;
-  const hasAnything = hasDoc || hasHistory;
 
   const btnDoc      = document.getElementById('finishBtnDoc');
   const btnTranscript = document.getElementById('finishBtnTranscript');
-  const btnSnapshot = document.getElementById('finishBtnSnapshot');
 
   if (btnDoc)       btnDoc.classList.toggle('finish-modal-btn-disabled', !hasDoc);
   if (btnTranscript) btnTranscript.classList.toggle('finish-modal-btn-disabled', !hasHistory);
-  if (btnSnapshot)  btnSnapshot.classList.toggle('finish-modal-btn-disabled', !hasAnything);
 }
 
 function hideFinishModal() {
@@ -4070,40 +4079,6 @@ function finishAndNew() {
   hideFinishModal();
   clearProject();
   goToScreen('screen-project');
-}
-
-function exportSnapshot() {
-  // Guard: disabled button should not fire
-  const btn = document.getElementById('finishBtnSnapshot');
-  if (btn?.classList.contains('finish-modal-btn-disabled')) return;
-
-  const hive    = localStorage.getItem(LS_HIVE)    || null;
-  const project = localStorage.getItem(LS_PROJECT) || null;
-  const session = localStorage.getItem(LS_SESSION) || null;
-  if (!hive && !project && !session) { toast('⚠️ Nothing to snapshot'); return; }
-
-  const snapshot = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
-
-  // Build filename from project name + version
-  const proj = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
-  const name    = proj.name    ? proj.name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40) : 'session';
-  const version = proj.version ? proj.version.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 10) : '';
-  const filename = version ? `WaxFrame-Snapshot-${name}-${version}` : `WaxFrame-Snapshot-${name}`;
-
-  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `${filename}.json`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-
-  if (btn) {
-    btn.textContent = '✅ Snapshot saved!';
-    btn.disabled = true;
-    btn.classList.add('finish-modal-btn-done');
-  }
-  toast('📷 Session snapshot saved — import it from the Menu to resume');
-  window._finishExported = true;
 }
 
 /* =========================================
@@ -6779,6 +6754,20 @@ function exportSession() {
 
   toast('💾 Full transcript exported');
   window._finishExported = true;
+
+  // If this was triggered from the Finish modal (modal currently active), mark
+  // the transcript button done for consistency with Export Document. The
+  // work-screen transcript button shares this function and shouldn't get that
+  // treatment, so we gate on modal visibility.
+  const modal = document.getElementById('finishModal');
+  if (modal && modal.classList.contains('active')) {
+    const btnT = document.getElementById('finishBtnTranscript');
+    if (btnT) {
+      btnT.textContent = '✅ Transcript exported!';
+      btnT.disabled = true;
+      btnT.classList.add('finish-modal-btn-done');
+    }
+  }
 }
 
 function backupSession() {
@@ -6871,6 +6860,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
   updateSetupRequirements();
+
+  // Capture pristine innerHTML of Finish modal export buttons so clearProject()
+  // can restore them to this state after a session boundary. Without this, a
+  // previous session's "✅ Exported!" / done styling carries over to the next
+  // session because finishAndExport and exportSession overwrite button innerHTML.
+  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn && !btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+  });
 
   // Show dev toolbar and admin nav items if dev mode is active
   if (localStorage.getItem('waxframe_dev') === '1') {

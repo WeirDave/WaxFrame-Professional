@@ -2,6 +2,38 @@
 
 ---
 
+## v3.19.15 Pro — Build `20260422-003`
+**Released:** April 22, 2026
+
+### Finish modal cleanup — snapshot button removed, export-button state leak fixed
+
+The Finish modal shipped with a **📷 Save Session Snapshot** button that called a function called `exportSnapshot()` — which was a near-duplicate of the Menu's **💾 Backup Session** → `backupSession()`. Same output (`_waxframe_backup` JSON), same use case (pause and resume across sessions), two different entry points, two slightly different filename conventions, and one of them had a stale `.name` vs `.projectName` bug that produced generic `WaxFrame-Snapshot-session.json` filenames instead of the project-named files the Menu version produces correctly. This release deletes the duplicate entirely.
+
+The Finish modal's job is **finalizing and delivering** — Export Document, Export Full Transcript, Start New Project. Save-session-for-later is a different workflow (pause, resume, laptop battery dying, end of day, machine switch) and belongs in the Menu where it already lives. Collapsing to one entry point per action removes a real bug class: the duplicate function had drift in filename handling that nobody was going to notice until someone tried to compare two backup files from the same project.
+
+**Files touched by this deletion:** `index.html` removes the `finishBtnSnapshot` button block; `app.js` removes the `exportSnapshot()` function and the two corresponding references inside `showFinishModal()` (the lookup and the disabled-class toggle, plus the now-dead `hasAnything` variable); `waxframe-user-manual.html` removes the *📷 Save Session Snapshot* row from the Step 10 Finish modal table, rewrites the Start-New-Project warning to reference **Menu → 💾 Backup Session** for session preservation, and updates the Step 6 Finish-button descriptor that briefly mentioned snapshots. No CSS changes — the `.finish-modal-btn-snapshot` class had no standalone rules (it was only used as a tag on the shared `.finish-modal-btn-export` styling).
+
+### Bug Fix
+
+**Finish modal export-button state leak across sessions**
+
+Clicking **💾 Export Document** in the Finish modal correctly set the button to a "✅ Exported!" done state — disabled and visually distinct — so the user knew the export had happened. But that done state persisted across sessions. After clicking **Start New Project** and running an entirely new session, the user would open the Finish modal and see **✅ Exported!** already applied to their Export Document button, even though they had never exported this new session's content. Same pattern affected the deleted snapshot button.
+
+Root cause was that `finishAndExport()` overwrote the button's `innerHTML` and set `disabled = true`, but nothing else in the codebase ever reset those properties. `showFinishModal()` only toggled the `.finish-modal-btn-disabled` class based on whether there was content to export; it never restored the per-session done state. `clearProject()` wiped all session data but left the Finish modal button state untouched.
+
+The fix captures each button's pristine `innerHTML` into a `dataset.originalHtml` attribute on page load (inside the existing `DOMContentLoaded` handler, one capture per button, one line per button), then restores from that snapshot inside `clearProject()` alongside the other session-teardown work. This gives correct scoping — within the same session, closing and reopening the Finish modal preserves the user's "already exported" state so they don't get confused. Across sessions, `clearProject()` fires (it's called by `finishAndNew()` and by session-wipe paths), the button innerHTML is restored from the captured pristine state, `disabled` is cleared, and `.finish-modal-btn-done` class is removed. User sees a fresh Finish modal with fresh export buttons for the new session.
+
+### Consistency
+
+**Finish modal transcript button — now also shows a done state**
+
+`exportSession()` (the full-transcript export function) is called from two places: the work-screen **📋 Export Transcript** button and the Finish modal's **📋 Export Full Transcript** button. Previously it updated neither button's done state because it couldn't know which caller fired it. Now it checks whether the Finish modal is currently active — if so, it updates `finishBtnTranscript` to the done state, matching the behaviour of `finishAndExport()` for the document button. The work-screen transcript button is unaffected because the modal is not active when it fires. The state-leak fix above applies to the transcript button too, so its new done state resets correctly across sessions via the same mechanism.
+
+### Files Changed
+`index.html` · `app.js` · `waxframe-user-manual.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.14 Pro — Build `20260422-002`
 **Released:** April 22, 2026
 
