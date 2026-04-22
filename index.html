@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260421-020">
+  <meta name="waxframe-build" content="20260421-021">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.19.10">
+  <link rel="stylesheet" href="style.css?v=3.19.11">
 </head>
 <body>
 
@@ -916,25 +916,37 @@
 <!-- GOAL INFO MODAL -->
 <div class="finish-modal-overlay" id="goalInfoModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
-    <div class="goal-info-modal-icon-wrap">
-      <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="goal-info-modal-icon">
-    </div>
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">About Your Project Goal</h2>
     <div class="goal-info-body">
-      <p>The six goal fields are assembled into a structured brief that every AI reads before each round. You don't need to fill all of them — even two or three gives the hive a strong foundation.</p>
+      <p>This is the most important section of the entire setup. Every AI in your hive reads these six fields before touching your document — it is the <strong>only</strong> context they have about what you actually want. Vague fields produce a vague document. Specific, detailed fields produce something you can use.</p>
+      <p>You do not need to fill all six — even two or three give the hive a strong foundation. Fill them top to bottom. Each one controls a specific dimension of the output:</p>
       <div class="goal-info-row">
-        <span class="info-label">Generating from scratch</span>
-        <span class="goal-info-desc">Your full assembled goal is sent to every AI. The AIs have nothing else to work from — give them as much detail as possible, especially Desired outcome and Scope.</span>
+        <span class="info-label">Document type</span>
+        <span class="goal-info-desc">Sets the format, length conventions, and depth. Be specific — <em>cover letter</em> not <em>document</em>, <em>technical comparison</em> not <em>report</em>. If there is one thing the AIs must never forget, put it here.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Document exists</span>
-        <span class="goal-info-desc">Only a trimmed <em>Project Context</em> is sent — approximately the first 300 characters of your assembled goal, cut at a sentence boundary. The token budget is better spent on the document and reviewer suggestions.</span>
+        <span class="info-label">Target audience</span>
+        <span class="goal-info-desc">Calibrates tone, vocabulary, and how much to explain. <em>IT Director and VP of Facilities</em> produces very different results than <em>business audience</em>. Name the seniority, technical level, and any split audience.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> For anything the AIs must never forget, put it in <strong>Document type</strong> or <strong>Desired outcome</strong> — both lead the assembled goal and always survive the 300-character trim when a document exists.</p>
       <div class="goal-info-row">
-        <span class="info-label">Refine Preview</span>
-        <span class="goal-info-desc">The Refine Preview panel below the goal fields shows exactly what will be sent when a document exists — updated live as you type. It only appears when your assembled goal exceeds 300 characters.</span>
+        <span class="info-label">Desired outcome</span>
+        <span class="goal-info-desc">The finish line. This is the field with the most impact on quality — every suggestion and every rewrite is working toward this. <em>Approve the budget</em>, <em>schedule an interview</em>, <em>pick one of the three options</em>. Vague here means vague everywhere.</span>
       </div>
+      <div class="goal-info-row">
+        <span class="info-label">Scope &amp; constraints</span>
+        <span class="goal-info-desc">Draws the fence. AIs expand into adjacent topics unless you stop them. Cover both sides — what must be included and what must <em>not</em> be. <em>Wireless only — no switching, routing, or security products.</em></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Tone &amp; voice</span>
+        <span class="goal-info-desc">Prevents style drift across rounds when different AIs are writing. Two or three words is enough — <em>confident, direct, no jargon</em> or <em>warm, conversational, no bullet points</em>.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Additional instructions</span>
+        <span class="goal-info-desc">Hard rules that must survive every round — things the AIs must always or never do. <em>Do not add new sections. Never change the numbers in the cost table. Always use Oxford commas.</em></span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> The goal works the same way whether you are uploading a file, pasting text, or starting from scratch. The AIs have nothing else to work from — no internet access, no knowledge of your organisation, no understanding of what you want unless you put it here.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('goalInfoModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1074,6 +1086,7 @@
         <span class="goal-info-desc">On the Work screen you can toggle individual AIs on or off for the current session using the Edit Hive button — without losing their saved keys. Useful if you want a faster round or are testing specific reviewers.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step1" target="_blank" class="link-accent">Read the full guide in the user manual — Step 1: Set Up Your Worker Bees ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoBeesModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1099,6 +1112,7 @@
         <span class="goal-info-desc">Yes — you can change your Builder at any time from the Work screen using the Change Builder button. You are not locked in.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> See <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a> for a full breakdown of token costs across providers and how to keep your usage costs low.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step2" target="_blank" class="link-accent">Read the full guide in the user manual — Step 2: Choose Your Builder ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoBuilderModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1113,6 +1127,7 @@
       <p>This is the live version of your document. Every round, the Builder rewrites it in full based on reviewer suggestions. You can edit it directly at any time between rounds — the AIs reference line numbers, so the numbering updates automatically as you make changes.</p>
       <div class="goal-info-row"><span class="info-label">Editing directly</span><span class="goal-info-desc">Click anywhere in the document and type. The hive will see your changes in the next round.</span></div>
       <div class="goal-info-row"><span class="info-label">Line numbers</span><span class="goal-info-desc">AIs reference line numbers in their suggestions so the Builder can locate changes precisely. Don't worry about the numbers — they update automatically.</span></div>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1127,6 +1142,7 @@
       <div class="goal-info-row"><span class="info-label">User Decision</span><span class="goal-info-desc">The Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own resolution, bypass if you've already fixed it directly, or decline to suppress it entirely. Your decision is applied immediately and locked.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder Decision</span><span class="goal-info-desc">The Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the <strong>Current:</strong> label on any conflict card to jump directly to that line in the working document.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step8" target="_blank" class="link-accent">Read the full guide in the user manual — Step 8: Review Results and Resolve Conflicts ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1141,6 +1157,7 @@
       <div class="goal-info-row"><span class="info-label">Round entries</span><span class="goal-info-desc">Each round starts with a divider showing the round number and phase. Sending, response, success, and error entries follow for each AI.</span></div>
       <div class="goal-info-row"><span class="info-label">Errors</span><span class="goal-info-desc">API errors, rate limits, and connection failures appear in red with the HTTP status code and a plain-English explanation.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log for troubleshooting.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1155,6 +1172,7 @@
       <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds — it reads all reviewer suggestions and rewrites the working document each round. It uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
       <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoHiveModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1169,7 +1187,8 @@
       <div class="goal-info-row"><span class="info-label">{name}</span><span class="goal-info-desc">Replaced with your project name, sanitised for use in filenames.</span></div>
       <div class="goal-info-row"><span class="info-label">{version}</span><span class="goal-info-desc">Replaced with your project version number. If no version is set, defaults to "v1".</span></div>
       <div class="goal-info-row"><span class="info-label">Example</span><span class="goal-info-desc">A mask of <code>{name}_final_{version}</code> with project name "My Report" and version "v2" produces <code>My_Report_final_v2.txt</code>.</span></div>
-      <p class="goal-info-tip">💡 Leave the mask blank to use the default format: ProjectName_version.txt</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Leave the mask blank to use the default format: ProjectName_version.txt</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step10" target="_blank" class="link-accent">Read the full guide in the user manual — Step 10: Export and Finish ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoExportMaskModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1185,6 +1204,7 @@
       <div class="goal-info-row"><span class="info-label">Paste Text</span><span class="goal-info-desc">Click inside the editor that appears and paste your text directly.</span></div>
       <div class="goal-info-row"><span class="info-label">Start from Scratch</span><span class="goal-info-desc">No further action needed — the hive will generate a first draft from your project goal.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with digitally-created documents. Heavily designed or scanned PDFs may extract poorly — try Paste Text if that happens.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" class="link-accent">Read the full guide in the user manual — Step 4: Provide Your Starting Document ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1250,7 +1270,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.10"></script>
+<script src="app.js?v=3.19.11"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
