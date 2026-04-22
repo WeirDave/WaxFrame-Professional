@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260421-016">
+  <meta name="waxframe-build" content="20260421-017">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.19.6">
+  <link rel="stylesheet" href="style.css?v=3.19.7">
 </head>
 <body>
 
@@ -950,11 +950,28 @@
       <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
       <div>
         <div class="custom-ai-modal-title" id="tkpTitle">Testing API keys…</div>
-        <div class="custom-ai-modal-sub">Sending a minimal test request to each saved AI</div>
+        <div class="custom-ai-modal-sub">Click any row to see what was sent and received</div>
       </div>
       <button class="import-server-close-btn" id="tkpDismiss" onclick="dismissTestPanel()" title="Close">✕</button>
     </div>
-    <div id="tkpRows" class="tkp-rows"></div>
+    <div class="tkp-three-col">
+      <div class="tkp-col tkp-col-rows">
+        <div class="tkp-col-hdr">AI</div>
+        <div id="tkpRows" class="tkp-rows"></div>
+      </div>
+      <div class="tkp-col tkp-col-sent">
+        <div class="tkp-col-hdr">Sent</div>
+        <div class="tkp-col-body" id="tkpSentPane">
+          <div class="tkp-empty">Click a row to see the request.</div>
+        </div>
+      </div>
+      <div class="tkp-col tkp-col-rcv">
+        <div class="tkp-col-hdr">Received</div>
+        <div class="tkp-col-body" id="tkpRcvPane">
+          <div class="tkp-empty">Click a row to see the response.</div>
+        </div>
+      </div>
+    </div>
     <div class="custom-ai-form-footer">
       <span></span>
       <button class="btn" onclick="dismissTestPanel()">← Close</button>
@@ -1210,7 +1227,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.6"></script>
+<script src="app.js?v=3.19.7"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
