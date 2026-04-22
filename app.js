@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-016
+//  Build: 20260421-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-016';         // build stamp — update each session
+const BUILD       = '20260421-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2271,55 +2271,59 @@ async function testAllKeys() {
   const modal  = document.getElementById('testKeysModal');
   const title  = document.getElementById('tkpTitle');
   const rowsEl = document.getElementById('tkpRows');
+  const sentPane = document.getElementById('tkpSentPane');
+  const rcvPane  = document.getElementById('tkpRcvPane');
   const closeBtn = document.getElementById('tkpDismiss');
   if (!modal) return;
 
+  // Fresh state per run
+  window._tkpData = {};
+  window._tkpSelected = null;
   rowsEl.innerHTML = '';
+  if (sentPane) sentPane.innerHTML = '<div class="tkp-empty">Click a row to see the request.</div>';
+  if (rcvPane)  rcvPane.innerHTML  = '<div class="tkp-empty">Click a row to see the response.</div>';
   if (title) title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
   if (closeBtn) { closeBtn.disabled = true; closeBtn.textContent = 'Testing…'; }
   modal.classList.add('active');
 
   keyed.forEach(ai => {
-    const row = document.createElement('div');
+    const row = document.createElement('button');
+    row.type = 'button';
     row.className = 'tkp-row';
     row.id = `tkprow-${ai.id}`;
+    row.onclick = () => selectTkpRow(ai.id);
     row.innerHTML = `
-      <div class="tkp-row-top">
-        <span class="tkp-ai-name">${ai.name}</span>
-        <span class="tkp-status tkp-pending">…</span>
-        <button class="tkp-detail-toggle" id="tkpdetailbtn-${ai.id}" onclick="toggleTkpDetail('${ai.id}')" style="display:none;">▶ Details</button>
-      </div>
-      <div class="tkp-detail" id="tkpdetail-${ai.id}" style="display:none;">
-        <div class="tkp-detail-row"><span class="tkp-detail-label">Endpoint</span><pre class="tkp-detail-pre" id="tkpep-${ai.id}">—</pre></div>
-        <div class="tkp-detail-row"><span class="tkp-detail-label">Sent</span><pre class="tkp-detail-pre" id="tkpsent-${ai.id}">—</pre></div>
-        <div class="tkp-detail-row"><span class="tkp-detail-label">Status</span><pre class="tkp-detail-pre" id="tkpstat-${ai.id}">—</pre></div>
-        <div class="tkp-detail-row"><span class="tkp-detail-label">Received</span><pre class="tkp-detail-pre tkp-detail-pre--received" id="tkprcv-${ai.id}">—</pre></div>
-      </div>`;
+      <span class="tkp-ai-name">${ai.name}</span>
+      <span class="tkp-status tkp-pending" id="tkpstatusicon-${ai.id}">…</span>`;
     rowsEl.appendChild(row);
+    window._tkpData[ai.id] = {
+      name: ai.name, endpoint: '', sentBody: '', status: '', rcvBody: '',
+      done: false, ok: false,
+    };
   });
 
   let passed = 0, failed = 0;
 
   for (const ai of keyed) {
-    const statusEl  = document.querySelector(`#tkprow-${ai.id} .tkp-status`);
-    const detailBtn = document.getElementById(`tkpdetailbtn-${ai.id}`);
-    const epEl      = document.getElementById(`tkpep-${ai.id}`);
-    const sentEl    = document.getElementById(`tkpsent-${ai.id}`);
-    const statEl    = document.getElementById(`tkpstat-${ai.id}`);
-    const rcvEl     = document.getElementById(`tkprcv-${ai.id}`);
+    const statusEl  = document.getElementById(`tkpstatusicon-${ai.id}`);
     const cfg = API_CONFIGS[ai.provider];
+    const rec = window._tkpData[ai.id];
 
     if (!cfg || !cfg._key) {
       if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; }
+      rec.done = true; rec.status = 'No key saved';
+      if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
       failed++; continue;
     }
 
     const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
-    if (epEl) epEl.textContent = cfg.endpoint;
-    if (sentEl) {
-      try { sentEl.textContent = JSON.stringify(JSON.parse(sentBody), null, 2); }
-      catch { sentEl.textContent = sentBody; }
-    }
+    rec.endpoint = cfg.endpoint;
+    try { rec.sentBody = JSON.stringify(JSON.parse(sentBody), null, 2); }
+    catch { rec.sentBody = sentBody; }
+
+    // If this row is currently selected, live-update the sent pane so the
+    // user sees data populate as tests run. Received updates below on completion.
+    if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
 
     const t0 = Date.now();
     try {
@@ -2329,28 +2333,33 @@ async function testAllKeys() {
       try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
       let pretty = rawText;
       try { pretty = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
-      if (statEl) statEl.textContent = `HTTP ${response.status} — ${ms}ms`;
-      if (rcvEl)  rcvEl.textContent  = pretty;
-      if (detailBtn) detailBtn.style.display = '';
+      rec.status  = `HTTP ${response.status} — ${ms}ms`;
+      rec.rcvBody = pretty;
+      rec.done    = true;
       if (!response.ok) {
         let errMsg = `HTTP ${response.status}`;
         try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
-        if (statusEl) { statusEl.textContent = `✕ ${errMsg}`; statusEl.className = 'tkp-status tkp-fail'; }
+        if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = errMsg; }
+        rec.ok = false;
         failed++;
       } else {
         let extracted = '';
         try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
-        if (statusEl) { statusEl.textContent = `✓ ${extracted.trim().substring(0, 20)}`; statusEl.className = 'tkp-status tkp-pass'; }
+        if (statusEl) { statusEl.textContent = `✓`; statusEl.className = 'tkp-status tkp-pass'; statusEl.title = extracted.trim().substring(0, 60); }
+        rec.ok = true;
         passed++;
       }
     } catch(e) {
       const ms = Date.now() - t0;
-      if (statusEl) { statusEl.textContent = `✕ ${e.message.substring(0, 40)}`; statusEl.className = 'tkp-status tkp-fail'; }
-      if (statEl)   statEl.textContent   = `Network Error — ${ms}ms`;
-      if (rcvEl)    rcvEl.textContent    = e.message;
-      if (detailBtn) detailBtn.style.display = '';
+      if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = e.message; }
+      rec.status  = `Network Error — ${ms}ms`;
+      rec.rcvBody = e.message;
+      rec.done    = true;
+      rec.ok      = false;
       failed++;
     }
+    // If this row is currently selected, refresh the received pane
+    if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
     await new Promise(r => setTimeout(r, 300));
   }
 
@@ -2358,13 +2367,48 @@ async function testAllKeys() {
   if (closeBtn) { closeBtn.disabled = false; closeBtn.textContent = '✕ Close'; }
 }
 
-function toggleTkpDetail(id) {
-  const detail = document.getElementById(`tkpdetail-${id}`);
-  const btn    = document.getElementById(`tkpdetailbtn-${id}`);
-  if (!detail) return;
-  const open = detail.style.display !== 'none';
-  detail.style.display = open ? 'none' : 'block';
-  if (btn) btn.textContent = open ? '▶ Details' : '▼ Details';
+// Click a row → select it and render its data into the Sent + Received panes.
+// Works whether the test has completed for that row or is still pending.
+function selectTkpRow(id) {
+  window._tkpSelected = id;
+  document.querySelectorAll('.tkp-row').forEach(r => r.classList.remove('is-selected'));
+  const row = document.getElementById(`tkprow-${id}`);
+  if (row) row.classList.add('is-selected');
+  renderTkpDetail(id);
+}
+
+function renderTkpDetail(id) {
+  const rec = window._tkpData && window._tkpData[id];
+  const sentPane = document.getElementById('tkpSentPane');
+  const rcvPane  = document.getElementById('tkpRcvPane');
+  if (!rec || !sentPane || !rcvPane) return;
+
+  const esc = s => String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // SENT pane — endpoint + request body
+  if (rec.sentBody) {
+    sentPane.innerHTML = `
+      <div class="tkp-detail-label">Endpoint</div>
+      <pre class="tkp-detail-pre">${esc(rec.endpoint)}</pre>
+      <div class="tkp-detail-label">Request body</div>
+      <pre class="tkp-detail-pre tkp-detail-pre--grow">${esc(rec.sentBody)}</pre>`;
+  } else {
+    sentPane.innerHTML = '<div class="tkp-empty">Waiting for this test to start…</div>';
+  }
+
+  // RECEIVED pane — status + response body
+  if (rec.done) {
+    rcvPane.innerHTML = `
+      <div class="tkp-detail-label">Status</div>
+      <pre class="tkp-detail-pre">${esc(rec.status || '—')}</pre>
+      <div class="tkp-detail-label">Response body</div>
+      <pre class="tkp-detail-pre tkp-detail-pre--grow">${esc(rec.rcvBody || '(empty)')}</pre>`;
+  } else if (rec.sentBody) {
+    rcvPane.innerHTML = '<div class="tkp-empty">Request sent — awaiting response…</div>';
+  } else {
+    rcvPane.innerHTML = '<div class="tkp-empty">Waiting for this test to start…</div>';
+  }
 }
 
 function dismissTestPanel() {

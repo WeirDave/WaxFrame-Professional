@@ -2,6 +2,31 @@
 
 ---
 
+## v3.19.7 Pro — Build `20260421-017`
+**Released:** April 21, 2026
+
+### New Features
+
+**Test All Keys modal — three-column layout for scale**
+The previous inline-expandable design collapsed at any hive size beyond a handful of AIs. Each row's Details button expanded a four-section detail block below that row, pushing the rest of the list down and forcing constant scrolling when reviewing a 27+ AI hive (e.g. David's Alfredo gateway). Rebuilt the modal as a three-column layout:
+
+- **Left column (280px fixed)** — scrollable list of all keyed AIs, one line per row showing name and a compact ✓ / ✕ / ⋯ status icon. Entire row is clickable (no more per-row Details button). Selected row gets an amber left-border accent and subtle background tint.
+- **Middle column (flex)** — Sent pane. Shows the request endpoint and pretty-printed JSON body for the currently selected row.
+- **Right column (flex)** — Received pane. Shows the HTTP status + elapsed time and pretty-printed JSON response body.
+
+Each column scrolls independently, so the 27-AI list never shoves the response JSON offscreen.
+
+Modal widened from `max-width: 660px` to `max-width: 1400px` with `width: 95vw`, sized to `height: 65vh` with a `400px` minimum. Initial state shows placeholder copy in the middle/right panes ("Click a row to see the request/response"); clicking any row during or after testing populates both panes from a shared `window._tkpData` store keyed by AI id.
+
+**Live updates during testing.** If the row currently selected is the one being tested right now, the Sent pane updates the moment the request is prepared and the Received pane updates the moment the response arrives — no need to re-click after the test finishes to see fresh data.
+
+Replaced the old `toggleTkpDetail()` function with two new functions: `selectTkpRow(id)` handles row selection and highlight, `renderTkpDetail(id)` builds the middle + right pane content from `_tkpData`. All rendered text is HTML-escaped to handle JSON responses that might contain angle brackets.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.6 Pro — Build `20260421-016`
 **Released:** April 21, 2026
 
