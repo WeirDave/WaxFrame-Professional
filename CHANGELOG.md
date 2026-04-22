@@ -2,6 +2,22 @@
 
 ---
 
+## v3.18.6 Pro — Build `20260421-007`
+**Released:** April 21, 2026
+
+### Bug Fixes
+
+**Hive convergence count — subline too small**
+The `4 OF 6 AIS AGREE` subline was rendering at `clamp(0.85rem, 1.5vw, 1.15rem)` with weight 600 and `0.12em` letter-spacing — visually tiny next to the **HIVE APPROVED** headline. Matched the count's typography to the headline: same `clamp(1.4rem, 3vw, 2.2rem)` font-size, weight 800, and `0.2em` letter-spacing. Kept color white for visual distinction from the amber headline. Moved count from `bottom: 17%` to `bottom: 12%` to give breathing room between the two now-equally-sized lines.
+
+**Stale `style.css` cache-bust**
+`index.html` was still referencing `style.css?v=3.18.2` even though the file had changed in 3.18.3, 3.18.4, and 3.18.5. Bumped to `3.18.6` to force cache refresh for anyone who had the page open.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.18.5 Pro — Build `20260421-006`
 **Released:** April 21, 2026
 
