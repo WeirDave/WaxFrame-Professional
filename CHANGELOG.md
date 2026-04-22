@@ -2,6 +2,19 @@
 
 ---
 
+## v3.18.4 Pro — Build `20260421-005`
+**Released:** April 21, 2026
+
+### New Features
+
+**Dev toolbar — convergence sequence test buttons**
+Added three buttons to the dev toolbar for previewing the hive-finish convergence sequence without running a real round. `▶ Fly-in` plays the bee overlay silently (4s, 10 puffs) for animation-only preview. `▶ Majority` mirrors the majority-convergence trigger used in `runRound()` when some AIs still have suggestions — calls `playFlyingCarSound()` plus `showHiveFinish({ duration: 4000, smokeBursts: 10 })`. `▶ Unanimous` mirrors the full-agreement trigger — calls `playFlyingCarSound()` plus `showHiveFinish({ duration: 5000, smokeBursts: 14 })` and opens the finish modal at T+1800ms. Three helpers (`devTestFlyInOnly`, `devTestMajorityConverge`, `devTestUnanimous`) added to `app.js` directly after `hiveRand`. No production flows touched; dev mode only.
+
+### Files Changed
+`index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.18.3 Pro — Build `20260421-004`
 **Released:** April 21, 2026
 
