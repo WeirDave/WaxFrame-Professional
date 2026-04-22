@@ -1717,6 +1717,10 @@ html, body {
   word-break: break-word;
   tab-size: 4;
 }
+.work-doc-ta::selection {
+  background: var(--accent);
+  color: #0a0c12;
+}
 
 .work-doc-rules { display: none; }
 .work-doc-right-margin { display: none; }
