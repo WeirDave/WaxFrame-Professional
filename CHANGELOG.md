@@ -2,7 +2,52 @@
 
 ---
 
-## v3.18.1 Pro — Build `20260421-002`
+## v3.18.2 Pro — Build `20260421-003`
+**Released:** April 21, 2026
+
+### New Features
+
+**Finish modal — Start New Project export safety check**
+Clicking Start New Project now checks whether any export has occurred in the current finish modal session. If content exists in the working document and nothing has been exported, a confirm dialog blocks the action. Dialog wording explicitly labels Cancel as the safe path (go back and export) and OK as the destructive path (discard everything). Export flag is set by all three export functions and resets each time the modal opens.
+
+### Bug Fixes
+
+**Finish modal — button color system restored**
+Export Document, Export Full Transcript, and Save Session Snapshot restored to identical amber dashed styling — stale blue `!important` on transcript and green `!important` on snapshot removed. Start New Project restored to green — positive action, keep using the product. Disabled export buttons changed from red to muted grey so unavailable and destructive states no longer share the same color. Bee icon removed from Start New Project, warning sub-label added.
+
+**Work screen text selection — amber highlight**
+Working document textarea text selection color changed from browser default blue to WaxFrame amber with near-black text via `::selection` CSS. Consistent across light and dark mode.
+
+**Round History moved to Menu**
+History button removed from the work screen top bar. Now accessible via Menu → Round History. Top bar is Notes and Finish only. User manual updated throughout.
+
+**Nav panel responsive width**
+Navigation panel now widens progressively on smaller screens — 280px at full desktop, 320px at 1400px, 360px at 1200px, and up to 420px (or 90vw) at 1100px and below.
+
+**Backup Session filename fixed**
+Was always saving as `WaxFrame-Backup-session.json` because the code read `.name` from the project object but the field is stored as `.projectName`. Now correctly names the file after the project name and version.
+
+**Holdout suggestion card scroll — index-based lookup**
+Click-to-scroll on holdout convergence cards was broken because the data attribute approach truncated at inner quotes. Replaced with index-based lookup from `window._flatHoldoutSuggestions`. Unicode curly quotes added to scroll regex.
+
+**Holdout cards — NO CHANGES NEEDED artifact and stale line numbers**
+Trailing NO CHANGES NEEDED text stripped during parsing. Stale Line N: references stripped from displayed suggestion text via existing `stripLineRefs`.
+
+**Goal modal auto-sizing**
+Project goal modal textarea now auto-sizes to content when opened, capped at 55% viewport height. Modal widened to 900px.
+
+**Session navigation — blank work screen fix**
+`goToScreen` was missing a `screen-work` handler. Navigating away mid-session and back left the textarea empty. Fixed.
+
+**Session protection — accidental Launch guard**
+Launch button on screen-document changes to Return to Work Screen when an active session exists. `startSession` also requires confirmation before overwriting an active session.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `waxframe-user-manual.html` · `document-playbooks.html` · `CHANGELOG.md`
+
+---
+
+
 **Released:** April 21, 2026
 
 ### Bug Fixes
