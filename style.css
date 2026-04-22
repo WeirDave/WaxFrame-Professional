@@ -5681,6 +5681,36 @@ kbd {
 .dp-back-top { display:block; text-align:right; font-size:12px; color:var(--text-dim); text-decoration:none; padding:4px 0 0; transition:color 0.12s; }
 .dp-back-top:hover { color:var(--accent); }
 
+/* ── dp-field-label variants ── */
+.dp-field-label--scratch { color: #3b82f6; }
+
+/* ── Playbook section headers (Step 3 / Step 4 labels) ── */
+.dp-section-hdr { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.08em; color:var(--accent); margin:0 0 6px; }
+.dp-section-hdr--s4 { color:var(--text-dim); margin-top:4px; }
+.dp-section-hdr-note { font-size:10px; font-weight:600; color:var(--muted); text-transform:none; letter-spacing:0; margin-left:6px; }
+.dp-section-sub { font-size:12px; color:var(--text-dim); margin:0 0 10px; line-height:1.5; }
+
+/* ── dp-table: field-by-field goal table ── */
+.dp-table { width:100%; border-collapse:collapse; font-size:13px; margin-bottom:4px; }
+.dp-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:4px 12px 7px 0; border-bottom:1px solid var(--border2); text-align:left; }
+.dp-table td { padding:8px 12px 8px 0; border-bottom:1px solid var(--border); vertical-align:top; line-height:1.55; color:var(--text-dim); }
+.dp-table tr:last-child td { border-bottom:none; }
+.dp-table-field { font-size:11px; font-weight:700; color:var(--accent); white-space:nowrap; padding-right:20px !important; width:160px; vertical-align:top; }
+
+/* ── dp-scratch-note: callout for from-scratch field overrides ── */
+.dp-scratch-note { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-sm); padding:10px 14px; margin:2px 0; font-size:13px; color:var(--text-dim); line-height:1.6; }
+.dp-scratch-note-hdr { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:#3b82f6; margin-bottom:6px; }
+.dp-scratch-note table { width:100%; border-collapse:collapse; margin-top:6px; }
+.dp-scratch-note td { padding:5px 10px 5px 0; border-bottom:1px solid rgba(59,130,246,0.15); vertical-align:top; }
+.dp-scratch-note tr:last-child td { border-bottom:none; }
+.dp-scratch-note .dp-table-field { color:#3b82f6; font-size:11px; width:160px; white-space:nowrap; padding-right:16px !important; }
+
+/* ── dp-s4-item: Step 4 path items ── */
+.dp-s4-pair { display:flex; flex-direction:column; gap:6px; }
+.dp-s4-item { background:var(--surface2); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:10px 14px; font-size:13px; line-height:1.6; color:var(--text-dim); }
+.dp-s4-label { font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); margin-bottom:4px; }
+.dp-s4-label--scratch { color:#3b82f6; }
+
 [data-theme="light"] .dp-intro,
 [data-theme="light"] .dp-toc { background:#ffffff; }
 [data-theme="light"] .dp-playbook-body { background:#ffffff; }
