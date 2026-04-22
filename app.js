@@ -3862,7 +3862,13 @@ function showProjectGoalModal() {
       ? `${goal.length} characters — exceeds 300-character Refine limit`
       : `${goal.length} characters`;
   }
-  if (editTa) { editTa.value = goal; editTa.readOnly = true; }
+  if (editTa) {
+    editTa.value = goal;
+    editTa.readOnly = true;
+    // Auto-size to show full content without scrolling
+    editTa.style.height = 'auto';
+    editTa.style.height = Math.min(editTa.scrollHeight, window.innerHeight * 0.55) + 'px';
+  }
   updateProjectGoalModalPreview();
   modal.classList.add('active');
 }
