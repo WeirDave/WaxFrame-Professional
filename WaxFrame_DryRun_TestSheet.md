@@ -11,21 +11,25 @@ Copy fields into Setup 3. Paste the Starting Document into Setup 4. Run rounds u
 **Project name:** Chocolate Chip Cookies
 **Version:** v1
 **Document type:** Recipe
-**Target audience:** Home cook, beginner level, someone who has never baked cookies before
-**Desired outcome:** Anyone following this recipe can bake chocolate chip cookies successfully on the first try. Instructions are clear, ingredient quantities are precise, and steps are in a logical order with nothing assumed.
-**Scope & constraints:** Classic American-style chocolate chip cookies. Pantry staples only. No brown butter, no overnight chilling, no stand mixer required. Include ingredient list with quantities, numbered steps, yield, and oven temperature in Fahrenheit. End with a short storage note and how to tell when they are done.
-**Tone & voice:** Warm and conversational, like a friend walking someone through their first bake
-**Additional instructions:** Do not substitute ingredients without flagging them as optional variations. Do not invent cooking times — flag anything uncertain.
+**Target audience:** Myself and friends that enjoy chocolate chip cookies that are easy to make
+**Desired outcome:** Create a recipe that is simple and easy but makes great cookies
+**Scope & constraints:** leave blank
+**Tone & voice:** leave blank
+**Additional instructions:** No extra ingredients like nuts
 
 **Length Constraint:** leave blank
 
 ### Starting Document
 
-Use **Start from Scratch**. Before Round 1, open the Notes drawer and paste:
+Use **Start from Scratch** and leave the text box empty. Don't paste guiding notes — the six goal fields above are all the hive needs. One click of **Smoke the Hive** typically produces a draft in round 1 and full convergence by round 2.
 
-```
-Classic chocolate chip cookies. Yields about 24 cookies. Ingredients: flour, butter, white sugar, brown sugar, eggs, vanilla, baking soda, salt, semi-sweet chocolate chips. No nuts. Oven at 375°F.
-```
+### Expected run shape
+
+- **Builder:** any of the six (DeepSeek baseline-tested)
+- **Active reviewers:** all six — Gemini tends to be the noisiest on this topic but still converges
+- **Rounds:** 2–3 (real measured data, not estimate)
+- **Final word count:** 400–500
+- **Time:** ~1 minute
 
 ---
 
@@ -547,3 +551,36 @@ Record the actual round count for each test. Note anything unusual.
 ---
 
 **Chunk 2** will cover the 19 new playbooks (LinkedIn Profile, Interview Follow-Up, Business Case, Statement of Work, RFP Writing, Case Study, Press Release, Website Copy, Short-Form Content, Meeting Summary, Project Brief, Status Update, Technical Report, SOP, Policy, Personal Letter, Complaint Letter, Review, Event Plan).
+
+---
+
+## Empirical Run Data — Quick Start calibration
+
+Three real runs of the Chocolate Chip Cookies scenario, same topic, different goal-field phrasing. Builder held constant where known. Demonstrates that **goal-field wording is the dominant driver of convergence speed** — not topic complexity or reviewer quality.
+
+| Run | Seed style | Builder | Reviewers | Rounds | Final words | Time |
+|---|---|---|---|---|---|---|
+| v1.0 | Short human-voice | unknown | 6 | **13** | 256 | 16 min |
+| v2.0 | Original AI-drafted playbook seed (maximalist) | DeepSeek | 6 | **22** | 1,013 | 36 min |
+| v3.0 | Human-voice seed (current Quick Start above) | DeepSeek | 6 | **2** | 434 | ~1 min |
+
+### Key findings
+
+**The v2.0 seed was the problem, not the hive.** The original Quick Start seed contained phrases like *"with nothing assumed"*, *"precise quantities"*, *"successfully on the first try"*, and *"someone who has **never** baked cookies before"*. Each one of those is a direct instruction to reviewers to interrogate every implicit assumption, which manufactures pedagogical churn — 22 rounds of `a small bowl` vs `a small separate bowl` vs `a small bowl (for cracking eggs)`. Removing those phrases collapsed the run from 22 rounds to 2 without changing the topic, the reviewers, the Builder, or anything else.
+
+**Majority convergence (5-of-6) fires in round 2 of v3.0.** Round 1 produces the draft; round 2 asks "is anyone unhappy with this?" and five reviewers say no. That is the target experience of WaxFrame — one click of Smoke the Hive produces a deliverable document. The v2.0 run proved the hive can also grind 22 rounds if the goal invites it; v3.0 proves it doesn't have to.
+
+**Takeaway for all playbook seeds:** write as a human telling another human what they want. Avoid perfectionism framing (*on the first try*, *nothing assumed*, *precise*, *comprehensive*, *never-before*). Avoid comma-lists of hard constraints when a one-line description would do. Empty optional fields are fine and often better than overspecified ones.
+
+### Reviewer behavior notes from the v2.0 run
+
+Not all reviewers drive churn equally. Across 22 rounds:
+
+- **Gemini** — flagged as slow responder 7 times; most of its suggestions were synonym swaps (invalid per reviewer prompt). Highest-signal candidate to toggle off on topics prone to stylistic loops.
+- **Grok** — slow 2 times but suggestions were substantive when offered; frequently voted no-changes.
+- **Perplexity** — once pulled in an external-web temperature suggestion (`375°F → 350°F, [2]`) despite the reviewer prompt forbidding external citations. One-off but worth watching on topics where Perplexity's grounded-search bias might surface.
+- **ChatGPT / Claude / DeepSeek** — mostly well-behaved; Claude's late-round holdouts in the v2.0 run were substantive additions (beginner-safety notes, explanations of *why*) rather than synonym noise.
+
+### Builder considerations
+
+Builder choice affects output shape independently of reviewer behavior. DeepSeek as Builder tends toward verbose compilations (1,013 words at v2.0's worst bloat point); the same seed with a tighter Builder like Claude or ChatGPT may land shorter. Future runs should capture Builder identity per row.
