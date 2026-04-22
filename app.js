@@ -3983,7 +3983,7 @@ function finishAndNew() {
   const liveDoc = document.getElementById('workDocument')?.value?.trim() || '';
   const hasContent = liveDoc.length > 0 || history.length > 0;
   if (!window._finishExported && hasContent) {
-    if (!confirm('You haven\'t exported anything yet. Starting a new project will permanently clear your document and round history.\n\nExport your document first, then start a new project.')) return;
+    if (!confirm('⚠️ You haven\'t exported anything yet.\n\nClick Cancel to go back and export your document first.\nClick OK to discard your document and start fresh.')) return;
   }
   hideFinishModal();
   clearProject();
