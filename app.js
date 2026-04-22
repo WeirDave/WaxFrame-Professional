@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-011
+//  Build: 20260421-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-011';         // build stamp — update each session
+const BUILD       = '20260421-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4116,14 +4116,16 @@ function hiveRand(min, max) {
 /* =========================================
    UNANIMOUS CONVERGENCE SCENE
    Timeline:
-     T+0.0s  scene shown, black backdrop starts fading in (800ms)
-     T+0.8s  worker bee flies left → right across screen (2500ms)
-             + Kai's whirr plays in sync with the flight
-     T+3.3s  fog puffs spawn across screen + smoker hiss
-     T+8.3s  fog clears (500ms)
-     T+8.8s  image reveals (900ms) + fanfare + multicolor fireworks
-     T+13s   image holds, sparks fully faded
-     T+14s   scene fades out and hides
+     T+0.0s   scene shown, black backdrop starts fading in (800ms)
+     T+0.8s   worker bee flies left → right across screen (2500ms, linear)
+              + Kai's whirr plays in sync with the flight
+     T+2.05s  bee is halfway — fog puffs begin spawning progressively
+              left → right over the next 2500ms, as if the bee's passing
+              is generating atmospheric fog in its wake
+     T+4.55s  full fog density reached
+     T+6.0s   fog clears (500ms)
+     T+6.5s   image reveals (900ms) + fanfare + multicolor fireworks
+     T+11s    scene fades out and hides
    Escape or click dismisses early via closeUnanimousScene().
    ========================================= */
 
@@ -4178,46 +4180,53 @@ function playUnanimousScene() {
     playFlyingCarSound(); // Kai's whirr
   }, 800));
 
-  // T+3.3s — spawn fog puffs across full screen + soft smoker hiss
-  _unanimousTimers.push(setTimeout(() => {
-    const puffCount = 28;
-    for (let i = 0; i < puffCount; i++) {
+  // T+2.05s — bee is halfway; begin progressive left→right fog sweep.
+  // Each puff spawns at a position progressing 0%→100% across the screen
+  // over the next 2500ms, simulating a jet-exhaust wake.
+  const totalPuffs = 28;
+  const sweepStart = 2050;
+  const sweepDuration = 2500;
+  fog.classList.add('is-rising'); // opacity container transitions to full
+  for (let i = 0; i < totalPuffs; i++) {
+    const t = i / (totalPuffs - 1);            // 0..1
+    const spawnDelay = sweepStart + t * sweepDuration;
+    const xPercent = t * 100;                  // left → right
+    _unanimousTimers.push(setTimeout(() => {
       const puff = document.createElement('span');
       puff.className = 'unanimous-fog-puff';
-      const size = hiveRand(220, 460);
+      const size = hiveRand(240, 480);
       puff.style.setProperty('--size', `${size}px`);
-      puff.style.setProperty('--dx',   `${hiveRand(-180, 180)}px`);
+      puff.style.setProperty('--dx',   `${hiveRand(-140, 140)}px`);
       puff.style.setProperty('--dy',   `${hiveRand(-220, -60)}px`);
-      puff.style.setProperty('--dur',  `${hiveRand(3800, 5200)}ms`);
-      puff.style.setProperty('--delay', `${hiveRand(0, 900)}ms`);
-      puff.style.setProperty('--opacity', (0.55 + Math.random() * 0.35).toFixed(2));
-      // Distribute across full screen including off-bottom so fog drifts up into view
-      puff.style.left = `${Math.random() * 100}%`;
-      puff.style.top  = `${40 + Math.random() * 70}%`;
+      puff.style.setProperty('--dur',  `${hiveRand(3200, 4600)}ms`);
+      puff.style.setProperty('--delay', `0ms`);
+      puff.style.setProperty('--opacity', (0.6 + Math.random() * 0.3).toFixed(2));
+      // x tracks the sweep; slight jitter so puffs aren't on a perfect line.
+      // y covers mid-to-lower screen so fog rises through the viewport.
+      puff.style.left = `${xPercent + hiveRand(-4, 4)}%`;
+      puff.style.top  = `${45 + Math.random() * 60}%`;
       puff.style.marginLeft = `${-size / 2}px`;
       puff.style.marginTop  = `${-size / 2}px`;
       fog.appendChild(puff);
-    }
-    fog.classList.add('is-rising');
-    if (typeof playSmokerSound === 'function') playSmokerSound();
-  }, 3300));
+    }, spawnDelay));
+  }
 
-  // T+8.3s — clear fog
+  // T+6.0s — clear fog
   _unanimousTimers.push(setTimeout(() => {
     fog.classList.remove('is-rising');
     fog.classList.add('is-clearing');
-  }, 8300));
+  }, 6000));
 
-  // T+8.8s — reveal image + fanfare + fireworks
+  // T+6.5s — reveal image + fanfare + fireworks
   _unanimousTimers.push(setTimeout(() => {
     image.style.opacity = '';
     image.classList.add('is-revealed');
     playUnanimousFanfare();
     spawnUnanimousFireworks(canvas);
-  }, 8800));
+  }, 6500));
 
-  // T+13.3s — fully close
-  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 13300));
+  // T+11s — fully close
+  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
 }
 
 function closeUnanimousScene(silent = false) {
