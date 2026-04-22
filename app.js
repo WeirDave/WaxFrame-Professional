@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-007
+//  Build: 20260421-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-007';         // build stamp — update each session
+const BUILD       = '20260421-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4113,6 +4113,235 @@ function hiveRand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
+/* =========================================
+   UNANIMOUS CONVERGENCE SCENE
+   Timeline:
+     T+0.0s  scene shown, black backdrop starts fading in (800ms)
+     T+0.8s  fog puffs spawn across screen + Kai's whirr plays
+     T+6.0s  fog clears (500ms)
+     T+6.5s  image reveals (900ms) + fanfare + multicolor fireworks
+     T+11s   image holds, sparks fully faded
+     T+12s   scene fades out and hides
+   Escape or click dismisses early via closeUnanimousScene().
+   ========================================= */
+
+let _unanimousTimers = [];
+let _unanimousKeyHandler = null;
+
+function playUnanimousScene() {
+  const scene     = document.getElementById('unanimousScene');
+  const fog       = document.getElementById('unanimousFog');
+  const image     = document.getElementById('unanimousImage');
+  const canvas    = document.getElementById('unanimousSparksCanvas');
+  if (!scene || !fog || !image || !canvas) return;
+
+  // Cancel any previous run
+  closeUnanimousScene(true);
+
+  // Reset state
+  fog.innerHTML = '';
+  fog.classList.remove('is-rising', 'is-clearing');
+  image.classList.remove('is-revealed');
+  image.style.opacity = '0';
+  scene.classList.remove('is-closing');
+  scene.setAttribute('aria-hidden', 'false');
+  scene.classList.add('is-active');
+
+  // Size canvas — DPR-aware so sparks render crisply on Retina / high-DPI screens.
+  // We size the backing bitmap at sw*dpr x sh*dpr and the CSS box at sw x sh,
+  // then scale the context so drawing calls still use CSS pixels.
+  const sw = window.innerWidth, sh = window.innerHeight;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.floor(sw * dpr);
+  canvas.height = Math.floor(sh * dpr);
+  canvas.style.width  = sw + 'px';
+  canvas.style.height = sh + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, sw, sh);
+
+  // Escape/click to skip
+  _unanimousKeyHandler = (e) => { if (e.key === 'Escape') closeUnanimousScene(); };
+  document.addEventListener('keydown', _unanimousKeyHandler);
+  scene.addEventListener('click', () => closeUnanimousScene(), { once: true });
+
+  // T+0.8s — spawn fog puffs everywhere and play Kai's whirr
+  _unanimousTimers.push(setTimeout(() => {
+    const puffCount = 28;
+    for (let i = 0; i < puffCount; i++) {
+      const puff = document.createElement('span');
+      puff.className = 'unanimous-fog-puff';
+      const size = hiveRand(220, 460);
+      puff.style.setProperty('--size', `${size}px`);
+      puff.style.setProperty('--dx',   `${hiveRand(-180, 180)}px`);
+      puff.style.setProperty('--dy',   `${hiveRand(-220, -60)}px`);
+      puff.style.setProperty('--dur',  `${hiveRand(3800, 5200)}ms`);
+      puff.style.setProperty('--delay', `${hiveRand(0, 900)}ms`);
+      puff.style.setProperty('--opacity', (0.55 + Math.random() * 0.35).toFixed(2));
+      // Distribute across full screen including off-bottom so fog drifts up into view
+      puff.style.left = `${Math.random() * 100}%`;
+      puff.style.top  = `${40 + Math.random() * 70}%`;
+      puff.style.marginLeft = `${-size / 2}px`;
+      puff.style.marginTop  = `${-size / 2}px`;
+      fog.appendChild(puff);
+    }
+    fog.classList.add('is-rising');
+    playFlyingCarSound(); // Kai's whirr
+  }, 800));
+
+  // T+6.0s — clear fog
+  _unanimousTimers.push(setTimeout(() => {
+    fog.classList.remove('is-rising');
+    fog.classList.add('is-clearing');
+  }, 6000));
+
+  // T+6.5s — reveal image + fanfare + fireworks
+  _unanimousTimers.push(setTimeout(() => {
+    image.style.opacity = '';
+    image.classList.add('is-revealed');
+    playUnanimousFanfare();
+    spawnUnanimousFireworks(canvas);
+  }, 6500));
+
+  // T+11s — fully close
+  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
+}
+
+function closeUnanimousScene(silent = false) {
+  const scene = document.getElementById('unanimousScene');
+  _unanimousTimers.forEach(t => clearTimeout(t));
+  _unanimousTimers = [];
+  if (_unanimousKeyHandler) {
+    document.removeEventListener('keydown', _unanimousKeyHandler);
+    _unanimousKeyHandler = null;
+  }
+  if (!scene) return;
+  if (silent) {
+    scene.classList.remove('is-active', 'is-closing');
+    scene.setAttribute('aria-hidden', 'true');
+    return;
+  }
+  scene.classList.add('is-closing');
+  setTimeout(() => {
+    scene.classList.remove('is-active', 'is-closing');
+    scene.setAttribute('aria-hidden', 'true');
+    const fog = document.getElementById('unanimousFog');
+    if (fog) { fog.innerHTML = ''; fog.classList.remove('is-rising', 'is-clearing'); }
+    const image = document.getElementById('unanimousImage');
+    if (image) { image.classList.remove('is-revealed'); image.style.opacity = '0'; }
+  }, 900);
+}
+
+// ── FANFARE — ascending C–E–G–high-C major arpeggio with a ping cap ──
+function playUnanimousFanfare() {
+  if (_isMuted) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = ctx.currentTime;
+
+    // Triumphant chord stabs: C5, E5, G5, C6
+    const notes = [
+      { freq: 523.25, start: 0.00, dur: 0.18, vol: 0.22 },  // C5
+      { freq: 659.25, start: 0.15, dur: 0.18, vol: 0.22 },  // E5
+      { freq: 783.99, start: 0.30, dur: 0.55, vol: 0.26 },  // G5 held
+      { freq: 1046.5, start: 0.60, dur: 0.80, vol: 0.28 },  // C6 climax
+    ];
+    notes.forEach(n => {
+      // Two oscillators per note for a richer brass-ish tone
+      [['square', 1.0], ['triangle', 0.6]].forEach(([type, mul]) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(n.freq, t0 + n.start);
+        gain.gain.setValueAtTime(0, t0 + n.start);
+        gain.gain.linearRampToValueAtTime(n.vol * mul, t0 + n.start + 0.02);
+        gain.gain.setValueAtTime(n.vol * mul, t0 + n.start + n.dur * 0.7);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + n.start + n.dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t0 + n.start); osc.stop(t0 + n.start + n.dur + 0.05);
+      });
+    });
+
+    // Sparkle ping at the end
+    const ping = ctx.createOscillator();
+    const pg   = ctx.createGain();
+    ping.type = 'sine';
+    ping.frequency.setValueAtTime(2093, t0 + 1.35); // C7
+    pg.gain.setValueAtTime(0, t0 + 1.35);
+    pg.gain.linearRampToValueAtTime(0.14, t0 + 1.38);
+    pg.gain.exponentialRampToValueAtTime(0.001, t0 + 2.0);
+    ping.connect(pg); pg.connect(ctx.destination);
+    ping.start(t0 + 1.35); ping.stop(t0 + 2.05);
+
+    setTimeout(() => ctx.close(), 2400);
+  } catch(e) { /* audio not supported — fail silently */ }
+}
+
+// ── MULTICOLOR FIREWORKS — radial burst, canvas-rendered for performance ──
+// Canvas is already sized and DPR-scaled by playUnanimousScene(). All coords
+// here are CSS pixels; the transform applied to the context handles the DPR
+// multiply automatically.
+function spawnUnanimousFireworks(canvas) {
+  const ctx = canvas.getContext('2d');
+  const cssW = parseFloat(canvas.style.width)  || canvas.width;
+  const cssH = parseFloat(canvas.style.height) || canvas.height;
+  const cx   = cssW / 2;
+  const cy   = cssH / 2;
+  const hues = [40, 20, 350, 320, 280, 220, 190, 140]; // gold, orange, red, magenta, purple, blue, cyan, green
+  const particleCount = 90;
+  const particles = [];
+  for (let i = 0; i < particleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 180 + Math.random() * 520;
+    const hue   = hues[Math.floor(Math.random() * hues.length)];
+    particles.push({
+      x: cx, y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0,
+      maxLife: 900 + Math.random() * 900,
+      size: 2 + Math.random() * 3.5,
+      hue,
+    });
+  }
+
+  let last = performance.now();
+  let rafId = null;
+  function loop(now) {
+    const dt = (now - last) / 1000;
+    last = now;
+    ctx.clearRect(0, 0, cssW, cssH);
+    ctx.globalCompositeOperation = 'lighter';
+    let alive = 0;
+    particles.forEach(p => {
+      p.life += dt * 1000;
+      if (p.life >= p.maxLife) return;
+      alive++;
+      // Integrate with gravity and air drag
+      p.vy += 380 * dt;   // gravity
+      p.vx *= 0.985;
+      p.vy *= 0.985;
+      p.x  += p.vx * dt;
+      p.y  += p.vy * dt;
+      const lifeRatio = p.life / p.maxLife;
+      const alpha = Math.max(0, 1 - lifeRatio);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * (1 - lifeRatio * 0.3), 0, Math.PI * 2);
+      ctx.fillStyle = `hsla(${p.hue}, 100%, 65%, ${alpha})`;
+      ctx.shadowColor = `hsla(${p.hue}, 100%, 65%, ${alpha * 0.9})`;
+      ctx.shadowBlur  = 12;
+      ctx.fill();
+    });
+    ctx.shadowBlur = 0;
+    if (alive > 0) {
+      rafId = requestAnimationFrame(loop);
+    } else {
+      ctx.clearRect(0, 0, cssW, cssH);
+    }
+  }
+  rafId = requestAnimationFrame(loop);
+}
+
 // ── DEV TOOLBAR — convergence sequence test helpers ──
 // Mirror the exact parameters used in production so the dev buttons are
 // a faithful preview. Used from the Dev Toolbar only; not wired into any
@@ -4131,10 +4360,9 @@ function devTestMajorityConverge() {
 }
 
 function devTestUnanimous() {
-  // Unanimous: all 6 AIs agree — same end-state as majority, no auto-modal.
-  toast('🏁 Dev: unanimous (6 of 6)');
-  playFlyingCarSound();
-  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 6, total: 6 });
+  // Unanimous: full scene — black → fog → image + fanfare + multicolor fireworks.
+  toast('🏁 Dev: unanimous scene (Esc or click to skip)');
+  playUnanimousScene();
 }
 
 function setPhase(id) {
@@ -4928,10 +5156,9 @@ async function runRound() {
     if (runBtnU) runBtnU.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
     stopRoundTimer();
     hideSmokerOverlay();
-    // 🎉 Hive converged — same end-state regardless of holdout count.
-    // User decides when to finish via the Finish button; no auto-popup.
-    playFlyingCarSound();
-    showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
+    // 🎉 Unanimous — full scene: black → fog + whirr → image + fanfare + fireworks.
+    // Escape or click skips. User decides when to finish via the Finish button.
+    playUnanimousScene();
     return;
   } else if (noChangesCount > 0) {
     consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
