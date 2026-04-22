@@ -5266,14 +5266,16 @@ function getLedgerEntry(d) {
 // Extract the "before" text from a reviewer suggestion like:
 // "Line 9: Change 'either one (or both) of us' to 'one or both of us'."
 // so we can scroll to it in the document.
-function scrollToHoldoutLine(suggestionText) {
-  if (!suggestionText) return;
-  // Try to extract text inside single quotes after "Change "
-  const match = suggestionText.match(/Change\s+["'](.+?)["']\s+to/i);
+function scrollToHoldoutLine(idx) {
+  const suggestions = window._flatHoldoutSuggestions;
+  if (!suggestions || !suggestions[idx]) return;
+  const suggestionText = suggestions[idx].text;
+  // Try to extract the "before" text from "Change 'X' to 'Y'" pattern
+  const match = suggestionText.match(/Change\s+[""\u201c\u2018'](.+?)[""\u201d\u2019']\s+to/i);
   if (match && match[1]) {
     scrollToCurrentText(match[1]);
   } else {
-    toast('⚠️ Could not find text to scroll to');
+    toast('⚠️ Could not locate that passage in the document');
   }
 }
 
@@ -5337,11 +5339,16 @@ function renderConflicts() {
       const parts = h.response.split(/\n(?=\d+\.\s)/);
       if (parts.length > 1) {
         parts.forEach(part => {
-          const trimmed = part.trim();
+          const trimmed = part.trim()
+            .replace(/\bno changes needed\.?\s*$/i, '')  // strip trailing NO CHANGES NEEDED
+            .trim();
           if (trimmed) flatSuggestions.push({ name: h.name, text: trimmed });
         });
       } else {
-        flatSuggestions.push({ name: h.name, text: h.response.trim() });
+        const trimmed = h.response.trim()
+          .replace(/\bno changes needed\.?\s*$/i, '')
+          .trim();
+        if (trimmed) flatSuggestions.push({ name: h.name, text: trimmed });
       }
     });
 
@@ -5371,7 +5378,7 @@ function renderConflicts() {
             <span class="convergence-ai-badge">🐝 ${esc(s.name)}</span>
             <span class="decision-badge" class="convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
-          <div class="convergence-suggestion decision-current-clickable" title="Click to scroll document to this text" data-suggestion="${esc(s.text)}" onclick="scrollToHoldoutLine(this.dataset.suggestion)">${esc(stripLineRefs(s.text))}</div>
+          <div class="convergence-suggestion decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToHoldoutLine(${i})">${esc(stripLineRefs(s.text))}</div>
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">
