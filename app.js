@@ -1518,6 +1518,11 @@ function goToScreen(id) {
     setTimeout(updateProjectRequirements, 0);
     updateGoalCounter();
   }
+  if (id === 'screen-work') {
+    // Navigating back to work screen mid-session — restore doc and UI state
+    // isNewSession = false preserves the console and conflicts panel
+    initWorkScreen();
+  }
   if (id === 'screen-document') {
     switchDocTab(docTab);
     // Restore file status if we had an uploaded file
