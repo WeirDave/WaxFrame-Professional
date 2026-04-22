@@ -4515,12 +4515,21 @@ kbd {
 }
 
 .finish-modal-btn-new {
-  border: 1px dashed var(--green);
-  color: var(--green);
+  border: 1px dashed #f87171;
+  color: #f87171;
+  flex-direction: column;
+  gap: 3px;
 }
 .finish-modal-btn-new:hover {
-  background: var(--green-dim);
+  background: rgba(248,113,113,0.08);
   border-style: solid;
+}
+.finish-modal-btn-new-sub {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+  line-height: 1.4;
+  font-family: var(--font);
 }
 
 .finish-modal-footer-btns {
@@ -5496,7 +5505,7 @@ kbd {
 
 /* ── Finish modal extras ── */
 .finish-history-row        { display: flex; gap: 8px; align-items: center; }
-.finish-modal-btn-transcript { border-color: var(--blue) !important; color: var(--blue) !important; }
+
 .finish-modal-goal         { max-width: 900px; text-align: left; }
 .finish-modal-title-goal   { margin-bottom: 6px; }
 .finish-modal-cancel-accent { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -5573,8 +5582,7 @@ kbd {
 /* ── Finish modal button subtitles ── */
 .finish-modal-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; }
 .finish-modal-btn-sub { font-size: 11px; font-weight: 400; opacity: 0.7; line-height: 1.4; }
-.finish-modal-btn-snapshot { border-color: #00b300 !important; color: #00b300 !important; }
-.finish-modal-btn-new { flex-direction: row; gap: 8px; }
+.finish-modal-btn-new { flex-direction: column; gap: 3px; }
 
 /* ── Finish modal button disabled / done states ── */
 .finish-modal-btn-disabled {

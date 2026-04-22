@@ -3929,6 +3929,7 @@ function showFinishModal() {
   const modal = document.getElementById('finishModal');
   if (modal) modal.classList.add('active');
   projectClockPause();
+  window._finishExported = false; // reset export tracking for this modal open
 
   const hasDoc     = !!(document.getElementById('workDocument')?.value?.trim());
   const hasHistory = history.length > 0;
@@ -3968,6 +3969,7 @@ function finishAndExport() {
   a.download = `${filename}.txt`;
   a.click();
   toast('💾 Document exported');
+  window._finishExported = true;
 
   const btnDoc = document.getElementById('finishBtnDoc');
   if (btnDoc) {
@@ -3978,6 +3980,9 @@ function finishAndExport() {
 }
 
 function finishAndNew() {
+  if (!window._finishExported && (docText || history.length > 0)) {
+    if (!confirm('You haven\'t exported anything yet. Starting a new project will permanently clear your document and round history.\n\nExport your document first, then start a new project.')) return;
+  }
   hideFinishModal();
   clearProject();
   goToScreen('screen-project');
@@ -4014,6 +4019,7 @@ function exportSnapshot() {
     btn.classList.add('finish-modal-btn-done');
   }
   toast('📷 Session snapshot saved — import it from the Menu to resume');
+  window._finishExported = true;
 }
 
 /* =========================================
@@ -6271,6 +6277,7 @@ function exportSession() {
   URL.revokeObjectURL(url);
 
   toast('💾 Full transcript exported');
+  window._finishExported = true;
 }
 
 function backupSession() {
