@@ -5286,8 +5286,8 @@ kbd {
   font-weight: 800;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: rgba(255,255,255,0.95);
-  text-shadow: 0 0 20px rgba(244,185,66,0.5), 0 2px 8px rgba(0,0,0,0.9);
+  color: var(--accent, #f5a623);
+  text-shadow: 0 0 20px rgba(244,185,66,0.6), 0 2px 8px rgba(0,0,0,0.8);
   opacity: 0;
   white-space: nowrap;
   display: none;
@@ -5317,6 +5317,106 @@ kbd {
   .hive-finish-overlay, .hive-finish-overlay * { animation: none !important; transition: none !important; }
   .hive-finish-overlay.is-active { opacity: 1; visibility: visible; }
   .hive-finish-bee-img, .hive-finish-tagline { opacity: 1 !important; transform: none !important; }
+}
+
+/* ══════════════════════════════════════
+   UNANIMOUS CONVERGENCE SCENE
+   Fade black → fog + whirr → reveal + fanfare + fireworks
+   Escape or click dismisses. Majority uses the smaller fly-in.
+   ══════════════════════════════════════ */
+.unanimous-scene {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: none;
+  pointer-events: none;
+  overflow: hidden;
+}
+.unanimous-scene.is-active {
+  display: block;
+  pointer-events: all;
+  cursor: pointer;
+}
+.unanimous-backdrop {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0;
+  transition: opacity 800ms ease-in;
+}
+.unanimous-scene.is-active .unanimous-backdrop {
+  opacity: 1;
+}
+.unanimous-fog {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0;
+}
+.unanimous-fog.is-rising {
+  animation: unanimousFogRise 5200ms ease-in-out forwards;
+}
+.unanimous-fog.is-clearing {
+  animation: unanimousFogClear 500ms ease-out forwards;
+}
+.unanimous-fog-puff {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.9), rgba(255,255,255,0.35) 50%, rgba(255,255,255,0) 75%);
+  filter: blur(24px);
+  opacity: 0;
+  animation: unanimousFogPuff var(--dur) ease-out forwards;
+  animation-delay: var(--delay, 0ms);
+}
+@keyframes unanimousFogPuff {
+  0%   { opacity: 0; transform: translate3d(0, 60px, 0) scale(0.6); }
+  40%  { opacity: var(--opacity, 0.85); }
+  100% { opacity: var(--opacity, 0.85); transform: translate3d(var(--dx, 0), var(--dy, -100px), 0) scale(1.4); }
+}
+@keyframes unanimousFogRise {
+  0%   { opacity: 0; }
+  25%  { opacity: 1; }
+  100% { opacity: 1; }
+}
+@keyframes unanimousFogClear {
+  0%   { opacity: 1; }
+  100% { opacity: 0; }
+}
+.unanimous-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.82);
+  width: min(78vh, 78vw, 820px);
+  height: auto;
+  opacity: 0;
+  filter: drop-shadow(0 0 60px rgba(245,166,35,0.55)) drop-shadow(0 24px 80px rgba(0,0,0,0.7));
+  pointer-events: none;
+}
+.unanimous-image.is-revealed {
+  animation: unanimousImageReveal 900ms cubic-bezier(.18,.89,.32,1.28) forwards;
+}
+@keyframes unanimousImageReveal {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.82); }
+  60%  { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+  100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+.unanimous-sparks-canvas {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+}
+.unanimous-scene.is-closing {
+  transition: opacity 900ms ease-out;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .unanimous-scene, .unanimous-scene * { animation: none !important; transition: none !important; }
+  .unanimous-scene.is-active .unanimous-backdrop { opacity: 1; }
+  .unanimous-scene.is-active .unanimous-image { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 /* ══════════════════════════════════════
