@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260421-004">
+  <meta name="waxframe-build" content="20260421-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1154,6 +1154,9 @@
 <div class="dev-toolbar" id="devToolbar" style="display:none">
   <span class="dev-toolbar-label">⚙ DEV</span>
   <button onclick="playUnlockScene()">▶ Unlock Scene</button>
+  <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
+  <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
+  <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
 </div>
 
 <div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
@@ -1198,7 +1201,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.18.3"></script>
+<script src="app.js?v=3.18.4"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

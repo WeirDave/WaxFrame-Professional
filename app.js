@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-004
+//  Build: 20260421-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-004';         // build stamp — update each session
+const BUILD       = '20260421-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4065,6 +4065,33 @@ function hideHiveFinish() {
 
 function hiveRand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+// ── DEV TOOLBAR — convergence sequence test helpers ──
+// Mirror the exact parameters used in production so the dev buttons are
+// a faithful preview. Used from the Dev Toolbar only; not wired into any
+// user-facing flow.
+function devTestFlyInOnly() {
+  // Bee fly-in overlay with no audio — for previewing the animation in silence.
+  toast('🐝 Dev: fly-in only (no sound)');
+  showHiveFinish({ duration: 4000, smokeBursts: 10 });
+}
+
+function devTestMajorityConverge() {
+  // Majority convergence: some AIs still have suggestions, Builder is skipped.
+  // Matches the real call site in runRound() when hasMajorityConvergence is true.
+  toast('🏁 Dev: majority convergence');
+  playFlyingCarSound();
+  showHiveFinish({ duration: 4000, smokeBursts: 10 });
+}
+
+function devTestUnanimous() {
+  // Unanimous: every AI agrees no changes needed. Finish modal opens at +1.8s.
+  // Matches the real call site when noChangesCount === successfulReviews.length.
+  toast('🏁 Dev: unanimous — finish modal will open');
+  playFlyingCarSound();
+  showHiveFinish({ duration: 5000, smokeBursts: 14 });
+  setTimeout(() => showFinishModal(), 1800);
 }
 
 function setPhase(id) {
