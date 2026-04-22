@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-010
+//  Build: 20260421-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-010';         // build stamp — update each session
+const BUILD       = '20260421-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4117,11 +4117,13 @@ function hiveRand(min, max) {
    UNANIMOUS CONVERGENCE SCENE
    Timeline:
      T+0.0s  scene shown, black backdrop starts fading in (800ms)
-     T+0.8s  fog puffs spawn across screen + Kai's whirr plays
-     T+6.0s  fog clears (500ms)
-     T+6.5s  image reveals (900ms) + fanfare + multicolor fireworks
-     T+11s   image holds, sparks fully faded
-     T+12s   scene fades out and hides
+     T+0.8s  worker bee flies left → right across screen (2500ms)
+             + Kai's whirr plays in sync with the flight
+     T+3.3s  fog puffs spawn across screen + smoker hiss
+     T+8.3s  fog clears (500ms)
+     T+8.8s  image reveals (900ms) + fanfare + multicolor fireworks
+     T+13s   image holds, sparks fully faded
+     T+14s   scene fades out and hides
    Escape or click dismisses early via closeUnanimousScene().
    ========================================= */
 
@@ -4130,10 +4132,11 @@ let _unanimousKeyHandler = null;
 
 function playUnanimousScene() {
   const scene     = document.getElementById('unanimousScene');
+  const bee       = document.getElementById('unanimousBee');
   const fog       = document.getElementById('unanimousFog');
   const image     = document.getElementById('unanimousImage');
   const canvas    = document.getElementById('unanimousSparksCanvas');
-  if (!scene || !fog || !image || !canvas) return;
+  if (!scene || !fog || !image || !canvas || !bee) return;
 
   // Cancel any previous run
   closeUnanimousScene(true);
@@ -4143,6 +4146,10 @@ function playUnanimousScene() {
   fog.classList.remove('is-rising', 'is-clearing');
   image.classList.remove('is-revealed');
   image.style.opacity = '0';
+  bee.classList.remove('is-flying');
+  bee.style.opacity = '0';
+  // Force reflow so re-adding is-flying restarts the animation on subsequent plays
+  void bee.offsetWidth;
   scene.classList.remove('is-closing');
   scene.setAttribute('aria-hidden', 'false');
   scene.classList.add('is-active');
@@ -4165,7 +4172,13 @@ function playUnanimousScene() {
   document.addEventListener('keydown', _unanimousKeyHandler);
   scene.addEventListener('click', () => closeUnanimousScene(), { once: true });
 
-  // T+0.8s — spawn fog puffs everywhere and play Kai's whirr
+  // T+0.8s — worker bee flies left → right + Kai's whirr
+  _unanimousTimers.push(setTimeout(() => {
+    bee.classList.add('is-flying');
+    playFlyingCarSound(); // Kai's whirr
+  }, 800));
+
+  // T+3.3s — spawn fog puffs across full screen + soft smoker hiss
   _unanimousTimers.push(setTimeout(() => {
     const puffCount = 28;
     for (let i = 0; i < puffCount; i++) {
@@ -4186,25 +4199,25 @@ function playUnanimousScene() {
       fog.appendChild(puff);
     }
     fog.classList.add('is-rising');
-    playFlyingCarSound(); // Kai's whirr
-  }, 800));
+    if (typeof playSmokerSound === 'function') playSmokerSound();
+  }, 3300));
 
-  // T+6.0s — clear fog
+  // T+8.3s — clear fog
   _unanimousTimers.push(setTimeout(() => {
     fog.classList.remove('is-rising');
     fog.classList.add('is-clearing');
-  }, 6000));
+  }, 8300));
 
-  // T+6.5s — reveal image + fanfare + fireworks
+  // T+8.8s — reveal image + fanfare + fireworks
   _unanimousTimers.push(setTimeout(() => {
     image.style.opacity = '';
     image.classList.add('is-revealed');
     playUnanimousFanfare();
     spawnUnanimousFireworks(canvas);
-  }, 6500));
+  }, 8800));
 
-  // T+11s — fully close
-  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
+  // T+13.3s — fully close
+  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 13300));
 }
 
 function closeUnanimousScene(silent = false) {
@@ -4229,6 +4242,8 @@ function closeUnanimousScene(silent = false) {
     if (fog) { fog.innerHTML = ''; fog.classList.remove('is-rising', 'is-clearing'); }
     const image = document.getElementById('unanimousImage');
     if (image) { image.classList.remove('is-revealed'); image.style.opacity = '0'; }
+    const bee = document.getElementById('unanimousBee');
+    if (bee) { bee.classList.remove('is-flying'); bee.style.opacity = '0'; }
   }, 900);
 }
 
