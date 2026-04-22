@@ -387,13 +387,18 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Length Constraint (optional)</div>
-      <p>Below the six goal fields, near the bottom of the screen, is a section headed <strong>Length Constraint (optional)</strong>. This lets you set a maximum length for your finished document. Use it when your document must fit within a specific limit — for example, a 500-word blog post, a 200-character social media caption, or a one-page résumé.</p>
+      <p>Below the six goal fields is a section headed <strong>Length Constraint (optional)</strong>. This is where you set a maximum length for your document — not in the goal fields. Use it whenever your document must fit within a specific limit.</p>
       <p>The section contains two inputs:</p>
       <ul>
-        <li>A number field with the placeholder <em>e.g. 200</em> — enter your maximum here.</li>
-        <li>A dropdown menu with three options: <strong>Characters</strong>, <strong>Words</strong>, or <strong>Pages</strong> — select the unit that matches your limit.</li>
+        <li>A number field — enter your maximum here. e.g. <em>200</em></li>
+        <li>A unit dropdown — <strong>Words</strong>, <strong>Characters</strong>, or <strong>Pages</strong></li>
       </ul>
-      <p>When a length constraint is set, WaxFrame includes it in every prompt sent to your AIs and instructs them to actively keep the document within the limit. Leave both fields blank if your document has no length requirement.</p>
+      <p>When set, WaxFrame formats the constraint and includes it in every prompt sent to your AIs in a standardised way, instructing them to keep the document within the limit. Leave both fields blank if your document has no length requirement.</p>
+      <p><strong>Important:</strong> put your word or page limit here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you set it here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.</p>
+      </div>
     </div>
 
     <div class="wh-block">
