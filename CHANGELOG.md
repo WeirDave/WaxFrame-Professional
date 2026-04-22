@@ -2,6 +2,19 @@
 
 ---
 
+## v3.19.6 Pro — Build `20260421-016`
+**Released:** April 21, 2026
+
+### Polish
+
+**Unanimous Scene — full 1 second gap between anvil and first firework burst**
+The previous 300ms gap between the anvil drop and the first firework burst was too tight — anvil and burst felt like a single event rather than a launch-followed-by-explosion sequence. Shifted fireworks from T+7.1s to T+7.8s so there's now a full 1 second between the anvil's mortar-thump at T+6.8s and the first burst at T+7.8s. Cascaded downstream: crackle sounds for bursts 2 and 3 moved to T+8.5s and T+9.2s; scene close moved from T+11s to T+12s to preserve ~1 second of clean image hold after the last burst's sparks fade. Total scene length now 12.9s (up from 11.9s).
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.5 Pro — Build `20260421-015`
 **Released:** April 21, 2026
 
