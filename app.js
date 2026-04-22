@@ -960,6 +960,8 @@ async function submitDevPassword() {
       const savedPos = JSON.parse(localStorage.getItem('waxframe_dev_toolbar_pos') || 'null');
       if (savedPos) { tb.style.top = savedPos.top + 'px'; tb.style.left = savedPos.left + 'px'; tb.style.right = 'auto'; }
     }
+    // Wire drag — otherwise toolbar is undraggable until next page load
+    attachDevToolbarDrag();
     const navDevSection = document.getElementById('navDevSection');
     if (navDevSection) navDevSection.classList.add('active');
     toast('🛠 Dev mode enabled');
@@ -976,6 +978,46 @@ function exitDevMode() {
   const navDevSection = document.getElementById('navDevSection');
   if (navDevSection) navDevSection.classList.remove('active');
   toast('Dev mode disabled');
+}
+
+// Wire the dev toolbar's label as a drag handle. Called from two places:
+//  1) DOMContentLoaded when dev mode is already on at page load
+//  2) submitDevPassword when dev mode is unlocked mid-session
+// The data-drag-attached guard prevents double-binding if both paths run.
+function attachDevToolbarDrag() {
+  const tb = document.getElementById('devToolbar');
+  if (!tb || tb.dataset.dragAttached === '1') return;
+  const label = tb.querySelector('.dev-toolbar-label');
+  if (!label) return;
+  tb.dataset.dragAttached = '1';
+  label.addEventListener('mousedown', function(e) {
+    e.preventDefault();
+    // Immediately convert right-anchored position to explicit left/top.
+    // Chrome and Edge both fight the drag if right is still set when left is applied.
+    const rect = tb.getBoundingClientRect();
+    tb.style.right  = 'auto';
+    tb.style.bottom = 'auto';
+    tb.style.left   = rect.left + 'px';
+    tb.style.top    = rect.top  + 'px';
+    const offX = e.clientX - rect.left;
+    const offY = e.clientY - rect.top;
+    function onMove(e) {
+      const newLeft = Math.max(0, Math.min(window.innerWidth  - tb.offsetWidth,  e.clientX - offX));
+      const newTop  = Math.max(0, Math.min(window.innerHeight - tb.offsetHeight, e.clientY - offY));
+      tb.style.left = newLeft + 'px';
+      tb.style.top  = newTop  + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
+        top:  parseInt(tb.style.top),
+        left: parseInt(tb.style.left)
+      }));
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
 }
 
 // ── LICENSE UNLOCK SCENE ──
@@ -6414,38 +6456,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         tb.style.left = savedPos.left + 'px';
         tb.style.right = 'auto';
       }
-      // Drag by label
-      const label = tb.querySelector('.dev-toolbar-label');
-      if (label) {
-        label.addEventListener('mousedown', function(e) {
-          e.preventDefault();
-          // Immediately convert right-anchored position to explicit left/top.
-          // Chrome and Edge both fight the drag if right is still set when left is applied.
-          const rect = tb.getBoundingClientRect();
-          tb.style.right  = 'auto';
-          tb.style.bottom = 'auto';
-          tb.style.left   = rect.left + 'px';
-          tb.style.top    = rect.top  + 'px';
-          const offX = e.clientX - rect.left;
-          const offY = e.clientY - rect.top;
-          function onMove(e) {
-            const newLeft = Math.max(0, Math.min(window.innerWidth  - tb.offsetWidth,  e.clientX - offX));
-            const newTop  = Math.max(0, Math.min(window.innerHeight - tb.offsetHeight, e.clientY - offY));
-            tb.style.left = newLeft + 'px';
-            tb.style.top  = newTop  + 'px';
-          }
-          function onUp() {
-            document.removeEventListener('mousemove', onMove);
-            document.removeEventListener('mouseup', onUp);
-            localStorage.setItem('waxframe_dev_toolbar_pos', JSON.stringify({
-              top:  parseInt(tb.style.top),
-              left: parseInt(tb.style.left)
-            }));
-          }
-          document.addEventListener('mousemove', onMove);
-          document.addEventListener('mouseup', onUp);
-        });
-      }
+      attachDevToolbarDrag();
     }
   }
 
