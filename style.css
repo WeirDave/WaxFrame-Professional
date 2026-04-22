@@ -3486,10 +3486,11 @@ kbd {
   font-family: var(--font);
   font-size: 12px;
   font-weight: 700;
-  color: #0a0c12;
   letter-spacing: 0.02em;
   pointer-events: none;
 }
+.footer-btn-smoke .shake-wide-label { color: #0a0c12; }
+.footer-btn .shake-wide-label { color: var(--text); }
 
 /* ── Console Clock ── */
 .console-clock {
@@ -3841,6 +3842,29 @@ kbd {
   border-color: var(--text-dim) !important;
   background: rgba(255,255,255,0.04) !important;
   opacity: 1;
+}
+
+/* ── Lock in Notes button on conflict cards ── */
+.decision-lock-row {
+  padding: 6px 0 2px;
+  display: flex;
+  justify-content: flex-end;
+}
+.decision-lock-btn {
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.decision-lock-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
 }
 
 .decision-card.bypassed {
@@ -5696,6 +5720,7 @@ kbd {
 .dp-table td { padding:8px 12px 8px 0; border-bottom:1px solid var(--border); vertical-align:top; line-height:1.55; color:var(--text-dim); }
 .dp-table tr:last-child td { border-bottom:none; }
 .dp-table-field { font-size:11px; font-weight:700; color:var(--accent); white-space:nowrap; padding-right:20px !important; width:160px; vertical-align:top; }
+.dp-table-field--lc { color: var(--text-dim); }
 
 /* ── dp-scratch-note: callout for from-scratch field overrides ── */
 .dp-scratch-note { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-sm); padding:10px 14px; margin:2px 0; font-size:13px; color:var(--text-dim); line-height:1.6; }

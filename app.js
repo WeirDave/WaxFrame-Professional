@@ -648,6 +648,7 @@ function playRosieSound() {
 
 // ── FLYING CAR ARRIVAL — doppler-style descending swoop ──
 function playFlyingCarSound() {
+  if (_isMuted) return;
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const o = ctx.createOscillator(), o2 = ctx.createOscillator();
@@ -1340,6 +1341,7 @@ function spawnSparks(container) {
 }
 
 function playMetalClang(audioCtx, clangBuffer) {
+  if (_isMuted) return;
   try {
     if (clangBuffer && audioCtx) {
       // Buffer already decoded — plays with zero async delay
@@ -1361,6 +1363,7 @@ function playMetalClang(audioCtx, clangBuffer) {
 }
 
 function playAnvilSound(audioCtx) {
+  if (_isMuted) return;
   try {
     const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
 
@@ -2347,7 +2350,28 @@ function openConsoleErrorDetail(id) {
   modal.classList.add('active');
 }
 
-function applyNotesTemplate(template) {
+function lockConflictToNotes(decisionIdx) {
+  // Get the selected option text — fall back to Current: text if nothing selected yet
+  const card = document.getElementById(`dcard-${decisionIdx}`);
+  let lockText = '';
+  if (card) {
+    const selectedBtn = card.querySelector('.decision-opt-btn.selected .decision-opt-text');
+    if (selectedBtn) {
+      lockText = selectedBtn.textContent.replace(/^"|"$/g, '').trim();
+    } else {
+      // Nothing selected yet — use the Current: text
+      lockText = window._conflictCurrentTexts?.[decisionIdx] || '';
+    }
+  }
+  if (!lockText) {
+    toast('⚠️ Select an option first, then lock it');
+    return;
+  }
+  const template = `Lock this line exactly as written — do not change it: "${lockText}"`;
+  applyNotesTemplate(template);
+  openNotesModal();
+  toast('🔒 Locked in Notes — run Send to Builder to apply');
+}
   const ta = document.getElementById('workNotes');
   if (!ta) return;
   const current = ta.value.trim();
@@ -4584,6 +4608,7 @@ async function runBuilderOnly() {
     // Clear notes — they've been applied, don't carry into next round
     const notesEl = document.getElementById('workNotes');
     if (notesEl) { notesEl.value = ''; }
+    updateNotesBtnPriority();
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
@@ -5391,6 +5416,11 @@ function renderConflicts() {
             onclick="selectBypassDecision(${di}, ${total})">
             <span class="decision-opt-num decision-opt-num-bypass">✏️</span>
             <span class="decision-opt-text decision-opt-text-dim">I edited the document directly — skip this conflict</span>
+          </button>
+        </div>
+        <div class="decision-lock-row">
+          <button class="decision-lock-btn" onclick="lockConflictToNotes(${di})" title="Lock selected option into Notes so the Builder can't change it">
+            🔒 Lock my selection in Notes
           </button>
         </div>
         <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
