@@ -3980,7 +3980,9 @@ function finishAndExport() {
 }
 
 function finishAndNew() {
-  if (!window._finishExported && (docText || history.length > 0)) {
+  const liveDoc = document.getElementById('workDocument')?.value?.trim() || '';
+  const hasContent = liveDoc.length > 0 || history.length > 0;
+  if (!window._finishExported && hasContent) {
     if (!confirm('You haven\'t exported anything yet. Starting a new project will permanently clear your document and round history.\n\nExport your document first, then start a new project.')) return;
   }
   hideFinishModal();
