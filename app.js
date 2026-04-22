@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-015
+//  Build: 20260421-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-015';         // build stamp — update each session
+const BUILD       = '20260421-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4126,12 +4126,12 @@ function hiveRand(min, max) {
      T+6.0s   fog clears (500ms)
      T+6.5s   image reveals (900ms zoom) — silent, let the user see it
      T+6.8s   right after image drops: anvil drop (mortar-launch thump)
-     T+7.1s   fireworks — 3 multicolor bursts (center → left → right at 0/700/1400ms)
-     T+7.8s   crackle sound matched to burst 2
-     T+8.5s   crackle sound matched to burst 3
-     T+8.5s → T+11s   ~2s of clean image hold (sparks fade through)
-     T+11s    scene fades out (900ms)
-     T+11.9s  scene fully closed
+     T+7.8s   1s after anvil: fireworks — 3 multicolor bursts (center → left → right at 0/700/1400ms)
+     T+8.5s   crackle sound matched to burst 2
+     T+9.2s   crackle sound matched to burst 3
+     T+9.2s → T+12s   ~1s of clean image hold (sparks fade through)
+     T+12s    scene fades out (900ms)
+     T+12.9s  scene fully closed
    Escape or click dismisses early via closeUnanimousScene().
    ========================================= */
 
@@ -4229,24 +4229,24 @@ function playUnanimousScene() {
     image.classList.add('is-revealed');
   }, 6500));
 
-  // T+6.8s — right after image drops: anvil (mortar-launch thump, lands just before the first burst).
+  // T+6.8s — right after image drops: anvil (mortar-launch thump).
   _unanimousTimers.push(setTimeout(() => {
     if (typeof playAnvilSound === 'function') playAnvilSound();
   }, 6800));
 
-  // T+7.1s — 300ms after anvil: fireworks fire. spawnUnanimousFireworks runs
+  // T+7.8s — 1 second after anvil: fireworks fire. spawnUnanimousFireworks runs
   // its default 3-burst multicolor schedule (center → left → right at 0/700/1400ms).
   _unanimousTimers.push(setTimeout(() => {
     spawnUnanimousFireworks(canvas);
-  }, 7100));
+  }, 7800));
 
   // Crackle sounds matched to the second and third bursts (the first burst
-  // is sonically covered by the anvil bang).
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 7800));  // burst 2
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 8500));  // burst 3
+  // is sonically covered by the anvil bang that preceded it).
+  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 8500));  // burst 2 (7800 + 700)
+  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 9200));  // burst 3 (7800 + 1400)
 
-  // T+11s — ~2s of clean image hold after last burst (sparks fade through), then close.
-  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
+  // T+12s — ~1s of clean image hold after last burst's sparks fade, then close.
+  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 12000));
 }
 
 function closeUnanimousScene(silent = false) {
