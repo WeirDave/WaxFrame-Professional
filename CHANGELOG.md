@@ -2,6 +2,40 @@
 
 ---
 
+## v3.19.14 Pro — Build `20260422-002`
+**Released:** April 22, 2026
+
+### Quick Start playbook rewrite — human-voice seed, empirically calibrated round count
+
+The Quick Start playbook (the onboarding entry point pinned above the main playbook catalog on the Document Playbooks page) shipped with goal-field values that read like a product brief for an AI rather than something a human would actually type when sitting down to describe what they want. Phrases like *"with nothing assumed"*, *"successfully on the first try"*, *"precise quantities"*, and *"someone who has never baked cookies before"* are each a direct instruction to reviewers to interrogate every implicit assumption — which manufactures pedagogical churn on a topic (chocolate chip cookies) that should converge fast.
+
+Three real runs of the same scenario, same reviewers, same Builder, only the goal-field phrasing changing, produced the following measured data:
+
+| Run | Seed style | Rounds | Final words | Time |
+|---|---|---|---|---|
+| v1.0 | Short human-voice | 13 | 256 | 16 min |
+| v2.0 | Original AI-drafted playbook seed | **22** | 1,013 | 36 min |
+| v3.0 | Human-voice seed (now shipped as Quick Start) | **2** | 434 | ~1 min |
+
+Goal-field phrasing turned out to be the dominant driver of convergence speed. Builder identity and reviewer set were held constant across v2.0 and v3.0; only the seed changed, and rounds dropped from 22 to 2. The previous Quick Start seed was not producing a bad recipe — it was producing an *over-specified* recipe that invited 22 rounds of synonym swaps over phrases like `a small bowl` vs `a small separate bowl` vs `a small bowl (for cracking eggs)`.
+
+The Quick Start seed is now rewritten to match how a human actually describes what they want. The desired-outcome field is a single line — *"Create a recipe that is simple and easy but makes great cookies"*. Scope and tone are left blank (both are optional; a good target-audience line carries the framing the hive needs). Additional-instructions is one short constraint — *"No extra ingredients like nuts"* — rather than a multi-clause guardrail block. The prior "paste these guiding notes before Round 1" instruction has also been removed: the playbook no longer tells users to seed the hive with extra parameters beyond the six goal fields, because a first-time user would not know to do that unprompted, and the goal fields are sufficient.
+
+The rounds estimate is also corrected. The playbook previously stated `2–4 rounds typical`, which was an aspirational guess that did not survive first contact with the playbook's own seed (which actually took 22 rounds). The new estimate is `2 rounds typical — draft in round 1, majority convergence in round 2`, which is the measured result on the new seed. Users will not arrive at round 5 wondering if WaxFrame is broken.
+
+The closing tip at the bottom of the Quick Start block has been updated to point users to **Menu → 💾 Backup Session** for saving a reference copy, rather than the Finish-modal snapshot button. The Menu path is the canonical location for session backup in WaxFrame; the Finish-modal snapshot button is a duplicate entry point that will be removed in a future release.
+
+### Dry Run Test Sheet updated with v3.0 seed and empirical results
+
+The Quick Start block at the top of `WaxFrame_DryRun_TestSheet.md` is rewritten to match the new playbook seed. A new **Empirical Run Data — Quick Start calibration** section has been appended at the end of the file, capturing the three-run dataset (v1.0 / v2.0 / v3.0), reviewer-behavior observations from the v2.0 run (which reviewers drove stylistic churn versus which produced substantive suggestions), and Builder-choice considerations. This section is the empirical baseline for future playbook calibration work — when other playbooks are dry-run tested, their actual measured round counts can replace the current estimates in `document-playbooks.html` using the same pattern.
+
+Two columns proposed for future test-sheet entries — **Builder** and **Active reviewers** — because the v2.0-to-v3.0 data isolated seed phrasing as the dominant variable only because Builder was held constant. Future runs that vary Builder will need that column to stay interpretable.
+
+### Files Changed
+`document-playbooks.html` · `WaxFrame_DryRun_TestSheet.md` · `index.html` · `version.js` · `app.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.13 Pro — Build `20260422-001`
 **Released:** April 22, 2026
 
