@@ -4515,13 +4515,13 @@ kbd {
 }
 
 .finish-modal-btn-new {
-  border: 1px dashed #f87171;
-  color: #f87171;
+  border: 1px dashed var(--green);
+  color: var(--green);
   flex-direction: column;
   gap: 3px;
 }
 .finish-modal-btn-new:hover {
-  background: rgba(248,113,113,0.08);
+  background: var(--green-dim);
   border-style: solid;
 }
 .finish-modal-btn-new-sub {
@@ -5586,9 +5586,9 @@ kbd {
 
 /* ── Finish modal button disabled / done states ── */
 .finish-modal-btn-disabled {
-  border-color: #f87171 !important;
-  color: #f87171 !important;
-  opacity: 0.55;
+  border-color: var(--border2) !important;
+  color: var(--text-dim) !important;
+  opacity: 0.45;
   cursor: not-allowed;
 }
 .finish-modal-btn-disabled:hover {
