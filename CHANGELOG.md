@@ -2,6 +2,24 @@
 
 ---
 
+## v3.18.3 Pro — Build `20260421-004`
+**Released:** April 21, 2026
+
+### Copy
+
+**Setup 3 and Goal Info modal — Document type tips rewritten**
+Both tips describing how the Document type field behaves were worded awkwardly — one referred to the "assembled brief" and the other to an instruction being "included when a document exists," terminology that did not match the surrounding modal copy. Rewrote both to use the established vocabulary (*assembled goal*, *300-character trim*) and to describe the behavior in concrete user terms rather than internal terms. Audited every other tip across `index.html`, `document-playbooks.html`, `api-details.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, and `README.md` — all read cleanly and were left alone.
+
+### Maintenance
+
+**Build stamp reconciliation**
+`app.js` header comment was stale at `20260421-001` while `index.html` meta and CHANGELOG were already at `20260421-003`. Bumped all four stamp locations to `20260421-004`: `index.html` meta `waxframe-build`, `index.html` `app.js?v=` cache-bust, `app.js` header comment, and `app.js` `BUILD` constant.
+
+### Files Changed
+`index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.18.2 Pro — Build `20260421-003`
 **Released:** April 21, 2026
 
