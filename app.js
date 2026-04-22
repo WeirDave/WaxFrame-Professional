@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-022';         // build stamp — update each session
+const BUILD       = '20260422-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5768,13 +5768,66 @@ function scrollToCurrentText(currentText) {
     toast('⚠️ Text not found in document — it may have changed');
     return;
   }
-  const editor     = ta.closest('.work-doc-editor');
-  const before     = text.substring(0, idx);
-  const lineNumber = before.split('\n').length - 1;
-  const lineHeight = parseFloat(getComputedStyle(ta).lineHeight) || 21;
-  const scrollTop  = lineNumber * lineHeight - (editor ? editor.clientHeight / 3 : 0);
-  if (editor) editor.scrollTop = Math.max(0, scrollTop);
-  ta.focus();
+  const editor = ta.closest('.work-doc-editor');
+  if (!editor) {
+    // No outer scroll container — select only; any page scroll is native.
+    ta.focus({ preventScroll: true });
+    ta.setSelectionRange(idx, idx + currentText.length);
+    return;
+  }
+
+  // Measure the match's real pixel offset using a hidden mirror <div> that
+  // inherits the textarea's font, width, padding, and wrap properties. The
+  // prior implementation counted '\n' characters only, which on a wrapped
+  // prose document (.work-doc-ta uses white-space: pre-wrap, ~80ch wide)
+  // could misplace the scroll target by thousands of pixels. A paragraph
+  // with zero newlines but 500 characters wraps to ~7 visual rows — the
+  // old math treated that as one row.
+  let mirror = document.getElementById('_workDocScrollMirror');
+  if (!mirror) {
+    mirror = document.createElement('div');
+    mirror.id = '_workDocScrollMirror';
+    mirror.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(mirror);
+  }
+  const cs = getComputedStyle(ta);
+  mirror.style.cssText =
+    'position:absolute;visibility:hidden;top:-99999px;left:-99999px;pointer-events:none;' +
+    'width:' + cs.width + ';' +
+    'padding:' + cs.padding + ';' +
+    'border:' + cs.border + ';' +
+    'box-sizing:' + cs.boxSizing + ';' +
+    'font-family:' + cs.fontFamily + ';' +
+    'font-size:' + cs.fontSize + ';' +
+    'font-weight:' + cs.fontWeight + ';' +
+    'line-height:' + cs.lineHeight + ';' +
+    'letter-spacing:' + cs.letterSpacing + ';' +
+    'white-space:' + cs.whiteSpace + ';' +
+    'word-break:' + cs.wordBreak + ';' +
+    'overflow-wrap:' + cs.overflowWrap + ';' +
+    'tab-size:' + cs.tabSize + ';';
+
+  // Place a zero-width marker at the match position; its offsetTop is the
+  // exact pixel y of the match accounting for all wrap.
+  mirror.textContent = '';
+  mirror.appendChild(document.createTextNode(text.substring(0, idx)));
+  const marker = document.createElement('span');
+  marker.textContent = '\u200B';
+  mirror.appendChild(marker);
+  const offsetY = marker.offsetTop;
+
+  // Convert textarea-local y to editor-scroll y, then target ~1/3 down the
+  // viewport so the match isn't jammed against the top edge (matches prior
+  // UX intent).
+  const taRect        = ta.getBoundingClientRect();
+  const editorRect    = editor.getBoundingClientRect();
+  const taTopInEditor = (taRect.top - editorRect.top) + editor.scrollTop;
+  const targetScroll  = taTopInEditor + offsetY - editor.clientHeight / 3;
+  editor.scrollTop = Math.max(0, targetScroll);
+
+  // preventScroll: true stops Chrome from re-scrolling an ancestor on focus
+  // and undoing the manual scroll we just applied.
+  ta.focus({ preventScroll: true });
   ta.setSelectionRange(idx, idx + currentText.length);
   toast('📍 Scrolled to text in document', 2000);
 }
