@@ -2,24 +2,34 @@
 
 ---
 
-## v3.19.0 Pro — Build `20260421-010`
+## v3.19.0 Pro — Build `20260421-011`
 **Released:** April 21, 2026
 
 ### New Features
 
 **Unanimous Convergence Scene — full-screen reveal for the hive's biggest moment**
-When every AI in the hive agrees the document is done, unanimous convergence now triggers a dedicated full-screen scene instead of the shared fly-in overlay. Timeline: black backdrop fades in over 800ms, then 28 large fog puffs rise across the full screen with Kai's fly-in whirr sound (5.2s), fog clears over 500ms, then `WaxFrame_Hive_Converged_Unanimously_03.png` reveals centered with a 900ms spring-eased zoom while a synthesized fanfare plays (C5–E5–G5–C6 major arpeggio with square+triangle oscillators for brass-ish tone, capped by a C7 sparkle ping) and a multicolor fireworks burst erupts from center (90 particles, 8-hue palette — gold, orange, red, magenta, purple, blue, cyan, green — canvas-rendered with gravity and air drag). Image holds ~4.5s then the scene fades out. **Escape key or click dismisses early** at any point in the timeline — all scheduled timers cancel, keydown listener removes itself, fog and image reset.
+When every AI in the hive agrees the document is done, unanimous convergence now triggers a dedicated full-screen scene instead of the shared fly-in overlay. Timeline:
 
-**Viewport-aware rendering.** Image sized with `min(78vh, 78vw, 820px)` so it fits any supported viewport from 1024×768 up through 4K desktops. Fog puffs positioned in percentage units for natural scaling. Canvas is **DPR-aware** — backing bitmap sized at `sw * devicePixelRatio × sh * devicePixelRatio` with the context pre-scaled so sparks render crisply on Retina / high-DPI screens (iMac M4, 4K monitors) instead of the blurry-on-Retina default you'd get from a 1:1 canvas.
+- **0 → 0.8s** — black backdrop fades in
+- **0.8 → 3.3s** — worker bee flies left-to-right across screen with a natural weaving bob (`-30vw` → `130vw`, ±28px vertical sine, slight rotation per stage) + Kai's whirr sound plays in sync with the flight
+- **3.3 → 8.3s** — 28 large fog puffs rise across the full screen + soft smoker hiss
+- **8.3 → 8.8s** — fog clears
+- **8.8s** — `WaxFrame_Hive_Converged_Unanimously_03.png` reveals centered with a 900ms spring-eased zoom while a synthesized fanfare plays (C5–E5–G5–C6 major arpeggio with square+triangle oscillators for brass-ish tone, capped by a C7 sparkle ping) and a multicolor fireworks burst erupts from center (90 particles, 8-hue palette — gold, orange, red, magenta, purple, blue, cyan, green — canvas-rendered with gravity and air drag)
+- **8.8 → 13.3s** — image holds, sparks fade out
+- **13.3 → 14.3s** — scene fades out
+
+**Escape key or click dismisses early** at any point in the timeline — all scheduled timers cancel, keydown listener removes itself, bee/fog/image reset.
+
+**Viewport-aware rendering.** Image sized with `min(78vh, 78vw, 820px)`. Bee sized with `min(280px, 20vw)` so it scales down on smaller viewports. Fog puffs positioned in percentage units. Canvas is **DPR-aware** — backing bitmap sized at `sw * devicePixelRatio × sh * devicePixelRatio` with the context pre-scaled so sparks render crisply on Retina / high-DPI screens (iMac M4, 4K monitors) instead of the blurry-on-Retina default you'd get from a 1:1 canvas.
 
 Majority convergence is unchanged and still uses the smaller fly-in overlay with the `N of M AIs agree` subline. The new scene is reserved for the full-agreement moment.
 
-`playUnanimousScene()`, `closeUnanimousScene()`, `playUnanimousFanfare()`, and `spawnUnanimousFireworks()` added to `app.js` between `hiveRand` and the dev-toolbar helpers. HTML overlay (`#unanimousScene` with backdrop, fog, image, sparks canvas) added to `index.html` after the existing unlock scene. CSS block added to `style.css` between the hive-finish reduced-motion rule and the dev toolbar section — includes `prefers-reduced-motion` support that skips all animation and reveals the image immediately.
+`playUnanimousScene()`, `closeUnanimousScene()`, `playUnanimousFanfare()`, and `spawnUnanimousFireworks()` added to `app.js` between `hiveRand` and the dev-toolbar helpers. HTML overlay (`#unanimousScene` with backdrop, bee, fog, image, sparks canvas) added to `index.html` after the existing unlock scene. CSS block added to `style.css` between the hive-finish reduced-motion rule and the dev toolbar section — includes `prefers-reduced-motion` support that skips all animation, reveals the image immediately, and hides the bee.
 
-Dev toolbar `▶ Unanimous` button rewired to fire the new scene so the 11-second sequence can be previewed without running a real round.
+Dev toolbar `▶ Unanimous` button rewired to fire the new scene so the 14-second sequence can be previewed without running a real round.
 
 ### Files Changed
-`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md` · `images/WaxFrame_Hive_Converged_Unanimously_03.png` *(new asset, drop into `images/`)*
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md` · `images/WaxFrame_Hive_Converged_Unanimously_03.png` *(new asset)* · `images/WaxFrame_Worker_Bee_v2.png` *(new asset, drop into `images/`)*
 
 ---
 
