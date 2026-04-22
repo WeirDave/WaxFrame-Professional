@@ -410,7 +410,7 @@
       </div>
       <button class="btn btn-lg btn-cta" id="launchBtn" onclick="startSession()">
         <img src="images/Waxframe_logo_v19.png" class="bee-btn-img">
-        Launch WaxFrame →
+        <span class="launch-label">Launch WaxFrame →</span>
       </button>
     </div>
   </div>
@@ -907,6 +907,7 @@
     </div>
     <div class="goal-modal-footer">
       <button class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
+      <button class="finish-modal-cancel" onclick="navigator.clipboard.writeText(document.getElementById('projectGoalModalEdit').value).then(()=>window.toast('📋 Goal copied'))">📋 Copy</button>
       <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
     </div>
   </div>
