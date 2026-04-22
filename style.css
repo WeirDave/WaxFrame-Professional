@@ -1724,6 +1724,16 @@ html, body {
   background: var(--accent);
   color: #0a0c12;
 }
+[data-theme="light"] .work-doc-ta::selection {
+  background: var(--accent);
+  color: #ffffff;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .work-doc-ta::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+}
 
 .work-doc-rules { display: none; }
 .work-doc-right-margin { display: none; }
@@ -1990,8 +2000,19 @@ html, body {
   font-family: var(--font-mono);
   line-height: 1.4;
 }
-.dcw-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
-.dcw-ctrl-btn.active { border-color: #00b300; color: #00b300; }
+.dcw-ctrl-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+/* Active states — green when running (Start pressed), amber when paused (Pause pressed).
+   Matches the semantic mapping used by the clock digits: running digits are green,
+   paused digits flash amber. The :hover rule above excludes .active so we don't need
+   !important — hover and active never compete on the same element. */
+.dcw-ctrl-btn--start.active {
+  border-color: #00b300;
+  color: #00b300;
+}
+.dcw-ctrl-btn--pause.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
 
 /* Light theme overrides */
 [data-theme="light"] .dual-clock-widget { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
@@ -2004,7 +2025,15 @@ html, body {
 [data-theme="light"] .dcw-label-bot { color: #384060; }
 [data-theme="light"] .dcw-label-bot.running { color: #047857; }
 [data-theme="light"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
-[data-theme="light"] .dcw-ctrl-btn:hover { border-color: var(--accent); color: var(--accent); }
+[data-theme="light"] .dcw-ctrl-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
+[data-theme="light"] .dcw-ctrl-btn--start.active {
+  border-color: #047857;
+  color: #047857;
+}
+[data-theme="light"] .dcw-ctrl-btn--pause.active {
+  border-color: #a06000;
+  color: #a06000;
+}
 [data-theme="light"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .dual-clock-widget { background: rgba(255,255,255,0.7); border-color: rgba(0,0,0,0.1); }
@@ -2016,6 +2045,14 @@ html, body {
   [data-theme="auto"] .dcw-label-top { color: #7880a0; }
   [data-theme="auto"] .dcw-label-bot { color: #7880a0; }
   [data-theme="auto"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
+  [data-theme="auto"] .dcw-ctrl-btn--start.active {
+    border-color: #047857;
+    color: #047857;
+  }
+  [data-theme="auto"] .dcw-ctrl-btn--pause.active {
+    border-color: #a06000;
+    color: #a06000;
+  }
   [data-theme="auto"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 }
 
@@ -5862,11 +5899,156 @@ kbd {
 .dp-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
 .dp-bee { width:80px; flex-shrink:0; }
 
-.dp-toc { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:20px 24px; margin-bottom:32px; }
-.dp-toc-title { font-family:var(--font-display); font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:12px; }
-.dp-toc-grid { display:flex; flex-wrap:wrap; gap:8px; }
-.dp-toc-link { font-size:14px; color:var(--text-dim); text-decoration:none; padding:4px 12px; border:1px dashed var(--border2); border-radius:20px; transition:all 0.12s; }
-.dp-toc-link:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-dim); }
+/* ── Two-column layout: sticky sidebar + main column ── */
+.dp-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 32px;
+  align-items: flex-start;
+}
+.dp-sidebar {
+  position: sticky;
+  top: 116px;                 /* clears the sticky page-header */
+  align-self: start;
+  max-height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+.dp-sidebar-inner {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 18px 16px;
+}
+.dp-sidebar-title {
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+.dp-sidebar-category {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin: 14px 0 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.dp-sidebar-category:first-of-type {
+  border-top: none;
+  padding-top: 0;
+  margin-top: 14px;
+}
+.dp-sidebar-link {
+  display: block;
+  font-size: 14px;
+  color: var(--text);
+  text-decoration: none;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  transition: all 0.12s;
+  margin-bottom: 2px;
+}
+.dp-sidebar-link:hover {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.dp-sidebar-quickstart {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  text-decoration: none;
+  transition: all 0.12s;
+  margin-bottom: 4px;
+}
+.dp-sidebar-quickstart:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.dp-sidebar-quickstart:hover .dp-sidebar-quickstart-label,
+.dp-sidebar-quickstart:hover .dp-sidebar-quickstart-sub {
+  color: #ffffff;
+}
+.dp-sidebar-quickstart-star {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.dp-sidebar-quickstart-label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+}
+.dp-sidebar-quickstart-sub {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+.dp-main {
+  min-width: 0;               /* prevents grid-cell overflow from long code blocks */
+}
+
+/* ── Category headers inside main column ── */
+.dp-category-hdr {
+  margin: 24px 0 20px;
+  padding: 16px 20px;
+  background: linear-gradient(180deg, rgba(245,166,35,0.06), rgba(245,166,35,0.02));
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+  scroll-margin-top: 116px;
+}
+.dp-category-hdr:first-of-type {
+  margin-top: 0;
+}
+.dp-category-title {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 4px;
+  letter-spacing: 0.02em;
+}
+.dp-category-sub {
+  font-size: 14px;
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Quick Start featured card (distinct from regular playbooks) ── */
+.dp-playbook--quickstart {
+  border: 2px solid var(--accent);
+  box-shadow: 0 0 0 1px var(--accent-dim), 0 4px 24px rgba(245,166,35,0.08);
+  margin-bottom: 36px;
+}
+.dp-playbook-header--quickstart {
+  background: linear-gradient(135deg, rgba(245,166,35,0.22), rgba(0,0,0,0.55));
+}
+.dp-quickstart-intro {
+  background: var(--accent-dim);
+  border: 1px dashed var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 8px;
+}
+.dp-quickstart-intro p {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+}
 
 .dp-playbook { background:transparent; border:1px solid var(--border2); border-radius:var(--radius-lg); margin-bottom:28px; scroll-margin-top: 116px; }
 .dp-playbook-header { display:flex; align-items:center; gap:16px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
