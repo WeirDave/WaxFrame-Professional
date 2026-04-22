@@ -2372,6 +2372,8 @@ function lockConflictToNotes(decisionIdx) {
   openNotesModal();
   toast('🔒 Locked in Notes — run Send to Builder to apply');
 }
+
+function applyNotesTemplate(template) {
   const ta = document.getElementById('workNotes');
   if (!ta) return;
   const current = ta.value.trim();
