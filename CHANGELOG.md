@@ -2,6 +2,36 @@
 
 ---
 
+## v3.19.10 Pro — Build `20260421-020`
+**Released:** April 21, 2026
+
+### Polish
+
+**Single-key Test modal — now a true three-column layout matching Test All Keys**
+v3.19.9 matched the two-pane single-test modal's height to Test All Keys but kept the column count mismatched (2 vs 3). Consistency matters more than column optimization — a single-AI row is still cleaner than an empty space. Rewrote single-test as a real three-column layout: Rows column (showing just the one AI being tested, pre-selected with the amber accent), Sent pane, Received pane. Modal width bumped from `1100px` to `1400px` matching the multi-test modal exactly.
+
+`testApiKey()` now populates the new row's name and status indicator so the left column reflects test progress in real time: `⋯` pending, `✓` pass, `✕` fail — identical icon set to Test All Keys. Row status tooltip shows either the extracted response snippet (on pass) or the error message (on fail).
+
+Dropped the now-unused `.tkp-two-col` CSS rule. The two test modals now share the exact same layout primitive.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
+## v3.19.9 Pro — Build `20260421-019`
+**Released:** April 21, 2026
+
+### Bug Fixes
+
+**Single-key Test modal — height matched to Test All Keys**
+The v3.19.8 single-test modal was sized `height: 60vh / min-height: 360px` while Test All Keys uses `65vh / 400px`. Rationale was the single-test has fewer columns, but response body length is identical regardless of column count — so the shorter height just meant Alfredo / Perplexity responses forced unnecessary scrolling in the Received pane. Bumped `.tkp-two-col` to `65vh / 400px` matching `.tkp-three-col`.
+
+### Files Changed
+`style.css` · `index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.8 Pro — Build `20260421-018`
 **Released:** April 21, 2026
 
