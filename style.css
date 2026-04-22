@@ -5347,6 +5347,30 @@ kbd {
 .unanimous-scene.is-active .unanimous-backdrop {
   opacity: 1;
 }
+.unanimous-bee {
+  position: absolute;
+  top: 42%;
+  left: 0;
+  width: min(280px, 20vw);
+  height: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-30vw, 0);
+  filter: drop-shadow(0 0 22px rgba(245,166,35,0.55)) drop-shadow(0 12px 32px rgba(0,0,0,0.5));
+  z-index: 2;
+}
+.unanimous-bee.is-flying {
+  animation: unanimousBeeFlyAcross 2500ms cubic-bezier(.42,0,.58,1) forwards;
+}
+@keyframes unanimousBeeFlyAcross {
+  0%   { opacity: 0; transform: translate(-30vw, 0)     rotate(-3deg); }
+  8%   { opacity: 1; }
+  25%  {              transform: translate(18vw, -28px) rotate(2deg); }
+  50%  {              transform: translate(55vw,  14px) rotate(-2deg); }
+  75%  {              transform: translate(92vw, -22px) rotate(2deg); }
+  92%  { opacity: 1; }
+  100% { opacity: 0; transform: translate(130vw, 0)     rotate(-3deg); }
+}
 .unanimous-fog {
   position: absolute;
   inset: 0;
@@ -5417,6 +5441,7 @@ kbd {
   .unanimous-scene, .unanimous-scene * { animation: none !important; transition: none !important; }
   .unanimous-scene.is-active .unanimous-backdrop { opacity: 1; }
   .unanimous-scene.is-active .unanimous-image { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  .unanimous-scene.is-active .unanimous-bee { opacity: 0; }
 }
 
 /* ══════════════════════════════════════
