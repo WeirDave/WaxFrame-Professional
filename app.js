@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-014
+//  Build: 20260421-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-014';         // build stamp — update each session
+const BUILD       = '20260421-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4115,23 +4115,23 @@ function hiveRand(min, max) {
 
 /* =========================================
    UNANIMOUS CONVERGENCE SCENE
-   Timeline (follows real-firework cadence: thump → boom → crackle crackle crackle):
+   Timeline:
      T+0.0s   scene shown, black backdrop starts fading in (800ms)
      T+0.8s   worker bee flies left → right across screen (2500ms, linear)
               + Kai's whirr plays in sync with the flight
-     T+2.05s  bee halfway — fog puffs spawn progressively left → right over
-              the next 2500ms (bee's jet-exhaust wake)
-     T+4.55s  full fog density reached
+     T+1.05s  fog puffs spawn progressively left → right over 2500ms
+              (bee's jet-exhaust wake — starts early so fog is built up
+              around the bee as it passes)
+     T+3.55s  full fog density reached
      T+6.0s   fog clears (500ms)
      T+6.5s   image reveals (900ms zoom) — silent, let the user see it
-     T+7.5s   1s hold → anvil drop (mortar launch thump)
-     T+8.5s   1s hold → BOOM: main rainbow burst (70 particles) + fanfare
-     T+10.0s  crackle 1: small sparkle burst (18 gold particles, 55% size) + crackle sound
-     T+10.3s  crackle 2: second sparkle burst + crackle sound
-     T+10.6s  crackle 3: third sparkle burst + crackle sound
-     T+10.6s  ~1.9s of clean image time (sparkles fade through)
-     T+12.5s  scene fades out (900ms)
-     T+13.4s  scene fully closed
+     T+6.8s   right after image drops: anvil drop (mortar-launch thump)
+     T+7.1s   fireworks — 3 multicolor bursts (center → left → right at 0/700/1400ms)
+     T+7.8s   crackle sound matched to burst 2
+     T+8.5s   crackle sound matched to burst 3
+     T+8.5s → T+11s   ~2s of clean image hold (sparks fade through)
+     T+11s    scene fades out (900ms)
+     T+11.9s  scene fully closed
    Escape or click dismisses early via closeUnanimousScene().
    ========================================= */
 
@@ -4190,7 +4190,7 @@ function playUnanimousScene() {
   // Each puff spawns at a position progressing 0%→100% across the screen
   // over the next 2500ms, simulating a jet-exhaust wake.
   const totalPuffs = 28;
-  const sweepStart = 2050;
+  const sweepStart = 1050;
   const sweepDuration = 2500;
   fog.classList.add('is-rising'); // opacity container transitions to full
   for (let i = 0; i < totalPuffs; i++) {
@@ -4229,26 +4229,24 @@ function playUnanimousScene() {
     image.classList.add('is-revealed');
   }, 6500));
 
-  // T+7.5s — 1 second after reveal: anvil drop (mortar-launch thump).
+  // T+6.8s — right after image drops: anvil (mortar-launch thump, lands just before the first burst).
   _unanimousTimers.push(setTimeout(() => {
     if (typeof playAnvilSound === 'function') playAnvilSound();
-  }, 7500));
+  }, 6800));
 
-  // T+8.5s — 1 second after anvil: BOOM (main rainbow burst) + fanfare.
-  // spawnUnanimousFireworks fires its default schedule which includes the
-  // main burst at 0ms and three sparkle crackles at 1500/1800/2100ms from now.
+  // T+7.1s — 300ms after anvil: fireworks fire. spawnUnanimousFireworks runs
+  // its default 3-burst multicolor schedule (center → left → right at 0/700/1400ms).
   _unanimousTimers.push(setTimeout(() => {
-    playUnanimousFanfare();
     spawnUnanimousFireworks(canvas);
-  }, 8500));
+  }, 7100));
 
-  // Crackle sounds matched to the sparkle bursts at 8500+1500/1800/2100.
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 10000));
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 10300));
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 10600));
+  // Crackle sounds matched to the second and third bursts (the first burst
+  // is sonically covered by the anvil bang).
+  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 7800));  // burst 2
+  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 8500));  // burst 3
 
-  // T+12.5s — ~1.9s of clean image hold after last crackle, then close.
-  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 12500));
+  // T+11s — ~2s of clean image hold after last burst (sparks fade through), then close.
+  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
 }
 
 function closeUnanimousScene(silent = false) {
@@ -4363,51 +4361,40 @@ function playCrackleSound() {
   } catch(e) { /* audio not supported — fail silently */ }
 }
 
-// ── MULTICOLOR FIREWORKS — staged bursts, canvas-rendered for performance ──
+// ── MULTICOLOR FIREWORKS — three multicolored bursts, canvas-rendered for performance ──
 // Canvas is already sized and DPR-scaled by playUnanimousScene(). All coords
 // here are CSS pixels; the transform applied to the context handles the DPR
-// multiply automatically. Accepts an optional bursts array so a single shared
-// particle system can render multiple sequential bursts ("pop-pop-pop") at
-// different positions — letting the user's eye register the image between pops.
-function spawnUnanimousFireworks(canvas, bursts) {
+// multiply automatically. Runs three sequential bursts (center → left → right)
+// over 1.4s, all with the full rainbow palette at full size — visual variety
+// without fading the individual bursts into invisible gold sparkles.
+function spawnUnanimousFireworks(canvas) {
   const ctx  = canvas.getContext('2d');
   const cssW = parseFloat(canvas.style.width)  || canvas.width;
   const cssH = parseFloat(canvas.style.height) || canvas.height;
+  const hues = [40, 20, 350, 320, 280, 220, 190, 140]; // gold, orange, red, magenta, purple, blue, cyan, green
 
-  const palettes = {
-    rainbow: [40, 20, 350, 320, 280, 220, 190, 140], // gold, orange, red, magenta, purple, blue, cyan, green
-    sparkle: [42, 48, 52, 56, 60],                    // gold-to-white shimmer range
-  };
-
-  // Default schedule: one big BOOM (rainbow, full-size), then a 1.5s pause,
-  // then three sparkle crackles at spread positions with ~55% size/speed/life.
-  // Each burst: { at, x, y, count, palette, sizeMult }
-  const schedule = bursts || [
-    { at: 0,    x: cssW * 0.50, y: cssH * 0.50, count: 70, palette: 'rainbow', sizeMult: 1.00 },
-    { at: 1500, x: cssW * 0.30, y: cssH * 0.40, count: 18, palette: 'sparkle', sizeMult: 0.55 },
-    { at: 1800, x: cssW * 0.68, y: cssH * 0.55, count: 18, palette: 'sparkle', sizeMult: 0.55 },
-    { at: 2100, x: cssW * 0.45, y: cssH * 0.35, count: 18, palette: 'sparkle', sizeMult: 0.55 },
+  const schedule = [
+    { at: 0,    x: cssW * 0.50, y: cssH * 0.50, count: 60 },  // center: main burst
+    { at: 700,  x: cssW * 0.32, y: cssH * 0.44, count: 40 },  // upper-left
+    { at: 1400, x: cssW * 0.68, y: cssH * 0.56, count: 40 },  // lower-right
   ];
 
   const particles = [];
   const startTime = performance.now();
   const lastBurstAt = schedule.reduce((m, b) => Math.max(m, b.at), 0);
 
-  // Queue each burst — particles get pushed into the shared pool when fired
   schedule.forEach(burst => {
     setTimeout(() => {
-      const hues = palettes[burst.palette] || palettes.rainbow;
-      const sizeMult = burst.sizeMult || 1;
       for (let i = 0; i < burst.count; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const speed = (180 + Math.random() * 520) * sizeMult;
+        const speed = 180 + Math.random() * 520;
         particles.push({
           x: burst.x, y: burst.y,
           vx: Math.cos(angle) * speed,
           vy: Math.sin(angle) * speed,
           life: 0,
-          maxLife: (900 + Math.random() * 900) * sizeMult,
-          size: (2 + Math.random() * 3.5) * sizeMult,
+          maxLife: 900 + Math.random() * 900,
+          size: 2 + Math.random() * 3.5,
           hue: hues[Math.floor(Math.random() * hues.length)],
         });
       }
@@ -4442,7 +4429,6 @@ function spawnUnanimousFireworks(canvas, bursts) {
     });
     ctx.shadowBlur = 0;
 
-    // Keep the loop alive while any particle is alive OR more bursts are still pending
     const elapsed = now - startTime;
     const hasPendingBursts = elapsed < lastBurstAt + 50;
     if (alive > 0 || hasPendingBursts) {
