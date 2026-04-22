@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260421-018">
+  <meta name="waxframe-build" content="20260421-020">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.19.8">
+  <link rel="stylesheet" href="style.css?v=3.19.10">
 </head>
 <body>
 
@@ -1014,7 +1014,16 @@
       </div>
       <button class="import-server-close-btn" onclick="closeTestKeyModal()" title="Close">✕</button>
     </div>
-    <div class="tkp-two-col">
+    <div class="tkp-three-col">
+      <div class="tkp-col tkp-col-rows">
+        <div class="tkp-col-hdr">AI</div>
+        <div class="tkp-rows">
+          <div class="tkp-row is-selected" id="testKeySingleRow">
+            <span class="tkp-ai-name" id="testKeySingleName">—</span>
+            <span class="tkp-status tkp-pending" id="testKeySingleStatus">…</span>
+          </div>
+        </div>
+      </div>
       <div class="tkp-col tkp-col-sent">
         <div class="tkp-col-hdr">Sent</div>
         <div class="tkp-col-body">
@@ -1241,7 +1250,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.8"></script>
+<script src="app.js?v=3.19.10"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
