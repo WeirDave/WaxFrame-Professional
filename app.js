@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260421-012
+//  Build: 20260421-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260421-012';         // build stamp — update each session
+const BUILD       = '20260421-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4124,8 +4124,13 @@ function hiveRand(min, max) {
               is generating atmospheric fog in its wake
      T+4.55s  full fog density reached
      T+6.0s   fog clears (500ms)
-     T+6.5s   image reveals (900ms) + fanfare + multicolor fireworks
-     T+11s    scene fades out and hides
+     T+6.5s   image reveals (900ms) + anvil drop (deep launch thump)
+     T+7.0s   first firework burst + fanfare (the "pop")
+     T+7.7s   second firework burst (offset left)
+     T+8.4s   third firework burst (offset right)
+     T+8.4 → 11s   image holds, sparks fade through (~2.6s clean viewing)
+     T+11s    scene fades out (900ms)
+     T+11.9s  scene fully closed
    Escape or click dismisses early via closeUnanimousScene().
    ========================================= */
 
@@ -4217,15 +4222,22 @@ function playUnanimousScene() {
     fog.classList.add('is-clearing');
   }, 6000));
 
-  // T+6.5s — reveal image + fanfare + fireworks
+  // T+6.5s — image reveals + anvil drop (the firework launch "thump")
   _unanimousTimers.push(setTimeout(() => {
     image.style.opacity = '';
     image.classList.add('is-revealed');
-    playUnanimousFanfare();
-    spawnUnanimousFireworks(canvas);
+    if (typeof playAnvilSound === 'function') playAnvilSound();
   }, 6500));
 
-  // T+11s — fully close
+  // T+7.0s — first firework burst + fanfare (the explosion).
+  // spawnUnanimousFireworks with no bursts arg fires its default 3-burst
+  // sequence centered → left → right at T+0, T+700ms, T+1400ms.
+  _unanimousTimers.push(setTimeout(() => {
+    playUnanimousFanfare();
+    spawnUnanimousFireworks(canvas);
+  }, 7000));
+
+  // T+11s — fully close (gives ~2.6s post-last-burst for user to absorb image)
   _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 11000));
 }
 
@@ -4301,33 +4313,48 @@ function playUnanimousFanfare() {
   } catch(e) { /* audio not supported — fail silently */ }
 }
 
-// ── MULTICOLOR FIREWORKS — radial burst, canvas-rendered for performance ──
+// ── MULTICOLOR FIREWORKS — staged bursts, canvas-rendered for performance ──
 // Canvas is already sized and DPR-scaled by playUnanimousScene(). All coords
 // here are CSS pixels; the transform applied to the context handles the DPR
-// multiply automatically.
-function spawnUnanimousFireworks(canvas) {
-  const ctx = canvas.getContext('2d');
+// multiply automatically. Accepts an optional bursts array so a single shared
+// particle system can render multiple sequential bursts ("pop-pop-pop") at
+// different positions — letting the user's eye register the image between pops.
+function spawnUnanimousFireworks(canvas, bursts) {
+  const ctx  = canvas.getContext('2d');
   const cssW = parseFloat(canvas.style.width)  || canvas.width;
   const cssH = parseFloat(canvas.style.height) || canvas.height;
-  const cx   = cssW / 2;
-  const cy   = cssH / 2;
   const hues = [40, 20, 350, 320, 280, 220, 190, 140]; // gold, orange, red, magenta, purple, blue, cyan, green
-  const particleCount = 90;
+
+  // Default to three sequential bursts: main center, then a left pop, then a right pop.
+  // Timings are relative to the moment this function is called.
+  const schedule = bursts || [
+    { at: 0,    x: cssW * 0.50, y: cssH * 0.50, count: 60 },
+    { at: 700,  x: cssW * 0.32, y: cssH * 0.44, count: 40 },
+    { at: 1400, x: cssW * 0.68, y: cssH * 0.56, count: 40 },
+  ];
+
   const particles = [];
-  for (let i = 0; i < particleCount; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 180 + Math.random() * 520;
-    const hue   = hues[Math.floor(Math.random() * hues.length)];
-    particles.push({
-      x: cx, y: cy,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 0,
-      maxLife: 900 + Math.random() * 900,
-      size: 2 + Math.random() * 3.5,
-      hue,
-    });
-  }
+  const startTime = performance.now();
+  const lastBurstAt = schedule.reduce((m, b) => Math.max(m, b.at), 0);
+
+  // Queue each burst — particles get pushed into the shared pool when fired
+  schedule.forEach(burst => {
+    setTimeout(() => {
+      for (let i = 0; i < burst.count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 180 + Math.random() * 520;
+        particles.push({
+          x: burst.x, y: burst.y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          life: 0,
+          maxLife: 900 + Math.random() * 900,
+          size: 2 + Math.random() * 3.5,
+          hue: hues[Math.floor(Math.random() * hues.length)],
+        });
+      }
+    }, burst.at);
+  });
 
   let last = performance.now();
   let rafId = null;
@@ -4341,7 +4368,6 @@ function spawnUnanimousFireworks(canvas) {
       p.life += dt * 1000;
       if (p.life >= p.maxLife) return;
       alive++;
-      // Integrate with gravity and air drag
       p.vy += 380 * dt;   // gravity
       p.vx *= 0.985;
       p.vy *= 0.985;
@@ -4357,7 +4383,11 @@ function spawnUnanimousFireworks(canvas) {
       ctx.fill();
     });
     ctx.shadowBlur = 0;
-    if (alive > 0) {
+
+    // Keep the loop alive while any particle is alive OR more bursts are still pending
+    const elapsed = now - startTime;
+    const hasPendingBursts = elapsed < lastBurstAt + 50;
+    if (alive > 0 || hasPendingBursts) {
       rafId = requestAnimationFrame(loop);
     } else {
       ctx.clearRect(0, 0, cssW, cssH);
