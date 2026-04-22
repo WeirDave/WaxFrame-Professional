@@ -3923,6 +3923,8 @@ function hideFinishModal() {
 }
 
 function finishAndExport() {
+  const btn = document.getElementById('finishBtnDoc');
+  if (btn?.classList.contains('finish-modal-btn-disabled') || btn?.disabled) return;
   const docTa = document.getElementById('workDocument');
   const originalDoc = docTa?.value?.trim();
   if (!originalDoc) { toast('⚠️ Nothing to export yet'); return; }
@@ -3953,6 +3955,39 @@ function finishAndNew() {
   hideFinishModal();
   clearProject();
   goToScreen('screen-project');
+}
+
+function exportSnapshot() {
+  // Guard: disabled button should not fire
+  const btn = document.getElementById('finishBtnSnapshot');
+  if (btn?.classList.contains('finish-modal-btn-disabled')) return;
+
+  const hive    = localStorage.getItem(LS_HIVE)    || null;
+  const project = localStorage.getItem(LS_PROJECT) || null;
+  const session = localStorage.getItem(LS_SESSION) || null;
+  if (!hive && !project && !session) { toast('⚠️ Nothing to snapshot'); return; }
+
+  const snapshot = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
+
+  // Build filename from project name + version
+  const proj = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
+  const name    = proj.name    ? proj.name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40) : 'session';
+  const version = proj.version ? proj.version.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 10) : '';
+  const filename = version ? `WaxFrame-Snapshot-${name}-${version}` : `WaxFrame-Snapshot-${name}`;
+
+  const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = `${filename}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  if (btn) {
+    btn.textContent = '✅ Snapshot saved!';
+    btn.disabled = true;
+    btn.classList.add('finish-modal-btn-done');
+  }
+  toast('📷 Session snapshot saved — import it from the Menu to resume');
 }
 
 /* =========================================
