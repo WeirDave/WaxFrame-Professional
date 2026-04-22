@@ -1080,6 +1080,9 @@ html, body {
   box-shadow: 4px 0 24px rgba(0,0,0,0.5);
   overflow: hidden;
 }
+@media (max-width: 1400px) { .nav-panel { width: 320px; } }
+@media (max-width: 1200px) { .nav-panel { width: 360px; } }
+@media (max-width: 1100px) { .nav-panel { width: min(420px, 90vw); } }
 .nav-panel.open {
   transform: translateX(0);
 }

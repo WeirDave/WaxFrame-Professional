@@ -6279,12 +6279,16 @@ function backupSession() {
   const session = localStorage.getItem(LS_SESSION) || null;
   if (!hive && !project && !session) { toast('⚠️ Nothing to back up'); return; }
   const backup   = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
-  const name     = (() => { try { return JSON.parse(project || '{}').name || 'session'; } catch(e) { return 'session'; } })();
+  const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
+  const name     = proj.projectName || 'session';
+  const version  = proj.projectVersion || '';
   const safeName = name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40);
+  const safeVer  = version.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 10);
+  const filename = safeVer ? `WaxFrame-Backup-${safeName}-${safeVer}` : `WaxFrame-Backup-${safeName}`;
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
-  a.download = `WaxFrame-Backup-${safeName}.json`;
+  a.download = `${filename}.json`;
   a.click();
   URL.revokeObjectURL(a.href);
   closeNavMenu();
