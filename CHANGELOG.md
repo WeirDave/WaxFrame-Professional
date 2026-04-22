@@ -2,6 +2,36 @@
 
 ---
 
+## v3.19.4 Pro — Build `20260421-014`
+**Released:** April 21, 2026
+
+### Polish
+
+**Unanimous Scene — real-firework cadence: thump → BOOM → crackle crackle crackle**
+The prior reveal had image + anvil + fanfare + burst all fire within a ~500ms window, which still buried the image under too much simultaneous input. Rebuilt around how actual fireworks work — mortar launch thump, shell rises, main shell break with big burst, 1–2 second pause, then the silver-star crackle as the charges burn off.
+
+New cadence:
+
+- **T+6.5s** — image reveals (900ms zoom). **Silent.** User reads the image first.
+- **T+7.5s** — 1 second hold → `playAnvilSound()` fires (mortar launch thump).
+- **T+8.5s** — 1 second hold → **BOOM**: main rainbow burst (70 particles, full size, centered) + fanfare.
+- **T+10.0s** — crackle 1: small gold sparkle burst (18 particles, 55% size/speed/life) at screen-upper-left + `playCrackleSound()` (10 rapid high-pitched noise pops over ~300ms).
+- **T+10.3s** — crackle 2: sparkle burst screen-right + crackle sound.
+- **T+10.6s** — crackle 3: sparkle burst upper-center + crackle sound.
+- **T+10.6s → T+12.5s** — ~1.9s clean image hold, sparkles fading through.
+- **T+12.5s → T+13.4s** — scene fades out.
+
+**New `playCrackleSound()` function** added to `app.js` — generates 10 short bandpass-filtered noise pops at randomized 3.2–7 kHz frequencies over ~300ms. Each pop is ~40–90ms with an exponential decay envelope. Respects `_isMuted` like every other scene sound. Reads as sparkler-star crackle, not thunder.
+
+**Fireworks function extended** to accept per-burst `palette` (`'rainbow'` for the main boom, `'sparkle'` for crackles — a tighter gold-to-white hue range) and `sizeMult` (scales particle size, speed, and lifetime together so sparkle crackles are visually distinct from the main burst). Default schedule inside `spawnUnanimousFireworks()` is now one main burst at 0ms followed by three sparkle crackles at 1500/1800/2100ms — all feeding into the same shared particle system and RAF loop.
+
+Total scene length: 13.4s (up from 11.9s). Escape or click still dismisses anywhere.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.3 Pro — Build `20260421-013`
 **Released:** April 21, 2026
 
