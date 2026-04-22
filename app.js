@@ -4215,8 +4215,8 @@ RULES:
 - Do not introduce new content that changes the intended meaning of the document.
 - Keep each suggestion to one sentence maximum — no explanations, no justifications.
 - Give your TOP 3 most impactful suggestions only. If you have more, choose the three that matter most.
-- ⚠️ Do NOT suggest changes for the sake of suggesting changes. Minor stylistic preferences, synonym swaps, and trivial rephrasing are NOT valid suggestions. Only suggest a change if it meaningfully improves the document.
-- Only return NO CHANGES NEEDED if you have reviewed every line and can justify why each individual line cannot be improved. If any line could be clearer, more precise, or more consistent, suggest it instead. This response should be rare.
+- ⚠️ Do NOT suggest changes for the sake of suggesting changes. Punctuation preferences, synonym swaps, stylistic alternatives, and trivial rephrasing are NOT valid suggestions. A suggestion is only valid if it meaningfully improves the document's effectiveness for its stated purpose.
+- ⚠️ If the document is already clear, well-written, and serving its stated purpose — respond with only: NO CHANGES NEEDED. This is the correct and expected response when no genuine improvement exists. Do not search for something to suggest just to avoid this response.
 
 ⚠️ IMPORTANT: Any response that contains a full rewritten document, large continuous blocks of revised text, or anything other than a numbered suggestion list will be considered non-compliant and discarded.`,
 
