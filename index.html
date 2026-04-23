@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260422-006">
+  <meta name="waxframe-build" content="20260422-007">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -608,7 +608,7 @@
 
   <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
-    <span class="notes-drawer-title">📝 Notes for this Round</span>
+    <span class="notes-drawer-title">📝 Notes for this Round <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
     <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyNotes()">📋 Copy</button>
@@ -620,7 +620,6 @@
     <span class="notes-templates-label">Templates:</span>
     <button class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
     <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('I have applied my conflict decision. Do not re-raise or undo this change.')">✅ Applied my decision</button>
     <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
     <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
   </div>
@@ -1206,6 +1205,26 @@
   </div>
 </div>
 
+<div class="finish-modal-overlay" id="infoNotesModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Notes</h2>
+    <div class="goal-info-body">
+      <p>Notes are directions for the Builder only — not sent to reviewers. They apply to the next round only and are cleared automatically after that round runs. Use Notes for one-round-only instructions; for rules that must survive every round, put them in <strong>Additional instructions</strong> on the Project screen instead.</p>
+      <div class="goal-info-row"><span class="info-label">🔒 Lock a line</span><span class="goal-info-desc">Prevents the Builder or reviewers from changing a specific line. Paste the exact text between the quotes — paraphrasing or line numbers will not work because the AIs pattern-match against the document text.</span></div>
+      <div class="goal-info-row"><span class="info-label">🔒 Lock a section</span><span class="goal-info-desc">Protects a block of content starting at a specific heading or first line. Paste the section heading exactly as it appears.</span></div>
+      <div class="goal-info-row"><span class="info-label">↩ Reverted document</span><span class="goal-info-desc">Tells the Builder you have manually reverted the document to an earlier state. Instructs it to ignore all changes from the previous round and treat the current text as the new baseline.</span></div>
+      <div class="goal-info-row"><span class="info-label">🚫 No new sections</span><span class="goal-info-desc">Caps the Builder to working within the existing document structure. Stops it from adding headings or creating new sections during the next round.</span></div>
+      <div class="goal-info-row"><span class="info-label">Freeform notes</span><span class="goal-info-desc">Type your own instructions below the template buttons. Good for targeted direction like <em>tighten the third paragraph</em> or <em>the conclusion needs to be more decisive</em>.</span></div>
+      <div class="goal-info-row"><span class="info-label">📋 Copy</span><span class="goal-info-desc">Copies the current Notes text to your clipboard. Useful if you want to reuse a complex instruction in a later round.</span></div>
+      <div class="goal-info-row"><span class="info-label">✕ Clear</span><span class="goal-info-desc">Wipes the Notes field. Does not undo — use with intent.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Quoting the exact text from the document is more reliable than citing line numbers — line numbers shift as the document evolves, but exact text is stable.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step9" target="_blank" class="link-accent">Read the full guide in the user manual — Step 9: Run More Rounds ↗</a></p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoNotesModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
 <!-- DEV TOOLBAR -->
 <div class="dev-toolbar" id="devToolbar" style="display:none">
   <span class="dev-toolbar-label">⚙ DEV</span>
@@ -1266,7 +1285,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.18"></script>
+<script src="app.js?v=3.19.19"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
