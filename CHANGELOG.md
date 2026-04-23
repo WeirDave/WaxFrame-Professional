@@ -2,6 +2,36 @@
 
 ---
 
+## v3.19.19 Pro — Build `20260422-007`
+**Released:** April 22, 2026
+
+### Notes info modal added, stale template button retired, Document Playbooks header overlay fix
+
+Three threads in one release. A Notes info modal so the template buttons explain themselves, removal of a template button that competed with a more specific flow on the Conflicts card, and a visual fix on `document-playbooks.html` where category headers were rendering bare on the honeycomb background instead of sitting on the same dark translucent overlay as everything else on the page.
+
+### Notes info modal
+
+Every work-screen panel — The Hive, Conflicts, Working Document, Live Console — has an ⓘ button next to its title that opens a modal explaining what lives in that panel and how to use it. The Notes drawer was the one panel missing that button. Added, following the same `.goal-info-btn` + `.finish-modal.goal-info-modal` pattern as the other four. The modal documents each template button with when-to-use guidance, the freeform notes row, the action buttons (Copy, Clear), a tip on why exact text beats line numbers for locking, and a link to the user manual's Step 9 for depth.
+
+### Retired template: ✅ Applied my decision
+
+The `✅ Applied my decision` template button on the Notes drawer (pre-filled text: *"I have applied my conflict decision. Do not re-raise or undo this change."*) predates the **🔒 Lock my selection in Notes** button that now lives on every USER DECISION conflict card. The conflict card handles this case better — it auto-applies the decision and pre-fills a Lock a line template with the exact selected text. The standalone template button was a fossil routing users to a flow that had been superseded. Button removed from `index.html`; corresponding row removed from the Notes examples table in the user manual (`waxframe-user-manual.html` Step 9, *After applying a conflict*).
+
+The four remaining templates — **🔒 Lock a line**, **🔒 Lock a section**, **↩ Reverted document**, **🚫 No new sections** — each cover a distinct workflow the conflict card does not handle.
+
+### Document Playbooks category header fix
+
+`.dp-category-hdr` was styled with a 6%-opacity amber gradient as its background, which at viewing time meant the honeycomb pattern showed through almost fully and the category title ("Career & Hiring", "Business & Sales", etc.) appeared to float unreadable-ish directly on the tiled background. Every other card on the page — playbook headers, tip callouts, the intro block — sits on the site-standard `rgba(0,0,0,0.55)` + `backdrop-filter: blur(6px)` overlay. Category headers now match. Text colors flipped from `var(--text)` / `var(--text-dim)` to `#ffffff` / `rgba(255,255,255,0.7)` to sit on the darker panel. No light-theme override needed — the overlay is theme-independent, same as `.dp-playbook-header`.
+
+### Document Playbooks Quick Start tip rewrite
+
+The Quick Start "cookies playbook" tip was incoherent as written: it implied the cookies session was useful as a "reference session" to "compare against" your real document, and routed the transition through `Menu → Backup Session`. None of that is how the app actually works — WaxFrame's localStorage is path-bound, so you can't run cookies and a real project in parallel, and a session backup JSON is archival not comparative. Rewritten to honestly describe what the Quick Start is (a training run to see the full flow end-to-end) and route the user through the actual transition path: **🏁 Finish** on the work screen → **Start New Project**.
+
+### Files Changed
+`index.html` · `style.css` · `document-playbooks.html` · `waxframe-user-manual.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.18 Pro — Build `20260422-006`
 **Released:** April 22, 2026
 
