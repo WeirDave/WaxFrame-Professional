@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260422-004';         // build stamp — update each session
+const BUILD       = '20260422-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -775,17 +775,23 @@ function consoleLog(msg, type = 'info', rawData = null) {
 }
 
 
+// ── COPY / CLEAR HELPERS ──
+// Single entry point for Copy buttons. Empty-state toast or success toast.
+function copyToClipboard(text, label = 'Text') {
+  const txt = (text ?? '').toString();
+  if (!txt.trim()) { toast(`⚠️ No ${label.toLowerCase()} to copy`); return; }
+  navigator.clipboard.writeText(txt).then(() => toast(`📋 ${label} copied`));
+}
+
 function copyConsole() {
   const el = document.getElementById('liveConsole');
   if (!el) return;
   const text = Array.from(el.querySelectorAll('.console-entry')).reverse().map(e => e.textContent).join('\n');
-  navigator.clipboard.writeText(text).then(() => toast('📋 Console copied'));
+  copyToClipboard(text, 'Console');
 }
 
 function copyConflicts() {
-  const el = document.getElementById('conflictsPanel');
-  if (!el) return;
-  navigator.clipboard.writeText(el.innerText).then(() => toast('📋 Conflicts copied'));
+  copyToClipboard(document.getElementById('conflictsPanel')?.innerText, 'Conflicts');
 }
 
 function clearConflicts() {
@@ -794,9 +800,28 @@ function clearConflicts() {
 }
 
 function copyNotes() {
+  copyToClipboard(document.getElementById('workNotes')?.value, 'Notes');
+}
+
+function clearNotes() {
   const ta = document.getElementById('workNotes');
-  if (!ta || !ta.value.trim()) { toast('Nothing to copy'); return; }
-  navigator.clipboard.writeText(ta.value).then(() => toast('📋 Notes copied'));
+  if (ta) ta.value = '';
+  saveSession();
+  updateNotesBtnPriority();
+}
+
+function copyGoal() {
+  copyToClipboard(document.getElementById('projectGoalModalEdit')?.value, 'Goal');
+}
+
+function clearGoal() {
+  ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.value = '';
+  });
+  saveProject();
+  updateGoalCounter();
+  updateProjectRequirements();
 }
 
 function openChangeBuilder() {
@@ -6571,7 +6596,7 @@ function copyActiveHistTab() {
   const modal = document.getElementById('histDocModal');
   if (!modal) return;
   const active = modal.querySelector('.hist-resp-panel.active textarea');
-  if (active) navigator.clipboard.writeText(active.value).then(() => toast('📋 Copied'));
+  copyToClipboard(active?.value, 'Response');
 }
 
 
@@ -6787,9 +6812,7 @@ function importSession() {
 }
 
 function copyDocument() {
-  const text = document.getElementById('workDocument')?.value.trim();
-  if (!text) { toast('⚠️ No document to copy'); return; }
-  navigator.clipboard.writeText(text).then(() => toast('📋 Document copied'));
+  copyToClipboard(document.getElementById('workDocument')?.value, 'Document');
 }
 
 function clearDocument() {

@@ -2,6 +2,42 @@
 
 ---
 
+## v3.19.17 Pro — Build `20260422-005`
+**Released:** April 22, 2026
+
+### Copy + Clear button DRY audit — one clipboard helper, all inline onclick chains promoted to named functions
+
+Six **Copy** buttons across the app each had their own hand-rolled copy handler. Four lived as named functions (`copyConsole`, `copyConflicts`, `copyNotes`, `copyDocument`) and one more (`copyActiveHistTab`) in the history modal, but each one re-implemented the same four-step pattern: read text from the DOM, maybe empty-check it, call `navigator.clipboard.writeText`, fire a toast. The empty-check was present in two of them (`copyDocument`, `copyNotes`) and missing from the other three, so pressing **Copy** on an empty Conflicts panel silently copied nothing while pressing it on an empty Document gave you a warning. The sixth Copy — the **📋 Copy** on the Project Goal modal footer — wasn't even a function, just a 115-character inline `onclick` chain. Five variants of the same mechanical action plus one inline, with inconsistent user feedback depending on which button you hit.
+
+Two more **Clear** buttons lived as inline `onclick` chains: the **✕ Clear Goal** button under the goal form (wiping six fields plus three follow-up calls, all in the attribute) and the **✕ Clear** button in the Notes drawer (three calls inline). Every other panel on the work screen — Conflicts, Console, Document — had a proper `clearX()` function; Goal and Notes were the outliers.
+
+This release collapses the copy surface to a single `copyToClipboard(text, label)` helper and promotes the three remaining inline handlers to named functions so every panel's Copy and Clear pair now looks the same.
+
+### Refactor
+
+**New helper: `copyToClipboard(text, label)`**
+
+One function handles the shared steps: coerce the input, empty-check it, write it, toast the result. Every caller now reads as a one-liner except `copyConsole`, which keeps its custom text extraction (reversed `.console-entry` walk + newline join) and hands the resulting string to the helper. `copyConflicts`, `copyNotes`, `copyDocument`, `copyActiveHistTab`, and the new `copyGoal` are all of the form `copyToClipboard(source?.value, 'Label')`.
+
+**Three inline `onclick` chains promoted to named functions**
+
+`clearGoal()` wipes the six goal input fields and calls `saveProject()`, `updateGoalCounter()`, `updateProjectRequirements()` — previously a 215-character attribute. `clearNotes()` wipes `workNotes` and calls `saveSession()`, `updateNotesBtnPriority()` — previously inline. `copyGoal()` reads the goal modal edit field through the new helper — previously an inline `navigator.clipboard.writeText(...).then(()=>window.toast(...))`. The three button elements in `index.html` now read `onclick="clearGoal()"`, `onclick="clearNotes()"`, `onclick="copyGoal()"`.
+
+### User-Visible Side Effects
+
+**Consistent empty-check on every Copy button**
+
+All six Copy buttons now toast `⚠️ No {label} to copy` when the source is empty, where previously three of them silently copied an empty string. Conflicts, Console, and Goal-copy gain this feedback; Document and Notes keep theirs; the history-tab Copy gains it too.
+
+**Unified toast wording**
+
+`copyNotes` used to toast `Nothing to copy` on empty — now `⚠️ No notes to copy`, matching the other five. `copyActiveHistTab` used to toast `📋 Copied` on success — now `📋 Response copied`, with the noun that every other Copy toast includes.
+
+### Files Changed
+`index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.16 Pro — Build `20260422-004`
 **Released:** April 22, 2026
 
