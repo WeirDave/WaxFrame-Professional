@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260422-005';         // build stamp — update each session
+const BUILD       = '20260422-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4768,14 +4768,15 @@ QUESTION: A plain-English question describing what the user needs to decide — 
 CURRENT: "the exact current text in the document as it stands"
 OPTION_1: "exact proposed text" — AI names who suggested this
 OPTION_2: "exact proposed text" — AI names who suggested this
-OPTION_3: "exact proposed text" — AI names who suggested this (add more options if needed, up to 6)
+OPTION_3: "exact proposed text" — AI names who suggested this (add more OPTION_N lines as needed — one per genuinely distinct suggestion, no upper limit)
 END_DECISION
 
 Rules for USER DECISION format:
 - CURRENT must be the verbatim text currently in the document
 - Each OPTION must be the complete replacement text, not a description of a change
 - List only the AIs who specifically suggested that option by name
-- Include as many options as there are genuinely distinct suggestions — minimum 2, maximum 6
+- Include one OPTION_N per genuinely distinct suggestion — minimum 2 UNIQUE options, no maximum
+- Each OPTION_N text must be UNIQUE within the block — if two or more reviewers proposed the same replacement text (verbatim, or differing only in whitespace, capitalisation, or trailing punctuation), MERGE them into a single OPTION_N and list all their AI names together, comma-separated. Identical options are not a choice.
 - Do not add commentary outside the structured block
 - Do not combine options that are meaningfully different
 - CRITICAL: The quoted option text must never contain an em dash (—). The only em dash on an OPTION line is the single separator between the quoted text and the AI names at the end. If you need a pause or range in the option text, use a comma or hyphen instead.
@@ -5583,7 +5584,18 @@ function extractConflicts(text) {
       !/included for completeness/i.test(o.text) &&
       !/placeholder/i.test(o.text)
     );
-    if (decision.options.length >= 2) result.userDecisions.push(decision);
+    if (decision.options.length < 2) continue;
+    // Suppress no-op decisions — Builder sometimes folds duplicate reviewer
+    // proposals into multiple OPTION_N entries with identical text. Exact
+    // match only so genuine micro-differences (punctuation, a trailing word)
+    // are preserved as real choices.
+    const uniqueTexts = new Set(decision.options.map(o => o.text));
+    if (uniqueTexts.size < 2) {
+      const sample = decision.options[0]?.text || '(empty)';
+      consoleLog(`⚠️ Suppressed no-op USER DECISION — all options identical: "${sample}"`, 'warn');
+      continue;
+    }
+    result.userDecisions.push(decision);
   }
 
   // Extract BUILDER DECISION lines (freeform, not structured)

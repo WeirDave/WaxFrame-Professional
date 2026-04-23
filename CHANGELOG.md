@@ -2,6 +2,46 @@
 
 ---
 
+## v3.19.18 Pro — Build `20260422-006`
+**Released:** April 22, 2026
+
+### No-op USER DECISION bug — duplicate reviewer proposals now merge into one option, hard 6-option cap removed
+
+The Chocolate Chip Cookies v2.0 dry run surfaced a deterministic bug in how the Builder emits `[USER DECISION]` blocks. When two or more reviewers independently proposed the same replacement text for a contested line, the Builder was folding those duplicates into separate `OPTION_1`, `OPTION_2`, `OPTION_3` entries rather than merging them into one option with all proposing AI names listed together. The user saw a "choice" where every option read the same text — clicking any of them produced the same outcome. Six occurrences across five Builder-only rounds out of twenty-one total (R3, R8, R10 twice, R12, R14). Roughly a quarter of Builder rounds had at least one.
+
+The damage ran deeper than cosmetic. WaxFrame's entire conflict-resolution model leans on the user reading the number of AI names attributed to each option as a convergence signal — "four names on OPTION_1, one name on OPTION_2" means pick OPTION_1. When identical proposals spread across multiple options, that signal inverts: a line with genuine 4-way reviewer convergence rendered as three options + one option, looking like less convergence than existed.
+
+A second, separate bug fell out of audit: the prompt hard-capped option count at 6. Fine on a six-AI hive. Not fine at 37-AI scale via Alfredo or any other gateway — the Builder was being forced to silently drop real reviewer input to fit.
+
+### Layer 1 — Builder prompt: merge rule added, count cap removed
+
+Three edits to the USER DECISION rules block inside the Builder's review-round prompt.
+
+**Merge rule (new bullet)**
+
+Inserted immediately after the "List only the AIs" rule:
+
+`Each OPTION_N text must be UNIQUE within the block — if two or more reviewers proposed the same replacement text (verbatim, or differing only in whitespace, capitalisation, or trailing punctuation), MERGE them into a single OPTION_N and list all their AI names together, comma-separated. Identical options are not a choice.`
+
+This addresses the upstream source of the six observed occurrences directly. The existing `Do not combine options that are meaningfully different` rule (which survives unchanged) handles the opposite direction; the new rule fills the previously-unstated complement.
+
+**Count cap removed**
+
+The rule previously read `Include as many options as there are genuinely distinct suggestions — minimum 2, maximum 6`. The cap was arbitrary — the parser regex (`/^OPTION_\d+:/i`) matches any digit count, and the renderer iterates `d.options.map(...)` with no hardcoded loop limit. The 6-cap was pure prompt-side text with no downstream enforcement, and at high-AI-count deployments (37+ models through Alfredo) it was silently discarding legitimate distinct proposals. Now reads `Include one OPTION_N per genuinely distinct suggestion — minimum 2 UNIQUE options, no maximum`. The example scaffold in the template block had a parallel `(add more options if needed, up to 6)` hint on the `OPTION_3` line; that too now reads `(add more OPTION_N lines as needed — one per genuinely distinct suggestion, no upper limit)`.
+
+### Layer 2 — Parser safety net in `extractConflicts()`
+
+Prompt rules are soft. Builders interpret them with varying rigor — prior dry-run data showed Grok and Perplexity reliably followed structured rules while ChatGPT, Claude, Gemini, and DeepSeek drifted more often. The Builder prompt fix is the real fix, but it's not an enforceable one. The parser side now catches what slips through.
+
+After the existing junk-option filter, `extractConflicts()` now Set-dedupes the collected `OPTION_N` texts using strict exact equality. If fewer than two unique texts survive, the whole decision block is dropped instead of pushed to `result.userDecisions`, and a warn-level line appears in the live console: `⚠️ Suppressed no-op USER DECISION — all options identical: "<sample>"`. Strict equality preserves every genuine micro-difference — `"cup"` and `"cup,"` remain separate options, as do `"10 minutes"` and `"10 minutes."` — so no legitimate decision is lost. The console log is diagnostic: if a particular Builder starts firing it frequently, that's signal the Builder is ignoring the merge rule and we know where to look.
+
+With Layer 1 in place, Layer 2 should rarely fire. Both exist so the feature degrades gracefully across Builder models of varying rule-adherence.
+
+### Files Changed
+`index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.17 Pro — Build `20260422-005`
 **Released:** April 22, 2026
 
