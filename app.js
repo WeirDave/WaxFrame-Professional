@@ -385,7 +385,7 @@ let workDocSaveTimer = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260422-003';         // build stamp — update each session
+const BUILD       = '20260422-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -466,8 +466,8 @@ async function checkStorageQuota() {
         if (!existing) {
           const btn = document.createElement('button');
           btn.className = 'btn quota-warn-btn';
-          btn.textContent = '💾 Export Session Now';
-          btn.onclick = exportSession;
+          btn.textContent = '💾 Export Transcript Now';
+          btn.onclick = exportTranscript;
           el.prepend(btn);
         }
       }
@@ -1973,8 +1973,8 @@ function saveSession() {
           if (!existing) {
             const btn = document.createElement('button');
             btn.className = 'btn quota-warn-btn';
-            btn.textContent = '💾 Export Session Now';
-            btn.onclick = exportSession;
+            btn.textContent = '💾 Export Transcript Now';
+            btn.onclick = exportTranscript;
             el.prepend(btn);
           }
         }
@@ -4038,36 +4038,6 @@ function showFinishModal() {
 function hideFinishModal() {
   const modal = document.getElementById('finishModal');
   if (modal) modal.classList.remove('active');
-}
-
-function finishAndExport() {
-  const btn = document.getElementById('finishBtnDoc');
-  if (btn?.classList.contains('finish-modal-btn-disabled') || btn?.disabled) return;
-  const docTa = document.getElementById('workDocument');
-  const originalDoc = docTa?.value?.trim();
-  if (!originalDoc) { toast('⚠️ Nothing to export yet'); return; }
-
-  const totalRounds = round - 1;
-  const totalMins = Math.round(_projClockSeconds / 60);
-  const timeStr = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
-  const byline = `\n\n---\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
-
-  const exportDoc = originalDoc + byline;
-  const filename = buildExportName();
-  const blob = new Blob([exportDoc], { type: 'text/plain' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${filename}.txt`;
-  a.click();
-  toast('💾 Document exported');
-  window._finishExported = true;
-
-  const btnDoc = document.getElementById('finishBtnDoc');
-  if (btnDoc) {
-    btnDoc.textContent = '✅ Exported!';
-    btnDoc.disabled = true;
-    btnDoc.classList.add('finish-modal-btn-done');
-  }
 }
 
 function finishAndNew() {
@@ -6664,32 +6634,42 @@ function buildExportName() {
   const ver     = document.getElementById('workProjectVersion')?.textContent?.trim() || '';
   const mask    = (document.getElementById('exportMask')?.value?.trim()) ||
                   ((() => { try { return JSON.parse(localStorage.getItem(LS_PROJECT) || '{}').exportMask || ''; } catch(e) { return ''; } })());
-  const safeName = name.replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+  const safeName = name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const safeVer  = ver.replace(/[^a-z0-9._-]/gi, '');
   if (mask) {
     return mask
       .replace(/\{name\}/gi, safeName)
       .replace(/\{version\}/gi, safeVer || 'v1')
-      .replace(/[^a-z0-9._\-{}]/gi, '_')
-      .replace(/_+/g, '_')
-      .replace(/^_|_$/g, '');
+      .replace(/[^a-z0-9._\-{}]/gi, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
   }
-  return safeVer ? `${safeName}_${safeVer}` : safeName;
+  return safeVer ? `${safeName}-${safeVer}` : safeName;
 }
 
 function exportDocument() {
   const doc = document.getElementById('workDocument')?.value?.trim();
   if (!doc) { toast('⚠️ Nothing to export yet'); return; }
+
+  const totalRounds = round - 1;
+  const totalMins   = Math.round(_projClockSeconds / 60);
+  const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
+  const byline      = `\n\n---\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
+
+  const out      = doc + byline;
   const filename = buildExportName();
-  const blob = new Blob([doc], { type: 'text/plain' });
-  const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
-  a.download = `${filename}.txt`;
+  const blob     = new Blob([out], { type: 'text/plain' });
+  const a        = document.createElement('a');
+  a.href         = URL.createObjectURL(blob);
+  a.download     = `${filename}.txt`;
   a.click();
+
   toast('💾 Document exported');
+  window._finishExported = true;
+  document.dispatchEvent(new CustomEvent('waxframe:exported', { detail: { kind: 'document' } }));
 }
 
-function exportSession() {
+function exportTranscript() {
   const name    = document.getElementById('projectName')?.value.trim()    || 'AI-Hive';
   const doc     = document.getElementById('workDocument')?.value.trim()   || '';
   const filename = buildExportName();
@@ -6746,7 +6726,7 @@ function exportSession() {
   const blob = new Blob([out], { type: 'text/plain' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `${filename}_Transcript.txt`;
+  a.href = url; a.download = `${filename}-Transcript.txt`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -6754,20 +6734,7 @@ function exportSession() {
 
   toast('💾 Full transcript exported');
   window._finishExported = true;
-
-  // If this was triggered from the Finish modal (modal currently active), mark
-  // the transcript button done for consistency with Export Document. The
-  // work-screen transcript button shares this function and shouldn't get that
-  // treatment, so we gate on modal visibility.
-  const modal = document.getElementById('finishModal');
-  if (modal && modal.classList.contains('active')) {
-    const btnT = document.getElementById('finishBtnTranscript');
-    if (btnT) {
-      btnT.textContent = '✅ Transcript exported!';
-      btnT.disabled = true;
-      btnT.classList.add('finish-modal-btn-done');
-    }
-  }
+  document.dispatchEvent(new CustomEvent('waxframe:exported', { detail: { kind: 'transcript' } }));
 }
 
 function backupSession() {
@@ -6864,10 +6831,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Capture pristine innerHTML of Finish modal export buttons so clearProject()
   // can restore them to this state after a session boundary. Without this, a
   // previous session's "✅ Exported!" / done styling carries over to the next
-  // session because finishAndExport and exportSession overwrite button innerHTML.
+  // session because exportDocument and exportTranscript dispatch a
+  // waxframe:exported event that overwrites button innerHTML when the Finish
+  // modal is active.
   ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
     const btn = document.getElementById(id);
     if (btn && !btn.dataset.originalHtml) btn.dataset.originalHtml = btn.innerHTML;
+  });
+
+  // Finish modal owns its own reaction to exports. The exporters dispatch
+  // waxframe:exported and this listener decides whether to mark the matching
+  // Finish modal button done — only if the modal is currently active. Work-
+  // screen and quota-warn buttons fire the same exporters but the modal is
+  // closed at that point, so this is a no-op for them.
+  document.addEventListener('waxframe:exported', (e) => {
+    const modal = document.getElementById('finishModal');
+    if (!modal || !modal.classList.contains('active')) return;
+    const kind = e.detail?.kind;
+    if (kind === 'document') {
+      const btn = document.getElementById('finishBtnDoc');
+      if (btn) {
+        btn.textContent = '✅ Exported!';
+        btn.disabled = true;
+        btn.classList.add('finish-modal-btn-done');
+      }
+    } else if (kind === 'transcript') {
+      const btn = document.getElementById('finishBtnTranscript');
+      if (btn) {
+        btn.textContent = '✅ Transcript exported!';
+        btn.disabled = true;
+        btn.classList.add('finish-modal-btn-done');
+      }
+    }
   });
 
   // Show dev toolbar and admin nav items if dev mode is active

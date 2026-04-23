@@ -2,6 +2,46 @@
 
 ---
 
+## v3.19.16 Pro — Build `20260422-004`
+**Released:** April 22, 2026
+
+### Export consolidation — one bylined document exporter, event-decoupled done-state, hyphenated filenames
+
+Three functions were handling export: `exportDocument()` on the work screen, `finishAndExport()` on the Finish modal, and `exportSession()` everywhere transcripts were exported. `exportDocument` wrote the doc with no byline. `finishAndExport` wrote the same doc with a byline and then directly poked `finishBtnDoc` into a done state. `exportSession` wrote the transcript and had a `finishModal.classList.contains('active')` branch baked into its tail to decide whether to poke `finishBtnTranscript`. Two functions for the same document export with different output, and both exporters reaching into Finish modal button state directly — neither of those was going to age well.
+
+This release collapses the document side to a single `exportDocument()` that always writes the byline, renames `exportSession()` → `exportTranscript()` to match what it actually produces, and decouples the Finish modal done-state via a `waxframe:exported` custom event. The exporters now dispatch on success and know nothing about Finish modal buttons. A single listener attached at `DOMContentLoaded` checks whether the modal is active and updates the matching button only when it is — work-screen and quota-warn exports are no-ops for that listener because the modal is closed when they fire.
+
+### Bug Fix
+
+**Work-screen Export now writes the byline**
+
+The work-screen **💾 Export** button was calling the old no-byline `exportDocument()`. If you exported the document from the work screen instead of walking through the Finish modal, you got a bare text file with no provenance footer. This was the bug that surfaced the consolidation — two nearly identical document exporters with divergent output. Now every document export — work-screen or Finish modal — writes the same byline block (`Produced by WaxFrame in N rounds and N minutes. weirdave.github.io/WaxFrame-Professional`) because there's only one function that does it.
+
+### Refactor
+
+**Function rename: `exportSession()` → `exportTranscript()`**
+
+The function produces a transcript. Calling it `exportSession()` was a holdover from when "session" meant the whole run including document state. With `backupSession()` now owning the session-preservation workflow (separate JSON format, Menu entry point, resume-later semantics), keeping `exportSession` as the name for the transcript exporter was a collision waiting to confuse someone. The UI labels referencing this function updated to match: the two quota-warn buttons injected into the live console when localStorage fills up now read **💾 Export Transcript Now** instead of **💾 Export Session Now**. Same DRY cascade that drove the rename — downstream labels should match the function they call.
+
+**Custom-event done-state**
+
+The Finish modal done-state (disabled button, `✅ Exported!` text, `.finish-modal-btn-done` class) used to live inside the exporters themselves. Now the exporters dispatch `waxframe:exported` with a `detail.kind` of `document` or `transcript` and a listener inside the existing `DOMContentLoaded` block — right next to the pristine-innerHTML capture added in v3.19.15 — handles the done-state transition. The listener is gated on `finishModal.classList.contains('active')`, so it only fires when the modal is currently open. Work-screen Export, work-screen Export Transcript, and the two quota-warn injected buttons all fire the same exporters and all correctly get nothing from the listener because the modal is not open when they fire. The state-leak fix from v3.19.15 keeps working because `clearProject()` still restores from `dataset.originalHtml`.
+
+### Filename Format
+
+**Hyphenated filenames, version dots preserved**
+
+`buildExportName()` previously produced files like `My_Project_v1.2.3.txt` and `My_Project_v1.2.3_Transcript.txt` — underscores between every token. Now it produces `My-Project-v1.2.3.txt` and `My-Project-v1.2.3-Transcript.txt`. Spaces and non-alphanumeric characters in the project name become hyphens, the separator between project name and version becomes a hyphen, the `_Transcript` suffix becomes `-Transcript`, and the version string still accepts dots and hyphens verbatim so semver-style versions survive intact. The regex in the mask-substitution path was updated the same way so custom export masks collapse to hyphens too. Users with past exports will see the filename style change starting from this release — non-destructive, just visibly different.
+
+### Deleted
+
+**`finishAndExport()`** — folded into `exportDocument()`. The Finish modal's Export Document button now calls `exportDocument()` directly. The `finish-modal-btn-disabled` guard that used to live at the top of `finishAndExport()` is no longer needed — when the button has that class, the browser-level `disabled` attribute already blocks the click, and the empty-doc toast already exists as the first line of the unified function.
+
+### Files Changed
+`index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.15 Pro — Build `20260422-003`
 **Released:** April 22, 2026
 

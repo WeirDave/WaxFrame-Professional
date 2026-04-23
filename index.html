@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260422-003">
+  <meta name="waxframe-build" content="20260422-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -802,7 +802,7 @@
         </div>
       </div>
       <div class="finish-history-row">
-        <button class="btn" onclick="exportSession()">📋 Export Transcript</button>
+        <button class="btn" onclick="exportTranscript()">📋 Export Transcript</button>
         <button class="btn" onclick="closeRoundHistoryModal()">✕ Close</button>
       </div>
     </div>
@@ -821,8 +821,8 @@
     <h2 class="finish-modal-title">🏁 Project Complete!</h2>
     <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do.</p>
     <div class="finish-modal-actions">
-      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="finishAndExport()">💾 Export Document</button>
-      <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportSession()">
+      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="exportDocument()">💾 Export Document</button>
+      <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportTranscript()">
         📋 Export Full Transcript
         <span class="finish-modal-btn-sub">Every round, every AI response, and the final document — all in one file</span>
       </button>
@@ -1266,7 +1266,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.15"></script>
+<script src="app.js?v=3.19.16"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
