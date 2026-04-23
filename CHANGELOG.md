@@ -2,6 +2,30 @@
 
 ---
 
+## v3.19.24 Pro — Build `20260423-001`
+**Released:** April 23, 2026
+
+### Bug Fix
+
+**Work-document oninput ReferenceError — `_lineNumDebounce` was never declared**
+Every keystroke in the Work Screen document textarea was throwing `Uncaught ReferenceError: _lineNumDebounce is not defined` from `handleWorkDocumentInput` at `app.js:3978`. Firefox DevTools captured this firing 247 times in a single session. The error aborted the handler before `clearTimeout(workDocSaveTimer)` and `setTimeout(() => saveSession(), 250)` could run, meaning the 250 ms debounced session save never fired after any keystroke. `updateLineNumbers` also never ran, so the line-number gutter fell behind during active editing. The textarea's auto-grow line (`ta.style.height = ta.scrollHeight + 'px'`) executed before the throw, so users saw no visible failure — the textarea grew as expected, but session persistence and line-number updates silently stopped.
+
+Root cause was a missing variable declaration. `workDocSaveTimer` is declared with `let workDocSaveTimer = null;` at the top of `app.js`, but the companion `_lineNumDebounce` timer handle — used on the same `oninput` path — was introduced without its own declaration. `clearTimeout(_lineNumDebounce)` then attempted to read an undeclared identifier, which throws a `ReferenceError` regardless of strict mode. The subsequent assignment `_lineNumDebounce = setTimeout(...)` would have created an implicit global in sloppy mode, but the earlier read throws first, so execution never reached it.
+
+Fix is a one-line declaration added directly beneath `workDocSaveTimer`:
+
+```js
+let workDocSaveTimer = null;
+let _lineNumDebounce = null;
+```
+
+No other code paths touched. `handleWorkDocumentInput` now completes cleanly on every keystroke, debounced session saves resume firing at 250 ms, and line numbers update on the 50 ms debounce as designed.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.23 Pro — Build `20260422-011`
 **Released:** April 22, 2026
 
