@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260422-004">
+  <meta name="waxframe-build" content="20260422-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -282,7 +282,7 @@
 
         <div class="goal-counter-bar">
           <span id="goalCounter"></span>
-          <button class="btn btn-sm proj-clear-btn" onclick="['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});saveProject();updateGoalCounter();updateProjectRequirements();">✕ Clear Goal</button>
+          <button class="btn btn-sm proj-clear-btn" onclick="clearGoal()">✕ Clear Goal</button>
         </div>
 
         <div id="goalRefinePreview" class="goal-refine-preview-panel">
@@ -612,7 +612,7 @@
     <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyNotes()">📋 Copy</button>
-      <button class="btn" onclick="document.getElementById('workNotes').value='';saveSession();updateNotesBtnPriority()">✕ Clear</button>
+      <button class="btn" onclick="clearNotes()">✕ Clear</button>
       <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
   </div>
@@ -903,7 +903,7 @@
     </div>
     <div class="goal-modal-footer">
       <button class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
-      <button class="finish-modal-cancel" onclick="navigator.clipboard.writeText(document.getElementById('projectGoalModalEdit').value).then(()=>window.toast('📋 Goal copied'))">📋 Copy</button>
+      <button class="finish-modal-cancel" onclick="copyGoal()">📋 Copy</button>
       <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
     </div>
   </div>
@@ -1266,7 +1266,7 @@
 </div>
 
 <script src="version.js"></script>
-<script src="app.js?v=3.19.16"></script>
+<script src="app.js?v=3.19.17"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
