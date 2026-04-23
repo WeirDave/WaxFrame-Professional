@@ -4901,7 +4901,11 @@ kbd {
   }
 }
 .helper-body a { color: var(--accent); text-decoration: none; transition: all 0.12s; }
-.helper-body a:hover { color: var(--accent-hover); text-decoration: underline; }
+.helper-body a:hover { color: var(--accent-hover); }
+/* Opt-in underline: only anchors explicitly tagged .link-accent underline on hover.
+   Specificity (0,2,1) deliberately beats .helper-body a:hover (0,1,1) above — without
+   this rule, every .link-accent content link would lose its underline site-wide. */
+.helper-body a.link-accent:hover { text-decoration: underline; }
 
 /* ── Close button (helper pages) ── */
 .close-btn {
@@ -4972,7 +4976,7 @@ kbd {
 
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
-.helper-body .page-main { padding: 24px 32px 48px; max-width: 900px; width: 100%; margin: 0 auto; }
+.helper-body .page-main { padding: 24px 32px 48px; max-width: 1200px; width: 100%; margin: 0 auto; }
 .api-intro-strip {
   display: flex;
   align-items: center;

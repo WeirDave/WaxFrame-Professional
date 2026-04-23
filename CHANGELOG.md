@@ -2,6 +2,61 @@
 
 ---
 
+## v3.19.23 Pro — Build `20260422-011`
+**Released:** April 22, 2026
+
+### Helper-page anchor cascade trap fixed, reading column widened, Step 10 count corrected
+
+Three threads in one release.
+
+The first is the underline-on-sidebar bug chased in v3.19.21 and v3.19.22 without it ever actually landing. The real winner in the cascade was a generic rule thirty-six lines above the sidebar block — defensive `text-decoration: none` on `.doc-sidebar-link` pseudo-states couldn't beat it on specificity. Fix is architectural: remove the blanket underline on `.helper-body a:hover` and make underline opt-in via the existing `.link-accent` class. Credit to Kai for spotting what I missed twice.
+
+The second is a layout fix. `.helper-body .page-main` had a `max-width: 900px` set back when laptop screens were the edge case. Since WaxFrame now enforces a 1024px minimum viewport via overlay, the design target is desktop and the 900px ceiling was leaving 250+ pixels of unused honeycomb background on either side of the content on laptops, and much more on full desktop monitors. Bumped to 1200px — the main reading column grows from 564px to 864px, tables in the User Manual appendix finally get room to breathe, and at desktop widths the column centers cleanly the way a normal docs site does.
+
+The third is a small doc fix in Step 10 of the User Manual. The section described the Finish modal as having "four buttons and two secondary options" and the subheading read "The four export and finish options" — but the modal has only three primary buttons (Export Document, Export Full Transcript, Start New Project). The two occurrences of "four" corrected to "three". Purely cosmetic but it was counting wrong.
+
+```
+.helper-body a:hover { color: var(--accent-hover); text-decoration: underline; }
+```
+
+All five docs/helper pages use `<body class="helper-body">`, so every anchor on those pages — including sidebar links — is eligible for that hover rule. Specificity: `.helper-body a:hover` is `(0,1,1)` — class + element. `.doc-sidebar-link:hover` is `(0,1,0)` — class only. The generic rule wins by one point regardless of cascade order, which is why none of the earlier defensive blocks actually landed. Credit to Kai for spotting the cascade trap I missed twice.
+
+### The fix — opt-in underline via `.link-accent`
+
+Two rules replaced with three. The blanket underline on `:hover` is removed from `.helper-body a`. In its place, an opt-in rule scoped to anchors carrying the `.link-accent` class — which already exists at line 4813 of `style.css` and is already used 40+ times across every helper page for inline content links, billing links, appendix references, and CTA links.
+
+`style.css` lines 4903–4904 before:
+
+```
+.helper-body a { color: var(--accent); text-decoration: none; transition: all 0.12s; }
+.helper-body a:hover { color: var(--accent-hover); text-decoration: underline; }
+```
+
+After:
+
+```
+.helper-body a { color: var(--accent); text-decoration: none; transition: all 0.12s; }
+.helper-body a:hover { color: var(--accent-hover); }
+.helper-body a.link-accent:hover { text-decoration: underline; }
+```
+
+### Why the third rule is mandatory, not defensive
+
+The opt-in rule is `(0,2,1)` specificity — `.helper-body` + `.link-accent` + `a`. Without it, `.helper-body a:hover` at `(0,1,1)` would beat the existing `.link-accent:hover` at `(0,1,0)` and strip the underline from every content link site-wide, not just the sidebar. That would be a visible regression on the forty-plus inline references across the User Manual, API Key Guide, What Are Tokens, Document Playbooks, and Prompt Editor. The third rule restores the underline exactly where it's wanted and nowhere it isn't.
+
+### Sidebar behavior after this release
+
+`.doc-sidebar-link:hover` — no longer has a generic `text-decoration: underline` inherited from `.helper-body a:hover`. The v3.19.21 defensive `text-decoration: none` block on `.doc-sidebar-link` pseudo-states becomes redundant at this point but is retained; removing it is cosmetic and not worth the diff. Noted for a future sweep.
+
+### Architectural outcome
+
+Helper pages now treat anchor styling as opt-in rather than opt-out. Plain `<a>` on a helper page: accent color, no underline, hover changes color only. Anchor tagged `.link-accent`: same plus underline on hover. This is the pattern every new inline content link should already be using and every existing one already is.
+
+### Files Changed
+`style.css` · `index.html` · `waxframe-user-manual.html` · `document-playbooks.html` · `prompt-editor.html` · `api-details.html` · `what-are-tokens.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.22 Pro — Build `20260422-010`
 **Released:** April 22, 2026
 
