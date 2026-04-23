@@ -2,6 +2,38 @@
 
 ---
 
+## v3.19.21 Pro — Build `20260422-009`
+**Released:** April 22, 2026
+
+### User manual gets the playbooks sidebar, shared classes renamed `.dp-*` → `.doc-*`, scroll-spy active-section highlighting added to both docs pages
+
+Three coupled threads. The user manual was still running the old pill-row table-of-contents (`.wh-toc`) at the top of the page while `document-playbooks.html` had already adopted a sticky left sidebar. The visual inconsistency between the two primary docs pages was unnecessary — they serve the same navigational purpose and should share the same pattern. This release brings the manual into line, renames the shared layout/sidebar classes from the misleading `.dp-*` prefix (which stood for "document playbooks" but is now used on both pages) to `.doc-*`, and finally ships the scroll-spy active-section highlight that was scoped previously and never built.
+
+### Class rename: `.dp-*` layout/sidebar → `.doc-*`
+
+Eleven class names renamed across `style.css`, `document-playbooks.html`, and `waxframe-user-manual.html`: `dp-layout`, `dp-sidebar`, `dp-sidebar-inner`, `dp-sidebar-title`, `dp-sidebar-category`, `dp-sidebar-link`, `dp-sidebar-quickstart`, `dp-sidebar-quickstart-star`, `dp-sidebar-quickstart-label`, `dp-sidebar-quickstart-sub`, `dp-main`. Playbook-specific content classes (`dp-playbook`, `dp-category-hdr`, `dp-table`, `dp-field`, etc.) stay `.dp-*` — those are content classes for the playbook cards themselves and not shared with the manual.
+
+### Manual sidebar: five groups, sticky 240px column
+
+The manual's old `.wh-toc` pill-row block at the top of the page is removed. In its place, a sticky 240px left column that mirrors the playbooks pattern. Five groups: **Before You Start**, **Step-by-Step Guide**, **Appendices**, **Reference**, **External Guides**. All 18 existing section anchors preserved. Section content is 100% unchanged — this is a pure layout shift. The three external-guide links (API Key Guide, Document Playbooks, What Are Tokens) sit at the bottom of the sidebar and open in new tabs as before.
+
+Stale `.wh-toc` CSS removed: the main rules block, the two light-theme overrides, and the print-media overrides. Nothing references those classes anywhere in the codebase now.
+
+### Scroll-spy: active section highlighted in the sidebar
+
+New file `docs-scrollspy.js`, loaded by both `waxframe-user-manual.html` and `document-playbooks.html` after `theme.js` and `version.js`. An `IntersectionObserver` watches every section the sidebar links to (anchor links with `href^="#"` only — external guides are ignored). When a section enters the upper 40% of the viewport, its sidebar link gets `.is-active`. When multiple short sections stack on screen simultaneously, the one nearest the top wins.
+
+Active state applies the `.is-active` class to the matching sidebar link — same amber background and accent color as the hover state, plus `font-weight: 600` so an active section reads louder than a hovered one. External sidebar links carry no hash and are silently ignored. If a page has no `.doc-sidebar` the script no-ops immediately — safe to load on any page.
+
+### Sidebar link underline bulletproofing
+
+Pre-existing minor issue: some combination of browser pseudo-state defaults (suspected `:focus` or `:visited`) was rendering an underline on sidebar links despite `text-decoration: none` being set on the base rule. Defensive fix: `:hover`, `:focus`, `:visited`, `:active` all now explicitly declare `text-decoration: none` on both `.doc-sidebar-link` and `.doc-sidebar-quickstart`. Browser defaults can't bleed through any state.
+
+### Files Changed
+`style.css` · `document-playbooks.html` · `waxframe-user-manual.html` · `docs-scrollspy.js` *(new)* · `index.html` · `app.js` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.19 Pro — Build `20260422-007`
 **Released:** April 22, 2026
 

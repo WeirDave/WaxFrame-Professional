@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260419-007">
+  <meta name="waxframe-build" content="20260422-009">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css">
@@ -49,46 +49,47 @@
     </div>
   </div>
 
-  <!-- TABLE OF CONTENTS -->
-  <div class="wh-toc">
-    <div class="wh-toc-title">Contents</div>
-    <div class="wh-toc-group">
-      <div class="wh-toc-group-label">Before You Start</div>
-      <a href="#what-is-it" class="wh-toc-link">🐝 What WaxFrame Does</a>
-      <a href="#licensing" class="wh-toc-link">🎟️ Free Trial &amp; Licensing</a>
-      <a href="#your-files" class="wh-toc-link">📁 What's in the Folder</a>
-    </div>
-    <div class="wh-toc-group">
-      <div class="wh-toc-group-label">Step-by-Step Guide</div>
-      <a href="#step1" class="wh-toc-link">① Setup 1 — Set Up Your Worker Bees</a>
-      <a href="#step2" class="wh-toc-link">② Setup 2 — Choose Your Builder</a>
-      <a href="#step3" class="wh-toc-link">③ Setup 3 — Define Your Project</a>
-      <a href="#step4" class="wh-toc-link">④ Setup 4 — Provide Your Starting Document</a>
-      <a href="#step5" class="wh-toc-link">⑤ Step 5 — Launch WaxFrame</a>
-      <a href="#step6" class="wh-toc-link">⑥ Step 6 — The Work Screen</a>
-      <a href="#step7" class="wh-toc-link">⑦ Step 7 — Run Your First Round</a>
-      <a href="#step8" class="wh-toc-link">⑧ Step 8 — Review Results and Resolve Conflicts</a>
-      <a href="#step9" class="wh-toc-link">⑨ Step 9 — Run More Rounds</a>
-      <a href="#step10" class="wh-toc-link">⑩ Step 10 — Export and Finish</a>
-    </div>
-    <div class="wh-toc-group">
-      <div class="wh-toc-group-label">Appendices</div>
-      <a href="#appendix-a" class="wh-toc-link">A — Adding a Custom AI</a>
-      <a href="#appendix-b" class="wh-toc-link">B — Importing from a Model Server</a>
-      <a href="#appendix-c" class="wh-toc-link">C — Using WaxFrame at Work</a>
-    </div>
-    <div class="wh-toc-group">
-      <div class="wh-toc-group-label">Reference</div>
-      <a href="#problems" class="wh-toc-link">🔧 When Things Go Wrong</a>
-      <a href="#billing" class="wh-toc-link">💳 API Costs &amp; Billing</a>
-    </div>
-    <div class="wh-toc-group">
-      <div class="wh-toc-group-label">External Guides</div>
-      <a href="api-details.html" target="_blank" class="wh-toc-link">🔑 API Key Guide ↗</a>
-      <a href="document-playbooks.html" target="_blank" class="wh-toc-link">📋 Document Playbooks ↗</a>
-      <a href="what-are-tokens.html" target="_blank" class="wh-toc-link">🪙 What Are Tokens? ↗</a>
-    </div>
-  </div>
+  <!-- TWO-COLUMN LAYOUT: sticky sidebar + main content -->
+  <div class="doc-layout">
+
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-title">Contents</div>
+
+        <div class="doc-sidebar-category">Before You Start</div>
+        <a href="#what-is-it" class="doc-sidebar-link">🐝 What WaxFrame Does</a>
+        <a href="#licensing"  class="doc-sidebar-link">🎟️ Free Trial &amp; Licensing</a>
+        <a href="#your-files" class="doc-sidebar-link">📁 What's in the Folder</a>
+
+        <div class="doc-sidebar-category">Step-by-Step Guide</div>
+        <a href="#step1"  class="doc-sidebar-link">① Setup 1 — Worker Bees</a>
+        <a href="#step2"  class="doc-sidebar-link">② Setup 2 — Choose Your Builder</a>
+        <a href="#step3"  class="doc-sidebar-link">③ Setup 3 — Define Your Project</a>
+        <a href="#step4"  class="doc-sidebar-link">④ Setup 4 — Starting Document</a>
+        <a href="#step5"  class="doc-sidebar-link">⑤ Step 5 — Launch WaxFrame</a>
+        <a href="#step6"  class="doc-sidebar-link">⑥ Step 6 — The Work Screen</a>
+        <a href="#step7"  class="doc-sidebar-link">⑦ Step 7 — Run Your First Round</a>
+        <a href="#step8"  class="doc-sidebar-link">⑧ Step 8 — Review &amp; Resolve</a>
+        <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Run More Rounds</a>
+        <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Export &amp; Finish</a>
+
+        <div class="doc-sidebar-category">Appendices</div>
+        <a href="#appendix-a" class="doc-sidebar-link">A — Adding a Custom AI</a>
+        <a href="#appendix-b" class="doc-sidebar-link">B — Importing from a Model Server</a>
+        <a href="#appendix-c" class="doc-sidebar-link">C — Using WaxFrame at Work</a>
+
+        <div class="doc-sidebar-category">Reference</div>
+        <a href="#problems" class="doc-sidebar-link">🔧 When Things Go Wrong</a>
+        <a href="#billing"  class="doc-sidebar-link">💳 API Costs &amp; Billing</a>
+
+        <div class="doc-sidebar-category">External Guides</div>
+        <a href="api-details.html"        target="_blank" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
+        <a href="document-playbooks.html" target="_blank" class="doc-sidebar-link">📋 Document Playbooks ↗</a>
+        <a href="what-are-tokens.html"    target="_blank" class="doc-sidebar-link">🪙 What Are Tokens? ↗</a>
+      </div>
+    </aside>
+
+    <div class="doc-main">
 
 
   <!-- ═══════════════════════════════════════════════════════════
@@ -1151,6 +1152,10 @@
     </div>
   </div>
 
+    </div> <!-- /.doc-main -->
+
+  </div> <!-- /.doc-layout -->
+
 </div>
 
 <div class="page-footer">
@@ -1167,6 +1172,7 @@
 
 <script src="theme.js"></script>
 <script src="version.js"></script>
+<script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
