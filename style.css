@@ -6004,7 +6004,8 @@ kbd {
 .dp-category-hdr {
   margin: 24px 0 20px;
   padding: 16px 20px;
-  background: linear-gradient(180deg, rgba(245,166,35,0.06), rgba(245,166,35,0.02));
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
   border-left: 4px solid var(--accent);
   border-radius: var(--radius-sm);
   scroll-margin-top: 116px;
@@ -6016,13 +6017,13 @@ kbd {
   font-family: var(--font-display);
   font-size: 22px;
   font-weight: 800;
-  color: var(--text);
+  color: #ffffff;
   margin: 0 0 4px;
   letter-spacing: 0.02em;
 }
 .dp-category-sub {
   font-size: 14px;
-  color: var(--text-dim);
+  color: rgba(255,255,255,0.7);
   line-height: 1.6;
   margin: 0;
 }
