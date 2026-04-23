@@ -755,21 +755,21 @@ html, body {
   margin-bottom: 14px;
 }
 .doc-tab {
-  background: transparent !important;
-  border: 1px solid var(--border2) !important;
-  color: var(--text-dim) !important;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
 }
 .doc-tab:hover {
-  border-color: var(--accent) !important;
-  color: var(--accent) !important;
-  background: transparent !important;
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
 }
 .doc-tab.active {
-  background: var(--accent) !important;
-  border-color: var(--accent) !important;
-  border-style: solid !important;
-  color: #0a0c12 !important;
-  font-weight: 700 !important;
+  background: var(--accent);
+  border-color: var(--accent);
+  border-style: solid;
+  color: #0a0c12;
+  font-weight: 700;
 }
 
 .doc-tab-panel { display: none; }
@@ -1238,22 +1238,6 @@ html, body {
   background: transparent;
 }
 
-/* Floating card header — used over honeycomb background */
-.honeycomb-header {
-  margin: 6px 8px 4px !important;
-  background: rgba(0,0,0,0.55) !important;
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.1) !important;
-  border-radius: 10px !important;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  padding: 8px 12px !important;
-}
-.honeycomb-header .work-section-title { color: #ffffff !important; }
-[data-theme="light"] .honeycomb-header .work-section-title { color: #ffffff !important; }
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .honeycomb-header .work-section-title { color: #ffffff !important; }
-}
-
 /* ══ LEFT PANEL — transparent, body bg shows through ══ */
 .work-left-panel {
   display: flex;
@@ -1604,6 +1588,22 @@ html, body {
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .work-panel-header { background: #ffffff; }
   [data-theme="auto"] .work-panel-header .work-section-title { color: var(--text); }
+}
+
+/* Floating card header — used over honeycomb background. Compound selector beats .work-panel-header specificity; block declared after theme rules so dark text stays forced white in both themes. */
+.work-panel-header.honeycomb-header {
+  margin: 6px 8px 4px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  padding: 8px 12px;
+}
+.work-panel-header.honeycomb-header .work-section-title { color: #ffffff; }
+[data-theme="light"] .work-panel-header.honeycomb-header .work-section-title { color: #ffffff; }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .work-panel-header.honeycomb-header .work-section-title { color: #ffffff; }
 }
 /* ══ DOC EDITOR ══ */
 /* ══ DOC EDITOR — single scroll container, notebook paper background ══ */
@@ -5724,7 +5724,7 @@ kbd {
 
 .finish-modal-goal         { max-width: 900px; text-align: left; }
 .finish-modal-title-goal   { margin-bottom: 6px; }
-.finish-modal-cancel-accent { border-color: var(--accent) !important; color: var(--accent) !important; }
+.finish-modal-cancel-accent { border-color: var(--accent); color: var(--accent); }
 
 /* ── Project goal modal ── */
 .goal-modal-name         { font-size: 13px; color: var(--text); font-weight: 600; margin-bottom: 2px; }
@@ -6096,8 +6096,8 @@ kbd {
 .dp-table th { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; color:var(--muted); padding:4px 12px 7px 0; border-bottom:1px solid var(--border2); text-align:left; }
 .dp-table td { padding:8px 12px 8px 0; border-bottom:1px solid var(--border); vertical-align:top; line-height:1.55; color:var(--text-dim); }
 .dp-table tr:last-child td { border-bottom:none; }
-.dp-table-field { font-size:11px; font-weight:700; color:var(--accent); white-space:nowrap; padding-right:20px !important; width:160px; vertical-align:top; }
-.dp-table-field--lc { color: var(--text-dim); }
+.dp-table .dp-table-field { font-size:11px; font-weight:700; color:var(--accent); white-space:nowrap; padding-right:20px; width:160px; vertical-align:top; }
+.dp-table .dp-table-field--lc { color: var(--text-dim); }
 
 /* ── dp-scratch-note: callout for from-scratch field overrides ── */
 .dp-scratch-note { background:rgba(59,130,246,0.06); border:1px solid rgba(59,130,246,0.2); border-radius:var(--radius-sm); padding:10px 14px; margin:2px 0; font-size:13px; color:var(--text-dim); line-height:1.6; }
@@ -6105,7 +6105,7 @@ kbd {
 .dp-scratch-note table { width:100%; border-collapse:collapse; margin-top:6px; }
 .dp-scratch-note td { padding:5px 10px 5px 0; border-bottom:1px solid rgba(59,130,246,0.15); vertical-align:top; }
 .dp-scratch-note tr:last-child td { border-bottom:none; }
-.dp-scratch-note .dp-table-field { color:#3b82f6; font-size:11px; width:160px; white-space:nowrap; padding-right:16px !important; }
+.dp-scratch-note .dp-table-field { color:#3b82f6; font-size:11px; width:160px; white-space:nowrap; padding-right:16px; }
 
 /* ── dp-s4-item: Step 4 path items ── */
 .dp-s4-pair { display:flex; flex-direction:column; gap:6px; }
