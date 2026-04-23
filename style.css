@@ -5939,9 +5939,10 @@ kbd {
 .doc-sidebar-link {
   display: block;
   font-size: 14px;
-  color: var(--text);
+  color: var(--text-dim);
   text-decoration: none;
   padding: 6px 10px;
+  border: 1px dashed transparent;
   border-radius: var(--radius-sm);
   transition: all 0.12s;
   margin-bottom: 2px;
@@ -5953,14 +5954,15 @@ kbd {
 .doc-sidebar-link:active {
   text-decoration: none;
 }
-.doc-sidebar-link:hover {
-  background: var(--accent-dim);
-  color: var(--accent);
-}
-/* Scroll-spy active-section highlight (set/unset by docs-scrollspy.js) */
+/* Hover and scroll-spy active share the button-like accent treatment */
+.doc-sidebar-link:hover,
 .doc-sidebar-link.is-active {
-  background: var(--accent-dim);
+  border-color: var(--accent);
   color: var(--accent);
+  background: var(--accent-dim);
+}
+/* Scroll-spy active-section highlight — heavier weight than hover */
+.doc-sidebar-link.is-active {
   font-weight: 600;
 }
 .doc-sidebar-quickstart {
