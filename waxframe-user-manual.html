@@ -104,7 +104,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The concept in plain English</div>
-      <p>WaxFrame runs multiple AI assistants on your document at the same time. Most of them act as <strong>reviewers</strong> — they each read your document independently and produce numbered, specific suggestions for improvement. One AI acts as the <strong>Builder</strong> — it reads every suggestion from every reviewer, decides which ones are the strongest, and rewrites the document incorporating them. You review the result, resolve any disagreements between AIs, and run another round if needed. Each round the document improves. You stop when it is good enough.</p>
+      <p>WaxFrame runs multiple AI assistants on your document at the same time. Most of them act as <strong>reviewers</strong> — they each read your document independently and produce numbered, specific suggestions for improvement. One AI acts as the <strong>Builder</strong> — it reads every suggestion from every reviewer, decides which ones are the strongest, and rewrites the document incorporating them. You review the result, resolve any disagreements between AIs, and run another round if needed. Each round the document improves — you stop when you're satisfied with the result.</p>
       <p>WaxFrame works whether you are starting from a blank page, improving an existing draft, uploading a file, or pasting content in. It handles any kind of written document — business proposals, technical reports, cover letters, blog posts, marketing copy, executive summaries, policy documents, résumés, and more.</p>
     </div>
 
@@ -223,7 +223,7 @@
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
       <p>After clicking <strong>Let's get started →</strong> on the welcome screen, you arrive at the first setup screen: <strong>Worker Bees</strong>. This is a full-width screen dedicated to connecting your AI assistants. Your Worker Bees are the AI assistants that act as reviewers each round. They each read your document independently and produce a numbered list of specific suggestions. You need <strong>at least two Worker Bees with saved API keys</strong> before WaxFrame will allow you to proceed. A status indicator at the bottom of the screen shows whether this requirement is met.</p>
-      <p>Directly above the list of AIs, a <strong>hive count chip</strong> shows the total number of AIs in your hive and how many of them have saved API keys. When the key-saved count is even, a small <strong>⚠️ even count — tie risk</strong> warning appears, because an even number of voting AIs can produce tie votes on convergence rounds. Add one more AI with a saved key to avoid this. When the key-saved count is odd (three or more), a subtle <strong>✓ odd count</strong> indicator confirms there is no tie risk.</p>
+      <p>Directly above the list of AIs, a <strong>hive count chip</strong> shows the total number of AIs in your hive and how many of them have saved API keys. This is purely informational — WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals, so there is no tie risk regardless of whether your count is even or odd.</p>
     </div>
 
     <div class="wh-block">
@@ -351,10 +351,10 @@
     <div class="wh-block">
       <div class="wh-block-title">The Builder picker — what you see</div>
       <p>The right panel displays a grid of cards, one for each AI that has a saved API key. AIs without a saved key do not appear here — you must save a key for an AI in Step 1 before it can be selected as Builder.</p>
-      <p>Each card shows the AI's name and icon. Click a card to select that AI as your Builder. The selected card is highlighted and marked with a crown icon (👑). Only one AI can be the Builder at a time. You can change your Builder at any time, including from the Work screen during an active session.</p>
+      <p>Each card shows the AI's name and icon. Click a card to select that AI as your Builder. The selected card is highlighted and marked with a small <strong>Builder badge</strong> in the top-right corner — a crowned bee icon that indicates this AI is the current Builder. Only one AI can be the Builder at a time. You can change your Builder at any time, including from the Work screen during an active session, where the selected Builder is shown with a 👑 crown label in the Change Builder modal.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the US providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a></p>
+        <p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the other providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a></p>
       </div>
     </div>
 
@@ -1212,7 +1212,7 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.19.23"></script>
+<script src="version.js?v=3.20.16"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
