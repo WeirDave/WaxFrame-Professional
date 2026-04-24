@@ -2,6 +2,24 @@
 
 ---
 
+## v3.20.17 Pro — Build `20260424-010`
+**Released:** April 24, 2026
+
+### Documentation Fix — Document Playbooks
+
+**Cover Letter playbook round estimate updated from `2–4 rounds typical` to `6–10 rounds typical` (measured, not estimated)**
+A walkthrough run on a real cover letter (Senior Wireless Network Engineer, Helios Biosciences, Dana Reyes) measured majority convergence at Round 10 — four of six AIs reporting no further changes. The prior estimate of 2–4 rounds was significantly understated for this document type. Unlike shorter transactional documents (cookies recipe: 2 rounds measured, thank-you note: 2–4 rounds), cover letters require iterative tuning of hook specificity and role-connection tightness, which takes more rounds than edit-heavy but structurally simple documents. Updated the playbook's Rounds field to reflect the measured behavior, with a short explanation of *why* cover letters converge more slowly so users calibrate their expectations before starting rather than wondering if something is broken at round 5.
+
+### Latent Bug Fix
+
+**`version.js` cache busts across the remaining four helper pages**
+v3.20.16 fixed the stale `version.js?v=3.19.23` cache bust on `waxframe-user-manual.html`, but the same stale cache bust existed on every other page that loads `version.js`: `document-playbooks.html`, `api-details.html`, `what-are-tokens.html`, and `prompt-editor.html`. All four had been stuck at `3.19.23` for many releases. Bumped all five (including the manual, which follows the established per-release bump rule) to `3.20.17` in one pass, completing the fix. Going forward, every release should bump the `version.js?v=` cache bust on all five helper pages alongside the four standard version locations.
+
+### Files Changed
+`document-playbooks.html` · `waxframe-user-manual.html` · `api-details.html` · `what-are-tokens.html` · `prompt-editor.html` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.16 Pro — Build `20260424-009`
 **Released:** April 24, 2026
 
