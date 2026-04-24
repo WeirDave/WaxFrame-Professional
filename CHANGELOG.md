@@ -2,6 +2,45 @@
 
 ---
 
+## v3.20.3 Pro — Build `20260423-009`
+**Released:** April 23, 2026
+
+### Bug Fixes
+
+**Import from Model Server — help and raw response panels could render simultaneously**
+In v3.20.2 the middle-column state rules had `.import-server-modal.import-server-state-ready .import-server-raw-panel { display: block }`. That rule fired whenever the modal was in the ready state regardless of whether the user had asked to see the raw response, so a returning user whose saved config auto-fetched on open would immediately see the raw response panel rendering underneath the help pane on desktop (where both middle-column panes lived in the same column) and as overlapping content on laptop. The help pane also did not have any state-scoped hide rule, so on laptop the media query that merged cols 2+3 into the middle column let the help pane remain visible in ready state when it should have been gone.
+
+The core rule that was missing: **cols 2+3 show exactly one pane at a time, per state**. Prefetch shows help. Ready by default shows the checklist (middle column empty). Ready + raw toggled on shows the raw response and hides the checklist. Error shows the error pane.
+
+Fixed by tightening the display selectors: `.import-server-raw-panel` only displays when both `.import-server-state-ready` AND `.import-server-raw-visible` are present on the inner modal, and the laptop-tier media query was updated so ready state on laptop empties the middle column (instead of keeping help visible). The raw toggle button that previously only appeared on laptop now appears on both tiers, since the raw pane is hidden by default regardless of viewport width.
+
+### Changes
+
+**Import from Model Server — in-hive models filtered OUT of the checklist entirely**
+The checklist previously showed every model returned by the server, dimming the ones already in the hive and marking them with an In hive badge. This was well-intentioned — "here is the full catalog, with your existing picks visible for context" — but it violated the screen's actual purpose, which is "what can I add to my hive that is not already there?". The dimmed rows could not be used for any action, took up vertical space, and forced the user to scan past duplicates to find the new model they came to add.
+
+`renderImportServerChecklist()` now filters the model list against existing-in-hive entries for this same Chat Endpoint and only renders the available ones. The header changed from `37 models — 29 selected` to `29 available · 0 selected · 8 already in hive`, so the user still gets the complete context (why is the list smaller than expected?) without having to look at rows they cannot interact with. When a user deletes an AI on the Worker Bees setup page and reopens this modal, the model reappears in the list naturally since the filter is computed at render time. The `.import-server-item-badge` CSS rule is retained for potential future use but is no longer emitted during rendering.
+
+**Import from Model Server — live Fetched-N-ago timestamp in the checklist header**
+On every successful fetch, `renderImportServerChecklist()` captures `Date.now()` into `_importFetchedAt` and displays a relative-time stamp next to the available/selected counter. A `setInterval` refreshes the text every 5 seconds (`just now` → `5s ago` → `1m ago` → `2h ago`). The span carries a tooltip with the exact local time for users who want it. The interval clears on modal close to avoid leaking timers.
+
+Since every modal open with saved defaults auto-fetches, the timestamp answers the implicit "is this list current?" question without the user having to click Refresh. If the user later clicks Refresh manually, the timestamp resets. If a fetch fails, the timestamp is not updated — so the previously-successful timestamp persists through the error state, signaling "last successful fetch was X ago, but it is broken now."
+
+**Worker Bees setup screen — hive count chip with even-count tie warning**
+Added a new `.hive-count-chip` element directly above the AI grid on the Worker Bees setup screen. It shows the total number of AIs in the hive plus the number that have saved API keys — the second number being what actually matters for running rounds at runtime. When the key-saved count is even and at least 2, the chip shows a `⚠️ even count — tie risk` warning since an even number of voting AIs can produce tie votes on convergence rounds. When the key-saved count is odd and at least 3, a subtle `✓ odd count` indicator appears instead. The chip has no content and visually collapses via `.hive-count-chip:empty { display: none }` if the render ever produces nothing.
+
+Wired into `renderAISetupGrid()` via a new `renderHiveCountChip()` function that runs at the end of every grid render, so the chip updates automatically whenever an AI is added, removed, keyed, or unkeyed. No additional hooks required.
+
+### User Manual
+Appendix B rewritten step-by-step to reflect: the `📋 View raw response` button with collapsed-by-default behavior, the filtered-out in-hive models with the header math, the live Fetched-N-ago timestamp, and the auto-fetch-is-always-live guarantee. The CORS/mixed-content tip was retained.
+
+Step 1 intro expanded with a new paragraph explaining the hive count chip above the AI grid, including what the even-count tie-risk warning means and when the subtle odd-count confirmation appears.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
 ## v3.20.2 Pro — Build `20260423-008`
 **Released:** April 23, 2026
 

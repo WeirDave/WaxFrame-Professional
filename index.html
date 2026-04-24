@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260423-008">
+  <meta name="waxframe-build" content="20260423-009">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.20.2">
+  <link rel="stylesheet" href="style.css?v=3.20.3">
 </head>
 <body>
 
@@ -102,6 +102,7 @@
           <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
           <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
         </div>
+        <div class="hive-count-chip" id="hiveCountChip"></div>
         <div class="ai-setup-grid" id="aiSetupGrid"></div>
       </div>
     </div>
@@ -813,7 +814,10 @@
         <!-- Live checklist shown post-fetch -->
         <div class="import-server-checklist-panel" id="importServerChecklistPanel">
           <div class="import-server-checklist-hdr">
-            <span id="importChecklistCount" class="import-checklist-count"></span>
+            <div class="import-checklist-hdr-left">
+              <span id="importChecklistCount" class="import-checklist-count"></span>
+              <span id="importChecklistTimestamp" class="import-checklist-timestamp"></span>
+            </div>
             <div class="import-server-checklist-actions">
               <button class="btn btn-xs" onclick="importServerSelectAll()">All</button>
               <button class="btn btn-xs" onclick="importServerSelectNone()">None</button>
@@ -1329,7 +1333,7 @@
 </div>
 
 <script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.20.2"></script>
+<script src="app.js?v=3.20.3"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
