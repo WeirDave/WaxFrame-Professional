@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-007';         // build stamp — update each session
+const BUILD       = '20260424-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -893,11 +893,6 @@ function setBuilderFromModal(id) {
   closeChangeBuilder();
   renderBeeStatusGrid();
   toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
-}
-
-function clearConsole() {
-  const el = document.getElementById('liveConsole');
-  if (el) el.innerHTML = '<div class="console-entry console-info">Console cleared.</div>';
 }
 
 // ══════════════════════════════════════
@@ -1865,6 +1860,14 @@ function clearProject() {
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
   localStorage.removeItem('waxframe_v2_has_pdf_pages');
+
+  // Reset the live console and conflicts panels. clearProject is the one
+  // user-initiated destructive action that should zero out the session log —
+  // normal navigation and re-launching a session does not touch these panels.
+  const liveConsoleEl = document.getElementById('liveConsole');
+  if (liveConsoleEl) liveConsoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
+  const conflictsEl = document.getElementById('conflictsPanel');
+  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
 
   // Reset Finish modal export buttons to their pristine innerHTML captured on
   // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
@@ -4155,15 +4158,10 @@ function initWorkScreen(isNewSession = false) {
   const version = document.getElementById('projectVersion')?.value.trim() || '';
   const goal    = assembleProjectGoal();
 
-  // Only clear transient panels on a brand new session — not on page refresh
-  if (isNewSession) {
-    const consoleEl = document.getElementById('liveConsole');
-    if (consoleEl) consoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
-    const conflictsEl = document.getElementById('conflictsPanel');
-    if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
-    const notesEl = document.getElementById('workNotes');
-    if (notesEl) notesEl.value = '';
-  }
+  // Note: console/conflicts/notes are NOT wiped here, even on a brand new
+  // session. The only legitimate path for wiping those panels is clearProject(),
+  // which is an explicit user-initiated destructive action. No normal navigation
+  // or re-launch should clear the session log.
 
   const el = document.getElementById('workProjectName');
   const ve = document.getElementById('workProjectVersion');

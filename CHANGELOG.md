@@ -2,6 +2,29 @@
 
 ---
 
+## v3.20.15 Pro — Build `20260424-008`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Live console could be wiped by normal user actions — violated "the console is an audit log, not a scratchpad" design intent**
+Two separate paths were wiping `#liveConsole` outside of an explicit destructive action:
+
+1. **A `✕ Clear` button sat next to the `📋 Copy` button in the console header**, wired to a `clearConsole()` function that replaced the console's innerHTML with "Console cleared." There is no legitimate use case for clearing the console mid-session — the console is the session's audit log of what happened in every round — and the existence of the button invited accidental wipes. Removed the button from `index.html` and deleted the `clearConsole()` function from `app.js`. The Copy button stays.
+
+2. **`initWorkScreen(true)` at the top of the work-screen initializer unconditionally wiped `#liveConsole`, `#conflictsPanel`, and `#workNotes` whenever `startSession()` ran.** This fires on every "Launch WaxFrame →" click, which means a user who started from scratch, clicked Smoke the Hive, had a round fail (no history recorded), navigated back, and re-launched would silently lose every console entry they had. Removed the wipe block from `initWorkScreen()` entirely. The responsibility for zeroing the live-console and conflicts panels now lives solely in `clearProject()` — the one user-initiated, explicitly-labeled destructive action. `#workNotes` was already being wiped in `clearProject()` at line 1844, so that behavior is unchanged.
+
+This enforces the design principle that no routine navigation, re-launch, or input change should ever wipe the session log. The only way to clear the console is to explicitly end the project via `Finish Project & Start Over`.
+
+### Known Still-Open
+
+**Candy reported an empty console after navigating `work screen → Starting Document → upload file → Return to Work Screen`, where the launch button had correctly changed to `↩ Return to Work Screen` (i.e., an active session was detected).** That flow routes through `goToScreen('screen-work')` which calls `initWorkScreen()` without the `isNewSession` flag, so neither of the fixes in this release directly addresses her scenario. A different path in the file-upload flow is suspected but not yet pinned. Investigation continues in a subsequent release.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.14 Pro — Build `20260424-007`
 **Released:** April 24, 2026
 
