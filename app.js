@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-008';         // build stamp — update each session
+const BUILD       = '20260423-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2143,6 +2143,33 @@ function renderAISetupGrid() {
     </div>`;
   }).join('');
   renderBuilderPicker();
+  renderHiveCountChip();
+}
+
+// Hive count chip: shows total in hive + key-saved subset + tie-risk warning on
+// even key counts. Counts only AIs visible in the current list (hidden defaults
+// excluded — they don't run). "With keys" is the number that will actually vote
+// at runtime, so that's what drives the tie-risk check.
+function renderHiveCountChip() {
+  const chip = document.getElementById('hiveCountChip');
+  if (!chip) return;
+  const total = aiList.length;
+  const withKeys = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return !!cfg?._key;
+  }).length;
+
+  let warning = '';
+  if (withKeys >= 2 && withKeys % 2 === 0) {
+    warning = `<span class="hive-count-warn" title="An even number of voting AIs can produce tie votes each round. Add one more AI with a saved key to avoid ties.">⚠️ even count — tie risk</span>`;
+  } else if (withKeys >= 3 && withKeys % 2 === 1) {
+    warning = `<span class="hive-count-ok" title="Odd number of voting AIs — no tie risk.">✓ odd count</span>`;
+  }
+
+  chip.innerHTML = `
+    <span class="hive-count-chip-main">🐝 <strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${withKeys}</strong> with ${withKeys === 1 ? 'key' : 'keys'}</span>
+    ${warning}
+  `;
 }
 
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
@@ -3022,6 +3049,42 @@ const IMPORT_SERVER_PRESETS = {
 let _importServerModels   = [];
 let _importServerPreset   = null;
 
+// Timestamp ticker state — hoisted up here so closeImportServerModal() can safely
+// call stopImportTimestampTicker() which reassigns _importFetchedAt = null.
+// `let` declarations are block-scoped and not hoisted, so these MUST appear before
+// any function that reads or writes them.
+let _importFetchedAt = null;
+let _importTimestampInterval = null;
+let _importAvailableCount = 0;
+let _importInHiveCount = 0;
+
+function formatRelativeTime(ts) {
+  if (!ts) return '';
+  const diff = Math.max(0, Date.now() - ts);
+  const s = Math.floor(diff / 1000);
+  if (s < 5)    return 'just now';
+  if (s < 60)   return `${s}s ago`;
+  const m = Math.floor(s / 60);
+  if (m < 60)   return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  return `${h}h ago`;
+}
+
+function startImportTimestampTicker() {
+  stopImportTimestampTicker();
+  _importTimestampInterval = setInterval(() => {
+    const el = document.getElementById('importChecklistTimestamp');
+    if (el && _importFetchedAt) el.textContent = `Fetched ${formatRelativeTime(_importFetchedAt)}`;
+  }, 5000);
+}
+
+function stopImportTimestampTicker() {
+  if (_importTimestampInterval) {
+    clearInterval(_importTimestampInterval);
+    _importTimestampInterval = null;
+  }
+}
+
 const IMPORT_SERVER_LS_KEY = 'waxframe_import_server_defaults';
 const IS_LOCAL_RUNTIME = (typeof location !== 'undefined' && location.protocol === 'file:');
 
@@ -3160,6 +3223,8 @@ function closeImportServerModal() {
   if (innerModal) innerModal.classList.remove('has-saved-key');
   resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
+  stopImportTimestampTicker();
+  _importFetchedAt = null;
 }
 
 function resetImportServer(full = false) {
@@ -3345,14 +3410,20 @@ function updateChecklistCount() {
     btn.disabled = checked === 0;
   }
   const countEl = document.getElementById('importChecklistCount');
-  if (countEl) countEl.textContent = `${_importServerModels.length} models — ${checked} selected`;
+  if (countEl) {
+    const avail = _importAvailableCount || 0;
+    const inHive = _importInHiveCount || 0;
+    const parts = [`${avail} available · ${checked} selected`];
+    if (inHive > 0) parts.push(`${inHive} already in hive`);
+    countEl.textContent = parts.join(' · ');
+  }
 }
 
 function renderImportServerChecklist() {
   const items = document.getElementById('importServerChecklistItems');
   if (!items) return;
 
-  // Build a set of (endpoint|modelId) pairs already in the hive so we can mark + default-uncheck duplicates
+  // Build a set of model IDs already in the hive from this same Chat Endpoint
   const chatUrl = document.getElementById('importServerChatUrl').value.trim();
   const existingForThisServer = new Set(
     aiList
@@ -3364,21 +3435,36 @@ function renderImportServerChecklist() {
       .filter(Boolean)
   );
 
-  items.innerHTML = _importServerModels.map((model, i) => {
-    const modelId      = typeof model === 'object' ? model.id   : model;
-    const modelName    = typeof model === 'object' ? model.name : model;
-    const alreadyInHive = existingForThisServer.has(modelId);
-    const rowCls  = `import-server-item${alreadyInHive ? ' is-already-in-hive' : ''}`;
-    const checked = alreadyInHive ? '' : 'checked';
-    const badge   = alreadyInHive ? '<span class="import-server-item-badge" title="This model is already in your hive from this server">In hive</span>' : '';
+  // Filter in-hive models OUT of the checklist entirely — purpose of this screen
+  // is "what can I add?", not "what do I already have?". Removing them from the
+  // hive happens on the Worker Bees page via the per-AI delete button.
+  const available = _importServerModels.filter(model => {
+    const modelId = typeof model === 'object' ? model.id : model;
+    return !existingForThisServer.has(modelId);
+  });
+  _importAvailableCount = available.length;
+  _importInHiveCount    = _importServerModels.length - available.length;
+
+  items.innerHTML = available.map((model, i) => {
+    const modelId   = typeof model === 'object' ? model.id   : model;
+    const modelName = typeof model === 'object' ? model.name : model;
     return `
-    <div class="${rowCls}">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" ${checked} onchange="updateChecklistCount()">
+    <div class="import-server-item">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      ${badge}
       <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
     </div>`;
   }).join('');
+
+  // Timestamp in header, live-updating
+  _importFetchedAt = Date.now();
+  const tsEl = document.getElementById('importChecklistTimestamp');
+  if (tsEl) {
+    tsEl.textContent = 'Fetched just now';
+    tsEl.title = `Fetched at ${new Date(_importFetchedAt).toLocaleTimeString()}`;
+  }
+  startImportTimestampTicker();
+
   updateChecklistCount();
 }
 

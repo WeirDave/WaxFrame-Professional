@@ -2580,12 +2580,18 @@ html, body {
 .import-server-forget-btn:hover { color: var(--accent); }
 .import-server-modal.has-saved-key .import-server-forget-btn { display: inline-block; }
 
-/* ── Middle column panes — state-toggled visibility ── */
+/* ── Middle column panes — state-toggled visibility ─────────────
+   RULE: cols 2+3 show exactly ONE pane at a time, per state:
+   • prefetch  → help
+   • ready (default) → (checklist lives in col 3; middle is empty)
+   • ready + .import-server-raw-visible → raw response
+   • error → error pane
+   ─────────────────────────────────────────────────────────── */
 .import-server-help,
 .import-server-raw-panel,
 .import-server-error { display: none; }
 .import-server-modal.import-server-state-prefetch .import-server-help { display: block; }
-.import-server-modal.import-server-state-ready    .import-server-raw-panel { display: block; }
+.import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-raw-panel { display: block; }
 .import-server-modal.import-server-state-error    .import-server-error { display: block; }
 
 /* Help pane */
@@ -2765,6 +2771,20 @@ html, body {
   font-size: 12px;
   color: var(--text-dim);
   flex-shrink: 0;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.import-checklist-hdr-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.import-checklist-timestamp {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-style: italic;
 }
 .import-server-checklist-actions { display: flex; gap: 6px; }
 .import-server-checklist-items {
@@ -2831,13 +2851,40 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ── Raw-response toggle button (column 1, laptop-tier only) ── */
+/* ── Raw-response toggle button (column 1, shown in ready state on both tiers) ── */
 .import-server-raw-toggle {
   display: none;
   align-self: flex-start;
   margin-top: 6px;
   font-size: 12px;
   padding: 6px 12px;
+}
+.import-server-modal.import-server-state-ready .import-server-raw-toggle {
+  display: inline-flex;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DESKTOP TIER (≥1601px): 3-column layout with raw toggleable.
+   Since the raw pane is now hidden by default in ready state,
+   the checklist takes cols 2+3 when raw is off, and goes back
+   to col 3 only when the user opens raw response explicitly.
+   ══════════════════════════════════════════════════════════════ */
+@media (min-width: 1601px) {
+  /* READY default: empty middle, checklist takes 2+3 */
+  .import-server-modal.import-server-state-ready .import-server-col-checklist {
+    grid-column: 2 / 4;
+  }
+  /* READY + raw toggled on: raw in col 2, checklist back to col 3 */
+  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-checklist {
+    grid-column: auto;
+  }
+  /* ERROR: error pane across cols 2+3 since placeholder is useless */
+  .import-server-modal.import-server-state-error .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-error .import-server-col-checklist {
+    display: none;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2855,7 +2902,7 @@ html, body {
     display: none;
   }
 
-  /* READY (default): checklist takes cols 2+3, raw response hidden behind toggle */
+  /* READY (default): checklist takes cols 2+3, middle col empty */
   .import-server-modal.import-server-state-ready .import-server-col-middle {
     display: none;
   }
@@ -2944,6 +2991,59 @@ html, body {
   margin-bottom: 10px;
   font-size: 13px;
   color: var(--text-dim);
+}
+
+/* ── Hive count chip (Worker Bees setup screen) ── */
+.hive-count-chip {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 14px;
+  margin-bottom: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-dim);
+  font-size: 13px;
+  flex-wrap: wrap;
+}
+.hive-count-chip:empty { display: none; }
+.hive-count-chip-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.hive-count-chip-main strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.hive-count-sep {
+  color: var(--text-faint);
+  margin: 0 2px;
+}
+.hive-count-warn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid #e6a545;
+  border-radius: var(--radius-sm);
+  background: rgba(230, 165, 69, 0.1);
+  color: #e6a545;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+}
+.hive-count-ok {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: 12px;
+  cursor: help;
 }
 .ai-hidden-restore-btn {
   margin-left: auto;
