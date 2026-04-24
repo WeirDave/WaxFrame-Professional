@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-009';         // build stamp — update each session
+const BUILD       = '20260423-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3128,10 +3128,12 @@ function getImportServerInnerModal() {
 }
 
 function setImportServerState(state) {
-  // state: 'prefetch' | 'ready' | 'error'
+  // state: 'prefetch' | 'loading' | 'ready' | 'error'
+  // 'loading' is transient — used between modal open and auto-fetch completion
+  // to suppress all middle/right-column content so nothing flashes.
   const modal = getImportServerInnerModal();
   if (!modal) return;
-  modal.classList.remove('import-server-state-prefetch', 'import-server-state-ready', 'import-server-state-error');
+  modal.classList.remove('import-server-state-prefetch', 'import-server-state-loading', 'import-server-state-ready', 'import-server-state-error');
   // Any state change resets the laptop-only "show raw instead of checklist" modifier
   modal.classList.remove('import-server-raw-visible');
   modal.classList.add(`import-server-state-${state}`);
@@ -3184,13 +3186,15 @@ function onImportServerKeyInput() {
 }
 
 function showImportServerModal() {
-  const modal = document.getElementById('importServerModal');
-  if (modal) modal.classList.add('active');
+  const overlay = document.getElementById('importServerModal');
 
   // Populate Quick Add options (filtered by runtime) and runtime note
   populateImportServerQuickAdd();
   updateImportServerRuntimeNote();
 
+  // Initialize state to prefetch BEFORE revealing the modal, so no stray panes
+  // (raw response, placeholder, etc.) flash during the brief gap between overlay
+  // activation and the fetch completing.
   resetImportServer(true);
 
   // Populate fields from last-used server if saved
@@ -3208,8 +3212,15 @@ function showImportServerModal() {
     }
   }
 
+  // Reveal modal only after state is settled
+  if (overlay) overlay.classList.add('active');
+
   // Auto-fetch if we have a complete saved config; otherwise focus Chat URL
   if (saved && saved.chatUrl && saved.modelsUrl) {
+    // Switch to loading state so no stray panes flash during the fetch gap.
+    // fetchImportServerModels() will transition to 'ready' on success or
+    // 'error' on failure via setImportServerState() calls.
+    setImportServerState('loading');
     fetchImportServerModels();
   } else {
     chatEl?.focus();
@@ -3452,7 +3463,7 @@ function renderImportServerChecklist() {
     <div class="import-server-item">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
+      <input type="text" class="import-server-name-input" id="isn-${i}" value="" placeholder="Nickname (optional)">
     </div>`;
   }).join('');
 
