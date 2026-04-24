@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-004';         // build stamp — update each session
+const BUILD       = '20260424-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1596,10 +1596,6 @@ function goToScreen(id) {
     }
     setTimeout(updateDocRequirements, 0);
   }
-}
-
-function goToFree() {
-  window.open('https://weirdave.github.io/WaxFrame-Free/', '_blank');
 }
 
 function openNavMenu() {
@@ -3622,9 +3618,6 @@ function continueFromProject() {
   goToScreen('screen-document');
 }
 
-// Legacy alias — kept for any nav-menu calls
-function validateAndContinue() { continueFromBees(); }
-
 // ── SCREEN 3: PROJECT SETUP ──
 function switchDocTab(tab) {
   docTab = tab;
@@ -4636,51 +4629,6 @@ function closeUnanimousScene(silent = false) {
     const bee = document.getElementById('unanimousBee');
     if (bee) { bee.classList.remove('is-flying'); bee.style.opacity = '0'; }
   }, 900);
-}
-
-// ── FANFARE — ascending C–E–G–high-C major arpeggio with a ping cap ──
-function playUnanimousFanfare() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const t0 = ctx.currentTime;
-
-    // Triumphant chord stabs: C5, E5, G5, C6
-    const notes = [
-      { freq: 523.25, start: 0.00, dur: 0.18, vol: 0.22 },  // C5
-      { freq: 659.25, start: 0.15, dur: 0.18, vol: 0.22 },  // E5
-      { freq: 783.99, start: 0.30, dur: 0.55, vol: 0.26 },  // G5 held
-      { freq: 1046.5, start: 0.60, dur: 0.80, vol: 0.28 },  // C6 climax
-    ];
-    notes.forEach(n => {
-      // Two oscillators per note for a richer brass-ish tone
-      [['square', 1.0], ['triangle', 0.6]].forEach(([type, mul]) => {
-        const osc  = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = type;
-        osc.frequency.setValueAtTime(n.freq, t0 + n.start);
-        gain.gain.setValueAtTime(0, t0 + n.start);
-        gain.gain.linearRampToValueAtTime(n.vol * mul, t0 + n.start + 0.02);
-        gain.gain.setValueAtTime(n.vol * mul, t0 + n.start + n.dur * 0.7);
-        gain.gain.exponentialRampToValueAtTime(0.001, t0 + n.start + n.dur);
-        osc.connect(gain); gain.connect(ctx.destination);
-        osc.start(t0 + n.start); osc.stop(t0 + n.start + n.dur + 0.05);
-      });
-    });
-
-    // Sparkle ping at the end
-    const ping = ctx.createOscillator();
-    const pg   = ctx.createGain();
-    ping.type = 'sine';
-    ping.frequency.setValueAtTime(2093, t0 + 1.35); // C7
-    pg.gain.setValueAtTime(0, t0 + 1.35);
-    pg.gain.linearRampToValueAtTime(0.14, t0 + 1.38);
-    pg.gain.exponentialRampToValueAtTime(0.001, t0 + 2.0);
-    ping.connect(pg); pg.connect(ctx.destination);
-    ping.start(t0 + 1.35); ping.stop(t0 + 2.05);
-
-    setTimeout(() => ctx.close(), 2400);
-  } catch(e) { /* audio not supported — fail silently */ }
 }
 
 // ── CRACKLE — short burst of high-pitched filtered noise pops ──
