@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-012';         // build stamp — update each session
+const BUILD       = '20260423-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2167,7 +2167,7 @@ function renderHiveCountChip() {
   }
 
   chip.innerHTML = `
-    <span class="hive-count-chip-main">🐝 <strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${withKeys}</strong> with ${withKeys === 1 ? 'key' : 'keys'}</span>
+    <span class="hive-count-chip-main"><strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${withKeys}</strong> with ${withKeys === 1 ? 'key' : 'keys'}</span>
     ${warning}
   `;
 }

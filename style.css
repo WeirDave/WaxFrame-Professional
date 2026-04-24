@@ -2886,22 +2886,38 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DESKTOP TIER (≥1601px): 3-column layout with raw toggleable.
-   Default ready state shows checklist across cols 2+3 (no raw).
-   Raw appears in col 2 only when user clicks View response details.
-   On error, error pane + raw response stack in a merged 2+3 region
-   so the user sees both the explanation and the proof at full width.
+   DESKTOP TIER (≥1601px): same swap-based behavior as laptop.
+   The right region is either checklist OR raw OR error — never
+   multiple panes side-by-side. This keeps the user's mental
+   model consistent across viewport sizes.
    ══════════════════════════════════════════════════════════════ */
 @media (min-width: 1601px) {
-  /* READY default: empty middle, checklist takes 2+3 */
+  /* PREFETCH: help pane takes cols 2+3, hide checklist placeholder */
+  .import-server-modal.import-server-state-prefetch .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-prefetch .import-server-col-checklist {
+    display: none;
+  }
+
+  /* READY (default): checklist takes cols 2+3, middle col hidden */
+  .import-server-modal.import-server-state-ready .import-server-col-middle {
+    display: none;
+  }
   .import-server-modal.import-server-state-ready .import-server-col-checklist {
     grid-column: 2 / 4;
   }
-  /* READY + raw toggled on: raw in col 2, checklist back to col 3 */
-  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-checklist {
-    grid-column: auto;
+
+  /* READY + raw toggled ON: raw response takes cols 2+3, checklist hidden */
+  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-middle {
+    display: flex;
+    grid-column: 2 / 4;
   }
-  /* ERROR: merge cols 2+3 for error pane + auto-shown raw response */
+  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-checklist {
+    display: none;
+  }
+
+  /* ERROR: error pane + auto-shown raw stack in merged 2+3 region */
   .import-server-modal.import-server-state-error .import-server-col-middle {
     grid-column: 2 / 4;
   }
@@ -2956,11 +2972,6 @@ html, body {
   .import-server-modal.import-server-state-error .import-server-raw-panel {
     display: flex;
     margin-top: 14px;
-  }
-
-  /* Raw-response toggle button visible only in laptop READY state */
-  .import-server-modal.import-server-state-ready .import-server-raw-toggle {
-    display: inline-flex;
   }
 }
 
@@ -3058,6 +3069,7 @@ html, body {
   color: #e6a545;
   font-size: 12px;
   font-weight: 600;
+  cursor: help;
 }
 .hive-count-ok {
   display: inline-flex;
@@ -3065,6 +3077,7 @@ html, body {
   gap: 4px;
   color: var(--text-faint);
   font-size: 12px;
+  cursor: help;
 }
 .ai-hidden-restore-btn {
   margin-left: auto;
