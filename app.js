@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-013';         // build stamp — update each session
+const BUILD       = '20260424-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2146,10 +2146,11 @@ function renderAISetupGrid() {
   renderHiveCountChip();
 }
 
-// Hive count chip: shows total in hive + key-saved subset + tie-risk warning on
-// even key counts. Counts only AIs visible in the current list (hidden defaults
-// excluded — they don't run). "With keys" is the number that will actually vote
-// at runtime, so that's what drives the tie-risk check.
+// Hive count chip: shows total AIs in hive + count with saved keys. Purely
+// informational. Earlier iterations included an even-count "tie risk" warning,
+// but WaxFrame's convergence logic is a threshold check (Math.floor(n/2)+1
+// must agree on "no changes") rather than an either-or vote between competing
+// proposals — so tie scenarios don't arise. Warning removed as misleading.
 function renderHiveCountChip() {
   const chip = document.getElementById('hiveCountChip');
   if (!chip) return;
@@ -2159,16 +2160,8 @@ function renderHiveCountChip() {
     return !!cfg?._key;
   }).length;
 
-  let warning = '';
-  if (withKeys >= 2 && withKeys % 2 === 0) {
-    warning = `<span class="hive-count-warn" title="An even number of voting AIs can produce tie votes each round. Add one more AI with a saved key to avoid ties.">⚠️ even count — tie risk</span>`;
-  } else if (withKeys >= 3 && withKeys % 2 === 1) {
-    warning = `<span class="hive-count-ok" title="Odd number of voting AIs — no tie risk.">✓ odd count</span>`;
-  }
-
   chip.innerHTML = `
     <span class="hive-count-chip-main"><strong>${total}</strong> ${total === 1 ? 'AI' : 'AIs'} in hive <span class="hive-count-sep">·</span> <strong>${withKeys}</strong> with ${withKeys === 1 ? 'key' : 'keys'}</span>
-    ${warning}
   `;
 }
 
@@ -3090,19 +3083,35 @@ const IS_LOCAL_RUNTIME = (typeof location !== 'undefined' && location.protocol =
 
 function saveImportServerDefaults(chatUrl, modelsUrl, apiKey) {
   try {
-    localStorage.setItem(IMPORT_SERVER_LS_KEY, JSON.stringify({ chatUrl, modelsUrl, apiKey }));
-  } catch(e) {}
+    const payload = JSON.stringify({ chatUrl, modelsUrl, apiKey });
+    localStorage.setItem(IMPORT_SERVER_LS_KEY, payload);
+    // Immediate read-back verification — catches silent quota / permission issues
+    // that don't throw but still fail to persist the value.
+    const verify = localStorage.getItem(IMPORT_SERVER_LS_KEY);
+    if (verify !== payload) {
+      console.error('[import-server] localStorage write did not persist', { expected: payload, got: verify });
+      toast('⚠️ Could not save server for next time (localStorage issue)');
+    }
+  } catch(e) {
+    console.error('[import-server] Failed to save defaults to localStorage:', e);
+    toast('⚠️ Could not save server for next time: ' + (e.name || 'unknown error'));
+  }
 }
 
 function loadImportServerDefaults() {
   try {
     const raw = localStorage.getItem(IMPORT_SERVER_LS_KEY);
-    return raw ? JSON.parse(raw) : null;
-  } catch(e) { return null; }
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) {
+    console.error('[import-server] Failed to load defaults from localStorage:', e);
+    return null;
+  }
 }
 
 function clearImportServerDefaults() {
-  try { localStorage.removeItem(IMPORT_SERVER_LS_KEY); } catch(e) {}
+  try { localStorage.removeItem(IMPORT_SERVER_LS_KEY); }
+  catch(e) { console.error('[import-server] Failed to clear defaults:', e); }
 }
 
 function forgetImportServerDefaults() {
@@ -3390,6 +3399,16 @@ async function fetchImportServerModels() {
     fetchBtn.textContent = 'Refresh';
     fetchBtn.classList.remove('btn-accent');
     setImportServerState('ready');
+
+    // Save the validated server config immediately on successful fetch.
+    // These three fields returned HTTP 200 with a valid model list — they've
+    // proven themselves and are worth remembering whether or not the user
+    // ultimately adds any models from this server. (Add to Hive also saves,
+    // as a belt-and-suspenders redundancy.)
+    saveImportServerDefaults(chatUrl, modelsUrl, key);
+    // Mark the inner modal so the 🔑 saved flags light up on the three fields
+    const innerModalForSave = getImportServerInnerModal();
+    if (innerModalForSave) innerModalForSave.classList.add('has-saved-key');
 
   } catch(e) {
     if (status) { status.textContent = `❌ Network / CORS error`; status.className = 'custom-ai-test-status fail'; }

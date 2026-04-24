@@ -3062,23 +3062,6 @@ html, body {
   color: var(--text-faint);
   margin: 0 2px;
 }
-.hive-count-warn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #e6a545;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: help;
-}
-.hive-count-ok {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: var(--text-faint);
-  font-size: 12px;
-  cursor: help;
-}
 .ai-hidden-restore-btn {
   margin-left: auto;
   font-size: 12px;

@@ -2,6 +2,35 @@
 
 ---
 
+## v3.20.8 Pro — Build `20260424-001`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Import from Model Server — valid server config lost unless user added at least one new model**
+The `saveImportServerDefaults()` call lived only inside `addImportServerModels()`, which fires when the user clicks Add N to Hive. In practice, a user who opens the modal, successfully fetches a model list, and then closes the modal without adding anything (because all models are already in the hive, or because they were just verifying the server was reachable) would lose the validated server configuration entirely. On the next modal open, the three fields would be blank — with no indication that the previous fetch had actually succeeded. This was the root cause of the symptom reported where URL fields appeared empty despite the user having used Import successfully in an earlier session.
+
+Fixed by moving the save call up into `fetchImportServerModels()` at the point of a successful 200 response with a valid model list. The `has-saved-key` class on the inner modal is also applied at that moment so the three 🔑 saved flags light up immediately, giving visual confirmation that the config was stored. The existing save call in `addImportServerModels()` is retained as belt-and-suspenders redundancy — if Fetch somehow failed to save but Add succeeds, the data still lands in localStorage.
+
+Rationale: the moment three fields return HTTP 200 with a valid model list, they've proven themselves valid and are worth remembering regardless of whether the user ultimately adds any models from this session. The "save on commit" heuristic from earlier versions was too strict for this flow — Import is as much a diagnostic tool as a commit tool.
+
+**Import from Model Server — silent localStorage failures now surface to console and toast**
+Previous save/load/clear wrappers had `try { ... } catch(e) {}` with empty catch blocks, which swallowed every possible storage error (quota exceeded, permission denied, JSON parse failure, etc.). If localStorage ever failed to persist a value, the user would have no visible indication — the next modal open would just show blank fields with no explanation.
+
+Replaced with explicit error handling: save now logs the exception to `console.error` with the tag `[import-server]` and surfaces a toast to the user explaining that their server config couldn't be remembered. Save also now performs an immediate read-back verification — if `localStorage.setItem` appears to succeed but the value doesn't round-trip through `getItem`, we flag it. Load and clear get the same treatment. This converts "silent mystery failures" into "diagnosable incidents" for any future storage weirdness.
+
+### Changes
+
+**Hive count chip — even-count tie-risk warning removed**
+Earlier iterations added an amber ⚠️ "even count — tie risk" warning to the hive count chip on the Worker Bees setup screen, suggesting that an even number of voting AIs could produce tie votes on convergence rounds. After reviewing the actual convergence logic in `app.js`, this warning was determined to be misleading — WaxFrame's convergence is a one-sided threshold check (`Math.floor(noChangesCount) >= Math.floor(n/2) + 1`) rather than an either-or vote between competing options, so tie scenarios are mathematically impossible in the current model. The Builder synthesizes ALL reviewer suggestions into the next iteration regardless of count; there's no "winning proposal" that could tie.
+
+Removed the warning and corresponding odd-count confirmation badge from `renderHiveCountChip()`, the associated `.hive-count-warn` and `.hive-count-ok` CSS rules, and the "Even count tie risk" explainer row from `infoBeesModal`. The chip now shows a clean informational line — `N AIs in hive · M with keys` — and nothing else. User's testing history empirically confirmed no ties had ever occurred; the warning was solving a problem that didn't exist.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.7 Pro — Build `20260423-013`
 **Released:** April 24, 2026
 
