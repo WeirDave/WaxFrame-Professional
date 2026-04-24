@@ -2,6 +2,29 @@
 
 ---
 
+## v3.19.26 Pro — Build `20260423-003`
+**Released:** April 23, 2026
+
+### Changes
+
+**Import from Model Server — dropped the hard 2-model minimum on the checklist**
+The Import from Model Server checklist enforced a minimum of two models per import, disabling the Add to Hive button and showing `Select at least 2 (N selected)` until two checkboxes were ticked. That constraint was written assuming users would build their entire hive in one import pass, but the common real-world case is adding a single new model to an already-populated hive — identical to how the Add Custom AI form works. The restriction created a dead-end where the only way to add one model via the server browser was to also re-add a second model you already had.
+
+The "a round needs two or more bees to run" rule is a separate run-time constraint enforced elsewhere on the Worker Bees setup screen and on the Smoke the Hive button; there was no reason for the import flow to second-guess that.
+
+Two surgical edits in `app.js`:
+
+1. **`updateChecklistCount()`** — button text now reads `Add N to Hive` whenever one or more models are checked, and `Select at least 1 (0 selected)` only when nothing is checked. The button is disabled only when `checked === 0`.
+
+2. **`addImportServerModels()`** — removed the `checked.length < 2` guard and its `Select at least 2 models to collaborate` toast. The existing `!checked.length` guard continues to block empty submissions.
+
+No changes to the checklist UI, the Fetch Models flow, or the User Manual Appendix B — Step 4 of Appendix B was already neutral (`Check the models you want to add`).
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.19.25 Pro — Build `20260423-002`
 **Released:** April 23, 2026
 
