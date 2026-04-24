@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-002';         // build stamp — update each session
+const BUILD       = '20260423-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3181,10 +3181,10 @@ function updateChecklistCount() {
   const checked = document.querySelectorAll('.import-server-check:checked').length;
   const btn = document.getElementById('importChecklistAddBtn');
   if (btn) {
-    btn.textContent = checked < 2
-      ? `Select at least 2 (${checked} selected)`
+    btn.textContent = checked === 0
+      ? `Select at least 1 (0 selected)`
       : `Add ${checked} to Hive`;
-    btn.disabled = checked < 2;
+    btn.disabled = checked === 0;
   }
   const countEl = document.getElementById('importChecklistCount');
   if (countEl) countEl.textContent = `${_importServerModels.length} models — ${checked} selected`;
@@ -3225,7 +3225,6 @@ function addImportServerModels() {
 
   const checked = document.querySelectorAll('.import-server-check:checked');
   if (!checked.length) { toast('⚠️ No models selected'); return; }
-  if (checked.length < 2) { toast('⚠️ Select at least 2 models to collaborate'); return; }
 
   const ts     = Date.now();
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
