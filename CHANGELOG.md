@@ -2,6 +2,38 @@
 
 ---
 
+## v3.20.6 Pro — Build `20260423-012`
+**Released:** April 23, 2026
+
+### Bug Fixes
+
+**Raw response panel was visible in every state due to CSS cascade conflict**
+The `.import-server-raw-panel` rule at line 2671 of `style.css` contained `display: flex` as part of its layout block. The base visibility rule at line 2591 set `display: none` on the same class. Because both rules have identical selector specificity (single class), CSS cascade resolution favors the later rule — which meant `display: flex` always won, overriding the hide rule and making the raw response panel render permanently with its empty ENDPOINT/STATUS/RECEIVED header cells visible before any fetch had occurred. This was the root cause of the "ghost panel" visible in pre-fetch state on both laptop and desktop viewports.
+
+Fixed by removing `display: flex` from the base `.import-server-raw-panel` rule and moving the display value into the state-scoped show rule. The rule `.import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-raw-panel` now sets `display: flex` directly; pre-fetch, loading, and ready-without-toggle states correctly inherit `display: none` from the base rule. The same fix was applied to the two error-state rules (laptop tier and desktop tier) that previously used `display: block` which would have clobbered the flex layout — now `display: flex` on both so error state gets the same flex-column raw panel layout the toggled-on case uses.
+
+This was the exact kind of bug I warned about in earlier notes — later rules with equal specificity silently winning cascade battles. Caught this one by actually reading the cascade output instead of trusting the state class rules to do the work alone.
+
+**Hive count chip looked like a clickable button**
+The chip had `padding: 8px 14px`, `border: 1px solid var(--border)`, `border-radius: var(--radius-md)`, and a tinted background — collectively producing a pill-shaped container indistinguishable from the toolbar buttons above it. The even-count warning and odd-count confirmation badges inside were additionally styled with their own borders, tinted backgrounds, and `cursor: help`, which made them look like independent clickable sub-buttons. Hovering triggered a tooltip (via the `title` attribute) which further reinforced the "interactive element" assumption.
+
+Stripped all button-like styling from `.hive-count-chip`: no padding other than 6px vertical for breathing room, no border, no background, no border radius. It now reads as a plain status line. The `.hive-count-warn` and `.hive-count-ok` badges inside lost their borders, tinted backgrounds, and `cursor: help` — now just colored text (warning in amber, ok in faint) to signal the meaning without suggesting interactivity. The tooltip was dropped entirely since the text itself explains the situation clearly enough.
+
+**Add N to Hive button acted disabled-but-lit when N was 0**
+When zero models were checked, the button was set to `disabled` but retained its accent-yellow styling. The yellow accent signals "primary action, press me next" — which conflicted with the disabled state that prevented clicks. Users in the testing round tried to click it multiple times expecting something to happen, since the visual weight of an accented button overrides the greyness of a disabled state in peripheral vision.
+
+Changed the behavior to make the button an always-active escape hatch: when 0 models are selected, clicking it closes the modal with no changes to the hive (identical to Cancel). `updateChecklistCount` no longer sets `btn.disabled = true` for zero-count, and `addImportServerModels` now returns early via `closeImportServerModal()` when the check list is empty rather than displaying the previous "⚠️ No models selected" toast. The button label still reads "Add 0 to Hive" for honesty — the user sees exactly what will happen — but the button is now pressable and does something sensible.
+
+**Version stamp at top of page was barely readable in dark mode**
+`.fs-header-brand .app-version-stamp` and `.page-header-brand .app-version-stamp` rules used `color: var(--muted)` combined with `opacity: 0.7`, which compounded to render the version text nearly invisible against the dark modal background. Users reported having to squint to read which version was running — not ideal during a multi-version patch-release cycle where version identification is important.
+
+Changed both rules to `color: var(--text-dim)` (the same shade used for body copy in secondary contexts) and removed the `opacity: 0.7` attenuation entirely. The tagline ("Many minds. One refined result.") already uses `var(--muted)` without opacity, so the version stamp is now slightly MORE prominent than the tagline — which is correct for a diagnostic element that should be scannable without effort.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.5 Pro — Build `20260423-011`
 **Released:** April 23, 2026
 

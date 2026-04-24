@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-011';         // build stamp — update each session
+const BUILD       = '20260423-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3423,8 +3423,11 @@ function updateChecklistCount() {
   const checked = document.querySelectorAll('.import-server-check:checked').length;
   const btn = document.getElementById('importServerAddBtn');
   if (btn) {
+    // When 0 are checked, button acts as a shortcut to close the modal with no changes —
+    // same behavior as Cancel. This keeps the button always interactive and avoids the
+    // disabled-but-accented "press me" confusion from earlier versions.
     btn.textContent = checked === 0 ? 'Add 0 to Hive' : `Add ${checked} to Hive`;
-    btn.disabled = checked === 0;
+    btn.disabled = false;
   }
   const countEl = document.getElementById('importChecklistCount');
   if (countEl) {
@@ -3514,7 +3517,8 @@ function addImportServerModels() {
   if (!chatUrl) { toast('⚠️ Enter a Chat Endpoint URL'); return; }
 
   const checked = document.querySelectorAll('.import-server-check:checked');
-  if (!checked.length) { toast('⚠️ No models selected'); return; }
+  // Zero-selected = user's escape hatch, behaves like Cancel (no hive changes)
+  if (!checked.length) { closeImportServerModal(); return; }
 
   const ts     = Date.now();
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
