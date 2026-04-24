@@ -370,22 +370,20 @@ html, body {
   display: block;
   font-size: 10px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--text-dim);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-top: 3px;
-  opacity: 0.7;
 }
 /* Version stamp below the tagline on helper pages */
 .page-header-brand .app-version-stamp {
   display: block;
   font-size: 10px;
   font-weight: 600;
-  color: var(--muted);
+  color: var(--text-dim);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-top: 3px;
-  opacity: 0.7;
 }
 
 .work-version-stamp {
@@ -2590,7 +2588,7 @@ html, body {
 .import-server-raw-panel,
 .import-server-error { display: none; }
 .import-server-modal.import-server-state-prefetch .import-server-help { display: block; }
-.import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-raw-panel { display: block; }
+.import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-raw-panel { display: flex; }
 .import-server-modal.import-server-state-error    .import-server-error { display: block; }
 /* Loading state: hide all right-region content so nothing flashes during auto-fetch */
 .import-server-modal.import-server-state-loading .import-server-col-middle,
@@ -2668,12 +2666,13 @@ html, body {
 .import-server-help-runtime.visible { display: block; }
 
 /* Raw response pane — reuses .custom-ai-raw-panel base but allowed to fill its column */
+/* Raw response pane — reuses .custom-ai-raw-panel base but allowed to fill its column.
+   Base stays display:none (declared above); state-show rule applies display:flex. */
 .import-server-raw-panel {
   overflow-y: auto;
   min-height: 0;
   flex: 1;
   margin-top: 0;
-  display: flex;
   flex-direction: column;
 }
 .import-server-raw-panel .custom-ai-raw-row {
@@ -2910,7 +2909,7 @@ html, body {
     display: none;
   }
   .import-server-modal.import-server-state-error .import-server-raw-panel {
-    display: block;
+    display: flex;
     margin-top: 14px;
   }
 }
@@ -2955,7 +2954,7 @@ html, body {
     display: none;
   }
   .import-server-modal.import-server-state-error .import-server-raw-panel {
-    display: block;
+    display: flex;
     margin-top: 14px;
   }
 
@@ -3026,15 +3025,14 @@ html, body {
 }
 
 /* ── Hive count chip (Worker Bees setup screen) ── */
+/* This is a passive status display, NOT a button. Styled as a plain info
+   line with no border, no pill shape, and no interactive cursor. */
 .hive-count-chip {
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 8px 14px;
-  margin-bottom: 12px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  padding: 6px 0;
+  margin-bottom: 10px;
   color: var(--text-dim);
   font-size: 13px;
   flex-wrap: wrap;
@@ -3057,25 +3055,16 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border: 1px solid #e6a545;
-  border-radius: var(--radius-sm);
-  background: rgba(230, 165, 69, 0.1);
   color: #e6a545;
   font-size: 12px;
   font-weight: 600;
-  cursor: help;
 }
 .hive-count-ok {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
   color: var(--text-faint);
   font-size: 12px;
-  cursor: help;
 }
 .ai-hidden-restore-btn {
   margin-left: auto;
