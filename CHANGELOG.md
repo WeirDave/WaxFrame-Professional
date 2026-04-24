@@ -2,24 +2,24 @@
 
 ---
 
-## v3.19.24 Pro — Build `20260423-001`
+## v3.19.25 Pro — Build `20260423-002`
 **Released:** April 23, 2026
 
-### Bug Fix
+### Bug Fixes
+
+**Live Console wiped on page refresh — restore was racing against saveSession**
+After a page refresh the Live Console appeared empty (reset to the default page-load message `Console ready — Smoke the hive to begin.`), while every other piece of session state — round count, phase, document text, round history, notes, project clock — restored correctly. A round run after the refresh would then populate the console with only that single round's entries, and the next `saveSession` would persist that partial state into IndexedDB, permanently losing the earlier rounds' console history.
+
+Root cause was a structural problem in the init flow. `loadSession()` read the full session blob from IDB via `await idbGet()` and restored every field **except** `consoleHTML`. A second, redundant `idbGet()` call lived inside the `DOMContentLoaded` handler as a separate `.then()` chain whose sole job was to patch `consoleHTML` back into the DOM asynchronously. Between the synchronous `loadSession()` returning and that second async restore completing, any code path that triggered `saveSession` would capture the DOM's default `<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>` and write it over the good stored HTML. On Firefox with `file://` URLs the handoff between the two separate IDB reads is not guaranteed tight, which made this race condition surface reliably.
+
+Fixed with two coordinated changes:
+
+1. **Console restore moved inside `loadSession()`** — right next to the notes restore, using the `s` object already in hand from the single `await idbGet()`. The DOM is already ready when `loadSession()` runs (it's called from the `DOMContentLoaded` handler), so a synchronous `consoleEl.innerHTML = s.consoleHTML` is safe and correct. The fallback `catch` branch that loads from `localStorage` got the same restore line. The redundant second IDB read in `DOMContentLoaded` was removed, eliminating the race window entirely.
+
+2. **Belt-and-suspenders guard in `saveSession()`** — an early-return check at the top of the function. If `history.length > 0` but the DOM console is empty or still showing the default page-load message, `saveSession` now returns without writing. This protects against any future code path that might call `saveSession` during an initialization window where the console DOM hasn't yet been populated — preventing a default-HTML overwrite of good stored data. The next legitimate save (after any real state change) captures everything correctly.
 
 **Work-document oninput ReferenceError — `_lineNumDebounce` was never declared**
-Every keystroke in the Work Screen document textarea was throwing `Uncaught ReferenceError: _lineNumDebounce is not defined` from `handleWorkDocumentInput` at `app.js:3978`. Firefox DevTools captured this firing 247 times in a single session. The error aborted the handler before `clearTimeout(workDocSaveTimer)` and `setTimeout(() => saveSession(), 250)` could run, meaning the 250 ms debounced session save never fired after any keystroke. `updateLineNumbers` also never ran, so the line-number gutter fell behind during active editing. The textarea's auto-grow line (`ta.style.height = ta.scrollHeight + 'px'`) executed before the throw, so users saw no visible failure — the textarea grew as expected, but session persistence and line-number updates silently stopped.
-
-Root cause was a missing variable declaration. `workDocSaveTimer` is declared with `let workDocSaveTimer = null;` at the top of `app.js`, but the companion `_lineNumDebounce` timer handle — used on the same `oninput` path — was introduced without its own declaration. `clearTimeout(_lineNumDebounce)` then attempted to read an undeclared identifier, which throws a `ReferenceError` regardless of strict mode. The subsequent assignment `_lineNumDebounce = setTimeout(...)` would have created an implicit global in sloppy mode, but the earlier read throws first, so execution never reached it.
-
-Fix is a one-line declaration added directly beneath `workDocSaveTimer`:
-
-```js
-let workDocSaveTimer = null;
-let _lineNumDebounce = null;
-```
-
-No other code paths touched. `handleWorkDocumentInput` now completes cleanly on every keystroke, debounced session saves resume firing at 250 ms, and line numbers update on the 50 ms debounce as designed.
+This fix was shipped in v3.19.24 but is repeated here because v3.19.24 was a local-only build on the work laptop — not committed to GitHub — so this entry covers the canonical first commit of the fix. Every keystroke in the Work Screen document textarea was throwing `Uncaught ReferenceError: _lineNumDebounce is not defined` from `handleWorkDocumentInput` at `app.js:3978`. Firefox DevTools captured this firing 247 times in a single session. The error aborted the handler before `clearTimeout(workDocSaveTimer)` and the debounced `saveSession()` call could run, meaning 250 ms debounced saves never fired after a keystroke and `updateLineNumbers` never refreshed the gutter. The textarea's auto-grow line (`ta.style.height = ta.scrollHeight + 'px'`) executed before the throw, so users saw no visible failure — the textarea grew as expected, but session persistence and line-number updates silently stopped. Root cause was a missing `let` declaration for `_lineNumDebounce`. Fixed by adding `let _lineNumDebounce = null;` immediately beneath the existing `let workDocSaveTimer = null;` declaration.
 
 ### Files Changed
 `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
