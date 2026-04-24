@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-001">
+  <meta name="waxframe-build" content="20260424-002">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.20.8">
+  <link rel="stylesheet" href="style.css?v=3.20.9">
 </head>
 <body>
 
@@ -1014,7 +1014,6 @@
         <div class="custom-ai-modal-title" id="tkpTitle">Testing API keys…</div>
         <div class="custom-ai-modal-sub">Click any row to see what was sent and received</div>
       </div>
-      <button class="import-server-close-btn" id="tkpDismiss" onclick="dismissTestPanel()" title="Close">✕</button>
     </div>
     <div class="tkp-three-col">
       <div class="tkp-col tkp-col-rows">
@@ -1036,7 +1035,7 @@
     </div>
     <div class="custom-ai-form-footer">
       <span></span>
-      <button class="btn" onclick="dismissTestPanel()">← Close</button>
+      <button class="btn" id="tkpDismiss" onclick="dismissTestPanel()">← Close</button>
     </div>
   </div>
 </div>
@@ -1050,7 +1049,6 @@
         <div class="custom-ai-modal-title" id="cedTitle">Error Detail</div>
         <div class="custom-ai-modal-sub" id="cedStatus"></div>
       </div>
-      <button class="import-server-close-btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')" title="Close">✕</button>
     </div>
     <div class="custom-ai-raw-panel ced-raw-panel">
       <div class="custom-ai-raw-row">
@@ -1074,7 +1072,6 @@
         <div class="custom-ai-modal-title" id="testKeyModalTitle">Testing API Key…</div>
         <div class="custom-ai-modal-sub" id="testKeyModalSub">Sending a minimal test request…</div>
       </div>
-      <button class="import-server-close-btn" onclick="closeTestKeyModal()" title="Close">✕</button>
     </div>
     <div class="tkp-three-col">
       <div class="tkp-col tkp-col-rows">
@@ -1340,7 +1337,7 @@
 </div>
 
 <script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.20.8"></script>
+<script src="app.js?v=3.20.9"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
