@@ -2,6 +2,45 @@
 
 ---
 
+## v3.20.16 Pro — Build `20260424-009`
+**Released:** April 24, 2026
+
+### Documentation Fixes — User Manual
+
+**The "concept in plain English" closing sentence rewritten**
+Previously two short, abrupt sentences: *"Each round the document improves. You stop when it is good enough."* Reworded per Candy's suggestion to a single flowing sentence: *"Each round the document improves — you stop when you're satisfied with the result."* Same meaning, smoother voice.
+
+**Step 1 — stale "even count / tie risk" warning paragraph rewritten**
+The Step 1 section described a `⚠️ even count — tie risk` warning chip and a `✓ odd count` indicator on the hive count chip — neither of which appears in the current app. The warning was intentionally removed from the codebase in an earlier release because WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals — so tie scenarios genuinely don't arise. The manual paragraph never caught up to that change. Rewrote it to describe the chip as it actually behaves now (purely informational, total + key-saved counts, no warnings), and explained briefly *why* tie risk doesn't apply. Surfaced by Candy during walkthrough — she had 6 AIs and was looking for a warning that no longer exists.
+
+**Step 2 — Builder selection icon description corrected**
+The manual stated the selected Builder card on Setup 2 is *"highlighted and marked with a crown icon (👑)."* The actual UI shows a Builder badge (`WaxFrame_Builder_v3.png`) — a small crowned-bee image in the top-right corner of the selected card. The 👑 character emoji crown only appears in the Change Builder modal accessible from the Work screen, where the selected entry gets a *"👑 Current"* label. Rewrote the paragraph to describe the Builder badge accurately and to clarify when the emoji crown does appear, so users know what to look for in both contexts. Surfaced by Candy ("Manual says the selected builder has a crown icon, but on mine it's a bee").
+
+**Step 2 — "US providers" framing replaced with "other providers"**
+The DeepSeek cost-comparison sentence read: *"DeepSeek in particular offers excellent output at a significantly lower cost than the US providers..."* Reworded to *"...than the other providers..."* Per Candy's note — the US-vs-not framing was unnecessary and read awkwardly given that two of the six default providers (Grok and DeepSeek) don't fit the comparison cleanly anyway.
+
+### Latent Bug Fix
+
+**Stale `version.js` cache bust on the user manual**
+The user manual's `<script src="version.js?v=3.19.23">` tag had been stuck at `3.19.23` for many releases — every release bumps the `app.js?v=` cache bust on `index.html` but the `version.js?v=` cache bust on the manual page was being missed. Updated to `3.20.16`. Going forward, the version.js cache bust on `waxframe-user-manual.html` should be bumped on every release alongside the standard four version locations (meta build, APP_VERSION, BUILD, app.js cache bust).
+
+### Audit — Back-to-Top Navigation
+
+Candy flagged a concern that the appendix sections were missing back-to-top links. Audited every `<div class="wh-section">` block in the manual against its corresponding `<a href="#top" class="wh-back-top">` link. Result: all 18 sections (3 intro, 10 steps, 3 appendices, 2 reference) have a back-to-top link inside the last `wh-block` of the section, anchoring to the `#top` ID on the `page-main` container. **Nothing missing.** Possible misread on Candy's part — recommend confirming with her in case she meant per-subsection back-to-tops within a single appendix (each appendix has 3-4 wh-blocks and only one back-to-top at the section's bottom; that pattern is consistent with every other section but could feel sparse on the longer appendices).
+
+### Known Open
+
+**Setup Flow "squishy and distorted bullets"** — Candy reported that the bullets in the "Setup flow" section look squishy and distorted. That section uses a `<table class="wh-table">`, not bullets, so the comment can't be acted on without a screenshot showing the visual issue. Held pending screenshot.
+
+**Cover letter format vs paragraph length gate** — Surfaced earlier in the session: a cover letter's standard structure (greeting + body + sign-off) measures as 5 blank-line-separated blocks, but users intuitively count 3 body paragraphs. A 3-paragraph limit on a cover letter is therefore unsatisfiable — every Builder produces 4-5 blocks and the gate correctly rejects each round in a loop. Three solution paths offered (docs-only, pre-flight warning, prompt-side escape hatch) — pending direction.
+
+**Empty-console bug after work → upload → return navigation** — Candy's original walkthrough bug from the v3.20.15 cycle. Her flow used "Return to Work Screen" (active session detected) which routes through `goToScreen('screen-work')` → `initWorkScreen()` without `isNewSession`, so neither the v3.20.15 fixes nor anything before them explains the empty console. Suspect lives in the file-upload flow. Investigation continues.
+
+### Files Changed
+`waxframe-user-manual.html` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.15 Pro — Build `20260424-008`
 **Released:** April 24, 2026
 
