@@ -2,6 +2,39 @@
 
 ---
 
+## v3.20.2 Pro — Build `20260423-008`
+**Released:** April 23, 2026
+
+### Bug Fixes
+
+**Import from Model Server — raw response panel was capped at 160px on laptop viewports**
+The `RECEIVED` pre element inside the raw response panel was hard-capped by two stale rules leftover from before the v3.20.0 three-column refactor: `.custom-ai-raw-pre { max-height: 120px }` and `.import-server-raw-received { max-height: 160px }`. Those caps made sense when the raw panel was a small diagnostic box stacked under a single-column form, but in the new layout the middle column has plenty of vertical space — the 160px cap was arbitrarily shrinking the JSON output to a strip that could not show more than a few lines of a 37-model response on a 811px-tall laptop viewport.
+
+Fixed by adding scoped overrides inside `.import-server-raw-panel`: the pre element now has `max-height: none`, and the received row becomes a `flex: 1 1 0; min-height: 0; overflow-y: auto` so it grows to fill whatever vertical space the column offers while keeping its own scrollbar when the JSON is larger than the panel. The endpoint and status rows stay compact (`flex-shrink: 0`) so the received JSON gets all the slack.
+
+### Changes
+
+**Import from Model Server — laptop-tier layout adapts to state (1422–1600px)**
+At the product's minimum viewport width, 1422px split three even columns leaves each column narrower than a long enterprise model ID like `anthropic.claude-3-7-sonnet-20250219-v1:0`. After a successful fetch the raw response and the model checklist both compete for column real estate, and the checklist — which is the thing the user actually needs to act on — ends up cramped while the raw response (a diagnostic rarely needed on success) takes an equal share. Symmetrically, on error the error pane was held to column 2 only while column 3 showed a now-pointless `Models will appear here` placeholder, wasting the very space the user needs to read the error details.
+
+A new laptop-tier media query (`max-width: 1600px`, matching the existing convention for the 1422–1600px viewport band) collapses columns 2+3 into a single right region whose content swaps based on modal state:
+
+- **Pre-fetch state:** the `What you'll need` help pane spans cols 2+3. The `Models will appear here` placeholder is hidden since it tells the user nothing they do not already know at that moment.
+- **Ready state (success, default):** the model checklist spans cols 2+3, giving long model IDs and the In hive badges room to breathe. The raw response hides behind a new `📋 View raw response` button that appears in column 1 below Fetch Models.
+- **Ready state + raw toggled on:** clicking the toggle swaps the right region — raw response spans cols 2+3, checklist hides, button relabels to `← Back to models`. Clicking again returns to the checklist.
+- **Error state:** the error pane (title, description, tailored hints) spans cols 2+3. The checklist placeholder is hidden since no fetch succeeded.
+
+On desktop viewports (`min-width: 1601px`), the three-column layout is untouched — there is enough horizontal space for all three panes to coexist, the toggle button stays hidden, and the behavior matches v3.20.0/v3.20.1.
+
+**Grid columns rebalanced to even thirds.** The previous `minmax(360px, 3fr) minmax(420px, 4fr) minmax(360px, 3fr)` gave the middle column 33% more space than the inputs or checklist columns. The intent at design time was to favor the raw JSON panel, but in practice this left the checklist column narrower than needed for long model IDs. Rebalanced to `1fr 1fr 1fr` — each column gets an equal third of available space at 1422px, and at desktop sizes the extra space distributes evenly. This also feeds cleanly into the laptop-tier collapse: when cols 2+3 merge, they become a 2:1 ratio against col 1 which gives the right region a natural 2/3 of viewport width for the content that matters most.
+
+**Small state-hygiene improvement in `setImportServerState()`.** Every state transition now clears the `import-server-raw-visible` modifier class and resets the raw-toggle button label. Without this, a user who toggled raw response visible in ready state would have the toggle class linger into error or prefetch states and cause unpredictable rendering on the next transition. The class is laptop-only in terms of visual effect, but the cleanup is unconditional so state machine behavior stays identical across viewport tiers.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.1 Pro — Build `20260423-007`
 **Released:** April 23, 2026
 
