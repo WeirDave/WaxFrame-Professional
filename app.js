@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-006';         // build stamp — update each session
+const BUILD       = '20260424-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -856,9 +856,9 @@ function showRoundErrorModal(reason, details) {
   if (!modal) return;
 
   const messages = {
-    bloat:    `The Builder returned a document that was significantly longer than the original. This can happen when an AI adds to the document instead of refining it. Your document has not been changed.
+    bloat:    `The Builder returned a document that exceeded the length limit. Your document has not been changed. The measurement and limit are shown below in the unit you set on the Project screen.
 
-You can try running the round again — the result may differ — or switch to a different Builder and try again.`,
+You can try running the round again — the result may differ — or switch to a different Builder, or adjust the Length Constraint on the Project screen and try again.`,
     conflicts:`The Builder's response was missing a required section and could not be processed. Your document has not been changed.
 
 You can try running the round again or switch to a different Builder and try again.`,
