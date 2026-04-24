@@ -2,6 +2,51 @@
 
 ---
 
+## v3.20.5 Pro — Build `20260423-011`
+**Released:** April 23, 2026
+
+### Changes
+
+**Saved flag now appears on all three restored fields**
+The 🔑 saved indicator was previously shown only next to the API Key label, implying that only the key was restored from localStorage when in fact all three fields (Chat Endpoint, Models Endpoint, API Key) get populated together on modal open. The inconsistency made it unclear whether the URLs were also remembered. Added identical saved spans to the Chat Endpoint and Models Endpoint labels, controlled by the same `.has-saved-key` class on the inner modal so they appear and disappear as a unit. The old `id="importServerKeySaved"` was removed from the API key span since all three now share the same class-based toggle and individual IDs are not needed.
+
+**Desktop raw response now toggle-only**
+On desktop (≥1601px), v3.20.0 through v3.20.4 kept the raw response panel permanently visible in column 2 whenever the fetch succeeded. This was a hangover from the original three-column design that assumed all three panes should always be populated on desktop. In practice the raw JSON is a diagnostic almost nobody needs after a successful fetch — the checklist is what the user came for. The permanent raw pane was consuming 33% of the horizontal real estate for content that rarely mattered, squeezing the model ID labels for no good reason.
+
+Desktop tier now matches laptop: the default ready state shows the checklist spanning cols 2+3, and raw response only appears (in col 2, with checklist collapsing back to col 3) when the user clicks the View response details button. The button behavior, label, and state are identical across both viewport tiers.
+
+**Error state auto-shows raw response on both tiers**
+When a fetch fails, the user immediately needs two things: a friendly explanation of what went wrong (title, description, suggested fixes) and the raw server response for forensic evidence. Previously the raw response was hidden in error state, forcing the user to click the toggle to inspect the actual server reply. That's an unnecessary extra click during a moment of frustration.
+
+Both laptop and desktop tier media queries now include a rule that auto-displays the raw response panel in error state, rendered stacked below the error pane within the merged cols 2+3 region with a 14px top margin for visual separation. The user gets the explanation on top and the proof immediately below in a single glance.
+
+**Fetch Models button accent state is now state-dependent**
+Previously the Fetch Models button kept its `btn-accent` class across all states, which is incorrect after a successful fetch — at that point the primary call-to-action becomes Add N to Hive in the footer, not Refresh on the side. Keeping Fetch accented post-fetch created two competing "press me next" signals.
+
+`resetImportServer()` applies `btn-accent` (pre-fetch state = Fetch is the primary action). On successful fetch, `fetchImportServerModels()` removes `btn-accent` and relabels the button to Refresh — now a standard secondary action matching View response details and Forget saved server in visual weight. Pressing Forget saved server returns to pre-fetch state, which re-applies the accent via `resetImportServer()`.
+
+**Secondary buttons now horizontally arranged and uniformly styled**
+View response details and Forget saved server were previously stacked vertically as two separate full-width dashed-border elements below the Fetch row, which read as a staircase of loose actions rather than a paired set. They were also visually inconsistent with every other `.btn.btn-sm` in the product (solid subtle border, no dashed outline).
+
+Added a new `.import-server-actions-row` container that lays both buttons out horizontally with an 8px gap. Removed the position-override CSS (`align-self`, `margin-top`, `padding`, explicit font-size) from both button rules so they inherit directly from `.btn.btn-sm` — same treatment as every other secondary button in the app. The two buttons now read as a deliberate paired row of secondary utilities rather than a visual afterthought.
+
+**Raw response button relabeled to "View response details"**
+The previous "View raw response" label used developer-speak that obscured what the button actually revealed. The content beneath is the endpoint URL, HTTP status code, and full server JSON — which is a set of response details rather than a pure "raw" data dump. Renamed to "View response details" to describe what the user actually sees when they click.
+
+**Nickname field pre-filled with model ID in italic, reverts to normal on edit**
+v3.20.4 shipped an empty nickname input with placeholder text. The problem, as pointed out during testing: if a model ID is long (for example `[Unofficial] Claude-4-5-Sonnet-Extended-Thinking`) and the user only wants to strip a prefix (`[Unofficial] `) or adjust a tiny portion, typing the entire name from scratch is a non-starter and the feature gets abandoned. Empty-by-default made the optional customization feature effectively unused.
+
+Reverting to pre-fill behavior: the nickname input is populated with the model ID on render, but rendered in italic with `var(--text-faint)` color and a new `.is-default` class. This signals that the content is suggested/default rather than user-typed, visually echoing the treatment of placeholder text. A new `onImportNicknameInput()` handler fires on first keystroke and strips the `.is-default` class, switching the text to normal-weight `var(--text)` — indicating the content is now the user's own.
+
+A small uppercase `NICKNAME:` header was added to the left of each input via a new `.import-server-nickname-label` element to make the field's purpose explicit. Italics alone signal *"this is editable"* but not *"this is a nickname field"* — the header closes that ambiguity. Layout became `checkbox | model ID | NICKNAME: input`, with the model ID label at 50% and the nickname wrap at 45%.
+
+The add-to-hive fallback logic remains: empty nickname at submit time falls back to the model ID (same as every previous version). Since the field now defaults to the model ID anyway, this fallback only triggers if the user explicitly deletes the contents.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.4 Pro — Build `20260423-010`
 **Released:** April 23, 2026
 

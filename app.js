@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-010';         // build stamp — update each session
+const BUILD       = '20260423-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3243,7 +3243,11 @@ function resetImportServer(full = false) {
   const fetchBtn = document.getElementById('importServerFetchBtn');
   const addBtn   = document.getElementById('importServerAddBtn');
   if (status)   { status.textContent = ''; status.className = 'custom-ai-test-status'; }
-  if (fetchBtn) { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
+  if (fetchBtn) {
+    fetchBtn.disabled = false;
+    fetchBtn.textContent = 'Fetch Models';
+    fetchBtn.classList.add('btn-accent');
+  }
   if (addBtn)   { addBtn.disabled = true; addBtn.textContent = 'Add 0 to Hive'; }
   _importServerModels = [];
   setImportServerState('prefetch');
@@ -3382,7 +3386,9 @@ async function fetchImportServerModels() {
     writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
     renderImportServerChecklist();
     if (status) { status.textContent = `✓ ${models.length} model${models.length !== 1 ? 's' : ''} found`; status.className = 'custom-ai-test-status pass'; }
-    fetchBtn.disabled = false; fetchBtn.textContent = 'Refresh';
+    fetchBtn.disabled = false;
+    fetchBtn.textContent = 'Refresh';
+    fetchBtn.classList.remove('btn-accent');
     setImportServerState('ready');
 
   } catch(e) {
@@ -3430,6 +3436,14 @@ function updateChecklistCount() {
   }
 }
 
+// Nickname is pre-filled with the model ID in italic "default" styling. The
+// moment the user edits it, we strip the is-default class so it renders in the
+// normal non-italic style — signaling "this is now your custom text".
+function onImportNicknameInput(input) {
+  if (!input) return;
+  input.classList.remove('is-default');
+}
+
 function renderImportServerChecklist() {
   const items = document.getElementById('importServerChecklistItems');
   if (!items) return;
@@ -3463,7 +3477,10 @@ function renderImportServerChecklist() {
     <div class="import-server-item">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      <input type="text" class="import-server-name-input" id="isn-${i}" value="" placeholder="Nickname (optional)">
+      <div class="import-server-nickname-wrap">
+        <label class="import-server-nickname-label" for="isn-${i}">Nickname:</label>
+        <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${esc(modelName)}" data-default-value="${esc(modelName)}" oninput="onImportNicknameInput(this)">
+      </div>
     </div>`;
   }).join('');
 

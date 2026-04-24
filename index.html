@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260423-010">
+  <meta name="waxframe-build" content="20260423-011">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.20.4">
+  <link rel="stylesheet" href="style.css?v=3.20.5">
 </head>
 <body>
 
@@ -730,17 +730,23 @@
           </select>
         </div>
         <div class="custom-ai-field-wrap">
-          <label>Chat Endpoint <span class="field-required">*</span></label>
+          <label>
+            Chat Endpoint <span class="field-required">*</span>
+            <span class="import-server-key-saved" title="This URL came from your last successful import">🔑 saved</span>
+          </label>
           <input type="text" id="importServerChatUrl" placeholder="https://your-server.com/api/chat/completions" oninput="resetImportServer(); autoDeriveModelsUrl()">
         </div>
         <div class="custom-ai-field-wrap">
-          <label>Models Endpoint <span class="field-required">*</span></label>
+          <label>
+            Models Endpoint <span class="field-required">*</span>
+            <span class="import-server-key-saved" title="This URL came from your last successful import">🔑 saved</span>
+          </label>
           <input type="text" id="importServerUrl" placeholder="https://your-server.com/api/models" oninput="resetImportServer()">
         </div>
         <div class="custom-ai-field-wrap">
           <label>
             API Key <span class="field-optional">(optional)</span>
-            <span class="import-server-key-saved" id="importServerKeySaved" title="A key from your last successful import is loaded">🔑 saved</span>
+            <span class="import-server-key-saved" title="A key from your last successful import is loaded">🔑 saved</span>
           </label>
           <div class="custom-ai-key-wrap">
             <input type="password" id="importServerKey" placeholder="Paste key if required" oninput="onImportServerKeyInput()">
@@ -748,11 +754,13 @@
           </div>
         </div>
         <div class="import-server-fetch-row">
-          <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
+          <button class="btn btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
           <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
         </div>
-        <button class="btn btn-sm import-server-raw-toggle" id="importServerRawToggle" onclick="toggleImportServerRawPane()">📋 View raw response</button>
-        <button class="btn btn-sm import-server-forget-btn" id="importServerForgetBtn" onclick="forgetImportServerDefaults()">🗑 Forget saved server</button>
+        <div class="import-server-actions-row">
+          <button class="btn btn-sm import-server-raw-toggle" id="importServerRawToggle" onclick="toggleImportServerRawPane()">📋 View response details</button>
+          <button class="btn btn-sm import-server-forget-btn" id="importServerForgetBtn" onclick="forgetImportServerDefaults()">🗑 Forget saved server</button>
+        </div>
       </div>
 
       <!-- ── COLUMN 2 — CONTEXT (help / raw response / error) ── -->
@@ -1333,7 +1341,7 @@
 </div>
 
 <script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.20.4"></script>
+<script src="app.js?v=3.20.5"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
