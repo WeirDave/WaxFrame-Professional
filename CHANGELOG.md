@@ -2,6 +2,23 @@
 
 ---
 
+## v3.20.11 Pro — Build `20260424-004`
+**Released:** April 24, 2026
+
+### Changes
+
+**Nav panel header now includes tagline and version stamp**
+The slide-in navigation menu (triggered by the hamburger/menu button on every screen) previously showed only the WaxFrame logo and wordmark in its header, with the close button to the right. Every other surface of the product — hero screen, helper pages, About modal — pairs the wordmark with the tagline ("Many minds. One refined result.") and the current version stamp. The nav panel was the lone exception, which made it inconsistent and also meant users had to navigate to the About WaxFrame modal to check which version they were on.
+
+Added a `.nav-panel-brand-text` flex column inside the existing `.nav-panel-brand` container. It holds three stacked elements: the wordmark (existing), a new `.nav-panel-tagline` span in muted uppercase matching the hero treatment, and a new `.app-version-stamp.nav-panel-version` span that gets auto-populated by the existing `version.js` propagation logic at line 7201 of `app.js`. No JavaScript changes required — the auto-populate routine already targets every `.app-version-stamp` in the DOM.
+
+Styling matches the hero brand block: tagline at 10px `var(--muted)` uppercase with 0.06em letter-spacing, version stamp at 10px `var(--text-dim)` uppercase (same readability treatment the hero header got in v3.20.6). The logo retains `flex-shrink: 0` and the text column gets `min-width: 0` to prevent overflow issues if the nav panel is narrow on a small viewport.
+
+### Files Changed
+`index.html` · `style.css` · `version.js` · `app.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.10 Pro — Build `20260424-003`
 **Released:** April 24, 2026
 
