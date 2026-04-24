@@ -2521,7 +2521,7 @@ html, body {
   flex: 1 1 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(360px, 3fr) minmax(420px, 4fr) minmax(360px, 3fr);
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 20px;
   padding: 0 4px;
   overflow: hidden;
@@ -2657,11 +2657,30 @@ html, body {
 }
 .import-server-help-runtime.visible { display: block; }
 
-/* Raw response pane — reuses .custom-ai-raw-panel base */
+/* Raw response pane — reuses .custom-ai-raw-panel base but allowed to fill its column */
 .import-server-raw-panel {
   overflow-y: auto;
   min-height: 0;
   flex: 1;
+  margin-top: 0;
+  display: flex;
+  flex-direction: column;
+}
+.import-server-raw-panel .custom-ai-raw-row {
+  flex-shrink: 0;
+}
+.import-server-raw-panel .custom-ai-raw-row:last-child {
+  flex: 1 1 0;
+  min-height: 0;
+}
+.import-server-raw-panel .custom-ai-raw-pre {
+  max-height: none;
+}
+.import-server-raw-panel .import-server-raw-received {
+  max-height: none;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* Error pane */
@@ -2810,6 +2829,61 @@ html, body {
   border-radius: var(--radius-sm);
   padding: 1px 6px;
   flex-shrink: 0;
+}
+
+/* ── Raw-response toggle button (column 1, laptop-tier only) ── */
+.import-server-raw-toggle {
+  display: none;
+  align-self: flex-start;
+  margin-top: 6px;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LAPTOP TIER (1422–1600px): collapse cols 2+3 into a single
+   right region whose content swaps based on modal state. Keeps
+   col 1 (inputs) stable; lets the model list / help / error /
+   raw-response each own the full right region when active.
+   ══════════════════════════════════════════════════════════════ */
+@media (max-width: 1600px) {
+  /* PREFETCH: help pane takes cols 2+3, hide placeholder */
+  .import-server-modal.import-server-state-prefetch .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-prefetch .import-server-col-checklist {
+    display: none;
+  }
+
+  /* READY (default): checklist takes cols 2+3, raw response hidden behind toggle */
+  .import-server-modal.import-server-state-ready .import-server-col-middle {
+    display: none;
+  }
+  .import-server-modal.import-server-state-ready .import-server-col-checklist {
+    grid-column: 2 / 4;
+  }
+
+  /* READY + raw toggled ON: raw response takes cols 2+3, checklist hidden */
+  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-middle {
+    display: flex;
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-ready.import-server-raw-visible .import-server-col-checklist {
+    display: none;
+  }
+
+  /* ERROR: error pane takes cols 2+3, hide checklist placeholder */
+  .import-server-modal.import-server-state-error .import-server-col-middle {
+    grid-column: 2 / 4;
+  }
+  .import-server-modal.import-server-state-error .import-server-col-checklist {
+    display: none;
+  }
+
+  /* Raw-response toggle button visible only in laptop READY state */
+  .import-server-modal.import-server-state-ready .import-server-raw-toggle {
+    display: inline-flex;
+  }
 }
 
 /* ── MODEL SELECTOR ── */
