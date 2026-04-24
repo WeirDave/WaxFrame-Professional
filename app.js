@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-001';         // build stamp — update each session
+const BUILD       = '20260423-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1974,6 +1974,20 @@ function loadSettings() {
 function saveSession() {
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
+
+  // ── Belt-and-suspenders guard ──
+  // If we have round history in memory but the DOM console only shows the
+  // default page-load message (or is empty), something is trying to save
+  // before the load-time console restore has populated the DOM. Skip this
+  // write entirely so we don't overwrite good stored consoleHTML with the
+  // default HTML from index.html. The next legitimate saveSession call
+  // (after restore completes or on any real user action) will capture state
+  // correctly.
+  const DEFAULT_CONSOLE_MSG = 'Console ready — Smoke the hive to begin.';
+  if (history.length > 0 && (!consoleHTML.trim() || consoleHTML.includes(DEFAULT_CONSOLE_MSG))) {
+    return;
+  }
+
   const notesEl = document.getElementById('workNotes');
   const notes = notesEl ? notesEl.value : '';
   const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds };
@@ -2043,6 +2057,13 @@ async function loadSession() {
       const notesEl = document.getElementById('workNotes');
       if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority(); }
     }
+    // Restore console HTML synchronously — inline with the rest of state
+    // restore so there is no async gap between load and render during which
+    // the DOM's default console HTML could be captured by an errant saveSession.
+    if (s.consoleHTML) {
+      const consoleEl = document.getElementById('liveConsole');
+      if (consoleEl) consoleEl.innerHTML = s.consoleHTML;
+    }
     return true;
   } catch(e) {
     // Last resort: try localStorage directly
@@ -2056,6 +2077,11 @@ async function loadSession() {
       docText = s.docText || '';
       if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
+      // Restore console HTML in the fallback path too (see main path)
+      if (s.consoleHTML) {
+        const consoleEl = document.getElementById('liveConsole');
+        if (consoleEl) consoleEl.innerHTML = s.consoleHTML;
+      }
       return true;
     } catch(e2) { return false; }
   }
@@ -6932,22 +6958,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Active session — resume work screen
     goToScreen('screen-work');
     initWorkScreen();
-    // Restore console HTML from IDB session (already loaded into memory by loadSession)
-    idbGet().then(s => {
-      if (s?.consoleHTML) {
-        const el = document.getElementById('liveConsole');
-        if (el) el.innerHTML = s.consoleHTML;
-      }
-    }).catch(() => {
-      // Fallback to localStorage console restore
-      try {
-        const s = JSON.parse(localStorage.getItem(LS_SESSION) || '{}');
-        if (s.consoleHTML) {
-          const el = document.getElementById('liveConsole');
-          if (el) el.innerHTML = s.consoleHTML;
-        }
-      } catch(e) {}
-    });
+    // Console HTML is already restored by loadSession — no second IDB read needed
     _projClockRender();
     projectClockStart();
   } else if (projectName) {
