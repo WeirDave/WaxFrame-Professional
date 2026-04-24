@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260423-004">
+  <meta name="waxframe-build" content="20260423-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.19.23">
+  <link rel="stylesheet" href="style.css?v=3.20.0">
 </head>
 <body>
 
@@ -708,84 +708,127 @@
 
 <!-- ── Import from Model Server Modal ── -->
 <div class="custom-ai-modal-overlay" id="importServerModal" onclick="if(event.target===this)closeImportServerModal()">
-  <div class="custom-ai-modal import-server-modal">
+  <div class="custom-ai-modal import-server-modal import-server-state-prefetch">
     <div class="custom-ai-modal-hdr">
-      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="custom-ai-modal-bee">
+      <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
       <div>
         <div class="custom-ai-modal-title">Import from Model Server</div>
         <div class="custom-ai-modal-sub">Fetch all models from a local or enterprise AI server and add them in bulk</div>
       </div>
       <button class="import-server-close-btn" onclick="closeImportServerModal()" title="Close">✕</button>
     </div>
-    <div class="custom-ai-form-row custom-ai-quickadd-row">
-      <div class="custom-ai-field-wrap">
-        <label>Quick Add <span class="field-optional">(optional)</span></label>
-        <select id="importServerQuickAdd" class="custom-ai-select" onchange="applyImportServerQuickAdd(this.value)">
-          <option value="">— Select a known server or fill in manually —</option>
-          <option value="openwebui">Open WebUI — fills https://your-server.com, fetches /api/models, calls /api/chat/completions</option>
-          <option value="ollama">Ollama (local) — fills http://localhost:11434, fetches /api/tags, calls /v1/chat/completions</option>
-          <option value="lmstudio">LM Studio (local) — fills http://localhost:1234, fetches /v1/models, calls /v1/chat/completions</option>
-        </select>
-      </div>
-    </div>
-    <div class="custom-ai-form-row">
-      <div class="custom-ai-field-wrap">
-        <label>Chat Endpoint <span class="field-required">*</span></label>
-        <input type="text" id="importServerChatUrl" placeholder="https://your-server.com/api/chat/completions" oninput="resetImportServer(); autoDeriveModelsUrl()">
-      </div>
-      <div class="custom-ai-field-wrap">
-        <label>Models Endpoint <span class="field-required">*</span></label>
-        <input type="text" id="importServerUrl" placeholder="https://your-server.com/api/models" oninput="resetImportServer()">
-      </div>
-    </div>
-    <div class="custom-ai-form-row">
-      <div class="custom-ai-field-wrap">
-        <label>API Key <span class="field-optional">(optional)</span></label>
-        <div class="custom-ai-key-wrap">
-          <input type="password" id="importServerKey" placeholder="Paste key if required" oninput="resetImportServer()">
-          <button class="ai-eye-btn" type="button" onclick="toggleImportServerKeyVis()" title="Show/hide key">👁</button>
+
+    <div class="import-server-body">
+
+      <!-- ── COLUMN 1 — INPUTS ── -->
+      <div class="import-server-col import-server-col-inputs">
+        <div class="custom-ai-field-wrap">
+          <label>Quick Add <span class="field-optional">(optional)</span></label>
+          <select id="importServerQuickAdd" class="custom-ai-select" onchange="applyImportServerQuickAdd(this.value)">
+            <!-- Options populated at runtime by populateImportServerQuickAdd() -->
+          </select>
         </div>
+        <div class="custom-ai-field-wrap">
+          <label>Chat Endpoint <span class="field-required">*</span></label>
+          <input type="text" id="importServerChatUrl" placeholder="https://your-server.com/api/chat/completions" oninput="resetImportServer(); autoDeriveModelsUrl()">
+        </div>
+        <div class="custom-ai-field-wrap">
+          <label>Models Endpoint <span class="field-required">*</span></label>
+          <input type="text" id="importServerUrl" placeholder="https://your-server.com/api/models" oninput="resetImportServer()">
+        </div>
+        <div class="custom-ai-field-wrap">
+          <label>
+            API Key <span class="field-optional">(optional)</span>
+            <span class="import-server-key-saved" id="importServerKeySaved" title="A key from your last successful import is loaded">🔑 saved</span>
+          </label>
+          <div class="custom-ai-key-wrap">
+            <input type="password" id="importServerKey" placeholder="Paste key if required" oninput="onImportServerKeyInput()">
+            <button class="ai-eye-btn" type="button" onclick="toggleImportServerKeyVis()" title="Show/hide key">👁</button>
+          </div>
+        </div>
+        <div class="import-server-fetch-row">
+          <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
+          <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
+        </div>
+        <button class="import-server-forget-btn" id="importServerForgetBtn" onclick="forgetImportServerDefaults()">Forget saved server</button>
       </div>
-      <div class="custom-ai-field-wrap"></div>
+
+      <!-- ── COLUMN 2 — CONTEXT (help / raw response / error) ── -->
+      <div class="import-server-col import-server-col-middle">
+
+        <!-- Pre-fetch help -->
+        <div class="import-server-help" id="importServerHelpPane">
+          <div class="import-server-help-title">What you'll need</div>
+          <p class="import-server-help-intro">Import from Model Server works with any AI platform that exposes an OpenAI-compatible chat completions API. Fill in the three fields on the left and click <strong>Fetch Models</strong>.</p>
+
+          <div class="import-server-help-row">
+            <div class="import-server-help-label">Chat Endpoint</div>
+            <div class="import-server-help-desc">The URL WaxFrame sends chat requests to. For Open WebUI this typically ends in <code>/api/chat/completions</code>. For Ollama and LM Studio it ends in <code>/v1/chat/completions</code>.</div>
+          </div>
+
+          <div class="import-server-help-row">
+            <div class="import-server-help-label">Models Endpoint</div>
+            <div class="import-server-help-desc">The URL WaxFrame queries for the list of available models. For Open WebUI this is <code>/api/models</code>. For Ollama it is <code>/api/tags</code>. For LM Studio it is <code>/v1/models</code>.</div>
+          </div>
+
+          <div class="import-server-help-row">
+            <div class="import-server-help-label">API Key</div>
+            <div class="import-server-help-desc">Required for most enterprise servers as a bearer token. Leave blank for local development servers that do not require authentication.</div>
+          </div>
+
+          <div class="import-server-help-tip">
+            <strong>Not sure what to enter?</strong> Pick a preset from <strong>Quick Add</strong> to auto-fill a matching endpoint pattern, then adjust the base URL to match your server. If you are connecting to an enterprise platform at work, ask your IT team for the chat completions endpoint and the authentication method.
+          </div>
+
+          <div class="import-server-help-runtime" id="importServerRuntimeNote"></div>
+        </div>
+
+        <!-- Post-fetch raw response -->
+        <div class="custom-ai-raw-panel import-server-raw-panel" id="importServerRawPanel">
+          <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="importServerRawEndpoint"></pre></div>
+          <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="importServerRawStatus"></pre></div>
+          <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre import-server-raw-received" id="importServerRawReceived"></pre></div>
+        </div>
+
+        <!-- Error state -->
+        <div class="import-server-error" id="importServerErrorPane">
+          <div class="import-server-error-title" id="importServerErrorTitle">Something went wrong</div>
+          <div class="import-server-error-desc" id="importServerErrorDesc"></div>
+          <div class="import-server-error-hints" id="importServerErrorHints"></div>
+        </div>
+
+      </div>
+
+      <!-- ── COLUMN 3 — CHECKLIST (post-fetch only) ── -->
+      <div class="import-server-col import-server-col-checklist">
+
+        <!-- Placeholder shown pre-fetch -->
+        <div class="import-server-checklist-placeholder" id="importServerChecklistPlaceholder">
+          <div class="import-server-checklist-placeholder-icon">☰</div>
+          <div class="import-server-checklist-placeholder-title">Models will appear here</div>
+          <div class="import-server-checklist-placeholder-desc">After you click Fetch Models, the available models from your server show up here so you can pick which ones to add to your hive.</div>
+        </div>
+
+        <!-- Live checklist shown post-fetch -->
+        <div class="import-server-checklist-panel" id="importServerChecklistPanel">
+          <div class="import-server-checklist-hdr">
+            <span id="importChecklistCount" class="import-checklist-count"></span>
+            <div class="import-server-checklist-actions">
+              <button class="btn btn-xs" onclick="importServerSelectAll()">All</button>
+              <button class="btn btn-xs" onclick="importServerSelectNone()">None</button>
+            </div>
+          </div>
+          <div class="import-server-checklist-items" id="importServerChecklistItems"></div>
+        </div>
+
+      </div>
+
     </div>
-    <div class="import-server-fetch-row">
-      <button class="btn btn-accent btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
-      <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
-      <button class="btn btn-sm" id="importServerSelectBtn" onclick="openImportChecklist()" style="display:none;">☰ Select Models…</button>
-    </div>
-    <div id="importServerRawPanel" class="custom-ai-raw-panel" style="display:none;">
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Endpoint</span><pre class="custom-ai-raw-pre" id="importServerRawEndpoint"></pre></div>
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Status</span><pre class="custom-ai-raw-pre" id="importServerRawStatus"></pre></div>
-      <div class="custom-ai-raw-row"><span class="custom-ai-raw-label">Received</span><pre class="custom-ai-raw-pre import-server-raw-received" id="importServerRawReceived"></pre></div>
-    </div>
+
     <div class="custom-ai-form-footer">
       <span></span>
       <button class="btn" onclick="closeImportServerModal()">Cancel</button>
-      <button class="btn btn-accent btn-sm" id="importServerAddBtn" style="display:none;" onclick="openImportChecklist()">Select &amp; Add to Hive →</button>
-    </div>
-  </div>
-</div>
-
-<!-- ══ IMPORT SERVER CHECKLIST OVERLAY ══ -->
-<div class="import-checklist-overlay" id="importChecklistOverlay">
-  <div class="import-checklist-panel">
-    <div class="import-checklist-hdr">
-      <div class="import-checklist-hdr-left">
-        <span class="import-checklist-title">Select Models to Add</span>
-        <span id="importChecklistCount" class="import-checklist-count"></span>
-      </div>
-      <div class="import-checklist-hdr-right">
-        <button class="btn btn-sm" onclick="importServerSelectAll()">Select All</button>
-        <button class="btn btn-sm" onclick="importServerSelectNone()">Select None</button>
-        <button class="import-checklist-close-btn" onclick="closeImportChecklist()">← Back</button>
-      </div>
-    </div>
-    <div class="import-checklist-body">
-      <div id="importServerChecklistItems" class="import-checklist-items"></div>
-    </div>
-    <div class="import-checklist-footer">
-      <button class="btn" onclick="closeImportChecklist()">← Back</button>
-      <button class="btn btn-accent" id="importChecklistAddBtn" onclick="addImportServerModels()">Add Selected to Hive</button>
+      <button class="btn btn-accent btn-sm" id="importServerAddBtn" onclick="addImportServerModels()" disabled>Add 0 to Hive</button>
     </div>
   </div>
 </div>
@@ -1285,7 +1328,7 @@
 </div>
 
 <script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.19.27"></script>
+<script src="app.js?v=3.20.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

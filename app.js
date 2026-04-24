@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-004';         // build stamp — update each session
+const BUILD       = '20260423-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3023,6 +3023,7 @@ let _importServerModels   = [];
 let _importServerPreset   = null;
 
 const IMPORT_SERVER_LS_KEY = 'waxframe_import_server_defaults';
+const IS_LOCAL_RUNTIME = (typeof location !== 'undefined' && location.protocol === 'file:');
 
 function saveImportServerDefaults(chatUrl, modelsUrl, apiKey) {
   try {
@@ -3037,9 +3038,73 @@ function loadImportServerDefaults() {
   } catch(e) { return null; }
 }
 
+function clearImportServerDefaults() {
+  try { localStorage.removeItem(IMPORT_SERVER_LS_KEY); } catch(e) {}
+}
+
+function forgetImportServerDefaults() {
+  clearImportServerDefaults();
+  const chatEl   = document.getElementById('importServerChatUrl');
+  const modelsEl = document.getElementById('importServerUrl');
+  const keyEl    = document.getElementById('importServerKey');
+  if (chatEl)   chatEl.value   = '';
+  if (modelsEl) modelsEl.value = '';
+  if (keyEl)    keyEl.value    = '';
+  const modal = document.getElementById('importServerModal');
+  if (modal) modal.classList.remove('has-saved-key');
+  setImportServerState('prefetch');
+  toast('🗑️ Forgot saved server');
+}
+
+function setImportServerState(state) {
+  // state: 'prefetch' | 'ready' | 'error'
+  const modal = document.getElementById('importServerModal');
+  if (!modal) return;
+  modal.classList.remove('import-server-state-prefetch', 'import-server-state-ready', 'import-server-state-error');
+  modal.classList.add(`import-server-state-${state}`);
+}
+
+function populateImportServerQuickAdd() {
+  const sel = document.getElementById('importServerQuickAdd');
+  if (!sel) return;
+  const opts = [
+    { value: '',          label: '— Select a known server or fill in manually —' },
+    { value: 'openwebui', label: 'Open WebUI — /api/chat/completions & /api/models' }
+  ];
+  // Local-only presets are hidden on hosted (https) runtime due to mixed-content blocking
+  if (IS_LOCAL_RUNTIME) {
+    opts.push({ value: 'ollama',   label: 'Ollama (local) — http://localhost:11434' });
+    opts.push({ value: 'lmstudio', label: 'LM Studio (local) — http://localhost:1234' });
+  }
+  sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+}
+
+function updateImportServerRuntimeNote() {
+  const el = document.getElementById('importServerRuntimeNote');
+  if (!el) return;
+  if (IS_LOCAL_RUNTIME) {
+    el.textContent = `Runtime: local file (file://) — Open WebUI, Ollama, and LM Studio are all usable.`;
+  } else {
+    el.textContent = `Runtime: hosted (https://) — only https endpoints can be reached. Local presets (Ollama, LM Studio) are hidden because browsers block http://localhost from a secure page.`;
+  }
+  el.classList.add('visible');
+}
+
+function onImportServerKeyInput() {
+  // Any typing in the key field clears the "saved key" indicator — the user is overriding
+  const modal = document.getElementById('importServerModal');
+  if (modal) modal.classList.remove('has-saved-key');
+  resetImportServer();
+}
+
 function showImportServerModal() {
   const modal = document.getElementById('importServerModal');
   if (modal) modal.classList.add('active');
+
+  // Populate Quick Add options (filtered by runtime) and runtime note
+  populateImportServerQuickAdd();
+  updateImportServerRuntimeNote();
+
   resetImportServer(true);
 
   // Populate fields from last-used server if saved
@@ -3051,6 +3116,7 @@ function showImportServerModal() {
     if (chatEl)   chatEl.value   = saved.chatUrl   || '';
     if (modelsEl) modelsEl.value = saved.modelsUrl || '';
     if (keyEl)    keyEl.value    = saved.apiKey    || '';
+    if (saved.apiKey) modal?.classList.add('has-saved-key');
   }
 
   // Auto-fetch if we have a complete saved config; otherwise focus Chat URL
@@ -3063,24 +3129,23 @@ function showImportServerModal() {
 
 function closeImportServerModal() {
   const modal = document.getElementById('importServerModal');
-  if (modal) modal.classList.remove('active');
+  if (modal) {
+    modal.classList.remove('active');
+    modal.classList.remove('has-saved-key');
+  }
   resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
 }
 
 function resetImportServer(full = false) {
-  const status    = document.getElementById('importServerFetchStatus');
-  const addBtn    = document.getElementById('importServerAddBtn');
-  const selectBtn = document.getElementById('importServerSelectBtn');
-  const fetchBtn  = document.getElementById('importServerFetchBtn');
-  const rawPanel  = document.getElementById('importServerRawPanel');
-  if (status)    { status.textContent = ''; status.className = 'custom-ai-test-status'; }
-  if (addBtn)    addBtn.style.display = 'none';
-  if (selectBtn) selectBtn.style.display = 'none';
-  if (fetchBtn)  { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
-  if (full && rawPanel) rawPanel.style.display = 'none';
-  closeImportChecklist();
+  const status   = document.getElementById('importServerFetchStatus');
+  const fetchBtn = document.getElementById('importServerFetchBtn');
+  const addBtn   = document.getElementById('importServerAddBtn');
+  if (status)   { status.textContent = ''; status.className = 'custom-ai-test-status'; }
+  if (fetchBtn) { fetchBtn.disabled = false; fetchBtn.textContent = 'Fetch Models'; }
+  if (addBtn)   { addBtn.disabled = true; addBtn.textContent = 'Add 0 to Hive'; }
   _importServerModels = [];
+  setImportServerState('prefetch');
 }
 
 function autoDeriveModelsUrl() {
@@ -3124,30 +3189,44 @@ function applyImportServerQuickAdd(value) {
 
 async function fetchImportServerModels() {
   const modelsUrl = document.getElementById('importServerUrl').value.trim();
+  const chatUrl   = document.getElementById('importServerChatUrl').value.trim();
   const key       = document.getElementById('importServerKey').value.trim();
-  const status   = document.getElementById('importServerFetchStatus');
-  const fetchBtn = document.getElementById('importServerFetchBtn');
-  const rawPanel    = document.getElementById('importServerRawPanel');
-  const rawEndpoint = document.getElementById('importServerRawEndpoint');
-  const rawStatus   = document.getElementById('importServerRawStatus');
-  const rawReceived = document.getElementById('importServerRawReceived');
+  const status    = document.getElementById('importServerFetchStatus');
+  const fetchBtn  = document.getElementById('importServerFetchBtn');
 
-  if (!modelsUrl || !modelsUrl.startsWith('http')) { toast('⚠️ Enter a valid Models Endpoint URL starting with http'); return; }
+  if (!modelsUrl || !modelsUrl.startsWith('http')) {
+    showImportServerError('Enter a Models Endpoint URL',
+      'The Models Endpoint field is empty or does not start with http:// or https://.',
+      ['Use Quick Add to pre-fill a known pattern, then adjust the server portion to match yours.',
+       'The Models Endpoint is the URL that returns the list of available models (for Open WebUI that is /api/models).']
+    );
+    return;
+  }
+  // Mixed-content pre-flight: browser will block http:// from an https:// page
+  if (!IS_LOCAL_RUNTIME && modelsUrl.startsWith('http://')) {
+    showImportServerError('Mixed-content blocked by the browser',
+      `WaxFrame is served over https, so requests to ${modelsUrl} will be blocked by the browser before they leave your machine.`,
+      ['Use an https:// endpoint served by your server.',
+       'Or open WaxFrame locally from the file:// URL (download the build and open index.html) if you need to reach http://localhost.']
+    );
+    return;
+  }
 
   fetchBtn.disabled = true;
   fetchBtn.textContent = '…';
   if (status) { status.textContent = 'Fetching models…'; status.className = 'custom-ai-test-status testing'; }
-  if (rawPanel) rawPanel.style.display = 'none';
 
   const headers = { 'Content-Type': 'application/json' };
   if (key) headers['Authorization'] = `Bearer ${key}`;
 
-  const showRaw = (endpoint, statusText, receivedObj) => {
-    if (!rawPanel) return;
+  const writeRaw = (endpoint, statusText, receivedObj) => {
+    const rawEndpoint = document.getElementById('importServerRawEndpoint');
+    const rawStatus   = document.getElementById('importServerRawStatus');
+    const rawReceived = document.getElementById('importServerRawReceived');
     if (rawEndpoint) rawEndpoint.textContent = endpoint;
     if (rawStatus)   rawStatus.textContent   = statusText;
-    if (rawReceived) rawReceived.textContent  = (receivedObj !== null && typeof receivedObj === 'object') ? JSON.stringify(receivedObj, null, 2) : String(receivedObj);
-    rawPanel.style.display = '';
+    if (rawReceived) rawReceived.textContent = (receivedObj !== null && typeof receivedObj === 'object')
+      ? JSON.stringify(receivedObj, null, 2) : String(receivedObj);
   };
 
   try {
@@ -3155,64 +3234,89 @@ async function fetchImportServerModels() {
     const data = await resp.json().catch(() => null);
 
     if (!resp.ok) {
-      if (status) { status.textContent = `❌ HTTP ${resp.status} — could not fetch models`; status.className = 'custom-ai-test-status fail'; }
-      showRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
+      if (status) { status.textContent = `❌ HTTP ${resp.status}`; status.className = 'custom-ai-test-status fail'; }
       fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+      const hints = [];
+      if (resp.status === 401 || resp.status === 403) {
+        hints.push('The server rejected the request as unauthenticated or forbidden. Check the API Key field.');
+        hints.push('Confirm with your IT team that your key is valid and has access to the /models endpoint.');
+      } else if (resp.status === 404) {
+        hints.push('The Models Endpoint URL returned 404 — the path is probably wrong for this server type.');
+        hints.push('Open WebUI uses /api/models. Ollama uses /api/tags. LM Studio uses /v1/models.');
+      } else if (resp.status >= 500) {
+        hints.push('The server returned a 5xx error. The platform itself is having trouble — try again in a moment.');
+      } else {
+        hints.push('See the raw response panel for full details.');
+      }
+      showImportServerError(`HTTP ${resp.status} — ${resp.statusText || 'request failed'}`,
+        `The server responded, but not with the model list WaxFrame expected.`, hints);
+      // Still populate raw panel for power users to inspect
+      writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
       return;
     }
 
-    // Parse model list — handle OpenAI {data:[]}, Open WebUI {data:[]}, Ollama {models:[]}, or bare []
-    // Store {id, name} objects so we can show friendly display names from the name field
+    // Parse model list — OpenAI {data:[]}, Open WebUI {data:[]}, Ollama {models:[]}, or bare []
     let models = [];
     if (Array.isArray(data)) {
       models = data.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
-    } else if (Array.isArray(data.data)) {
+    } else if (data && Array.isArray(data.data)) {
       models = data.data.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
-    } else if (Array.isArray(data.models)) {
+    } else if (data && Array.isArray(data.models)) {
       models = data.models.map(m => ({ id: m.id || m.name || m, name: m.name || m.id || m })).filter(m => m.id);
     }
 
-    showRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
-
     if (!models.length) {
-      if (status) { status.textContent = '❌ No models found in response'; status.className = 'custom-ai-test-status fail'; }
+      if (status) { status.textContent = '❌ No models in response'; status.className = 'custom-ai-test-status fail'; }
       fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+      showImportServerError('No models in response',
+        'The request succeeded, but the response did not contain a recognizable list of models.',
+        ['Check that the Models Endpoint URL is the one that returns the model list — not the chat endpoint.',
+         'Open the raw response panel in the modal to inspect the server reply (available after any successful fetch).']
+      );
+      writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
       return;
     }
 
     _importServerModels = models;
+    writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
     renderImportServerChecklist();
     if (status) { status.textContent = `✓ ${models.length} model${models.length !== 1 ? 's' : ''} found`; status.className = 'custom-ai-test-status pass'; }
     fetchBtn.disabled = false; fetchBtn.textContent = 'Refresh';
-    document.getElementById('importServerAddBtn').style.display = '';
-    const _selBtn = document.getElementById('importServerSelectBtn');
-    if (_selBtn) _selBtn.style.display = '';
+    setImportServerState('ready');
 
   } catch(e) {
-    if (status) { status.textContent = `❌ Could not reach server — CORS or network error`; status.className = 'custom-ai-test-status fail'; }
-    showRaw(modelsUrl, '— network error', e.message);
+    if (status) { status.textContent = `❌ Network / CORS error`; status.className = 'custom-ai-test-status fail'; }
     fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
+    showImportServerError('Could not reach the server',
+      'The browser could not complete the request. This usually means CORS, an unreachable host, or DNS failure.',
+      ['If running WaxFrame from a local file:// URL, your server must allow file:// origins or be served from a local web server.',
+       'Verify the server hostname is reachable from this machine (VPN, internal DNS, etc.).',
+       `Underlying error: ${esc(e.message || String(e))}`]
+    );
   }
 }
 
-function openImportChecklist() {
-  const overlay = document.getElementById('importChecklistOverlay');
-  if (overlay) overlay.classList.add('active');
-  updateChecklistCount();
-}
-
-function closeImportChecklist() {
-  const overlay = document.getElementById('importChecklistOverlay');
-  if (overlay) overlay.classList.remove('active');
+function showImportServerError(title, desc, hints) {
+  const t = document.getElementById('importServerErrorTitle');
+  const d = document.getElementById('importServerErrorDesc');
+  const h = document.getElementById('importServerErrorHints');
+  if (t) t.textContent = title;
+  if (d) d.textContent = desc;
+  if (h) {
+    if (Array.isArray(hints) && hints.length) {
+      h.innerHTML = '<ul>' + hints.map(x => `<li>${esc(x)}</li>`).join('') + '</ul>';
+    } else {
+      h.innerHTML = '';
+    }
+  }
+  setImportServerState('error');
 }
 
 function updateChecklistCount() {
   const checked = document.querySelectorAll('.import-server-check:checked').length;
-  const btn = document.getElementById('importChecklistAddBtn');
+  const btn = document.getElementById('importServerAddBtn');
   if (btn) {
-    btn.textContent = checked === 0
-      ? `Select at least 1 (0 selected)`
-      : `Add ${checked} to Hive`;
+    btn.textContent = checked === 0 ? 'Add 0 to Hive' : `Add ${checked} to Hive`;
     btn.disabled = checked === 0;
   }
   const countEl = document.getElementById('importChecklistCount');
@@ -3223,13 +3327,30 @@ function renderImportServerChecklist() {
   const items = document.getElementById('importServerChecklistItems');
   if (!items) return;
 
+  // Build a set of (endpoint|modelId) pairs already in the hive so we can mark + default-uncheck duplicates
+  const chatUrl = document.getElementById('importServerChatUrl').value.trim();
+  const existingForThisServer = new Set(
+    aiList
+      .filter(ai => {
+        const cfg = API_CONFIGS[ai.provider];
+        return cfg && cfg.endpoint === chatUrl;
+      })
+      .map(ai => API_CONFIGS[ai.provider]?.model)
+      .filter(Boolean)
+  );
+
   items.innerHTML = _importServerModels.map((model, i) => {
-    const modelId   = typeof model === 'object' ? model.id   : model;
-    const modelName = typeof model === 'object' ? model.name : model;
+    const modelId      = typeof model === 'object' ? model.id   : model;
+    const modelName    = typeof model === 'object' ? model.name : model;
+    const alreadyInHive = existingForThisServer.has(modelId);
+    const rowCls  = `import-server-item${alreadyInHive ? ' is-already-in-hive' : ''}`;
+    const checked = alreadyInHive ? '' : 'checked';
+    const badge   = alreadyInHive ? '<span class="import-server-item-badge" title="This model is already in your hive from this server">In hive</span>' : '';
     return `
-    <div class="import-server-item">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
+    <div class="${rowCls}">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" ${checked} onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
+      ${badge}
       <input type="text" class="import-server-name-input" id="isn-${i}" value="${esc(modelName)}" placeholder="Display name">
     </div>`;
   }).join('');
@@ -3290,7 +3411,6 @@ function addImportServerModels() {
   // Save last-used server for next open
   saveImportServerDefaults(chatUrl, modelsUrl, key);
 
-  closeImportChecklist();
   closeImportServerModal();
   renderAISetupGrid();
   saveHive();

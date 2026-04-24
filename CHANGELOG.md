@@ -2,6 +2,39 @@
 
 ---
 
+## v3.20.0 Pro — Build `20260423-005`
+**Released:** April 23, 2026
+
+### Changes
+
+**Import from Model Server — full UX refresh to a single-screen three-column layout**
+The Import from Model Server modal previously used a cramped single-column form plus a second full-screen overlay for the model checklist. That layout created a modal-over-modal pattern, left first-time users guessing at what each field should contain, forced every subsequent visit to re-type the server URLs and API key, and treated the "pick which models to add" step as a separate ceremony requiring a dedicated handoff button. For a user adding a newly-available model to an already-populated hive — the single most common case for anyone running Alfredo, Open WebUI, Ollama, or LM Studio — the flow was five clicks and a manual URL copy when it should have been one.
+
+The modal now does every job in a single screen built as a three-column grid designed against the product's 1422px minimum viewport.
+
+**Column 1 — Inputs (stable across all states).** Chat Endpoint and Models Endpoint are stacked vertically instead of sitting side-by-side, giving each URL field the full column width it needs for the long enterprise paths users actually paste. The API Key field gains a 🔑 saved indicator that appears inline with the label whenever the current key value came from saved defaults — matching the convention the rest of the WaxFrame UI uses for saved per-bee API keys. A discreet Forget saved server link appears below Fetch Models only when saved defaults exist, letting the user clear the localStorage entry without digging through browser settings.
+
+**Column 2 — Context (state-dependent).** In the pre-fetch state the middle column shows a What you'll need help pane written in the same voice as the User Manual: each field is explained with a short description, a code-styled example of the typical endpoint suffix, and a tip block with real-world guidance for home and work users. A small runtime note sits at the bottom of the help pane showing whether WaxFrame is currently running from a local file:// URL or a hosted https:// URL, so the user understands at a glance why local presets are or are not available. In the post-fetch ready state, the middle column switches to the existing raw-response panel (endpoint, status, full JSON) so power users can inspect exactly what the server returned. In the error state, it becomes a friendly error panel with a plain-English title, a description of what happened, and a bulleted list of likely causes and fixes tailored to the specific failure mode (401/403, 404, 5xx, mixed-content blocking, CORS, network unreachable).
+
+**Column 3 — Checklist (inline, always visible).** The separate full-screen overlay is gone. Before a fetch, column 3 shows a placeholder tile explaining that models will appear there once the user clicks Fetch Models. After a successful fetch, the checklist populates in place with the full model list, compact All/None toggles in the header, and a single footer button labeled Add N to Hive that updates live as checkboxes toggle. No more handoff button, no more modal-over-modal.
+
+**Duplicate detection — the pro-level move.** When the checklist renders, `renderImportServerChecklist()` now builds a set of model IDs already in the hive that were imported from the same Chat Endpoint URL, marks those rows with a subtle In hive badge, leaves them unchecked by default, and dims their row slightly so the user's eye goes to the new models. Checking a dimmed row and clicking Add still creates a fresh bee with a unique generated ID — the detection is purely a UX hint, not a hard block — but for the common case of "I just want that one new model" the default state is now correct without the user having to click Select None and then find the one new model in a list of 37.
+
+**Runtime-aware Quick Add presets.** The Quick Add dropdown is now populated at runtime. When WaxFrame is loaded over `file://`, all three presets (Open WebUI, Ollama, LM Studio) appear. When loaded over `https://`, the two local presets are hidden because browsers block mixed-content requests to `http://localhost` from a secure page. This prevents a class of error that previously manifested as a mysterious network failure after the user picked a preset that could never have worked.
+
+**Pre-flight mixed-content check.** Before firing a fetch, the client now checks whether WaxFrame is running on https and the Models Endpoint is http. If so, it skips the network call entirely and routes straight to the error pane with a clear explanation that the browser will block the request before it leaves the machine, plus two concrete workarounds (use https, or download WaxFrame and run it from file://). This fails fast and explains itself instead of producing an opaque CORS-style error hours into a debugging session.
+
+**Header bee swap.** The modal header now uses `WaxFrame_API_Bee_v1.png` instead of `WaxFrame_Worker_Bee_v2.png`. The Worker Bee belongs to Setup 1; the API Bee is the correct mascot for anything authentication- or endpoint-related, and using it here reinforces the visual grammar the rest of the product already uses.
+
+**Technical cleanup performed as part of this release.** The `import-checklist-overlay` markup was removed from `index.html` in full. The `.import-checklist-overlay`, `.import-checklist-panel`, `.import-checklist-hdr`, `.import-checklist-hdr-left`, `.import-checklist-title`, `.import-checklist-hdr-right`, `.import-checklist-close-btn`, `.import-checklist-body`, `.import-checklist-items`, and `.import-checklist-footer` rule blocks were removed from `style.css`. The `openImportChecklist` and `closeImportChecklist` functions were removed from `app.js`, along with every call site that used to reference them. The `importServerSelectBtn` button and its associated show/hide toggles were removed. Three inline `style="display:none;"` attributes were removed from the modal markup and replaced with state-class-driven CSS — bringing this modal into compliance with the project's no-inline-CSS rule.
+
+**Accompanying updates.** User Manual Appendix B was rewritten step-by-step to reflect the single-screen flow, the In hive badge, the 🔑 saved indicator, the Forget saved server link, and the error-panel behavior. The CORS tip was expanded into a mixed-content tip. The old step referencing Select & Add to Hive → and a separate checklist panel was removed.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
 ## v3.19.27 Pro — Build `20260423-004`
 **Released:** April 23, 2026
 
