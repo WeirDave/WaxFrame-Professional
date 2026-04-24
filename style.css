@@ -1433,8 +1433,8 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ── Edit Hive button — hidden on big screens ── */
-.hive-edit-btn { display: none; }
+/* ── Edit Hive button — visible at all viewports ── */
+.hive-edit-btn { display: inline-flex; }
 
 /* ── Dot strip — hidden on big screens, shown at laptop ── */
 .bee-dot-strip { display: none; }
@@ -1510,7 +1510,7 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ── At laptop viewport: show dot strip + Edit Hive button, hide card grid ── */
+/* ── At laptop viewport: show dot strip, hide card grid ── */
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
   .bee-dot-strip   {
@@ -1525,7 +1525,6 @@ html, body {
   }
   [data-theme="light"] .bee-dot-strip,
   .bee-dot-strip-light { background: rgba(0,0,0,0.12); }
-  .hive-edit-btn   { display: inline-flex; }
 
   /* Dot — one per AI, icon in a glowing circle */
   .bee-dot {

@@ -2,6 +2,36 @@
 
 ---
 
+## v3.20.12 Pro — Build `20260424-005`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Edit Hive button no longer hidden on large viewports**
+The `Edit Hive` button next to `Change Builder` in the Hive panel header was invisible at any viewport wider than `1600px` due to a legacy responsive rule that applied `display: none` globally and flipped it back to `inline-flex` only inside the `@media (max-width: 1600px)` block. The original design intent was that on large screens, users would toggle AIs via checkboxes on the hex cards directly, and the dedicated button was only needed when cards collapsed to the dot strip at laptop width. In practice, the button is a more discoverable central control for the same action and should be available regardless of viewport.
+
+The underlying button markup in `index.html`, the `openEditHive()` / `closeEditHive()` handlers in `app.js`, and the `editHiveModal` markup and styling were all intact — only the CSS visibility gate had removed the button from the UI on large displays.
+
+### Code Cleanup
+
+**Removed three dead JavaScript functions identified during full-codebase audit**
+A cross-reference audit of every top-level function definition in `app.js` against all caller sites (HTML `onclick` handlers, JS call graph, string-constructed references) surfaced three functions with zero live callers anywhere in the codebase:
+
+- `goToFree()` — a three-line helper that opened the Free edition URL in a new tab. Leftover from a previous navigation entry that no longer exists.
+- `playUnanimousFanfare()` — a ~45-line WebAudio implementation of an ascending C-E-G-C major arpeggio with a sparkle ping cap, originally used for unanimous-convergence celebrations. Superseded by Kai's custom `waxframe_hive_approved_flyin.wav` audio asset used by the current convergence flyer.
+- `validateAndContinue()` — a one-line alias delegating to `continueFromBees()`, explicitly labeled in its own comment as "Legacy alias — kept for any nav-menu calls." No such nav-menu calls exist; the only live caller of the underlying flow uses `continueFromBees()` directly.
+
+Total reduction: 52 lines from `app.js`. No runtime behavior changes; the audio fanfare produced by `playUnanimousFanfare()` hasn't been heard in production since the convergence flyer was rebuilt around the `.wav` asset.
+
+### Known Backlog
+
+The same audit identified a larger CSS cleanup opportunity — roughly 85 validated orphan CSS classes clustered around old welcome-screen cards, bee UI leftovers, an unused text-utility suite, and miscellaneous one-offs — plus 29 inline `style=` attributes across `index.html` and `document-playbooks.html` that violate the house "no inline CSS" rule. Deferred to a dedicated cleanup release where each orphan can be verified against dynamic class construction patterns and the inline styles can be consolidated into proper utility classes without mixing concerns with a bug fix.
+
+### Files Changed
+`style.css` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.11 Pro — Build `20260424-004`
 **Released:** April 24, 2026
 
