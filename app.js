@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-005';         // build stamp — update each session
+const BUILD       = '20260423-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3050,15 +3050,23 @@ function forgetImportServerDefaults() {
   if (chatEl)   chatEl.value   = '';
   if (modelsEl) modelsEl.value = '';
   if (keyEl)    keyEl.value    = '';
-  const modal = document.getElementById('importServerModal');
-  if (modal) modal.classList.remove('has-saved-key');
+  const innerModal = getImportServerInnerModal();
+  if (innerModal) innerModal.classList.remove('has-saved-key');
   setImportServerState('prefetch');
   toast('🗑️ Forgot saved server');
 }
 
+// The outer overlay has id="importServerModal" while the inner modal has class
+// ".import-server-modal" — state classes and has-saved-key live on the INNER modal
+// so the existing CSS selectors (e.g. .import-server-modal.import-server-state-ready)
+// match correctly. Always go through this helper; never use getElementById for that.
+function getImportServerInnerModal() {
+  return document.querySelector('#importServerModal .import-server-modal');
+}
+
 function setImportServerState(state) {
   // state: 'prefetch' | 'ready' | 'error'
-  const modal = document.getElementById('importServerModal');
+  const modal = getImportServerInnerModal();
   if (!modal) return;
   modal.classList.remove('import-server-state-prefetch', 'import-server-state-ready', 'import-server-state-error');
   modal.classList.add(`import-server-state-${state}`);
@@ -3092,8 +3100,8 @@ function updateImportServerRuntimeNote() {
 
 function onImportServerKeyInput() {
   // Any typing in the key field clears the "saved key" indicator — the user is overriding
-  const modal = document.getElementById('importServerModal');
-  if (modal) modal.classList.remove('has-saved-key');
+  const innerModal = getImportServerInnerModal();
+  if (innerModal) innerModal.classList.remove('has-saved-key');
   resetImportServer();
 }
 
@@ -3116,7 +3124,10 @@ function showImportServerModal() {
     if (chatEl)   chatEl.value   = saved.chatUrl   || '';
     if (modelsEl) modelsEl.value = saved.modelsUrl || '';
     if (keyEl)    keyEl.value    = saved.apiKey    || '';
-    if (saved.apiKey) modal?.classList.add('has-saved-key');
+    if (saved.apiKey) {
+      const innerModal = getImportServerInnerModal();
+      if (innerModal) innerModal.classList.add('has-saved-key');
+    }
   }
 
   // Auto-fetch if we have a complete saved config; otherwise focus Chat URL
@@ -3128,11 +3139,10 @@ function showImportServerModal() {
 }
 
 function closeImportServerModal() {
-  const modal = document.getElementById('importServerModal');
-  if (modal) {
-    modal.classList.remove('active');
-    modal.classList.remove('has-saved-key');
-  }
+  const overlay = document.getElementById('importServerModal');
+  if (overlay) overlay.classList.remove('active');
+  const innerModal = getImportServerInnerModal();
+  if (innerModal) innerModal.classList.remove('has-saved-key');
   resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
 }

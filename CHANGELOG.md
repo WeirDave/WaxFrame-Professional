@@ -2,7 +2,26 @@
 
 ---
 
-## v3.20.0 Pro — Build `20260423-005`
+## v3.20.1 Pro — Build `20260423-007`
+**Released:** April 23, 2026
+
+### Bug Fixes
+
+**Import from Model Server — state transitions were targeting the wrong DOM element**
+In v3.20.0 the three-column state machine (`prefetch` → `ready` → `error`) silently failed to transition the UI. A successful fetch would update the status text, rename the Fetch button to Refresh, populate the checklist internally (the footer's live `Add N to Hive` count proved the checkboxes were rendered correctly), but the middle column kept showing the `What you'll need` help pane and the right column kept showing the `Models will appear here` placeholder. The 🔑 saved indicator and Forget saved server link never appeared either, even when a saved config was loaded from localStorage.
+
+Root cause was an ID-vs-class collision in the modal markup. The outer overlay element carries `id="importServerModal"`, while the inner modal div carries the classes `.import-server-modal`, `.import-server-state-prefetch`, and (when appropriate) `.has-saved-key`. The state-toggled CSS selectors — for example `.import-server-modal.import-server-state-ready .import-server-raw-panel { display: block; }` — require both classes to be present on the same element. `setImportServerState()` and every `has-saved-key` toggle were using `document.getElementById('importServerModal')`, which returns the overlay, so the state class landed on the overlay (which does not have `.import-server-modal`) and the selectors never matched. The initial state class baked into the HTML on the inner modal was never replaced, so the UI stayed frozen in `prefetch` mode no matter what happened.
+
+Fixed by introducing a small helper `getImportServerInnerModal()` that returns the inner modal via `document.querySelector('#importServerModal .import-server-modal')`. Every site that was toggling state or `has-saved-key` now routes through that helper: `setImportServerState`, `showImportServerModal` (adding `has-saved-key` from saved defaults), `closeImportServerModal` (removing `has-saved-key`), `forgetImportServerDefaults` (removing `has-saved-key`), and `onImportServerKeyInput` (removing `has-saved-key` when the user types a new key). The overlay's own `active` class toggle still uses `getElementById` because that class legitimately belongs on the overlay.
+
+The existing CSS selectors were not changed — they were correct. Only the JS targeting was wrong.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
+## v3.20.0 Pro — Build `20260423-006`
 **Released:** April 23, 2026
 
 ### Changes
@@ -24,7 +43,7 @@ The modal now does every job in a single screen built as a three-column grid des
 
 **Pre-flight mixed-content check.** Before firing a fetch, the client now checks whether WaxFrame is running on https and the Models Endpoint is http. If so, it skips the network call entirely and routes straight to the error pane with a clear explanation that the browser will block the request before it leaves the machine, plus two concrete workarounds (use https, or download WaxFrame and run it from file://). This fails fast and explains itself instead of producing an opaque CORS-style error hours into a debugging session.
 
-**Header bee swap.** The modal header now uses `WaxFrame_API_Bee_v1.png` instead of `WaxFrame_Worker_Bee_v2.png`. The Worker Bee belongs to Setup 1; the API Bee is the correct mascot for anything authentication- or endpoint-related, and using it here reinforces the visual grammar the rest of the product already uses.
+**Header bee swap — cascaded across all API-related modals.** The Import from Model Server modal header now uses `WaxFrame_API_Bee_v1.png` instead of `WaxFrame_Worker_Bee_v2.png`. The Worker Bee belongs to Setup 1; the API Bee is the correct mascot for anything authentication- or endpoint-related, and using it here reinforces the visual grammar the rest of the product uses. For consistency across the suite of modals that deal with API configuration and credentials, the same swap was applied to the Add Custom AI modal, the Test All Keys modal, and the Test Key modal. All four API-adjacent modals now share the API Bee; the Worker Bee remains on screens and buttons that represent the bees themselves (Welcome, Setup 1, unanimous convergence).
 
 **Technical cleanup performed as part of this release.** The `import-checklist-overlay` markup was removed from `index.html` in full. The `.import-checklist-overlay`, `.import-checklist-panel`, `.import-checklist-hdr`, `.import-checklist-hdr-left`, `.import-checklist-title`, `.import-checklist-hdr-right`, `.import-checklist-close-btn`, `.import-checklist-body`, `.import-checklist-items`, and `.import-checklist-footer` rule blocks were removed from `style.css`. The `openImportChecklist` and `closeImportChecklist` functions were removed from `app.js`, along with every call site that used to reference them. The `importServerSelectBtn` button and its associated show/hide toggles were removed. Three inline `style="display:none;"` attributes were removed from the modal markup and replaced with state-class-driven CSS — bringing this modal into compliance with the project's no-inline-CSS rule.
 
