@@ -388,19 +388,50 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Length Constraint (optional)</div>
-      <p>Below the six goal fields is a section headed <strong>Length Constraint (optional)</strong>. This is where you set a maximum length for your document — not in the goal fields. Use it whenever your document must fit within a specific limit.</p>
+      <div class="wh-block-title">Length Constraint</div>
+      <p>Below the goal fields is a section headed <strong>Length Constraint</strong>. This is where you set a maximum length for your document — not in the goal fields. Use it whenever your document must fit within a specific limit.</p>
       <p>The section contains two inputs:</p>
       <ul>
         <li>A number field — enter your maximum here. e.g. <em>200</em></li>
-        <li>A unit dropdown — <strong>Words</strong>, <strong>Characters</strong>, or <strong>Pages</strong></li>
+        <li>A unit dropdown — <strong>Characters</strong>, <strong>Words</strong>, <strong>Paragraphs</strong>, or <strong>Pages</strong></li>
       </ul>
       <p>When set, WaxFrame formats the constraint and includes it in every prompt sent to your AIs in a standardised way, instructing them to keep the document within the limit. Leave both fields blank if your document has no length requirement.</p>
-      <p><strong>Important:</strong> put your word or page limit here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you set it here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
+      <p><strong>Important:</strong> put your length limit here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you set it here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
         <p>The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.</p>
       </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How Length Constraint is measured</div>
+      <p>Behind the scenes, after the Builder returns each round, WaxFrame measures the output in the exact unit you chose and rejects the round if it exceeds your limit. The prior document is preserved when a round is rejected — you never lose work to a gate failure. Here is how each unit is counted:</p>
+      <table class="wh-table">
+        <thead><tr><th>Unit</th><th>How it is counted</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>Characters</strong></td>
+            <td>Every character in the text, including spaces.</td>
+            <td>Matches how web forms, SMS counters, and social media count. Accurate for plain English. Emoji and complex scripts can count differently than what appears on screen.</td>
+          </tr>
+          <tr>
+            <td><strong>Words</strong></td>
+            <td>Tokens separated by whitespace.</td>
+            <td>Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs. For hard ceilings elsewhere, trim a few words under your target as a buffer.</td>
+          </tr>
+          <tr>
+            <td><strong>Paragraphs</strong></td>
+            <td>Blocks of text separated by blank lines.</td>
+            <td>Matches how markdown, plain text, and Word documents denote paragraph breaks. Headings and bullet lists count as paragraphs if they are separated by blank lines.</td>
+          </tr>
+          <tr>
+            <td><strong>Pages</strong></td>
+            <td>Approximated using 500 words per single-spaced 12pt page.</td>
+            <td>This is the one unit WaxFrame cannot measure directly — actual page count depends on your font, margins, and line spacing. For firm limits (court filings, one-page résumés), aim slightly under the target to leave headroom.</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>If the Builder returns a document that exceeds your limit, WaxFrame rejects the round and leaves the prior document untouched. You will see a length-gate message in the console telling you the measured output in your chosen unit alongside the limit, so you can decide whether to raise the limit, tighten the goal, or rerun the round.</p>
     </div>
 
     <div class="wh-block">
