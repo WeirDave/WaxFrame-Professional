@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-007';         // build stamp — update each session
+const BUILD       = '20260423-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3069,7 +3069,22 @@ function setImportServerState(state) {
   const modal = getImportServerInnerModal();
   if (!modal) return;
   modal.classList.remove('import-server-state-prefetch', 'import-server-state-ready', 'import-server-state-error');
+  // Any state change resets the laptop-only "show raw instead of checklist" modifier
+  modal.classList.remove('import-server-raw-visible');
   modal.classList.add(`import-server-state-${state}`);
+  const toggleBtn = document.getElementById('importServerRawToggle');
+  if (toggleBtn) toggleBtn.textContent = '📋 View raw response';
+}
+
+// Laptop-tier only: in ready state the raw response hides behind a toggle so the
+// checklist can use cols 2+3. This flips which pane is visible in the right region.
+function toggleImportServerRawPane() {
+  const modal = getImportServerInnerModal();
+  if (!modal) return;
+  modal.classList.toggle('import-server-raw-visible');
+  const visible = modal.classList.contains('import-server-raw-visible');
+  const toggleBtn = document.getElementById('importServerRawToggle');
+  if (toggleBtn) toggleBtn.textContent = visible ? '← Back to models' : '📋 View raw response';
 }
 
 function populateImportServerQuickAdd() {
