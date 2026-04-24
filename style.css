@@ -3604,10 +3604,11 @@ kbd {
   right: 0;
   background-image: url('images/Waxframe_logo_v19.png');
   background-repeat: no-repeat;
-  background-position: center;
-  background-size: 300px;
+  background-position: right 24px center;
+  background-size: min(240px, 85%);
   opacity: 0;
   pointer-events: none;
+  z-index: 0;
   animation: watermarkPulse 16s ease-in-out infinite;
 }
 @keyframes watermarkPulse {
