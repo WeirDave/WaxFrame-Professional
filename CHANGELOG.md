@@ -2,6 +2,41 @@
 
 ---
 
+## v3.20.7 Pro — Build `20260423-013`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Desktop layout — checklist appeared below a large empty region instead of filling cols 2+3**
+In v3.20.6 the desktop tier rules set `grid-column: 2 / 4` on `.import-server-col-checklist` in ready state, with the intent of letting the checklist span cols 2 and 3. However `.import-server-col-middle` was still in the DOM and occupying col 2 by default. CSS Grid's auto-placement algorithm could not place the checklist into cols 2-3 because col 2 was taken, so it was pushed down to row 2 of the grid — which produced the visually jarring effect of an empty middle region on top and the checklist dropped below it.
+
+Fix applied: desktop tier now explicitly hides `.import-server-col-middle` with `display: none` in ready-default state, matching the laptop tier's swap-based approach. The checklist now has a clear col-2-through-col-3 span to fill. This is a cleaner design overall — the right region is either the checklist OR the raw response OR the error pane, never two panes side-by-side, which keeps the user's mental model consistent across viewport sizes.
+
+**Desktop raw response toggle produced a three-column split instead of replacing the checklist**
+Previous desktop rule left the checklist in col 3 when raw was toggled on, producing a three-column layout (inputs | raw | checklist). The user's expectation — and the stated design intent — was that raw response should REPLACE the checklist, not sit beside it. Same semantic as toggling between two views, consistent with laptop behavior.
+
+Fix: when `.import-server-raw-visible` is active on desktop, `.import-server-col-middle` now spans `grid-column: 2 / 4` and `.import-server-col-checklist` is set to `display: none`. Clicking View response details swaps the right region fully from checklist to raw; clicking Back to models swaps it back. One pane, never two.
+
+**Redundant X close button in modal header removed**
+The header contained a small ✕ button in the top-right corner that duplicated the Cancel button in the footer. With the v3.20.6 change that makes Add 0 to Hive also close the modal when zero models are selected, there were three different ways to exit: ✕, Cancel, and Add 0 to Hive. Removed the ✕ since Cancel is the discoverable and conventional escape hatch for modal dialogs, and its location in the footer keeps it consistent with the primary action (Add N to Hive) sitting next to it.
+
+The overlay click-outside-to-close behavior (`onclick="if(event.target===this)closeImportServerModal()"`) is retained so users can click the dark area outside the modal to dismiss it.
+
+### Changes
+
+**Hive count chip — removed bee emoji and restored hover cursor on warning badges**
+The chip text previously read `🐝 9 AIs in hive · 8 with keys`. The 🐝 emoji was removed per user preference — the surrounding context (Worker Bees page, hive terminology) already makes the subject clear without iconography.
+
+The `.hive-count-warn` and `.hive-count-ok` badges had `cursor: help` removed in v3.20.6 as part of the "don't look like a button" cleanup. That made the tooltip effectively undiscoverable since nothing suggested the text was interactive. Restored `cursor: help` on both badges so hovering now shows the question-mark cursor, which is a standard UI hint that additional information is available via tooltip. The badges still have no border, no background, and no padding — so they remain visually passive, just with discoverable hover behavior.
+
+**Tie-risk explainer added to the Worker Bees info modal**
+The hover tooltip on the even-count warning is useful but not obvious — users have to intuitively hover on the right element to see it. Added a new Info row to the `infoBeesModal` (the ⓘ button at the top of the Worker Bees screen) titled "Even count tie risk" that explains the summary line above the AI grid, the warning text, why even counts cause problems on convergence rounds, and how to resolve it (add or remove one AI with a key to reach an odd count). The inline warning + hover tooltip + info modal entry together form a three-tier disclosure: instant scan (warning color), on-demand detail (hover), and full explanation (info modal) for users who want to understand the mechanics.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.6 Pro — Build `20260423-012`
 **Released:** April 23, 2026
 
