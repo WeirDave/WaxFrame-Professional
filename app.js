@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260423-003';         // build stamp — update each session
+const BUILD       = '20260423-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3022,11 +3022,43 @@ const IMPORT_SERVER_PRESETS = {
 let _importServerModels   = [];
 let _importServerPreset   = null;
 
+const IMPORT_SERVER_LS_KEY = 'waxframe_import_server_defaults';
+
+function saveImportServerDefaults(chatUrl, modelsUrl, apiKey) {
+  try {
+    localStorage.setItem(IMPORT_SERVER_LS_KEY, JSON.stringify({ chatUrl, modelsUrl, apiKey }));
+  } catch(e) {}
+}
+
+function loadImportServerDefaults() {
+  try {
+    const raw = localStorage.getItem(IMPORT_SERVER_LS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+
 function showImportServerModal() {
   const modal = document.getElementById('importServerModal');
   if (modal) modal.classList.add('active');
   resetImportServer(true);
-  document.getElementById('importServerChatUrl')?.focus();
+
+  // Populate fields from last-used server if saved
+  const saved    = loadImportServerDefaults();
+  const chatEl   = document.getElementById('importServerChatUrl');
+  const modelsEl = document.getElementById('importServerUrl');
+  const keyEl    = document.getElementById('importServerKey');
+  if (saved) {
+    if (chatEl)   chatEl.value   = saved.chatUrl   || '';
+    if (modelsEl) modelsEl.value = saved.modelsUrl || '';
+    if (keyEl)    keyEl.value    = saved.apiKey    || '';
+  }
+
+  // Auto-fetch if we have a complete saved config; otherwise focus Chat URL
+  if (saved && saved.chatUrl && saved.modelsUrl) {
+    fetchImportServerModels();
+  } else {
+    chatEl?.focus();
+  }
 }
 
 function closeImportServerModal() {
@@ -3034,9 +3066,6 @@ function closeImportServerModal() {
   if (modal) modal.classList.remove('active');
   resetImportServer(true);
   document.getElementById('importServerQuickAdd').value = '';
-  document.getElementById('importServerChatUrl').value  = '';
-  document.getElementById('importServerUrl').value      = '';
-  document.getElementById('importServerKey').value      = '';
 }
 
 function resetImportServer(full = false) {
@@ -3218,8 +3247,9 @@ function importServerSelectNone() {
 }
 
 function addImportServerModels() {
-  const chatUrl = document.getElementById('importServerChatUrl').value.trim();
-  const key     = document.getElementById('importServerKey').value.trim();
+  const chatUrl   = document.getElementById('importServerChatUrl').value.trim();
+  const modelsUrl = document.getElementById('importServerUrl').value.trim();
+  const key       = document.getElementById('importServerKey').value.trim();
 
   if (!chatUrl) { toast('⚠️ Enter a Chat Endpoint URL'); return; }
 
@@ -3256,6 +3286,9 @@ function addImportServerModels() {
     activeAIs.push(ai);
     added++;
   });
+
+  // Save last-used server for next open
+  saveImportServerDefaults(chatUrl, modelsUrl, key);
 
   closeImportChecklist();
   closeImportServerModal();

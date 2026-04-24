@@ -2,6 +2,31 @@
 
 ---
 
+## v3.19.27 Pro — Build `20260423-004`
+**Released:** April 23, 2026
+
+### Changes
+
+**Import from Model Server — remembers last-used server and auto-fetches on open**
+The Import from Model Server form required re-typing the Chat Endpoint, Models Endpoint, and API Key on every open. For users running a local or enterprise AI platform (Alfredo, Open WebUI, Ollama, LM Studio) — where the server is almost always the same one every time — this turned "add a newly available model" into a copy-paste hunt for URLs and tokens that should already be known.
+
+Two coordinated changes in `app.js` fix this end-to-end:
+
+1. **Persistence.** A new localStorage key `waxframe_import_server_defaults` now stores the last successful Chat Endpoint, Models Endpoint, and API Key as a single JSON blob. The write happens inside `addImportServerModels()` only after models have actually been added — fetching alone does not save a config, so half-broken or cancelled attempts never contaminate the defaults. Two small helpers were added (`saveImportServerDefaults`, `loadImportServerDefaults`) right next to the existing `_importServerModels` / `_importServerPreset` state, with try/catch wrappers for private-mode and quota edge cases.
+
+2. **Auto-populate + auto-fetch.** `showImportServerModal()` now reads the saved defaults on open and writes them into the three form fields before doing anything else. If both URLs are present in the saved config, the form immediately calls `fetchImportServerModels()` without requiring a button click — the user sees the current model list as soon as the modal opens. If nothing is saved (first-time use), behavior is unchanged: focus lands on the Chat URL field.
+
+Supporting cleanup in `closeImportServerModal()`: removed the three explicit field wipes for Chat URL, Models URL, and API Key. They were redundant now that `showImportServerModal()` repopulates authoritatively from localStorage on every open. The Quick Add dropdown is still reset on close (it is an action trigger, not a stored value). The private `resetImportServer(true)` call still clears transient UI state (fetch status, add/select buttons, raw response panel) as before.
+
+Quick Add presets still override saved defaults when explicitly picked — selecting Ollama or LM Studio from the dropdown overwrites the URL fields with that preset's localhost paths. This is the intentional escape hatch for switching servers.
+
+User Manual Appendix B updated with a tip block explaining the remembered-server / auto-fetch behavior and how to switch to a different server via Quick Add.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
 ## v3.19.26 Pro — Build `20260423-003`
 **Released:** April 23, 2026
 
