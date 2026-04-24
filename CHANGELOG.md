@@ -2,6 +2,45 @@
 
 ---
 
+## v3.20.13 Pro — Build `20260424-006`
+**Released:** April 24, 2026
+
+### Changes
+
+**Length Constraint — new Paragraphs unit added, direct-unit measurement across the board**
+The Length Constraint field on the Project screen now supports four units — `Characters`, `Words`, `Paragraphs`, `Pages` — in that order. Paragraphs is new. The field also drops its `(optional)` label since the three required goal fields (Document type, Target audience, Desired outcome) are already marked with asterisks and everything else is optional by elimination.
+
+More importantly, the bloat gate that enforces the length limit has been refactored from a single "normalise everything to word count" path into a direct-unit measurement. When the user sets a limit in `Characters`, the gate now counts characters in the Builder output and compares to the exact limit. Same for `Words` (whitespace-split token count) and `Paragraphs` (blank-line-separated blocks, whitespace-only blocks dropped). `Pages` remains word-estimated via `WORDS_PER_PAGE = 500` because pages aren't directly countable from raw text — font, margins, and line spacing all affect rendered page count, and WaxFrame doesn't have a layout engine.
+
+This eliminates a subtle accuracy bug in the previous implementation: for Characters mode, the old gate converted the user's character limit into a word-equivalent (`limit / 5.5`) and compared word counts, which could pass documents over the character limit if they had short words, or reject documents under the character limit if they had long words. Now the measurement is exact.
+
+The AI prompt sent each round uses direct-unit wording too: *"The final document must contain no more than N words"*, *"...no more than N characters, including spaces"*, *"...no more than N paragraphs, separated by blank lines"*. Pages alone keeps the hedge: *"Target N pages (approximately M words). Pages depend on font and layout..."* — because that's the truth for that unit.
+
+When the gate triggers, the error message now reports in the user's chosen unit — *"Length gate triggered — 247 words vs limit 200 words"* — rather than forcing every failure into a word-count shape. The console log, the bee status, and the failed-round details all carry the same unit-correct wording.
+
+### New Feature
+
+**Length Constraint info modal + user manual transparency section**
+A new ⓘ button next to the `Length Constraint` heading on the Project screen opens an info modal explaining exactly how each unit is measured, including the fuzzy edges (Microsoft Word word-count divergence on hyphenated terms, UTF-16 counting for emoji in Characters mode, blank-line detection in Paragraphs, the 500-word-per-page approximation in Pages). The modal reuses the existing `finish-modal-overlay` / `goal-info-modal` structure — no new CSS.
+
+The user manual (`waxframe-user-manual.html`) Step 3 gets a matching expansion: the existing `Length Constraint` block updated for accuracy (units reordered, `(optional)` dropped), and a new sibling block `How Length Constraint is measured` containing the full transparency table (Unit × How it is counted × Notes). Manual and modal tell the same story — the modal for in-context "what does this field do" moments, the manual for users who want to understand the behavior end to end before relying on it.
+
+### Code Cleanup
+
+**Orphan `.length-constraint-optional` CSS rule removed**
+The CSS rule styling the `(optional)` span (font-size, font-weight, color, margin-left) had no remaining consumers after the span was removed from `index.html`. Deleted from `style.css` to keep the stylesheet free of dead weight.
+
+### Known Deferred
+
+**Pulsing logo watermark overflow into drop zone on Starting Document screen** — the `::after` pseudo-element on `#panel-upload` / `#panel-paste` / `#panel-scratch` can visually bleed into the content column at certain viewport widths because the 920×920 background image's visible drip extends into the horizontal region intended for content. Deferred to a dedicated next release so a CSS layout fix doesn't bisect-conflict with this release's length-constraint behavioral refactor. Candidate fixes under evaluation: anchor `background-position: right center`, reduce `background-size`, or add a `padding-right` buffer.
+
+**Paragraph gate counts blocks, not semantic paragraphs** — the paragraph gate detects blank-line separation (`\n\s*\n`). A Builder that returns one run-on block with only single newlines between logical paragraphs will count as 1 paragraph and pass. The AI prompt explicitly instructs "separated by blank lines" to force proper formatting, so this is a low-probability failure mode in practice, but it's worth knowing about.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
 ## v3.20.12 Pro — Build `20260424-005`
 **Released:** April 24, 2026
 

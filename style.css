@@ -3227,12 +3227,6 @@ kbd {
   justify-content: space-between;
   margin-bottom: 4px;
 }
-.length-constraint-optional {
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--text-dim);
-  margin-left: 6px;
-}
 .length-constraint-hint {
   font-size: 11px;
   color: var(--accent);

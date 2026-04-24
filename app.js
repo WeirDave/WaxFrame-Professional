@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-005';         // build stamp — update each session
+const BUILD       = '20260424-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1770,18 +1770,41 @@ function saveProject() {
 function saveSettings() { saveHive(); saveProject(); }
 
 // ── Length constraint helpers ──
-const WORDS_PER_PAGE = 500;
-const CHARS_PER_WORD = 5.5; // average chars per word for estimation
+const WORDS_PER_PAGE      = 500;
+const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
+const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
+
+// ── Length-unit measurement helpers ──
+// Direct-count the output in the user's chosen unit. Pages can't be measured
+// from raw text, so it falls back to word count (and the gate compares against
+// the word estimate from WORDS_PER_PAGE).
+function countInUnit(text, unit) {
+  if (!text) return 0;
+  if (unit === 'characters')  return text.length;
+  if (unit === 'paragraphs')  return text.split(/\n\s*\n/).filter(p => p.trim()).length;
+  // words and pages both reduce to whitespace-split word count
+  return text.trim().split(/\s+/).filter(Boolean).length;
+}
+
+function unitLabel(unit, count) {
+  const plural = count === 1 ? '' : 's';
+  if (unit === 'pages')      return `page${plural}`;
+  if (unit === 'paragraphs') return `paragraph${plural}`;
+  if (unit === 'words')      return `word${plural}`;
+  return `character${plural}`;
+}
 
 function getLengthConstraint() {
   const limit = parseInt(document.getElementById('lengthLimit')?.value || '0', 10);
   const unit  = document.getElementById('lengthUnit')?.value || 'characters';
   if (!limit || limit <= 0) return null;
-  // Normalise everything to a word limit for the bloat gate
+  // wordLimit is a fallback estimate used by the gate ONLY for pages (not directly countable)
+  // and by the hint display for pages/paragraphs/characters. Characters and words are direct-counted.
   let wordLimit;
-  if (unit === 'words')      wordLimit = limit;
-  else if (unit === 'pages') wordLimit = limit * WORDS_PER_PAGE;
-  else                       wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
+  if (unit === 'words')           wordLimit = limit;
+  else if (unit === 'paragraphs') wordLimit = limit * WORDS_PER_PARAGRAPH;
+  else if (unit === 'pages')      wordLimit = limit * WORDS_PER_PAGE;
+  else                            wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
   return { limit, unit, wordLimit };
 }
 
@@ -1790,12 +1813,12 @@ function updateLengthConstraintHint() {
   if (!hintEl) return;
   const c = getLengthConstraint();
   if (!c) { hintEl.textContent = ''; return; }
-  if (c.unit === 'pages') {
-    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
-  } else if (c.unit === 'characters') {
-    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
-  } else {
+  // Show word estimate for the fuzzy-ish units (pages, paragraphs) and for characters
+  // (because 500 chars ≈ 91 words is a useful sanity check). Words is self-explanatory.
+  if (c.unit === 'words') {
     hintEl.textContent = '';
+  } else {
+    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
   }
 }
 
@@ -5161,11 +5184,13 @@ function buildPromptForAI(ai, reviewerResponses) {
   const _lc = getLengthConstraint();
   if (_lc) {
     if (_lc.unit === 'pages') {
-      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). The final document must not exceed this length. Tighten and consolidate content to fit within this limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). Pages depend on font and layout, so treat this as a word-count target. The final document must not exceed this length.\n\n`;
+    } else if (_lc.unit === 'paragraphs') {
+      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} paragraph${_lc.limit !== 1 ? 's' : ''}, separated by blank lines. This is a hard limit.\n\n`;
     } else if (_lc.unit === 'words') {
-      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} words. The final document must not exceed this word count. Tighten and consolidate content to fit within this limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} words. This is a hard limit.\n\n`;
     } else {
-      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} characters. The final document must not exceed this character count. Tighten and consolidate content to fit within this limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} characters, including spaces. This is a hard limit.\n\n`;
     }
   }
 
@@ -5327,24 +5352,41 @@ async function runBuilderOnly() {
     if (!builderHadError && newDoc) {
       const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
       const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
-      const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
       const _lcGate   = getLengthConstraint();
-      const bloatLimit = _lcGate ? _lcGate.wordLimit : (prevWords > 0 ? prevWords * 1.5 : Infinity);
-      const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
+      let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
+      if (_lcGate) {
+        // User specified a length constraint — honor it in its native unit.
+        // Pages uses the word estimate (not directly measurable from raw text).
+        actual    = countInUnit(newDoc, _lcGate.unit);
+        limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+        unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
+        limitName = _lcGate.unit === 'pages'
+          ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
+          : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
+        bloatFail = actual > limitNum;
+        bloatPct  = Math.round((actual / limitNum) * 100);
+      } else {
+        // No constraint — fall back to 1.5× prior-word sanity check
+        actual    = newWords;
+        unitName  = 'words';
+        bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
+        limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+        bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
+      }
       if (bloatFail) {
         builderHadError = true;
         _failedRoundReason = 'bloat';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-        setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
-        setStatus(`⚠️ Builder output is ${bloatPct}% of original — round rejected`);
-        consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+        setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
+        setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
+        consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
       } else {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
         docText = newDoc;
         setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
         setStatus(`✅ Round ${round} complete — Builder applied your instructions`);
-        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
+        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
         playRosieSound();
       }
     } else if (!builderHadError) {
@@ -5648,26 +5690,41 @@ async function runRound() {
       }
 
       if (!builderHadError && newDoc) {
-        // ── GATE 2: Bloat check — reject if new doc is >120% of prior word count ──
+        // ── GATE 2: Length gate — measure in user's chosen unit, fall back to 1.5× prior words ──
         const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
         const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
-        const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
         const _lcGate   = getLengthConstraint();
-        const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
+        let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
+        if (_lcGate) {
+          actual    = countInUnit(newDoc, _lcGate.unit);
+          limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+          unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
+          limitName = _lcGate.unit === 'pages'
+            ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
+            : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
+          bloatFail = actual > limitNum;
+          bloatPct  = Math.round((actual / limitNum) * 100);
+        } else {
+          actual    = newWords;
+          unitName  = 'words';
+          bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
+          limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+          bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
+        }
         if (bloatFail) {
           builderHadError = true;
           _failedRoundReason = 'bloat';
-          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-          setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
-          setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected`);
-          consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+          setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
+          setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
+          consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
         } else {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
           docText = newDoc;
           setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
           setStatus(`✅ Round ${round} complete — document updated`);
-          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
+          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
           const hasUserConflicts = window._lastConflicts?.userDecisions?.length > 0;
           if (hasUserConflicts) { playRoundCompleteSound(); } else { playRosieSound(); }
         }
