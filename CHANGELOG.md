@@ -2,6 +2,44 @@
 
 ---
 
+## v3.20.4 Pro — Build `20260423-010`
+**Released:** April 23, 2026
+
+### Bug Fixes
+
+**Import from Model Server — brief flash of stray content during auto-fetch open**
+When opening the modal with saved defaults in localStorage, there was a 1–2 second gap between overlay activation and the auto-fetch completing. During that gap the modal was in the `prefetch` state, which briefly rendered the help pane (and in some cases the raw response skeleton) before the state flipped to `ready` and the checklist appeared. The effect was a visible flicker that made the UI feel unstable.
+
+Fixed by adding a new transient `loading` state to the state machine. `showImportServerModal()` now reorders operations so the overlay reveals only after field population and state initialization are complete, and when an auto-fetch is about to fire it calls `setImportServerState('loading')` before invoking `fetchImportServerModels()`. CSS for the loading state sets `visibility: hidden` on both `.import-server-col-middle` and `.import-server-col-checklist`, which keeps their grid cells reserved (preventing layout shifts) while suppressing all content. The subsequent transition to `ready` or `error` inside `fetchImportServerModels()` reveals the correct pane in a single repaint rather than two.
+
+Using `visibility: hidden` instead of `display: none` is deliberate here: the loading state needs to reserve the grid columns so the modal does not briefly collapse to a single-column layout when `display: none` removes the columns from the grid entirely, which would cause a second flash.
+
+### Changes
+
+**Model checklist — single-row items with empty nickname field and fallback behavior**
+Each model row was previously a two-line layout: a grayscale label with the model ID on top, and a white text input pre-filled with the same model ID directly below it. The duplication looked like a rendering bug rather than an intentional customization field — the user had no visual signal that the bottom control was editable since both elements showed identical text, and the double-stacked layout consumed twice the vertical real estate needed for each model.
+
+`renderImportServerChecklist()` now renders each model as a single horizontal row: `checkbox | model ID label (60%) | nickname input (40%)`. The nickname input is empty by default and carries a placeholder `Nickname (optional)` in italic faint text, which signals clearly that the field exists, is optional, and accepts custom text. The model ID label uses `overflow: hidden; text-overflow: ellipsis; white-space: nowrap` so long enterprise IDs truncate cleanly rather than wrapping.
+
+The add-to-hive fallback logic at line 3500 of `app.js` was already `(nameInput?.value.trim()) || modelId`, so an empty nickname field continues to result in the model ID becoming the display name. No logic change was needed to accompany the UI change.
+
+Net effect: twice as many models visible per scroll screen on laptop viewports, cleaner visual hierarchy, and an unambiguous signal that the nickname is optional user input rather than duplicate display.
+
+**Forget saved server — promoted from underline link to proper button**
+The Forget saved server control was previously styled as a plain underlined link with no background or border, tucked below the Fetch Models button. This was inconsistent with the new View raw response button (added in v3.20.2) sitting directly above it, which uses the product's standard `btn btn-sm` styling. The inconsistency made the Forget link read as either an afterthought or a low-priority secondary action, which undersold the fact that it is the direct counterpart to the 🔑 saved indicator in the API Key label above.
+
+`.import-server-forget-btn` is now declared as a `btn btn-sm` element in the markup, inheriting the same visual language as every other action button in the column: subtle border, rounded corners, 12px font, hover state, consistent padding. The label gains a 🗑 emoji prefix to make the destructive nature of the action scannable. The CSS rule retains its state-triggered display behavior (`.import-server-modal.has-saved-key .import-server-forget-btn { display: inline-flex }`) so the button only appears when there actually is a saved config to forget.
+
+**Modal header bee resized to 120px in the Import modal**
+The shared `.custom-ai-modal-bee` class sets all API-adjacent modal bees to 48px. In the Import from Model Server modal, which is a full-width full-height modal with significant column 1 real estate (particularly on desktop viewports 2560px+), the 48px bee looked undersized against the volume of surrounding space and the weight of the title text. Added a scoped rule `.import-server-modal .custom-ai-modal-bee { width: 120px; height: 120px; }` that boosts the bee only inside the Import modal, leaving the Add Custom AI, Test All Keys, and Test Key modals at the original 48px since those are compact modals where 48px remains proportionally correct.
+
+The bee at 120px fills roughly the same visual weight as the title+subtitle block next to it, which balances the header and gives column 1 a distinctive character even when the user has not yet clicked anything.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.3 Pro — Build `20260423-009`
 **Released:** April 23, 2026
 
