@@ -2,6 +2,34 @@
 
 ---
 
+## v3.20.14 Pro — Build `20260424-007`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Round Not Saved modal body text was stale after the v3.20.13 length-gate refactor**
+The modal shown on a length-gate rejection had inherited pre-refactor bloat-gate copy, which framed every failure as an anti-bloat heuristic ("the Builder added to the document instead of refining it"). That wording was accurate for the fallback 1.5×-prior-words case but misleading when the user had set an explicit Paragraphs or Characters limit and the Builder simply overshot the cap — exactly the case surfaced by the first Cover Letter playbook test run where DeepSeek returned 5 paragraphs against a 3-paragraph limit. Rewrote the lead paragraph to frame the rejection as "exceeded the length limit" and point the user at retrying, switching Builders, or adjusting the Length Constraint on the Project screen. The measurement and limit were already being displayed correctly in the details block beneath the message — only the lead paragraph needed updating.
+
+**Pulsing logo watermark overflowed the content column on Starting Document screen**
+The `::after` pseudo-element that renders the pulsing WaxFrame logo in the dead space right of the content column on `#panel-upload`, `#panel-paste`, and `#panel-scratch` was sized at a fixed `300px` with `background-position: center`. At narrower panel widths the 300px image — whose visible hex frame is wide and whose honey drip extends from the top-right corner downward — could bleed visually into the content column because center-positioning put the hex close to the dead-space's left edge and the hex's hollow interior let drop-zone content show through its middle, reading as overlap even when the bounding boxes did not actually intersect.
+
+Three surgical changes in the pseudo-element rule:
+- `background-size: 300px` → `background-size: min(240px, 85%)`. Reduces maximum size by 20% and uses CSS `min()` so the image scales down (never overflows) at narrow dead-space widths.
+- `background-position: center` → `background-position: right 24px center`. Right-anchors the watermark with a 24px buffer from the right edge. If overflow ever does occur, it clips at the right margin rather than bleeding into the content column.
+- Added explicit `z-index: 0` to the pseudo-element so its stacking context is deterministic regardless of sibling positioning.
+
+No animation changes — the `watermarkPulse` keyframes and 16-second cycle are untouched.
+
+### Changes
+
+**Tone & voice goal-field hint rewritten — floor → better framing matches the other goal fields**
+The hint under the Tone & voice field previously told users to "Pick two or three words," which set a low ceiling on how much guidance they offered the AIs and produced inconsistent tone across rounds. This was the one goal field hint out of six that didn't use the floor-then-better cadence the other five already use (*be specific — "cover letter" not "document"* for Document type, *"IT Director and VP of Facilities" gives very different results than "general public"* for Target audience, etc). Rewrote the hint to match: a few adjectives (*professional, confident*) works as a floor, and a richer directive (*Direct and confident, not stiff — like a peer they'd want to work with*) locks in consistency across rounds. The matching row in the user manual's Step 3 "What each field does" table updated to the same framing.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
 ## v3.20.13 Pro — Build `20260424-006`
 **Released:** April 24, 2026
 
