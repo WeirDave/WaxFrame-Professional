@@ -994,20 +994,21 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Fetching and selecting models</div>
+      <p>The Import from Model Server form is a single-screen workflow laid out in three columns: inputs on the left, context in the middle, and the model list on the right.</p>
       <ol class="wh-steps">
-        <li class="wh-step"><span class="wh-step-num">1</span><span>Fill in the Chat Endpoint, Models Endpoint, and API Key fields (or use Quick Add to pre-fill them).</span></li>
-        <li class="wh-step"><span class="wh-step-num">2</span><span>Click <strong>Fetch Models</strong>. WaxFrame queries your Models Endpoint and retrieves the full list of available models. A status message and the raw response from your server appear below the button so you can confirm the connection worked.</span></li>
-        <li class="wh-step"><span class="wh-step-num">3</span><span>Click <strong>Select &amp; Add to Hive →</strong>. A checklist panel opens showing every model returned by your server.</span></li>
-        <li class="wh-step"><span class="wh-step-num">4</span><span>Check the models you want to add to your hive. Use <strong>Select All</strong> or <strong>Select None</strong> to manage the list quickly.</span></li>
-        <li class="wh-step"><span class="wh-step-num">5</span><span>Click <strong>Add Selected to Hive</strong>. WaxFrame adds each selected model as a separate AI in your Worker Bees list, using the Chat Endpoint you provided and the model ID for each one.</span></li>
+        <li class="wh-step"><span class="wh-step-num">1</span><span>Fill in the Chat Endpoint, Models Endpoint, and API Key fields on the left (or use Quick Add to pre-fill them). The middle column shows a <strong>What you'll need</strong> guide while you fill in the form.</span></li>
+        <li class="wh-step"><span class="wh-step-num">2</span><span>Click <strong>Fetch Models</strong>. WaxFrame queries your Models Endpoint and retrieves the full list of available models. The middle column switches to a raw response panel showing the endpoint, HTTP status, and the full JSON your server returned. The right column populates with the model checklist.</span></li>
+        <li class="wh-step"><span class="wh-step-num">3</span><span>Review the checklist on the right. Models already in your hive from this same server are marked with an <strong>In hive</strong> badge and left unchecked by default so you do not create duplicates. Any models that are new to your hive are checked by default, ready to add.</span></li>
+        <li class="wh-step"><span class="wh-step-num">4</span><span>Adjust the checklist as needed. Use <strong>All</strong> or <strong>None</strong> at the top of the right column to toggle everything. Edit any model's display name in the text field beside its ID.</span></li>
+        <li class="wh-step"><span class="wh-step-num">5</span><span>Click <strong>Add N to Hive</strong> in the footer. WaxFrame adds each selected model as a separate AI in your Worker Bees list, using the Chat Endpoint you provided and the model ID for each one. The server config is saved for next time.</span></li>
       </ol>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>WaxFrame remembers the last server you successfully added models from. The next time you open <strong>Import from Model Server</strong>, the Chat Endpoint, Models Endpoint, and API Key fields are pre-filled, and WaxFrame automatically fetches the current model list for you. Just select any new models and click <strong>Add Selected to Hive</strong>. To import from a different server, pick a new preset from Quick Add or type new URLs — the new values are saved on your next successful add.</p>
+        <p>WaxFrame remembers the last server you successfully added models from. The next time you open <strong>Import from Model Server</strong>, the three fields are pre-filled, a <strong>🔑 saved</strong> indicator appears next to the API Key label, and WaxFrame automatically fetches the current model list for you. Just tick any new models and click <strong>Add N to Hive</strong>. To switch to a different server, pick a new preset from Quick Add or type new URLs — the new values are saved on your next successful add. To clear the saved server, click <strong>Forget saved server</strong> below the Fetch Models button.</p>
       </div>
       <div class="wh-tip">
         <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>If Fetch Models returns a CORS or Network Error, your server may be blocking requests from local file origins. Ask your IT team to configure the server to allow <code>file://</code> origin requests, or serve WaxFrame from a local web server so requests originate from an HTTP address.</p>
+        <p>If a fetch fails, the middle column switches to an error panel that explains what likely went wrong and suggests next steps. Common causes: an incorrect Models Endpoint path, an invalid or missing API Key, CORS restrictions on the server, or mixed-content blocking when WaxFrame is loaded from <code>https://</code> but the server URL is <code>http://localhost</code>. For the mixed-content case, download WaxFrame and open it from a <code>file://</code> URL instead, or serve it from a local web server on the same origin as your model server.</p>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
