@@ -2,6 +2,46 @@
 
 ---
 
+## v3.20.10 Pro — Build `20260424-003`
+**Released:** April 24, 2026
+
+### Code Cleanup
+
+**CSS `!important` cleanup pass 2 — 19 flags eliminated from state-override rules**
+Completed the second round of `!important` elimination across six selector clusters that had been relying on `!important` to force state-specific visual overrides. Total count dropped from 45 flags to 26, with all 26 remaining in legitimate contexts (print stylesheet, `prefers-reduced-motion` overrides, mobile overlay hiding, `::selection` pseudo-element). Each fix leaves the rendered UI visually identical while removing the cascade debt.
+
+**Convergence card state rules** — Four flags removed from `.convergence-card`, `.convergence-card.declined`, and `.convergence-card.custom-selected`. Root cause: HTML renders `.convergence-card` on the same element as `.decision-card`, so the base `.decision-card` rule with `border: 1px solid var(--amber)` was competing at equal specificity (0,1,0). Fix: upgraded selectors to compound `.decision-card.convergence-card` which bumps to specificity (0,2,0) and beats the base rule naturally. Same technique applied to `.declined` and `.custom-selected` state variants.
+
+**Decision option button selected states** — Six flags removed from `.decision-opt-btn.selected.decline-btn` and `.decision-opt-btn.selected.custom-btn` plus their nested `.decision-opt-num` child rules. Root cause: the child `.decision-opt-num` state rules at these locations were duplicating what the variant-specific rules at lines 6176-6179 (`.decision-opt-btn.selected .decision-opt-num-decline` etc.) were already doing correctly. Since the child rules were redundant, they were deleted entirely rather than reworked; the parent `.decline-btn` and `.custom-btn` rules retained their border/background values with `!important` stripped since they naturally win via source order against the generic `.decision-opt-btn.selected` rule above.
+
+**Decision option custom and bypass variants** — Four flags removed from `.decision-opt-custom.selected` and `.decision-opt-bypass.selected`. Root cause: these rules were fighting the generic `.decision-opt-btn.selected` rule at equal specificity (0,2,0). Fix: these variant-specific rules already come after the generic one in source order, so at equal specificity the cascade naturally selects them. `!important` was cargo-culted and never needed.
+
+**Bypassed decision card** — Three flags removed from `.decision-card.bypassed` and its `.decision-badge` child. Root cause: 2-class selector naturally beats single-class `.decision-card` base at specificity (0,2,0) vs (0,1,0). The sibling `.decision-card.resolved` rule had never used `!important` and worked correctly, confirming this one didn't need it either.
+
+**History response tab active state** — Four flags removed from `.hist-resp-tab.active` (background, border-color, color, font-weight). Root cause: fighting the `.work-phase-pill` base rule that coexists on the same element at equal specificity. The active rule comes much later in the stylesheet, so source order already wins without `!important`.
+
+**Finish modal button disabled states** — Three flags removed from `.finish-modal-btn-disabled` and its `:hover` pseudo-class. Root cause: competing with `.finish-modal-btn-export` and `.finish-modal-btn-new` at equal specificity. Disabled rules come later in source order, so cascade naturally selects them.
+
+### Why this matters
+
+Every `!important` flag is a cascade escape valve — a developer saying "I couldn't make CSS behave normally so I'm going to force this rule to win." The cost is that any future rule needing to override the forced value also has to use `!important`, which cascades into a "specificity arms race" where every state gets progressively more flags. Cleaning these up restores normal cascade behavior so future state rules don't need escalation. The 26 remaining flags genuinely require the escape valve (print overrides, motion preferences, mobile takeover, browser-default selection colors) — those are the legitimate cases the feature was designed for.
+
+### Testing Notes
+
+This release touches visual state rules on convergence cards, decision cards, decision option buttons, history response tabs, and finish modal disabled/done states. Visual regression risk concentrated in:
+- Convergence cards on resolved rounds (all reviewers agreed)
+- Decision cards on rounds with reviewer disagreements (hot conflicts, bypass actions, custom text)
+- Decision option buttons in all four variants (apply/decline/custom/bypass) when selected vs unselected
+- History response tabs when switching between document and notes views
+- Finish modal export/new buttons when disabled
+
+If any of those states renders differently than expected after update, the specificity fix isn't winning where intended — easy to chase down, just file the regression.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.9 Pro — Build `20260424-002`
 **Released:** April 24, 2026
 

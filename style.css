@@ -4062,34 +4062,33 @@ kbd {
   color: var(--text);
   border: 1px solid #00b300;
 }
-.convergence-card {
-  border-color: #00b300 !important;
+/* Compound selectors used here: .convergence-card is always rendered WITH
+   .decision-card on the same element, so .decision-card.convergence-card has
+   specificity (0,2,0) which naturally beats the .decision-card base rule
+   below at (0,1,0) — no !important needed. */
+.decision-card.convergence-card {
+  border-color: #00b300;
 }
-.convergence-card.declined {
-  border-color: #f87171 !important;
+.decision-card.convergence-card.declined {
+  border-color: #f87171;
 }
-.convergence-card.declined .convergence-ai-badge {
+.decision-card.convergence-card.declined .convergence-ai-badge {
   color: var(--muted);
 }
-.convergence-card.custom-selected {
-  border-color: var(--amber) !important;
+.decision-card.convergence-card.custom-selected {
+  border-color: var(--amber);
 }
 .decision-opt-btn.selected.decline-btn {
-  border-color: #f87171 !important;
-  background: rgba(248,113,113,0.08) !important;
-}
-.decision-opt-btn.selected.decline-btn .decision-opt-num {
-  background: rgba(248,113,113,0.15) !important;
-  color: #f87171 !important;
+  border-color: #f87171;
+  background: rgba(248,113,113,0.08);
 }
 .decision-opt-btn.selected.custom-btn {
-  border-color: var(--amber) !important;
-  background: rgba(245,166,35,0.08) !important;
+  border-color: var(--amber);
+  background: rgba(245,166,35,0.08);
 }
-.decision-opt-btn.selected.custom-btn .decision-opt-num {
-  background: rgba(245,166,35,0.15) !important;
-  color: var(--amber) !important;
-}
+/* .decision-opt-num background/color when selected is handled per-variant
+   at lines 6176-6179 via .decision-opt-num-{apply|decline|custom|bypass} —
+   single source of truth rather than duplicated here. */
 .convergence-ai-badge {
   font-size: 11px;
   font-weight: 700;
@@ -4282,9 +4281,11 @@ kbd {
 .decision-opt-custom {
   border-style: dashed;
 }
+/* Source order wins: this rule comes after .decision-opt-btn.selected above,
+   at equal specificity (0,2,0), so it overrides naturally without !important. */
 .decision-opt-custom.selected {
-  border-color: var(--amber) !important;
-  background: rgba(245,166,35,0.08) !important;
+  border-color: var(--amber);
+  background: rgba(245,166,35,0.08);
 }
 
 .decision-opt-bypass {
@@ -4293,8 +4294,8 @@ kbd {
 }
 .decision-opt-bypass:hover { opacity: 1; }
 .decision-opt-bypass.selected {
-  border-color: var(--text-dim) !important;
-  background: rgba(255,255,255,0.04) !important;
+  border-color: var(--text-dim);
+  background: rgba(255,255,255,0.04);
   opacity: 1;
 }
 
@@ -4322,12 +4323,12 @@ kbd {
 }
 
 .decision-card.bypassed {
-  border-color: var(--border2) !important;
+  border-color: var(--border2);
   opacity: 0.65;
 }
 .decision-card.bypassed .decision-badge {
-  background: var(--surface3) !important;
-  color: var(--text-dim) !important;
+  background: var(--surface3);
+  color: var(--text-dim);
 }
 .decision-custom-wrap {
   margin-top: 8px;
@@ -5592,7 +5593,7 @@ kbd {
 
 .hist-resp-panel { display: none; flex: 1; min-height: 0; }
 .hist-resp-panel.active { display: flex; flex-direction: column; }
-.hist-resp-tab.active { background: var(--accent) !important; border-color: var(--accent) !important; color: #0a0c12 !important; font-weight: 700 !important; cursor: default; }
+.hist-resp-tab.active { background: var(--accent); border-color: var(--accent); color: #0a0c12; font-weight: 700; cursor: default; }
 
 /* ── Shared footer (helper pages) ── */
 .page-footer {
@@ -6206,14 +6207,16 @@ kbd {
 .finish-modal-btn-new { flex-direction: column; gap: 3px; }
 
 /* ── Finish modal button disabled / done states ── */
+/* Source order wins: these rules come AFTER .finish-modal-btn-export/-new above
+   at equal specificity, so they override naturally without !important. */
 .finish-modal-btn-disabled {
-  border-color: var(--border2) !important;
-  color: var(--text-dim) !important;
+  border-color: var(--border2);
+  color: var(--text-dim);
   opacity: 0.45;
   cursor: not-allowed;
 }
 .finish-modal-btn-disabled:hover {
-  background: transparent !important;
+  background: transparent;
 }
 .finish-modal-btn-done {
   opacity: 0.5;
