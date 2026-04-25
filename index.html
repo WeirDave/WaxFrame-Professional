@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-010">
+  <meta name="waxframe-build" content="20260424-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.20.11">
+  <link rel="stylesheet" href="style.css?v=3.20.10">
 </head>
 <body>
 
@@ -254,7 +254,7 @@
           <div class="goal-field">
             <label class="goal-field-label" for="goalTone">Tone &amp; voice</label>
             <input type="text" id="goalTone" class="goal-field-input" placeholder="e.g. formal vs casual, technical vs plain English, confident vs cautious, warm and conversational, dry and direct" oninput="saveProject();updateGoalCounter();updateProjectRequirements()">
-            <p class="goal-field-hint">How should it sound? A few adjectives — <em>professional, confident</em> — is a floor that works but leaves a lot open to interpretation. Richer is better: <em>Direct and confident, not stiff — like a peer they'd want to work with</em>. Say what to sound like, what to avoid, and who's reading. Bland inputs produce inconsistent outputs across rounds.</p>
+            <p class="goal-field-hint">How should it sound? Pick two or three words — <em>confident, direct, jargon-free</em> or <em>warm, conversational, no bullet points</em>. Without this, different AIs will drift toward different styles and the document becomes inconsistent across rounds.</p>
           </div>
 
           <div class="goal-field">
@@ -267,7 +267,7 @@
 
         <div class="length-constraint-row">
           <div class="length-constraint-header">
-            <h3 class="proj-goal-heading">Length Constraint <button class="goal-info-btn" onclick="document.getElementById('infoLengthModal').classList.add('active')" title="About length measurement"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></h3>
+            <h3 class="proj-goal-heading">Length Constraint <span class="length-constraint-optional">(optional)</span></h3>
             <span class="length-constraint-hint" id="lengthConstraintHint"></span>
           </div>
           <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit. Leave blank for unconstrained.</p>
@@ -276,7 +276,6 @@
             <select id="lengthUnit" class="length-unit-select" onchange="saveProject();updateLengthConstraintHint()">
               <option value="characters">Characters</option>
               <option value="words">Words</option>
-              <option value="paragraphs">Paragraphs</option>
               <option value="pages">Pages</option>
             </select>
           </div>
@@ -536,6 +535,7 @@
           <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
             <button class="btn" onclick="copyConsole()">📋 Copy</button>
+            <button class="btn" onclick="clearConsole()">✕ Clear</button>
           </div>
         </div>
         <div class="console-body-wrap">
@@ -1180,23 +1180,6 @@
   </div>
 </div>
 
-<!-- LENGTH CONSTRAINT INFO -->
-<div class="finish-modal-overlay" id="infoLengthModal" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="finish-modal goal-info-modal">
-    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
-    <h2 class="finish-modal-title">About Length Constraint</h2>
-    <div class="goal-info-body">
-      <p>Tell WaxFrame how long the final document should be. We enforce the limit using the most accurate measurement available for each unit — but results can vary with formatting, so keep that in mind.</p>
-      <div class="goal-info-row"><span class="info-label">Characters</span><span class="goal-info-desc">Counted directly from the text. Matches how web forms, SMS counters, and social media count. Accurate for plain English. Emoji and complex scripts can count differently than what appears on screen.</span></div>
-      <div class="goal-info-row"><span class="info-label">Words</span><span class="goal-info-desc">Counted by whitespace separation. Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs. If you're hitting a hard ceiling elsewhere, trim a few words under your target as a buffer.</span></div>
-      <div class="goal-info-row"><span class="info-label">Paragraphs</span><span class="goal-info-desc">Counted as blocks of text separated by blank lines. This is how markdown, plain text, and Word documents denote paragraph breaks. Headings and bullet lists count as paragraphs too if they're separated by blank lines.</span></div>
-      <div class="goal-info-row"><span class="info-label">Pages</span><span class="goal-info-desc">Approximated using 500 words per single-spaced 12pt page. This is the one unit WaxFrame cannot measure directly — actual page count depends on your font, margins, and line spacing. For firm limits, aim slightly under the target.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
-    </div>
-    <button class="finish-modal-cancel" onclick="document.getElementById('infoLengthModal').classList.remove('active')">Got it →</button>
-  </div>
-</div>
-
 <div class="finish-modal-overlay" id="infoConflictsModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
@@ -1354,7 +1337,7 @@
 </div>
 
 <script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.20.17"></script>
+<script src="app.js?v=3.20.11"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
@@ -1395,11 +1378,7 @@
   <div class="nav-panel-header">
     <div class="nav-panel-brand">
       <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
-      <div class="nav-panel-brand-text">
-        <span class="nav-panel-title">WaxFrame</span>
-        <span class="nav-panel-tagline">Many minds. One refined result.</span>
-        <span class="app-version-stamp nav-panel-version"></span>
-      </div>
+      <span class="nav-panel-title">WaxFrame</span>
     </div>
     <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
   </div>

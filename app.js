@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-010';         // build stamp — update each session
+const BUILD       = '20260424-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -856,9 +856,9 @@ function showRoundErrorModal(reason, details) {
   if (!modal) return;
 
   const messages = {
-    bloat:    `The Builder returned a document that exceeded the length limit. Your document has not been changed. The measurement and limit are shown below in the unit you set on the Project screen.
+    bloat:    `The Builder returned a document that was significantly longer than the original. This can happen when an AI adds to the document instead of refining it. Your document has not been changed.
 
-You can try running the round again — the result may differ — or switch to a different Builder, or adjust the Length Constraint on the Project screen and try again.`,
+You can try running the round again — the result may differ — or switch to a different Builder and try again.`,
     conflicts:`The Builder's response was missing a required section and could not be processed. Your document has not been changed.
 
 You can try running the round again or switch to a different Builder and try again.`,
@@ -893,6 +893,11 @@ function setBuilderFromModal(id) {
   closeChangeBuilder();
   renderBeeStatusGrid();
   toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
+}
+
+function clearConsole() {
+  const el = document.getElementById('liveConsole');
+  if (el) el.innerHTML = '<div class="console-entry console-info">Console cleared.</div>';
 }
 
 // ══════════════════════════════════════
@@ -1593,6 +1598,10 @@ function goToScreen(id) {
   }
 }
 
+function goToFree() {
+  window.open('https://weirdave.github.io/WaxFrame-Free/', '_blank');
+}
+
 function openNavMenu() {
   document.getElementById('navPanel')?.classList.add('open');
   document.getElementById('navBackdrop')?.classList.add('open');
@@ -1765,41 +1774,18 @@ function saveProject() {
 function saveSettings() { saveHive(); saveProject(); }
 
 // ── Length constraint helpers ──
-const WORDS_PER_PAGE      = 500;
-const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
-const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
-
-// ── Length-unit measurement helpers ──
-// Direct-count the output in the user's chosen unit. Pages can't be measured
-// from raw text, so it falls back to word count (and the gate compares against
-// the word estimate from WORDS_PER_PAGE).
-function countInUnit(text, unit) {
-  if (!text) return 0;
-  if (unit === 'characters')  return text.length;
-  if (unit === 'paragraphs')  return text.split(/\n\s*\n/).filter(p => p.trim()).length;
-  // words and pages both reduce to whitespace-split word count
-  return text.trim().split(/\s+/).filter(Boolean).length;
-}
-
-function unitLabel(unit, count) {
-  const plural = count === 1 ? '' : 's';
-  if (unit === 'pages')      return `page${plural}`;
-  if (unit === 'paragraphs') return `paragraph${plural}`;
-  if (unit === 'words')      return `word${plural}`;
-  return `character${plural}`;
-}
+const WORDS_PER_PAGE = 500;
+const CHARS_PER_WORD = 5.5; // average chars per word for estimation
 
 function getLengthConstraint() {
   const limit = parseInt(document.getElementById('lengthLimit')?.value || '0', 10);
   const unit  = document.getElementById('lengthUnit')?.value || 'characters';
   if (!limit || limit <= 0) return null;
-  // wordLimit is a fallback estimate used by the gate ONLY for pages (not directly countable)
-  // and by the hint display for pages/paragraphs/characters. Characters and words are direct-counted.
+  // Normalise everything to a word limit for the bloat gate
   let wordLimit;
-  if (unit === 'words')           wordLimit = limit;
-  else if (unit === 'paragraphs') wordLimit = limit * WORDS_PER_PARAGRAPH;
-  else if (unit === 'pages')      wordLimit = limit * WORDS_PER_PAGE;
-  else                            wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
+  if (unit === 'words')      wordLimit = limit;
+  else if (unit === 'pages') wordLimit = limit * WORDS_PER_PAGE;
+  else                       wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
   return { limit, unit, wordLimit };
 }
 
@@ -1808,12 +1794,12 @@ function updateLengthConstraintHint() {
   if (!hintEl) return;
   const c = getLengthConstraint();
   if (!c) { hintEl.textContent = ''; return; }
-  // Show word estimate for the fuzzy-ish units (pages, paragraphs) and for characters
-  // (because 500 chars ≈ 91 words is a useful sanity check). Words is self-explanatory.
-  if (c.unit === 'words') {
-    hintEl.textContent = '';
-  } else {
+  if (c.unit === 'pages') {
     hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
+  } else if (c.unit === 'characters') {
+    hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
+  } else {
+    hintEl.textContent = '';
   }
 }
 
@@ -1860,14 +1846,6 @@ function clearProject() {
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
   localStorage.removeItem('waxframe_v2_has_pdf_pages');
-
-  // Reset the live console and conflicts panels. clearProject is the one
-  // user-initiated destructive action that should zero out the session log —
-  // normal navigation and re-launching a session does not touch these panels.
-  const liveConsoleEl = document.getElementById('liveConsole');
-  if (liveConsoleEl) liveConsoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
-  const conflictsEl = document.getElementById('conflictsPanel');
-  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
 
   // Reset Finish modal export buttons to their pristine innerHTML captured on
   // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
@@ -3644,6 +3622,9 @@ function continueFromProject() {
   goToScreen('screen-document');
 }
 
+// Legacy alias — kept for any nav-menu calls
+function validateAndContinue() { continueFromBees(); }
+
 // ── SCREEN 3: PROJECT SETUP ──
 function switchDocTab(tab) {
   docTab = tab;
@@ -4158,10 +4139,15 @@ function initWorkScreen(isNewSession = false) {
   const version = document.getElementById('projectVersion')?.value.trim() || '';
   const goal    = assembleProjectGoal();
 
-  // Note: console/conflicts/notes are NOT wiped here, even on a brand new
-  // session. The only legitimate path for wiping those panels is clearProject(),
-  // which is an explicit user-initiated destructive action. No normal navigation
-  // or re-launch should clear the session log.
+  // Only clear transient panels on a brand new session — not on page refresh
+  if (isNewSession) {
+    const consoleEl = document.getElementById('liveConsole');
+    if (consoleEl) consoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
+    const conflictsEl = document.getElementById('conflictsPanel');
+    if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
+    const notesEl = document.getElementById('workNotes');
+    if (notesEl) notesEl.value = '';
+  }
 
   const el = document.getElementById('workProjectName');
   const ve = document.getElementById('workProjectVersion');
@@ -4652,6 +4638,51 @@ function closeUnanimousScene(silent = false) {
   }, 900);
 }
 
+// ── FANFARE — ascending C–E–G–high-C major arpeggio with a ping cap ──
+function playUnanimousFanfare() {
+  if (_isMuted) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = ctx.currentTime;
+
+    // Triumphant chord stabs: C5, E5, G5, C6
+    const notes = [
+      { freq: 523.25, start: 0.00, dur: 0.18, vol: 0.22 },  // C5
+      { freq: 659.25, start: 0.15, dur: 0.18, vol: 0.22 },  // E5
+      { freq: 783.99, start: 0.30, dur: 0.55, vol: 0.26 },  // G5 held
+      { freq: 1046.5, start: 0.60, dur: 0.80, vol: 0.28 },  // C6 climax
+    ];
+    notes.forEach(n => {
+      // Two oscillators per note for a richer brass-ish tone
+      [['square', 1.0], ['triangle', 0.6]].forEach(([type, mul]) => {
+        const osc  = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(n.freq, t0 + n.start);
+        gain.gain.setValueAtTime(0, t0 + n.start);
+        gain.gain.linearRampToValueAtTime(n.vol * mul, t0 + n.start + 0.02);
+        gain.gain.setValueAtTime(n.vol * mul, t0 + n.start + n.dur * 0.7);
+        gain.gain.exponentialRampToValueAtTime(0.001, t0 + n.start + n.dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(t0 + n.start); osc.stop(t0 + n.start + n.dur + 0.05);
+      });
+    });
+
+    // Sparkle ping at the end
+    const ping = ctx.createOscillator();
+    const pg   = ctx.createGain();
+    ping.type = 'sine';
+    ping.frequency.setValueAtTime(2093, t0 + 1.35); // C7
+    pg.gain.setValueAtTime(0, t0 + 1.35);
+    pg.gain.linearRampToValueAtTime(0.14, t0 + 1.38);
+    pg.gain.exponentialRampToValueAtTime(0.001, t0 + 2.0);
+    ping.connect(pg); pg.connect(ctx.destination);
+    ping.start(t0 + 1.35); ping.stop(t0 + 2.05);
+
+    setTimeout(() => ctx.close(), 2400);
+  } catch(e) { /* audio not supported — fail silently */ }
+}
+
 // ── CRACKLE — short burst of high-pitched filtered noise pops ──
 // Simulates the sparkler-star crackle that follows a firework's main burst.
 // Each call produces ~10 rapid pops over ~300ms, bandpass-filtered so they
@@ -5087,6 +5118,7 @@ Rules for USER DECISION format:
 - List only the AIs who specifically suggested that option by name
 - Include one OPTION_N per genuinely distinct suggestion — minimum 2 UNIQUE options, no maximum
 - Each OPTION_N text must be UNIQUE within the block — if two or more reviewers proposed the same replacement text (verbatim, or differing only in whitespace, capitalisation, or trailing punctuation), MERGE them into a single OPTION_N and list all their AI names together, comma-separated. Identical options are not a choice.
+- Do not include the unchanged original text as an OPTION_N entry. Every OPTION_N must be a genuine reviewer-suggested alternative attributed to one or more reviewers by name. If a strict majority of reviewers proposed the same change, apply it to the document and do not generate a USER DECISION block — that is a strict majority, not a 3v3 split. Manufacturing a fake "original text" or "unchanged" option to surface a unanimous vote as a choice is a violation of the MAJORITY RULES above.
 - Do not add commentary outside the structured block
 - Do not combine options that are meaningfully different
 - CRITICAL: The quoted option text must never contain an em dash (—). The only em dash on an OPTION line is the single separator between the quoted text and the AI names at the end. If you need a pause or range in the option text, use a comma or hyphen instead.
@@ -5182,13 +5214,11 @@ function buildPromptForAI(ai, reviewerResponses) {
   const _lc = getLengthConstraint();
   if (_lc) {
     if (_lc.unit === 'pages') {
-      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). Pages depend on font and layout, so treat this as a word-count target. The final document must not exceed this length.\n\n`;
-    } else if (_lc.unit === 'paragraphs') {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} paragraph${_lc.limit !== 1 ? 's' : ''}, separated by blank lines. This is a hard limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). The final document must not exceed this length. Tighten and consolidate content to fit within this limit.\n\n`;
     } else if (_lc.unit === 'words') {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} words. This is a hard limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} words. The final document must not exceed this word count. Tighten and consolidate content to fit within this limit.\n\n`;
     } else {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} characters, including spaces. This is a hard limit.\n\n`;
+      prompt += `LENGTH CONSTRAINT: Maximum ${_lc.limit} characters. The final document must not exceed this character count. Tighten and consolidate content to fit within this limit.\n\n`;
     }
   }
 
@@ -5350,41 +5380,24 @@ async function runBuilderOnly() {
     if (!builderHadError && newDoc) {
       const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
       const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
+      const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
       const _lcGate   = getLengthConstraint();
-      let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
-      if (_lcGate) {
-        // User specified a length constraint — honor it in its native unit.
-        // Pages uses the word estimate (not directly measurable from raw text).
-        actual    = countInUnit(newDoc, _lcGate.unit);
-        limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-        unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
-        limitName = _lcGate.unit === 'pages'
-          ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
-          : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
-        bloatFail = actual > limitNum;
-        bloatPct  = Math.round((actual / limitNum) * 100);
-      } else {
-        // No constraint — fall back to 1.5× prior-word sanity check
-        actual    = newWords;
-        unitName  = 'words';
-        bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
-        limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
-        bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
-      }
+      const bloatLimit = _lcGate ? _lcGate.wordLimit : (prevWords > 0 ? prevWords * 1.5 : Infinity);
+      const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
       if (bloatFail) {
         builderHadError = true;
         _failedRoundReason = 'bloat';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-        setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
-        setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
-        consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+        setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
+        setStatus(`⚠️ Builder output is ${bloatPct}% of original — round rejected`);
+        consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
       } else {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
         docText = newDoc;
         setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
         setStatus(`✅ Round ${round} complete — Builder applied your instructions`);
-        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
+        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
         playRosieSound();
       }
     } else if (!builderHadError) {
@@ -5688,41 +5701,26 @@ async function runRound() {
       }
 
       if (!builderHadError && newDoc) {
-        // ── GATE 2: Length gate — measure in user's chosen unit, fall back to 1.5× prior words ──
+        // ── GATE 2: Bloat check — reject if new doc is >120% of prior word count ──
         const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
         const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
+        const bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
         const _lcGate   = getLengthConstraint();
-        let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
-        if (_lcGate) {
-          actual    = countInUnit(newDoc, _lcGate.unit);
-          limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-          unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
-          limitName = _lcGate.unit === 'pages'
-            ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
-            : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
-          bloatFail = actual > limitNum;
-          bloatPct  = Math.round((actual / limitNum) * 100);
-        } else {
-          actual    = newWords;
-          unitName  = 'words';
-          bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
-          limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
-          bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
-        }
+        const bloatFail  = _lcGate ? newWords > _lcGate.wordLimit : (prevWords > 0 && newWords > prevWords * 1.5);
         if (bloatFail) {
           builderHadError = true;
           _failedRoundReason = 'bloat';
-          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-          setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
-          setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
-          consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${newWords} words (${bloatPct}% of original ${prevWords}${_lcGate ? ` · limit: ${_lcGate.wordLimit} words` : ''}) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+          setBeeStatus(builderAI.id, 'error', `Bloat detected (${bloatPct}%)`);
+          setStatus(`⚠️ Builder output is ${bloatPct}% of original length — round rejected`);
+          consoleLog(`⚠️ Bloat gate triggered — ${newWords} words vs ${prevWords > 0 ? prevWords + ' prior' : 'no prior'}${_lcGate ? ` (limit: ${_lcGate.wordLimit})` : ''} (${bloatPct}%). Round not saved.`, 'warn');
         } else {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
           docText = newDoc;
           setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
           setStatus(`✅ Round ${round} complete — document updated`);
-          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
+          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${bloatPct}% of prior` : ''})`, 'success');
           const hasUserConflicts = window._lastConflicts?.userDecisions?.length > 0;
           if (hasUserConflicts) { playRoundCompleteSound(); } else { playRosieSound(); }
         }
@@ -5937,6 +5935,21 @@ function extractConflicts(text) {
     if (uniqueTexts.size < 2) {
       const sample = decision.options[0]?.text || '(empty)';
       consoleLog(`⚠️ Suppressed no-op USER DECISION — all options identical: "${sample}"`, 'warn');
+      continue;
+    }
+    // Suppress unanimous-vote decisions where the Builder applied a change
+    // (current matches one option) but used a fake baseline label like
+    // "original text" as another option to manufacture a 2-way choice. Per
+    // the Builder's own MAJORITY RULES, a unanimous vote should be applied
+    // silently, not surfaced as a USER DECISION. Defensive parsing because
+    // Builder LLMs occasionally violate that rule.
+    const baselineLabelRegex = /^\s*(original(\s+text)?|unchanged|baseline|no[\s-]?change|current|n\/?a|none)\s*$/i;
+    const currentText = (decision.current || '').trim();
+    const hasFakeBaseline = decision.options.some(o => baselineLabelRegex.test(o.ais || ''));
+    const currentMatchesAnOption = currentText.length > 0 &&
+      decision.options.some(o => o.text.trim() === currentText);
+    if (hasFakeBaseline && currentMatchesAnOption) {
+      consoleLog(`⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`, 'warn');
       continue;
     }
     result.userDecisions.push(decision);
