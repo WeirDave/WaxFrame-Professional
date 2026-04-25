@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260425-003
+   Build: 20260425-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1466,8 +1466,11 @@ html, body {
   flex-shrink: 0;
 }
 
-/* ── Edit Hive button — visible at all viewports ── */
-.hive-edit-btn { display: inline-flex; }
+/* ── Edit Hive button — laptop-only (paired with the dot-strip view) ──
+   At desktop (≥1601px) the full hex-grid AI cards are visible with their
+   own toggle affordance, so this header button is redundant noise. It
+   becomes useful again at ≤1600px where cards collapse to dot icons. */
+.hive-edit-btn { display: none; }
 
 /* ── Dot strip — hidden on big screens, shown at laptop ── */
 .bee-dot-strip { display: none; }
@@ -1546,6 +1549,7 @@ html, body {
 /* ── At laptop viewport: show dot strip, hide card grid ── */
 @media (max-width: 1600px) {
   .hex-grid        { display: none; }
+  .hive-edit-btn   { display: inline-flex; }
   .bee-dot-strip   {
     display: flex;
     flex-wrap: wrap;
@@ -6218,7 +6222,6 @@ kbd {
   scrollbar-width: thin;
   scrollbar-color: rgba(245,166,35,0.4) transparent;
 }
-.goal-modal-textarea:focus  { border-color: var(--accent); }
 .goal-modal-refine-wrap     { margin-top: 10px; }
 .text-green                 { color: #00b300; }
 .text-accent                { color: var(--accent); }
@@ -6258,7 +6261,10 @@ kbd {
 .goal-modal-meta         { font-size: 12px; color: var(--text-dim); margin-bottom: 14px; }
 .goal-modal-label        { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; }
 .goal-modal-label-note   { font-style: italic; font-weight: 400; }
-.goal-modal-textarea     { width: 100%; font-family: var(--font-mono); font-size: 13px; line-height: 1.7; color: var(--text); background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 14px; resize: none; outline: none; box-sizing: border-box; transition: border-color 0.15s; overflow-y: auto; }
+.goal-modal-fields       { display: flex; flex-direction: column; gap: 8px; padding: 14px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm); max-height: 55vh; overflow-y: auto; box-sizing: border-box; }
+.goal-modal-fields .dp-field         { padding: 6px 0; }
+.goal-modal-fields .dp-field-value   { color: var(--text); }
+.goal-modal-empty        { font-size: 13px; color: var(--text-dim); font-style: italic; padding: 8px 0; text-align: center; }
 .goal-modal-refine-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 600; }
 .goal-modal-refine-text  { font-family: var(--font-mono); font-size: 12px; line-height: 1.6; color: var(--text-dim); background: var(--surface2); border: 1px solid var(--accent); border-radius: var(--radius-sm); padding: 10px 14px; white-space: pre-wrap; max-height: 120px; overflow-y: auto; }
 .goal-modal-footer       { display: flex; gap: 10px; margin-top: 16px; align-items: center; }
