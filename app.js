@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260425-006
+//  Build: 20260425-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-006';         // build stamp — update each session
+const BUILD       = '20260425-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -7722,12 +7722,40 @@ function exportTranscript() {
   document.dispatchEvent(new CustomEvent('waxframe:exported', { detail: { kind: 'transcript' } }));
 }
 
-function backupSession() {
+async function backupSession() {
   const hive    = localStorage.getItem(LS_HIVE)    || null;
   const project = localStorage.getItem(LS_PROJECT) || null;
-  const session = localStorage.getItem(LS_SESSION) || null;
-  if (!hive && !project && !session) { toast('⚠️ Nothing to back up'); return; }
-  const backup   = { _waxframe_backup: true, LS_HIVE: hive, LS_PROJECT: project, LS_SESSION: session };
+  // Legacy localStorage session — almost always null since the IDB migration
+  // ran ages ago. Kept for forward compatibility with any unmigrated browser.
+  const sessionLS = localStorage.getItem(LS_SESSION) || null;
+  // ── (v3.21.10) Primary session source: IndexedDB ──
+  // The session blob (round history, working document, console HTML, conflicts,
+  // notes, project clock seconds) lives in IDB. Prior versions read only the
+  // legacy LS_SESSION key here and got null, producing backups that contained
+  // only project setup and API keys — never round data. Every restore from
+  // those backups silently lost round history.
+  let sessionIDB = null;
+  try { sessionIDB = await idbGet(); } catch(e) { /* ignore — fall back to mirror */ }
+  // Also include the localStorage mirror as a redundancy layer. If IDB is
+  // somehow unreadable at backup time but the mirror has data, we still
+  // capture it.
+  const sessionMirror = localStorage.getItem(LS_SESSION_MIRROR) || null;
+
+  if (!hive && !project && !sessionLS && !sessionIDB && !sessionMirror) {
+    toast('⚠️ Nothing to back up'); return;
+  }
+
+  const backup = {
+    _waxframe_backup:         true,
+    _waxframe_backup_version: 2, // v2 = includes IDB session + LS mirror (v3.21.10+)
+    _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
+    _waxframe_backup_ts:      Date.now(),
+    LS_HIVE:           hive,
+    LS_PROJECT:        project,
+    LS_SESSION:        sessionLS,
+    IDB_SESSION:       sessionIDB,    // ← the actual round data
+    LS_SESSION_MIRROR: sessionMirror, // ← belt-and-suspenders redundancy
+  };
   const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
   const name     = proj.projectName || 'session';
   const version  = proj.projectVersion || '';
@@ -7746,7 +7774,12 @@ function backupSession() {
   a.click();
   URL.revokeObjectURL(a.href);
   closeNavMenu();
-  toast('💾 Session backed up');
+  // Confirm what was actually captured so the user knows whether session data
+  // is in the file or only project setup.
+  const sessionMsg = sessionIDB
+    ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
+    : ' (project setup only — no session data)';
+  toast(`💾 Session backed up${sessionMsg}`);
 }
 
 function importSession() {
@@ -7757,15 +7790,44 @@ function importSession() {
     const file = e.target.files[0];
     if (!file) return;
     const reader   = new FileReader();
-    reader.onload  = ev => {
+    reader.onload  = async ev => {
       try {
         const data = JSON.parse(ev.target.result);
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
-        if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
-        if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
-        if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
-        toast('✅ Backup restored — reloading…');
-        setTimeout(() => location.reload(), 800);
+        // ── Restore localStorage layers ──
+        if (data.LS_HIVE)           localStorage.setItem(LS_HIVE,           data.LS_HIVE);
+        if (data.LS_PROJECT)        localStorage.setItem(LS_PROJECT,        data.LS_PROJECT);
+        if (data.LS_SESSION)        localStorage.setItem(LS_SESSION,        data.LS_SESSION);
+        if (data.LS_SESSION_MIRROR) localStorage.setItem(LS_SESSION_MIRROR, data.LS_SESSION_MIRROR);
+        // ── (v3.21.10) Restore IndexedDB session ──
+        // Prior versions never wrote to IDB on restore, so even if a backup
+        // had session data it would land in localStorage where loadSession
+        // immediately migrated it (or ignored it if null). The IDB write
+        // here is the actual session restore.
+        let restoredFromIDB = false;
+        if (data.IDB_SESSION) {
+          try {
+            await idbSet(data.IDB_SESSION);
+            try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(_) {}
+            restoredFromIDB = true;
+          } catch(idbErr) {
+            console.error('[importSession] IDB restore failed:', idbErr);
+            toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
+          }
+        }
+        // Diagnostic toast — be explicit about what was captured so users know
+        // whether they're getting full state or just project setup.
+        const v = data._waxframe_backup_version || 1;
+        if (v < 2 && !data.IDB_SESSION) {
+          toast('⚠️ Old backup format (pre-v3.21.10) — only project setup + API keys restored. Session data not in this file. Reloading…', 12000);
+        } else if (restoredFromIDB) {
+          const sh = data.IDB_SESSION?.history?.length || 0;
+          const sd = data.IDB_SESSION?.docText?.length || 0;
+          toast(`✅ Backup restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
+        } else {
+          toast('✅ Project setup restored (no session data in backup) — reloading…', 6000);
+        }
+        setTimeout(() => location.reload(), 1500);
       } catch(e) {
         toast('⚠️ Could not read file — is it a WaxFrame backup?');
       }
