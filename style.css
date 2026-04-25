@@ -7305,47 +7305,53 @@ kbd {
    v3.21.0 — REFERENCE MATERIAL (Setup 4 + Work-screen drawer)
    ========================================================== */
 
-/* Setup 4 counter row beneath the paste/upload tabs */
+/* Setup 4 counter row — sits where export-mask-row sits on Setup 5
+   to keep the vertical rhythm of the two screens identical. */
 .ref-counter-row {
   display: flex;
-  gap: 18px;
   align-items: center;
-  margin-top: 10px;
-  padding: 8px 12px;
+  gap: 14px;
+  padding: 7px 10px;
   background: var(--surface2);
-  border: 1px solid var(--border);
+  border: 1px dashed var(--border2);
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  color: var(--text-dim);
+  margin-bottom: 8px;
   flex-wrap: wrap;
+}
+.ref-counter-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .ref-counter-item {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
 }
-.ref-counter-label {
+.ref-counter-sublabel {
   color: var(--muted);
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-size: 11px;
 }
-.ref-counter-item span:not(.ref-counter-label) {
+.ref-counter-item span:not(.ref-counter-sublabel) {
   font-family: var(--font-mono);
-  color: var(--text);
+  color: var(--accent);
   font-size: 12px;
 }
-.ref-counter-item .goal-info-btn {
-  margin-left: 2px;
-}
-.ref-counter-item .goal-info-btn img {
-  width: 14px;
-  height: 14px;
-  vertical-align: middle;
+.ref-counter-info {
+  margin-left: auto;
 }
 
-/* Setup 4 footer hint replacement */
+/* Setup 4 footer hint */
 .ref-optional-hint {
   color: var(--muted);
   font-style: italic;

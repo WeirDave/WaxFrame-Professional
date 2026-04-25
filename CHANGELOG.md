@@ -2,6 +2,49 @@
 
 ---
 
+## v3.21.1 Pro — Build `20260424-015`
+**Released:** April 24, 2026
+
+### Visual polish on Setup 4 — Reference Material
+
+**Setup 4 layout matched to Setup 5**
+The new Reference Material screen now mirrors the visual rhythm of the Starting Document screen exactly. The default tab is **Upload File** instead of Paste Text, matching Setup 5. The chars / words / tokens estimate counter has been moved up from below the tab panels to sit between the tab hint and the panels — the position where the Export Filename row sits on Setup 5. The counter row has been restyled to match the Export Filename row's appearance: dashed border, surface2 background, identical padding and margin. A leading `📚 Reference size` label parallels the `💾 Export filename` label on Setup 5.
+
+**Continue button is permanently lit**
+The Continue — Starting Document button on Setup 4 now carries the `btn-accent` class on render. Reference material is always optional, so the button is permanently in the lit "ready" state — there is no requirements gate to clear. This matches the visual prominence of the Launch button on Setup 5 once requirements are met.
+
+**Drop-zone icon unified across both setup screens**
+Both the Reference Material drop zone (Setup 4) and the Starting Document drop zone (Setup 5) now show the 📚 emoji instead of mixing 📚 and 📄. The 📚 emoji renders with stronger color saturation across browsers and gives both screens a more polished, consistent look.
+
+### Audit fixes — files missed in the v3.21.0 release
+
+**README.md badges bumped**
+The Version and Build badges in the repo README were stale — Version showed `3.2` and Build showed `20260415-002`, both far behind. They now reflect `Version-3.21.1` and `Build-20260424-015`.
+
+**WaxFrame Dry-Run Test Sheet renumbered**
+The dry-run test sheet had 12 occurrences of "Setup 4" referring to the Starting Document — these all shift to "Setup 5" with the new Setup 4 / Setup 5 numbering introduced in v3.21.0. The top-level instruction in the test sheet preamble has been updated accordingly. Anyone running the dry-run scripts post-v3.21.0 would have hit the wrong screen otherwise.
+
+### State defaults tightened
+
+The in-memory `refTab` default is now `'upload'` to match the new default tab on Setup 4. The `clearProject` reset path matches. The `loadSettings` restore path uses the persisted value but falls back to `'upload'` when none is present.
+
+### Files Changed
+
+- `index.html` — Restructured `screen-reference` body so the counter row sits between the tab hint and the panels (mirrors `screen-document`'s export-mask-row position). Default active tab and panel switched from paste to upload. Counter row markup updated to match the export-mask-row pattern with a leading `📚 Reference size` label and inline `Chars / Words / Tokens (est.)` items. `btn-accent` added to `#refContinueBtn` so the Continue button is permanently lit. Starting Document drop zone icon swapped from 📄 to 📚 for visual consistency with the Reference Material drop zone. Bumped `waxframe-build` meta to `20260424-015`, `app.js?v=` cache-bust to `3.21.1`, and `version.js?v=` cache-bust to `3.21.1`.
+- `app.js` — Bumped `BUILD` to `20260424-015`. Default `refTab` state var changed from `'paste'` to `'upload'`. `clearProject` reset target changed accordingly.
+- `style.css` — Restyled `.ref-counter-row` to mirror `.export-mask-row` proportions (dashed border, surface2 background, 7px / 10px padding, 8px bottom margin). Added `.ref-counter-sublabel` and `.ref-counter-info` styles to support the new label structure. `!important` count unchanged at 41.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.1 Pro`.
+- `README.md` — Bumped Version badge to `3.21.1` and Build badge to `20260424-015`.
+- `WaxFrame_DryRun_TestSheet.md` — Bulk-shifted 12 occurrences of "Setup 4" referring to the Starting Document to "Setup 5". Updated the top-level preamble instruction to direct users to paste starting documents into Setup 5.
+- `waxframe-user-manual.html` — Bumped `version.js?v=` cache-bust to `3.21.1`. No content changes.
+- `document-playbooks.html` — Bumped `version.js?v=` cache-bust to `3.21.1`. No content changes.
+- `what-are-tokens.html` — Bumped `version.js?v=` cache-bust to `3.21.1`. No content changes.
+- `api-details.html` — Bumped `version.js?v=` cache-bust to `3.21.1`. No content changes.
+- `prompt-editor.html` — Bumped `version.js?v=` cache-bust to `3.21.1`. No content changes.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.0 Pro — Build `20260424-014`
 **Released:** April 24, 2026
 

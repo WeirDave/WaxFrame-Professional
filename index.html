@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-014">
+  <meta name="waxframe-build" content="20260424-015">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -352,12 +352,20 @@
         </div>
 
         <div class="doc-input-tabs">
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
-          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-ref-paste" onclick="switchRefTab('paste')">📋 Paste Text</button>
+          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-paste" onclick="switchRefTab('paste')">📋 Paste Text</button>
         </div>
-        <p id="refTabHint" class="doc-tab-hint">Paste source material below — the hive will be told to cite against it but never edit it.</p>
+        <p id="refTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
 
-        <div class="doc-tab-panel" id="panel-ref-upload">
+        <div class="ref-counter-row" id="refCounterRow">
+          <span class="ref-counter-label">📚 Reference size</span>
+          <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span id="refCountChars">0</span></span>
+          <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span id="refCountWords">0</span></span>
+          <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span id="refCountTokens">0</span></span>
+          <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
+        </div>
+
+        <div class="doc-tab-panel active" id="panel-ref-upload">
           <div class="drop-zone" id="refDropZone" onclick="document.getElementById('refFileInput').click()"
                ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
             <div class="drop-zone-icon">📚</div>
@@ -371,7 +379,7 @@
           </div>
         </div>
 
-        <div class="doc-tab-panel active" id="panel-ref-paste">
+        <div class="doc-tab-panel" id="panel-ref-paste">
           <div class="proj-ta-editor">
             <div class="proj-ta-scroll">
               <div class="proj-ta-nums" id="refPasteNums"><div>1</div></div>
@@ -383,12 +391,6 @@
           </div>
         </div>
 
-        <div class="ref-counter-row" id="refCounterRow">
-          <span class="ref-counter-item"><span class="ref-counter-label">Chars:</span> <span id="refCountChars">0</span></span>
-          <span class="ref-counter-item"><span class="ref-counter-label">Words:</span> <span id="refCountWords">0</span></span>
-          <span class="ref-counter-item"><span class="ref-counter-label">Tokens (est.):</span> <span id="refCountTokens">0</span> <button class="goal-info-btn" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-        </div>
-
       </div>
     </div>
 
@@ -398,7 +400,7 @@
         <span class="launch-req-title">Reference material is optional</span>
         <span class="launch-req-item ref-optional-hint">Skip this step if your project does not need source material to cite against.</span>
       </div>
-      <button class="btn btn-lg btn-cta" id="refContinueBtn" onclick="goToScreen('screen-document')">
+      <button class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Starting Document →
       </button>
@@ -453,7 +455,7 @@
         <div class="doc-tab-panel active" id="panel-upload">
           <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
                ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
-            <div class="drop-zone-icon">📄</div>
+            <div class="drop-zone-icon">📚</div>
             <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
             <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), or Markdown (.md)</div>
             <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleFileSelect(event)">
@@ -1494,8 +1496,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.21.0"></script>
-<script src="app.js?v=3.21.0"></script>
+<script src="version.js?v=3.21.1"></script>
+<script src="app.js?v=3.21.1"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
