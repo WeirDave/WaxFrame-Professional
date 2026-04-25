@@ -7300,3 +7300,73 @@ kbd {
   padding-top: 1px;
 }
 .dp-goal-val { font-size: 13px; color: var(--text); line-height: 1.5; }
+
+/* ==========================================================
+   v3.21.0 — REFERENCE MATERIAL (Setup 4 + Work-screen drawer)
+   ========================================================== */
+
+/* Setup 4 counter row beneath the paste/upload tabs */
+.ref-counter-row {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-dim);
+  flex-wrap: wrap;
+}
+.ref-counter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.ref-counter-label {
+  color: var(--muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 11px;
+}
+.ref-counter-item span:not(.ref-counter-label) {
+  font-family: var(--font-mono);
+  color: var(--text);
+  font-size: 12px;
+}
+.ref-counter-item .goal-info-btn {
+  margin-left: 2px;
+}
+.ref-counter-item .goal-info-btn img {
+  width: 14px;
+  height: 14px;
+  vertical-align: middle;
+}
+
+/* Setup 4 footer hint replacement */
+.ref-optional-hint {
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* Work-screen reference drawer — wider and taller than notes drawer */
+.notes-drawer.ref-drawer {
+  width: 880px;
+}
+.ref-drawer-counter-row {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  padding: 7px 16px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.notes-drawer-ta.ref-drawer-ta {
+  height: 440px;
+}

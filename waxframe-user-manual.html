@@ -65,13 +65,14 @@
         <a href="#step1"  class="doc-sidebar-link">① Setup 1 — Worker Bees</a>
         <a href="#step2"  class="doc-sidebar-link">② Setup 2 — Choose Your Builder</a>
         <a href="#step3"  class="doc-sidebar-link">③ Setup 3 — Define Your Project</a>
-        <a href="#step4"  class="doc-sidebar-link">④ Setup 4 — Starting Document</a>
-        <a href="#step5"  class="doc-sidebar-link">⑤ Step 5 — Launch WaxFrame</a>
-        <a href="#step6"  class="doc-sidebar-link">⑥ Step 6 — The Work Screen</a>
-        <a href="#step7"  class="doc-sidebar-link">⑦ Step 7 — Run Your First Round</a>
-        <a href="#step8"  class="doc-sidebar-link">⑧ Step 8 — Review &amp; Resolve</a>
-        <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Run More Rounds</a>
-        <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Export &amp; Finish</a>
+        <a href="#step4"  class="doc-sidebar-link">④ Setup 4 — Reference Material</a>
+        <a href="#step5"  class="doc-sidebar-link">⑤ Setup 5 — Starting Document</a>
+        <a href="#step6"  class="doc-sidebar-link">⑥ Step 6 — Launch WaxFrame</a>
+        <a href="#step7"  class="doc-sidebar-link">⑦ Step 7 — The Work Screen</a>
+        <a href="#step8"  class="doc-sidebar-link">⑧ Step 8 — Run Your First Round</a>
+        <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Review &amp; Resolve</a>
+        <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Run More Rounds</a>
+        <a href="#step11" class="doc-sidebar-link">⑪ Step 11 — Export &amp; Finish</a>
 
         <div class="doc-sidebar-category">Appendices</div>
         <a href="#appendix-a" class="doc-sidebar-link">A — Adding a Custom AI</a>
@@ -110,14 +111,15 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The setup flow</div>
-      <p>WaxFrame walks you through four setup screens in order before you reach the Work screen. Each screen is dedicated to one task, and you can move forward or back freely using the navigation buttons at the top of each screen.</p>
+      <p>WaxFrame walks you through five setup screens in order before you reach the Work screen. Each screen is dedicated to one task, and you can move forward or back freely using the navigation buttons at the top of each screen.</p>
       <table class="wh-table">
         <thead><tr><th>Screen</th><th>What you do there</th></tr></thead>
         <tbody>
           <tr><td><strong>Setup 1 — Worker Bees</strong></td><td>Connect your AI assistants by saving their API keys. This is a one-time setup — your configuration is saved automatically and is there every time you return.</td></tr>
           <tr><td><strong>Setup 2 — Builder</strong></td><td>Choose which AI will act as the Builder — the AI that rewrites your document each round.</td></tr>
           <tr><td><strong>Setup 3 — Your Project</strong></td><td>Name your project and fill in the structured goal fields that guide every AI.</td></tr>
-          <tr><td><strong>Setup 4 — Starting Document</strong></td><td>Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.</td></tr>
+          <tr><td><strong>Setup 4 — Reference Material</strong></td><td>Optional. Paste or upload source material the hive should cite against every round but never edit — RFP requirements, job descriptions, style guides, scoring rubrics, prior decisions, vendor claims.</td></tr>
+          <tr><td><strong>Setup 5 — Starting Document</strong></td><td>Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.</td></tr>
           <tr><td><strong>Work</strong></td><td>Run rounds, read the updated document, resolve conflicts between AIs, refine further if needed, and export when you are done.</td></tr>
         </tbody>
       </table>
@@ -500,12 +502,94 @@
   <div class="wh-section" id="step4">
     <div class="wh-section-hdr">
       <div class="wh-section-icon">④</div>
-      <div class="wh-section-title">Step 4 — Provide Your Starting Document</div>
+      <div class="wh-section-title">Step 4 — Reference Material</div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>After continuing from the Your Project screen, you arrive at Setup 4: <strong>Starting Document</strong>. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.</p>
+      <p>After continuing from the Your Project screen, you arrive at Setup 4: <strong>Reference Material</strong>. This is a full-width screen with a small ⓘ info button next to the heading. Reference material is <em>optional</em> — most projects do not need it. The Continue button is always active and you can skip the screen entirely if your project has no source material to cite against.</p>
+      <p>This screen is where you provide source documentation that the hive should consult on every round but never edit. The hive sees this content alongside your starting document, but the prompt explicitly tells every reviewer and the Builder to treat it as read-only authoritative source — not as something to rewrite.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When to use it</div>
+      <p>Reference material is the right tool when there is a specific document the hive needs to cross-check against. Common cases:</p>
+      <ul class="wh-list">
+        <li><strong>RFP responses</strong> — paste the RFP itself so the hive can verify your response addresses every required section, scoring criterion, and constraint.</li>
+        <li><strong>Cover letters and résumés</strong> — paste the job description so every revision is checked against the actual role requirements, not a generic idea of the job.</li>
+        <li><strong>Brand or style guides</strong> — paste your organization's style rules so the hive enforces them on every round without needing you to repeat them in Notes.</li>
+        <li><strong>Scoring rubrics</strong> — paste a grading rubric or evaluation criteria so the hive can self-score against it as it refines.</li>
+        <li><strong>Prior decisions or vendor claims</strong> — paste the agreed positions, technical specifications, or contractual claims you must stay consistent with.</li>
+      </ul>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When to skip it</div>
+      <p>Most short documents do not need reference material. A cookie recipe, a thank-you note, a personal blog post, or a quick email rarely has external source material to cite against. If you cannot name what the hive would be checking <em>against</em>, leave Setup 4 empty and continue.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">How it differs from Notes and from your Starting Document</div>
+      <p>Three places hold instructions or content for the hive. They are distinct, and using the wrong one is a common cause of confusion.</p>
+      <table class="wh-table">
+        <thead><tr><th>Field</th><th>Role</th><th>How the hive treats it</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Project Goal</strong> (Setup 3)</td><td>Standing target — what you are trying to produce</td><td>Sent every round, never changes within a session</td></tr>
+          <tr><td><strong>Reference Material</strong> (Setup 4)</td><td>Standing source material — what the document must cite against</td><td>Sent every round, can be edited mid-session, never edited by the hive</td></tr>
+          <tr><td><strong>Starting Document</strong> (Setup 5)</td><td>The artifact under construction</td><td>Line-numbered, reviewed, rewritten by the Builder each round</td></tr>
+          <tr><td><strong>Notes</strong> (Work screen)</td><td>Round-to-round directives for the Builder only</td><td>Sent on the next round only; cleared automatically after that round runs</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Two ways to provide it</div>
+      <p>Setup 4 has two tabs at the top — <strong>📄 Upload File</strong> and <strong>📋 Paste Text</strong>. Pick one. They are mutually exclusive — pasting after uploading replaces the uploaded content, and uploading after pasting replaces the pasted content. If you have multiple reference documents, concatenate them into one paste with clear section headers like <code>=== JOB DESCRIPTION ===</code> and <code>=== STYLE GUIDE ===</code> so the hive can tell them apart.</p>
+      <p>The <strong>📄 Upload File</strong> tab accepts the same formats as Setup 5: Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), and Markdown (.md). The file is read once and its text content is loaded into memory; you can then edit the text directly via the paste textarea or via the Reference button on the Work screen.</p>
+      <p>The <strong>📋 Paste Text</strong> tab is the more common choice. Most reference material lives somewhere already — a job posting in your browser, an RFP in another document, a style guide in a wiki — and pasting is faster and gives you direct control over what the hive actually sees.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The character / word / token counter</div>
+      <p>Below the input area is a live counter showing characters, words, and an estimated token count. The token estimate uses the rule of thumb <code>characters ÷ 4</code>, which is the standard approximation for English text in OpenAI-family tokenizers. Real tokenizers vary by model, language, and content type — treat the number as an order-of-magnitude estimate, not a precise count. The ⓘ button next to the token count opens a brief explainer with more detail.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Token cost reality</div>
+      <p>Reference material is sent to <em>every reviewer every round</em>. A 5,000-character RFP is roughly 1,250 tokens per request. A six-bee hive running four rounds is 30,000 tokens spent just transmitting the reference material — before any document content, project goal, or response is counted.</p>
+      <p>Two consequences follow:</p>
+      <ul class="wh-list">
+        <li><strong>Trim aggressively.</strong> Paste only what is load-bearing. If a 40-page RFP has three pages of substantive requirements and 37 pages of boilerplate, paste the three pages.</li>
+        <li><strong>Pick a cost-conscious Builder.</strong> When reference material is large, switch your Builder to a model with low input-token pricing — DeepSeek and Gemini Flash are typically the cheapest options. The Builder is sent the largest prompt every round, so changing it has the biggest cost impact.</li>
+      </ul>
+      <p>For the full breakdown of how tokens are priced and why per-round costs scale the way they do, see the <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a> guide.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Editing reference material mid-session</div>
+      <p>Once you launch a session, the Work screen toolbar shows a new <strong>📚 Reference</strong> button between Notes and Finish. Clicking it opens a drawer that slides up from the bottom of the screen, showing the current reference material in an editable textarea with the same character / word / token counter.</p>
+      <p>Edits saved from this drawer apply to the <em>next</em> round — past rounds keep the snapshot of the reference material that was active when they ran. This is intentional: each entry in Round History stores the reference material as it existed at the moment that round was generated, so the transcript stays internally consistent even if you change the source material between rounds.</p>
+      <p>The drawer has three actions: <strong>📋 Copy</strong> (copies the current text to your clipboard), <strong>✕ Clear</strong> (wipes the field with confirmation — does not affect past rounds), and <strong>💾 Save &amp; Close</strong> (commits the edit and closes the drawer).</p>
+    </div>
+
+    <div class="wh-tip">
+      <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+      <p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+  </div>
+
+
+  <div class="wh-section" id="step5">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⑤</div>
+      <div class="wh-section-title">Step 5 — Provide Your Starting Document</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What you are looking at</div>
+      <p>After continuing from the Your Project screen, you arrive at Setup 5: <strong>Starting Document</strong>. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.</p>
       <p><strong>Important:</strong> These three buttons — <strong>📄 Upload File</strong>, <strong>📋 Paste Text</strong>, and <strong>💡 Start from Scratch</strong> — are <em>mode selectors</em>, not action buttons. Clicking one selects that mode and changes what appears below the buttons. You then interact with the area below them to actually provide your content. A brief instruction line directly below the buttons updates to tell you exactly what to do next.</p>
     </div>
 
@@ -557,10 +641,10 @@
   </div>
 
 
-  <div class="wh-section" id="step5">
+  <div class="wh-section" id="step6">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑤</div>
-      <div class="wh-section-title">Step 5 — Launch WaxFrame</div>
+      <div class="wh-section-icon">⑥</div>
+      <div class="wh-section-title">Step 6 — Launch WaxFrame</div>
     </div>
 
     <div class="wh-block">
@@ -580,10 +664,10 @@
   </div>
 
 
-  <div class="wh-section" id="step6">
+  <div class="wh-section" id="step7">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑥</div>
-      <div class="wh-section-title">Step 6 — The Work Screen</div>
+      <div class="wh-section-icon">⑦</div>
+      <div class="wh-section-title">Step 7 — The Work Screen</div>
     </div>
 
     <div class="wh-block">
@@ -612,7 +696,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">🏁 Finish</span>
-        <span class="goal-info-desc">Opens the Finish panel where you can export your document, export the full transcript, or start a new project. Covered in full in Step 10.</span>
+        <span class="goal-info-desc">Opens the Finish panel where you can export your document, export the full transcript, or start a new project. Covered in full in Step 11.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">License badge</span>
@@ -648,7 +732,7 @@
       <p>Below the AI status area is the <strong>Conflicts</strong> section, also in the left column:</p>
       <div class="goal-info-row">
         <span class="info-label">Conflicts</span>
-        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A 📋 Copy button and a ✕ Clear button appear in the Conflicts header. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. Covered in full in Step 8.</span>
+        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A 📋 Copy button and a ✕ Clear button appear in the Conflicts header. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. Covered in full in Step 9.</span>
       </div>
     </div>
 
@@ -695,7 +779,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Smoke the Hive button</span>
-        <span class="goal-info-desc">The main round button. Runs a full round — all reviewers process the document simultaneously, then the Builder reads all their suggestions and produces the updated document. This is the button you click to start each round. Covered in detail in Step 7.</span>
+        <span class="goal-info-desc">The main round button. Runs a full round — all reviewers process the document simultaneously, then the Builder reads all their suggestions and produces the updated document. This is the button you click to start each round. Covered in detail in Step 8.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Sound toggle</span>
@@ -710,10 +794,10 @@
   </div>
 
 
-  <div class="wh-section" id="step7">
+  <div class="wh-section" id="step8">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑦</div>
-      <div class="wh-section-title">Step 7 — Run Your First Round</div>
+      <div class="wh-section-icon">⑧</div>
+      <div class="wh-section-title">Step 8 — Run Your First Round</div>
     </div>
 
     <div class="wh-block">
@@ -748,10 +832,10 @@
   </div>
 
 
-  <div class="wh-section" id="step8">
+  <div class="wh-section" id="step9">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑧</div>
-      <div class="wh-section-title">Step 8 — Review Results and Resolve Conflicts</div>
+      <div class="wh-section-icon">⑨</div>
+      <div class="wh-section-title">Step 9 — Review Results and Resolve Conflicts</div>
     </div>
 
     <div class="wh-block">
@@ -804,10 +888,10 @@
   </div>
 
 
-  <div class="wh-section" id="step9">
+  <div class="wh-section" id="step10">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑨</div>
-      <div class="wh-section-title">Step 9 — Run More Rounds</div>
+      <div class="wh-section-icon">⑩</div>
+      <div class="wh-section-title">Step 10 — Run More Rounds</div>
     </div>
 
     <div class="wh-block">
@@ -888,10 +972,10 @@
   </div>
 
 
-  <div class="wh-section" id="step10">
+  <div class="wh-section" id="step11">
     <div class="wh-section-hdr">
-      <div class="wh-section-icon">⑩</div>
-      <div class="wh-section-title">Step 10 — Export and Finish</div>
+      <div class="wh-section-icon">⑪</div>
+      <div class="wh-section-title">Step 11 — Export and Finish</div>
     </div>
 
     <div class="wh-block">
@@ -1219,7 +1303,7 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.20.17"></script>
+<script src="version.js?v=3.21.0"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
