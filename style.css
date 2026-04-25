@@ -391,6 +391,12 @@ html, body {
   margin-top: 4px;
   display: block;
 }
+/* Welcome screen pair: tagline 15px → version 13px, weight matches tagline */
+.welcome-brand .app-version-stamp {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
 
 .setup-step-badge .app-version-stamp {
   display: inline;
@@ -1178,7 +1184,7 @@ html, body {
   line-height: 1.3;
 }
 .nav-panel-version {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: var(--text-dim);
   letter-spacing: 0.06em;
@@ -1853,9 +1859,10 @@ html, body {
 }
 .work-right-logo-version {
   font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  font-weight: 500;
-  letter-spacing: 0.04em;
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
   margin-top: 4px;
 }
 /* ══ RESPONSIVE BREAKPOINTS ══
@@ -1871,13 +1878,13 @@ html, body {
   .work-right-logo-img { width: 100px; height: 100px; }
   .work-right-logo-name { font-size: 22px; }
   .work-right-logo-tag { font-size: 11px; }
-  .work-right-logo-version { font-size: 10px; margin-top: 3px; }
+  .work-right-logo-version { font-size: 9px; letter-spacing: 0.1em; margin-top: 3px; }
 }
 @media (max-width: 1500px) {
   .work-right-logo-img { width: 72px; height: 72px; }
   .work-right-logo-name { font-size: 18px; }
   .work-right-logo-tag { font-size: 10px; letter-spacing: 0.06em; }
-  .work-right-logo-version { font-size: 9px; letter-spacing: 0.03em; margin-top: 2px; }
+  .work-right-logo-version { font-size: 9px; letter-spacing: 0.06em; margin-top: 2px; }
   .work-right-logo { padding: 8px 10px; margin: 6px 6px 3px; }
   .left-panel-header { padding: 6px 10px; margin: 5px 6px 2px; }
 }
