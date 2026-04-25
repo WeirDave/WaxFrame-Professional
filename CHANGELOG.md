@@ -2,6 +2,28 @@
 
 ---
 
+## v3.20.20 Pro — Build `20260424-013`
+**Released:** April 24, 2026
+
+### Documentation
+
+**Step 9 — Explained the top-three reviewer cap and what it means for iteration on long documents**
+Added a new block to Step 9 of the User Manual titled "Why a round can come up empty before the document is done." The block addresses a confusion that surfaced during testing: users were treating a round with no flagged conflicts as a signal that the document was finished, when in fact the underlying mechanic is that each reviewer is constrained to its top three most impactful suggestions per round, and on long or complex documents six reviewers picking three issues each only adds up to eighteen specific spots — which they do not always pick the same way. A round can therefore complete with zero conflicts not because the document is done, but because the reviewers happened to focus on different parts and none of their suggestions overlapped enough to disagree about. The new block makes this explicit, explains the rotating-focus pattern across rounds, and clarifies that the genuine "done" signal is a round where every reviewer responds with NO CHANGES NEEDED — not "no conflicts in the last round." Placed second in Step 9 immediately after "The rhythm of a session" so users encounter it before any of the Notes-related blocks.
+
+### Why this matters
+
+The top-three cap is one of the load-bearing design decisions in WaxFrame's review pass — without it, reviewers dump long lists of trivial nitpicks, the Builder gets overwhelmed, and conflicts pile up faster than the user can resolve them. The cap keeps each round focused, but the trade-off is that any single round only covers a finite number of spots in the document. For short documents this is invisible. For long documents (RFPs, multi-section reports, manuals) this is the difference between users running three rounds and giving up versus running eight rounds and reaching genuine convergence. Documenting the mechanic explicitly removes the guessing.
+
+### Files Changed
+
+- `waxframe-user-manual.html` — Added new "Why a round can come up empty before the document is done" block to Step 9. Bumped the manual's own `waxframe-build` meta to `20260424-013`.
+- `app.js` — Bumped `BUILD` to `20260424-013`. No code changes.
+- `version.js` — Bumped `APP_VERSION` to `v3.20.20 Pro`.
+- `index.html` — Bumped `waxframe-build` meta to `20260424-013` and `app.js?v=` cache-bust to `3.20.20`.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.20.19 Pro — Build `20260424-012`
 **Released:** April 24, 2026
 
