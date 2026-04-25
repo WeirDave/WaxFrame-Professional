@@ -2,6 +2,53 @@
 
 ---
 
+## v3.21.9 Pro — Build `20260425-006`
+**Released:** April 25, 2026
+
+### Storage layer hardening — kill the empty-state save once and for all
+
+This release addresses a recurring data-loss bug where the IndexedDB session would end up containing the literal default state (`{round:1, phase:"draft", history:[], docText:"", consoleHTML:DEFAULT, projClockSeconds:0}`) overwriting the user's actual session. Two prior incidents were observed during v3.21.5 and v3.21.7 testing. Forensic analysis of the IDB content showed the consoleHTML field contained the exact default HTML from `index.html` line 638 (`Console ready — Smoke the hive to begin.`), which is only present when the page has just loaded and nothing has touched the console DOM yet — meaning a `saveSession()` call fired with all-default in-memory state and committed empty defaults on top of stored data. The exact call site that produced the bad write could not be pinned down from code reading alone (twenty `saveSession()` call sites, all gated behind user actions in source, but at least one was firing during page load with default state). This release ships defense-in-depth so the bug cannot recur regardless of which call path is the actual trigger, plus an instrumentation pass to catch the remaining unknown root cause if it ever fires again.
+
+**Track A — five structural hardenings, all behind the existing storage layer with no behavior change for normal use:**
+
+A1. **Serialized save chain with read-check-write guard.** Every `saveSession()` now runs through a single `_saveSessionChain` Promise so two saves in flight cannot race. Inside the chain, the function reads current IDB state first and refuses to commit if the new state would clobber populated stored data with empty defaults — specifically, blocks any write where in-memory has `history.length === 0 && !docText.trim()` but stored has `history.length > 0 || docText.trim().length > 0`. The "make progress" invariant: a save can never *delete* persisted data unless explicitly invoked through `clearProject()`. Existing belt-and-suspenders guard #1 (in-memory has data but DOM console is default → don't save) is preserved as guard #1; the new write-guard becomes guard #2.
+
+A2. **Pre-launch storage verify in `startSession()`.** Made the function `async` and added a check after the existing in-memory guard: if in-memory is empty but IDB or the localStorage mirror has populated session data, surface an explicit confirm dialog (`A saved session exists in browser storage but did NOT load into memory on this page load. Cancel to keep the saved session intact and reload to retry. OK to discard.`). User must explicitly choose discard before any state-mutating call runs. If discard is chosen, IDB and the mirror are explicitly cleared so the new launch doesn't leave a partial overwrite. This catches the specific failure mode where `loadSession()` failed silently (IDB read errored, async race lost to a sync user action, mid-load eviction) and the user clicks Continue thinking they're resuming.
+
+A3. **localStorage session mirror as second-tier persistence.** Every successful IDB commit also writes a JSON mirror to `localStorage['waxframe_v2_session_mirror']` (skipped when the session is empty defaults so we don't pollute the mirror). `loadSession()` now consults the mirror as fallback #1 (before the legacy `LS_SESSION` key, now fallback #2) so if IDB is evicted but localStorage isn't, the recovery path is automatic. When mirror recovery succeeds, the recovered data is pushed back into IDB so subsequent loads use the primary path. Eviction policies for IDB and localStorage are independent in all major browsers — the mirror is meaningful redundancy, not the same storage with a different key. Mirror writes have a 4.5MB safety cap (under the 5MB localStorage limit) and silently no-op if exceeded.
+
+A4. **Persistent storage retry on engagement.** `navigator.storage.persist()` is called once at DOMContentLoaded and the result stashed on `window._storagePersistent`. If it was denied (Firefox in particular often denies on first visit), every third successful round now re-requests it from inside `saveSession()` after the IDB commit. Browsers grant persistence based on engagement signals (round count is a proxy for active use), so retry is the recommended approach.
+
+A5. **Legacy `aihive_v2_db` deletion.** The project rebranded from "AIHive" to "WaxFrame" months ago. The localStorage keys and IDB database name were renamed at the time, but the pre-rename `aihive_v2_db` was never explicitly deleted, so it lingered in browsers as orphan data alongside the active `waxframe_v2_db`. Added a one-time migration in DOMContentLoaded that calls `indexedDB.deleteDatabase('aihive_v2_db')` and stamps a `waxframe_v2_legacy_idb_purged` flag in localStorage so it only runs once.
+
+**Track B — instrumentation to pin down the actual root cause:**
+
+Added a dev-mode-only `console.trace()` at the top of `saveSession()` that logs every save with the current state (`round`, `phase`, `history.length`, `docText.length`, `consoleHTML.length`) and a full call stack. Gated behind `localStorage.getItem('waxframe_dev') === '1'` so it's invisible for normal users. If the bad save fires again with dev mode on, the stack trace points directly at the buggy call site. Also added explicit `console.warn` log lines on both guard #1 and guard #2 trip events, so when the new write-guard catches an empty-state save attempt, the call stack is preserved and the specific path can be diagnosed without needing to reproduce.
+
+### Files Changed
+
+- `app.js` — Added `LS_SESSION_MIRROR` constant, `_saveSessionChain` Promise, `_lastKnownGoodSession` cache. Rewrote `saveSession()` from sync-fire-and-forget to chain-serialized read-check-write with two guards, mirror write, and engagement retry. Added LS_SESSION_MIRROR fallback in `loadSession()` between IDB and the legacy LS_SESSION fallback. Made `startSession()` async and added the pre-launch storage verify after the existing in-memory guard. Added one-time `aihive_v2_db` deletion in DOMContentLoaded. Added dev-mode `console.trace` in `saveSession()` plus `console.warn` on both guard trips. Bumped `BUILD` to `20260425-006` and the comment-header build.
+- `index.html` — Bumped `waxframe-build` meta to `20260425-006` and all cache-busts to `3.21.9`. Comment-header build bumped.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.9 Pro`.
+- `style.css`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts and comment-header builds bumped to `3.21.9` / `20260425-006`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+### What to expect after deploy
+
+Normal use looks identical — saves still feel synchronous, no UI changes, no new modals on a healthy session. The hardening only surfaces when something has gone wrong:
+
+- If a buggy save tries to clobber populated stored data with empty defaults, guard #2 silently blocks it and logs a `[saveSession] BLOCKED by guard #2` warning to the console. Stored data stays intact.
+- If the user lands on Setup Step 5 with empty in-memory state but populated stored data, clicking Continue surfaces the recovery dialog rather than blowing away the saved session.
+- If IDB gets evicted but localStorage doesn't, the next page load auto-recovers from the mirror with a `[loadSession] IDB empty — recovered session from localStorage mirror` console line.
+- The legacy `aihive_v2_db` disappears from DevTools Storage tab on first load.
+
+### Known gaps still open
+
+The dev-mode trace is a diagnostic tool, not a fix on its own. If the original bug fires again with dev mode active, the stack trace will identify the call site and the next release can target it directly. Until then, the structural hardening prevents the symptom regardless of cause.
+
+---
+
 ## v3.21.8 Pro — Build `20260425-005`
 **Released:** April 25, 2026
 

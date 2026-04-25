@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260425-005
+//  Build: 20260425-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -390,10 +390,11 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-005';         // build stamp — update each session
+const BUILD       = '20260425-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
+const LS_SESSION_MIRROR = 'waxframe_v2_session_mirror'; // (v3.21.9) localStorage mirror of IDB session — survives IDB eviction
 const LS_SETTINGS = 'waxframe_v2_settings';  // legacy key — migrated on first load
 const LS_LICENSE  = 'waxframe_v2_license';   // license key — persistent
 
@@ -2147,20 +2148,34 @@ function loadSettings() {
   } catch(e) { return false; }
 }
 
+// ── (v3.21.9) Save serialization chain ──
+// Every saveSession() awaits the previous one through this chain so two saves
+// in flight can't race on the read-check-write guard inside.
+let _saveSessionChain = Promise.resolve();
+
 function saveSession() {
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
 
-  // ── Belt-and-suspenders guard ──
+  // ── (v3.21.9) Track B — dev-mode trace ──
+  // Logs every saveSession call with its stack trace and current state. Helps
+  // pin down spurious empty-state writes. Behind the dev flag so it's invisible
+  // for normal users. Remove once root cause is confirmed.
+  if (localStorage.getItem('waxframe_dev') === '1') {
+    console.groupCollapsed(`[saveSession] round=${round} phase=${phase} history=${history.length} docText=${docText.length} consoleHTML=${consoleHTML.length}`);
+    console.trace('call site');
+    console.groupEnd();
+  }
+
+  // ── Belt-and-suspenders guard #1 (existing) ──
   // If we have round history in memory but the DOM console only shows the
   // default page-load message (or is empty), something is trying to save
   // before the load-time console restore has populated the DOM. Skip this
   // write entirely so we don't overwrite good stored consoleHTML with the
-  // default HTML from index.html. The next legitimate saveSession call
-  // (after restore completes or on any real user action) will capture state
-  // correctly.
+  // default HTML from index.html.
   const DEFAULT_CONSOLE_MSG = 'Console ready — Smoke the hive to begin.';
   if (history.length > 0 && (!consoleHTML.trim() || consoleHTML.includes(DEFAULT_CONSOLE_MSG))) {
+    if (localStorage.getItem('waxframe_dev') === '1') console.warn('[saveSession] BLOCKED by guard #1 — in-memory has data but DOM console is default');
     return;
   }
 
@@ -2168,39 +2183,85 @@ function saveSession() {
   const notes = notesEl ? notesEl.value : '';
   const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds };
 
-  // Primary: save to IndexedDB (no size limit)
-  idbSet(session).then(() => {
-    // Set a lightweight flag in localStorage so resume detection works on page load
-    try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
-    // Check quota health after every save
-    checkStorageQuota();
-  }).catch(e => {
-    // IndexedDB failed — fall back to localStorage with explicit error
-    consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error');
+  // Chain through the previous save so the read-check-write below cannot
+  // race against another saveSession in flight. Each call resolves the chain
+  // once its IDB write commits (or errors).
+  _saveSessionChain = _saveSessionChain.then(async () => {
+    // ── (v3.21.9) Belt-and-suspenders guard #2 — write-guard ──
+    // Refuse to commit if the new state would clobber populated stored data
+    // with empty defaults. This catches the case where in-memory state has
+    // regressed to its initial values (loadSession failed, race with init,
+    // unexpected reset path) but IDB still has the user's real session.
+    // Cheap to read — every save already implies an IDB transaction round-trip.
+    let stored = null;
+    try { stored = await idbGet(); } catch(e) { /* ignore — fall through to write */ }
+    const memEmpty    = (history.length === 0 && !docText.trim());
+    const storedHasData = stored && (
+      (Array.isArray(stored.history) && stored.history.length > 0) ||
+      (typeof stored.docText === 'string' && stored.docText.trim().length > 0)
+    );
+    if (memEmpty && storedHasData) {
+      console.warn('[saveSession] BLOCKED by guard #2 — in-memory empty, stored has data',
+                   { storedHistoryLen: stored.history?.length, storedDocLen: stored.docText?.length });
+      // Do NOT write. Leave stored data intact.
+      return;
+    }
+
+    // ── Primary: save to IndexedDB (no size limit) ──
     try {
-      localStorage.setItem(LS_SESSION, JSON.stringify(session));
-      try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(ee) {}
-    } catch(lsErr) {
-      if (lsErr.name === 'QuotaExceededError') {
-        consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error');
-        const el = document.getElementById('liveConsole');
-        if (el) {
-          const existing = el.querySelector('.quota-warn-btn');
-          if (!existing) {
-            const btn = document.createElement('button');
-            btn.className = 'btn quota-warn-btn';
-            btn.textContent = '💾 Export Transcript Now';
-            btn.onclick = exportTranscript;
-            el.prepend(btn);
+      await idbSet(session);
+      try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
+      // ── (v3.21.9) A3 — write LS mirror after every successful IDB commit ──
+      // Independent eviction policies between IDB and localStorage mean a
+      // mirror is meaningful redundancy. Skip the mirror if the session is
+      // empty defaults (don't pollute the mirror).
+      if (!memEmpty) {
+        try {
+          const mirrorJson = JSON.stringify(session);
+          if (mirrorJson.length < 4_500_000) { // ~4.5MB safety margin under 5MB limit
+            localStorage.setItem(LS_SESSION_MIRROR, mirrorJson);
           }
+        } catch(e) { /* quota — silent, IDB still has the truth */ }
+      }
+      checkStorageQuota();
+
+      // ── (v3.21.9) A4 — persistent storage retry on engagement ──
+      // Browsers grant persistence based on engagement signals. Re-request
+      // every 3 rounds if we haven't been granted yet — cheap and idempotent.
+      if (history.length > 0 && history.length % 3 === 0 &&
+          !window._storagePersistent && navigator.storage?.persist) {
+        try {
+          window._storagePersistent = await navigator.storage.persist();
+        } catch(e) { /* ignore */ }
+      }
+    } catch(e) {
+      // IndexedDB failed — fall back to localStorage (the mirror IS the fallback)
+      consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error');
+      try {
+        localStorage.setItem(LS_SESSION, JSON.stringify(session));
+        try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(ee) {}
+      } catch(lsErr) {
+        if (lsErr.name === 'QuotaExceededError') {
+          consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error');
+          const el = document.getElementById('liveConsole');
+          if (el) {
+            const existing = el.querySelector('.quota-warn-btn');
+            if (!existing) {
+              const btn = document.createElement('button');
+              btn.className = 'btn quota-warn-btn';
+              btn.textContent = '💾 Export Transcript Now';
+              btn.onclick = exportTranscript;
+              el.prepend(btn);
+            }
+          }
+        } else {
+          consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error');
         }
-      } else {
-        consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error');
       }
     }
   });
 
-  saveProject(); // keep project fields in sync
+  saveProject(); // keep project fields in sync (synchronous, doesn't need to be in the chain)
 }
 
 async function loadSession() {
@@ -2214,7 +2275,24 @@ async function loadSession() {
     // Primary: try IndexedDB first
     let s = await idbGet();
 
-    // Fallback: try localStorage (handles sessions saved before IDB migration)
+    // ── (v3.21.9) Fallback #1: localStorage mirror ──
+    // Mirror is written on every successful IDB save. If IDB was evicted
+    // but localStorage wasn't, this is our recovery path. The mirror is
+    // authoritative if IDB returns null but the mirror has data.
+    if (!s) {
+      try {
+        const mirrorRaw = localStorage.getItem(LS_SESSION_MIRROR);
+        if (mirrorRaw) {
+          s = JSON.parse(mirrorRaw);
+          // Push the recovered data back into IDB so subsequent loads use the
+          // primary path again. Don't await — recovery succeeds either way.
+          idbSet(s).catch(() => {});
+          console.warn('[loadSession] IDB empty — recovered session from localStorage mirror', { historyLen: s.history?.length, docLen: s.docText?.length });
+        }
+      } catch(e) { /* mirror corrupt — fall through */ }
+    }
+
+    // Fallback #2: try legacy localStorage key (handles sessions saved before IDB migration)
     if (!s) {
       const raw = localStorage.getItem(LS_SESSION);
       if (raw) {
@@ -4493,16 +4571,53 @@ function copyReferenceMaterial() {
   );
 }
 
-function startSession() {
+async function startSession() {
   const name = document.getElementById('projectName').value.trim();
   const goal = assembleProjectGoal();
 
   if (!name) { toast('⚠️ Enter a project name'); return; }
   if (!goal) { toast('⚠️ Fill in at least one goal field'); return; }
 
-  // Guard: if an active session exists, warn before overwriting it
+  // Guard #1: if an active session exists in memory, warn before overwriting it
   if (history.length > 0 || (docText && round > 1)) {
     if (!confirm(`You have an active session (${round - 1} round${round - 1 !== 1 ? 's' : ''} completed). Launching again will clear your current document and round history. Continue?`)) return;
+  }
+
+  // ── (v3.21.9) Guard #2: pre-launch storage verify ──
+  // The in-memory check above only catches sessions that successfully loaded
+  // into memory. If loadSession() failed silently — IDB read errored, async
+  // race lost to user click, mid-load eviction — in-memory is empty but IDB
+  // (or the localStorage mirror) may still hold the user's real session.
+  // Read both before launching so we don't blow away recoverable data.
+  if (history.length === 0 && !docText) {
+    let storedSession = null;
+    try { storedSession = await idbGet(); } catch(e) { /* ignore — fall through to mirror */ }
+    if (!storedSession) {
+      try {
+        const mirrorRaw = localStorage.getItem(LS_SESSION_MIRROR);
+        if (mirrorRaw) storedSession = JSON.parse(mirrorRaw);
+      } catch(e) { /* corrupt — ignore */ }
+    }
+    const storedHasData = storedSession && (
+      (Array.isArray(storedSession.history) && storedSession.history.length > 0) ||
+      (typeof storedSession.docText === 'string' && storedSession.docText.trim().length > 0)
+    );
+    if (storedHasData) {
+      const sh = storedSession.history?.length || 0;
+      const sd = storedSession.docText?.length || 0;
+      const proceed = confirm(
+        `⚠️ A saved session exists in browser storage (${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document) but did NOT load into memory on this page load. ` +
+        `This usually means a load race or a transient IDB read failure.\n\n` +
+        `Click Cancel to keep the saved session intact and reload the page to retry the load.\n` +
+        `Click OK to discard the saved session and start fresh.`
+      );
+      if (!proceed) return;
+      // User explicitly chose discard. Clear the saved session before launching
+      // so the new launch doesn't leave a partial overwrite.
+      try { await idbClear(); } catch(e) { /* ignore */ }
+      try { localStorage.removeItem(LS_SESSION_MIRROR); } catch(e) {}
+      try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+    }
   }
 
   if (docTab === 'paste') {
@@ -7694,6 +7809,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
   initMuteBtn();
+
+  // ── (v3.21.9) One-time migration: delete legacy aihive_v2_db ──
+  // The project was renamed from "AIHive" to "WaxFrame" months ago. The
+  // localStorage keys and IDB name were renamed at that time, but the
+  // pre-rename IndexedDB database "aihive_v2_db" was never explicitly
+  // deleted, so it lingered in browsers as orphan data. Clean it up once.
+  if (!localStorage.getItem('waxframe_v2_legacy_idb_purged')) {
+    try {
+      indexedDB.deleteDatabase('aihive_v2_db');
+      localStorage.setItem('waxframe_v2_legacy_idb_purged', '1');
+    } catch(e) { /* not critical — try again next load */ }
+  }
   // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);
   document.title = 'WaxFrame ' + APP_VERSION;
