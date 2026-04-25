@@ -12,7 +12,7 @@
   <meta name="waxframe-build" content="20260424-013">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.2">
+  <link rel="stylesheet" href="style.css?v=3.21.3">
 </head>
 <body class="helper-body">
 
@@ -570,14 +570,12 @@
       <p>Once you launch a session, the Work screen toolbar shows a new <strong>📚 Reference</strong> button between Notes and Finish. Clicking it opens a drawer that slides up from the bottom of the screen, showing the current reference material in an editable textarea with the same character / word / token counter.</p>
       <p>Edits saved from this drawer apply to the <em>next</em> round — past rounds keep the snapshot of the reference material that was active when they ran. This is intentional: each entry in Round History stores the reference material as it existed at the moment that round was generated, so the transcript stays internally consistent even if you change the source material between rounds.</p>
       <p>The drawer has three actions: <strong>📋 Copy</strong> (copies the current text to your clipboard), <strong>✕ Clear</strong> (wipes the field with confirmation — does not affect past rounds), and <strong>💾 Save &amp; Close</strong> (commits the edit and closes the drawer).</p>
-    </div>
-
-    <div class="wh-tip">
-      <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-      <p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p>
-    </div>
-
+      <div class="wh-tip">
+        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
+        <p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p>
+      </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
   </div>
 
 
@@ -1303,7 +1301,7 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.21.2"></script>
+<script src="version.js?v=3.21.3"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
