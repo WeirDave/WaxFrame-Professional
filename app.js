@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260425-007
+//  Build: 20260425-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-007';         // build stamp — update each session
+const BUILD       = '20260425-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -758,6 +758,19 @@ function projectClockReset() {
 function consoleLog(msg, type = 'info', rawData = null) {
   const el = document.getElementById('liveConsole');
   if (!el) return;
+  // ── (v3.21.11) Strip the page-load default entry on first real log ──
+  // The default "Console ready — Smoke the hive to begin." entry from
+  // index.html stays in the DOM forever otherwise, because consoleLog
+  // prepends new entries instead of replacing. That stale default
+  // contaminated consoleHTML.includes(DEFAULT_CONSOLE_MSG) checks in
+  // saveSession, causing Guard #1 to block every save after Round 1 —
+  // which silently broke IDB persistence for every session since the
+  // guard was added. Removing the default entry on first real activity
+  // also matches the UX intent (it's only useful before anything happens).
+  const defaultEntry = el.querySelector('.console-entry.console-info');
+  if (defaultEntry && defaultEntry.textContent.includes('Smoke the hive to begin')) {
+    defaultEntry.remove();
+  }
   const entry = document.createElement('div');
   entry.className = `console-entry console-${type}`;
   const time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'});
@@ -2167,17 +2180,16 @@ function saveSession() {
     console.groupEnd();
   }
 
-  // ── Belt-and-suspenders guard #1 (existing) ──
-  // If we have round history in memory but the DOM console only shows the
-  // default page-load message (or is empty), something is trying to save
-  // before the load-time console restore has populated the DOM. Skip this
-  // write entirely so we don't overwrite good stored consoleHTML with the
-  // default HTML from index.html.
-  const DEFAULT_CONSOLE_MSG = 'Console ready — Smoke the hive to begin.';
-  if (history.length > 0 && (!consoleHTML.trim() || consoleHTML.includes(DEFAULT_CONSOLE_MSG))) {
-    if (localStorage.getItem('waxframe_dev') === '1') console.warn('[saveSession] BLOCKED by guard #1 — in-memory has data but DOM console is default');
-    return;
-  }
+  // ── Guard #1 removed in v3.21.11 ──
+  // Guard #1 used to check `consoleHTML.includes(DEFAULT_CONSOLE_MSG)` to
+  // detect "DOM is still in default page-load state" — but the default
+  // entry's persistence in the DOM (consoleLog prepends rather than
+  // replacing) meant `.includes()` was always true after Round 1, blocking
+  // every save. The consoleLog fix above strips the default entry on first
+  // real log, so the substring would no longer match in normal flows, but
+  // the guard itself was a fragile DOM-heuristic. Guard #2 below
+  // (IDB-read with comparison) is the correct, race-proof protection and
+  // covers the same failure mode without the heuristic brittleness.
 
   const notesEl = document.getElementById('workNotes');
   const notes = notesEl ? notesEl.value : '';
