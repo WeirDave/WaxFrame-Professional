@@ -2,6 +2,30 @@
 
 ---
 
+## v3.21.3 Pro — Build `20260424-017`
+**Released:** April 24, 2026
+
+### Two visual bugs caught in v3.21.2 testing
+
+**Watermark now centered in the dead space (Setup 4 AND Setup 5)**
+The pulsing logo watermark on the Document and Reference Material setup screens was right-anchored 24px from the right edge of the dead space (`background-position: right 24px center`), which pinned it to the right side of the card instead of centering it horizontally within the empty area to the right of the constrained-width content column. The historical intent — and the way it used to render — was for the watermark to float in the middle of that dead space. The shared `::after` rule for `#panel-paste`, `#panel-upload`, `#panel-scratch`, `#panel-ref-paste`, and `#panel-ref-upload` now uses `background-position: center center`. Both Setup 4 and Setup 5 inherit the fix automatically since they share the rule. No need to change individual screens.
+
+**Manual Step 4 — content was escaping the white card container**
+In the v3.21.0 manual insertion, I placed the `.wh-tip` block and the `↑ Back to top` link as direct children of the `.wh-section` element. The white-card visual is created by `.wh-block { background: var(--surface) }`, not by the section wrapper — the section is transparent. So those two elements rendered directly on the honeycomb-tiled body background, and the supposed-last `.wh-block` lost its rounded bottom corners because something else was the actual `:last-child`. Both the tip and the back-top link now live inside the final `.wh-block` (Editing reference material mid-session), matching the pattern every other step uses.
+
+### Files Changed
+
+- `style.css` — Changed shared watermark `::after` rule from `background-position: right 24px center` to `background-position: center center`. `!important` count unchanged at 41. CSS braces balanced.
+- `waxframe-user-manual.html` — Moved the closing `<div class="wh-tip">…</div>` and `<a href="#top" class="wh-back-top">↑ Back to top</a>` from outside the last `.wh-block` to inside it (the Editing reference material mid-session block) for Step 4 — Reference Material. Bumped `version.js?v=` and `style.css?v=` cache-busts to `3.21.3`.
+- `index.html` — Bumped `waxframe-build` meta to `20260424-017`, `app.js?v=` cache-bust to `3.21.3`, `version.js?v=` cache-bust to `3.21.3`, `style.css?v=` cache-bust to `3.21.3`.
+- `app.js` — Bumped `BUILD` constant to `20260424-017`. No code changes.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.3 Pro`.
+- `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Bumped `version.js?v=` and `style.css?v=` cache-busts to `3.21.3`. No content changes.
+- `README.md` — Bumped Version badge to `3.21.3` and Build badge to `20260424-017`.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.2 Pro — Build `20260424-016`
 **Released:** April 24, 2026
 
