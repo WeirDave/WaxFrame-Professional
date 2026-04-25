@@ -773,7 +773,8 @@ html, body {
 .doc-tab-panel { display: none; }
 .doc-tab-panel.active { display: flex; flex-direction: column; flex: 1; min-height: 0; position: relative; }
 /* Paste panel: fill column height; width = working doc formula */
-#panel-paste .proj-ta-editor {
+#panel-paste .proj-ta-editor,
+#panel-ref-paste .proj-ta-editor {
   flex: 1;
   height: auto;
   min-height: 0;
@@ -3587,7 +3588,9 @@ kbd {
    Only non-display properties here so the class-based show/hide keeps control. */
 #panel-paste,
 #panel-upload,
-#panel-scratch {
+#panel-scratch,
+#panel-ref-paste,
+#panel-ref-upload {
   position: relative;
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
@@ -3595,7 +3598,9 @@ kbd {
 /* Pulsing logo watermark in dead space right of content — anchors to active panel */
 #panel-paste::after,
 #panel-upload::after,
-#panel-scratch::after {
+#panel-scratch::after,
+#panel-ref-paste::after,
+#panel-ref-upload::after {
   content: '';
   position: absolute;
   top: 0;
@@ -3621,7 +3626,8 @@ kbd {
 }
 
 /* Upload panel: drop zone matches paste panel width */
-#panel-upload .drop-zone {
+#panel-upload .drop-zone,
+#panel-ref-upload .drop-zone {
   flex: 1;
   min-height: 0;
   display: flex;
@@ -7177,7 +7183,9 @@ kbd {
   .proj-goal-intro { padding: 16px 20px 0; }
   #panel-paste::after,
   #panel-upload::after,
-  #panel-scratch::after { background-size: 150px; }
+  #panel-scratch::after,
+  #panel-ref-paste::after,
+  #panel-ref-upload::after { background-size: 150px; }
 }
 
 /* ── proj-left-top-row: title + Clear Project button side by side ── */
