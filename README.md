@@ -4,7 +4,7 @@
 
 # WaxFrame
 
-**Many minds. One refined result.**
+**Many minds, one refined result.**
 
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
