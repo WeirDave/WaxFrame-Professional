@@ -1,10 +1,37 @@
 /* =============================================================
    WaxFrame v2 — style.css
-   Build: 20260419-001
+   Build: 20260425-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap');
+/* ══════════════════════════════════════
+   DM SANS — self-hosted (fonts/ folder)
+   Replaces former Google Fonts dependency. All 18 weights × styles
+   declared so any callsite can use them. Browsers lazy-load each
+   woff2 only when a matching font-weight/style is actually rendered,
+   so declaring all is effectively free at page-load time.
+   Syne dropped entirely; DM Sans handles former display callsites
+   via the --font-display token (see :root below).
+   Font: DM Sans by Indian Type Foundry / Colophon Foundry. SIL OFL 1.1.
+══════════════════════════════════════ */
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 100; font-display: swap; src: url('fonts/dm-sans-v17-latin-100.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 100; font-display: swap; src: url('fonts/dm-sans-v17-latin-100italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 200; font-display: swap; src: url('fonts/dm-sans-v17-latin-200.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 200; font-display: swap; src: url('fonts/dm-sans-v17-latin-200italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 300; font-display: swap; src: url('fonts/dm-sans-v17-latin-300.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 300; font-display: swap; src: url('fonts/dm-sans-v17-latin-300italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 400; font-display: swap; src: url('fonts/dm-sans-v17-latin-regular.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 400; font-display: swap; src: url('fonts/dm-sans-v17-latin-italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 500; font-display: swap; src: url('fonts/dm-sans-v17-latin-500.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 500; font-display: swap; src: url('fonts/dm-sans-v17-latin-500italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 600; font-display: swap; src: url('fonts/dm-sans-v17-latin-600.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 600; font-display: swap; src: url('fonts/dm-sans-v17-latin-600italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 700; font-display: swap; src: url('fonts/dm-sans-v17-latin-700.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 700; font-display: swap; src: url('fonts/dm-sans-v17-latin-700italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 800; font-display: swap; src: url('fonts/dm-sans-v17-latin-800.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 800; font-display: swap; src: url('fonts/dm-sans-v17-latin-800italic.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: normal; font-weight: 900; font-display: swap; src: url('fonts/dm-sans-v17-latin-900.woff2') format('woff2'); }
+@font-face { font-family: 'DM Sans'; font-style: italic; font-weight: 900; font-display: swap; src: url('fonts/dm-sans-v17-latin-900italic.woff2') format('woff2'); }
 
 /* ══════════════════════════════════════
    RESET & BASE
@@ -42,7 +69,7 @@ input, textarea, select { font-family: inherit; }
   --amber:        #fbbf24;
   --line-stripe:  rgba(255,255,255,0.04);
   --font:         'DM Sans', system-ui, sans-serif;
-  --font-display: 'Syne', system-ui, sans-serif;
+  --font-display: 'DM Sans', system-ui, sans-serif;
   --font-mono:    'Courier New', Courier, monospace;
   --radius-sm:    8px;
   --radius-md:    14px;
@@ -6779,7 +6806,7 @@ kbd {
   opacity: 0;
 }
 .unlock-title {
-  font-family: 'Syne', sans-serif;
+  font-family: var(--font-display);
   font-size: 44px;
   font-weight: 800;
   color: var(--accent);
