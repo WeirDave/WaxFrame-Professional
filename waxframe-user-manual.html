@@ -12,7 +12,7 @@
   <meta name="waxframe-build" content="20260424-013">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.19.23">
+  <link rel="stylesheet" href="style.css?v=3.21.2">
 </head>
 <body class="helper-body">
 
@@ -118,7 +118,7 @@
           <tr><td><strong>Setup 1 — Worker Bees</strong></td><td>Connect your AI assistants by saving their API keys. This is a one-time setup — your configuration is saved automatically and is there every time you return.</td></tr>
           <tr><td><strong>Setup 2 — Builder</strong></td><td>Choose which AI will act as the Builder — the AI that rewrites your document each round.</td></tr>
           <tr><td><strong>Setup 3 — Your Project</strong></td><td>Name your project and fill in the structured goal fields that guide every AI.</td></tr>
-          <tr><td><strong>Setup 4 — Reference Material</strong></td><td>Optional. Paste or upload source material the hive should cite against every round but never edit — RFP requirements, job descriptions, style guides, scoring rubrics, prior decisions, vendor claims.</td></tr>
+          <tr><td><strong>Setup 4 — Reference Material</strong></td><td>Optional. Paste or upload source material the hive should cite against every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims.</td></tr>
           <tr><td><strong>Setup 5 — Starting Document</strong></td><td>Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.</td></tr>
           <tr><td><strong>Work</strong></td><td>Run rounds, read the updated document, resolve conflicts between AIs, refine further if needed, and export when you are done.</td></tr>
         </tbody>
@@ -536,7 +536,7 @@
         <tbody>
           <tr><td><strong>Project Goal</strong> (Setup 3)</td><td>Standing target — what you are trying to produce</td><td>Sent every round, never changes within a session</td></tr>
           <tr><td><strong>Reference Material</strong> (Setup 4)</td><td>Standing source material — what the document must cite against</td><td>Sent every round, can be edited mid-session, never edited by the hive</td></tr>
-          <tr><td><strong>Starting Document</strong> (Setup 5)</td><td>The artifact under construction</td><td>Line-numbered, reviewed, rewritten by the Builder each round</td></tr>
+          <tr><td><strong>Starting Document</strong> (Setup 5)</td><td>The document under construction</td><td>Line-numbered, reviewed, rewritten by the Builder each round</td></tr>
           <tr><td><strong>Notes</strong> (Work screen)</td><td>Round-to-round directives for the Builder only</td><td>Sent on the next round only; cleared automatically after that round runs</td></tr>
         </tbody>
       </table>
@@ -559,7 +559,7 @@
       <p>Reference material is sent to <em>every reviewer every round</em>. A 5,000-character RFP is roughly 1,250 tokens per request. A six-bee hive running four rounds is 30,000 tokens spent just transmitting the reference material — before any document content, project goal, or response is counted.</p>
       <p>Two consequences follow:</p>
       <ul class="wh-list">
-        <li><strong>Trim aggressively.</strong> Paste only what is load-bearing. If a 40-page RFP has three pages of substantive requirements and 37 pages of boilerplate, paste the three pages.</li>
+        <li><strong>Trim aggressively.</strong> Paste only what is most important. If a 40-page RFP has three pages of substantive requirements and 37 pages of boilerplate, paste the three pages.</li>
         <li><strong>Pick a cost-conscious Builder.</strong> When reference material is large, switch your Builder to a model with low input-token pricing — DeepSeek and Gemini Flash are typically the cheapest options. The Builder is sent the largest prompt every round, so changing it has the biggest cost impact.</li>
       </ul>
       <p>For the full breakdown of how tokens are priced and why per-round costs scale the way they do, see the <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a> guide.</p>
@@ -1303,7 +1303,7 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.21.1"></script>
+<script src="version.js?v=3.21.2"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

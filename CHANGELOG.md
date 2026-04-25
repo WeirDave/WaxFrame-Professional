@@ -2,6 +2,54 @@
 
 ---
 
+## v3.21.2 Pro — Build `20260424-016`
+**Released:** April 24, 2026
+
+### Critical: stale style.css cache-bust
+
+The root cause behind every styling complaint on Setup 4 in v3.21.1: `index.html` was serving `style.css?v=3.20.11` and the helper pages were serving `style.css?v=3.19.23`. Browsers cached those URLs aggressively. None of the v3.21.0 / v3.21.1 CSS additions — the counter row styling, drop zone scoping, the works — were actually being loaded by users on upgrade. Every helper page and `index.html` now serves `style.css?v=3.21.2`. This is a one-line-per-file fix that turns out to be the bigger of the two visible improvements in this release.
+
+### Setup 4 layout now mirrors Setup 5 exactly
+
+**Drop zone matched.** The scoped CSS rule that gives Setup 5's drop zone its constrained width (so it sits to the left of the watermark, not full-width across the card) was only targeted at `#panel-upload`. It now also targets `#panel-ref-upload`. Same flex sizing, same width formula, same monospace font. The Setup 4 drop zone now looks identical to Setup 5's.
+
+**Paste editor matched.** Same fix for `#panel-paste .proj-ta-editor` — the rule now also covers `#panel-ref-paste .proj-ta-editor`. The paste textarea on Setup 4 is now the same constrained width as on Setup 5, with the line numbers gutter and watermark dead-space matching.
+
+**Watermark extended to ref panels.** The pulsing logo watermark that appears in the dead space to the right of the working content area on Setup 5 (`#panel-paste::after`, `#panel-upload::after`, `#panel-scratch::after`) now also fires on `#panel-ref-paste::after` and `#panel-ref-upload::after`, including the laptop-tier (1422–1600px) size override.
+
+### Default tab behavior intentionally different from Setup 5
+
+Setup 5 — Starting Document is required, so it ships with Upload File active by default and the drop zone visible on page load. Setup 4 — Reference Material is optional, so on page load **neither tab is selected** and the panel area below the counter row is empty until the user explicitly picks a tab. The hint copy now reads "Pick **Upload File** or **Paste Text** to provide reference material — or skip this step entirely if your project does not need any." This is intentional asymmetry — a visible signal that Setup 4 is genuinely optional and a user can simply hit Continue without making a choice. `loadSettings` now only restores an active tab if the user previously picked one in a saved project; first-visit users see the neutral state.
+
+### Copy clarity fixes
+
+**"the artifact under construction" → "the document under construction".** The phrase appeared in three user-facing locations: the Setup 4 subtitle, the infoReferenceModal "Distinct from Starting Document" row, and the manual's Step 4 role-distinction table. All three now use plain language.
+
+**Job descriptions clarified in example lists.** The phrase "job descriptions" was ambiguous in the Reference Material example list — for a recruiter writing a JD, the JD is the artifact being produced, not a reference. The example now reads "job descriptions (rules and responsibilities)" everywhere it appears in prose copy on Setup 4 — the subtitle, the info modal opening paragraph, and the manual's setup-flow table — to make explicit that this entry refers to the source JD a user is writing against (a cover letter, a résumé), not a JD the user is producing.
+
+**Token cost copy made plainer.** Two phrases I had originally written that read as engineer-speak rather than plain English have been rewritten:
+
+- "Trim reference material to what is load-bearing" → "Trim reference material to what is most important"
+- "the hive cannot read what you do not paste — but it also pays for every character" → "the hive cannot read what you do not paste — but it also costs you money for every token"
+
+These corrections land in three spots: the infoReferenceModal tip, the manual's Step 4 trim-aggressively bullet, and the What Are Tokens? Reference material card.
+
+### Files Changed
+
+- `index.html` — Removed the `active` class from the Setup 4 Upload File tab and panel so neither is selected on first load. Updated the Reference Material subtitle to clarify "job descriptions (rules and responsibilities)" and replaced "the artifact under construction" with "the document under construction". Updated the infoReferenceModal opening paragraph and "Distinct from Starting Document" row to match. Updated the tip line in the info modal: load-bearing → most important; pays for every character → costs you money for every token. Updated the tab hint to read "Pick Upload File or Paste Text to provide reference material — or skip this step entirely if your project does not need any." Bumped `waxframe-build` meta to `20260424-016`, `app.js?v=` cache-bust to `3.21.2`, `version.js?v=` cache-bust to `3.21.2`, and `style.css?v=` cache-bust from stale `3.20.11` to `3.21.2`.
+- `app.js` — Bumped `BUILD` to `20260424-016`. Default `refTab` state var changed from `'upload'` to `''` (empty = no selection). `loadSettings` only calls `switchRefTab` when a persisted refTab value exists. `clearProject` resets refTab to empty and clears any active tab/panel state on the screen-reference DOM, also resets the hint copy to the neutral first-visit state.
+- `style.css` — Added `#panel-ref-upload` and `#panel-ref-paste` to the existing panel-decoration rule (positioning + monospace font). Added `#panel-ref-upload::after` and `#panel-ref-paste::after` to the watermark `::after` rule so the pulsing logo watermark fires on Setup 4 too. Added `#panel-ref-upload .drop-zone` to the constrained-width drop-zone rule. Added `#panel-ref-paste .proj-ta-editor` to the constrained-width paste-editor rule. Added the same ref panels to the laptop-tier (1422–1600px) watermark size override at the bottom of the file. `!important` count unchanged at 41.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.2 Pro`.
+- `waxframe-user-manual.html` — Replaced "the artifact under construction" with "the document under construction" in the Step 4 role-distinction table. Clarified "job descriptions (rules and responsibilities)" in the setup-flow table. Replaced load-bearing → most important in the trim-aggressively bullet. Bumped `version.js?v=` cache-bust to `3.21.2` and `style.css?v=` cache-bust from stale `3.19.23` to `3.21.2`.
+- `what-are-tokens.html` — Replaced load-bearing → most important and the "do not pay for what you do not paste" wording with "costs you money for every token you send" in the Reference material card. Bumped `version.js?v=` cache-bust to `3.21.2` and `style.css?v=` cache-bust to `3.21.2`.
+- `document-playbooks.html` — Bumped `version.js?v=` cache-bust to `3.21.2` and `style.css?v=` cache-bust to `3.21.2`. No content changes.
+- `api-details.html` — Bumped `version.js?v=` cache-bust to `3.21.2` and `style.css?v=` cache-bust to `3.21.2`. No content changes.
+- `prompt-editor.html` — Bumped `version.js?v=` cache-bust to `3.21.2` and `style.css?v=` cache-bust to `3.21.2`. No content changes.
+- `README.md` — Bumped Version badge to `3.21.2` and Build badge to `20260424-016`.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.1 Pro — Build `20260424-015`
 **Released:** April 24, 2026
 

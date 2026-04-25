@@ -382,7 +382,7 @@ let history   = [];
 let docText   = '';
 let docTab    = 'upload';
 // ── REFERENCE MATERIAL state (v3.21.0) ──
-let refTab      = 'upload';  // 'upload' or 'paste' — defaults to upload to mirror Setup 5
+let refTab      = '';        // 'upload', 'paste', or '' (no selection — neither panel visible until user picks)
 let refMaterial = '';        // active reference material text
 let refFilename = '';        // filename if uploaded (informational only)
 let workDocSaveTimer = null;
@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-015';         // build stamp — update each session
+const BUILD       = '20260424-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1860,7 +1860,7 @@ function clearProject() {
   // ── REFERENCE MATERIAL wipe (v3.21.0) ──
   refMaterial = '';
   refFilename = '';
-  refTab = 'upload';
+  refTab = '';
   const refTa = document.getElementById('refPasteText');
   if (refTa) { refTa.value = ''; updateProjLineNums('refPasteNums', refTa); }
   const refStatus = document.getElementById('refFileStatus');
@@ -1870,7 +1870,11 @@ function clearProject() {
   const refFileInput = document.getElementById('refFileInput');
   if (refFileInput) refFileInput.value = '';
   if (typeof updateRefCounter === 'function') updateRefCounter();
-  if (typeof switchRefTab === 'function') switchRefTab('upload');
+  // Clear any active tab/panel state — first-visit-like neutral state
+  document.querySelectorAll('#screen-reference .doc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#screen-reference .doc-tab-panel').forEach(p => p.classList.remove('active'));
+  const refHintEl = document.getElementById('refTabHint');
+  if (refHintEl) refHintEl.innerHTML = 'Pick <strong>Upload File</strong> or <strong>Paste Text</strong> to provide reference material — or skip this step entirely if your project does not need any.';
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
   localStorage.removeItem('waxframe_resolved_decisions');
@@ -2017,7 +2021,9 @@ function loadSettings() {
         if (typeof updateProjLineNums === 'function') updateProjLineNums('refPasteNums', refTa);
       }
       if (typeof updateRefCounter === 'function') updateRefCounter();
-      if (typeof switchRefTab === 'function') switchRefTab(refTab, true);
+      // Only restore an active tab if the user previously picked one.
+      // First-visit / no-prior-selection → leave neither tab selected.
+      if (refTab && typeof switchRefTab === 'function') switchRefTab(refTab, true);
       if (refFilename) {
         const status = document.getElementById('refFileStatus');
         if (status) {

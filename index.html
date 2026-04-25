@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-015">
+  <meta name="waxframe-build" content="20260424-016">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.20.11">
+  <link rel="stylesheet" href="style.css?v=3.21.2">
 </head>
 <body>
 
@@ -348,14 +348,14 @@
 
         <div class="fs-col-header">
           <h2 class="fs-col-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-          <p class="fs-col-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions, RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the artifact under construction).</p>
+          <p class="fs-col-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
         </div>
 
         <div class="doc-input-tabs">
-          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
           <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-paste" onclick="switchRefTab('paste')">📋 Paste Text</button>
         </div>
-        <p id="refTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
+        <p id="refTabHint" class="doc-tab-hint">Pick <strong>Upload File</strong> or <strong>Paste Text</strong> to provide reference material — or skip this step entirely if your project does not need any.</p>
 
         <div class="ref-counter-row" id="refCounterRow">
           <span class="ref-counter-label">📚 Reference size</span>
@@ -365,7 +365,7 @@
           <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
         </div>
 
-        <div class="doc-tab-panel active" id="panel-ref-upload">
+        <div class="doc-tab-panel" id="panel-ref-upload">
           <div class="drop-zone" id="refDropZone" onclick="document.getElementById('refFileInput').click()"
                ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
             <div class="drop-zone-icon">📚</div>
@@ -1408,15 +1408,15 @@
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">Reference Material</h2>
     <div class="goal-info-body">
-      <p>Reference material is source documentation the hive consults every round but never edits — job descriptions, RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. It is sent to every reviewer and to the Builder so they can cite against it.</p>
+      <p>Reference material is source documentation the hive consults every round but never edits — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. It is sent to every reviewer and to the Builder so they can cite against it.</p>
       <div class="goal-info-row"><span class="info-label">Distinct from Notes</span><span class="goal-info-desc"><strong>Notes</strong> are round-to-round directives for the Builder only and apply to the next round. <strong>Reference material</strong> is standing source material sent to every reviewer every round.</span></div>
-      <div class="goal-info-row"><span class="info-label">Distinct from Starting Document</span><span class="goal-info-desc">The <strong>Starting Document</strong> is the artifact under construction — the hive rewrites it. Reference material is read-only source material the hive cites against.</span></div>
+      <div class="goal-info-row"><span class="info-label">Distinct from Starting Document</span><span class="goal-info-desc">The <strong>Starting Document</strong> is the document under construction — the hive rewrites it. Reference material is read-only source material the hive cites against.</span></div>
       <div class="goal-info-row"><span class="info-label">When to use it</span><span class="goal-info-desc">RFPs, job descriptions, style guides, scoring rubrics, prior consensus decisions, vendor claims you need to cross-check against.</span></div>
       <div class="goal-info-row"><span class="info-label">When to skip it</span><span class="goal-info-desc">Most short documents do not need it. A cookie recipe or thank-you note has no source material to cite against.</span></div>
       <div class="goal-info-row"><span class="info-label">Editable mid-session</span><span class="goal-info-desc">Use the <strong>📚 Reference</strong> button on the Work screen to edit reference material between rounds. Edits apply to the next round.</span></div>
       <div class="goal-info-row"><span class="info-label">Single source per project</span><span class="goal-info-desc">Upload OR paste — not both. If you have multiple reference docs, concatenate them into one paste with clear section headers.</span></div>
       <div class="goal-info-row"><span class="info-label">Token cost reality</span><span class="goal-info-desc">Reference material is sent to every reviewer every round. A 5,000-character RFP roughly doubles your prompt size, which roughly doubles per-round cost. Pick a cost-conscious Builder when reference material is large.</span></div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is load-bearing. The hive cannot read what you do not paste — but it also pays for every character.</p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is most important. The hive cannot read what you do not paste — but it also costs you money for every token.</p>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoReferenceModal').classList.remove('active')">Got it →</button>
@@ -1496,8 +1496,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.21.1"></script>
-<script src="app.js?v=3.21.1"></script>
+<script src="version.js?v=3.21.2"></script>
+<script src="app.js?v=3.21.2"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
