@@ -2,6 +2,39 @@
 
 ---
 
+## v3.21.6 Pro — Build `20260425-003`
+**Released:** April 25, 2026
+
+### Self-hosted DM Sans, dropped Syne entirely
+
+WaxFrame had been loading two fonts from Google's CDN since project inception — Syne (display weights 400/600/700/800) and DM Sans (body weights 300/400/500/600 plus italic). Two parallel requests fired on every page load: one `<link>` in `index.html` and one `@import` in `style.css` with slightly different parameters (the CSS variant requested optical-size variants the HTML variant did not). Beyond redundancy, the external dependency on `fonts.googleapis.com` was a real liability for restricted-network deployment — air-gapped environments, corporate proxies, and locked-down work networks can all silently block Google Fonts. When that happens the request fails, fonts silently fall back to system defaults, and the WaxFrame wordmark renders in Times New Roman or whatever the OS supplies. The hive metaphor and the entire visual identity collapse into something that looks like a half-broken government form.
+
+Candy also wasn't a fan of Syne for the wordmark and titles. There was a partial change in v3.14.5 (April 18) where `.wh-section-title` in the user manual was switched from Syne to DM Sans 700 uppercase — but the rest of the app's `--font-display` callsites (16 places using weight 800, 12 using weight 700) stayed on Syne. This release finishes that work: Syne is dropped entirely and DM Sans handles every font role except monospace (which remains system-installed Courier New, per the project's strict typeface rules).
+
+The 18 DM Sans woff2 files (every weight 100–900 plus italic for each) live in a new `fonts/` subdirectory at repo root. All 18 are declared via `@font-face` rules at the top of `style.css` even though the actual codebase only references weights 300, 400, 400-italic, 500, 600, 700, and 800 — browsers lazy-load each woff2 only when a matching font-weight/style is actually rendered, so declaring all weights costs nothing at page-load time and keeps the door open for any future weight without needing another release. Total bundle ~270 KB woff2, served from same-origin GitHub Pages instead of an external CDN, so there's no DNS lookup, no extra TLS handshake, and no third-party tracking on every page load.
+
+The `--font-display` CSS token in `:root` was flipped from `'Syne'` to `'DM Sans'` — single line change. Every callsite using `var(--font-display)` cascades automatically with no find-and-replace required. One straggler was caught and fixed: `.unlock-title` (the WaxFrame Pro license unlock animation overlay) had a hardcoded `font-family: 'Syne'` instead of using the token; flipped to `var(--font-display)` so it joins the rest of the app's typography rather than falling back to system sans-serif.
+
+Visually, the WaxFrame wordmark and hero titles look different — Syne 800 is geometric and quirky with thin verticals and distinctive `e` and `g` glyphs; DM Sans 800 is more neutral, even, and readable. The change is subjective. If after living with it for a while a different display face is preferred (Inter, Manrope, Space Grotesk are common nearby choices), it's a one-token revert plus a different woff2 download.
+
+### Files Changed
+
+- `style.css` — Replaced single-line Google Fonts `@import` with an 18-rule `@font-face` block referencing files in `fonts/` (paths relative to repo root, matching where `style.css` lives). Flipped `--font-display` token from `'Syne'` to `'DM Sans'`. Fixed orphaned `.unlock-title` hardcoded `'Syne'` reference to use `var(--font-display)`. CSS braces balanced at 1600/1600. `!important` count unchanged.
+- `index.html` — Removed `<link rel="preconnect" href="https://fonts.googleapis.com">` and `<link href="https://fonts.googleapis.com/...">` from `<head>`. Bumped `waxframe-build` meta to `20260425-003` and all cache-busts to `3.21.6`.
+- `app.js` — Bumped `BUILD` to `20260425-003`. No code changes.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.6 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts bumped to `3.21.6`. No content changes. None of these pages referenced Google Fonts directly; they inherit fonts via `style.css`.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+- `fonts/` (new directory at repo root) — 18 DM Sans woff2 files (`dm-sans-v17-latin-100.woff2` through `dm-sans-v17-latin-900italic.woff2`). Already in place from the manual download via google-webfonts-helper.
+- `fonts/OFL.txt` (new file) — SIL Open Font License 1.1 boilerplate with the DM Sans Project Authors copyright line, required for OFL redistribution compliance when bundling the fonts.
+
+### Documentation hygiene — stale build comment blocks synced
+
+The HTML/CSS/JS comment headers at the top of every file (`Build: 2026MMDD-NNN`) had been silently out of sync for many releases — `index.html` still said `20260421-001`, `style.css` said `20260419-001`, `what-are-tokens.html` said `20260415-001`. These comment-block stamps aren't part of the canonical four-stamp release checklist (meta tag, `APP_VERSION`, `BUILD` constant, cache-busts), so they were never updated through normal release workflow. All 8 files (`index.html`, `app.js`, `style.css`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`) now synced to `20260425-003`. No behavioral impact — purely cosmetic, but it was misleading when reading source.
+
+---
+
 ## v3.21.5 Pro — Build `20260425-002`
 **Released:** April 25, 2026
 
