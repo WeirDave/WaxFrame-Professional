@@ -2,6 +2,80 @@
 
 ---
 
+## v3.21.11 Pro — Build `20260425-008`
+**Released:** April 25, 2026
+
+### 🚨 Root cause found: Guard #1 has been silently blocking every saveSession call after Round 1
+
+The data-loss bug we've been chasing for the last several releases was not eviction, not a race, not a write-guard misfire, not the backup function bug. It was simpler and worse: **the existing Guard #1 in `saveSession()` has been blocking 100% of save attempts after Round 1 since the guard was first added.**
+
+#### How the bug worked
+
+The default page-load console state, set in `index.html`, is a single div:
+
+```html
+<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>
+```
+
+`consoleLog()` adds new entries via `el.prepend(entry)` — new entries go to the **top** of the console. The default "Console ready" entry stays at the **bottom**, untouched, forever. After every round, after every API request, after every event, the default entry is still sitting there as the last child of `#liveConsole`.
+
+`saveSession()` had a guard intended to prevent saves before `loadSession()` had a chance to restore the real `consoleHTML`:
+
+```js
+const DEFAULT_CONSOLE_MSG = 'Console ready — Smoke the hive to begin.';
+if (history.length > 0 && (!consoleHTML.trim() || consoleHTML.includes(DEFAULT_CONSOLE_MSG))) {
+  return;
+}
+```
+
+The intent: "if in-memory has rounds but the DOM console looks like it just loaded, skip — `loadSession` hasn't restored real consoleHTML yet."
+
+The bug: `consoleHTML.includes(DEFAULT_CONSOLE_MSG)` returns `true` **forever**, because the default entry is never removed from the DOM. Once `history.length > 0` (after Round 1 completes), the guard fires on every subsequent save — **even saves that have completely legitimate data** with a fully populated console containing 50+ real entries.
+
+Result: Round 1 completes → `history.push(round1)` → `saveSession()` fires → Guard #1 trips because default entry still in DOM → `return` → no IDB write. Round 2 completes → same thing. Round 3 completes → same thing. The IDB blob remained at its page-load default state of `{round:1, history:[], docText:""}` for the entire session, no matter how many rounds ran.
+
+#### How the fix works
+
+`consoleLog()` now removes the default page-load entry on its first real call:
+
+```js
+const defaultEntry = el.querySelector('.console-entry.console-info');
+if (defaultEntry && defaultEntry.textContent.includes('Smoke the hive to begin')) {
+  defaultEntry.remove();
+}
+```
+
+Once any real activity has logged, the default entry is gone from the DOM. `consoleHTML.includes(DEFAULT_CONSOLE_MSG)` correctly returns `false` from then on. Guard #1 only trips when it should — between page load and the first real log entry.
+
+This also matches the original UX intent: the "Console ready" message is a placeholder for empty state, not a permanent footer.
+
+#### Why earlier hardening didn't help
+
+- **v3.21.9 added the save serialization chain, write-guard #2, LS mirror, pre-launch verify, and persist retry.** None of those mechanisms ever ran, because `saveSession` returned at Guard #1 before reaching the chain. The protections were structurally correct but executed zero times in practice.
+- **v3.21.10 fixed the backup/restore to capture and restore IDB session.** Correct fix for a real bug, but didn't address why IDB was empty in the first place.
+- **The dev-mode trace from v3.21.9** would have shown `[saveSession] BLOCKED by guard #1 — in-memory has data but DOM console is default` on every save after Round 1, which would have pointed straight at this. We had the diagnostic instrument; we didn't run it before today.
+
+#### What this means for your data
+
+Once v3.21.11 is deployed, complete a round and check IDB. You should now see populated `history`, `docText`, `consoleHTML`, etc. in the `current` key of `waxframe_v2_db / session`. A backup at that point will contain real session data. A hard refresh after that point will resume your session.
+
+Sessions started before v3.21.11 cannot be recovered — they were never persisted in the first place. Going forward, the IDB write actually happens, the LS mirror is populated as redundancy, and backups capture full state.
+
+#### A note on Guard #1's design
+
+The guard was added in good faith to protect against a real concern (page-load saveSession races), but the implementation had a wrong assumption: that the default entry is a transient state that goes away on its own. It doesn't — the implementation never removed it. The fix is to actually remove it when real activity begins, which makes the guard's check correct. The guard logic itself is unchanged.
+
+### Files Changed
+
+- `app.js` — Modified `consoleLog()` to remove the default page-load entry on first real call. Bumped `BUILD` to `20260425-008` and the comment-header build to match.
+- `index.html` — Bumped `waxframe-build` meta to `20260425-008` and all cache-busts to `3.21.11`. Comment-header build bumped.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.11 Pro`.
+- `style.css`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts and comment-header builds bumped to `3.21.11` / `20260425-008`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.10 Pro — Build `20260425-007`
 **Released:** April 25, 2026
 
