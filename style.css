@@ -3595,7 +3595,10 @@ kbd {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
 }
-/* Pulsing logo watermark in dead space right of content — anchors to active panel */
+/* Pulsing logo watermark in dead space right of content — anchors to active panel.
+   Centered horizontally within the dead space (the area to the right of the
+   constrained-width content column). Updated v3.21.3 — was right 24px center
+   which pinned the logo to the right edge instead of centering it. */
 #panel-paste::after,
 #panel-upload::after,
 #panel-scratch::after,
@@ -3609,7 +3612,7 @@ kbd {
   right: 0;
   background-image: url('images/Waxframe_logo_v19.png');
   background-repeat: no-repeat;
-  background-position: right 24px center;
+  background-position: center center;
   background-size: min(240px, 85%);
   opacity: 0;
   pointer-events: none;
