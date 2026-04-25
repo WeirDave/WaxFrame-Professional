@@ -1,6 +1,6 @@
 # WaxFrame Dry-Run Test Sheet
 
-Copy fields into Setup 3. Paste the Starting Document into Setup 4. Run rounds until convergence. Log actual round count at the bottom.
+Copy fields into Setup 3. Paste the Starting Document into Setup 5. Run rounds until convergence. Log actual round count at the bottom.
 
 ---
 
@@ -48,7 +48,7 @@ Use **Start from Scratch** and leave the text box empty. Don't paste guiding not
 
 **Length Constraint:** 1 Page
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 R. David Paine III
@@ -106,7 +106,7 @@ Ekahau, iBwave, Android Studio, Jamf MDM, Okta, Kolide, Cloudflare
 
 **Length Constraint:** 400 Words
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Dear Hiring Manager,
@@ -140,7 +140,7 @@ R. David Paine III
 
 **Length Constraint:** 6 Pages
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 PROPOSAL — WAREHOUSE WI-FI UPGRADE FOR ACME DISTRIBUTION
@@ -187,7 +187,7 @@ Better coverage. Faster scanners. Less downtime.
 
 **Length Constraint:** 40 Pages
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 RESPONSE TO CITY OF OAKLAND RFP 2026-WIFI-001
@@ -239,7 +239,7 @@ To be provided.
 
 **Length Constraint:** 120 Words
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Interview notes (convert this into a real thank-you email):
@@ -268,7 +268,7 @@ Next step: panel interview next week with her team lead and two senior engineers
 
 **Length Constraint:** 1 Page
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Q3 2026 WIRELESS OPERATIONS SUMMARY
@@ -311,7 +311,7 @@ Recommendations for leadership:
 
 **Length Constraint:** leave blank
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Pilot proposal notes (convert into a 14-slide presentation outline):
@@ -359,7 +359,7 @@ If pilot fails or shows marginal improvement, defer Wi-Fi 7 decision to 2028 and
 
 **Length Constraint:** 1400 Words
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Outline notes (turn into a full 1,200-word blog post):
@@ -405,7 +405,7 @@ Closing: if you've been surveying at eye level your whole career, you're not alo
 
 **Length Constraint:** 600 Words
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Internal notes for posting this role (turn into a clean job description):
@@ -457,7 +457,7 @@ Must be US person (ITAR/export control).
 
 **Length Constraint:** 150 Words
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Context notes (turn into an outreach email):
@@ -490,7 +490,7 @@ Signature: David Paine, Wireless Practice Lead, [My Company]
 
 **Length Constraint:** leave blank
 
-### Starting Document (paste into Setup 4)
+### Starting Document (paste into Setup 5)
 
 ```
 Rough recipe notes (turn into a polished recipe):
