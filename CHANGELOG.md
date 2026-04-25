@@ -2,6 +2,30 @@
 
 ---
 
+## v3.21.8 Pro — Build `20260425-005`
+**Released:** April 25, 2026
+
+### Mute button now actually mutes everything
+
+Two sound functions — `playSmokerSound()` and `playBuilderSound()` — were missing the `if (_isMuted) return;` guard at the top of their function bodies. The other eight direct-audio helpers (`playRoundCompleteSound`, `playRosieSound`, `playFlyingCarSound`, `playMetalClang`, `playAnvilSound`, `playCrackleSound`, plus the click sound) all had the guard. The two unguarded functions both directly create an `AudioContext` and schedule oscillators when called, so calling them with mute on still produced audible output.
+
+The smoker sound is the soft "breath of smoke" that plays during fly-in animations, and the builder sound is the pneumatic-hiss-plus-belt-rolling that fires when the Builder kicks off a round. Both fire frequently enough during normal use that the mute leak was very audible — every time the user kicked off a Builder round with mute on, they got the full pneumatic-hiss sound.
+
+The two scene-orchestrator functions `playUnlockScene()` and `playUnanimousScene()` do not need a top-level guard since they don't produce sound directly — they delegate to the per-effect helpers (`playMetalClang`, `playAnvilSound`, `playFlyingCarSound`, `playCrackleSound`) which are already gated. The visual scene plays normally with mute on; only the audio is suppressed.
+
+A prior audit in v3.21.6 had claimed all audio paths were gated, which was wrong — the audit's heuristic missed direct-AudioContext creation in functions whose comments described them as helpers rather than scenes. Audit logic for v3.21.8 was rewritten to enumerate every `function play*` definition and verify each that directly instantiates `AudioContext` or `new Audio()` has an `_isMuted` guard within its first three lines. All eight direct-audio helpers now pass.
+
+### Files Changed
+
+- `app.js` — Added `if (_isMuted) return;` as the first statement of `playSmokerSound()` (line 575) and `playBuilderSound()` (line 599). Bumped `BUILD` to `20260425-005` and the comment-header build to match.
+- `index.html` — Bumped `waxframe-build` meta to `20260425-005` and all cache-busts to `3.21.8`. Comment-header build bumped.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.8 Pro`.
+- `style.css`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts and comment-header builds bumped to `3.21.8` / `20260425-005`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.7 Pro — Build `20260425-004`
 **Released:** April 25, 2026
 
