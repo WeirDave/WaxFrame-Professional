@@ -390,11 +390,10 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-008';         // build stamp — update each session
+const BUILD       = '20260425-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
-const LS_SESSION_MIRROR = 'waxframe_v2_session_mirror'; // (v3.21.9) localStorage mirror of IDB session — survives IDB eviction
 const LS_SETTINGS = 'waxframe_v2_settings';  // legacy key — migrated on first load
 const LS_LICENSE  = 'waxframe_v2_license';   // license key — persistent
 
@@ -2169,77 +2168,19 @@ let _saveSessionChain = Promise.resolve();
 function saveSession() {
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
-
-  // ── (v3.21.9) Track B — dev-mode trace ──
-  // Logs every saveSession call with its stack trace and current state. Helps
-  // pin down spurious empty-state writes. Behind the dev flag so it's invisible
-  // for normal users. Remove once root cause is confirmed.
-  if (localStorage.getItem('waxframe_dev') === '1') {
-    console.groupCollapsed(`[saveSession] round=${round} phase=${phase} history=${history.length} docText=${docText.length} consoleHTML=${consoleHTML.length}`);
-    console.trace('call site');
-    console.groupEnd();
-  }
-
-  // ── Guard #1 removed in v3.21.11 ──
-  // Guard #1 used to check `consoleHTML.includes(DEFAULT_CONSOLE_MSG)` to
-  // detect "DOM is still in default page-load state" — but the default
-  // entry's persistence in the DOM (consoleLog prepends rather than
-  // replacing) meant `.includes()` was always true after Round 1, blocking
-  // every save. The consoleLog fix above strips the default entry on first
-  // real log, so the substring would no longer match in normal flows, but
-  // the guard itself was a fragile DOM-heuristic. Guard #2 below
-  // (IDB-read with comparison) is the correct, race-proof protection and
-  // covers the same failure mode without the heuristic brittleness.
-
   const notesEl = document.getElementById('workNotes');
   const notes = notesEl ? notesEl.value : '';
   const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds };
 
-  // Chain through the previous save so the read-check-write below cannot
-  // race against another saveSession in flight. Each call resolves the chain
-  // once its IDB write commits (or errors).
+  // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
-    // ── (v3.21.9) Belt-and-suspenders guard #2 — write-guard ──
-    // Refuse to commit if the new state would clobber populated stored data
-    // with empty defaults. This catches the case where in-memory state has
-    // regressed to its initial values (loadSession failed, race with init,
-    // unexpected reset path) but IDB still has the user's real session.
-    // Cheap to read — every save already implies an IDB transaction round-trip.
-    let stored = null;
-    try { stored = await idbGet(); } catch(e) { /* ignore — fall through to write */ }
-    const memEmpty    = (history.length === 0 && !docText.trim());
-    const storedHasData = stored && (
-      (Array.isArray(stored.history) && stored.history.length > 0) ||
-      (typeof stored.docText === 'string' && stored.docText.trim().length > 0)
-    );
-    if (memEmpty && storedHasData) {
-      console.warn('[saveSession] BLOCKED by guard #2 — in-memory empty, stored has data',
-                   { storedHistoryLen: stored.history?.length, storedDocLen: stored.docText?.length });
-      // Do NOT write. Leave stored data intact.
-      return;
-    }
-
-    // ── Primary: save to IndexedDB (no size limit) ──
+    // ── Primary: IndexedDB (no size limit) ──
     try {
       await idbSet(session);
       try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(e) {}
-      // ── (v3.21.9) A3 — write LS mirror after every successful IDB commit ──
-      // Independent eviction policies between IDB and localStorage mean a
-      // mirror is meaningful redundancy. Skip the mirror if the session is
-      // empty defaults (don't pollute the mirror).
-      if (!memEmpty) {
-        try {
-          const mirrorJson = JSON.stringify(session);
-          if (mirrorJson.length < 4_500_000) { // ~4.5MB safety margin under 5MB limit
-            localStorage.setItem(LS_SESSION_MIRROR, mirrorJson);
-          }
-        } catch(e) { /* quota — silent, IDB still has the truth */ }
-      }
       checkStorageQuota();
 
-      // ── (v3.21.9) A4 — persistent storage retry on engagement ──
-      // Browsers grant persistence based on engagement signals. Re-request
-      // every 3 rounds if we haven't been granted yet — cheap and idempotent.
+      // Persistent-storage retry every 3 rounds if not yet granted.
       if (history.length > 0 && history.length % 3 === 0 &&
           !window._storagePersistent && navigator.storage?.persist) {
         try {
@@ -2247,7 +2188,7 @@ function saveSession() {
         } catch(e) { /* ignore */ }
       }
     } catch(e) {
-      // IndexedDB failed — fall back to localStorage (the mirror IS the fallback)
+      // IDB failed — fall back to localStorage.
       consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error');
       try {
         localStorage.setItem(LS_SESSION, JSON.stringify(session));
@@ -2287,24 +2228,7 @@ async function loadSession() {
     // Primary: try IndexedDB first
     let s = await idbGet();
 
-    // ── (v3.21.9) Fallback #1: localStorage mirror ──
-    // Mirror is written on every successful IDB save. If IDB was evicted
-    // but localStorage wasn't, this is our recovery path. The mirror is
-    // authoritative if IDB returns null but the mirror has data.
-    if (!s) {
-      try {
-        const mirrorRaw = localStorage.getItem(LS_SESSION_MIRROR);
-        if (mirrorRaw) {
-          s = JSON.parse(mirrorRaw);
-          // Push the recovered data back into IDB so subsequent loads use the
-          // primary path again. Don't await — recovery succeeds either way.
-          idbSet(s).catch(() => {});
-          console.warn('[loadSession] IDB empty — recovered session from localStorage mirror', { historyLen: s.history?.length, docLen: s.docText?.length });
-        }
-      } catch(e) { /* mirror corrupt — fall through */ }
-    }
-
-    // Fallback #2: try legacy localStorage key (handles sessions saved before IDB migration)
+    // Fallback: try legacy localStorage key (handles sessions saved before IDB migration)
     if (!s) {
       const raw = localStorage.getItem(LS_SESSION);
       if (raw) {
@@ -4599,17 +4523,11 @@ async function startSession() {
   // The in-memory check above only catches sessions that successfully loaded
   // into memory. If loadSession() failed silently — IDB read errored, async
   // race lost to user click, mid-load eviction — in-memory is empty but IDB
-  // (or the localStorage mirror) may still hold the user's real session.
-  // Read both before launching so we don't blow away recoverable data.
+  // may still hold the user's real session. Read it before launching so we
+  // don't blow away recoverable data.
   if (history.length === 0 && !docText) {
     let storedSession = null;
-    try { storedSession = await idbGet(); } catch(e) { /* ignore — fall through to mirror */ }
-    if (!storedSession) {
-      try {
-        const mirrorRaw = localStorage.getItem(LS_SESSION_MIRROR);
-        if (mirrorRaw) storedSession = JSON.parse(mirrorRaw);
-      } catch(e) { /* corrupt — ignore */ }
-    }
+    try { storedSession = await idbGet(); } catch(e) { /* ignore */ }
     const storedHasData = storedSession && (
       (Array.isArray(storedSession.history) && storedSession.history.length > 0) ||
       (typeof storedSession.docText === 'string' && storedSession.docText.trim().length > 0)
@@ -4627,7 +4545,6 @@ async function startSession() {
       // User explicitly chose discard. Clear the saved session before launching
       // so the new launch doesn't leave a partial overwrite.
       try { await idbClear(); } catch(e) { /* ignore */ }
-      try { localStorage.removeItem(LS_SESSION_MIRROR); } catch(e) {}
       try { localStorage.removeItem(LS_SESSION); } catch(e) {}
     }
   }
@@ -7740,33 +7657,24 @@ async function backupSession() {
   // Legacy localStorage session — almost always null since the IDB migration
   // ran ages ago. Kept for forward compatibility with any unmigrated browser.
   const sessionLS = localStorage.getItem(LS_SESSION) || null;
-  // ── (v3.21.10) Primary session source: IndexedDB ──
-  // The session blob (round history, working document, console HTML, conflicts,
-  // notes, project clock seconds) lives in IDB. Prior versions read only the
-  // legacy LS_SESSION key here and got null, producing backups that contained
-  // only project setup and API keys — never round data. Every restore from
-  // those backups silently lost round history.
+  // Primary session source: IndexedDB. The session blob (round history, working
+  // document, console HTML, notes, project clock seconds) lives in IDB.
   let sessionIDB = null;
-  try { sessionIDB = await idbGet(); } catch(e) { /* ignore — fall back to mirror */ }
-  // Also include the localStorage mirror as a redundancy layer. If IDB is
-  // somehow unreadable at backup time but the mirror has data, we still
-  // capture it.
-  const sessionMirror = localStorage.getItem(LS_SESSION_MIRROR) || null;
+  try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
 
-  if (!hive && !project && !sessionLS && !sessionIDB && !sessionMirror) {
+  if (!hive && !project && !sessionLS && !sessionIDB) {
     toast('⚠️ Nothing to back up'); return;
   }
 
   const backup = {
     _waxframe_backup:         true,
-    _waxframe_backup_version: 2, // v2 = includes IDB session + LS mirror (v3.21.10+)
+    _waxframe_backup_version: 3, // v3 = LS mirror removed (v3.21.12+); v2 (v3.21.10/11) included LS_SESSION_MIRROR
     _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
     _waxframe_backup_ts:      Date.now(),
     LS_HIVE:           hive,
     LS_PROJECT:        project,
     LS_SESSION:        sessionLS,
     IDB_SESSION:       sessionIDB,    // ← the actual round data
-    LS_SESSION_MIRROR: sessionMirror, // ← belt-and-suspenders redundancy
   };
   const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
   const name     = proj.projectName || 'session';
@@ -7807,10 +7715,11 @@ function importSession() {
         const data = JSON.parse(ev.target.result);
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
         // ── Restore localStorage layers ──
-        if (data.LS_HIVE)           localStorage.setItem(LS_HIVE,           data.LS_HIVE);
-        if (data.LS_PROJECT)        localStorage.setItem(LS_PROJECT,        data.LS_PROJECT);
-        if (data.LS_SESSION)        localStorage.setItem(LS_SESSION,        data.LS_SESSION);
-        if (data.LS_SESSION_MIRROR) localStorage.setItem(LS_SESSION_MIRROR, data.LS_SESSION_MIRROR);
+        if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
+        if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+        if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+        // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
+        // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
         // ── (v3.21.10) Restore IndexedDB session ──
         // Prior versions never wrote to IDB on restore, so even if a backup
         // had session data it would land in localStorage where loadSession
@@ -7884,17 +7793,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   loadSettings(); // always load hive (AI keys) silently
   initMuteBtn();
 
-  // ── (v3.21.9) One-time migration: delete legacy aihive_v2_db ──
-  // The project was renamed from "AIHive" to "WaxFrame" months ago. The
-  // localStorage keys and IDB name were renamed at that time, but the
-  // pre-rename IndexedDB database "aihive_v2_db" was never explicitly
-  // deleted, so it lingered in browsers as orphan data. Clean it up once.
-  if (!localStorage.getItem('waxframe_v2_legacy_idb_purged')) {
-    try {
-      indexedDB.deleteDatabase('aihive_v2_db');
-      localStorage.setItem('waxframe_v2_legacy_idb_purged', '1');
-    } catch(e) { /* not critical — try again next load */ }
-  }
   // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);
   document.title = 'WaxFrame ' + APP_VERSION;

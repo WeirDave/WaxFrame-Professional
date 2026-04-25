@@ -2,6 +2,64 @@
 
 ---
 
+## v3.21.12 Pro — Build `20260425-009`
+**Released:** April 25, 2026
+
+### Tagline punctuation fixed everywhere
+
+The tagline read `Many minds. One refined result.` in ten places across the product (welcome screen, five `.fs-logo-tag` instances on helper screens, work screen right-panel logo, nav panel, README, user manual print header). The mid-sentence period split it into two short fragments. Replaced the period with a comma and lowercased the second word so it now reads `Many minds, one refined result.` as one continuous sentence with a comma pause. Eight of the ten instances render uppercase via CSS `text-transform: uppercase`, so the source-case change is invisible to users for those — but the underlying grammar is now correct everywhere. The two visible instances (README markdown bold, user manual print header) read more naturally.
+
+### Version stamp added under the tagline on the work screen
+
+The right-panel logo block on the work screen showed only the WaxFrame wordmark and tagline, with no version indicator inside the document workspace itself. Users had to navigate to the About modal or check the top-right corner to see which version they were on. Added a new `.work-right-logo-version` element under the tagline that auto-populates from `APP_VERSION` via the existing `.app-version-stamp` class — it follows whatever `version.js` says, no manual maintenance required. The version line uses dimmer styling than the tagline (`rgba(255,255,255,0.55)` vs `rgba(255,255,255,0.8)`) so it doesn't compete visually. Scales down at the laptop breakpoints (1700px, 1500px) and hides together with the tagline at 1600px to keep the right panel uncluttered on smaller laptops.
+
+### Job Description playbook updated with measured round count and real-world example
+
+The `Rounds` line in the JD playbook said `3–4 rounds typical` — an aspirational estimate that did not reflect actual convergence behavior. After running a full JD project from scratch with reference materials in v3.21.11, the real number is `20–22 rounds typical`. Updated the playbook entry to reflect this with the framing that even from scratch with full reference materials, real convergence on a quality JD takes 20+ rounds, not 3–5. Round 22 of the test reached majority convergence (3 of 4 AIs satisfied) with the holdout offering minor wording suggestions. Marked `(measured, not estimated)` to match the credibility convention already used in the Birthday Card and Cover Letter playbook entries.
+
+Added a new `Real-world example — JD that took 22 rounds` block after the Step 3 table, showing concrete values for every Project screen field (project name, version, document type, target audience, desired outcome, scope and constraints, tone and voice, additional instructions, length constraint, starting document choice) plus the full Notes payload as a Courier New `<pre>` block. A beginner can copy these values verbatim, run the playbook end-to-end, and reproduce the convergence result. Once they understand the rhythm, they swap in their own role and notes for later runs. New `.dp-real-example` CSS class added with amber accent (matches the WaxFrame honey theme, differentiates from the blue scratch-note block already in the playbook).
+
+### Storage scaffolding cleanup — paranoid layers removed now that the real fix is in place and validated
+
+The data-loss bug was actually fixed in v3.21.11 by removing Guard #1 from `saveSession` and stripping the default console entry on first real log. Several defensive layers were added during the bug hunt that turned out to be unnecessary scaffolding once the root cause was found. Persistence is now granted by Firefox after bookmarking, IDB writes commit cleanly every round, and a 642 KB backup taken after a 21-round JD test confirmed every round, the full console history, the document state, the project clock, and the resolved decisions all persist correctly. With the real fix validated end-to-end, the scaffolding can come out.
+
+Removed in `app.js`:
+
+- The Track B dev-mode trace block in `saveSession` that logged every save call with a stack trace behind the `waxframe_dev` flag — only useful while hunting the bug, now noise.
+- The Guard #2 IDB-read-and-compare write-guard inside `_saveSessionChain` that read stored data on every save and refused to write if in-memory was empty but stored had data — was added to catch Guard #1 misfires; with Guard #1 gone, this never fires and is overhead on every save.
+- The `LS_SESSION_MIRROR` write that copied the full session to localStorage after every successful IDB commit — was added as belt-and-suspenders redundancy against IDB eviction; with Firefox persistent storage now granted, IDB cannot be evicted without explicit user action, making the mirror redundant. Removing the mirror also reclaims the localStorage quota the duplicate session was eating.
+- The `LS_SESSION_MIRROR` fallback read in `loadSession` that recovered from the mirror if IDB returned null.
+- The `LS_SESSION_MIRROR` fallback read in the `startSession` pre-launch storage verify (still reads IDB, just no longer falls through to a mirror that no longer exists).
+- The `LS_SESSION_MIRROR` field from the backup format. Backup format bumped to `v3` to mark the change. v2 backups (from v3.21.10 and v3.21.11) still import correctly — `LS_SESSION_MIRROR` field in old backups is ignored; the IDB session is the single source of truth.
+- The `LS_SESSION_MIRROR` constant declaration.
+- The legacy `aihive_v2_db` purge block in `DOMContentLoaded` that ran a one-time `indexedDB.deleteDatabase('aihive_v2_db')` to clean up orphan data from before the rename. Only the developer and one tester have downloaded the program, both already cleaned, so the purge has no remaining purpose.
+- Verbose multi-paragraph comments throughout `saveSession` documenting the removed scaffolding.
+
+Kept (these earned their place during the investigation and stay):
+
+- `_saveSessionChain` write serialization — chains every saveSession through the previous one's promise so writes never overlap. Low cost, real race protection.
+- Pre-launch storage verify in `startSession` — reads IDB before launching a new session and warns the user if stored data exists but didn't load into memory. Catches silent loadSession failures.
+- Persist retry every 3 rounds inside `saveSession` — re-requests `navigator.storage.persist()` if not yet granted; cheap, idempotent, and helped Firefox grant persistence during the validation test.
+- Backup format v3 with `IDB_SESSION` field — fixes the silent empty-backup bug from v3.21.10 where pre-IDB-migration backups had `LS_SESSION: null` and lost all round data.
+- The actual bug fix from v3.21.11 — `consoleLog` strips the page-load default entry on first real log, and Guard #1 removed entirely.
+- IDB-failure fallback to legacy `LS_SESSION` key — kept for defense in depth in the unlikely case IDB ever throws on write.
+
+### Files changed
+
+- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, `waxframe-build` meta bumped to `20260425-009`, `app.js?v=3.21.12` cache-bust.
+- `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (scale down), 1500px (scale down further), 1600px (hide). `.dp-real-example` block of rules for the new playbook example card.
+- `README.md` — tagline edit.
+- `waxframe-user-manual.html` — tagline edit (print header sub).
+- `document-playbooks.html` — JD playbook `Rounds` line rewritten, new `Real-world example` block inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
+- `app.js` — full storage cleanup as described, `BUILD` bumped to `20260425-009`.
+- `version.js` — `APP_VERSION` bumped to `v3.21.12 Pro`.
+
+### Validation prior to this release
+
+A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.12 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.12 retains all the validated behavior and removes only the scaffolding.
+
+---
+
 ## v3.21.11 Pro — Build `20260425-008`
 **Released:** April 25, 2026
 
