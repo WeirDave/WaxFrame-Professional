@@ -535,18 +535,18 @@ Record the actual round count for each test. Note anything unusual.
 
 | # | Playbook | Current estimate | Actual | Notes |
 |---|---|---|---|---|
-| 0 | Quick Start — Cookies | (new) | | |
+| 0 | Quick Start — Cookies | (new) | **2** | v3.0 human-voice seed, DeepSeek Builder, build 20260421 era — see Empirical Run Data below |
 | 1 | Résumé | 3–5 | | |
 | 2 | Cover Letter | 2–4 | | |
 | 3 | Business Proposal | 4–6 | | |
 | 4 | RFP Response | 20–60+ | | |
-| 5 | Thank-You Letter | 2–4 | | |
+| 5 | Thank-You Letter | 2–4 | **2** (from scratch) · **13** (refining a draft) | Letter to Candy from scratch — 2 rounds, 9 min, build 20260421-002. Letter to Tim refining a rough draft — 13 rounds, 14 min, build 20260421-001. Convergence principle in action. |
 | 6 | Executive Summary | 3–5 | | |
 | 7 | Presentation Outline | 4–6 | | |
 | 8 | Blog Post | 3–5 | | |
 | 9 | Job Description | 3–4 | | |
 | 10 | Email / Outreach | 2–3 | | |
-| 11 | Recipe | 5–20+ | | |
+| 11 | Recipe | 5–20+ | | Beef Wellington 21 rounds on build 20260330-001 (AI Hive v2 era) — pre-USER DECISION fix and pre-Quick-Start seed rewrite, not representative of current build |
 
 ---
 

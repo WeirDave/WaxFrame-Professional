@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-017';         // build stamp — update each session
+const BUILD       = '20260425-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -799,11 +799,6 @@ function copyConflicts() {
   copyToClipboard(document.getElementById('conflictsPanel')?.innerText, 'Conflicts');
 }
 
-function clearConflicts() {
-  const el = document.getElementById('conflictsPanel');
-  if (el) el.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
-}
-
 function copyNotes() {
   copyToClipboard(document.getElementById('workNotes')?.value, 'Notes');
 }
@@ -934,6 +929,25 @@ function saveLicense(key) {
     existing.valid = true;
     existing.key   = key;
     localStorage.setItem(LS_LICENSE, JSON.stringify(existing));
+  } catch(e) {}
+}
+
+function getLicenseKey() {
+  // Returns the stored license key string, or null if not licensed.
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || 'null');
+    return (data && data.valid && data.key) ? data.key : null;
+  } catch(e) { return null; }
+}
+
+function clearLicense() {
+  // Wipes the license (valid + key) but preserves trialRoundsUsed
+  // so removing a license cannot be used to escape an expired trial.
+  try {
+    const data = JSON.parse(localStorage.getItem(LS_LICENSE) || '{}');
+    delete data.valid;
+    delete data.key;
+    localStorage.setItem(LS_LICENSE, JSON.stringify(data));
   } catch(e) {}
 }
 
@@ -1525,9 +1539,9 @@ function updateLicenseBadge() {
   if (!badge) return;
   if (isLicensed()) {
     badge.textContent = '✓ Licensed';
-    badge.title       = 'WaxFrame Pro — licensed';
+    badge.title       = 'WaxFrame Pro — manage license';
     badge.classList.add('licensed');
-    badge.onclick     = null;
+    badge.onclick     = () => showLicenseManageModal();
   } else {
     const used      = getTrialRoundsUsed();
     const remaining = Math.max(0, FREE_TRIAL_ROUNDS - used);
@@ -1538,6 +1552,43 @@ function updateLicenseBadge() {
     badge.classList.remove('licensed');
     badge.onclick = () => showLicenseModal('');
   }
+}
+
+// ── License Manage Modal — shown when licensed badge is clicked ──
+function showLicenseManageModal() {
+  const modal = document.getElementById('licenseManageModal');
+  const keyEl = document.getElementById('licenseManageKey');
+  if (keyEl) {
+    const key = getLicenseKey();
+    // Mask all but the last 8 characters: "••••••••-••••••••-••••••••-XXXXXXXX"
+    if (key && key.length >= 8) {
+      const masked = key.slice(0, -8).replace(/[A-Za-z0-9]/g, '•') + key.slice(-8);
+      keyEl.textContent = masked;
+    } else {
+      keyEl.textContent = '••••••••-••••••••-••••••••-••••••••';
+    }
+  }
+  if (modal) modal.classList.add('active');
+}
+
+function hideLicenseManageModal() {
+  const modal = document.getElementById('licenseManageModal');
+  if (modal) modal.classList.remove('active');
+}
+
+function replaceLicenseKey() {
+  // Open the entry modal so a new key can be submitted; old key remains
+  // valid until the new one verifies, so the user is never locked out mid-flow.
+  hideLicenseManageModal();
+  showLicenseModal('');
+}
+
+function confirmRemoveLicense() {
+  if (!confirm('Remove your WaxFrame Pro license key from this browser?\n\nYou will revert to the free trial. If your trial is already used up, you will need to enter a license key to keep running rounds.')) return;
+  clearLicense();
+  hideLicenseManageModal();
+  updateLicenseBadge();
+  toast('License key removed');
 }
 function goToScreen(id) {
   // Auto-save document state when navigating away from work screen,
@@ -7451,7 +7502,12 @@ function backupSession() {
   const version  = proj.projectVersion || '';
   const safeName = name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40);
   const safeVer  = version.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 10);
-  const filename = safeVer ? `WaxFrame-Backup-${safeName}-${safeVer}` : `WaxFrame-Backup-${safeName}`;
+  // Local-time timestamp: YYYYMMDD-HHmm (matches the build-stamp format used elsewhere)
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const baseName = safeVer ? `WaxFrame-Backup-${safeName}-${safeVer}` : `WaxFrame-Backup-${safeName}`;
+  const filename = `${baseName}-${stamp}`;
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const a    = document.createElement('a');
   a.href     = URL.createObjectURL(blob);
