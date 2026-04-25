@@ -2,6 +2,40 @@
 
 ---
 
+## v3.20.18 Pro — Build `20260424-011`
+**Released:** April 24, 2026
+
+### Bug Fix
+
+**Fake-baseline USER DECISION cards no longer surface unanimous votes as user choices**
+A bug surfaced during testing where the Builder occasionally violated its own MAJORITY RULES instruction by surfacing a unanimous reviewer vote as a USER DECISION conflict. The pattern: all six bees would propose the same change, the Builder would correctly apply that change to the document, but it would also generate a USER DECISION block with the applied change as OPTION_1 (attributed to all six reviewers) and the unchanged original text as OPTION_2 (labeled "original text" rather than attributed to any reviewer). The user would then be presented with a "decision" between the already-applied text and the abandoned baseline — a non-choice. This release adds two layers of defense.
+
+**Parser-side suppression in `extractConflicts`** — Added a second no-op check after the existing identical-text suppression. The new check fires when two conditions both hold: at least one option's `ais` field matches a baseline-label pattern (`original`, `original text`, `unchanged`, `baseline`, `no change`, `current`, `n/a`, `none`), AND the document's current text matches at least one option verbatim. Together those mean the Builder applied a unanimous change but tried to manufacture a 2-way choice with a fake baseline option. The decision is suppressed before reaching the UI and a console warning is logged: `⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`. This is the primary fix and works regardless of Builder LLM compliance.
+
+**Builder prompt tightening in `BUILDER_INSTRUCTIONS.refine`** — Added a new rule under "Rules for USER DECISION format" explicitly prohibiting the Builder from including unchanged original text as an OPTION_N entry. The rule also reiterates that strict majorities should be applied silently, not surfaced as decisions, and explicitly names the "fake original text option" anti-pattern as a violation of the MAJORITY RULES block above. This reduces the frequency at which the parser-side suppression has to fire.
+
+### Why two layers
+
+LLM compliance with multi-clause instructions is not deterministic. Any time a Builder rule depends on the model correctly interpreting and applying a conditional, there will be drift — especially over long instruction blocks and across providers. The parser-side defense catches violations regardless of which Builder model is in use, which custom Alfredo model the user has configured, or what other prompt drift may be occurring. The prompt-side rule is belt-and-suspenders that reduces how often the parser has to step in.
+
+### Testing Notes
+
+This release affects the conflict-extraction path in `extractConflicts` and the refine-phase Builder instructions. Visual and functional regression risk concentrated in:
+- USER DECISION cards on rounds where reviewers genuinely disagreed (3v3 splits, true conflicts) — these should still surface normally
+- USER DECISION cards on rounds where multiple reviewers proposed substantially different alternatives — these should still surface normally
+- Any round where the Builder incorrectly generated a fake-baseline option — these should now be silently suppressed with a console warning
+
+The new suppression is conservative: it requires both a baseline-label pattern in an option's reviewer attribution AND the current document text to match an option verbatim. Genuine 3v3 splits with real reviewer attribution on both sides will pass through untouched.
+
+### Files Changed
+
+- `app.js` — Added unanimous-vote no-op suppression block in `extractConflicts` (insert after existing identical-text check). Added new rule to `BUILDER_INSTRUCTIONS.refine` USER DECISION format section. Bumped `BUILD` to `20260424-011`.
+- `version.js` — Bumped `APP_VERSION` to `v3.20.18 Pro`.
+- `index.html` — Bumped `waxframe-build` meta to `20260424-011` and `app.js?v=` cache-bust to `3.20.18`.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.20.17 Pro — Build `20260424-010`
 **Released:** April 24, 2026
 
