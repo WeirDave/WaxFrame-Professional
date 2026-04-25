@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-010';         // build stamp — update each session
+const BUILD       = '20260424-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5087,6 +5087,7 @@ Rules for USER DECISION format:
 - List only the AIs who specifically suggested that option by name
 - Include one OPTION_N per genuinely distinct suggestion — minimum 2 UNIQUE options, no maximum
 - Each OPTION_N text must be UNIQUE within the block — if two or more reviewers proposed the same replacement text (verbatim, or differing only in whitespace, capitalisation, or trailing punctuation), MERGE them into a single OPTION_N and list all their AI names together, comma-separated. Identical options are not a choice.
+- Do not include the unchanged original text as an OPTION_N entry. Every OPTION_N must be a genuine reviewer-suggested alternative attributed to one or more reviewers by name. If a strict majority of reviewers proposed the same change, apply it to the document and do not generate a USER DECISION block — that is a strict majority, not a 3v3 split. Manufacturing a fake "original text" or "unchanged" option to surface a unanimous vote as a choice is a violation of the MAJORITY RULES above.
 - Do not add commentary outside the structured block
 - Do not combine options that are meaningfully different
 - CRITICAL: The quoted option text must never contain an em dash (—). The only em dash on an OPTION line is the single separator between the quoted text and the AI names at the end. If you need a pause or range in the option text, use a comma or hyphen instead.
@@ -5937,6 +5938,21 @@ function extractConflicts(text) {
     if (uniqueTexts.size < 2) {
       const sample = decision.options[0]?.text || '(empty)';
       consoleLog(`⚠️ Suppressed no-op USER DECISION — all options identical: "${sample}"`, 'warn');
+      continue;
+    }
+    // Suppress unanimous-vote decisions where the Builder applied a change
+    // (current matches one option) but used a fake baseline label like
+    // "original text" as another option to manufacture a 2-way choice. Per
+    // the Builder's own MAJORITY RULES, a unanimous vote should be applied
+    // silently, not surfaced as a USER DECISION. Defensive parsing because
+    // Builder LLMs occasionally violate that rule.
+    const baselineLabelRegex = /^\s*(original(\s+text)?|unchanged|baseline|no[\s-]?change|current|n\/?a|none)\s*$/i;
+    const currentText = (decision.current || '').trim();
+    const hasFakeBaseline = decision.options.some(o => baselineLabelRegex.test(o.ais || ''));
+    const currentMatchesAnOption = currentText.length > 0 &&
+      decision.options.some(o => o.text.trim() === currentText);
+    if (hasFakeBaseline && currentMatchesAnOption) {
+      consoleLog(`⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`, 'warn');
       continue;
     }
     result.userDecisions.push(decision);
