@@ -382,7 +382,7 @@ let history   = [];
 let docText   = '';
 let docTab    = 'upload';
 // ── REFERENCE MATERIAL state (v3.21.0) ──
-let refTab      = 'paste';   // 'upload' or 'paste' — defaults to paste since most reference material is pasted
+let refTab      = 'upload';  // 'upload' or 'paste' — defaults to upload to mirror Setup 5
 let refMaterial = '';        // active reference material text
 let refFilename = '';        // filename if uploaded (informational only)
 let workDocSaveTimer = null;
@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-014';         // build stamp — update each session
+const BUILD       = '20260424-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1860,7 +1860,7 @@ function clearProject() {
   // ── REFERENCE MATERIAL wipe (v3.21.0) ──
   refMaterial = '';
   refFilename = '';
-  refTab = 'paste';
+  refTab = 'upload';
   const refTa = document.getElementById('refPasteText');
   if (refTa) { refTa.value = ''; updateProjLineNums('refPasteNums', refTa); }
   const refStatus = document.getElementById('refFileStatus');
@@ -1870,7 +1870,7 @@ function clearProject() {
   const refFileInput = document.getElementById('refFileInput');
   if (refFileInput) refFileInput.value = '';
   if (typeof updateRefCounter === 'function') updateRefCounter();
-  if (typeof switchRefTab === 'function') switchRefTab('paste');
+  if (typeof switchRefTab === 'function') switchRefTab('upload');
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
   localStorage.removeItem('waxframe_resolved_decisions');
