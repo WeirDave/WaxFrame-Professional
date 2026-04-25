@@ -2,6 +2,51 @@
 
 ---
 
+## v3.21.10 Pro — Build `20260425-007`
+**Released:** April 25, 2026
+
+### 🚨 Backup and restore now actually capture session data
+
+`backupSession()` and `importSession()` were both reading and writing to `localStorage[LS_SESSION]` only. The session data — round history, working document, console HTML, conflicts, notes, project clock seconds — has lived in **IndexedDB** since the IDB migration ran (a long-running migration block in `loadSession` removes `LS_SESSION` from localStorage immediately after copying it to IDB, so the localStorage key has been `null` for every browser that's run WaxFrame for more than its first session).
+
+**Every backup file produced since the IDB migration has been silently empty of session data.** Looking at one example backup file: the JSON contained `LS_HIVE` (API keys), `LS_PROJECT` (project name, goal fields, reference material), and `LS_SESSION: null`. No round history. No working document. No console output. No conflicts. Importing such a file gave back only the project setup and API keys — never the round work — because `importSession()` had `if (data.LS_SESSION) localStorage.setItem(...)` which evaluated false on null and skipped the write entirely. Even if a backup *had* contained session data, restore would have written it to localStorage where the next `loadSession` migration would have re-shuffled it through IDB. That whole leg of the path was inert.
+
+This was the silent disaster underneath the data-loss reports. After every wipe (which is a separate bug, still under investigation), users believed they could restore from their most recent backup, then watched the Round 1+ history fail to come back, and assumed the wipe destroyed both the live data *and* the backup. In fact the backup never had it in the first place.
+
+#### What changed in `backupSession()`
+
+Now `async` and reads the IDB session via `await idbGet()`, including the result in the backup JSON under a new `IDB_SESSION` field. Also captures the localStorage mirror (`LS_SESSION_MIRROR`, written by every successful save since v3.21.9) as a redundancy layer. Adds two metadata fields:
+- `_waxframe_backup_version: 2` — distinguishes new backups from pre-v3.21.10 (legacy v1) backups
+- `_waxframe_app_version` and `_waxframe_backup_ts` — records which build produced the backup and when
+
+The success toast now states what was actually captured: rounds completed and characters in working document, e.g. `💾 Session backed up (3 rounds, 12,453 chars)`. If only project setup was captured (no IDB session at backup time), the toast says so explicitly: `(project setup only — no session data)`.
+
+#### What changed in `importSession()`
+
+Now writes IDB on restore via `await idbSet(data.IDB_SESSION)`, and also restores `LS_SESSION_MIRROR` if present. The success toast distinguishes three cases:
+- **v2 backup with full session data** → `✅ Backup restored — N rounds, M chars in document. Reloading…`
+- **v1 backup or v2 with no session data** → `⚠️ Old backup format — only project setup + API keys restored. Session data not in this file. Reloading…`
+- **Project-only restore (no session in backup)** → `✅ Project setup restored (no session data in backup) — reloading…`
+
+Reload delay extended from 800ms to 1500ms so the toast is actually readable before the page reloads.
+
+#### Implications for existing backup files
+
+**Every WaxFrame backup file with format version 1 (no `_waxframe_backup_version` field, or version field absent) contains zero session data.** Importing such a file restores only API keys and project setup. There is no recovery path for those backups — the data was never captured. Going forward, every new backup made from v3.21.10+ contains the IDB session, and restoring from those files will actually bring back round history.
+
+If you have an old backup of an important session: the only data in it is the API keys, project name/version, six goal fields, document tab choice, reference material, and reference filename. Everything else (history, document, console, conflicts, notes, project clock) is not in the file and cannot be recovered from it.
+
+### Files Changed
+
+- `app.js` — `backupSession()` rewritten as `async` to read IDB via `idbGet()` and include the result in the backup JSON. Backup format bumped to version 2 with new `IDB_SESSION` and `LS_SESSION_MIRROR` fields plus `_waxframe_app_version` and `_waxframe_backup_ts` metadata. `importSession()` rewritten with an `async` reader.onload handler to write IDB via `idbSet()` and restore `LS_SESSION_MIRROR`. Success/warning toasts made explicit about what was captured/restored. Bumped `BUILD` to `20260425-007` and the comment-header build to match.
+- `index.html` — Bumped `waxframe-build` meta to `20260425-007` and all cache-busts to `3.21.10`. Comment-header build bumped.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.10 Pro`.
+- `style.css`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts and comment-header builds bumped to `3.21.10` / `20260425-007`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.9 Pro — Build `20260425-006`
 **Released:** April 25, 2026
 
