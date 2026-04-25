@@ -2,37 +2,197 @@
 
 ---
 
+## v3.20.17 Pro — Build `20260424-010`
+**Released:** April 24, 2026
+
+### Documentation Fix — Document Playbooks
+
+**Cover Letter playbook round estimate updated from `2–4 rounds typical` to `6–10 rounds typical` (measured, not estimated)**
+A walkthrough run on a real cover letter (Senior Wireless Network Engineer, Helios Biosciences, Dana Reyes) measured majority convergence at Round 10 — four of six AIs reporting no further changes. The prior estimate of 2–4 rounds was significantly understated for this document type. Unlike shorter transactional documents (cookies recipe: 2 rounds measured, thank-you note: 2–4 rounds), cover letters require iterative tuning of hook specificity and role-connection tightness, which takes more rounds than edit-heavy but structurally simple documents. Updated the playbook's Rounds field to reflect the measured behavior, with a short explanation of *why* cover letters converge more slowly so users calibrate their expectations before starting rather than wondering if something is broken at round 5.
+
+### Latent Bug Fix
+
+**`version.js` cache busts across the remaining four helper pages**
+v3.20.16 fixed the stale `version.js?v=3.19.23` cache bust on `waxframe-user-manual.html`, but the same stale cache bust existed on every other page that loads `version.js`: `document-playbooks.html`, `api-details.html`, `what-are-tokens.html`, and `prompt-editor.html`. All four had been stuck at `3.19.23` for many releases. Bumped all five (including the manual, which follows the established per-release bump rule) to `3.20.17` in one pass, completing the fix. Going forward, every release should bump the `version.js?v=` cache bust on all five helper pages alongside the four standard version locations.
+
+### Files Changed
+`document-playbooks.html` · `waxframe-user-manual.html` · `api-details.html` · `what-are-tokens.html` · `prompt-editor.html` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
+## v3.20.16 Pro — Build `20260424-009`
+**Released:** April 24, 2026
+
+### Documentation Fixes — User Manual
+
+**The "concept in plain English" closing sentence rewritten**
+Previously two short, abrupt sentences: *"Each round the document improves. You stop when it is good enough."* Reworded per Candy's suggestion to a single flowing sentence: *"Each round the document improves — you stop when you're satisfied with the result."* Same meaning, smoother voice.
+
+**Step 1 — stale "even count / tie risk" warning paragraph rewritten**
+The Step 1 section described a `⚠️ even count — tie risk` warning chip and a `✓ odd count` indicator on the hive count chip — neither of which appears in the current app. The warning was intentionally removed from the codebase in an earlier release because WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals — so tie scenarios genuinely don't arise. The manual paragraph never caught up to that change. Rewrote it to describe the chip as it actually behaves now (purely informational, total + key-saved counts, no warnings), and explained briefly *why* tie risk doesn't apply. Surfaced by Candy during walkthrough — she had 6 AIs and was looking for a warning that no longer exists.
+
+**Step 2 — Builder selection icon description corrected**
+The manual stated the selected Builder card on Setup 2 is *"highlighted and marked with a crown icon (👑)."* The actual UI shows a Builder badge (`WaxFrame_Builder_v3.png`) — a small crowned-bee image in the top-right corner of the selected card. The 👑 character emoji crown only appears in the Change Builder modal accessible from the Work screen, where the selected entry gets a *"👑 Current"* label. Rewrote the paragraph to describe the Builder badge accurately and to clarify when the emoji crown does appear, so users know what to look for in both contexts. Surfaced by Candy ("Manual says the selected builder has a crown icon, but on mine it's a bee").
+
+**Step 2 — "US providers" framing replaced with "other providers"**
+The DeepSeek cost-comparison sentence read: *"DeepSeek in particular offers excellent output at a significantly lower cost than the US providers..."* Reworded to *"...than the other providers..."* Per Candy's note — the US-vs-not framing was unnecessary and read awkwardly given that two of the six default providers (Grok and DeepSeek) don't fit the comparison cleanly anyway.
+
+### Latent Bug Fix
+
+**Stale `version.js` cache bust on the user manual**
+The user manual's `<script src="version.js?v=3.19.23">` tag had been stuck at `3.19.23` for many releases — every release bumps the `app.js?v=` cache bust on `index.html` but the `version.js?v=` cache bust on the manual page was being missed. Updated to `3.20.16`. Going forward, the version.js cache bust on `waxframe-user-manual.html` should be bumped on every release alongside the standard four version locations (meta build, APP_VERSION, BUILD, app.js cache bust).
+
+### Audit — Back-to-Top Navigation
+
+Candy flagged a concern that the appendix sections were missing back-to-top links. Audited every `<div class="wh-section">` block in the manual against its corresponding `<a href="#top" class="wh-back-top">` link. Result: all 18 sections (3 intro, 10 steps, 3 appendices, 2 reference) have a back-to-top link inside the last `wh-block` of the section, anchoring to the `#top` ID on the `page-main` container. **Nothing missing.** Possible misread on Candy's part — recommend confirming with her in case she meant per-subsection back-to-tops within a single appendix (each appendix has 3-4 wh-blocks and only one back-to-top at the section's bottom; that pattern is consistent with every other section but could feel sparse on the longer appendices).
+
+### Known Open
+
+**Setup Flow "squishy and distorted bullets"** — Candy reported that the bullets in the "Setup flow" section look squishy and distorted. That section uses a `<table class="wh-table">`, not bullets, so the comment can't be acted on without a screenshot showing the visual issue. Held pending screenshot.
+
+**Cover letter format vs paragraph length gate** — Surfaced earlier in the session: a cover letter's standard structure (greeting + body + sign-off) measures as 5 blank-line-separated blocks, but users intuitively count 3 body paragraphs. A 3-paragraph limit on a cover letter is therefore unsatisfiable — every Builder produces 4-5 blocks and the gate correctly rejects each round in a loop. Three solution paths offered (docs-only, pre-flight warning, prompt-side escape hatch) — pending direction.
+
+**Empty-console bug after work → upload → return navigation** — Candy's original walkthrough bug from the v3.20.15 cycle. Her flow used "Return to Work Screen" (active session detected) which routes through `goToScreen('screen-work')` → `initWorkScreen()` without `isNewSession`, so neither the v3.20.15 fixes nor anything before them explains the empty console. Suspect lives in the file-upload flow. Investigation continues.
+
+### Files Changed
+`waxframe-user-manual.html` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
+## v3.20.15 Pro — Build `20260424-008`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Live console could be wiped by normal user actions — violated "the console is an audit log, not a scratchpad" design intent**
+Two separate paths were wiping `#liveConsole` outside of an explicit destructive action:
+
+1. **A `✕ Clear` button sat next to the `📋 Copy` button in the console header**, wired to a `clearConsole()` function that replaced the console's innerHTML with "Console cleared." There is no legitimate use case for clearing the console mid-session — the console is the session's audit log of what happened in every round — and the existence of the button invited accidental wipes. Removed the button from `index.html` and deleted the `clearConsole()` function from `app.js`. The Copy button stays.
+
+2. **`initWorkScreen(true)` at the top of the work-screen initializer unconditionally wiped `#liveConsole`, `#conflictsPanel`, and `#workNotes` whenever `startSession()` ran.** This fires on every "Launch WaxFrame →" click, which means a user who started from scratch, clicked Smoke the Hive, had a round fail (no history recorded), navigated back, and re-launched would silently lose every console entry they had. Removed the wipe block from `initWorkScreen()` entirely. The responsibility for zeroing the live-console and conflicts panels now lives solely in `clearProject()` — the one user-initiated, explicitly-labeled destructive action. `#workNotes` was already being wiped in `clearProject()` at line 1844, so that behavior is unchanged.
+
+This enforces the design principle that no routine navigation, re-launch, or input change should ever wipe the session log. The only way to clear the console is to explicitly end the project via `Finish Project & Start Over`.
+
+### Known Still-Open
+
+**Candy reported an empty console after navigating `work screen → Starting Document → upload file → Return to Work Screen`, where the launch button had correctly changed to `↩ Return to Work Screen` (i.e., an active session was detected).** That flow routes through `goToScreen('screen-work')` which calls `initWorkScreen()` without the `isNewSession` flag, so neither of the fixes in this release directly addresses her scenario. A different path in the file-upload flow is suspected but not yet pinned. Investigation continues in a subsequent release.
+
+### Files Changed
+`app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
+## v3.20.14 Pro — Build `20260424-007`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Round Not Saved modal body text was stale after the v3.20.13 length-gate refactor**
+The modal shown on a length-gate rejection had inherited pre-refactor bloat-gate copy, which framed every failure as an anti-bloat heuristic ("the Builder added to the document instead of refining it"). That wording was accurate for the fallback 1.5×-prior-words case but misleading when the user had set an explicit Paragraphs or Characters limit and the Builder simply overshot the cap — exactly the case surfaced by the first Cover Letter playbook test run where DeepSeek returned 5 paragraphs against a 3-paragraph limit. Rewrote the lead paragraph to frame the rejection as "exceeded the length limit" and point the user at retrying, switching Builders, or adjusting the Length Constraint on the Project screen. The measurement and limit were already being displayed correctly in the details block beneath the message — only the lead paragraph needed updating.
+
+**Pulsing logo watermark overflowed the content column on Starting Document screen**
+The `::after` pseudo-element that renders the pulsing WaxFrame logo in the dead space right of the content column on `#panel-upload`, `#panel-paste`, and `#panel-scratch` was sized at a fixed `300px` with `background-position: center`. At narrower panel widths the 300px image — whose visible hex frame is wide and whose honey drip extends from the top-right corner downward — could bleed visually into the content column because center-positioning put the hex close to the dead-space's left edge and the hex's hollow interior let drop-zone content show through its middle, reading as overlap even when the bounding boxes did not actually intersect.
+
+Three surgical changes in the pseudo-element rule:
+- `background-size: 300px` → `background-size: min(240px, 85%)`. Reduces maximum size by 20% and uses CSS `min()` so the image scales down (never overflows) at narrow dead-space widths.
+- `background-position: center` → `background-position: right 24px center`. Right-anchors the watermark with a 24px buffer from the right edge. If overflow ever does occur, it clips at the right margin rather than bleeding into the content column.
+- Added explicit `z-index: 0` to the pseudo-element so its stacking context is deterministic regardless of sibling positioning.
+
+No animation changes — the `watermarkPulse` keyframes and 16-second cycle are untouched.
+
+### Changes
+
+**Tone & voice goal-field hint rewritten — floor → better framing matches the other goal fields**
+The hint under the Tone & voice field previously told users to "Pick two or three words," which set a low ceiling on how much guidance they offered the AIs and produced inconsistent tone across rounds. This was the one goal field hint out of six that didn't use the floor-then-better cadence the other five already use (*be specific — "cover letter" not "document"* for Document type, *"IT Director and VP of Facilities" gives very different results than "general public"* for Target audience, etc). Rewrote the hint to match: a few adjectives (*professional, confident*) works as a floor, and a richer directive (*Direct and confident, not stiff — like a peer they'd want to work with*) locks in consistency across rounds. The matching row in the user manual's Step 3 "What each field does" table updated to the same framing.
+
+### Files Changed
+`app.js` · `index.html` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
+## v3.20.13 Pro — Build `20260424-006`
+**Released:** April 24, 2026
+
+### Changes
+
+**Length Constraint — new Paragraphs unit added, direct-unit measurement across the board**
+The Length Constraint field on the Project screen now supports four units — `Characters`, `Words`, `Paragraphs`, `Pages` — in that order. Paragraphs is new. The field also drops its `(optional)` label since the three required goal fields (Document type, Target audience, Desired outcome) are already marked with asterisks and everything else is optional by elimination.
+
+More importantly, the bloat gate that enforces the length limit has been refactored from a single "normalise everything to word count" path into a direct-unit measurement. When the user sets a limit in `Characters`, the gate now counts characters in the Builder output and compares to the exact limit. Same for `Words` (whitespace-split token count) and `Paragraphs` (blank-line-separated blocks, whitespace-only blocks dropped). `Pages` remains word-estimated via `WORDS_PER_PAGE = 500` because pages aren't directly countable from raw text — font, margins, and line spacing all affect rendered page count, and WaxFrame doesn't have a layout engine.
+
+This eliminates a subtle accuracy bug in the previous implementation: for Characters mode, the old gate converted the user's character limit into a word-equivalent (`limit / 5.5`) and compared word counts, which could pass documents over the character limit if they had short words, or reject documents under the character limit if they had long words. Now the measurement is exact.
+
+The AI prompt sent each round uses direct-unit wording too: *"The final document must contain no more than N words"*, *"...no more than N characters, including spaces"*, *"...no more than N paragraphs, separated by blank lines"*. Pages alone keeps the hedge: *"Target N pages (approximately M words). Pages depend on font and layout..."* — because that's the truth for that unit.
+
+When the gate triggers, the error message now reports in the user's chosen unit — *"Length gate triggered — 247 words vs limit 200 words"* — rather than forcing every failure into a word-count shape. The console log, the bee status, and the failed-round details all carry the same unit-correct wording.
+
+### New Feature
+
+**Length Constraint info modal + user manual transparency section**
+A new ⓘ button next to the `Length Constraint` heading on the Project screen opens an info modal explaining exactly how each unit is measured, including the fuzzy edges (Microsoft Word word-count divergence on hyphenated terms, UTF-16 counting for emoji in Characters mode, blank-line detection in Paragraphs, the 500-word-per-page approximation in Pages). The modal reuses the existing `finish-modal-overlay` / `goal-info-modal` structure — no new CSS.
+
+The user manual (`waxframe-user-manual.html`) Step 3 gets a matching expansion: the existing `Length Constraint` block updated for accuracy (units reordered, `(optional)` dropped), and a new sibling block `How Length Constraint is measured` containing the full transparency table (Unit × How it is counted × Notes). Manual and modal tell the same story — the modal for in-context "what does this field do" moments, the manual for users who want to understand the behavior end to end before relying on it.
+
+### Code Cleanup
+
+**Orphan `.length-constraint-optional` CSS rule removed**
+The CSS rule styling the `(optional)` span (font-size, font-weight, color, margin-left) had no remaining consumers after the span was removed from `index.html`. Deleted from `style.css` to keep the stylesheet free of dead weight.
+
+### Known Deferred
+
+**Pulsing logo watermark overflow into drop zone on Starting Document screen** — the `::after` pseudo-element on `#panel-upload` / `#panel-paste` / `#panel-scratch` can visually bleed into the content column at certain viewport widths because the 920×920 background image's visible drip extends into the horizontal region intended for content. Deferred to a dedicated next release so a CSS layout fix doesn't bisect-conflict with this release's length-constraint behavioral refactor. Candidate fixes under evaluation: anchor `background-position: right center`, reduce `background-size`, or add a `padding-right` buffer.
+
+**Paragraph gate counts blocks, not semantic paragraphs** — the paragraph gate detects blank-line separation (`\n\s*\n`). A Builder that returns one run-on block with only single newlines between logical paragraphs will count as 1 paragraph and pass. The AI prompt explicitly instructs "separated by blank lines" to force proper formatting, so this is a low-probability failure mode in practice, but it's worth knowing about.
+
+### Files Changed
+`index.html` · `app.js` · `style.css` · `version.js` · `waxframe-user-manual.html` · `CHANGELOG.md`
+
+---
+
+## v3.20.12 Pro — Build `20260424-005`
+**Released:** April 24, 2026
+
+### Bug Fixes
+
+**Edit Hive button no longer hidden on large viewports**
+The `Edit Hive` button next to `Change Builder` in the Hive panel header was invisible at any viewport wider than `1600px` due to a legacy responsive rule that applied `display: none` globally and flipped it back to `inline-flex` only inside the `@media (max-width: 1600px)` block. The original design intent was that on large screens, users would toggle AIs via checkboxes on the hex cards directly, and the dedicated button was only needed when cards collapsed to the dot strip at laptop width. In practice, the button is a more discoverable central control for the same action and should be available regardless of viewport.
+
+The underlying button markup in `index.html`, the `openEditHive()` / `closeEditHive()` handlers in `app.js`, and the `editHiveModal` markup and styling were all intact — only the CSS visibility gate had removed the button from the UI on large displays.
+
+### Code Cleanup
+
+**Removed three dead JavaScript functions identified during full-codebase audit**
+A cross-reference audit of every top-level function definition in `app.js` against all caller sites (HTML `onclick` handlers, JS call graph, string-constructed references) surfaced three functions with zero live callers anywhere in the codebase:
+
+- `goToFree()` — a three-line helper that opened the Free edition URL in a new tab. Leftover from a previous navigation entry that no longer exists.
+- `playUnanimousFanfare()` — a ~45-line WebAudio implementation of an ascending C-E-G-C major arpeggio with a sparkle ping cap, originally used for unanimous-convergence celebrations. Superseded by Kai's custom `waxframe_hive_approved_flyin.wav` audio asset used by the current convergence flyer.
+- `validateAndContinue()` — a one-line alias delegating to `continueFromBees()`, explicitly labeled in its own comment as "Legacy alias — kept for any nav-menu calls." No such nav-menu calls exist; the only live caller of the underlying flow uses `continueFromBees()` directly.
+
+Total reduction: 52 lines from `app.js`. No runtime behavior changes; the audio fanfare produced by `playUnanimousFanfare()` hasn't been heard in production since the convergence flyer was rebuilt around the `.wav` asset.
+
+### Known Backlog
+
+The same audit identified a larger CSS cleanup opportunity — roughly 85 validated orphan CSS classes clustered around old welcome-screen cards, bee UI leftovers, an unused text-utility suite, and miscellaneous one-offs — plus 29 inline `style=` attributes across `index.html` and `document-playbooks.html` that violate the house "no inline CSS" rule. Deferred to a dedicated cleanup release where each orphan can be verified against dynamic class construction patterns and the inline styles can be consolidated into proper utility classes without mixing concerns with a bug fix.
+
+### Files Changed
+`style.css` · `app.js` · `index.html` · `version.js` · `CHANGELOG.md`
+
+---
+
 ## v3.20.11 Pro — Build `20260424-004`
 **Released:** April 24, 2026
 
-### Bug Fix
+### Changes
 
-**Fake-baseline USER DECISION cards no longer surface unanimous votes as user choices**
-A bug surfaced during testing where the Builder occasionally violated its own MAJORITY RULES instruction by surfacing a unanimous reviewer vote as a USER DECISION conflict. The pattern: all six bees would propose the same change, the Builder would correctly apply that change to the document, but it would also generate a USER DECISION block with the applied change as OPTION_1 (attributed to all six reviewers) and the unchanged original text as OPTION_2 (labeled "original text" rather than attributed to any reviewer). The user would then be presented with a "decision" between the already-applied text and the abandoned baseline — a non-choice. This release adds two layers of defense.
+**Nav panel header now includes tagline and version stamp**
+The slide-in navigation menu (triggered by the hamburger/menu button on every screen) previously showed only the WaxFrame logo and wordmark in its header, with the close button to the right. Every other surface of the product — hero screen, helper pages, About modal — pairs the wordmark with the tagline ("Many minds. One refined result.") and the current version stamp. The nav panel was the lone exception, which made it inconsistent and also meant users had to navigate to the About WaxFrame modal to check which version they were on.
 
-**Parser-side suppression in `extractConflicts`** — Added a second no-op check after the existing identical-text suppression at `app.js:5933`. The new check fires when two conditions both hold: at least one option's `ais` field matches a baseline-label pattern (`original`, `original text`, `unchanged`, `baseline`, `no change`, `current`, `n/a`, `none`), AND the document's current text matches at least one option verbatim. Together those mean the Builder applied a unanimous change but tried to manufacture a 2-way choice with a fake baseline option. The decision is suppressed before reaching the UI and a console warning is logged: `⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`. This is the primary fix and works regardless of Builder LLM compliance.
+Added a `.nav-panel-brand-text` flex column inside the existing `.nav-panel-brand` container. It holds three stacked elements: the wordmark (existing), a new `.nav-panel-tagline` span in muted uppercase matching the hero treatment, and a new `.app-version-stamp.nav-panel-version` span that gets auto-populated by the existing `version.js` propagation logic at line 7201 of `app.js`. No JavaScript changes required — the auto-populate routine already targets every `.app-version-stamp` in the DOM.
 
-**Builder prompt tightening in `BUILDER_INSTRUCTIONS.refine`** — Added a new rule under "Rules for USER DECISION format" explicitly prohibiting the Builder from including unchanged original text as an OPTION_N entry. The rule also reiterates that strict majorities should be applied silently, not surfaced as decisions, and explicitly names the "fake original text option" anti-pattern as a violation of the MAJORITY RULES block above. This reduces the frequency at which the parser-side suppression has to fire.
-
-### Why two layers
-
-LLM compliance with multi-clause instructions is not deterministic. Any time a Builder rule depends on the model correctly interpreting and applying a conditional ("if X then do Y, otherwise do Z"), there will be drift — especially over long instruction blocks and across providers. The parser-side defense catches violations regardless of which Builder model is in use, which custom Alfredo model the user has configured, or what other prompt drift may be occurring. The prompt-side rule is belt-and-suspenders that reduces how often the parser has to step in.
-
-### Testing Notes
-
-This release affects the conflict-extraction path in `extractConflicts` and the refine-phase Builder instructions. Visual and functional regression risk concentrated in:
-- USER DECISION cards on rounds where reviewers genuinely disagreed (3v3 splits, true conflicts) — these should still surface normally
-- USER DECISION cards on rounds where multiple reviewers proposed substantially different alternatives — these should still surface normally
-- Any round where the Builder incorrectly generated a fake-baseline option — these should now be silently suppressed with a console warning
-
-The new suppression is conservative: it requires both a baseline-label pattern in an option's reviewer attribution AND the current document text to match an option verbatim. Genuine 3v3 splits with real reviewer attribution on both sides will pass through untouched.
+Styling matches the hero brand block: tagline at 10px `var(--muted)` uppercase with 0.06em letter-spacing, version stamp at 10px `var(--text-dim)` uppercase (same readability treatment the hero header got in v3.20.6). The logo retains `flex-shrink: 0` and the text column gets `min-width: 0` to prevent overflow issues if the nav panel is narrow on a small viewport.
 
 ### Files Changed
-
-- `app.js` — Added unanimous-vote no-op suppression block in `extractConflicts` (insert after existing identical-text check). Added new rule to `BUILDER_INSTRUCTIONS.refine` USER DECISION format section. Bumped `BUILD` to `20260424-004`.
-- `version.js` — Bumped `APP_VERSION` to `v3.20.11 Pro`.
-- `index.html` — Bumped `waxframe-build` meta to `20260424-004` and `app.js?v=` cache-bust to `3.20.11`.
-- `CHANGELOG.md` — This entry.
+`index.html` · `style.css` · `version.js` · `app.js` · `CHANGELOG.md`
 
 ---
 
