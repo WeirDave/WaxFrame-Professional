@@ -2,6 +2,39 @@
 
 ---
 
+## v3.21.5 Pro — Build `20260425-002`
+**Released:** April 25, 2026
+
+### Holdout convergence cards now show a "Current:" line preview
+
+When majority convergence fires and the Builder is skipped, the Conflicts panel falls back to a separate render path that shows the holdout AI's raw suggestions (`🐝 DeepSeek · Suggestion 1 of 3` etc.). Compared to the structured Builder USER DECISION cards — which include a `Current: "the actual line from the doc"` row that is clickable to scroll the document to it — the holdout cards were missing that entire structural element. The card jumped straight from the AI badge to the suggestion text with no preview of the line being modified, leaving the user to manually scan the document to figure out what each suggestion was referencing.
+
+The previous attempt at making the card text clickable used a regex (`/Change\s+["...]([^...]+)["...]\s+to/i`) that only matched the literal pattern `Change "X" to "Y"`. Empirical testing against 11 common reviewer phrasings showed it caught 2 — `Change "X" to "Y"` itself and `Line N: Change "X" to "Y"`. The 9 misses included `Add "X" after "Y"`, `Remove "X"`, `Replace "X" with "Y"`, `Reword "X" as "Y"`, `Insert "X" before "Y"`, `Tighten "X"`, arrow notation `"X" → "Y"`, and meta-suggestions with no quoted anchor. When the regex missed, the click silently fired a `⚠️ Could not locate that passage` toast — worse than no clickability, because the user had no way to know in advance which cards were clickable.
+
+The replacement helper `findCurrentLineForSuggestion()` ignores the suggestion's verb entirely and walks the suggestion text looking for every quoted substring (straight quotes and curly quotes both). It filters those candidates down to the ones that already exist in the working document, sorts by length, and picks the longest. This correctly handles all 9 of the previously-missed phrasings: for `Add "based in Tampa" after "company"`, only `company` is in the doc (yet), so `company` is picked; for `Change "X" to "Y"`, only `X` is in the doc, so `X` is picked. It then walks the document text to find the `\n` boundaries on either side of the match and returns the full line containing the anchor (clipped to 200 characters around the anchor for very long lines).
+
+The holdout card markup was rewritten to render a `<div class="decision-current decision-current-clickable">` element above the suggestion text whenever a current-line context is found, matching the visual treatment of Builder USER DECISION cards. Click to scroll fires through the existing `scrollToCurrentText()` function. When no quoted anchor is found in the suggestion (rare — typically only when the AI emits a meta-suggestion like "Strengthen the opening") the card omits the Current: row entirely rather than rendering a broken or misleading link. The dead `scrollToHoldoutLine()` function was removed.
+
+### Copy buttons no longer fail silently and now show a visual confirmation
+
+`copyToClipboard()` was calling `navigator.clipboard.writeText(txt).then(() => toast(...))` with no rejection handler. When the clipboard write rejected — most commonly because the document had lost focus between the click event and the asynchronous write resolving, but also possible from permission denial or async context loss — the entire promise rejected silently. No success toast, no error toast, no log, no visible indication that the click had registered at all. From the user's perspective, the button just didn't do anything.
+
+Added a rejection handler that surfaces failures: `console.warn('[copy] writeText failed:', err)` for diagnostic logging, plus an explicit toast `⚠️ Couldn't copy {label} — click directly on the button and try again`. The user-facing message points at the focus-loss case since that's the most common cause and the most easily worked around.
+
+Added `flashCopyButton()` for visual confirmation independent of the toast. On a successful copy the clicked button briefly turns green with `✓ Copied` text for 1.1 seconds, then restores its original content. The button is captured synchronously from the active click event (or passed explicitly) so the reference survives the asynchronous clipboard promise. The new CSS rule `.btn.btn-copied` provides the green-tinted state using the existing `--green` and `--green-dim` tokens to match the licensed-pill and round-success styling already in the app.
+
+### Files Changed
+
+- `app.js` — Removed orphaned `scrollToHoldoutLine()` function (+12 lines deleted). Added `findCurrentLineForSuggestion()` helper (~40 lines). Modified the holdout-card render block in `renderConflicts()` to call the helper, persist the resolved anchor in `window._holdoutAnchors[i]`, and render a clickable `decision-current` row above the suggestion text when context is found. Modified `copyToClipboard()` to add a rejection handler and accept an optional button reference for visual feedback. Added `flashCopyButton()` helper. Bumped `BUILD` to `20260425-002`.
+- `style.css` — Added `.btn.btn-copied` rule with green border, background, and color using existing `--green` tokens. CSS braces balanced.
+- `index.html` — Bumped `waxframe-build` meta to `20260425-002` and all cache-busts to `3.21.5`.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.5 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts bumped to `3.21.5`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.4 Pro — Build `20260425-001`
 **Released:** April 25, 2026
 
