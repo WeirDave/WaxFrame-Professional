@@ -2,6 +2,43 @@
 
 ---
 
+## v3.21.7 Pro — Build `20260425-004`
+**Released:** April 25, 2026
+
+### Reference Material screen now restores its tab state on re-entry
+
+Navigating back to **Setup Step 4 — Reference Material** mid-project left both the *Upload File* and *Paste Text* tabs unselected with no panel visible — even when the user had previously pasted or uploaded reference material and the size readout at the top showed the data was loaded (`CHARS: 991  WORDS: 159  TOKENS (EST.): 248`). The user had to click one of the tab buttons to reveal the content again. Confusing on a screen that's supposed to show the existing state.
+
+Root cause was a missing case in `goToScreen()`. Every other setup screen has its own restoration block — `screen-bees` re-renders the AI grid, `screen-builder` re-renders the picker, `screen-project` updates requirements, `screen-document` calls `switchDocTab(docTab)` and restores the file-status pill. But there was no `if (id === 'screen-reference')` branch at all, so the screen was navigating into a stale DOM state. The active-tab state set at initial page load (during `loadProject()`) was either being lost between screen transitions or never applied if the user happened to hit Reference Material via Back navigation rather than the canonical setup flow.
+
+Added a screen-reference restoration block that mirrors the screen-document pattern: if `refTab` was previously saved, call `switchRefTab(refTab, true)` to re-activate the matching tab and panel; if `refTab` is empty but `refMaterial` has content (fallback for state inconsistency), default to `'paste'` unless `refFilename` is set, in which case default to `'upload'`. Also re-syncs the file-status pill (`📚 {filename} — {N} chars loaded`) and the clear-row visibility when an uploaded file is being restored, so the upload-mode UI doesn't lose its file context just because the screen was re-entered.
+
+### Project Goal modal — restructured to match the Setup 3 form layout
+
+Clicking the project info pill on the Work screen opened a modal that was supposed to show the assembled project goal as a read-only review. The implementation shoved the entire flat assembled-text blob (`Document type: Job description\n\nTarget audience: Network engineers...\n\nDesired outcome:\n...`) into a single `<textarea readonly>`, which rendered visually as one undifferentiated wall of text with embedded label prefixes. Looked disjointed and made it hard to scan for any single field — exactly the opposite of what the structured six-field form on Setup 3 was designed to provide. If the user expected to see the same structure they'd entered, they instead got a flat-text dump of it.
+
+The modal now renders the six goal fields as labeled rows using the same `.dp-field` / `.dp-field-label` / `.dp-field-value` pattern used in the document playbooks page — orange uppercase label on the left (120px min-width), value on the right with line-breaks preserved, divider rules between rows. Empty fields are skipped so the modal only shows what's actually populated. If no fields are filled in at all, the modal shows an explicit empty-state message pointing the user back to the Project screen rather than rendering an empty container.
+
+A new `.goal-modal-fields` CSS rule wraps the rows in a scrollable surface-tinted container with `max-height: 55vh` so very long goals (multi-paragraph outcome and scope fields) don't blow out the modal height. The orphaned `.goal-modal-textarea` and `.goal-modal-textarea:focus` CSS rules from the prior implementation were removed since the textarea element no longer exists. `copyGoal()` was updated to source from `assembleProjectGoal()` directly instead of reading the textarea's value, so the Copy button still works.
+
+### Edit Hive button — back to laptop-only
+
+The **Edit Hive** button in the Work screen's Hive panel header was showing on desktop viewports as well as laptop viewports. It was only ever needed at laptop sizes (≤1600px) where AI cards collapse to dot icons and you can't easily toggle individual AIs from the truncated view. At desktop the full hex-grid AI cards are visible with their own toggle affordance, making this header button redundant noise on the chrome of the work screen.
+
+Root cause was the CSS rule `.hive-edit-btn { display: inline-flex; }` declared at the desktop-default level with a comment that explicitly read `/* Edit Hive button — visible at all viewports */`. Flipped the default to `display: none` and added `.hive-edit-btn { display: inline-flex; }` inside the existing `@media (max-width: 1600px)` block alongside the `.hex-grid` / `.bee-dot-strip` swap, so it now opts in at the same breakpoint where the AI cards collapse to dots. Comment updated to reflect the laptop-only intent.
+
+### Files Changed
+
+- `app.js` — Added `screen-reference` case to `goToScreen()` (~22 lines) immediately after the existing `screen-document` block. Rewrote `showProjectGoalModal()` to render structured `.dp-field` rows from the six goal field values instead of stuffing a flat-text textarea. Updated `copyGoal()` to source from `assembleProjectGoal()` directly. Bumped `BUILD` to `20260425-004` and the comment-header build to match.
+- `index.html` — Replaced `<textarea id="projectGoalModalEdit">` with `<div id="projectGoalModalFields" class="goal-modal-fields"></div>`. Bumped `waxframe-build` meta to `20260425-004` and all cache-busts to `3.21.7`. Comment-header build bumped.
+- `style.css` — Added `.goal-modal-fields` / `.goal-modal-fields .dp-field` / `.goal-modal-fields .dp-field-value` / `.goal-modal-empty` rules. Removed orphan `.goal-modal-textarea` and `.goal-modal-textarea:focus` rules. Flipped `.hive-edit-btn` from desktop-default `display: inline-flex` to default `display: none`, with laptop-viewport opt-in inside the existing `@media (max-width: 1600px)` block. CSS braces balanced at 1603/1603. Comment-header build bumped.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.7 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-busts and comment-header builds bumped to `3.21.7` / `20260425-004`. No content changes.
+- `README.md` — Version + Build badges bumped.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.6 Pro — Build `20260425-003`
 **Released:** April 25, 2026
 

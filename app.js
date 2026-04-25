@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260425-003
+//  Build: 20260425-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-003';         // build stamp — update each session
+const BUILD       = '20260425-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -837,7 +837,9 @@ function clearNotes() {
 }
 
 function copyGoal() {
-  copyToClipboard(document.getElementById('projectGoalModalEdit')?.value, 'Goal');
+  // Source from the assembler directly — the modal no longer has a textarea
+  // to read from, since v3.21.7 replaced it with structured field rows.
+  copyToClipboard(assembleProjectGoal(), 'Goal');
 }
 
 function clearGoal() {
@@ -1671,6 +1673,31 @@ function goToScreen(id) {
       if (clearRow) clearRow.style.display = 'block';
     }
     setTimeout(updateDocRequirements, 0);
+  }
+  if (id === 'screen-reference') {
+    // Restore saved tab + content state when navigating back to the Reference
+    // Material screen. Without this, returning to the screen mid-project leaves
+    // both tabs in an unselected state with no panel visible — even though the
+    // size readout shows data is loaded. Mirrors the screen-document pattern.
+    if (refTab) {
+      switchRefTab(refTab, true);
+    } else if (refMaterial) {
+      // User had data but no saved tab choice — default to the tab that matches
+      // the source: 'upload' if a file was processed, otherwise 'paste'.
+      switchRefTab(refFilename ? 'upload' : 'paste', true);
+    }
+    // Re-sync the file-status pill if a file was uploaded — the DOM state may
+    // have been cleared between page load and screen re-entry.
+    if (refFilename && refMaterial) {
+      const status = document.getElementById('refFileStatus');
+      if (status) {
+        status.style.display = 'block';
+        status.textContent = `📚 ${refFilename} — ${refMaterial.length.toLocaleString()} chars loaded`;
+        if (typeof setFileStatusState === 'function') setFileStatusState(status, 'ok');
+      }
+      const clearRow = document.getElementById('refFileClearRow');
+      if (clearRow) clearRow.style.display = 'flex';
+    }
   }
 }
 
@@ -4710,21 +4737,46 @@ function showProjectGoalModal() {
   const goal    = assembleProjectGoal();
   const name    = document.getElementById('projectName')?.value.trim()    || '';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
-  const metaEl  = document.getElementById('projectGoalModalMeta');
-  const nameEl  = document.getElementById('projectGoalModalName');
-  const editTa  = document.getElementById('projectGoalModalEdit');
+  const metaEl   = document.getElementById('projectGoalModalMeta');
+  const nameEl   = document.getElementById('projectGoalModalName');
+  const fieldsEl = document.getElementById('projectGoalModalFields');
   if (nameEl) nameEl.textContent = [name, version].filter(Boolean).join(' · ');
   if (metaEl) {
     metaEl.textContent = goal.length > 300
       ? `${goal.length} characters — exceeds 300-character Refine limit`
       : `${goal.length} characters`;
   }
-  if (editTa) {
-    editTa.value = goal;
-    editTa.readOnly = true;
-    // Auto-size to show full content without scrolling
-    editTa.style.height = 'auto';
-    editTa.style.height = Math.min(editTa.scrollHeight, window.innerHeight * 0.55) + 'px';
+  if (fieldsEl) {
+    // Pull the six structured field values directly from the form, so the
+    // modal mirrors the Setup 3 (Project) screen layout instead of dumping
+    // a flat assembled-text blob with embedded labels.
+    const docType  = (document.getElementById('goalDocType')?.value  || '').trim();
+    const audience = (document.getElementById('goalAudience')?.value || '').trim();
+    const outcome  = (document.getElementById('goalOutcome')?.value  || '').trim();
+    const scope    = (document.getElementById('goalScope')?.value    || '').trim();
+    const tone     = (document.getElementById('goalTone')?.value     || '').trim();
+    const notes    = (document.getElementById('goalNotes')?.value    || '').trim();
+    const rows = [
+      ['Document type',     docType],
+      ['Target audience',   audience],
+      ['Desired outcome',   outcome],
+      ['Scope & constraints', scope],
+      ['Tone & voice',      tone],
+      ['Additional instructions', notes],
+    ].filter(([, v]) => v);
+    const esc = s => String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    if (rows.length === 0) {
+      fieldsEl.innerHTML = '<div class="goal-modal-empty">No goal fields filled in yet — open the Project screen to add them.</div>';
+    } else {
+      fieldsEl.innerHTML = rows.map(([label, value], i) => `
+        <div class="dp-field">
+          <div class="dp-field-label">${esc(label)}</div>
+          <div class="dp-field-value">${esc(value).replace(/\n/g, '<br>')}</div>
+        </div>${i < rows.length - 1 ? '<div class="dp-field-divider"></div>' : ''}
+      `).join('');
+    }
   }
   updateProjectGoalModalPreview();
   modal.classList.add('active');
