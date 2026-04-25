@@ -386,7 +386,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-011';         // build stamp — update each session
+const BUILD       = '20260424-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2050,6 +2050,12 @@ function saveSession() {
 }
 
 async function loadSession() {
+  // Eviction detection: if the session_exists flag is set in localStorage
+  // but no actual data is recoverable, the browser silently evicted our
+  // IndexedDB store between visits. Capture this so DOMContentLoaded can
+  // surface a clear warning to the user instead of dumping them at the
+  // welcome screen with no explanation.
+  const _hadSessionFlag = localStorage.getItem('waxframe_v2_session_exists') === '1';
   try {
     // Primary: try IndexedDB first
     let s = await idbGet();
@@ -2067,7 +2073,13 @@ async function loadSession() {
       }
     }
 
-    if (!s) return false;
+    if (!s) {
+      if (_hadSessionFlag) {
+        window._sessionEvicted = true;
+        localStorage.removeItem('waxframe_v2_session_exists');
+      }
+      return false;
+    }
 
     round   = s.round   || 1;
     phase   = s.phase   || 'draft';
@@ -7223,6 +7235,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (buildEl) buildEl.textContent = BUILD;
   updateSetupRequirements();
 
+  // Request persistent storage from the browser. Without this, IndexedDB
+  // session data (round history, document, console) is "best-effort" and
+  // the browser may evict it under storage pressure, after long inactivity,
+  // or when the user runs "Clear browsing data". Chrome grants persistence
+  // automatically based on engagement signals (bookmarked, frequently
+  // visited, PWA-installed); other browsers vary. The call is idempotent
+  // and harmless if denied — we still operate normally on best-effort
+  // storage. The result is stashed on window for diagnostics.
+  if (navigator.storage?.persist) {
+    try {
+      const isPersisted = await navigator.storage.persisted();
+      window._storagePersistent = isPersisted ? true : await navigator.storage.persist();
+    } catch(e) {
+      window._storagePersistent = null;
+    }
+  }
+
   // Capture pristine innerHTML of Finish modal export buttons so clearProject()
   // can restore them to this state after a session boundary. Without this, a
   // previous session's "✅ Exported!" / done styling carries over to the next
@@ -7306,5 +7335,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('screen-bees')?.classList.contains('active')) {
     if (activeAIs.length === 0) activeAIs = [...aiList];
     renderAISetupGrid();
+  }
+
+  // If loadSession detected eviction (session_exists flag was set but no
+  // data was recoverable), the browser silently wiped the user's IndexedDB
+  // store between visits. Surface this loudly so the user knows their work
+  // wasn't lost by WaxFrame, and so it doesn't happen silently again.
+  // Persist status (from earlier in this handler) determines remediation:
+  // if persistence is now granted, the loss should not recur; if denied,
+  // the user needs to take action (bookmark, visit more often, export).
+  if (window._sessionEvicted) {
+    const persistOK = window._storagePersistent === true;
+    const remediation = persistOK
+      ? 'Persistent storage is now granted — this should not happen again on this browser.'
+      : 'The browser has not granted persistent storage. Bookmark this site, visit it regularly, and export transcripts after each session to be safe.';
+    toast(`⚠️ Browser cleared your saved WaxFrame session. This was the browser, not WaxFrame. ${remediation}`, 18000);
+    console.warn('[WaxFrame] Session eviction detected on load. Previous IndexedDB store was wiped by the browser between visits. Persistent storage status:', window._storagePersistent);
   }
 });
