@@ -2,6 +2,40 @@
 
 ---
 
+## v3.21.4 Pro — Build `20260425-001`
+**Released:** April 25, 2026
+
+### Four small but meaningful UX fixes batched together
+
+**License pill is clickable when licensed (subscription-ready).**
+Previously the green `✓ Licensed` pill in the top bar was inert — once you entered a key, you had no way to view, replace, or remove it short of clearing localStorage. With WaxFrame moving toward an eventual subscription model, that's the wrong default. The pill now opens a Manage License modal showing the key in masked form (`••••••••-••••••••-••••••••-XXXXXXXX`, last 8 visible) with two actions: **Replace Key** opens the existing entry modal so a new key can be verified before the old one is replaced, and **Remove Key** (with a confirmation prompt) wipes the license while preserving `trialRoundsUsed` so removing a license can't be used to escape an expired trial.
+
+**Nav panel widened so the tagline fits on one line.**
+The slide-in nav panel was 280px on desktop, which forced the tagline `MANY MINDS. ONE REFINED RESULT.` to wrap to two lines under the WaxFrame wordmark. Bumped to 320px (matching what the panel was already doing on smaller laptop viewports), and removed the now-redundant `@media (max-width: 1400px) { width: 320px }` breakpoint since the new default already covers that range.
+
+**Conflicts panel — removed the dead Clear button.**
+The Clear button next to Copy on the Conflicts header was a copy-paste leftover from the Notes / Goal Clear buttons. Conflicts are *system output* — the Builder regenerates them every round — so a user-driven Clear was actively harmful (hid useful info until the next round) with no real state to clear. Button removed and the orphaned `clearConflicts()` function removed alongside it. Copy stays — that's legitimately useful.
+
+**Snapshot backup filename now includes a date+time stamp.**
+`Menu → 💾 Backup Session` was producing `WaxFrame-Backup-{name}-{version}.json` with no timestamp, so backing up the same project twice in one session would silently overwrite the prior file in your downloads folder. Filenames now append a local-time `YYYYMMDD-HHmm` stamp matching the build-stamp format used elsewhere — e.g. `WaxFrame-Backup-Chocolate-chip-cookies-v1-20260425-0917.json`. Multiple backups in the same session no longer collide.
+
+### Empirical round-count data captured
+
+`WaxFrame_DryRun_TestSheet.md` Results Log now records measured rounds where transcript data exists: Quick Start cookies (2 rounds, v3.0 seed), Thank-You Letter from scratch (2 rounds, build 20260421-002), and Thank-You Letter refining a rough draft (13 rounds, build 20260421-001). The 2-vs-13 split on the same playbook confirms the convergence principle in the wild — starting from scratch beats refining a misaligned draft. Beef Wellington's 21-round AI Hive v2 run is flagged as not representative of the current build.
+
+### Files Changed
+
+- `style.css` — Nav panel default width `280px` → `320px`; removed the now-redundant `@media (max-width: 1400px) { .nav-panel { width: 320px; } }` rule. `.license-badge.licensed` lost `cursor: default` (now inherits `cursor: pointer` from the base rule) and gained a visible hover state (`background: var(--green); color: #0a0c12;` plus a subtle green glow). Added new rules `.license-modal-key-display`, `.license-modal-actions`, `.license-modal-btn-secondary`, `.license-modal-btn-danger` for the Manage License modal. `!important` count unchanged at 41. CSS braces balanced.
+- `index.html` — Removed dead `<button>✕ Clear</button>` from the Conflicts header (line 556). Added new `licenseManageModal` block right after the existing `licenseModal`, with a masked key display, Replace/Remove action buttons, and Close. Bumped `waxframe-build` meta to `20260425-001`, and `style.css?v=`, `version.js?v=`, `app.js?v=` cache-busts to `3.21.4`.
+- `app.js` — Removed orphaned `clearConflicts()` function. Added `getLicenseKey()` and `clearLicense()` helpers in the LICENSE SYSTEM block. Added `showLicenseManageModal()`, `hideLicenseManageModal()`, `replaceLicenseKey()`, `confirmRemoveLicense()` for the Manage License flow. Modified `updateLicenseBadge()`: when licensed, `badge.onclick` is now wired to `showLicenseManageModal()` (was `null`), and the title changed from `"WaxFrame Pro — licensed"` to `"WaxFrame Pro — manage license"`. Modified `backupSession()` to append a local-time `YYYYMMDD-HHmm` timestamp to the filename. Bumped `BUILD` constant to `20260425-001`.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.4 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Bumped `version.js?v=` and `style.css?v=` cache-busts to `3.21.4`. No content changes.
+- `README.md` — Bumped Version badge to `3.21.4` and Build badge to `20260425-001`.
+- `WaxFrame_DryRun_TestSheet.md` — Filled in Actual round counts for rows 0 (Cookies), 5 (Thank-You Letter), and added a Notes caveat for row 11 (Recipe / Beef Wellington's old build).
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.21.3 Pro — Build `20260424-017`
 **Released:** April 24, 2026
 
