@@ -2,6 +2,41 @@
 
 ---
 
+## v3.20.19 Pro — Build `20260424-012`
+**Released:** April 24, 2026
+
+### Bug Fix
+
+**Browser-eviction defense for session storage**
+WaxFrame stores all session data — round history, document text, console log, notes, project clock — in IndexedDB. By default browsers treat this as "best-effort" storage that can be evicted at any time without warning, particularly under conditions like the user running "Clear browsing data" with cookies/site data checked, low disk space, long inactivity, or installed privacy extensions running their cleanup routines. This release adds two protections that were missing since the IndexedDB migration shipped.
+
+**Layer 1 — Persistent storage request** — Added a call to `navigator.storage.persist()` early in `DOMContentLoaded`, before any session loading occurs. This requests that the browser promote our data from "best-effort" to "persistent" — a tier that will not be evicted unless the user explicitly clears site data. Chrome grants persistence automatically based on engagement signals: bookmarked, frequently visited, PWA-installed, push notifications granted. Other browsers vary. The call is idempotent (uses `navigator.storage.persisted()` to check before re-requesting) and harmless if the browser denies it — WaxFrame continues operating on best-effort storage as before. The result is exposed on `window._storagePersistent` for diagnostic inspection.
+
+**Layer 2 — Eviction detection and user warning** — Added eviction detection to `loadSession`. The pattern: when the `waxframe_v2_session_exists` flag in localStorage is set to `'1'` but neither IndexedDB nor the LS_SESSION fallback returns recoverable data, the browser silently evicted our store between visits. Previously this dumped the user at the welcome screen with no explanation, indistinguishable from a fresh install. Now a `window._sessionEvicted` flag is set and the stale `session_exists` flag is cleared. After screen routing in `DOMContentLoaded`, if the eviction flag is set, an 18-second toast notification surfaces the loss with remediation guidance: "Browser cleared your saved WaxFrame session. This was the browser, not WaxFrame." If persistent storage is now granted, the message confirms recurrence is unlikely; if denied, it instructs the user to bookmark the site, visit regularly, and export transcripts after each session. A `console.warn` to the browser DevTools console captures the persistence status for technical follow-up.
+
+### Why this matters
+
+Best-effort browser storage has always been at risk of silent eviction. Without persistence and detection, session loss looked like normal "fresh install" behavior — invisible to the user, and to us. Multiple users have likely lost work to this without reporting it because there was nothing to report; the work just wasn't there anymore. Now the loss is surfaced loudly and the underlying cause is mitigated for any browser that supports persistent storage and grants the request.
+
+### Testing Notes
+
+To validate this release end to end:
+
+1. Load WaxFrame in Chrome. Open DevTools → Console. Confirm `window._storagePersistent` is `true` (granted), `false` (denied), or `null` (browser doesn't support the API). On Chrome with the site bookmarked, expect `true`.
+2. Run a round and let the session save. Open DevTools → Application → IndexedDB → `waxframe_v2_db`. Confirm a record exists in the `session` store under key `current`.
+3. To simulate eviction: in DevTools → Application → IndexedDB, right-click `waxframe_v2_db` and choose Delete Database. Do **not** clear localStorage — leave the `waxframe_v2_session_exists` flag in place to mimic real eviction behavior.
+4. Refresh the page. Expect the welcome screen to appear with an 18-second yellow toast warning that the browser cleared the session. The DevTools console should show a `[WaxFrame] Session eviction detected on load` warning with the persistence status logged.
+5. Run a fresh round. Confirm the new session saves and persists across normal refreshes without triggering the eviction toast.
+
+### Files Changed
+
+- `app.js` — Added `navigator.storage.persist()` request in `DOMContentLoaded`. Added eviction detection in `loadSession` and surface toast in `DOMContentLoaded`. Bumped `BUILD` to `20260424-012`.
+- `version.js` — Bumped `APP_VERSION` to `v3.20.19 Pro`.
+- `index.html` — Bumped `waxframe-build` meta to `20260424-012` and `app.js?v=` cache-bust to `3.20.19`.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.20.18 Pro — Build `20260424-011`
 **Released:** April 24, 2026
 
