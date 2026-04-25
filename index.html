@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-013">
+  <meta name="waxframe-build" content="20260424-014">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -78,7 +78,7 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 1 of 4</div>
+      <div class="setup-step-badge">Setup — Step 1 of 5</div>
     </div>
 
     <div class="fs-body-single">
@@ -140,7 +140,7 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 2 of 4</div>
+      <div class="setup-step-badge">Setup — Step 2 of 5</div>
     </div>
 
     <div class="fs-body-single">
@@ -192,7 +192,7 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 3 of 4</div>
+      <div class="setup-step-badge">Setup — Step 3 of 5</div>
     </div>
 
     <div class="fs-body-single">
@@ -316,16 +316,16 @@
       </div>
       <button class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
-        Continue — Starting Document →
+        Continue — Reference Material →
       </button>
     </div>
   </div>
 </div>
 
 <!-- ============================================================
-     SCREEN 5 — DOCUMENT  (Step 4 of 4)
+     SCREEN 5 — REFERENCE MATERIAL  (Step 4 of 5)
      ============================================================ -->
-<div class="screen" id="screen-document">
+<div class="screen" id="screen-reference">
   <div class="fullscreen-layout">
     <div class="fs-header">
       <div class="fs-header-left">
@@ -340,7 +340,92 @@
           <span class="app-version-stamp"></span>
         </div>
       </div>
-      <div class="setup-step-badge">Setup — Step 4 of 4</div>
+      <div class="setup-step-badge">Setup — Step 4 of 5</div>
+    </div>
+
+    <div class="fs-body-single">
+      <div class="setup-single-card setup-single-card--centered">
+
+        <div class="fs-col-header">
+          <h2 class="fs-col-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
+          <p class="fs-col-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions, RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the artifact under construction).</p>
+        </div>
+
+        <div class="doc-input-tabs">
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
+          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-ref-paste" onclick="switchRefTab('paste')">📋 Paste Text</button>
+        </div>
+        <p id="refTabHint" class="doc-tab-hint">Paste source material below — the hive will be told to cite against it but never edit it.</p>
+
+        <div class="doc-tab-panel" id="panel-ref-upload">
+          <div class="drop-zone" id="refDropZone" onclick="document.getElementById('refFileInput').click()"
+               ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
+            <div class="drop-zone-icon">📚</div>
+            <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
+            <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), or Markdown (.md)</div>
+            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleRefFileSelect(event)">
+          </div>
+          <div id="refFileStatus" class="file-status" style="display:none;"></div>
+          <div id="refFileClearRow" class="file-clear-row" style="display:none;">
+            <button class="btn btn-sm" onclick="clearRefUploadedFile()">✕ Remove file</button>
+          </div>
+        </div>
+
+        <div class="doc-tab-panel active" id="panel-ref-paste">
+          <div class="proj-ta-editor">
+            <div class="proj-ta-scroll">
+              <div class="proj-ta-nums" id="refPasteNums"><div>1</div></div>
+              <div class="proj-ta-inner">
+                <textarea id="refPasteText" class="proj-ta" placeholder="Paste reference material here — RFP requirements, job description, style guide, scoring rubric, prior decisions, vendor claims, etc.&#10;&#10;The hive will see this every round and cite against it, but will never propose edits to it."
+                  oninput="updateProjLineNums('refPasteNums', this); handleRefPasteInput()"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ref-counter-row" id="refCounterRow">
+          <span class="ref-counter-item"><span class="ref-counter-label">Chars:</span> <span id="refCountChars">0</span></span>
+          <span class="ref-counter-item"><span class="ref-counter-label">Words:</span> <span id="refCountWords">0</span></span>
+          <span class="ref-counter-item"><span class="ref-counter-label">Tokens (est.):</span> <span id="refCountTokens">0</span> <button class="goal-info-btn" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="launch-requirements">
+        <span class="launch-req-title">Reference material is optional</span>
+        <span class="launch-req-item ref-optional-hint">Skip this step if your project does not need source material to cite against.</span>
+      </div>
+      <button class="btn btn-lg btn-cta" id="refContinueBtn" onclick="goToScreen('screen-document')">
+        <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
+        Continue — Starting Document →
+      </button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     SCREEN 6 — DOCUMENT  (Step 5 of 5)
+     ============================================================ -->
+<div class="screen" id="screen-document">
+  <div class="fullscreen-layout">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" onclick="goToScreen('screen-reference')">← Back</button>
+      </div>
+      <div class="fs-header-brand">
+        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">WaxFrame</div>
+          <div class="fs-logo-tag">Many minds. One refined result.</div>
+          <span class="app-version-stamp"></span>
+        </div>
+      </div>
+      <div class="setup-step-badge">Setup — Step 5 of 5</div>
     </div>
 
     <div class="fs-body-single">
@@ -440,6 +525,7 @@
       </div>
       <div class="work-topbar-right">
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
+        <button class="btn" onclick="openReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <span class="app-version-stamp work-version-stamp"></span>
@@ -626,6 +712,26 @@
   </div>
   <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession();updateNotesBtnPriority()"
     placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
+</div>
+
+<!-- ── Reference Material Drawer (Work screen — editable mid-session) ── -->
+<div class="notes-drawer ref-drawer" id="referenceMaterialDrawer">
+  <div class="notes-drawer-hdr">
+    <span class="notes-drawer-title">📚 Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
+    <span class="notes-drawer-sub">Source material the hive cites against every round but never edits. Edits apply to the next round.</span>
+    <div class="notes-drawer-actions">
+      <button class="btn" onclick="copyReferenceMaterial()">📋 Copy</button>
+      <button class="btn" onclick="clearReferenceMaterialFromDrawer()">✕ Clear</button>
+      <button class="btn btn-accent" onclick="saveReferenceMaterialFromDrawer()">💾 Save &amp; Close</button>
+    </div>
+  </div>
+  <div class="ref-drawer-counter-row">
+    <span class="ref-counter-item"><span class="ref-counter-label">Chars:</span> <span id="refDrawerCountChars">0</span></span>
+    <span class="ref-counter-item"><span class="ref-counter-label">Words:</span> <span id="refDrawerCountWords">0</span></span>
+    <span class="ref-counter-item"><span class="ref-counter-label">Tokens (est.):</span> <span id="refDrawerCountTokens">0</span> <button class="goal-info-btn" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
+  </div>
+  <textarea id="refDrawerTextarea" class="notes-drawer-ta ref-drawer-ta" oninput="updateRefDrawerCounter()"
+    placeholder="Paste reference material here — RFP requirements, job description, style guide, scoring rubric, prior decisions, vendor claims, etc."></textarea>
 </div>
 
 <!-- ── Add Custom AI Modal ── -->
@@ -1174,7 +1280,7 @@
       <p>This is the live version of your document. Every round, the Builder rewrites it in full based on reviewer suggestions. You can edit it directly at any time between rounds — the AIs reference line numbers, so the numbering updates automatically as you make changes.</p>
       <div class="goal-info-row"><span class="info-label">Editing directly</span><span class="goal-info-desc">Click anywhere in the document and type. The hive will see your changes in the next round.</span></div>
       <div class="goal-info-row"><span class="info-label">Line numbers</span><span class="goal-info-desc">AIs reference line numbers in their suggestions so the Builder can locate changes precisely. Don't worry about the numbers — they update automatically.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1206,7 +1312,7 @@
       <div class="goal-info-row"><span class="info-label">User Decision</span><span class="goal-info-desc">The Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own resolution, bypass if you've already fixed it directly, or decline to suppress it entirely. Your decision is applied immediately and locked.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder Decision</span><span class="goal-info-desc">The Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the <strong>Current:</strong> label on any conflict card to jump directly to that line in the working document.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step8" target="_blank" class="link-accent">Read the full guide in the user manual — Step 8: Review Results and Resolve Conflicts ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step9" target="_blank" class="link-accent">Read the full guide in the user manual — Step 9: Review Results and Resolve Conflicts ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1221,7 +1327,7 @@
       <div class="goal-info-row"><span class="info-label">Round entries</span><span class="goal-info-desc">Each round starts with a divider showing the round number and phase. Sending, response, success, and error entries follow for each AI.</span></div>
       <div class="goal-info-row"><span class="info-label">Errors</span><span class="goal-info-desc">API errors, rate limits, and connection failures appear in red with the HTTP status code and a plain-English explanation.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log for troubleshooting.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1236,7 +1342,7 @@
       <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds — it reads all reviewer suggestions and rewrites the working document each round. It uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
       <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step6" target="_blank" class="link-accent">Read the full guide in the user manual — Step 6: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoHiveModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1252,7 +1358,7 @@
       <div class="goal-info-row"><span class="info-label">{version}</span><span class="goal-info-desc">Replaced with your project version number. If no version is set, defaults to "v1".</span></div>
       <div class="goal-info-row"><span class="info-label">Example</span><span class="goal-info-desc">A mask of <code>{name}_final_{version}</code> with project name "My Report" and version "v2" produces <code>My_Report_final_v2.txt</code>.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Leave the mask blank to use the default format: ProjectName_version.txt</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step10" target="_blank" class="link-accent">Read the full guide in the user manual — Step 10: Export and Finish ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step11" target="_blank" class="link-accent">Read the full guide in the user manual — Step 11: Export and Finish ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoExportMaskModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1268,7 +1374,7 @@
       <div class="goal-info-row"><span class="info-label">Paste Text</span><span class="goal-info-desc">Click inside the editor that appears and paste your text directly.</span></div>
       <div class="goal-info-row"><span class="info-label">Start from Scratch</span><span class="goal-info-desc">No further action needed — the hive will generate a first draft from your project goal.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with digitally-created documents. Heavily designed or scanned PDFs may extract poorly — try Paste Text if that happens.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" class="link-accent">Read the full guide in the user manual — Step 4: Provide Your Starting Document ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step5" target="_blank" class="link-accent">Read the full guide in the user manual — Step 5: Provide Your Starting Document ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1288,9 +1394,44 @@
       <div class="goal-info-row"><span class="info-label">📋 Copy</span><span class="goal-info-desc">Copies the current Notes text to your clipboard. Useful if you want to reuse a complex instruction in a later round.</span></div>
       <div class="goal-info-row"><span class="info-label">✕ Clear</span><span class="goal-info-desc">Wipes the Notes field. Does not undo — use with intent.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Quoting the exact text from the document is more reliable than citing line numbers — line numbers shift as the document evolves, but exact text is stable.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step9" target="_blank" class="link-accent">Read the full guide in the user manual — Step 9: Run More Rounds ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step10" target="_blank" class="link-accent">Read the full guide in the user manual — Step 10: Run More Rounds ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoNotesModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- ── Info: Reference Material ── -->
+<div class="finish-modal-overlay" id="infoReferenceModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Reference Material</h2>
+    <div class="goal-info-body">
+      <p>Reference material is source documentation the hive consults every round but never edits — job descriptions, RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. It is sent to every reviewer and to the Builder so they can cite against it.</p>
+      <div class="goal-info-row"><span class="info-label">Distinct from Notes</span><span class="goal-info-desc"><strong>Notes</strong> are round-to-round directives for the Builder only and apply to the next round. <strong>Reference material</strong> is standing source material sent to every reviewer every round.</span></div>
+      <div class="goal-info-row"><span class="info-label">Distinct from Starting Document</span><span class="goal-info-desc">The <strong>Starting Document</strong> is the artifact under construction — the hive rewrites it. Reference material is read-only source material the hive cites against.</span></div>
+      <div class="goal-info-row"><span class="info-label">When to use it</span><span class="goal-info-desc">RFPs, job descriptions, style guides, scoring rubrics, prior consensus decisions, vendor claims you need to cross-check against.</span></div>
+      <div class="goal-info-row"><span class="info-label">When to skip it</span><span class="goal-info-desc">Most short documents do not need it. A cookie recipe or thank-you note has no source material to cite against.</span></div>
+      <div class="goal-info-row"><span class="info-label">Editable mid-session</span><span class="goal-info-desc">Use the <strong>📚 Reference</strong> button on the Work screen to edit reference material between rounds. Edits apply to the next round.</span></div>
+      <div class="goal-info-row"><span class="info-label">Single source per project</span><span class="goal-info-desc">Upload OR paste — not both. If you have multiple reference docs, concatenate them into one paste with clear section headers.</span></div>
+      <div class="goal-info-row"><span class="info-label">Token cost reality</span><span class="goal-info-desc">Reference material is sent to every reviewer every round. A 5,000-character RFP roughly doubles your prompt size, which roughly doubles per-round cost. Pick a cost-conscious Builder when reference material is large.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is load-bearing. The hive cannot read what you do not paste — but it also pays for every character.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoReferenceModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- ── Info: Token Cost Estimate ── -->
+<div class="finish-modal-overlay" id="infoTokenCostModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Token Estimate</h2>
+    <div class="goal-info-body">
+      <p>The token count shown is an estimate based on <code>characters / 4</code>, which is the standard rule of thumb for English text in OpenAI-family tokenizers. Real tokenizers vary by model, language, and content type.</p>
+      <p>Use this number to gauge cost order of magnitude — a 5,000-character reference doc is roughly 1,250 tokens per request, sent to every reviewer every round. A 6-bee hive running 4 rounds = 30,000 tokens just for reference material, before any document or response content.</p>
+      <p class="goal-info-manual-link"><a href="what-are-tokens.html" target="_blank" class="link-accent">Read more about tokens and costs ↗</a></p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoTokenCostModal').classList.remove('active')">Got it →</button>
   </div>
 </div>
 
@@ -1353,8 +1494,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.19.23"></script>
-<script src="app.js?v=3.20.20"></script>
+<script src="version.js?v=3.21.0"></script>
+<script src="app.js?v=3.21.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
@@ -1409,7 +1550,8 @@
     <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
     <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-builder')">· Setup 2 — Builder</button>
     <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 3 — Your Project</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 4 — Starting Document</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 4 — Reference Material</button>
+    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 5 — Starting Document</button>
     <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Work Screen</button>
     <button class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">· 📖 Round History</button>
 

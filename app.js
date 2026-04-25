@@ -381,12 +381,16 @@ let phase     = 'draft';
 let history   = [];
 let docText   = '';
 let docTab    = 'upload';
+// ── REFERENCE MATERIAL state (v3.21.0) ──
+let refTab      = 'paste';   // 'upload' or 'paste' — defaults to paste since most reference material is pasted
+let refMaterial = '';        // active reference material text
+let refFilename = '';        // filename if uploaded (informational only)
 let workDocSaveTimer = null;
 let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260424-013';         // build stamp — update each session
+const BUILD       = '20260424-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1755,6 +1759,9 @@ function saveProject() {
     lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
     lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
     docTab,
+    referenceMaterial: refMaterial,
+    referenceFilename: refFilename,
+    refTab,
   };
   try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) {}
   updateLaunchRequirements();
@@ -1850,6 +1857,20 @@ function clearProject() {
   if (fileStatus) { fileStatus.style.display = 'none'; fileStatus.textContent = ''; }
   docTab = 'upload';
   switchDocTab('upload');
+  // ── REFERENCE MATERIAL wipe (v3.21.0) ──
+  refMaterial = '';
+  refFilename = '';
+  refTab = 'paste';
+  const refTa = document.getElementById('refPasteText');
+  if (refTa) { refTa.value = ''; updateProjLineNums('refPasteNums', refTa); }
+  const refStatus = document.getElementById('refFileStatus');
+  if (refStatus) { refStatus.style.display = 'none'; refStatus.textContent = ''; }
+  const refClearRow = document.getElementById('refFileClearRow');
+  if (refClearRow) refClearRow.style.display = 'none';
+  const refFileInput = document.getElementById('refFileInput');
+  if (refFileInput) refFileInput.value = '';
+  if (typeof updateRefCounter === 'function') updateRefCounter();
+  if (typeof switchRefTab === 'function') switchRefTab('paste');
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
   localStorage.removeItem('waxframe_resolved_decisions');
@@ -1986,6 +2007,27 @@ function loadSettings() {
       if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
       if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
+      // ── REFERENCE MATERIAL restore (v3.21.0) ──
+      if (typeof p.referenceMaterial === 'string') refMaterial = p.referenceMaterial;
+      if (typeof p.referenceFilename === 'string') refFilename = p.referenceFilename;
+      if (p.refTab) refTab = p.refTab;
+      const refTa = document.getElementById('refPasteText');
+      if (refTa) {
+        refTa.value = refMaterial;
+        if (typeof updateProjLineNums === 'function') updateProjLineNums('refPasteNums', refTa);
+      }
+      if (typeof updateRefCounter === 'function') updateRefCounter();
+      if (typeof switchRefTab === 'function') switchRefTab(refTab, true);
+      if (refFilename) {
+        const status = document.getElementById('refFileStatus');
+        if (status) {
+          status.style.display = 'block';
+          status.textContent = `📚 ${refFilename} — ${refMaterial.length.toLocaleString()} chars loaded`;
+          if (typeof setFileStatusState === 'function') setFileStatusState(status, 'ok');
+        }
+        const clearRow = document.getElementById('refFileClearRow');
+        if (clearRow) clearRow.style.display = '';
+      }
       updateGoalCounter();
     }
 
@@ -3653,7 +3695,7 @@ function continueFromProject() {
   if (!version)     { toast('⚠️ Enter a version number'); return; }
   if (!goal)        { toast('⚠️ Fill in at least one goal field'); return; }
   saveProject();
-  goToScreen('screen-document');
+  goToScreen('screen-reference');
 }
 
 // ── SCREEN 3: PROJECT SETUP ──
@@ -4114,6 +4156,231 @@ async function reExtractWithVision() {
   }
 }
 
+// ============================================================
+//  v3.21.0 — REFERENCE MATERIAL MODULE
+//  Source material the hive cites against every round but never edits.
+//  Distinct from Notes (round-to-round Builder directives) and from
+//  the Starting Document (the artifact under construction).
+// ============================================================
+
+function switchRefTab(tab, suppressSave) {
+  refTab = tab;
+  document.querySelectorAll('#screen-reference .doc-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#screen-reference .doc-tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-ref-'   + tab)?.classList.add('active');
+  document.getElementById('panel-ref-' + tab)?.classList.add('active');
+  // Init line numbers when switching to paste tab
+  if (tab === 'paste') {
+    const ta = document.getElementById('refPasteText');
+    if (ta) updateProjLineNums('refPasteNums', ta);
+  }
+  // Update the hint copy
+  const hintEl = document.getElementById('refTabHint');
+  if (hintEl) {
+    hintEl.textContent = tab === 'upload'
+      ? 'Click the area below to browse for a file, or drag and drop one directly onto it.'
+      : 'Paste source material below — the hive will be told to cite against it but never edit it.';
+  }
+  if (!suppressSave) saveProject();
+}
+
+function handleRefDragOver(e) {
+  e.preventDefault();
+  document.getElementById('refDropZone')?.classList.add('drag-over');
+}
+
+function handleRefFileDrop(e) {
+  e.preventDefault();
+  document.getElementById('refDropZone')?.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processRefFile(file);
+}
+
+function handleRefFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processRefFile(file);
+}
+
+function clearRefUploadedFile() {
+  refMaterial = '';
+  refFilename = '';
+  saveProject();
+  const status = document.getElementById('refFileStatus');
+  if (status) { status.style.display = 'none'; status.textContent = ''; }
+  const clearRow = document.getElementById('refFileClearRow');
+  if (clearRow) clearRow.style.display = 'none';
+  const fileInput = document.getElementById('refFileInput');
+  if (fileInput) fileInput.value = '';
+  updateRefCounter();
+}
+
+async function processRefFile(file) {
+  // Guard: warn if a session is already running and reference material would change mid-flight
+  const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
+  if (!onSetupScreen && (history.length > 0 || refMaterial)) {
+    const proceed = confirm(
+      `⚠️ You have an active session.
+
+Loading a new reference file will replace the current reference material starting on the NEXT round. Past rounds keep their original snapshot.
+
+Proceed?`
+    );
+    if (!proceed) return;
+  }
+  const status = document.getElementById('refFileStatus');
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (status) {
+    status.style.display = 'block';
+    status.textContent = `⏳ Reading ${file.name}…`;
+    setFileStatusState(status, 'loading');
+  }
+
+  try {
+    let result = { text: '', warnings: [], sourceType: ext };
+
+    if (ext === 'txt' || ext === 'md') {
+      result.text = await file.text();
+    } else if (ext === 'pdf') {
+      result = await extractPDF(file);
+    } else if (ext === 'docx') {
+      result = await extractDOCX(file);
+    } else if (ext === 'pptx') {
+      result = await extractPPTX(file);
+    } else {
+      throw new Error('Unsupported file type');
+    }
+
+    refMaterial = (result.text || '').trim();
+    refFilename = file.name;
+    saveProject();
+
+    if (status) {
+      if (result.warnings && result.warnings.length > 0) {
+        status.textContent = `⚠️ ${refMaterial.length.toLocaleString()} chars from ${file.name} — ${result.warnings[0]}`;
+        setFileStatusState(status, 'warn');
+      } else {
+        status.textContent = `📚 ${refMaterial.length.toLocaleString()} chars from ${file.name} loaded as reference material`;
+        setFileStatusState(status, 'ok');
+      }
+    }
+    const clearRow = document.getElementById('refFileClearRow');
+    if (clearRow) clearRow.style.display = '';
+    // Mirror into the paste textarea so the user can edit if needed
+    const refTa = document.getElementById('refPasteText');
+    if (refTa) {
+      refTa.value = refMaterial;
+      updateProjLineNums('refPasteNums', refTa);
+    }
+    updateRefCounter();
+  } catch (e) {
+    console.error('Ref file extraction failed:', e);
+    if (status) {
+      status.textContent = `❌ Could not read ${file.name}: ${e.message}`;
+      setFileStatusState(status, 'error');
+    }
+  }
+}
+
+function handleRefPasteInput() {
+  const ta = document.getElementById('refPasteText');
+  if (!ta) return;
+  refMaterial = ta.value;
+  // Pasting overrides any previously uploaded filename — clarify the source
+  if (refFilename) {
+    refFilename = '';
+    const status = document.getElementById('refFileStatus');
+    if (status) { status.style.display = 'none'; status.textContent = ''; }
+    const clearRow = document.getElementById('refFileClearRow');
+    if (clearRow) clearRow.style.display = 'none';
+  }
+  updateRefCounter();
+  saveProject();
+}
+
+// chars/4 is the standard rule of thumb for English text in OpenAI-family tokenizers.
+// Real tokenizers vary by model; this is an estimate, not a contract.
+function estimateTokens(text) {
+  if (!text) return 0;
+  return Math.round(text.length / 4);
+}
+
+function updateRefCounter() {
+  const text  = refMaterial || '';
+  const chars = text.length;
+  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const tok   = estimateTokens(text);
+  const c = document.getElementById('refCountChars');  if (c) c.textContent = chars.toLocaleString();
+  const w = document.getElementById('refCountWords');  if (w) w.textContent = words.toLocaleString();
+  const t = document.getElementById('refCountTokens'); if (t) t.textContent = tok.toLocaleString();
+}
+
+function updateRefDrawerCounter() {
+  const ta = document.getElementById('refDrawerTextarea');
+  const text = ta ? ta.value : '';
+  const chars = text.length;
+  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const tok   = estimateTokens(text);
+  const c = document.getElementById('refDrawerCountChars');  if (c) c.textContent = chars.toLocaleString();
+  const w = document.getElementById('refDrawerCountWords');  if (w) w.textContent = words.toLocaleString();
+  const t = document.getElementById('refDrawerCountTokens'); if (t) t.textContent = tok.toLocaleString();
+}
+
+// ── Work-screen drawer handlers ──
+function openReferenceMaterialDrawer() {
+  const drawer = document.getElementById('referenceMaterialDrawer');
+  if (!drawer) return;
+  const ta = document.getElementById('refDrawerTextarea');
+  if (ta) ta.value = refMaterial;
+  updateRefDrawerCounter();
+  drawer.classList.add('active');
+  setTimeout(() => document.getElementById('refDrawerTextarea')?.focus(), 100);
+}
+
+function closeReferenceMaterialDrawer() {
+  const drawer = document.getElementById('referenceMaterialDrawer');
+  if (drawer) drawer.classList.remove('active');
+}
+
+function saveReferenceMaterialFromDrawer() {
+  const ta = document.getElementById('refDrawerTextarea');
+  if (!ta) return;
+  const before = refMaterial;
+  refMaterial = ta.value;
+  // If filename was set from an upload but the user has now edited the text,
+  // drop the filename so the source label reflects the live state.
+  if (refFilename && refMaterial !== before) refFilename = '';
+  // Mirror back into Setup 4 paste textarea so navigation back stays in sync
+  const setupTa = document.getElementById('refPasteText');
+  if (setupTa) {
+    setupTa.value = refMaterial;
+    if (typeof updateProjLineNums === 'function') updateProjLineNums('refPasteNums', setupTa);
+  }
+  updateRefCounter();
+  saveProject();
+  closeReferenceMaterialDrawer();
+  if (refMaterial !== before) {
+    consoleLog(`📚 Reference material updated — applies to next round`, 'info');
+    toast('📚 Reference material saved — applies to next round');
+  }
+}
+
+function clearReferenceMaterialFromDrawer() {
+  if (!confirm('Clear all reference material? This wipes the field but does not affect past rounds.')) return;
+  const ta = document.getElementById('refDrawerTextarea');
+  if (ta) ta.value = '';
+  updateRefDrawerCounter();
+}
+
+function copyReferenceMaterial() {
+  const ta = document.getElementById('refDrawerTextarea');
+  const text = ta ? ta.value : refMaterial;
+  if (!text) { toast('Nothing to copy'); return; }
+  navigator.clipboard.writeText(text).then(
+    () => toast('📋 Reference material copied'),
+    () => toast('❌ Copy failed')
+  );
+}
+
 function startSession() {
   const name = document.getElementById('projectName').value.trim();
   const goal = assembleProjectGoal();
@@ -4157,7 +4424,8 @@ function startSession() {
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      label:          'Original Document'
+      label:          'Original Document',
+      referenceMaterialAtRound: refMaterial
     });
     renderRoundHistory();
     saveSession();
@@ -5191,6 +5459,14 @@ function buildPromptForAI(ai, reviewerResponses) {
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
   if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
 
+  // ── REFERENCE MATERIAL injection (v3.21.0) ──
+  // Standing source material the hive cites against every round but never edits.
+  // Sent to all reviewers and the Builder. Distinct from Notes (round-to-round Builder directives)
+  // and from CURRENT DOCUMENT (the artifact under construction).
+  if (refMaterial && refMaterial.trim()) {
+    prompt += `REFERENCE MATERIAL — read-only source the user is citing against. Do NOT propose edits to this material. Do NOT rewrite it or include it in your output. Treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules:\n${sep}\n${refMaterial}\n${sep}\n\n`;
+  }
+
   // Inject length constraint if set
   const _lc = getLengthConstraint();
   if (_lc) {
@@ -5331,6 +5607,10 @@ async function runBuilderOnly() {
   const numberedDoc = docText.split('\n').map((line, i) => `${String(i+1).padStart(4,' ')}  ${line}`).join('\n');
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
   if (goal) prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0,300)+'…' : goal}\n\n`;
+  // ── REFERENCE MATERIAL injection (v3.21.0) — Builder Only path ──
+  if (refMaterial && refMaterial.trim()) {
+    prompt += `REFERENCE MATERIAL — read-only source the user is citing against. Do NOT propose edits to this material. Do NOT rewrite it or include it in your output. Treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules:\n${sep}\n${refMaterial}\n${sep}\n\n`;
+  }
   prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
   prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
@@ -5428,7 +5708,8 @@ async function runBuilderOnly() {
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      label:          'Builder Only'
+      label:          'Builder Only',
+      referenceMaterialAtRound: refMaterial
     });
     window._lastConflicts = null;
     round++;
@@ -5458,7 +5739,8 @@ async function runBuilderOnly() {
       label:          'Builder Only',
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
-      failDetails:    _failedRoundDetails || ''
+      failDetails:    _failedRoundDetails || '',
+      referenceMaterialAtRound: refMaterial
     });
     renderRoundHistory();
     saveSession();
@@ -5600,7 +5882,8 @@ async function runRound() {
       conflicts:      { converged: true, holdouts: [] },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
-      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
+      referenceMaterialAtRound: refMaterial
     });
     window._lastConflicts = null;
     round++;
@@ -5640,7 +5923,8 @@ async function runRound() {
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
-      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
+      referenceMaterialAtRound: refMaterial
     });
     window._lastConflicts = null;
     round++;
@@ -5770,7 +6054,8 @@ async function runRound() {
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
-      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || []))
+      resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
+      referenceMaterialAtRound: refMaterial
   });
   window._lastConflicts = null;
 
@@ -5827,7 +6112,8 @@ async function runRound() {
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
-      failDetails:    _failedRoundDetails || ''
+      failDetails:    _failedRoundDetails || '',
+      referenceMaterialAtRound: refMaterial
     });
     renderRoundHistory();
     saveSession();
@@ -6000,7 +6286,9 @@ function stripBuilderEnvelope(text) {
   // Remove PROJECT CONTEXT: ... block (up to next blank line or section)
   result = result.replace(/^PROJECT CONTEXT:[^\n]*\n?(\n)?/im, '');
   // Remove PROJECT GOAL: ... block
-  result = result.replace(/^PROJECT GOAL:[^\n]*(\n[\s\S]*?)?(?=\n\n|\nCURRENT DOCUMENT|\nLENGTH|\nUSER NOTES|$)/im, '');
+  result = result.replace(/^PROJECT GOAL:[^\n]*(\n[\s\S]*?)?(?=\n\n|\nCURRENT DOCUMENT|\nLENGTH|\nUSER NOTES|\nREFERENCE MATERIAL|$)/im, '');
+  // Remove REFERENCE MATERIAL block (v3.21.0) — strip if echoed by non-compliant AIs
+  result = result.replace(/^REFERENCE MATERIAL[^\n]*\n[─\s]*\n?[\s\S]*?\n[─\s]*\n?/im, '');
   // Remove CURRENT DOCUMENT (line numbers for reference): header and separator line
   result = result.replace(/^CURRENT DOCUMENT \(line numbers for reference\):\s*\n[─\s]*\n?/im, '');
   // Remove line-numbered lines: "   1  text" — only if they appear as a leading block

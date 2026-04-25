@@ -2,6 +2,65 @@
 
 ---
 
+## v3.21.0 Pro — Build `20260424-014`
+**Released:** April 24, 2026
+
+### New Feature
+
+**Setup 4 — Reference Material**
+A new setup screen has been inserted between Your Project and Starting Document. Reference Material is source documentation the hive consults every round but never edits — RFP requirements, job descriptions, style guides, scoring rubrics, prior decisions, vendor claims. It is sent to every reviewer and to the Builder on every round, prefixed with explicit "read-only — do not propose edits to this material" framing. It is distinct from Notes (round-to-round Builder directives that clear after each round) and from the Starting Document (the artifact under construction that the hive rewrites). Setup 4 ships with two tabs — Upload File and Paste Text — and a live characters / words / tokens estimate counter. The screen is always optional; the Continue button works with an empty field.
+
+**Mid-session edits via the new 📚 Reference button**
+The Work-screen toolbar now has a 📚 Reference button between Notes and Finish. It opens a drawer that mirrors the Notes drawer pattern (slides up from the bottom of the screen) but is wider (880 px) and taller (440 px textarea) to accommodate longer source material. The drawer includes the same characters / words / tokens counter and three actions: 📋 Copy, ✕ Clear (with confirmation), and 💾 Save & Close. Edits saved from the drawer apply to the next round. Past rounds are unaffected — see the next bullet.
+
+**History snapshots reference material per round**
+Every entry pushed to the round history (`history[]`) now stores a `referenceMaterialAtRound` field — a verbatim snapshot of the reference material text that was active when that round ran. This applies to all seven `history.push` sites: Original Document round 0, Builder Only success and failure paths, Unanimous convergence, Majority convergence, and the main full round success and failure paths. The implication is that you can edit reference material between rounds without rewriting history — each transcript entry stays internally consistent with the source material the hive actually saw at that moment.
+
+### Architectural Rationale
+
+The Setup 4 / Setup 5 / Notes / Starting Document split maps to four distinct roles in the prompt envelope, each with different lifecycle and edit semantics. Project Goal is the standing target, sent every round, never changing within a session. Reference Material is standing source material, sent every round, editable mid-session, but never edited by the hive. Starting Document is the artifact under construction, line-numbered and rewritten by the Builder each round. Notes are round-to-round Builder directives, sent on the next round only and cleared automatically after. Reference Material answers a question that was previously muddled — where does cite-against source material live? — because Notes was being used for both standing reference and round-to-round direction. The split makes each role explicit and gives users a clear place for each kind of input.
+
+### Setup 4 / Setup 5 Renumber
+
+The setup-screen sequence is now five screens. Worker Bees stays at Setup 1, Builder at Setup 2, Your Project at Setup 3. The new Reference Material screen takes Setup 4. Starting Document — formerly Setup 4 — becomes Setup 5. The setup-step badges in the top-right of every setup screen now read "Setup — Step N of 5" with N reflecting the new ordering. The nav menu drawer reflects the new order. Users navigating from prior versions will land on familiar content — only the numbering and the inserted optional screen between Project and Document have changed.
+
+### Token Cost Reality
+
+Reference material is sent to every reviewer every round. A 5,000-character RFP is roughly 1,250 tokens per request. A six-bee hive running four rounds spends about 30,000 tokens just transmitting the reference material — before any document content, project goal, or AI response is counted. Two consequences flow from this: trim aggressively (paste only what is load-bearing), and pick a cost-conscious Builder when reference material is large (DeepSeek and Gemini Flash are the cheapest per input token). The new What Are Tokens? section "Reference material and your token budget" walks through the math. The chars / words / tokens estimate counter on Setup 4 and on the Work-screen drawer uses the standard `chars / 4` rule of thumb for English text in OpenAI-family tokenizers — accurate to order of magnitude, not precise.
+
+### Prompt Envelope Injection
+
+Reference Material is injected into the prompt envelope in two sites: the canonical `buildPromptForAI` function (which produces the prompt for both reviewers and the Builder in normal rounds) and the Builder Only path (used when the user runs a Notes-only round without reviewers). In both, Reference Material lands after the Project Goal / Project Context block and before the Length Constraint block, with explicit framing that the hive must treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules and must not propose edits to it or include it in output. The `stripBuilderEnvelope` function has been extended to strip echoed Reference Material blocks from non-compliant Builder responses, matching the existing behavior for Project Goal and Project Context echoes.
+
+### Documentation
+
+**User Manual — new Step 4 page and full renumber cascade**
+A complete new Step 4 — Reference Material section has been inserted between Step 3 and what was Step 4 (now Step 5 — Provide Your Starting Document). The new section covers what reference material is, when to use it, when to skip it, the four-field role distinction with a table comparing Project Goal, Reference Material, Starting Document, and Notes, the two-tab input model, the live counter, the token cost reality with practical numbers, and how to edit reference material mid-session via the 📚 Reference button. Every subsequent step has been renumbered: old Step 5 → Step 6, old Step 6 → Step 7, old Step 7 → Step 8, old Step 8 → Step 9, old Step 9 → Step 10, old Step 10 → Step 11. The sidebar TOC has been updated with the new entry and the circled-numeral glyphs extended to ⑪. The setup-flow intro and its accompanying table now describe five screens. All cross-references in the manual body have been shifted to match the new numbering.
+
+**Index.html cross-references**
+Every `waxframe-user-manual.html#stepN` link in `index.html` has been shifted to point at the new step number. Specifically: Work Screen references move from `#step6` to `#step7` (three occurrences), Review and Resolve from `#step8` to `#step9`, Run More Rounds from `#step9` to `#step10`, Export and Finish from `#step10` to `#step11`, and Provide Your Starting Document from `#step4` to `#step5`. The new Reference Material info modal correctly points to `#step4`. Cross-references for Steps 1, 2, and 3 are unchanged.
+
+**Document Playbooks — Setup 4 / Setup 5 wayfinder updates and reference-material rewrites**
+Every "Step 4 — Starting Document screen (the next screen after Your Project)" wayfinder header has been updated to "Step 5 — Starting Document screen (the next screen after Reference Material)" — twelve occurrences in total. The 22 inline mentions of "Setup 4 — Starting Document" have been bulk-shifted to "Setup 5 — Starting Document". Three playbooks that previously routed reference material through Notes have been rewritten: Cover Letter and Résumé now direct users to paste the job description on Setup 4 — Reference Material rather than the Notes drawer, and the RFP Response playbook now routes the RFP requirements text to Setup 4 — Reference Material in both the refining-a-draft and starting-from-scratch flows. Other playbooks where Notes guidance is genuinely round-to-round Builder direction (Business Proposal pain-point framing, Executive Summary trim directives, Blog Post style reminders) are unchanged.
+
+**What Are Tokens? — new "Reference material and your token budget" card**
+A new card has been added after "Tips for managing token costs" that walks through the practical math of reference-material token spend, explains why per-round costs scale with the size of the reference material multiplied by the number of reviewers and rounds, and reinforces two practical responses: trim aggressively, and switch the Builder to a cost-conscious model when reference material is large.
+
+### Files Changed
+
+- `index.html` — Inserted new `screen-reference` block between `screen-project` and `screen-document`. Added 📚 Reference button to the work-topbar between Notes and Finish. Inserted new nav menu entry for Setup 4 — Reference Material. Renumbered nav menu entry for Starting Document to Setup 5. Updated setup-step badges across all setup screens to "Setup — Step N of 5". Routed screen-document Back button to `screen-reference`. Updated screen-project Continue button label to "Continue — Reference Material →". Added new `referenceMaterialDrawer` element with counter row and Save / Clear / Copy actions. Added new `infoReferenceModal` and `infoTokenCostModal`. Shifted every `waxframe-user-manual.html#stepN` cross-reference to match the new step numbering. Bumped `waxframe-build` meta to `20260424-014`, `app.js?v=` cache-bust to `3.21.0`, and `version.js?v=` cache-bust to `3.21.0` (was stale at `3.19.23`).
+- `app.js` — Added `refTab`, `refMaterial`, `refFilename` state vars. Bumped `BUILD` constant to `20260424-014`. Routed `continueFromProject` to `screen-reference`. Extended `saveProject`, `loadSettings`, and `clearProject` to handle reference material persistence. Inserted new REFERENCE MATERIAL MODULE before `startSession` containing `switchRefTab`, `handleRefDragOver`, `handleRefFileDrop`, `handleRefFileSelect`, `clearRefUploadedFile`, `processRefFile`, `handleRefPasteInput`, `estimateTokens`, `updateRefCounter`, `updateRefDrawerCounter`, `openReferenceMaterialDrawer`, `closeReferenceMaterialDrawer`, `saveReferenceMaterialFromDrawer`, `clearReferenceMaterialFromDrawer`, and `copyReferenceMaterial`. Injected REFERENCE MATERIAL block into the prompt envelope in both the canonical `buildPromptForAI` and the Builder Only path, after Project Goal / Project Context and before Length Constraint. Extended `stripBuilderEnvelope` regex strippers to handle echoed REFERENCE MATERIAL blocks. Added `referenceMaterialAtRound: refMaterial` snapshot to all seven `history.push` sites: Original Document round 0, Builder Only success and failure, Unanimous convergence, Majority convergence, full round success, and full round failure.
+- `style.css` — Added v3.21.0 reference material section: `.ref-counter-row` and `.ref-counter-item` styling for the chars / words / tokens row, `.ref-counter-label` typography, `.ref-optional-hint` for the Setup 4 footer copy, `.notes-drawer.ref-drawer` width override (880 px), `.ref-drawer-counter-row` to match the notes-templates row pattern, and `.notes-drawer-ta.ref-drawer-ta` height override (440 px). `!important` count unchanged at 26.
+- `version.js` — Bumped `APP_VERSION` to `v3.21.0 Pro`.
+- `waxframe-user-manual.html` — Inserted new full Step 4 — Reference Material section between Step 3 and the renumbered Step 5. Renumbered every step from old Step 4 onward by one (old step4 → step5, …, old step10 → step11). Updated sidebar TOC with new Setup 4 — Reference Material entry, all subsequent entries shifted, glyph extended to ⑪. Updated setup-flow intro from "four setup screens" to "five setup screens" and inserted new Reference Material row in the setup-flow table. Shifted all body cross-references to match new numbering. Section icon glyphs extended to match. Bumped `version.js?v=` cache-bust to `3.21.0`.
+- `document-playbooks.html` — Bulk-shifted 22 occurrences of "Setup 4 — Starting Document" to "Setup 5 — Starting Document". Updated 12 wayfinder headers from "Step 4 — Starting Document screen (the next screen after Your Project)" to "Step 5 — Starting Document screen (the next screen after Reference Material)". Rewrote Cover Letter, Résumé, and RFP Response playbooks to route reference-material content (job description, RFP requirements) through Setup 4 — Reference Material instead of the Notes drawer. Bumped `version.js?v=` cache-bust to `3.21.0`.
+- `what-are-tokens.html` — Added new "Reference material and your token budget" card after "Tips for managing token costs". Bumped `version.js?v=` cache-bust to `3.21.0`.
+- `api-details.html` — Bumped `version.js?v=` cache-bust to `3.21.0`. No content changes.
+- `prompt-editor.html` — Bumped `version.js?v=` cache-bust to `3.21.0`. No content changes.
+- `CHANGELOG.md` — This entry.
+
+---
+
 ## v3.20.20 Pro — Build `20260424-013`
 **Released:** April 24, 2026
 
