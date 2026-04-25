@@ -9,12 +9,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260424-017">
+  <meta name="waxframe-build" content="20260425-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=3.21.3">
+  <link rel="stylesheet" href="style.css?v=3.21.4">
 </head>
 <body>
 
@@ -553,7 +553,6 @@
           <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
             <button class="btn" onclick="copyConflicts()">📋 Copy</button>
-            <button class="btn" onclick="clearConflicts()">✕ Clear</button>
           </div>
         </div>
         <div class="conflicts-panel" id="conflictsPanel">
@@ -1011,6 +1010,21 @@
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
     <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<!-- LICENSE MANAGE MODAL — shown when the licensed badge is clicked -->
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
   </div>
 </div>
 
@@ -1496,8 +1510,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.21.3"></script>
-<script src="app.js?v=3.21.3"></script>
+<script src="version.js?v=3.21.4"></script>
+<script src="app.js?v=3.21.4"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
