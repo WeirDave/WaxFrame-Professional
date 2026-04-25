@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-001';         // build stamp — update each session
+const BUILD       = '20260425-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -782,10 +782,36 @@ function consoleLog(msg, type = 'info', rawData = null) {
 
 // ── COPY / CLEAR HELPERS ──
 // Single entry point for Copy buttons. Empty-state toast or success toast.
-function copyToClipboard(text, label = 'Text') {
+function copyToClipboard(text, label = 'Text', btn = null) {
   const txt = (text ?? '').toString();
   if (!txt.trim()) { toast(`⚠️ No ${label.toLowerCase()} to copy`); return; }
-  navigator.clipboard.writeText(txt).then(() => toast(`📋 ${label} copied`));
+  // Resolve button reference: explicit arg, or the click event's currentTarget
+  const button = btn || (typeof event !== 'undefined' ? event.currentTarget : null);
+  navigator.clipboard.writeText(txt).then(
+    () => {
+      toast(`📋 ${label} copied`);
+      flashCopyButton(button);
+    },
+    err => {
+      // Promise rejection path — previously silent. Common causes: document
+      // not focused, permissions denied, async context loss. Surface it.
+      console.warn('[copy] writeText failed:', err);
+      toast(`⚠️ Couldn't copy ${label.toLowerCase()} — click directly on the button and try again`);
+    }
+  );
+}
+
+// Brief green-check flash on a copy button to confirm the action visually,
+// independent of the toast. Pass null and it's a no-op.
+function flashCopyButton(btn) {
+  if (!btn || !btn.classList) return;
+  const original = btn.innerHTML;
+  btn.classList.add('btn-copied');
+  btn.innerHTML = '✓ Copied';
+  setTimeout(() => {
+    btn.classList.remove('btn-copied');
+    btn.innerHTML = original;
+  }, 1100);
 }
 
 function copyConsole() {
@@ -6445,17 +6471,47 @@ function getLedgerEntry(d) {
 // Extract the "before" text from a reviewer suggestion like:
 // "Line 9: Change 'either one (or both) of us' to 'one or both of us'."
 // so we can scroll to it in the document.
-function scrollToHoldoutLine(idx) {
-  const suggestions = window._flatHoldoutSuggestions;
-  if (!suggestions || !suggestions[idx]) return;
-  const suggestionText = suggestions[idx].text;
-  // Try to extract the "before" text from "Change 'X' to 'Y'" pattern
-  const match = suggestionText.match(/Change\s+[""\u201c\u2018'](.+?)[""\u201d\u2019']\s+to/i);
-  if (match && match[1]) {
-    scrollToCurrentText(match[1]);
-  } else {
-    toast('⚠️ Could not locate that passage in the document');
+// Given a holdout suggestion ("Add 'X' after 'Y'", "Change 'A' to 'B'", etc.)
+// and the working document, find the most distinctive quoted anchor that
+// already exists in the doc, and return both the anchor and the line
+// containing it. Used to render a "Current:" preview on holdout cards so
+// they match the structure of Builder USER DECISION cards.
+//
+// Strategy:
+//   1. Pull every quoted substring out of the suggestion (straight + curly).
+//   2. Filter to those that actually appear in the working document.
+//   3. Pick the longest match - for "Add 'based in Tampa' after 'company'",
+//      this correctly picks "company" since "based in Tampa" is not in the
+//      doc yet. For "Change 'X' to 'Y'", X exists in doc, Y does not.
+//   4. Find the line containing the anchor; clip very long lines around it.
+function findCurrentLineForSuggestion(suggestionText, docText) {
+  if (!suggestionText || !docText) return null;
+  const quoteRx = /["\u201c\u2018']([^"\u201d\u2019']{2,}?)["\u201d\u2019']/g;
+  const candidates = [];
+  let m;
+  while ((m = quoteRx.exec(suggestionText)) !== null) {
+    candidates.push(m[1]);
   }
+  const existing = candidates.filter(c => docText.includes(c));
+  if (existing.length === 0) return null;
+  existing.sort((a, b) => b.length - a.length);
+  const anchor = existing[0];
+  const idx = docText.indexOf(anchor);
+  if (idx === -1) return null;
+  const lineStart = docText.lastIndexOf('\n', idx - 1) + 1;
+  let lineEnd = docText.indexOf('\n', idx);
+  if (lineEnd === -1) lineEnd = docText.length;
+  const line = docText.slice(lineStart, lineEnd).trim();
+  const MAX_PREVIEW = 200;
+  let preview = line;
+  if (preview.length > MAX_PREVIEW) {
+    const anchorInLine = line.indexOf(anchor);
+    const half = Math.floor((MAX_PREVIEW - anchor.length) / 2);
+    const previewStart = Math.max(0, anchorInLine - half);
+    const previewEnd = Math.min(line.length, previewStart + MAX_PREVIEW);
+    preview = (previewStart > 0 ? '…' : '') + line.slice(previewStart, previewEnd) + (previewEnd < line.length ? '…' : '');
+  }
+  return { anchor: anchor, preview: preview };
 }
 
 function scrollToCurrentText(currentText) {
@@ -6604,13 +6660,19 @@ function renderConflicts() {
     </div>`;
 
     if (total > 0) {
+      // Cache the working document once for line-context lookups across all suggestions
+      const docText = document.getElementById('workDocument')?.value || '';
+      window._holdoutAnchors = window._holdoutAnchors || {};
       flatSuggestions.forEach((s, i) => {
+        const ctx = findCurrentLineForSuggestion(s.text, docText);
+        if (ctx) window._holdoutAnchors[i] = ctx.anchor;
         html += `<div class="decision-card convergence-card" id="hcard-${i}">
           <div class="decision-card-header">
             <span class="convergence-ai-badge">🐝 ${esc(s.name)}</span>
-            <span class="decision-badge" class="convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
+            <span class="decision-badge convergence-count-badge">Suggestion ${i + 1} of ${total}</span>
           </div>
-          <div class="convergence-suggestion decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToHoldoutLine(${i})">${esc(stripLineRefs(s.text))}</div>
+          ${ctx ? `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._holdoutAnchors[${i}])"><span class="decision-label">Current:</span> "${esc(ctx.preview)}"</div>` : ''}
+          <div class="convergence-suggestion">${esc(stripLineRefs(s.text))}</div>
           <div class="decision-options">
             <button class="decision-opt-btn" id="hopt-${i}-apply"
               onclick="selectHoldout(${i}, 'apply', ${total})">

@@ -194,6 +194,12 @@ html, body {
   white-space: nowrap;
 }
 .btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+.btn.btn-copied {
+  border-color: var(--green);
+  background: var(--green-dim);
+  color: var(--green);
+  transition: all 0.15s ease-out;
+}
 
 /* Ghost — visible over honeycomb */
 .btn-ghost {
