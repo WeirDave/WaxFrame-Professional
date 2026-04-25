@@ -390,7 +390,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-009';         // build stamp — update each session
+const BUILD       = '20260425-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1944,14 +1944,16 @@ function updateLengthConstraintHint() {
 }
 
 // clearProject — wipe project data only, keep hive intact
-function clearProject() {
+async function clearProject() {
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
   localStorage.removeItem('waxframe_v2_session_exists');
   localStorage.removeItem('waxframe_v2_filename');
-  // Clear IndexedDB session
-  idbClear().catch(() => {});
+  // Wait for IDB delete to commit — fire-and-forget caused new-project flows
+  // to race against the old session deletion, leaving stale data in IDB when
+  // startSession ran its pre-launch verify.
+  try { await idbClear(); } catch(e) { /* non-critical */ }
   document.getElementById('projectName').value    = '';
   document.getElementById('projectVersion').value = '';
   // Clear all structured goal fields
@@ -3871,6 +3873,28 @@ function clearUploadedFile() {
   updateLaunchRequirements();
 }
 
+// Clear the Starting Document Paste Text textarea
+function clearPasteText() {
+  const ta = document.getElementById('pasteText');
+  if (!ta) return;
+  ta.value = '';
+  updateProjLineNums('projPasteNums', ta);
+  updateDocRequirements();
+  ta.focus();
+}
+
+// Clear the Reference Material Paste Text textarea
+function clearRefPasteText() {
+  const ta = document.getElementById('refPasteText');
+  if (!ta) return;
+  ta.value = '';
+  refMaterial = '';
+  updateProjLineNums('refPasteNums', ta);
+  if (typeof updateRefCounter === 'function') updateRefCounter();
+  saveProject();
+  ta.focus();
+}
+
 async function processFile(file) {
   // Guard: if a session is already running, warn before overwriting the live document
   // Skip on Setup 4 — user is still in setup, not an active session
@@ -4519,12 +4543,17 @@ async function startSession() {
     if (!confirm(`You have an active session (${round - 1} round${round - 1 !== 1 ? 's' : ''} completed). Launching again will clear your current document and round history. Continue?`)) return;
   }
 
-  // ── (v3.21.9) Guard #2: pre-launch storage verify ──
+  // ── Pre-launch storage verify ──
   // The in-memory check above only catches sessions that successfully loaded
   // into memory. If loadSession() failed silently — IDB read errored, async
   // race lost to user click, mid-load eviction — in-memory is empty but IDB
   // may still hold the user's real session. Read it before launching so we
   // don't blow away recoverable data.
+  //
+  // Smart comparison: if the stored session's project name differs from the
+  // current project name, the user is intentionally starting a new project
+  // and we silently clear the old session. Only when names match (legitimate
+  // "session didn't load into memory" scenario) do we warn before discarding.
   if (history.length === 0 && !docText) {
     let storedSession = null;
     try { storedSession = await idbGet(); } catch(e) { /* ignore */ }
@@ -4533,19 +4562,32 @@ async function startSession() {
       (typeof storedSession.docText === 'string' && storedSession.docText.trim().length > 0)
     );
     if (storedHasData) {
-      const sh = storedSession.history?.length || 0;
-      const sd = storedSession.docText?.length || 0;
-      const proceed = confirm(
-        `⚠️ A saved session exists in browser storage (${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document) but did NOT load into memory on this page load. ` +
-        `This usually means a load race or a transient IDB read failure.\n\n` +
-        `Click Cancel to keep the saved session intact and reload the page to retry the load.\n` +
-        `Click OK to discard the saved session and start fresh.`
-      );
-      if (!proceed) return;
-      // User explicitly chose discard. Clear the saved session before launching
-      // so the new launch doesn't leave a partial overwrite.
-      try { await idbClear(); } catch(e) { /* ignore */ }
-      try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+      const currentProjectName = document.getElementById('projectName')?.value.trim() || '';
+      const currentProjectVersion = document.getElementById('projectVersion')?.value.trim() || '';
+      // Pull stored project name from the most recent history entry (rounds carry projectName)
+      const storedProjectName = storedSession.history?.[storedSession.history.length - 1]?.projectName || '';
+      const storedProjectVersion = storedSession.history?.[storedSession.history.length - 1]?.projectVersion || '';
+      const namesDiffer = currentProjectName && storedProjectName &&
+        (currentProjectName !== storedProjectName || currentProjectVersion !== storedProjectVersion);
+
+      if (namesDiffer) {
+        // Different project — user is starting fresh. Clear stored session silently.
+        try { await idbClear(); } catch(e) { /* ignore */ }
+        try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+      } else {
+        // Same project name (or stored name unavailable) — likely a real load failure.
+        const sh = storedSession.history?.length || 0;
+        const sd = storedSession.docText?.length || 0;
+        const proceed = confirm(
+          `⚠️ A saved session exists in browser storage (${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document) but did NOT load into memory on this page load. ` +
+          `This usually means a load race or a transient IDB read failure.\n\n` +
+          `Click Cancel to keep the saved session intact and reload the page to retry the load.\n` +
+          `Click OK to discard the saved session and start fresh.`
+        );
+        if (!proceed) return;
+        try { await idbClear(); } catch(e) { /* ignore */ }
+        try { localStorage.removeItem(LS_SESSION); } catch(e) {}
+      }
     }
   }
 
@@ -4881,14 +4923,14 @@ function hideFinishModal() {
   if (modal) modal.classList.remove('active');
 }
 
-function finishAndNew() {
+async function finishAndNew() {
   const liveDoc = document.getElementById('workDocument')?.value?.trim() || '';
   const hasContent = liveDoc.length > 0 || history.length > 0;
   if (!window._finishExported && hasContent) {
     if (!confirm('⚠️ You haven\'t exported anything yet.\n\nClick Cancel to go back and export your document first.\nClick OK to discard your document and start fresh.')) return;
   }
   hideFinishModal();
-  clearProject();
+  await clearProject();
   goToScreen('screen-project');
 }
 

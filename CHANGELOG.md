@@ -2,7 +2,7 @@
 
 ---
 
-## v3.21.12 Pro — Build `20260425-009`
+## v3.21.13 Pro — Build `20260425-011`
 **Released:** April 25, 2026
 
 ### Tagline punctuation fixed everywhere
@@ -44,19 +44,48 @@ Kept (these earned their place during the investigation and stay):
 - The actual bug fix from v3.21.11 — `consoleLog` strips the page-load default entry on first real log, and Guard #1 removed entirely.
 - IDB-failure fallback to legacy `LS_SESSION` key — kept for defense in depth in the unlikely case IDB ever throws on write.
 
+### New project flow no longer races against the previous session's IDB delete
+
+The data-loss saga had a residual bug nobody hit until a real second-project test ran. After finishing one project (say the 21-round Altura JD) and clicking "Finish → Start New Project," the user moved through Setup screens 2–5 and clicked Launch on the new project. On launch, the pre-launch storage verify saw the OLD session still sitting in IDB and threw a confirm dialog: "A saved session exists in browser storage (21 rounds, 1,750 chars in document) but did NOT load into memory."
+
+The dialog itself was correct behavior for a real load failure — but this wasn't a load failure. It was a race condition. `clearProject()` had been calling `idbClear().catch(() => {})` as fire-and-forget. The async IDB delete didn't complete before the user moved through the new project setup faster than the disk delete. By Launch time, IDB still held the old session.
+
+Made `clearProject()` async and `await idbClear()` inside it. Updated the only caller (`finishAndNew`) to await `clearProject()`. Now by the time screen navigation moves to the new project, IDB is genuinely empty. The pre-launch verify becomes a true safety net for actual load failures rather than firing on legitimate new-project flows.
+
+The bandaid path I started writing — a "smart project-name comparison" inside the verify itself that would silently clear if names differed — got reverted. Fixing the upstream race directly is correct; gating the verify with downstream comparison logic was scope creep.
+
+### Tagline / version-stamp typography unified — Path A
+
+The tagline and version stamp at five locations across the product (welcome screen, work-screen right panel, two helper-screen brand spots, nav panel) were sized inconsistently. The work-screen version stamp added in `-009` was 11px under a 13px tagline, but more importantly the *relationship* between tagline and version differed at every location: welcome screen had a 4-point gap (15/11), work right had a 2-point gap (13/11), helper screens had a 2-point gap (12/10), nav panel had a 0-point gap (10/10).
+
+Adopted a consistent rule across all five pairs: **version is always tagline minus 2 points, with a floor of 9px.** Within each pair, color, font-weight, letter-spacing, and text-transform all match — they read as one typographic system, just sized down. The absolute size scales with the canvas (welcome screen wordmark is hero-sized so its tagline+version pair sits bigger; nav panel is compact so its pair sits smaller), which mirrors how brand systems treat logos at different scales (Coca-Cola's logo varies in size by surface, but the *relationship* of the logo to its surroundings stays consistent).
+
+Three CSS rules touched:
+- `.welcome-brand .app-version-stamp` — new override pinning welcome version to 13px (was inheriting 11px from the base rule), font-weight 600 to match welcome tagline
+- `.nav-panel-version` — 10px → 9px (was matching tagline at 10/10, now follows minus-2 rule)
+- `.work-right-logo-version` at the 1700px breakpoint — 10px → 9px (tagline at that breakpoint is 11px)
+
+The work-screen base pair (13/11) and helper-screen pairs (12/10) already complied with the rule — no change needed there.
+
+### Clear button added to both Paste Text fields
+
+Reference Material → Paste Text and Starting Document → Paste Text had no way to empty the textarea other than manual select-all-and-delete. Added a small `✕ Clear text` button below each paste textarea, mirroring the existing `✕ Remove file` button on the Upload File tabs. Clears the textarea, resets line numbers, focuses the textarea for immediate re-paste, and triggers the same downstream updates as a normal user-initiated empty (saveProject for reference material, updateDocRequirements for starting document).
+
+Two new functions in `app.js` (`clearPasteText` and `clearRefPasteText`) sized to mirror the existing `clearUploadedFile` pattern. Two new HTML rows in `index.html` reusing the existing `.file-clear-row` CSS class so the visual treatment matches the upload tab's clear button exactly. No new CSS needed.
+
 ### Files changed
 
-- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, `waxframe-build` meta bumped to `20260425-009`, `app.js?v=3.21.12` cache-bust.
-- `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (scale down), 1500px (scale down further), 1600px (hide). `.dp-real-example` block of rules for the new playbook example card.
+- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `waxframe-build` meta bumped to `20260425-011`. `app.js?v=3.21.13` cache-bust.
+- `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (now 9px per Path A), 1500px (9px per Path A floor), 1600px (hide). `.dp-real-example` block of rules for the playbook example card. New `.welcome-brand .app-version-stamp` override for Path A welcome pair. `.nav-panel-version` font-size changed from 10px to 9px per Path A.
 - `README.md` — tagline edit.
 - `waxframe-user-manual.html` — tagline edit (print header sub).
 - `document-playbooks.html` — JD playbook `Rounds` line rewritten, new `Real-world example` block inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
-- `app.js` — full storage cleanup as described, `BUILD` bumped to `20260425-009`.
-- `version.js` — `APP_VERSION` bumped to `v3.21.12 Pro`.
+- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. Two new functions `clearPasteText` and `clearRefPasteText`. `BUILD` bumped to `20260425-011`.
+- `version.js` — `APP_VERSION` bumped to `v3.21.13 Pro`.
 
 ### Validation prior to this release
 
-A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.12 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.12 retains all the validated behavior and removes only the scaffolding.
+A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.13 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.13 retains all the validated behavior and removes only the scaffolding.
 
 ---
 

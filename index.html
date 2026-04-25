@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260425-009">
+  <meta name="waxframe-build" content="20260425-011">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.21.11">
@@ -387,6 +387,9 @@
               </div>
             </div>
           </div>
+          <div class="file-clear-row">
+            <button class="btn btn-sm" onclick="clearRefPasteText()">✕ Clear text</button>
+          </div>
         </div>
 
       </div>
@@ -473,6 +476,9 @@
                   oninput="updateProjLineNums('projPasteNums', this); updateDocRequirements()"></textarea>
               </div>
             </div>
+          </div>
+          <div class="file-clear-row">
+            <button class="btn btn-sm" onclick="clearPasteText()">✕ Clear text</button>
           </div>
         </div>
 
@@ -1510,7 +1516,7 @@
 </div>
 
 <script src="version.js?v=3.21.11"></script>
-<script src="app.js?v=3.21.12"></script>
+<script src="app.js?v=3.21.13"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
