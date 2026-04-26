@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-015';         // build stamp — update each session
+const BUILD       = '20260425-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5622,6 +5622,12 @@ Rules for USER DECISION format:
 - Do not combine options that are meaningfully different
 - CRITICAL: The quoted option text must never contain an em dash (—). The only em dash on an OPTION line is the single separator between the quoted text and the AI names at the end. If you need a pause or range in the option text, use a comma or hyphen instead.
 
+ANTI-HALLUCINATION RULES — every USER DECISION must satisfy ALL of these or it must not be emitted:
+- THIS-ROUND ONLY: Only emit a USER DECISION for a phrasing that one or more reviewers in THIS round explicitly proposed an alternative for. Do not carry forward conflicts from prior rounds. Do not re-surface previously-rejected suggestions. If no reviewer in this round suggested a change to the phrasing, there is no decision to make.
+- ATTRIBUTION INTEGRITY: Each OPTION_N's named AI must have proposed that option's exact text (or an unambiguous near-paraphrase) in their response in THIS round. Do not attribute options to AIs whose response was "NO CHANGES NEEDED" or who said nothing about that part of the document. Fabricated attributions are a critical failure.
+- CURRENT MUST BE LIVE: CURRENT must be verbatim text that exists in the document you are emitting in your %%DOCUMENT_START%% block. Before you finalise the conflicts block, perform a substring check: locate CURRENT in your output document. If you cannot find it there, either (a) you have already applied one of the options to the document — in which case do not emit the USER DECISION, or (b) CURRENT is wrong — in which case fix it to match what is actually in your document.
+- DO NOT BOTH APPLY AND FLAG: If you applied a reviewer's suggestion to the document, do not also surface that same change as a USER DECISION. The user resolves USER DECISIONs by replacing CURRENT with their chosen option in the document. If CURRENT is no longer in the document, the resolution mechanism cannot work.
+
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%`,
 
@@ -6218,6 +6224,13 @@ async function runRound() {
       const builderResponse = await callAPI(builderAI, builderPrompt);
       const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
       const conflicts = extractConflicts(builderResponse);
+      // Defensive pass: validate USER DECISIONs against returned doc + this
+      // round's reviewer responses. Drops hallucinated decisions, strips
+      // fabricated AI attributions. See validateUserDecisions header for the
+      // session that motivated this.
+      if (conflicts && Array.isArray(conflicts.userDecisions) && conflicts.userDecisions.length > 0) {
+        conflicts.userDecisions = validateUserDecisions(conflicts.userDecisions, newDoc || '', successfulReviews);
+      }
       window._lastConflicts = conflicts || null;
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
@@ -6515,6 +6528,105 @@ function extractConflicts(text) {
   }
 
   return result;
+}
+
+// Defensive validation against Builder hallucination — verified against a real
+// session (v3.21.15) where the Builder fabricated a USER DECISION wholesale:
+// invented the conflict, used a stale CURRENT that wasn't in the doc anymore,
+// attributed options to AIs who said "no changes needed" that round, and
+// silently re-applied a previously-rejected suggestion to the document.
+//
+// Three checks, run in order:
+//  1. CURRENT must be a live substring of the document the Builder is returning.
+//     If not, the resolution mechanism (replace CURRENT with chosen option in
+//     the doc) cannot work — drop the decision.
+//  2. Each option's named AIs must have actually said something resembling the
+//     option text in their response THIS round. AIs who said "no changes
+//     needed" cannot be the source of an option. Strip unverified attributions;
+//     drop options that lose all attributions.
+//  3. After stripping, fewer than 2 verifiable options means it isn't a real
+//     choice — drop the whole decision.
+//
+// Logs every drop/strip to the console as 'warn' so the suppression is visible.
+// Reviews shape: [{ ai: { id, name }, response, success, noChanges }, ...]
+function validateUserDecisions(userDecisions, returnedDoc, reviews) {
+  if (!Array.isArray(userDecisions) || userDecisions.length === 0) return userDecisions || [];
+  const docLower = (returnedDoc || '').toLowerCase();
+
+  // Build name → response map (lowercased keys for lookup, original-case names retained for re-display)
+  const responseByName = new Map(); // lower-name → { lowerResponse, displayName, noChanges }
+  for (const r of reviews || []) {
+    const displayName = r?.ai?.name || '';
+    if (!displayName) continue;
+    responseByName.set(displayName.toLowerCase(), {
+      lowerResponse: (r.response || '').toLowerCase(),
+      displayName,
+      noChanges: !!r.noChanges
+    });
+  }
+
+  const cleaned = [];
+  for (const d of userDecisions) {
+    // ── CHECK 1: CURRENT must exist in returned doc ──
+    const currentText = (d.current || '').trim();
+    if (currentText && docLower.length > 0 && !docLower.includes(currentText.toLowerCase())) {
+      const preview = currentText.length > 60 ? currentText.slice(0, 60) + '…' : currentText;
+      consoleLog(`⚠️ Suppressed USER DECISION — CURRENT "${preview}" not in returned document (Builder hallucination)`, 'warn');
+      continue;
+    }
+
+    // ── CHECK 2: validate each option's AI attributions ──
+    const validatedOptions = [];
+    for (const opt of (d.options || [])) {
+      const optTextLower = (opt.text || '').toLowerCase();
+      // Split attribution string on commas, slashes, ampersands, " and "
+      const attrTokens = (opt.ais || '')
+        .split(/,|\/| and | & /i)
+        .map(s => s.trim())
+        .filter(Boolean);
+      const verified = [];
+      const stripped = [];
+      for (const token of attrTokens) {
+        const entry = responseByName.get(token.toLowerCase());
+        if (!entry) {
+          // AI not in this round's reviewer set at all — fabricated
+          stripped.push(token);
+          continue;
+        }
+        if (entry.noChanges) {
+          // AI said "no changes needed" — cannot be the source of an option
+          stripped.push(entry.displayName);
+          continue;
+        }
+        if (optTextLower && entry.lowerResponse.includes(optTextLower)) {
+          verified.push(entry.displayName);
+        } else {
+          stripped.push(entry.displayName);
+        }
+      }
+      if (stripped.length > 0) {
+        const optPreview = (opt.text || '').slice(0, 50) + ((opt.text || '').length > 50 ? '…' : '');
+        consoleLog(`⚠️ Stripped fake attribution from option "${optPreview}" — ${stripped.join(', ')} did not propose this in this round`, 'warn');
+      }
+      if (verified.length > 0) {
+        validatedOptions.push({ text: opt.text, ais: verified.join(', ') });
+      } else {
+        const optPreview = (opt.text || '').slice(0, 50) + ((opt.text || '').length > 50 ? '…' : '');
+        consoleLog(`⚠️ Dropped option "${optPreview}" — no verifiable attribution`, 'warn');
+      }
+    }
+
+    // ── CHECK 3: must have ≥2 verifiable options after stripping ──
+    if (validatedOptions.length < 2) {
+      const qPreview = (d.question || '').slice(0, 70) + ((d.question || '').length > 70 ? '…' : '');
+      consoleLog(`⚠️ Suppressed USER DECISION — fewer than 2 verifiable options after attribution check ("${qPreview}")`, 'warn');
+      continue;
+    }
+
+    cleaned.push({ ...d, options: validatedOptions });
+  }
+
+  return cleaned;
 }
 
 function extractDocument(text) {
