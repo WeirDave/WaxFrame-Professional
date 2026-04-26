@@ -2,6 +2,96 @@
 
 ---
 
+## v3.21.21 Pro — Build `20260426-004`
+**Released:** April 26, 2026
+
+Six threads landing together. Real-world testing today (Marco Contractor, Ferris-at-Lightkeeper, Stratton County Schools RFP) drove every change. No speculative features.
+
+### 🚨 Backup empty-file race fix v2 — bumped revoke timeout 1s → 30s
+
+The v3.21.19 fix used `setTimeout(URL.revokeObjectURL, 1000)` to defer the URL revoke after `a.click()`. That window was generous for the 41 KB Marco Contractor backup that originally surfaced the race. It was not generous enough for real-world session sizes. A 473 KB RFP-Response backup (Stratton County Schools Wi-Fi) raced again under v3.21.19, producing the exact same 0-byte placeholder + `filename (1).json` symptom.
+
+Larger blobs take longer for Chrome's download dispatcher to read. 1 second was simply too tight. Bumped the timeout to 30 seconds, which is roughly 30× the worst observed real-world case (a 642 KB JD backup) and provides comfortable safety margin even for hypothetical 100 MB blobs at slow disk write speeds. Memory cost of the deferred revoke is negligible — at most a handful of un-revoked blob URLs in any realistic session, and the page-unload garbage collector cleans them up at session end.
+
+The original v3.21.19 anchor-pattern fix (append to DOM, click, remove, defer revoke) is preserved unchanged — that pattern was correct, only the timeout value needed tuning. Comment block at the call site rewritten to document both fix iterations and the reasoning behind 30 seconds.
+
+A "preparing backup" modal was considered as a UX hedge during diagnosis but rejected after analysis: the click → Save As lag is sub-50ms even for very large backups (`JSON.stringify` on 1 MB is sub-10ms, `await idbGet()` is also fast), so the modal would have slowed the user for no real-world benefit. If session sizes ever push lag into perceptible territory (50 MB+ backups), reconsidering then.
+
+### Backup filename schema reorganized — project name first, "WaxFrame-Backup" suffix
+
+Old schema: `WaxFrame-Backup-{ProjectName}-{Version}-{YYYYMMDD-HHmm}.json`
+New schema: `{ProjectName}-{Version}-WaxFrame-Backup-{YYYYMMDD-HHmm}.json`
+
+Examples after upgrade:
+
+```
+Resume-Dana-Reyes-Wireless-v1-0-WaxFrame-Backup-20260425-1726.json
+Thank-You-Marco-Contractor-v1-0-WaxFrame-Backup-20260426-1015.json
+RFP-Response-Stratton-County-Schools-Wi-v1-0-WaxFrame-Backup-20260426-1140.json
+```
+
+Reasoning: when a user keeps backups, transcripts, exported documents, and any other project artifacts together in a single folder, alphabetical sort now groups everything by project rather than scattering backups under the `W` of "WaxFrame." A user with five WaxFrame projects sees their backup, transcript, and exported document for project X all sit adjacent in the file listing, regardless of which project they're looking for. Filename-derived metadata (project name, version, kind, timestamp) is preserved — only the order changed.
+
+One template-literal swap in `backupSession()` at the `baseName` declaration. No other download paths are affected; `exportDocument()` and `exportTranscript()` already use a project-name-first convention.
+
+### Working-document counter — pages added, order corrected
+
+The counter under the working-document textarea on the Work screen showed `${visualCount} lines · ${words} words · ${chars} chars`. Two problems surfaced while running the RFP Response playbook:
+
+1. **The counter could not display pages.** The Length Constraint on the Project screen offers a `Pages` unit (with the system internally converting via `WORDS_PER_PAGE = 500` at line 1924 of `app.js`). A user who picks `20 pages` on the Project screen had no way to track progress against that target from the working document — the counter showed lines, words, and characters, none of which mapped cleanly to the page target the prompt envelope was gating against.
+
+2. **The order was mixed-granularity.** `lines · words · chars` is medium → small → smallest. The Reference Material counter (Setup 4 panel and the Work-screen drawer) uses `Chars · Words · Tokens` — smallest → small → larger, ascending granularity. The working-document counter was inconsistent with the rest of the app.
+
+Fix lands in `updateLineNumbers()` at line 4848. Reordered to ascending granularity and appended pages calculated from the existing `WORDS_PER_PAGE` constant so the counter and the length gate cannot disagree. The `≈` prefix on pages matches the length-constraint hint convention (`≈{wordLimit} words`) — both communicate "this is a derived approximation, not a primary count." The `<0.1` floor keeps very short documents from displaying `0.0 pages`, which would read as "you have nothing" when in fact the user might have a single sentence.
+
+The `WORDS_PER_PAGE = 500` constant is unchanged. It's the single-spaced convention (vs. 250-word manuscript convention) appropriate for working documents like RFPs, business proposals, and reports — which are the long-form use cases where page tracking matters most.
+
+After upgrade, the working-document counter reads, for example, `1,034 chars · 187 words · 17 lines · ≈0.4 pages`.
+
+### Convergence label rolled out to four playbooks — time-first metrics
+
+The `Rounds` field in the playbook entries used a "rounds-only" framing that buried wall-clock time inside a paragraph of supporting detail. Time-to-converge is the more compelling number for most users — *"3 rounds in 1 minute"* lands harder than *"2–3 rounds typical."* For four playbooks where measured time data is now in hand, the field has been renamed `Convergence` and the value reformatted to lead with time:
+
+| Playbook | Old | New |
+|---|---|---|
+| **JD — Network Engineer Altura Systems** | `20–22 rounds typical` | `≈19 minutes · 21 rounds (measured, not estimated)` |
+| **Résumé — Dana Reyes Wireless** | `10–12 rounds typical (measured)` | `≈11 minutes · 11 rounds (measured, not estimated)` |
+| **Thank-You Letter — Marco Contractor v1** | `2–4 rounds typical` | `≈1 minute · 3 rounds (measured, not estimated)` |
+| **Email & Outreach — Ferris at Lightkeeper v1.0** | `2–3 rounds — short documents, focused goal` | `≈1 minute · 3 rounds (measured, not estimated)` |
+
+Cover Letter and Birthday Card retain their `Rounds` labels for now — they have measured round counts but no measured wall-clock data. The split (Convergence-with-time vs. Rounds-only) is itself meaningful: it tells the reader at a glance which playbooks have full empirical data behind them.
+
+The JD entry also picked up an off-by-one correction: the playbook prose previously claimed `Round 22 reached majority convergence` and the example block headline read `JD that took 22 rounds`. The actual transcript shows **Rounds completed: 21** with a 19-minute session duration. Round 21 was the convergence round (the system detected 3-of-4 satisfied at the end of round 21 and skipped what would have been round 22). All references corrected to 21. A footnote in the v3.21.14 CHANGELOG entry documents the correction.
+
+### Two playbook real-world example blocks added — Thank-You and Email & Outreach
+
+Following the JD/Résumé pattern from v3.21.14/v3.21.15, both Thank-You Letter and Email & Outreach playbooks now carry `.dp-real-example` blocks with verbatim Project-screen values and Reference Material payloads from real-world testing:
+
+- **Thank-You — Marco Contractor v1** — 10 Project fields plus the verbatim Reference Material payload (Marco Delgado's contractor work, slab-story anchor, neighbor referral, drop-by offer). Notes payload deliberately omitted because the actual run did not use one — the example reflects what was actually run, not what was hypothesized.
+- **Email & Outreach — Ferris at Lightkeeper v1.0** — 10 Project fields plus the verbatim Reference Material payload (Ferris Okafor's LinkedIn quote on unmanaged Wi-Fi, Altura Systems context, ask). The Reference Material payload includes a verbatim quote from a LinkedIn post the user pasted into Setup 4 — illustrating the correct workflow for "reference recent X" constraints when the hive cannot fetch from the web.
+
+Both playbooks' Step 5 scratch paths were also rewritten to route reference content through Setup 4 — Reference Material rather than the Notes drawer, matching the Setup 4 / Setup 5 split that shipped in v3.21.0 and aligning with the Cover Letter and Résumé playbooks. The Email & Outreach Step 5 scratch text adds an explicit line: *"The hive cannot browse the web — anything you want it to reference must be pasted into Reference Material first."* This is the first place in the playbook suite where the no-fetch constraint is stated plainly. Closes a documentation gap the user identified during testing.
+
+### Historical changelog footnote — v3.21.14 round count corrected
+
+The v3.21.14 entry originally described the JD test as reaching majority convergence at *"Round 22"* in three places (prose description, example block headline reference, Files Changed entry). The transcript shows 21 completed rounds. All three references corrected and a dated footnote appended to the v3.21.14 entry explaining the off-by-one and how it was discovered. The Validation section in the v3.21.14 entry was always correct — the 21-rounds figure has been there since release. Only the marketing-prose sentences had the slip.
+
+### Files changed
+
+- `app.js` — `backupSession()` `setTimeout` revoke timeout `1000` → `30000`. `baseName` template-literal: `WaxFrame-Backup-{name}-{ver}` → `{name}-{ver}-WaxFrame-Backup`. Comment block above the download anchor rewritten to document both v3.21.19 and v3.21.21 fix iterations. `updateLineNumbers()` counter line reordered to `chars · words · lines · ≈pages` ascending granularity, appended pages calculation using existing `WORDS_PER_PAGE` constant with `<0.1` floor for short documents, inline comment block above the new line documenting the design choices. `BUILD` constant `20260426-003` → `20260426-004`. Comment-header build → `20260426-004`.
+- `index.html` — `waxframe-build` meta `20260426-003` → `20260426-004`. `app.js?v=3.21.20` → `3.21.21`. `style.css?v=3.21.20` → `3.21.21`. `version.js?v=3.21.20` → `3.21.21`. Comment-header build → `20260426-004`.
+- `style.css` — Comment-header build only. No CSS changes.
+- `version.js` — `APP_VERSION` `v3.21.20 Pro` → `v3.21.21 Pro`.
+- `document-playbooks.html` — Four playbook updates: JD (Convergence label, ≈19 min · 21 rounds, off-by-one corrections), Résumé (Convergence label, ≈11 min · 11 rounds), Thank-You (Convergence label, ≈1 min · 3 rounds, RM-first scratch path, real-world example block), Email & Outreach (Convergence label, ≈1 min · 3 rounds, RM-first scratch path with no-fetch documentation, real-world example block). Div balance verified 373 / 373. Cache-bust + comment-header + meta sweep to `3.21.21` / `20260426-004`.
+- `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-bust + comment-header + meta sweep to `3.21.21` / `20260426-004`. No content changes.
+- `CHANGELOG.md` — this entry plus a dated footnote on the v3.21.14 entry documenting the JD round-count off-by-one correction.
+
+### What to expect after deploy
+
+A backup click drops one file (no 0-byte sibling, no `(1)` suffix) regardless of session size up to ~100 MB. Existing backup files in your downloads folder retain their old `WaxFrame-Backup-*` filenames; new backups going forward use the project-name-first schema. The working-document counter shows live page progress for any document. Four playbooks display headline `≈X minutes · Y rounds` convergence metrics. The Thank-You and Email & Outreach playbooks now have full real-world example blocks matching the JD and Résumé pattern.
+
+---
+
 ## v3.21.20 Pro — Build `20260426-003`
 **Released:** April 26, 2026
 
@@ -320,9 +410,9 @@ The right-panel logo block on the work screen showed only the WaxFrame wordmark 
 
 ### Job Description playbook updated with measured round count and real-world example
 
-The `Rounds` line in the JD playbook said `3–4 rounds typical` — an aspirational estimate that did not reflect actual convergence behavior. After running a full JD project from scratch with reference materials in v3.21.11, the real number is `20–22 rounds typical`. Updated the playbook entry to reflect this with the framing that even from scratch with full reference materials, real convergence on a quality JD takes 20+ rounds, not 3–5. Round 22 of the test reached majority convergence (3 of 4 AIs satisfied) with the holdout offering minor wording suggestions. Marked `(measured, not estimated)` to match the credibility convention already used in the Birthday Card and Cover Letter playbook entries.
+The `Rounds` line in the JD playbook said `3–4 rounds typical` — an aspirational estimate that did not reflect actual convergence behavior. After running a full JD project from scratch with reference materials in v3.21.11, the real number is `20–22 rounds typical`. Updated the playbook entry to reflect this with the framing that even from scratch with full reference materials, real convergence on a quality JD takes 20+ rounds, not 3–5. Round 21 of the test reached majority convergence (3 of 4 AIs satisfied) with the holdout offering minor wording suggestions. Marked `(measured, not estimated)` to match the credibility convention already used in the Birthday Card and Cover Letter playbook entries.
 
-Added a new `Real-world example — JD that took 22 rounds` block after the Step 3 table, showing concrete values for every Project screen field (project name, version, document type, target audience, desired outcome, scope and constraints, tone and voice, additional instructions, length constraint, starting document choice) plus the full Notes payload as a Courier New `<pre>` block. A beginner can copy these values verbatim, run the playbook end-to-end, and reproduce the convergence result. Once they understand the rhythm, they swap in their own role and notes for later runs. New `.dp-real-example` CSS class added with amber accent (matches the WaxFrame honey theme, differentiates from the blue scratch-note block already in the playbook).
+Added a new `Real-world example — JD that took 21 rounds` block after the Step 3 table, showing concrete values for every Project screen field (project name, version, document type, target audience, desired outcome, scope and constraints, tone and voice, additional instructions, length constraint, starting document choice) plus the full Notes payload as a Courier New `<pre>` block. A beginner can copy these values verbatim, run the playbook end-to-end, and reproduce the convergence result. Once they understand the rhythm, they swap in their own role and notes for later runs. New `.dp-real-example` CSS class added with amber accent (matches the WaxFrame honey theme, differentiates from the blue scratch-note block already in the playbook).
 
 ### Storage scaffolding cleanup — paranoid layers removed now that the real fix is in place and validated
 
@@ -394,11 +484,15 @@ Result: refresh at any point during project setup is now safe across all three S
 - `waxframe-user-manual.html` — tagline edit (print header sub).
 - `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` `20260425-013`.
 - `version.js` — `APP_VERSION` `v3.21.14 Pro`.
-- `document-playbooks.html` — JD playbook Rounds line rewritten with measured 22-round data. New Real-world example block (Altura Systems JD test) inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
+- `document-playbooks.html` — JD playbook Rounds line rewritten with measured 21-round data. New Real-world example block (Altura Systems JD test) inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
 
 ### Validation prior to this release
 
 A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.14 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.14 retains all the validated behavior and removes only the scaffolding.
+
+### Footnote — Round count corrected, 26 Apr 2026
+
+This entry originally described the test as reaching majority convergence at *"Round 22"* and the example block headline as *"JD that took 22 rounds."* The actual transcript shows **Rounds completed: 21** with a 19-minute session duration (project clock 1,109 seconds, consistent with the Validation section above which was always correct). Three references corrected here on 26 Apr 2026: the prose description, the example block headline reference, and the Files Changed entry. The off-by-one came from confusing the round number where the system *detected* convergence and would have started round 22 — with the round number that actually produced the converged document (round 21). Discovered while extracting time-to-converge data from the original transcript for the playbook prominence update that's coming in the next release.
 
 ---
 

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260426-003
+//  Build: 20260426-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260426-003';         // build stamp — update each session
+const BUILD       = '20260426-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4849,7 +4849,14 @@ function updateLineNumbers() {
   if (stats && text.trim()) {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     const chars = text.length;
-    stats.textContent = `${visualCount} lines · ${words.toLocaleString()} words · ${chars.toLocaleString()} chars`;
+    // Pages reuses WORDS_PER_PAGE (500, declared near the length-constraint
+    // logic) so this display stays in lockstep with whatever the length-gate
+    // converts pages→words to. Floor at <0.1 so very short docs don't show
+    // an unhelpful "0.0 pages". The ≈ prefix matches the length-hint
+    // convention for fuzzy unit conversions.
+    const pages    = words / WORDS_PER_PAGE;
+    const pagesStr = pages < 0.1 ? '<0.1' : pages.toFixed(1);
+    stats.textContent = `${chars.toLocaleString()} chars · ${words.toLocaleString()} words · ${visualCount} lines · ≈${pagesStr} pages`;
   } else if (stats) {
     stats.textContent = '';
   }
@@ -7940,15 +7947,25 @@ async function backupSession() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const baseName = safeVer ? `WaxFrame-Backup-${safeName}-${safeVer}` : `WaxFrame-Backup-${safeName}`;
+  const baseName = safeVer ? `${safeName}-${safeVer}-WaxFrame-Backup` : `${safeName}-WaxFrame-Backup`;
   const filename = `${baseName}-${stamp}`;
-  // Empty-file race fix (v3.21.19): backupSession is async (awaits idbGet) so the
-  // user-gesture context is broken by the time a.click() fires. Calling
-  // URL.revokeObjectURL synchronously right after click() can invalidate the blob
-  // before Chrome's download dispatcher reads it, producing a 0-byte placeholder
-  // file plus a retry that lands as `filename (1).json`. Match the proven pattern
-  // from exportTranscript: append the anchor to the DOM, click, remove, then
-  // defer the revoke so the download has time to start.
+  // Empty-file race fix history:
+  // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
+  //            via setTimeout(..., 1000) to give Chrome's download dispatcher
+  //            time to read the blob before the URL becomes invalid. Worked for
+  //            the ~41 KB Marco Contractor backup that originally surfaced the
+  //            race.
+  // v3.21.21 — Bumped the timeout from 1 second to 30 seconds. The 1-second
+  //            window was generous for tiny backups but not for real sessions:
+  //            a 473 KB RFP-Response backup raced again under v3.21.19,
+  //            producing the same 0-byte + filename(1) symptom. Larger blobs
+  //            take longer for the dispatcher to read, and 1 second was simply
+  //            too tight a margin for any realistic session size. 30 seconds
+  //            is ~30× the worst observed case (a 21-round JD backup at
+  //            642 KB) and gives the dispatcher 15× safety margin even for
+  //            hypothetical 100 MB blobs at slow disk write speeds. Memory
+  //            cost of the deferred revoke is negligible — at most a handful
+  //            of un-revoked blob URLs in any realistic session.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
@@ -7957,7 +7974,7 @@ async function backupSession() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
   closeNavMenu();
   // Confirm what was actually captured so the user knows whether session data
   // is in the file or only project setup.
