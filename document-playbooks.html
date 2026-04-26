@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — document-playbooks.html
-     Build: 20260426-004
+     Build: 20260426-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260426-004">
+  <meta name="waxframe-build" content="20260426-005">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.21">
+  <link rel="stylesheet" href="style.css?v=3.21.22">
 </head>
 <body class="helper-body">
 
@@ -958,25 +958,53 @@ Sender:
         </table>
       </div>
 
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Blog Post that took 16 rounds</div>
+        <div class="dp-real-example-sub">First measured <strong>refining-a-draft</strong> example in the playbook (Thank-You, Email & Outreach, JD, and Résumé examples are from-scratch or refining shorter drafts). The user uploaded an existing draft rather than starting from scratch, then provided a thesis-and-CTA payload through Reference Material. Run these exact values yourself to reproduce the convergence behavior; on later runs, swap the specifics for your own draft and notes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Blog — Why I Stopped Trusting One-Shot AI</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Blog Post</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Senior engineers and technical leads who already use ChatGPT or Claude for work, reading on LinkedIn or a company-internal blog</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Reader finishes the post and understands why running a document through multiple AI models in sequence produces meaningfully better output than a single high-quality model. They click through to the linked demo at the end.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cover: the "one-shot trap," why different models catch different issues, a concrete example with rough numbers, and what the reader can try today. Do not invent statistics.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>First-person, slightly opinionated, conversational — written the way you'd say it out loud, not how you'd write a whitepaper. Voice is someone who's been frustrated with single-model output for a year and finally solved the problem. Not promotional. Not AI-generated-sounding.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>No buzzwords like "synergy," "leverage," "revolutionary." If a section feels padded, cut it. No marketing fluff just real world shit.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Leave blank</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Upload File</strong> and select your existing draft post (a .docx, .txt, or .md file)</td></tr>
+        </table>
+        <div class="dp-real-example-sub" style="margin-top:12px;margin-bottom:4px;"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Thesis: any single LLM, no matter how good, has blind spots. One model will confidently write fluff where another catches it. One model will tighten structure while another improves tone. Run the same document through 4 or 5 different models in sequence, each refining what the previous one did, and the output is better than any single model can produce on its own.
+
+Concrete example to reference (real, from last month):
+- Took a 900-word draft of a proposal
+- Ran it through Claude alone: got a polished version, maybe 15% better
+- Ran the same draft through Claude, then GPT-4, then Gemini, then back to Claude: got a version where the structural argument was noticeably stronger, the jargon was stripped, and two factual hedges had been flagged that the author hadn't noticed
+
+What the reader should try today: pick a document they care about, hand it to 3 different models in sequence with the same prompt, compare the result to running it through any one model once.
+
+Call to action at the end: link to a tool that automates this — multiple models, single document, convergence loop. (This is WaxFrame, but the post should not name it overtly — the link speaks for itself.)</pre>
+      </div>
+
       <div class="dp-field-divider"></div>
 
       <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
-          Go to Setup 5 — Starting Document. Paste your draft post or article using the Paste Text button.
+          Go to Setup 4 — Reference Material if you have thesis statements, source material, key data points, or anything else the hive should reference but not edit. Then on Setup 5 — Starting Document, paste or upload your existing draft. The hive cannot browse the web — anything you want it to reference must be pasted into Reference Material first.
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste your key points, your angle, and anything you specifically want included or avoided.
+          Go to Setup 4 — Reference Material and paste your key points, your angle, source material, and anything you specifically want included or avoided. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
         </div>
       </div>
 
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
-        <div class="dp-field-label">Rounds</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>3–5 rounds for most posts</div></div>
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈13 minutes · 16 rounds (measured, not estimated) — refining a strong existing draft with Reference Material guidance. Voice-driven posts take more rounds than transactional documents because reviewers tune phrasing and rhythm sentence by sentence. The recent run (Blog — Why I Stopped Trusting One-Shot AI v1.0) reached majority convergence at Round 16.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -1178,7 +1206,7 @@ Sender:
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.21.21"></script>
+<script src="version.js?v=3.21.22"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
