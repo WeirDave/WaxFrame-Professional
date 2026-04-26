@@ -2,6 +2,49 @@
 
 ---
 
+## v3.21.16 Pro — Build `20260425-016`
+**Released:** April 25, 2026
+
+Builder hallucination fix. Verified against a real session (Thank-You — Marco Contractor, Round 5) where the Builder fabricated a USER DECISION wholesale: invented the conflict, used a stale `CURRENT` that wasn't in the returned document anymore, attributed both options to AIs who responded with "no changes needed" that round, and silently re-applied a previously-rejected suggestion to the document. The user could see all three failures simultaneously — the Current: link couldn't scroll-to-text because the text wasn't there, the option attributions were verifiably wrong against the live console transcript, and the document had quietly changed without any reviewer asking for that change.
+
+This is not a UI bug. The data going into the conflict panel was poisoned at source by the Builder LLM. Two-layer fix: prompt hardening (preventive) and app-side validation (defensive). Both ship in the same release because LLMs will hallucinate regardless of prompt — the validator catches what the rules miss.
+
+### Builder prompt — anti-hallucination rules
+
+Appended a new **ANTI-HALLUCINATION RULES** block to `BUILDER_INSTRUCTIONS.refine`'s USER DECISION format section, after the existing rules and the em-dash rule. Four rules, each addressing one of the failure modes observed in the test session:
+
+- **THIS-ROUND ONLY** — only emit a USER DECISION for a phrasing one or more reviewers proposed an alternative for in this round. No carrying conflicts forward. No re-surfacing previously-rejected suggestions. This addresses the "Builder dredged up Perplexity's Round 4 rejected proposal and re-attributed it to Grok in Round 5" failure.
+- **ATTRIBUTION INTEGRITY** — each `OPTION_N`'s named AI must have proposed that option's exact text (or unambiguous near-paraphrase) in their response in this round. Do not attribute options to AIs whose response was "NO CHANGES NEEDED." This addresses the "Grok said no changes needed but the Builder claimed Grok suggested an option" failure.
+- **CURRENT MUST BE LIVE** — `CURRENT` must be verbatim text that exists in the document the Builder is emitting in `%%DOCUMENT_START%%`. The Builder is told explicitly to perform a substring check before finalising the conflicts block. This addresses the "Current: link unfindable in document" failure that surfaced as a broken highlighter.
+- **DO NOT BOTH APPLY AND FLAG** — if a reviewer's suggestion was applied to the document, do not also surface it as a USER DECISION. The user resolves USER DECISIONs by replacing `CURRENT` with their chosen option in the document — both ends of that operation must be live in the doc. This addresses the silent-application failure where the Builder applied a change AND surfaced it as a choice.
+
+### App-side validation — `validateUserDecisions()`
+
+New function in `app.js` next to `extractConflicts()`. Runs after `extractConflicts()` returns and before `window._lastConflicts` is set, only on the multi-reviewer Builder synthesis path (the Builder Only path has no reviewer responses to validate against, so it's skipped). Three checks per USER DECISION:
+
+1. **CURRENT must be a live substring of the returned document.** Case-insensitive `String.includes()` check. If `CURRENT` isn't in the doc, the resolution mechanism (replace CURRENT with chosen option in the doc) cannot work — drop the entire decision and log a `'warn'`-level console message naming the suppressed CURRENT.
+2. **Each option's named AIs must have actually said something resembling the option text in their response THIS round.** Attribution string is split on `,`, `/`, `&`, and " and " (case-insensitive). Each token is looked up in the round's reviewer set. AIs absent from the round, or whose `noChanges` flag is set, are stripped from the attribution. AIs present in the round get a substring check: their response (lowercased) must contain the option text (lowercased). Strip the attribution if not. Log every strip.
+3. **After stripping, must have at least 2 verifiable options.** If fewer than 2 options retain at least one verified attribution, drop the whole decision. Log the suppression with the question text preview.
+
+Reviews shape consumed: `[{ ai: { id, name }, response, success, noChanges }, ...]` — already constructed at line ~6113 of `app.js` as `successfulReviews`. Validator is wired in at the call site immediately after `extractConflicts()` and mutates `conflicts.userDecisions` in place before the result is stored in `window._lastConflicts`.
+
+Every drop and strip surfaces in the live console as a yellow `'warn'` message, so when the validator catches a hallucination the user can see what was suppressed and why. This is intentional: silent correction would hide the underlying Builder reliability issue. Visible correction lets the user see whether their chosen Builder model is reliable.
+
+### Files changed
+
+- `app.js` — Appended ANTI-HALLUCINATION RULES block to `BUILDER_INSTRUCTIONS.refine` USER DECISION rules section. New `validateUserDecisions()` function inserted after `extractConflicts()` (~80 lines including header comment). Validator wired in at the multi-reviewer Builder synthesis call site (right after `extractConflicts()`, before `window._lastConflicts` assignment). `BUILD` bumped to `20260425-016`.
+- `index.html` — `waxframe-build` meta bumped to `20260425-016`. `app.js?v=3.21.16` cache-bust.
+- `version.js` — `APP_VERSION` `v3.21.16 Pro`.
+- `CHANGELOG.md` — this entry.
+
+### Notes for the user
+
+The validator only protects rounds run on v3.21.16 and later. USER DECISIONs already saved in an in-flight session from a prior build will not be retroactively cleaned. To clear a hallucinated decision in a session that pre-dates this build: pick Custom and type the live document text, or use the bypass option to ignore the decision and let the next round proceed.
+
+If you see frequent `'warn'` messages from the validator on a specific Builder model, that model is hallucinating during synthesis. Consider switching Builders via Change Builder on the Work screen.
+
+---
+
 ## v3.21.15 Pro — Build `20260425-015`
 **Released:** April 25, 2026
 
