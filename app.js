@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-013';         // build stamp — update each session
+const BUILD       = '20260425-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -6150,6 +6150,7 @@ async function runRound() {
     runBtnU?.classList.remove('running');
     if (runBtnU) runBtnU.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
     stopRoundTimer();
+    projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
     // 🎉 Unanimous — full scene: black → fog + whirr → image + fanfare + fireworks.
     // Escape or click skips. User decides when to finish via the Finish button.
@@ -6191,6 +6192,7 @@ async function runRound() {
     runBtn?.classList.remove('running');
     if (runBtn) runBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
     stopRoundTimer();
+    projectClockPause(); // pause project clock at convergence — user can resume manually if they keep iterating
     hideSmokerOverlay();
     // 🎉 Hive Approved — majority convergence earns the fanfare
     playFlyingCarSound();

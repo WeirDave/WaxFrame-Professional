@@ -2,6 +2,40 @@
 
 ---
 
+## v3.21.15 Pro — Build `20260425-015`
+**Released:** April 25, 2026
+
+A small follow-up to v3.21.14: project clock now stops at convergence, plus the Résumé playbook gets its own real-world example block (matching the JD playbook) with a callout teaching mid-stream Notes injection.
+
+### Project clock stops at convergence
+
+The project clock kept ticking after the convergence flyby fired. The byline at export time would then include any minutes the user spent reading the convergence message, exporting, or just looking at the screen — making the reported "time to produce" inaccurate. The Dana Reyes résumé that converged in 11 rounds reported 11 minutes in the byline, but wall-clock from Round 1 start to majority convergence was 29 minutes (with a ~15-minute idle gap mid-run that the clock correctly didn't count). The remaining gap between actual convergence time and byline time was the post-convergence drift this fixes.
+
+Added a `projectClockPause()` call at both convergence detection points in `app.js`: the unanimous path (line ~6152, all reviewers report no further changes) and the majority path (line ~6193, 4+ of 6 satisfied with holdouts). Both already called `stopRoundTimer()` at the same hook point — the project clock was the missing companion. Pause, not reset — so if the user keeps iterating after majority convergence (which is allowed), they can resume the clock manually via the play button.
+
+### Résumé playbook — measured 11-round real-world example
+
+The Résumé playbook said `3–5 rounds typical — more if starting from scratch` — same aspirational pattern as the JD playbook before it got measured in v3.21.14. After running the Dana Reyes Wireless résumé project end-to-end with reference materials (target job posting) and a Notes payload added on Round 2, the real number is **10–12 rounds**. Round 11 reached majority convergence (4 of 6 AIs satisfied) with 3 of those 4 simply confirming no further changes needed.
+
+Updated the Rounds line: *"10–12 rounds typical (measured, not estimated) — even refining a strong existing draft with reference materials and notes, real convergence on a quality résumé takes 10+ rounds. Round 11 reached majority convergence (4 of 6 AIs satisfied) with 3 of those 4 simply confirming no further changes needed."*
+
+Added a **Real-world example — Résumé that took 11 rounds** block matching the JD playbook structure, with concrete values for every Project screen field (project name, version, document type, target audience, desired outcome, scope and constraints, tone and voice, additional instructions, length constraint, starting document choice — Paste Text in this case) plus the verbatim starting document as a Courier New `<pre>` block and the Notes payload added after Round 2 as a separate `<pre>` block.
+
+### Mid-stream Notes injection — taught explicitly in the Résumé playbook
+
+Between the starting document `<pre>` and the notes payload `<pre>`, added a prominent **Mid-stream Notes injection — paste between Round 2 and Round 3, not at the start** callout. Where the JD playbook teaches **upfront notes injection** (everything loaded at Round 1), the Résumé playbook now teaches **mid-stream notes injection** as a deliberate technique: hold key facts back, let the hive read the existing draft on its own terms, then drop "I forgot to mention" details mid-project.
+
+The callout explains the workflow (paste between Round 2 and Round 3, the next round runs as Builder Only and incorporates the new facts directly without another reviewer voting cycle), the design semantics (Notes are one-shot — applied to the next round only, then cleared automatically), and the use case (forgotten facts or new context introduced mid-project without restarting from scratch). Two distinct valid techniques are now taught across the playbooks instead of one.
+
+### Files changed
+
+- `index.html` — `waxframe-build` meta bumped to `20260425-015`. `app.js?v=3.21.15` cache-bust.
+- `app.js` — `projectClockPause()` calls added at both convergence detection points (unanimous and majority). `BUILD` bumped to `20260425-015`.
+- `version.js` — `APP_VERSION` `v3.21.15 Pro`.
+- `document-playbooks.html` — Résumé playbook Rounds line updated to measured 10–12 with the Round 11 majority-convergence detail. New Real-world example block (Dana Reyes 11-round test) inserted after the existing Step 3 scratch-note. New Mid-stream Notes injection callout between the starting document `<pre>` and the notes payload `<pre>`. Div balance verified 365 / 365.
+
+---
+
 ## v3.21.14 Pro — Build `20260425-013`
 **Released:** April 25, 2026
 
@@ -83,13 +117,13 @@ Result: refresh at any point during project setup is now safe across all three S
 
 ### Files changed
 
-- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `pasteText` textarea `oninput` updated to call new `handlePasteTextInput()`. `waxframe-build` meta bumped to `20260425-013`. `app.js?v=3.21.14` cache-bust.
+- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `pasteText` textarea `oninput` updated to call new `handlePasteTextInput()`. `waxframe-build` meta `20260425-013`. `app.js?v=3.21.14` cache-bust.
 - `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (now 9px per Path A), 1500px (9px per Path A floor), 1600px (hide). `.dp-real-example` block of rules for the playbook example card. New `.welcome-brand .app-version-stamp` override for Path A welcome pair. `.nav-panel-version` font-size changed from 10px to 9px per Path A.
 - `README.md` — tagline edit.
 - `waxframe-user-manual.html` — tagline edit (print header sub).
-- `document-playbooks.html` — JD playbook `Rounds` line rewritten, new `Real-world example` block inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
-- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` bumped to `20260425-013`.
-- `version.js` — `APP_VERSION` bumped to `v3.21.14 Pro`.
+- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` `20260425-013`.
+- `version.js` — `APP_VERSION` `v3.21.14 Pro`.
+- `document-playbooks.html` — JD playbook Rounds line rewritten with measured 22-round data. New Real-world example block (Altura Systems JD test) inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
 
 ### Validation prior to this release
 
