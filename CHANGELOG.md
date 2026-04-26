@@ -2,6 +2,93 @@
 
 ---
 
+## v3.21.22 Pro — Build `20260426-005`
+**Released:** April 26, 2026
+
+Two threads. The first is a five-day-old UX/architecture bug discovered during the Wi-Fi 7 slide-deck playbook test today: the Notes drawer was being silently prefilled with a copy of the assembled project goal at session start, then auto-wiped after Round 1 by a guarded cleanup branch that existed only to mop up the prefill. Both halves of that ugly pair are gone now, and a stale `if (round === 1)` guard that was leftover from the prefill era has also been removed so notes-wipe behavior is now symmetric across the two Builder-run paths. The second thread is the Blog Post playbook update with measured Convergence data — first refining-a-draft real-world example block in the playbook suite.
+
+### Notes drawer prefill removed — and the asymmetric round-1 wipe guard alongside it
+
+**The bug.** Lines 4727–4731 of `app.js` contained an unconditional prefill: on round 1 of any new session, the Notes drawer's textarea (`workNotes`) was populated with `Project goal: ${assembleProjectGoal()}`. The user did not see this happen unless they opened the drawer from the Work screen. The byline counter showed "1 note" at session start, but most users (including the developer running every test in this release line) interpreted that as *the system has notes for me* rather than *the system has put my project goal in there with a confusing label*.
+
+**Origin.** Introduced in **v3.18.1 (April 21, 2026)** with no explicit changelog entry — confirmed by `git log -p --all -S 'Pre-fill notes with project goal'` showing the line first appearing in the v3.18.1 commit. Lived in the codebase across roughly 30 releases (v3.18.1 → v3.21.21) and was active during every project run during that window — Marco Contractor Thank-You, Ferris-at-Lightkeeper Outreach, Stratton County RFP, JD test, Résumé test, Blog Post, every measured-rounds entry currently in the playbook.
+
+**Scope of impact — corrected.** A first-pass analysis suggested the bug inflated Builder context every round of every project for ~30 releases. That framing was wrong. A second wipe site at line 6406 contained the comment *"Clear notes after round 1 so the auto-filled goal doesn't carry forward"* — meaning whoever introduced the prefill at line 4727 also wrote a guarded cleanup branch in `runRound` to wipe it after the first round. The bug was therefore active for **exactly Round 1 of each session**, not every round. From Round 2 onward, the Notes textarea was empty (assuming the user had not typed anything else), and the Builder received only the documented `PROJECT CONTEXT` block — bit-for-bit identical to post-fix behavior.
+
+This makes the bug a **UX-and-architectural-cleanliness bug** more than a meaningful-performance bug. Tracing through `buildPromptForAI()` at line 5772:
+
+- **Reviewers** (5 of 6 AIs in the default hive — Claude, ChatGPT, Gemini, Grok, Perplexity) — see the documented `PROJECT GOAL` block. They do not see `USER NOTES` in any path. Reviewer behavior pre-fix and post-fix is bit-for-bit identical. Every "the hive caught X" anecdote from prior testing (corporate-filler sentence in the Ferris outreach, dropped `[Your Name]` placeholder in the Marco letter, factual hedges in the Blog Post) was a reviewer catch — pure signal, unaffected by this bug.
+- **Builder, Round 1 only** (1 of 6 AIs, almost always DeepSeek in this release line) — saw the project goal twice: once truncated as `PROJECT CONTEXT` (300-char summary), once full as `USER NOTES FOR THIS ROUND:` (which contained the prefilled assembled goal). One-shot extra goal-anchoring at the start of each session.
+- **Builder, Round 2 and beyond** — saw the project goal once, as `PROJECT CONTEXT`. The `USER NOTES` block was empty (unless the user had typed something) because line 6406 wiped the textarea after Round 1.
+
+**Why it was wrong on principle even though impact was small.** Three reasons:
+
+1. **It contradicted the documented architecture.** The user manual, every playbook, and the prompt-editor docs describe Notes as *Builder-only round-specific directives* — distinct from Project Goal which all reviewers and the Builder receive every round. Prefilling Notes with the project goal violated the documented separation of concerns.
+
+2. **It surprised users at the worst moment.** When a user opens the Notes drawer on a new project, expecting an empty textarea (as documented), and finds a wall of project-goal text staring back labeled "Project goal:" — that is exactly the friction WaxFrame's playbook documentation is built to prevent. The drawer was inviting confusion at the start of every new project.
+
+3. **The user-typed-notes path was corrupted on Round 1.** When a user opened the drawer on Round 1 to type a real note, the textarea already contained the prefilled goal block. Two paths emerged: select-all-delete-then-type (clean — Builder receives only the user's note) or skim-and-append (corrupted — Builder receives `Project goal: <full goal>\n\n<user's actual note>` as one big USER NOTES block, weighting the user's specific directive alongside the full reassembled goal). How often the second path happened across testing is unknowable retroactively, but it could happen on Round 1 of any session.
+
+**The cleanup branch at line 6406 was the second tell.** The presence of `if (round === 1) { ... clear notes ... }` with the comment *"Clear notes after round 1 so the auto-filled goal doesn't carry forward"* is direct evidence that the prefill was a deliberate choice that someone immediately recognized would cause problems if it persisted. The fix at line 6406 only addressed the problem in `runRound`; the equivalent code in `runBuilderOnly` at line 6056 always wiped notes unconditionally after every Builder run. So the two Builder-run paths had asymmetric Notes behavior — `runBuilderOnly` wiped after every round, `runRound` only wiped after Round 1. With the prefill gone, the `round === 1` guard becomes a fossil that produces real asymmetric behavior: Notes typed for Round 5 of a session via `runRound` would carry forward to Round 6's textarea, while Notes typed for Round 5 via `runBuilderOnly` would not. Same user, same intent, different result depending on which footer button they clicked.
+
+**The fix.** Two surgical changes in `app.js`:
+
+1. **Lines 4727–4731 (the prefill).** Removed the `if (isNewSession && round === 1 && goal) { notesTa.value = 'Project goal: ' + goal }` block. Replaced with a twelve-line guard comment explaining what was removed, why, and the v3.21.22 release tag for future `git blame` lookups.
+2. **Lines 6406–6410 (the asymmetric wipe guard).** Removed the `if (round === 1)` guard around the notes-wipe in `runRound`. The wipe now runs unconditionally after every successful Builder run, matching `runBuilderOnly` line 6056. Added an eleven-line comment block documenting the cleanup, naming the original buggy behavior, and naming v3.21.22 so future `git blame` finds this entry.
+
+Both wipes are guarded by `if (!builderHadError)` at the function level, so a Builder failure preserves the user's typed notes for retry. That behavior was already correct and was not touched.
+
+**Notes drawer contract — unified.** The four-step contract is now the same regardless of which footer button the user clicks:
+
+1. On session start, drawer is empty.
+2. User types a note (or doesn't).
+3. On Smoke the Hive or Send to Builder click: capture notes into history (for transcript / revert), send notes to Builder in the prompt envelope, run the round.
+4. On Builder success: wipe textarea, reset footer button styling, save session. On Builder failure: preserve notes textarea so retry doesn't lose typing.
+
+This matches the contract the documentation has always described. The code now matches the docs.
+
+**Impact on prior testing — what is and is not known.**
+
+Factual:
+- Reviewer behavior pre-fix and post-fix is identical. Every reviewer catch in prior testing remains valid signal.
+- The Builder was burning extra context tokens on Round 1 of every session for ~30 releases. Whether that one-round extra goal-anchoring measurably degraded synthesis quality is unknown without controlled re-runs.
+- The convergence numbers in the playbooks (`≈19 min · 21 rounds`, `≈11 min · 11 rounds`, `≈13 min · 16 rounds`, `≈1 min · 3 rounds × 2`) are real measurements from real runs collected under the prevailing build at the time of measurement. They remain "measured, not estimated" by the convention's standard.
+
+Unknown:
+- Whether post-fix runs converge faster, the same, or marginally differently. Plausible mechanisms exist for "very slightly faster" (one round of cleaner Builder context), "essentially the same" (modern LLMs handle redundant Round 1 context gracefully and Round 1 is the draft round where extra goal-anchoring may be roughly neutral anyway), and there's even an outside chance of "very slightly worse" if the truncated 300-char `PROJECT CONTEXT` was losing detail that the prefilled full-goal in the notes block was completing on Round 1. Without controlled A/B re-runs, all three are live possibilities. The expected magnitude of any of these effects is small, given the bug only acted on one round per session.
+
+A re-run of the Marco Contractor Thank-You playbook on this build will provide one data point (3 rounds in 1 minute pre-fix → ? rounds in ? minutes post-fix). Not done in this release; will be captured opportunistically.
+
+### Blog Post playbook — first measured refining-a-draft real-world example
+
+The Blog Post playbook joins JD, Résumé, Thank-You, and Email & Outreach with a Convergence label and a real-world example block. Distinct from the others in two ways:
+
+1. **First refining-a-draft example in the playbook suite.** Thank-You and Email & Outreach are from-scratch; JD is from-scratch with reference materials; Résumé is refining a short existing draft. The Blog Post example is the first to teach the *upload an existing draft* workflow with Reference Material providing thesis-and-CTA guidance to the hive. A new sub-text on the example block calls this distinction out so a reader running the playbook understands they're seeing a different shape than the Marco Contractor / Ferris from-scratch examples.
+
+2. **Voice-driven content takes more rounds.** The measured run took 16 rounds and 13 minutes — three to five times what the previous playbook entry's `3–5 rounds for most posts` suggested. The new Convergence line acknowledges this directly: *"Voice-driven posts take more rounds than transactional documents because reviewers tune phrasing and rhythm sentence by sentence."* This sets correct expectations for users running blog playbooks for the first time and avoids the disappointment that the previous estimate would have produced.
+
+**Step 5 split rewritten** to route both refining-a-draft and from-scratch paths through Setup 4 — Reference Material, with the no-fetch documentation line repeated (since blog posts often reference real sources, statistics, and current events that the hive cannot fetch). Matches the pattern established by Email & Outreach.
+
+**Real-world example block** uses verbatim Project-screen values from the actual run (Document type `Blog Post`, Target audience naming senior engineers and technical leads, Desired outcome describing the multi-model thesis and click-through CTA, Scope and constraints listing the four required topics, Tone and voice as first-person/slightly-opinionated/conversational, Additional instructions banning specific buzzwords, Length Constraint left blank, Starting Document = Upload File) plus the verbatim Reference Material payload as a Courier `<pre>` block (thesis, concrete 900-word-proposal example with specific numbers, what-to-try-today, and the don't-name-WaxFrame CTA framing). No Notes payload in the example because the actual run used none.
+
+**Bonus signal.** The Blog Post run was conducted on v3.21.21 — the build immediately after the backup race fix v2 and filename schema flip. The two backups produced during the test (`Blog-Why-I-Stopped-Trusting-One-Shot-AI-v1-0-WaxFrame-Backup-20260426-1211.json` at 1MB and `...-1227.json` post-rounds) confirm both v3.21.21 fixes holding under a real-world 16-round, 13-minute, ~5KB document session: filenames use the new project-name-first schema, no `(1)`-suffixed sibling appeared for either backup, transcript header stamps `v3.21.21 Pro` / build `20260426-004` correctly. v3.21.21's backup race fix v2 is verified working in production.
+
+### Files changed
+
+- `app.js` — Removed the round-1 Notes prefill block at lines 4727–4731. Replaced with a twelve-line guard comment documenting the fix and naming v3.21.22. Removed the `if (round === 1)` guard around the notes-wipe in `runRound` at lines 6406–6410. Replaced with an eleven-line guard comment documenting the cleanup. Both wipes (line 6057 in `runBuilderOnly` and line 6418 in `runRound`) now behave identically: capture notes into history, send to Builder, wipe textarea on success, preserve textarea on Builder failure. `BUILD` constant `20260426-004` → `20260426-005`. Comment-header build → `20260426-005`. No other code changes — this is a removal-and-symmetry fix.
+- `index.html` — `waxframe-build` meta `20260426-004` → `20260426-005`. `app.js?v=3.21.21` → `3.21.22`. `style.css?v=3.21.21` → `3.21.22`. `version.js?v=3.21.21` → `3.21.22`. Comment-header build → `20260426-005`.
+- `style.css` — Comment-header build only. No CSS changes.
+- `version.js` — `APP_VERSION` `v3.21.21 Pro` → `v3.21.22 Pro`.
+- `document-playbooks.html` — Blog Post playbook updates: Rounds line `3–5 rounds for most posts` → `Convergence: ≈13 minutes · 16 rounds (measured, not estimated)` with the voice-driven-content explanation; Step 5 split rewritten to route both refining-a-draft and from-scratch paths through Setup 4 — Reference Material with no-fetch documentation; new Real-world example block (Blog — Why I Stopped Trusting One-Shot AI v1.0, 16 rounds, 13 minutes) — first refining-a-draft example block in the playbook suite. Div balance verified 377 / 377. Cache-bust + comment-header + meta sweep to `3.21.22` / `20260426-005`.
+- `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-bust + comment-header + meta sweep to `3.21.22` / `20260426-005`. No content changes.
+- `CHANGELOG.md` — this entry.
+
+### What to expect after deploy
+
+Open the Notes drawer on any fresh project — it is empty, as the documentation has always claimed. Type a note. Click Smoke the Hive or Send to Builder. After the round completes successfully, the textarea is empty again, ready for the next round's directive. The behavior is now identical regardless of which footer button you clicked. If the Builder fails for any reason (network, API key, etc.), your typed notes remain in the textarea so retry doesn't lose typing. The Blog Post playbook now displays `Convergence: ≈13 minutes · 16 rounds (measured)` and includes a full real-world example block that a user can copy verbatim to reproduce the 16-round refine-a-draft convergence on their own draft.
+
+---
+
 ## v3.21.21 Pro — Build `20260426-004`
 **Released:** April 26, 2026
 

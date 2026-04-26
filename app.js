@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260426-004
+//  Build: 20260426-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260426-004';         // build stamp — update each session
+const BUILD       = '20260426-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4724,11 +4724,15 @@ function initWorkScreen(isNewSession = false) {
   const ps = document.getElementById('phaseSelect');
   if (ps) ps.value = phase;
 
-  // Pre-fill notes with project goal on round 1 of a new session only
-  if (isNewSession && round === 1 && goal) {
-    const notesTa = document.getElementById('workNotes');
-    if (notesTa) notesTa.value = `Project goal: ${goal}`;
-  }
+  // Notes drawer is intentionally NOT prefilled. Notes are Builder-only,
+  // round-specific directives — distinct from Project Goal (which all reviewers
+  // and the Builder receive every round). A prior version of this function
+  // prefilled `workNotes` with `Project goal: ${goal}` on round 1 of a new
+  // session, which (1) duplicated the goal into the Builder-only channel,
+  // (2) inflated the Builder's context vs. the reviewers' (breaking the hive's
+  // symmetric-input model), and (3) silently surprised users who opened the
+  // drawer expecting it to be empty as documented in every playbook. Removed
+  // in v3.21.22.
 
   // Reset per-session bee selection to all active AIs
   window.sessionAIs = new Set(activeAIs.map(a => a.id));
@@ -6399,11 +6403,20 @@ async function runRound() {
   });
   window._lastConflicts = null;
 
-  // Clear notes after round 1 so the auto-filled goal doesn't carry forward
-  if (round === 1) {
-    const notesTa = document.getElementById('workNotes');
-    if (notesTa) notesTa.value = '';
-  }
+  // Clear notes after every successful Builder run. Notes are documented as
+  // round-specific directives — once the Builder has applied them, they should
+  // not carry forward to the next round. This matches the wipe in runBuilderOnly
+  // at line 6056, so notes behavior is identical regardless of which footer
+  // button (Smoke the Hive vs Send to Builder) the user clicked. The previous
+  // `if (round === 1)` guard was a fossil from the v3.18.1 → v3.21.21 era when
+  // workNotes was auto-prefilled on round 1 with the project goal — the guard
+  // existed only to clean up that auto-prefill. With the prefill removed in
+  // v3.21.22, the guard becomes asymmetric: it only wipes after Round 1 in
+  // runRound but wipes after every round in runBuilderOnly. Removed the guard
+  // so both paths behave the same.
+  const notesTa = document.getElementById('workNotes');
+  if (notesTa) notesTa.value = '';
+  updateNotesBtnPriority();
 
   round++;
 
