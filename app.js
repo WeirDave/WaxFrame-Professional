@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260426-002
+//  Build: 20260426-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260426-002';         // build stamp — update each session
+const BUILD       = '20260426-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -7819,7 +7819,7 @@ function exportDocument() {
   const totalRounds = round - 1;
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
-  const byline      = `\n\n---\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
+  const byline      = `\n\n---\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
 
   const out      = doc + byline;
   const filename = buildExportName();
@@ -7851,7 +7851,7 @@ function exportTranscript() {
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
 
-  let out = `${eq}\nWAXFRAME v2 — SESSION TRANSCRIPT\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
+  let out = `${eq}\nWAXFRAME — SESSION TRANSCRIPT\nVersion: ${APP_VERSION}\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
 
   const failLabels = { bloat: 'Output too long — Builder expanded document beyond allowed limit', conflicts: 'Missing conflicts block — Builder response rejected', delimiters: 'Malformed output — Builder response could not be parsed', api: 'API error', unknown: 'Unknown error' };
 
@@ -7889,7 +7889,7 @@ function exportTranscript() {
 
   if (doc) {
     out += `${eq}\nFINAL DOCUMENT\n${eq}\n\n${doc}\n\n`;
-    out += `${sep}\nProduced by WaxFrame in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional\n`;
+    out += `${sep}\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional\n`;
   }
 
   const blob = new Blob([out], { type: 'text/plain' });

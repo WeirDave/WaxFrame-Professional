@@ -2,6 +2,88 @@
 
 ---
 
+## v3.21.20 Pro — Build `20260426-003`
+**Released:** April 26, 2026
+
+### Version stamp now appears in exported documents and transcripts
+
+Direct outgrowth of running v1.0 vs v2.0 A/B comparisons on the same project — without a version stamp on the artifact, you have to remember which build produced which file. Now the version is sitting right there in the byline the next time the file gets opened weeks or months from now.
+
+### Document byline — version inline
+
+`exportDocument()` byline before:
+
+```
+---
+Produced by WaxFrame in 3 rounds and 1 minute.
+weirdave.github.io/WaxFrame-Professional
+```
+
+After:
+
+```
+---
+Produced by WaxFrame v3.21.20 Pro in 3 rounds and 1 minute.
+weirdave.github.io/WaxFrame-Professional
+```
+
+Inserted inline rather than as a new line — keeps the footer compact since the user is supposed to strip the byline before sending the document anyway. The `Pro` suffix comes through naturally because it's part of `APP_VERSION` (which is `v3.21.20 Pro` for the Pro edition and would be `v3.21.20 Free` if Free ever adopted the same byline pattern).
+
+`exportTranscript()`'s end-of-transcript byline gets the same change for consistency.
+
+### Transcript header — `Version:` line added, stale `v2` label dropped
+
+`exportTranscript()` header before:
+
+```
+═══════════════════════════════════════════════════════════
+WAXFRAME v2 — SESSION TRANSCRIPT
+Build: 20260426-002
+Project: Thank-You — Marco Contractor
+Rounds completed: 4
+Session duration: 1 minute
+Exported: 4/26/2026, 10:15:01 AM
+═══════════════════════════════════════════════════════════
+```
+
+After:
+
+```
+═══════════════════════════════════════════════════════════
+WAXFRAME — SESSION TRANSCRIPT
+Version: v3.21.20 Pro
+Build: 20260426-003
+Project: Thank-You — Marco Contractor
+Rounds completed: 4
+Session duration: 1 minute
+Exported: 4/26/2026, 10:15:01 AM
+═══════════════════════════════════════════════════════════
+```
+
+Two coordinated changes. First, the `v2` literal in the title line was a stale architecture-era marker that predates the v3.x version line — it made the transcript look like it was from a much older app and conflicted with the actual app version visible elsewhere in the UI. Dropped. The header now reads `WAXFRAME — SESSION TRANSCRIPT`. Second, a new `Version:` line was inserted directly under the title, populated from `APP_VERSION`. The existing `Build:` line was kept because it's the precise stamp diagnostic builds reference — the `Version:` line is the human-readable companion. Together they give both the user-facing version (`v3.21.20 Pro`) and the underlying build stamp (`20260426-003`) for any forensic work.
+
+The stale `v2` literal **only** existed in the user-facing transcript header. The `WaxFrame v2 —` comment headers at the top of `index.html`, `app.js`, and `style.css` reference a different `v2` — the v2 storage architecture generation (matching the `LS_HIVE` / `waxframe_v2_db` / `LS_PROJECT` constants in code). Internal naming, not user-visible. Those are correct as-is and were not touched.
+
+### Why this matters when comparing run-to-run output
+
+Real motivating case: this morning's Thank-You — Marco Contractor v1.0 produced a 9-round, 5-minute output on an earlier build, then v2.0 produced a 3-round, 1-minute output on v3.21.17. The convergence-rate difference between the two versions is direct evidence that the Builder anti-hallucination work and duplicate-option dedup are paying off — but you can only attribute the improvement if you can see *which build produced each file*. With the version stamp baked into both the document footer and the transcript header, A/B comparisons across any future build delta are self-documenting.
+
+### Files changed
+
+- `app.js` — `exportDocument()` byline interpolates `${APP_VERSION}` after `WaxFrame`. `exportTranscript()` header drops the stale `v2` literal and adds a `Version: ${APP_VERSION}` line directly under the title. `exportTranscript()`'s final-document byline matches `exportDocument()`'s pattern. `BUILD` constant `20260426-002` → `20260426-003`. Comment-header build → `20260426-003`.
+- `index.html` — `waxframe-build` meta `20260426-002` → `20260426-003`. `app.js?v=3.21.19` → `3.21.20`. `style.css?v=3.21.19` → `3.21.20`. `version.js?v=3.21.19` → `3.21.20`. Comment-header build → `20260426-003`.
+- `style.css` — Comment-header build only. No CSS changes.
+- `version.js` — `APP_VERSION` `v3.21.19 Pro` → `v3.21.20 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — Cache-bust + comment-header + meta sweep to `3.21.20` / `20260426-003`. No content changes.
+- `api-details.html` — Same cache-bust sweep. No `waxframe-build` meta on this file (by design).
+- `CHANGELOG.md` — this entry.
+
+### What to expect after deploy
+
+Any document or transcript you export from v3.21.20 onward will carry the `v3.21.20 Pro` stamp in its footer (document) or header (transcript). Files exported on prior builds keep whatever footer/header they shipped with — there's no retroactive rewrite. If you go back and export a transcript from an in-flight session that was started on an older build, the new stamp reflects the build that did the export, not the build that ran the rounds — that's correct, since `BUILD` and `APP_VERSION` are set at runtime from the loaded scripts, not from saved session metadata.
+
+---
+
 ## v3.21.19 Pro — Build `20260426-002`
 **Released:** April 26, 2026
 
