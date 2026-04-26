@@ -2,6 +2,38 @@
 
 ---
 
+## v3.21.18 Pro — Build `20260426-001`
+**Released:** April 26, 2026
+
+Cache-bust + comment-header sweep across all eight files. No behavior change. No code change. Zero risk.
+
+### What this fixes
+
+The canonical four-stamp release checklist (`waxframe-build` meta in `index.html`, `APP_VERSION` in `version.js`, `BUILD` constant in `app.js`, `app.js?v=` cache-bust in `index.html`) had been kept in lockstep through every release in the v3.21.x line. Two adjacent stamps had not — `style.css?v=` and `version.js?v=` cache-busts were last bumped to `3.21.11` in v3.21.11 and have been stale through the six releases since (v3.21.14 → v3.21.17). Same browser-cache trap that prompted the v3.21.2 emergency fix: any user upgrading from v3.21.11 to v3.21.17 today is still being served the v3.21.11-era CSS and `version.js` because the URLs the browser sees haven't changed.
+
+Comment-header build stamps inside the source files (the `Build: YYYYMMDD-NNN` line in the top comment of each file) had also drifted. These aren't part of the canonical four-stamp release checklist so they don't get touched by normal release workflow — they just sit there going stale until they get caught in a sweep. Eight files were stale: three core (`index.html`, `app.js`, `style.css` at `20260425-008`) and five helper pages (`waxframe-user-manual.html` at `20260424-013`, `document-playbooks.html` at `20260422-009`, `api-details.html` at `20260425-008`, `what-are-tokens.html` at `20260415-002`, `prompt-editor.html` at `20260414-002`). Same root cause as v3.21.6 noted: comment-header stamps are easy to forget because nothing references them at runtime, but they're misleading when reading source.
+
+Helper-page `<meta name="waxframe-build">` tags were also stale on the four helpers that carry one (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — `api-details.html` has no meta of this kind). All four now reflect the current build.
+
+### Files changed
+
+- `index.html` — `waxframe-build` meta `20260425-017` → `20260426-001`. `app.js?v=3.21.17` → `3.21.18`. `style.css?v=3.21.11` → `3.21.18`. `version.js?v=3.21.11` → `3.21.18`. Comment-header build `20260425-008` → `20260426-001`.
+- `app.js` — `BUILD` constant `20260425-017` → `20260426-001`. Comment-header build `20260425-008` → `20260426-001`. No code changes.
+- `style.css` — Comment-header build `20260425-008` → `20260426-001`. No CSS changes. `!important` count unchanged.
+- `version.js` — `APP_VERSION` `v3.21.17 Pro` → `v3.21.18 Pro`.
+- `waxframe-user-manual.html` — `style.css?v=` and `version.js?v=` cache-busts → `3.21.18`. `waxframe-build` meta `20260424-013` → `20260426-001`. Comment-header build → `20260426-001`. No content changes.
+- `document-playbooks.html` — Same sweep. Comment-header build `20260422-009` → `20260426-001`, meta tag updated. No content changes.
+- `what-are-tokens.html` — Same sweep. Comment-header build `20260415-002` → `20260426-001`, meta tag updated. No content changes.
+- `api-details.html` — Same cache-bust sweep. Comment-header build `20260425-008` → `20260426-001`. No meta tag exists on this file (by design). No content changes.
+- `prompt-editor.html` — Same sweep. Comment-header build `20260414-002` → `20260426-001`, meta tag updated. No content changes.
+- `CHANGELOG.md` — this entry.
+
+### Audit
+
+Post-sweep grep across `*.html`, `*.js`, `*.css`: zero references to any prior stale stamp (`3.21.11`, `3.21.17` for cache-busts; `20260425-008`, `20260425-017`, `20260424-013`, `20260422-009`, `20260415-002`, `20260414-002` for builds). Fourteen references each to `3.21.18` and `20260426-001`, matching expected propagation.
+
+---
+
 ## v3.21.17 Pro — Build `20260425-017`
 **Released:** April 25, 2026
 
