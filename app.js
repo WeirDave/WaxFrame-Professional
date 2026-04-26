@@ -386,11 +386,12 @@ let refTab      = '';        // 'upload', 'paste', or '' (no selection — neith
 let refMaterial = '';        // active reference material text
 let refFilename = '';        // filename if uploaded (informational only)
 let workDocSaveTimer = null;
+let pasteTextSaveTimer = null;
 let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-011';         // build stamp — update each session
+const BUILD       = '20260425-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1878,6 +1879,7 @@ function saveProject() {
     lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
     lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
     docTab,
+    pastedDocument: document.getElementById('pasteText')?.value || '',
     referenceMaterial: refMaterial,
     referenceFilename: refFilename,
     refTab,
@@ -2132,6 +2134,16 @@ function loadSettings() {
       if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
       if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
+      // ── PASTED STARTING DOCUMENT restore (v3.21.13) ──
+      // Mirror of reference material restore: paste textarea content was DOM-only
+      // and lost on refresh until launch. Persisted to LS_PROJECT, restored here.
+      if (typeof p.pastedDocument === 'string') {
+        const pasteTa = document.getElementById('pasteText');
+        if (pasteTa) {
+          pasteTa.value = p.pastedDocument;
+          if (typeof updateProjLineNums === 'function') updateProjLineNums('projPasteNums', pasteTa);
+        }
+      }
       // ── REFERENCE MATERIAL restore (v3.21.0) ──
       if (typeof p.referenceMaterial === 'string') refMaterial = p.referenceMaterial;
       if (typeof p.referenceFilename === 'string') refFilename = p.referenceFilename;
@@ -3880,7 +3892,22 @@ function clearPasteText() {
   ta.value = '';
   updateProjLineNums('projPasteNums', ta);
   updateDocRequirements();
+  saveProject();
   ta.focus();
+}
+
+// Auto-save handler for the Starting Document Paste Text textarea.
+// Persists pasted text to LS_PROJECT (debounced 250ms) so refreshing before
+// launch no longer loses the paste — mirrors how uploaded files persist
+// immediately on processFile and how reference material persists on every
+// keystroke via handleRefPasteInput → saveProject.
+function handlePasteTextInput() {
+  const ta = document.getElementById('pasteText');
+  if (!ta) return;
+  updateProjLineNums('projPasteNums', ta);
+  updateDocRequirements();
+  clearTimeout(pasteTextSaveTimer);
+  pasteTextSaveTimer = setTimeout(() => saveProject(), 250);
 }
 
 // Clear the Reference Material Paste Text textarea
