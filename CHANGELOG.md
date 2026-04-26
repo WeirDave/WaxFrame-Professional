@@ -2,6 +2,88 @@
 
 ---
 
+## v3.21.19 Pro — Build `20260426-002`
+**Released:** April 26, 2026
+
+### 🚨 `Backup Session` was producing a 0-byte file plus a `(1)`-suffixed real file from a single click
+
+A real-world test on the Thank-You — Marco Contractor v1.0 project (3 rounds, 1 minute, majority convergence at 4 of 6) surfaced a bug nobody had caught before: clicking 💾 Backup Session in the hamburger menu produced **two** files in the downloads folder for one click. The first file (`WaxFrame-Backup-{name}-{stamp}.json`) was 0 bytes — MD5 = `d41d8cd98f00b204e9800998ecf8427e`, the well-known empty-file hash. The second file (`WaxFrame-Backup-{name}-{stamp} (1).json` — Chrome's de-dup pattern when the same filename gets requested twice in the same minute) contained the actual 41 KB session payload.
+
+Practical impact: a user who opens their downloads folder and grabs the file with the canonical name (no `(1)` suffix) walks away with an empty file. They only get the real backup if they happen to grab the suffixed copy. Worse, a user who relies on filename autocomplete (`WaxFrame-Backup-...` → tab) gets the empty one too. This is exactly the kind of silent data loss the v3.21.10/v3.21.11 work was meant to eliminate.
+
+### Root cause — race between `URL.revokeObjectURL` and Chrome's download dispatcher
+
+`backupSession()` was constructing the download anchor like this:
+
+```js
+const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+const a    = document.createElement('a');
+a.href     = URL.createObjectURL(blob);
+a.download = `${filename}.json`;
+a.click();
+URL.revokeObjectURL(a.href);   // ← fires synchronously, races the download
+```
+
+Two things conspired:
+
+1. `backupSession()` is **async** because line 7914 awaits `idbGet()` to read the IndexedDB session. By the time `a.click()` runs, the synchronous user-gesture context from the hamburger-menu click has already broken — we're in a microtask continuation, not a sync handler.
+2. `URL.revokeObjectURL(a.href)` runs immediately after `click()`. In Chrome, `click()` only **schedules** the download; the dispatcher reads the blob asynchronously. If the URL gets revoked before the dispatcher reads it, the dispatcher writes a 0-byte placeholder, then internally retries with a fresh handle and writes the real file — Chrome appends `(1)` because the original filename slot is taken.
+
+The fix matches the pattern already proven correct in `exportTranscript()` (line 7891 onward, which has shipped since the IDB migration without anyone reporting empty-file issues): append the anchor to the DOM before clicking, remove it after, and defer the revoke with `setTimeout(..., 1000)` so the dispatcher has a full second to start reading the blob before its URL becomes invalid.
+
+```js
+const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+const url  = URL.createObjectURL(blob);
+const a    = document.createElement('a');
+a.href     = url;
+a.download = `${filename}.json`;
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+setTimeout(() => URL.revokeObjectURL(url), 1000);
+```
+
+Why a full second instead of a tighter timeout: the download dispatcher can take hundreds of milliseconds to start reading on busy systems (large downloads queue, slow disk, heavy tab load). A second is generous enough to cover any realistic case while still letting the URL be reclaimed before page unload. The blob itself is held by reference in the closure, so it isn't GC'd until the timer fires.
+
+### `exportDocument()` carried a related (but not yet biting) version of the same pattern
+
+While auditing the fix, the export-document path at line 7815–7835 was using a stripped-down version of the same anchor pattern:
+
+```js
+const blob = new Blob([out], { type: 'text/plain' });
+const a    = document.createElement('a');
+a.href     = URL.createObjectURL(blob);
+a.download = `${filename}.txt`;
+a.click();
+// no revokeObjectURL at all — tiny memory leak until page unload
+```
+
+Two issues here. First, the missing `revokeObjectURL` is a small memory leak — the blob URL stays alive until the page unloads. Second, the anchor is never DOM-attached, which Chrome currently tolerates but Firefox sometimes refuses to honor on detached anchors. Functionally `exportDocument()` works today (it's a sync function with no await, so the user-gesture context is preserved through `click()`), but it's the same fragile pattern that bit `backupSession()` once async entered the picture. Fixed in this release to match the proven `exportTranscript()` pattern: append, click, remove, revoke. Since the function is sync with an unbroken gesture context, a synchronous revoke is safe — no `setTimeout` needed there.
+
+Now all three download paths in `app.js` (`exportDocument`, `exportTranscript`, `backupSession`) use the same pattern. The async one defers the revoke; the two sync ones revoke synchronously. No more drift between download paths.
+
+### Why this slipped past the v3.21.10/v3.21.11 work
+
+The v3.21.10 release rewrote `backupSession()` to read IDB via `await idbGet()` — the change that introduced async into the download path. The validation at the time confirmed that **session data was being captured correctly into the JSON** (which it was — the `(1)` file in this report has correct, complete v3 backup data). Nobody noticed that an empty companion file was also dropping into the downloads folder, because the validation focused on backup *content* rather than file-system *side effects*. The user-visible symptom — "I clicked once, I have two files, one is empty" — only surfaces if you actually look at your downloads folder right after a backup, which most testing didn't do.
+
+### Files changed
+
+- `app.js` — `backupSession()` download block: append anchor to DOM before click, remove after, defer `URL.revokeObjectURL` via `setTimeout(..., 1000)`. Inline comment block added above the new pattern explaining the race. `exportDocument()` download block: append anchor to DOM, remove after, add the missing `URL.revokeObjectURL` (sync, since the function is sync). `BUILD` constant `20260426-001` → `20260426-002`. Comment-header build `20260426-001` → `20260426-002`.
+- `index.html` — `waxframe-build` meta `20260426-001` → `20260426-002`. `app.js?v=3.21.18` → `3.21.19`. `style.css?v=3.21.18` → `3.21.19`. `version.js?v=3.21.18` → `3.21.19`. Comment-header build → `20260426-002`.
+- `style.css` — Comment-header build `20260426-001` → `20260426-002`. No CSS changes.
+- `version.js` — `APP_VERSION` `v3.21.18 Pro` → `v3.21.19 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — `style.css?v=` and `version.js?v=` cache-busts → `3.21.19`. `waxframe-build` meta → `20260426-002`. Comment-header build → `20260426-002`. No content changes.
+- `api-details.html` — Same cache-bust sweep. Comment-header build → `20260426-002`. No `waxframe-build` meta on this file (by design). No content changes.
+- `CHANGELOG.md` — this entry.
+
+### What to expect after deploy
+
+A fresh Backup Session click will now drop **one** file into your downloads folder, with the full session data, named `WaxFrame-Backup-{project}-{version}-{YYYYMMDD-HHmm}.json`. No 0-byte sibling. No `(1)` suffix unless you genuinely click Backup twice in the same minute (in which case the second one correctly gets `(1)` because the filename slot is already taken — that's expected behavior, not the bug).
+
+Existing 0-byte backup files in your downloads folder are confirmed empty and can be safely deleted. The corresponding `(1)`-suffixed file is the real backup.
+
+---
+
 ## v3.21.18 Pro — Build `20260426-001`
 **Released:** April 26, 2026
 
