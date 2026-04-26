@@ -2,7 +2,7 @@
 
 ---
 
-## v3.21.13 Pro — Build `20260425-011`
+## v3.21.13 Pro — Build `20260425-012`
 **Released:** April 25, 2026
 
 ### Tagline punctuation fixed everywhere
@@ -73,14 +73,22 @@ Reference Material → Paste Text and Starting Document → Paste Text had no wa
 
 Two new functions in `app.js` (`clearPasteText` and `clearRefPasteText`) sized to mirror the existing `clearUploadedFile` pattern. Two new HTML rows in `index.html` reusing the existing `.file-clear-row` CSS class so the visual treatment matches the upload tab's clear button exactly. No new CSS needed.
 
+### Pasted starting document now persists like uploaded files do
+
+Behavioral asymmetry between Upload File and Paste Text in the Starting Document setup that had been there since the upload feature shipped: uploading a file triggered an immediate `saveSession()` after extraction, so the document text was on disk the moment the green status pill appeared. Pasting text into the textarea, by contrast, only persisted when the user clicked Launch — until then it was DOM-only and a refresh blew it away. No data loss for completed projects, but a one-off behavior gap that surprised users on first encounter.
+
+Closed the gap. Added a `pastedDocument` field to `LS_PROJECT` (alongside the existing `referenceMaterial` field), with a debounced 250ms auto-save on every keystroke in the paste textarea. `loadSettings` restores the field to the textarea on page load, mirroring how reference material is restored. `clearPasteText` now also calls `saveProject()` so the cleared state persists. `handlePasteTextInput` is the new oninput handler — replaces the previous inline `updateProjLineNums + updateDocRequirements` calls with a function that does both plus the debounced save.
+
+Result: refresh at any point during project setup is now safe across all three Starting Document modes — upload, paste, and scratch.
+
 ### Files changed
 
-- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `waxframe-build` meta bumped to `20260425-011`. `app.js?v=3.21.13` cache-bust.
+- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `pasteText` textarea `oninput` updated to call new `handlePasteTextInput()`. `waxframe-build` meta bumped to `20260425-012`. `app.js?v=3.21.13` cache-bust.
 - `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (now 9px per Path A), 1500px (9px per Path A floor), 1600px (hide). `.dp-real-example` block of rules for the playbook example card. New `.welcome-brand .app-version-stamp` override for Path A welcome pair. `.nav-panel-version` font-size changed from 10px to 9px per Path A.
 - `README.md` — tagline edit.
 - `waxframe-user-manual.html` — tagline edit (print header sub).
 - `document-playbooks.html` — JD playbook `Rounds` line rewritten, new `Real-world example` block inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
-- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. Two new functions `clearPasteText` and `clearRefPasteText`. `BUILD` bumped to `20260425-011`.
+- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` bumped to `20260425-012`.
 - `version.js` — `APP_VERSION` bumped to `v3.21.13 Pro`.
 
 ### Validation prior to this release

@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260425-011">
+  <meta name="waxframe-build" content="20260425-012">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.21.11">
@@ -473,7 +473,7 @@
               <div class="proj-ta-nums" id="projPasteNums"><div>1</div></div>
               <div class="proj-ta-inner">
                 <textarea id="pasteText" class="proj-ta" placeholder="Paste your existing document text here…"
-                  oninput="updateProjLineNums('projPasteNums', this); updateDocRequirements()"></textarea>
+                  oninput="handlePasteTextInput()"></textarea>
               </div>
             </div>
           </div>
