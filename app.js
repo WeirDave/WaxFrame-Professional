@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-016';         // build stamp — update each session
+const BUILD       = '20260425-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -571,6 +571,34 @@ function playRoundCompleteSound() {
 }
 
 // ── SMOKER START SOUND — soft breath of smoke ──
+// ── ALERT / WARNING SOUND — short two-chirp attention tone ──
+// Used when a destructive-action confirmation modal opens (e.g. discard
+// document confirmation in the Finish modal, v3.21.17). Two ascending sine
+// chirps ~80ms each with a 30ms gap between — short enough not to be
+// annoying, distinct enough to make the user actually look at the screen.
+function playAlertSound() {
+  if (_isMuted) return;
+  try {
+    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
+    const now  = ctx.currentTime;
+    const chirp = (startAt, freq) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type  = 'sine';
+      o.frequency.setValueAtTime(freq, startAt);
+      g.gain.setValueAtTime(0, startAt);
+      g.gain.linearRampToValueAtTime(0.18, startAt + 0.012);
+      g.gain.setValueAtTime(0.18, startAt + 0.06);
+      g.gain.exponentialRampToValueAtTime(0.001, startAt + 0.085);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(startAt); o.stop(startAt + 0.09);
+    };
+    chirp(now,         880);
+    chirp(now + 0.11, 1320);
+    setTimeout(() => ctx.close(), 400);
+  } catch(e) { /* audio not supported — fail silently */ }
+}
+
 function playSmokerSound() {
   if (_isMuted) return;
   try {
@@ -4934,6 +4962,22 @@ function showFinishModal() {
   if (modal) modal.classList.add('active');
   projectClockPause();
   window._finishExported = false; // reset export tracking for this modal open
+  // Reset button visuals to match the flag — without this, a prior session's
+  // "✅ Exported!" textContent and finish-modal-btn-done class persist across
+  // modal close/reopen, while the flag is freshly reset to false. Result: the
+  // export buttons LOOK done but the discard guard fires anyway because the
+  // flag says nothing was exported. Bug surfaced when the user exported, the
+  // modal reopened (e.g. via convergence event re-firing showFinishModal),
+  // and "Start New Project" then triggered the "haven't exported anything"
+  // confirm despite the visible green checkmark on the Export button.
+  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn && btn.dataset.originalHtml) {
+      btn.innerHTML = btn.dataset.originalHtml;
+      btn.disabled = false;
+      btn.classList.remove('finish-modal-btn-done');
+    }
+  });
 
   const hasDoc     = !!(document.getElementById('workDocument')?.value?.trim());
   const hasHistory = history.length > 0;
@@ -4954,8 +4998,32 @@ async function finishAndNew() {
   const liveDoc = document.getElementById('workDocument')?.value?.trim() || '';
   const hasContent = liveDoc.length > 0 || history.length > 0;
   if (!window._finishExported && hasContent) {
-    if (!confirm('⚠️ You haven\'t exported anything yet.\n\nClick Cancel to go back and export your document first.\nClick OK to discard your document and start fresh.')) return;
+    // Replaced native confirm() with a styled modal in v3.21.17. The native
+    // dialog (a) was visually jarring against the WaxFrame aesthetic, and
+    // (b) blocks the main thread, preventing any pre-dialog alert sound from
+    // playing reliably. The custom modal opens via openDiscardConfirm() which
+    // also fires playAlertSound() so the user actually notices.
+    openDiscardConfirm();
+    return;
   }
+  hideFinishModal();
+  await clearProject();
+  goToScreen('screen-project');
+}
+
+function openDiscardConfirm() {
+  const modal = document.getElementById('discardConfirmModal');
+  if (modal) modal.classList.add('active');
+  playAlertSound();
+}
+
+function closeDiscardConfirm() {
+  const modal = document.getElementById('discardConfirmModal');
+  if (modal) modal.classList.remove('active');
+}
+
+async function confirmDiscardAndNew() {
+  closeDiscardConfirm();
   hideFinishModal();
   await clearProject();
   goToScreen('screen-project');

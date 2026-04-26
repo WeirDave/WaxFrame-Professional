@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260425-016">
+  <meta name="waxframe-build" content="20260425-017">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.21.11">
@@ -1070,6 +1070,24 @@
   </div>
 </div>
 
+<!-- DISCARD CONFIRMATION MODAL — replaces the native confirm() that was used
+     in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
+     looked jarring against the WaxFrame aesthetic. Opened by openDiscardConfirm()
+     which also fires playAlertSound(). -->
+<div class="finish-modal-overlay" id="discardConfirmModal" onclick="if(event.target===this)closeDiscardConfirm()">
+  <div class="finish-modal round-error-modal">
+    <h2 class="finish-modal-title round-error-title">⚠️ You haven't exported anything yet</h2>
+    <div class="round-error-body">
+      <p class="round-error-msg">If you start a new project now, your working document and round history will be permanently discarded. Export the document and / or full transcript first if you need them.</p>
+    </div>
+    <div class="round-error-actions">
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="closeDiscardConfirm()">← Go back and export</button>
+      <button class="finish-modal-btn finish-modal-btn-new" onclick="confirmDiscardAndNew()">🗑️ Discard and start fresh</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="closeDiscardConfirm()">← Dismiss</button>
+  </div>
+</div>
+
 <!-- PROJECT GOAL VIEWER MODAL -->
 <div class="finish-modal-overlay" id="projectGoalModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal finish-modal-goal">
@@ -1516,7 +1534,7 @@
 </div>
 
 <script src="version.js?v=3.21.11"></script>
-<script src="app.js?v=3.21.16"></script>
+<script src="app.js?v=3.21.17"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

@@ -2,6 +2,38 @@
 
 ---
 
+## v3.21.17 Pro — Build `20260425-017`
+**Released:** April 25, 2026
+
+Three coupled fixes around the Finish modal's discard guard. Repro: convergence at 4 of 6, click 🏁 Finish on the Work screen, click Export Document, click Export Full Transcript (transcript button visibly flips to `✅ Transcript exported!`), close the modal, hamburger menu → Backup Session, click 🏁 Finish on the Work screen a second time, click Start New Project → native browser dialog *"You haven't exported anything yet"* — directly contradicting the still-visible green checkmark on the transcript button right above it.
+
+### State-sync bug — button visual and `_finishExported` flag drifted apart on modal reopen
+
+`showFinishModal()` resets `window._finishExported = false` on every modal open so the discard guard correctly fires for fresh sessions. The export buttons (`finishBtnDoc`, `finishBtnTranscript`) flip their textContent to `✅ Exported!` / `✅ Transcript exported!` and add the `finish-modal-btn-done` class via the `waxframe:exported` event listener — which only fires while the modal is active, and is the only thing that mutates them. There was no equivalent reset on modal reopen. Result: when `showFinishModal()` ran a second time during the same project session, the flag flipped to `false` while the buttons retained their *Exported!* text and disabled state from the prior open. The guard had no way to know what the user had already done in the previous open of the modal — it correctly read the flag, which had reset, while the user looked at the (un-reset) button DOM and saw a contradiction.
+
+Fix is in `showFinishModal()`: the `dataset.originalHtml` snapshot already captured for both export buttons at `DOMContentLoaded` is now restored on every modal open. Same `forEach` over `['finishBtnDoc', 'finishBtnTranscript']`. `btn.innerHTML = btn.dataset.originalHtml`, `btn.disabled = false`, `btn.classList.remove('finish-modal-btn-done')`. Flag and visual reset together; cannot drift. The flag is per-modal-session, not lifetime — exports from a prior modal open remain safely on disk; the freshly-opened modal correctly treats this session as not yet exported.
+
+### Native `confirm()` replaced with WaxFrame-styled modal
+
+The discard guard called `window.confirm()` directly, which produced a Chrome / Firefox / Safari-styled gray rectangle stamped over the honeycomb-themed Finish modal. Visually broke the entire register of the app and gave the user only a small triangle emoji to signal that something destructive was about to happen. Native `confirm()` also blocks the main thread, so any pre-dialog alert sound played via `AudioContext` would be cut off the instant the dialog opens.
+
+New modal in `index.html`: `discardConfirmModal`. Same structural pattern as the existing `roundErrorModal` — `.finish-modal-overlay` + `.finish-modal.round-error-modal` shells, `.finish-modal-title.round-error-title` heading, `.round-error-body` paragraph, `.round-error-actions` row with two `.finish-modal-btn` buttons, `.finish-modal-cancel` dismiss link. Two action buttons: `← Go back and export` (safe, `.finish-modal-btn-export` green styling, calls `closeDiscardConfirm()`) and `🗑️ Discard and start fresh` (destructive, `.finish-modal-btn-new` amber styling matching the existing destructive treatment, calls `confirmDiscardAndNew()` which closes both modals and proceeds to `clearProject()` + `goToScreen('screen-project')`).
+
+`finishAndNew()` was the only caller of the native `confirm()` and was refactored to call `openDiscardConfirm()` instead. Three new functions added near `finishAndNew`: `openDiscardConfirm`, `closeDiscardConfirm`, `confirmDiscardAndNew`. No CSS additions required — the existing `.finish-modal-overlay` and `.round-error-modal` rules cover the new modal cleanly.
+
+### `playAlertSound()` — short two-chirp attention tone
+
+New sound function next to `playSmokerSound()`. Two ascending sine chirps at 880 Hz then 1320 Hz, each ~80 ms, separated by a 30 ms gap. Short enough not to be annoying, distinct enough to make the user actually look at the screen. Wrapped in the standard `if (_isMuted) return;` guard so it respects the global mute toggle and the standard `try / catch` so it fails silently in environments without `AudioContext` support. Fires from `openDiscardConfirm()` immediately after the modal becomes active.
+
+### Files changed
+
+- `app.js` — `showFinishModal()` now resets export-button DOM alongside the `_finishExported` flag. `finishAndNew()` calls `openDiscardConfirm()` instead of native `confirm()`. New functions: `openDiscardConfirm`, `closeDiscardConfirm`, `confirmDiscardAndNew`, `playAlertSound`. `BUILD` bumped to `20260425-017`.
+- `index.html` — New `discardConfirmModal` block inserted after `roundErrorModal`. `waxframe-build` meta bumped to `20260425-017`. `app.js?v=3.21.17` cache-bust.
+- `version.js` — `APP_VERSION` `v3.21.17 Pro`.
+- `CHANGELOG.md` — this entry.
+
+---
+
 ## v3.21.16 Pro — Build `20260425-016`
 **Released:** April 25, 2026
 
