@@ -2,7 +2,7 @@
 
 ---
 
-## v3.21.13 Pro — Build `20260425-012`
+## v3.21.14 Pro — Build `20260425-013`
 **Released:** April 25, 2026
 
 ### Tagline punctuation fixed everywhere
@@ -83,17 +83,17 @@ Result: refresh at any point during project setup is now safe across all three S
 
 ### Files changed
 
-- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `pasteText` textarea `oninput` updated to call new `handlePasteTextInput()`. `waxframe-build` meta bumped to `20260425-012`. `app.js?v=3.21.13` cache-bust.
+- `index.html` — 8 tagline edits, `.work-right-logo-version` div added under work-screen tagline, two new `.file-clear-row` blocks for paste-textarea clear buttons (Reference Material paste panel and Starting Document paste panel). `pasteText` textarea `oninput` updated to call new `handlePasteTextInput()`. `waxframe-build` meta bumped to `20260425-013`. `app.js?v=3.21.14` cache-bust.
 - `style.css` — `.work-right-logo-version` rule plus matching breakpoint rules at 1700px (now 9px per Path A), 1500px (9px per Path A floor), 1600px (hide). `.dp-real-example` block of rules for the playbook example card. New `.welcome-brand .app-version-stamp` override for Path A welcome pair. `.nav-panel-version` font-size changed from 10px to 9px per Path A.
 - `README.md` — tagline edit.
 - `waxframe-user-manual.html` — tagline edit (print header sub).
 - `document-playbooks.html` — JD playbook `Rounds` line rewritten, new `Real-world example` block inserted after the existing Step 3 scratch-note. Div balance verified 359 / 359.
-- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` bumped to `20260425-012`.
-- `version.js` — `APP_VERSION` bumped to `v3.21.13 Pro`.
+- `app.js` — full storage cleanup (Track B trace, Guard #2, LS_SESSION_MIRROR, legacy aihive_v2_db purge, verbose comments). `clearProject` made async with awaited `idbClear()`. `finishAndNew` made async with awaited `clearProject()`. New functions `clearPasteText`, `clearRefPasteText`, and `handlePasteTextInput`. New `pastedDocument` field added to `saveProject` and restored in `loadSettings`. New `pasteTextSaveTimer` debounce global. `BUILD` bumped to `20260425-013`.
+- `version.js` — `APP_VERSION` bumped to `v3.21.14 Pro`.
 
 ### Validation prior to this release
 
-A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.13 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.13 retains all the validated behavior and removes only the scaffolding.
+A full JD project ran end-to-end on v3.21.11 (which has the same `saveSession` and `loadSession` logic as v3.21.14 once the dev trace, mirror, Guard #2, and legacy purge are stripped — the cleanup is removal-only, not behavioral change). 21 completed rounds, 88,308 character console log, 1,750 character document, 1,109 second project clock, resolved decisions persisted across 4 rounds, 642 KB backup containing complete IDB session. Every assertion in the bug-fix story checked out. v3.21.14 retains all the validated behavior and removes only the scaffolding.
 
 ---
 
