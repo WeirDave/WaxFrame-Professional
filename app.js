@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260426-001
+//  Build: 20260426-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260426-001';         // build stamp — update each session
+const BUILD       = '20260426-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -7824,10 +7824,14 @@ function exportDocument() {
   const out      = doc + byline;
   const filename = buildExportName();
   const blob     = new Blob([out], { type: 'text/plain' });
+  const url      = URL.createObjectURL(blob);
   const a        = document.createElement('a');
-  a.href         = URL.createObjectURL(blob);
+  a.href         = url;
   a.download     = `${filename}.txt`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 
   toast('💾 Document exported');
   window._finishExported = true;
@@ -7938,12 +7942,22 @@ async function backupSession() {
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
   const baseName = safeVer ? `WaxFrame-Backup-${safeName}-${safeVer}` : `WaxFrame-Backup-${safeName}`;
   const filename = `${baseName}-${stamp}`;
+  // Empty-file race fix (v3.21.19): backupSession is async (awaits idbGet) so the
+  // user-gesture context is broken by the time a.click() fires. Calling
+  // URL.revokeObjectURL synchronously right after click() can invalidate the blob
+  // before Chrome's download dispatcher reads it, producing a 0-byte placeholder
+  // file plus a retry that lands as `filename (1).json`. Match the proven pattern
+  // from exportTranscript: append the anchor to the DOM, click, remove, then
+  // defer the revoke so the download has time to start.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href     = URL.createObjectURL(blob);
+  a.href     = url;
   a.download = `${filename}.json`;
+  document.body.appendChild(a);
   a.click();
-  URL.revokeObjectURL(a.href);
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
   closeNavMenu();
   // Confirm what was actually captured so the user knows whether session data
   // is in the file or only project setup.
