@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260425-012';         // build stamp — update each session
+const BUILD       = '20260425-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2134,7 +2134,7 @@ function loadSettings() {
       if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
       if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
-      // ── PASTED STARTING DOCUMENT restore (v3.21.13) ──
+      // ── PASTED STARTING DOCUMENT restore (v3.21.14) ──
       // Mirror of reference material restore: paste textarea content was DOM-only
       // and lost on refresh until launch. Persisted to LS_PROJECT, restored here.
       if (typeof p.pastedDocument === 'string') {
