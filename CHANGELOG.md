@@ -2,6 +2,66 @@
 
 ---
 
+## v3.21.23 Pro — Build `20260427-001`
+**Released:** April 27, 2026
+
+Documentation-only release. No code changes. Adds measured Convergence data and the first real-world example block for the Presentation Outline playbook, completing the playbook's empirical-data treatment alongside the JD, Résumé, Thank-You, Email & Outreach, and Blog Post entries shipped earlier in the v3.21.x line.
+
+### Presentation Outline playbook — measured Convergence and v1-vs-v2 example block
+
+The Presentation Outline playbook joins the suite of measured playbooks with a Convergence label and a real-world example block. Distinct from every other measured playbook in two ways:
+
+1. **First playbook where the v1 run failed to converge and v2 succeeded.** The Wi-Fi 7 Readiness deck was tested twice on different builds. The v1.0 run (40 rounds, 33 minutes, on v3.21.21) used the same Reference Material as v2.0 but left Length Constraint blank and used softer scope language ("Presentation outline (for a slide deck I'll build after)" as Document type, "Executive-ready, direct" as tone). It never reached majority convergence — it ran 40 rounds of phrasing-level churn before the user manually clicked Finish. The v2.0 run (23 rounds, ~30 minutes active wall-clock, on v3.21.22) used `Length Constraint = 12 paragraphs`, tighter scope ("Maximum 12 slides"), and "Formal Final Draft Presentation" as tone. It reached majority convergence at Round 23 with the system stopping on its own (`🏁 Majority convergence — 3 of 5 AIs satisfied. Skipping Builder.`). Same Reference Material, same hive, same Builder — different settings produced fundamentally different outcomes.
+
+2. **First measured playbook where the v2 output is meaningfully better than the v1 output, not just faster to produce.** Comparing the two final documents head-to-head: v2.0 leads with the audience-anchoring 70/25/5 device mix that v1.0 dropped, structures each section with a clean topic sentence ("An opportunistic pilot opportunity exists"), closes with a sharp recommendation phrasing ("Our recommendation: authorize the $95k Wi-Fi 7 pilot..."), and dropped the technical 802.11be deep-dive (320 MHz channels, channel puncturing, MLO, 4096-QAM details) that was wrong for the audience and goal. v1.0 still has that 6-line technical paragraph because the hive never reached convergence on whether to keep or prune it. The Length Constraint anchor in v2.0 forced the hive to make a pruning decision rather than ping-pong indefinitely.
+
+**The operational lesson** is that slide-deck outlines (and other voice-driven, structurally-constrained documents) need a hard length anchor or the hive will polish the same word count of prose forever. The Convergence line on the playbook entry now states this directly: *"Length Constraint must be set — runs without one polish indefinitely (a v1.0 run with the same Reference Material but no length cap ran 40 rounds without converging)."* This is the first playbook in the suite with a "must" instruction baked into the Convergence line.
+
+**Three coordinated edits on the Presentation Outline playbook:**
+
+- **Convergence label** — `Rounds: 4–6 rounds — narrative flow and slide order take iteration` → `Convergence: ≈30 minutes · 23 rounds (measured, not estimated)` with the v1-vs-v2 contrast and the "Length Constraint must be set" directive inline. The 30-minute figure excludes a 49-minute idle gap mid-run (user stepped away between rounds 15 and 16); 79 minutes is the project clock total, ~30 minutes is the active iteration time.
+
+- **Step 5 split rewritten** — both refining-a-draft and from-scratch paths now route reference content through Setup 4 — Reference Material rather than the Notes drawer (matching the Setup 4 / Setup 5 split shipped in v3.21.0 and the no-fetch documentation pattern from Email & Outreach). The from-scratch path explicitly mentions pasting "driving question, recommendation, supporting reasoning, hard constraints (dates, dollar figures), and any context the deck must establish" — the structural shape of the actual v2.0 RM payload.
+
+- **Real-world example block** — verbatim Project-screen values from the v2.0 backup (Project name, Version, Document type "Power Point Presentation", Target audience naming the 1,200-person professional services firm, Desired outcome with the budget question, Scope and constraints with the 12-slide cap, Tone "Formal Final Draft Presentation", Additional instructions left blank, **Length Constraint 12 Paragraphs marked "required for this playbook"**, Starting Document = scratch). Reference Material payload included verbatim as a Courier `<pre>` block — the full 1,322-character payload covering driving question, recommendation, reasoning, context, and hard constraints. No Notes payload because the actual run did not use one. Sub-text on the example block contrasts v1.0 (no length, 40 rounds, no convergence) against v2.0 (12 paragraphs, 23 rounds, converged) so a reader running the playbook understands which lever to pull.
+
+**v3.21.22 fix verification under stress.** The v2.0 Wi-Fi 7 run was conducted on v3.21.22 and confirms two prior fixes holding under a real-world 23-round, 79-minute session: (1) backup race fix v2 — the 480 KB backup produced no `(1)`-suffixed sibling, transcript header stamps `v3.21.22 Pro` / build `20260426-005` correctly, the new filename schema (`Deck-Outline-Wi-Fi-7-Readiness-v2-0-WaxFrame-Backup-20260426-1858.json`) is correct; (2) Notes prefill removal — the saved session blob shows zero rounds with notes typed, exactly as documented. Both v3.21.22 fixes are verified working in production.
+
+### Playbook coverage status after this release
+
+Six of eight playbooks now carry full Convergence labels with measured time-and-rounds plus real-world example blocks:
+
+| Playbook | Convergence | Real-world example |
+|---|---|---|
+| Birthday Card | Rounds-only `2 rounds typical` | — |
+| Cover Letter | Rounds-only `6–10 rounds typical` | — |
+| Thank-You Letter | `≈1 minute · 3 rounds (measured)` | ✓ from-scratch (Marco Contractor) |
+| Email & Outreach | `≈1 minute · 3 rounds (measured)` | ✓ from-scratch (Ferris at Lightkeeper) |
+| Blog Post | `≈13 minutes · 16 rounds (measured)` | ✓ refining-a-draft (Trusting One-Shot AI) |
+| Résumé | `≈11 minutes · 11 rounds (measured)` | ✓ refining-a-draft (Dana Reyes) |
+| JD | `≈19 minutes · 21 rounds (measured)` | ✓ from-scratch (Altura Systems) |
+| **Presentation Outline** | **`≈30 minutes · 23 rounds (measured)`** | **✓ from-scratch + Length Constraint required (Wi-Fi 7 Readiness v2.0)** |
+
+Cover Letter and Birthday Card retain their rounds-only labels and will be promoted to the Convergence pattern opportunistically when measured runs are captured. The split (six measured playbooks vs. two rounds-only playbooks) is itself meaningful — it tells a reader at a glance which playbook entries have full empirical data behind them and which are still based on aspirational round estimates.
+
+### Files changed
+
+- `document-playbooks.html` — Presentation Outline playbook: Rounds line `4–6 rounds` → Convergence `≈30 minutes · 23 rounds (measured, not estimated)` with v1-vs-v2 contrast and Length Constraint directive; Step 5 split rewritten to route both paths through Setup 4 — Reference Material with no-fetch documentation; new Real-world example block (Deck Outline — Wi-Fi 7 Readiness v2.0, 23 rounds, ~30 min) with verbatim Project values, verbatim 1,322-character Reference Material payload, and Length Constraint marked as required. Div balance verified 381 / 381. Cache-bust + comment-header + meta sweep to `3.21.23` / `20260427-001`.
+- `index.html` — `waxframe-build` meta `20260426-005` → `20260427-001`. `app.js?v=3.21.22` → `3.21.23`. `style.css?v=3.21.22` → `3.21.23`. `version.js?v=3.21.22` → `3.21.23`. Comment-header build → `20260427-001`.
+- `app.js` — `BUILD` constant `20260426-005` → `20260427-001`. Comment-header build `20260426-005` → `20260427-001`. **No code changes.**
+- `style.css` — Comment-header build only. **No CSS changes.**
+- `version.js` — `APP_VERSION` `v3.21.22 Pro` → `v3.21.23 Pro`.
+- `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-bust + comment-header + meta sweep to `3.21.23` / `20260427-001`. No content changes.
+- `CHANGELOG.md` — this entry.
+
+### What to expect after deploy
+
+Open the Document Playbooks page (📋 button on the top bar, or `document-playbooks.html` directly), navigate to the Presentation Outline section. The Convergence label now reads `≈30 minutes · 23 rounds (measured, not estimated)` with the Length Constraint directive inline. A new Real-world example block sits between the scratch-note and the Step 5 section, with full Project-screen values and Reference Material payload from the actual Wi-Fi 7 Readiness v2.0 run. A reader running the playbook for the first time can copy these values verbatim, set Length Constraint to 12 Paragraphs, and reproduce the 23-round convergence pattern.
+
+No behavioral change anywhere else in the application. The Notes drawer still opens empty. Backups still drop one file. The working-document counter still shows pages. All v3.21.21 and v3.21.22 fixes remain in effect.
+
+---
+
 ## v3.21.22 Pro — Build `20260426-005`
 **Released:** April 26, 2026
 
