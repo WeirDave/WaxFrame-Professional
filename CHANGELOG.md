@@ -2,6 +2,70 @@
 
 ---
 
+## v3.21.27 Pro — Build `20260427-005`
+**Released:** April 27, 2026
+
+**Emergency layout fix.** Reverts the 54 orphan CSS rule deletions from v3.21.26 that broke setup screen layouts. v3.21.26 was deployed and rendered with content collapsed to the left ~60% of the viewport on Worker Bees, Choose Builder, and Starting Document setup screens, with body honeycomb pattern showing through on the right where the layout container should have extended. At least one of the deleted rules was load-bearing despite the orphan scan reporting zero references in HTML or JS — a static grep can't see classes added by JS at runtime, classes referenced via descendant selectors that affect layout when the descendant exists, or rules whose visual effect is "no-op on big screen" but become harmful when removed. `display: contents` rules in particular fall into this trap: they look orphan because nothing styles them further, but they're doing critical layout work by collapsing the wrapper element out of the flex/grid hierarchy.
+
+### What changed
+
+- **`style.css`** — restored to the v3.21.24 baseline (7512 lines), then re-applied the two safe v3.21.26 changes: the `.nav-item-accent:hover` specificity refactor (drops 2 of 26 `!important` declarations, no layout impact) and the five new `.dp-*` modifier rules (only used on the playbooks page, no impact on setup or work screens). Comment-header version label dropped (`WaxFrame v2` → `WaxFrame`) and Build stamp updated to `20260427-005`. Final file: **7520 lines** (was 7284 in broken v3.21.26).
+- **`document-playbooks.html`** — unchanged from v3.21.26. The 18 inline-style replacements still work because the new `.dp-*` modifier rules are still in style.css.
+- **`api-details.html`** — unchanged from v3.21.26. The redundant inline `style="margin-top:32px;"` deletion still works because the existing `.info-card-tips` rule is back in style.css providing exactly that margin.
+- **`waxframe-user-manual.html`, `document-playbooks.html`** — `docs-scrollspy.js?v=3.21.27` cache-bust preserved.
+- **All 7 HTML files + `app.js` + `style.css`** — comment-header version label dropped (`WaxFrame v2` / `WaxFrame v3.3` → `WaxFrame`). Build stamp `20260427-005`.
+- **All canonical stamps** updated to v3.21.27 / `20260427-005`. Site-wide cache-bust `?v=3.21.27`.
+
+### What's preserved from v3.21.26
+
+The four findings from v3.21.26 that did not involve CSS deletions remain in effect:
+
+- **#3 nav-item-accent specificity refactor** — `.nav-item.nav-item-accent:hover` at (0,2,1) replaces `.nav-item-accent:hover` with `!important`. `!important` count: 26 → 24.
+- **#4 Document playbooks inline-style cleanup** — 18 inline styles → 5 `.dp-*` modifier classes.
+- **#4 api-details inline-style deletion** — redundant `margin-top:32px` removed.
+- **#6 docs-scrollspy.js cache-bust** — `?v=3.21.27` on both helper pages that load it.
+- **#7 Comment-header version label drop** — all 8 files now read *"WaxFrame — &lt;filename&gt;"* with no version label.
+
+### What's reverted from v3.21.26
+
+- **#9 — All 54 orphan CSS rule deletions are reverted.** The defunct welcome-card subsystem, project-screen field utilities, text utility set, goal-counter stragglers, setup-card / hex-icon / API-form stragglers, notes-panel descendant rules, DP playbook stragglers, and singletons (`.badge-api`, `.finish-modal-bee`, `.wh-tag-amber`) are all restored. They will stay until a future release runs the deletion sweep again with actual visual testing on each setup, work, and modal screen before deploying.
+
+### Postmortem — why the orphan scan was insufficient
+
+The v3.21.26 scrutiny was over-reliant on cross-file `grep` to determine whether a CSS class had any HTML or JS reference. That heuristic has three known gaps that would have been caught by visual smoke testing on each screen before deploy:
+
+1. **`display: contents` rules look orphan because nothing else styles them, but they're doing critical layout work** by collapsing the wrapper element out of the flex/grid layout hierarchy. Removing the rule re-introduces the wrapper as a normal block element, breaking everything that depends on its children laying out as direct grid/flex items of the grandparent. The deleted `.hex-icon-wrap { display: contents; }` rule with its comment *"no-op on big screen — icon sits directly in body"* was the biggest red flag here — the comment was literally announcing that the rule's visible effect is invisible, which made the orphan signal misleading rather than confirming.
+2. **Class names built via JS template-literal concatenation or string interpolation slip past static grep.** The scan checked for `\bclassname\b` but didn't catch `'class-' + variable` or `${state}` substitutions. Several of the deleted classes may have been state modifiers added by JS based on runtime conditions — `.btn-shake-wide.running`, `.round-timer-clock.running`, etc. were grouped under "descendants of orphan parents" but the parent-orphan determination itself relied on the same grep that misses dynamic class construction.
+3. **Visual/structural smoke testing has no substitute for catching layout regressions.** Static analysis can prove some classes are unreferenced, but it can't prove a deletion is safe. The first half of *test plan after pulling* in the v3.21.26 release notes was *"walk every screen — Project setup → Worker Bees → Builder → Reference Material → Starting Document → Work → Finish modal. Watch for any styling regression from the 54 deletions"* — that was the right test plan, but it was suggested as a post-deploy check rather than a pre-deploy gate. For a CSS deletion sweep this large, the testing should have happened in a local preview before pushing to main.
+
+Future CSS dead-code passes will run with a stricter pre-deploy gate: every screen visually inspected, every modal opened, every state class triggered, before any `git push`.
+
+### Files changed (in this release vs broken v3.21.26)
+
+| File | v3.21.26 → v3.21.27 |
+|---|---|
+| `style.css` | 7284 → 7520 lines (+236 — restored the deletions). `!important` 24 → 24 (refactor preserved). dp-* modifiers preserved. |
+| `app.js` | `BUILD` → `20260427-005`. No code changes. |
+| `index.html` | All 4 canonical stamps → v3.21.27 / `20260427-005`. |
+| `version.js` | `APP_VERSION` → `v3.21.27 Pro`. |
+| `document-playbooks.html`, `api-details.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, `prompt-editor.html` | Cache-busts → `3.21.27`. Build → `20260427-005`. |
+
+### Upgrade
+
+Pull and hard-refresh (Ctrl+Shift+R / Cmd+Shift+R). Cache-busts at `3.21.27` ensure returning visitors get the fixed assets immediately.
+
+No session migration. Existing IndexedDB sessions, license keys, project state, and backups load unchanged.
+
+### Test plan
+
+1. Walk every setup screen — Worker Bees, Choose Builder, Your Project, Reference Material, Starting Document. Each should render full-width with content extending to the viewport edge (modulo the `max-width: 1390px` on `.setup-single-card`). No body honeycomb pattern visible on the right side beyond the standard centered-card breathing room.
+2. Hover the *AI Setup* nav item in light theme — accent background, black text, no `!important` needed (the refactor target).
+3. Document Playbooks page — sub-notes, real-example boxes, and tight paragraphs should render identically to v3.21.26 (the dp-* modifier rules survive).
+4. Work screen — full layout, hex grid renders correctly.
+5. Dev mode toolbar, Reference Material file upload, Notes drawer, Finish modal — all should render normally.
+
+---
+
 ## v3.21.26 Pro — Build `20260427-004`
 **Released:** April 27, 2026
 
