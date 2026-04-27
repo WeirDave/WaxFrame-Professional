@@ -2,6 +2,73 @@
 
 ---
 
+## v3.21.25 Pro — Build `20260427-003`
+**Released:** April 27, 2026
+
+Code hygiene patch. Four surgical cleanups identified during a scrutiny pass on v3.21.24. One latent crash on a setup-screen button is fixed by implementing the missing function it referenced. One genuinely dead function is removed. One mute-guard violation in the unlock cinematic is closed. Two unused local declarations are dropped. CSS dead-code reconciliation, the inline-style cleanup pass, and the helper-page comment-header drift fix are deferred to dedicated future passes — this release stays narrowly surgical.
+
+### #1 — Implement missing `openAllConsoles()` for the Worker Bees setup screen
+
+**The bug.** `index.html` line 99 had a button — *Open API Websites* on the Worker Bees setup screen — wired to `onclick="openAllConsoles()"`. The function did not exist anywhere in the codebase: not in `app.js`, not in `index.html`, not in any helper page. Clicking the button threw `ReferenceError: openAllConsoles is not defined` and aborted whatever flow the user was in. The button was placed there to help new users sign up for or check accounts at all six default AI providers in one click — exactly the scenario where a broken button is most damaging, since first-time users on the setup screen are precisely the audience who need this convenience.
+
+**The fix.** Implemented `openAllConsoles()` as a new function in `app.js` next to its setup-screen siblings (`hideAllDefaultAIs`, `restoreHiddenDefaults`). The function iterates `DEFAULT_AIS` — all six default providers regardless of hidden status, since the user clicked the button to see them all — deduplicates the `apiConsole` URLs via a `Set`, and opens each in a new tab via `window.open(url, '_blank', 'noopener,noreferrer')`. The `noopener,noreferrer` window features prevent the opened pages from accessing the `window.opener` reference back to WaxFrame, which is the standard hardening for any cross-origin tab open. Result is reported via toast based on three outcomes: nothing to open (no URLs found — defensive guard), all blocked by browser popup policy, partial open with some blocked, or all opened cleanly. The first time a user clicks the button on a fresh browser profile, Chrome / Firefox / Safari will surface a one-time *"allow popups from this site?"* prompt; once allowed, all six tabs open cleanly on subsequent invocations.
+
+**Why an implementation rather than a button removal.** Initial scrutiny landed on removing the button on the grounds that each AI row already exposes its own `↗` console link. That reasoning ignored the actual user journey: a brand-new user on the Worker Bees setup screen who has not yet signed up for any of the six default providers needs to make six accounts before they can paste API keys back into WaxFrame. Clicking six individual `↗` links in sequence is six clicks; clicking *Open API Websites* is one click and gets them six tabs to register accounts in. The button is genuinely useful, and removing it would have hidden the original v3.21.24-and-prior intent under a less-visible per-row link. Implemented rather than deleted.
+
+### #2 — Remove dead `refreshModelsForAI` function
+
+**The dead code.** `app.js` defined a 9-line `async function refreshModelsForAI(aiId)` at the old line 366 that was never called from anywhere — confirmed via full-repo grep across `app.js`, `index.html`, all five helper pages, and any template-string class assignment. It cleared the cached models for one provider, refetched, re-rendered the AI row, and toasted *↺ ${ai.name} models refreshed*.
+
+**Origin.** Almost certainly tied to a per-row refresh button that was removed from `renderAIRow` at some earlier point without the function being reconciled — the exact straggler-removal pattern the project rules call out as something to avoid. The whole-list `fetchModelsForProvider` is still in active use via the import-server flow and the per-key test flow, so on-demand model refresh still works through those entry points; the per-row entry was the only orphaned piece.
+
+**The fix.** Function deleted in full from `app.js`. No callers anywhere, so no downstream changes needed.
+
+### #3 — Mute-guard the `playUnlockScene` audio prep block
+
+**The violation.** The project audio-system rule is *"every direct-audio function (`play*Sound` that creates `AudioContext` or `new Audio()`) MUST start with `if (_isMuted) return;` as first statement"*, with an explicit carve-out for scene orchestrators (`playUnlockScene`, `playUnanimousScene`) on the basis that they delegate to gated per-effect helpers. `playUnlockScene` did delegate to gated helpers — `playMetalClang` is correctly guarded — but the orchestrator itself was creating the shared `AudioContext` and fetching / decoding the metal-clang MP3 at the top of the function with no mute check, then passing the already-prepared resources into `playMetalClang` later. When the user is muted, `playMetalClang` correctly returns at its own `_isMuted` guard before playing anything — but by that point an AudioContext had been created, an MP3 fetch had been kicked off, and the decoded buffer was sitting in memory unused.
+
+**The fix.** Wrapped the entire audio-prep block (lines 1136–1143 in the v3.21.24 line numbering) in `if (!_isMuted) { ... }`. `sharedAudioCtx` and `clangBuffer` are now declared as `let ... = null` at the outer scope so they remain in scope for the later `setTimeout(() => playMetalClang(sharedAudioCtx, clangBuffer), 1600)` call. When muted, both arguments arrive at `playMetalClang` as `null` — the function returns at its own `if (_isMuted) return` guard at line 1486 before touching either argument, so passing `null`s is safe. Net effect when muted: no `AudioContext` instantiated, no MP3 fetch, no decode, no buffer held in memory. The visual half of the unlock cinematic plays exactly as before. Inline comment naming v3.21.25 added for `git blame` discoverability and to explain the carve-out reasoning.
+
+### #4 — Drop two unused `const used` declarations in `runBuilderOnly`
+
+**The dead code.** `app.js` lines 6228 and 6270 (in the v3.21.24 line numbering) both contained:
+
+```
+if (!isLicensed()) { const used = incrementTrialRound(); updateLicenseBadge(); }
+```
+
+`used` was declared and never read. The same pattern at the equivalent `runRound` site (line 6432) does use the local — there it is checked against `FREE_TRIAL_ROUNDS` to surface the *"that was your last free round"* toast on the final trial round. The two `runBuilderOnly` sites were copy-pasted from `runRound` without the trailing if-check, leaving the local declaration as a no-op.
+
+**The fix.** Both lines collapsed to `if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }`, matching the cleaner sibling at line 6057 in the same function. The legitimate `const used = incrementTrialRound()` in `runRound` is unchanged. Behavior is identical at all three sites — the trial counter still increments on every successful round, the license badge still updates, and only the `runRound` site (where the local is actually consumed) still surfaces the last-round toast. Adding parallel last-round toasts to the two `runBuilderOnly` paths was considered and deferred — those are convergence and unanimous-convergence sites, where the user is in celebration mode rather than trial-pressure mode, and a *"last free round"* toast would clash with the convergence celebration. Worth revisiting only if user feedback indicates the toast is missed there.
+
+### Files changed
+
+- `app.js` — removed dead `async function refreshModelsForAI(aiId)` block (9 lines + surrounding whitespace) at the old line 366. Wrapped audio-prep block in `playUnlockScene` (old lines 1136–1143) in `if (!_isMuted) { ... }` with `let sharedAudioCtx`, `let clangBuffer` declarations hoisted outside the guard so they remain in scope for the downstream `playMetalClang` call. Added new `function openAllConsoles()` (24 lines including comment header) in the setup-screen helpers cluster next to `restoreHiddenDefaults`. Dropped unused `const used` from two sites in `runBuilderOnly` (unanimous and majority convergence). `BUILD` constant `20260427-002` → `20260427-003`. Comment-header build → `20260427-003`.
+- `index.html` — `waxframe-build` meta `20260427-002` → `20260427-003`. `app.js?v=3.21.24` → `3.21.25`. `style.css?v=3.21.24` → `3.21.25`. `version.js?v=3.21.24` → `3.21.25`. Comment-header build → `20260427-003`. *(No structural HTML change — the *Open API Websites* button at line 99 was briefly removed during this release's surgical pass and immediately restored when the original design intent was clarified. Net diff on this file is stamps only.)*
+- `version.js` — `APP_VERSION` `v3.21.24 Pro` → `v3.21.25 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — site-wide cache-bust sweep: `style.css?v=3.21.24` → `3.21.25`, `version.js?v=3.21.24` → `3.21.25`. Comment-header build → `20260427-003` in each.
+
+### Findings deferred from the same scrutiny pass
+
+The pass surfaced five additional findings that were judged out of scope for this surgical release because they require either a focused dedicated pass or a CSS architectural decision:
+
+- **Unnecessary `!important` on `.nav-item-accent:hover`** (`style.css` line 6762–6764, current count 26 declarations). Resolvable via specificity refactor to `.nav-item.nav-item-accent:hover` at (0,2,1) — pair with the next `!important` cleanup pass.
+- **Inline CSS rule violations** — 21 `style="..."` attributes in `index.html` (15 of them `display:none` initial-hidden state on file inputs, banners, modals, dev toolbar — needs a `.hidden` utility class, currently absent from `style.css`). 18 in `document-playbooks.html` (small typographic tweaks repeated 3-7× — pull into the `.dp-*` ruleset). 1 in `api-details.html` (`margin-top:32px` on an `.info-card-tips` block).
+- **Missing cache-bust on `docs-scrollspy.js`** in `waxframe-user-manual.html` and `document-playbooks.html`. Add `?v=3.21.25` to both tags and consider promoting it to a 5th canonical stamp target alongside the existing four.
+- **Helper-page header label drift** — `api-details.html` comment header still says *"WaxFrame v3.3"* while every other helper page says *"WaxFrame v2"*. Cosmetic only; resolve by either dropping the version from comment headers entirely (the `Build:` stamp underneath is enough) or syncing them.
+- **57 unused CSS classes** (~7% of total selectors) — notable orphan clusters include the entire `.welcome-card` subsystem (14 selectors), the project-screen field utilities (9 selectors), and the `.text-*` utility set (13 selectors that were apparently never adopted). Worth a dedicated cleanup pass before the next minor version bump.
+
+### Code health metrics
+
+- Total lines: `app.js` ~8210, `style.css` 7512, `index.html` 1628, `version.js` 7.
+- `app.js` function count: 278 (was 279 — `refreshModelsForAI` removed, `openAllConsoles` added; net change -0 functions because `refreshModelsForAI` was dead and `openAllConsoles` was missing — they cancel).
+- `!important` count in `style.css`: unchanged at 26 (deferred to next pass).
+- Empty `catch(e) {}` blocks: 25 (all around `localStorage.setItem` / `removeItem` calls where silent failure is the correct posture for private-mode / quota-exceeded scenarios — defensible pattern, not flagged for change).
+- All three `setInterval` calls are paired with `clearInterval` cleanup. No timer leaks.
+- All canonical four version stamps in sync. Helper-page cache-bust sweep clean across all five sibling files.
+
+---
+
 ## v3.21.24 Pro — Build `20260427-002`
 **Released:** April 27, 2026
 

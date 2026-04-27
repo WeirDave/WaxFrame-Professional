@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260427-002
+//  Build: 20260427-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -363,15 +363,6 @@ function saveModelForAI(aiId, modelId) {
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
-async function refreshModelsForAI(aiId) {
-  const ai = aiList.find(a => a.id === aiId);
-  if (!ai) return;
-  const cacheKey = `waxframe_models_${ai.provider}`;
-  localStorage.removeItem(cacheKey);
-  await fetchModelsForProvider(ai.provider);
-  renderAIRow(aiId);
-  toast(`↺ ${ai.name} models refreshed`, 2000);
-}
 let aiList           = JSON.parse(JSON.stringify(DEFAULT_AIS)); // full list, active = checked ones
 let activeAIs        = [];   // AIs selected in setup
 let builder          = null; // id of builder AI
@@ -391,7 +382,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260427-002';         // build stamp — update each session
+const BUILD       = '20260427-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1133,14 +1124,21 @@ function playUnlockScene() {
   // ── Shared AudioContext — created and resumed immediately while still in the user gesture stack.
   // Pre-fetching and decoding the MP3 now means the clang fires synchronously at T+1.6s
   // with no async fetch delay, which was causing the sound to misfire on first play.
-  const sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  sharedAudioCtx.resume();
-  let clangBuffer = null;
-  fetch('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3')
-    .then(r => r.arrayBuffer())
-    .then(buf => sharedAudioCtx.decodeAudioData(buf))
-    .then(decoded => { clangBuffer = decoded; })
-    .catch(() => {});
+  // (v3.21.25) Skip the entire audio prep when muted — playMetalClang() guards its own
+  // playback path internally, but creating the AudioContext + fetching/decoding the MP3
+  // is wasted work otherwise. Both args go through to playMetalClang as null; that
+  // function returns at its own _isMuted guard before touching either argument.
+  let sharedAudioCtx = null;
+  let clangBuffer    = null;
+  if (!_isMuted) {
+    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    sharedAudioCtx.resume();
+    fetch('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3')
+      .then(r => r.arrayBuffer())
+      .then(buf => sharedAudioCtx.decodeAudioData(buf))
+      .then(decoded => { clangBuffer = decoded; })
+      .catch(() => {});
+  }
 
   // ── Reset — everything hidden, logo pre-scaled for stamp ──
   logo.src = 'images/Waxframe_logo_v19.png';
@@ -2881,6 +2879,34 @@ function restoreHiddenDefaults() {
   saveHive();
   renderAISetupGrid();
   toast('↺ All default AIs restored');
+}
+
+// Open the API key / sign-up console for every default AI in new tabs.
+// (v3.21.25) Opens consoles for all six DEFAULT_AIS regardless of hidden status —
+// the user explicitly asked to see them all, including any they previously hid.
+// Browsers may surface a one-time "allow popups from this site" prompt on first
+// click; once allowed, subsequent invocations open all six tabs cleanly.
+function openAllConsoles() {
+  const seen   = new Set();
+  let opened   = 0;
+  let blocked  = 0;
+  for (const d of DEFAULT_AIS) {
+    const url = d.apiConsole;
+    if (!url || url === '#' || seen.has(url)) continue;
+    seen.add(url);
+    const w = window.open(url, '_blank', 'noopener,noreferrer');
+    if (w) opened++;
+    else   blocked++;
+  }
+  if (opened === 0 && blocked === 0) {
+    toast('⚠️ No API console URLs available');
+  } else if (blocked > 0 && opened === 0) {
+    toast('⚠️ Popups blocked — allow popups for this site and try again', 4500);
+  } else if (blocked > 0) {
+    toast(`↗ Opened ${opened} of ${opened + blocked} — allow popups to open the rest`, 4500);
+  } else {
+    toast(`↗ Opened ${opened} API website${opened !== 1 ? 's' : ''} in new tabs`, 3000);
+  }
 }
 
 function clearKeyForAI(id) {
@@ -6225,7 +6251,7 @@ async function runRound() {
     renderWorkPhaseBar();
     renderConflicts();
     saveSession();
-    if (!isLicensed()) { const used = incrementTrialRound(); updateLicenseBadge(); }
+    if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''));
     setStatus(`🏁 Unanimous — all AIs agree the document is ready`);
     const runBtnU = document.getElementById('runRoundBtn');
@@ -6267,7 +6293,7 @@ async function runRound() {
     renderWorkPhaseBar();
     renderConflicts();
     saveSession();
-    if (!isLicensed()) { const used = incrementTrialRound(); updateLicenseBadge(); }
+    if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''));
     setStatus(`🏁 Hive converged — review holdout suggestions or finish the project`);
     const runBtn = document.getElementById('runRoundBtn');
