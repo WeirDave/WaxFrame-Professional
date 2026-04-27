@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame v2 — app.js
-//  Build: 20260427-001
+//  Build: 20260427-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -391,7 +391,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260427-001';         // build stamp — update each session
+const BUILD       = '20260427-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2028,6 +2028,13 @@ async function clearProject() {
   if (refHintEl) refHintEl.innerHTML = 'Pick <strong>Upload File</strong> or <strong>Paste Text</strong> to provide reference material — or skip this step entirely if your project does not need any.';
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
+  // Reset Finish-modal export state — this used to live in showFinishModal()
+  // but resetting it on every modal open caused a guard-fires-incorrectly bug
+  // (v3.21.23 and earlier): export → close modal → reopen → guard says
+  // "haven't exported anything" because the flag was wiped on reopen. The flag
+  // is session-scoped, not modal-scoped. Button visuals are reset further down
+  // in this function alongside the other Finish-modal cleanup. v3.21.24 fix.
+  window._finishExported = false;
   localStorage.removeItem('waxframe_resolved_decisions');
   window._conflictLedger = [];
   localStorage.removeItem('waxframe_conflict_ledger');
@@ -4972,23 +4979,13 @@ function showFinishModal() {
   const modal = document.getElementById('finishModal');
   if (modal) modal.classList.add('active');
   projectClockPause();
-  window._finishExported = false; // reset export tracking for this modal open
-  // Reset button visuals to match the flag — without this, a prior session's
-  // "✅ Exported!" textContent and finish-modal-btn-done class persist across
-  // modal close/reopen, while the flag is freshly reset to false. Result: the
-  // export buttons LOOK done but the discard guard fires anyway because the
-  // flag says nothing was exported. Bug surfaced when the user exported, the
-  // modal reopened (e.g. via convergence event re-firing showFinishModal),
-  // and "Start New Project" then triggered the "haven't exported anything"
-  // confirm despite the visible green checkmark on the Export button.
-  ['finishBtnDoc', 'finishBtnTranscript'].forEach(id => {
-    const btn = document.getElementById(id);
-    if (btn && btn.dataset.originalHtml) {
-      btn.innerHTML = btn.dataset.originalHtml;
-      btn.disabled = false;
-      btn.classList.remove('finish-modal-btn-done');
-    }
-  });
+  // Export-state tracking and button visuals are NOT reset here. Both belong
+  // to the session, not to the modal. Resetting them on every modal open caused
+  // a real bug (v3.21.23 and earlier): user exports document → closes modal →
+  // reopens Finish modal → guard fires "you haven't exported anything!" because
+  // the flag was wiped by showFinishModal even though the export still happened.
+  // The flag and visuals now reset only in clearProject() when a new session
+  // genuinely begins. v3.21.24 fix.
 
   const hasDoc     = !!(document.getElementById('workDocument')?.value?.trim());
   const hasHistory = history.length > 0;

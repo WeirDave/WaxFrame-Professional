@@ -2,6 +2,55 @@
 
 ---
 
+## v3.21.24 Pro — Build `20260427-002`
+**Released:** April 27, 2026
+
+Surgical bug fix. Finish-modal export-state tracking was scoped to the modal instead of the session, causing the discard guard to fire incorrectly when a user reopened the Finish modal after exporting their work.
+
+### Finish-modal export-state guard — fix incorrect "haven't exported anything" warning on modal reopen
+
+**The bug.** Finish modal opens → user clicks Export Document, Export Transcript, Backup Session in some combination → user closes the modal (via X, navigation, click-outside, or any other path) → user reopens the Finish modal → user clicks Start New Project → discard-confirm modal incorrectly fires *"You haven't exported anything!"* even though the export already happened minutes ago and the files are sitting in the user's Downloads folder.
+
+**Origin.** `showFinishModal()` at line 4975 contained `window._finishExported = false;` — a per-modal-open reset of the export-tracking flag. The flag is *correctly* set to `true` by `exportDocument()` and `exportTranscript()` when those run. But every time `showFinishModal()` ran, the flag was wiped back to `false`, regardless of whether the user had exported in the same session. The visual button-state reset alongside (lines 4984–4991) had the same scoping problem.
+
+**Reproducer (now closed):** Click Finish → click Export Document (button shows ✅ Exported, flag = true) → click Backup Session (no flag interaction) → close modal somehow → reopen Finish modal (`showFinishModal` resets flag to false, resets buttons to pristine) → click Start New Project → guard fires.
+
+**Why the original v3.21.17 design was wrong.** The comment on the deleted block claimed the reset was needed because *"a prior session's '✅ Exported!' textContent and finish-modal-btn-done class persist across modal close/reopen, while the flag is freshly reset to false."* That comment correctly identified a symptom but landed on the wrong fix. The right architectural answer is that **the flag and the button visuals are session-scoped, not modal-scoped**. Both should reset when a new session genuinely begins (i.e., when `clearProject()` runs after the user clicks Start New Project), not when the modal opens. The Finish modal can be opened arbitrarily many times during a single session — every reopen wiped state that should have persisted.
+
+**The fix.** Two surgical changes in `app.js`:
+
+1. **Lines 4975–4991 in `showFinishModal()`.** Removed the `window._finishExported = false` line and the entire button-visual-reset block. Replaced with a five-line guard comment naming v3.21.24 for `git blame` discoverability and explaining why neither reset belongs in `showFinishModal`.
+2. **`clearProject()` at line ~2037.** Added `window._finishExported = false;` to the existing session-cleanup block, alongside `round = 1; phase = 'draft'; history = []; docText = '';` and the other session-state resets that already happen there. The button visual reset was *already* present in `clearProject()` at line ~2058 — it has been there since v3.21.17 with a comment explaining why. So adding the flag reset alongside completes the symmetry: both the flag and the visuals now reset together, in the same function, at the moment a new session genuinely begins.
+
+The guard at line 5008 (`if (!window._finishExported && hasContent)`) is unchanged. The two `window._finishExported = true;` sets in `exportDocument()` and `exportTranscript()` are unchanged. The on-export `waxframe:exported` event listener at line ~8128 that updates button visuals when an export completes is unchanged. Only the inappropriate per-modal-open reset is gone.
+
+**Behavior post-fix.**
+
+- *Open Finish modal first time in a session* → flag is `false` (clean session default). Visuals are pristine.
+- *Click Export Document* → `exportDocument()` sets flag to `true`. The `waxframe:exported` listener updates the button to "✅ Exported!" with `finish-modal-btn-done` class.
+- *Close modal, do other things, reopen Finish modal* → flag remains `true`. Button visuals remain "✅ Exported!" — a useful reminder to the user that they already exported and can safely click Start New Project.
+- *Click Start New Project* → guard checks flag: `true`, so guard does NOT fire. `clearProject()` runs. Inside `clearProject()`, the flag resets to `false` and the button visuals reset to pristine — ready for the next session.
+- *Builder failure during a round* → does not interact with this code path. Notes drawer fix from v3.21.22 still preserves typed notes on Builder error.
+
+**Adjacent observation.** This is the second time in the v3.21.x line where state that should have been session-scoped was incorrectly modal-scoped or per-action-scoped. The first was the v3.21.22 Notes-prefill removal — `workNotes` was being prefilled with the project goal on every fresh session, and the same bug-spec wrote a guarded cleanup branch in `runRound` to clean up its own prefill. Both fixes follow the same architectural pattern: *transient UI state should not be reset by transient UI actions; it should be reset by the action that genuinely ends the state's lifetime*. For Notes, that lifetime ends when a Builder run completes. For the Finish-modal flag, that lifetime ends when `clearProject()` runs. Worth keeping in mind for future state-reset code: ask "what lifetime does this state belong to?" before deciding where to reset it.
+
+### Files changed
+
+- `app.js` — `showFinishModal()` lines 4975–4991: removed `window._finishExported = false` line and the button-visual-reset block; replaced with a guard comment naming v3.21.24. `clearProject()` line ~2037: added `window._finishExported = false;` to the existing session-cleanup block with an inline guard comment naming v3.21.24. Net change: 19 lines removed from `showFinishModal`, 9 lines (1 reset + 8 comment) added to `clearProject`. `BUILD` constant `20260427-001` → `20260427-002`. Comment-header build → `20260427-002`.
+- `index.html` — `waxframe-build` meta `20260427-001` → `20260427-002`. `app.js?v=3.21.23` → `3.21.24`. `style.css?v=3.21.23` → `3.21.24`. `version.js?v=3.21.23` → `3.21.24`. Comment-header build → `20260427-002`.
+- `style.css` — Comment-header build only. **No CSS changes.**
+- `version.js` — `APP_VERSION` `v3.21.23 Pro` → `v3.21.24 Pro`.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Cache-bust + comment-header + meta sweep to `3.21.24` / `20260427-002`. **No content changes.**
+- `CHANGELOG.md` — this entry.
+
+### What to expect after deploy
+
+Reach a session you want to wrap. Click Finish. Click Export Document — button shows "✅ Exported!". Click Export Transcript — button shows "✅ Exported!". Click anywhere else to close the modal. Reopen Finish. The export buttons remain "✅ Exported!" (no more spurious pristine reset). Click Start New Project. The guard does NOT fire because the flag is still `true` from your earlier exports. The session clears cleanly and you land on a fresh Project screen. If you reopen Finish modal *after* clearProject ran (i.e., the very first time in a new session), buttons are pristine again — exactly as expected.
+
+If you genuinely have not exported in this session and you click Start New Project, the guard fires correctly and asks you to confirm — same as before. The fix only addresses the false-positive case.
+
+---
+
 ## v3.21.23 Pro — Build `20260427-001`
 **Released:** April 27, 2026
 
