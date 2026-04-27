@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame v2 — document-playbooks.html
-     Build: 20260426-005
+     Build: 20260427-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260426-005">
+  <meta name="waxframe-build" content="20260427-001">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.22">
+  <link rel="stylesheet" href="style.css?v=3.21.23">
 </head>
 <body class="helper-body">
 
@@ -1061,25 +1061,62 @@ Call to action at the end: link to a tool that automates this — multiple model
         </table>
       </div>
 
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Slide deck outline that converged in 23 rounds</div>
+        <div class="dp-real-example-sub">First measured playbook in the suite where the <strong>v1 run failed to converge and v2 succeeded</strong>. The v1 run used the same Reference Material but left Length Constraint blank and used softer scope language — it ran 40 rounds without the system ever stopping on its own. The v2 run set <strong>Length Constraint = 12 paragraphs</strong>, tightened scope to <em>"Maximum 12 slides"</em>, and reached majority convergence at Round 23 with the system stopping on its own. Length Constraint is the lever that distinguishes the two outcomes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Deck Outline — Wi-Fi 7 Readiness</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v2.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Power Point Presentation</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>IT leadership at a 1,200-person professional services firm — CIO, Director of Infrastructure, and two senior architects, sitting in a 45-minute meeting</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Audience leaves with a clear answer to one question: should we include a Wi-Fi 7 pilot in our FY27 budget? The outline should end with a concrete recommendation, not a list of considerations.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Maximum 12 slides. Each slide gets a paragraph or a couple of bullet points. Opening slide is the question, closing slide is the recommendation with a dollar figure. No "agenda" slide. No "thank you" slide.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Formal Final Draft Presentation</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td><em>(left blank)</em></td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Enter <strong>12</strong> · select <strong>Paragraphs</strong> — required for this playbook</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub" style="margin-top:12px;margin-bottom:4px;"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Driving question: "Should we pilot Wi-Fi 7 in FY27, or wait?"
+
+Recommendation: pilot in FY27 at a single floor of HQ, budget $95k, defer enterprise-wide deployment to FY28 or FY29 depending on client device penetration.
+
+Reasoning:
+- Wi-Fi 7 standard is ratified. Enterprise APs are shipping in volume from Cisco, Aruba, Juniper, Extreme.
+- Client device penetration is still low — under 12% of the user base has a Wi-Fi 7 capable endpoint as of Q1 2026. No reason to refresh the fleet now.
+- HQ 14th floor is being refreshed in FY27 anyway due to an expiring lease remodel. That gives a "free" pilot footprint.
+- Pilot goals: validate real-world throughput gains, test roaming behavior with mixed Wi-Fi 6E and Wi-Fi 7 clients, train the team on the new management platform.
+- If pilot is successful, shovel-ready plan for FY28 enterprise rollout. If not, $95k spent to learn instead of $2.1M to fail.
+
+Context the deck must establish:
+- Where we are today: Wi-Fi 6E, Aruba Central managed, last refreshed FY24
+- Where the industry is going: Wi-Fi 7 ratified, deployment guidance from Gartner suggests "selective pilots in FY26/FY27, mainstream in FY28"
+- Client device mix: 70% corporate-managed laptops, 25% BYOD phones, 5% IoT/sensors
+
+Hard constraints:
+- FY27 budget cycle closes in July 2026. Decision must happen before then.
+- Any dollar figure in the deck is directional — detailed pricing comes from the RFP, not this deck.</pre>
+      </div>
+
       <div class="dp-field-divider"></div>
 
       <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
-          Go to Setup 5 — Starting Document. Paste your existing outline or slide notes using the Paste Text button.
+          Go to Setup 4 — Reference Material if you have source data (statistics, quotes, prior decisions, supporting analysis) the deck must reference but not edit. Then on Setup 5 — Starting Document, paste your existing outline using the Paste Text button. The hive cannot browse the web — anything the deck must reference must be pasted into Reference Material first.
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste a list of the points you need to cover, in rough order of importance.
+          Go to Setup 4 — Reference Material and paste your driving question, recommendation, supporting reasoning, hard constraints (dates, dollar figures), and any context the deck must establish. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
         </div>
       </div>
 
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
-        <div class="dp-field-label">Rounds</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>4–6 rounds — narrative flow and slide order take iteration</div></div>
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈30 minutes · 23 rounds (measured, not estimated) — slide-deck outlines converge only when the hive is allowed to prune wrong-audience content. The recent run (Deck Outline — Wi-Fi 7 Readiness v2.0) reached majority convergence at Round 23 with the system stopping on its own. <strong>Length Constraint must be set</strong> — runs without one polish indefinitely (a v1.0 run with the same Reference Material but no length cap ran 40 rounds without converging).</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -1206,7 +1243,7 @@ Call to action at the end: link to a tool that automates this — multiple model
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.21.22"></script>
+<script src="version.js?v=3.21.23"></script>
 <script src="docs-scrollspy.js"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
