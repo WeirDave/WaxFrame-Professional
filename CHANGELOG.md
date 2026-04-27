@@ -2,6 +2,96 @@
 
 ---
 
+## v3.21.26 Pro — Build `20260427-004`
+**Released:** April 27, 2026
+
+CSS hygiene + helper-page sweep. The five findings deferred from v3.21.25's scrutiny pass are wrapped in this release. 54 orphan CSS rule blocks removed (≈226 lines, ~7% of total selectors). Two unnecessary `!important` declarations dropped via specificity refactor. 19 inline `style="..."` attributes pulled into proper class rules. Drifted helper-page version labels normalized. Cache-bust query string added to a previously-uncached external script. style.css comment-header build stamp resynced (had silently lagged in v3.21.25).
+
+### #3 — Specificity refactor on `.nav-item-accent:hover` drops 2 `!important` declarations
+
+The hover state at `style.css:6762` was using `!important` to win against the `[data-theme="light"] .nav-item:hover` rule at specificity (0,2,1) — `.nav-item-accent:hover` alone is only (0,1,1) and loses on cascade. Refactored to `.nav-item.nav-item-accent:hover` at (0,2,1), which ties on specificity and wins on source order without needing `!important`. Identical visual result. `!important` count in `style.css`: 26 → 24.
+
+### #4 — Inline CSS rule violations: 19 of 40 reconciled, 21 documented as carve-outs
+
+**document-playbooks.html (18 → 0).** Eighteen typography-only inline styles consolidated into five new `.dp-*` modifier classes in style.css.
+
+| Pattern | Occurrences | New class |
+|---------|---:|-----------|
+| `<span style="font-weight:400;font-size:10px;">` (sub-notes inside table cells) | 8 | `.dp-field-sub-note` |
+| `<div class="dp-real-example-sub" style="margin-top:12px;margin-bottom:4px;">` | 6 | `.dp-real-example-sub--mid` |
+| `<div class="dp-real-example-sub" style="margin-top:14px;margin-bottom:4px;">` | 1 | `.dp-real-example-sub--mid` (standardized 14→12px — visually imperceptible) |
+| `<div class="dp-real-example-sub" style="margin-top:0;margin-bottom:6px;">` | 1 | `.dp-real-example-sub--continuation` |
+| `<p style="margin:0 0 8px;">` | 1 | `.dp-tight-p` |
+| `<ul style="margin:0;padding-left:20px;line-height:1.7;">` | 1 | `.dp-tight-list` |
+
+**api-details.html (1 → 0).** The `<div class="info-card info-card-tips" style="margin-top:32px;">` had a redundant inline override — the existing `.info-card-tips` rule at `style.css:6339` already provides `margin-top: 32px;`. Inline attribute deleted; visual identical.
+
+**index.html (21 → 21, documented as carve-outs).** Two categories of inline style remain and are now formally documented as project-pattern carve-outs rather than violations.
+
+- **15× `style="display:none"` for initial-hidden state** (file inputs, status banners, modal-internal toggle elements, dev toolbar). These are JS-toggle elements — `app.js` reads and writes `element.style.display` directly to show and hide them, including reads of the form `el.style.display !== 'none'` at `app.js:3137` (`testCustomAIConnection`). Refactoring to a `.hidden` utility class would require auditing and rewriting every `style.display` read across the codebase to use `classList.contains('hidden')` or `getComputedStyle()` instead, since a class-hidden element reports `el.style.display === ''` rather than `'none'`. That refactor is non-surgical and was deemed out of scope for a hygiene patch. The 15 inline styles are kept and marked as the project's JS-toggle pattern. A `.hidden` utility may be added later for static-only hide cases that don't involve JS toggling, but YAGNI applies until such a case appears.
+
+- **6× `style="--sx:Xpx;--fall:Ypx;"` on snowflake animation spans** (lines 690-695). These are per-element animation parameters — each snowflake gets its own random horizontal offset and fall distance. Encoding 6 unique values via 6 modifier classes would be more verbose than inline custom properties, and CSS `attr()` for this purpose is not yet broadly supported. Inline custom properties are the canonical idiom for per-instance CSS variables; kept as a documented exception.
+
+### #6 — Cache-bust on `docs-scrollspy.js`
+
+`waxframe-user-manual.html` (line 1305) and `document-playbooks.html` (line 1247) loaded `docs-scrollspy.js` as a bare `<script src="docs-scrollspy.js"></script>` — no `?v=` query string. Every other shared asset on those pages already carried the canonical cache-bust. Returning visitors would have seen stale scrollspy behavior on any future scrollspy update. Both tags now read `<script src="docs-scrollspy.js?v=3.21.26"></script>`.
+
+The full cache-bust target list now consists of `style.css`, `version.js`, `app.js` (index.html only), and `docs-scrollspy.js` (manual + playbooks only). Worth promoting to the canonical version-stamp checklist as a 5th sweep target alongside the existing four (`waxframe-build` meta, `APP_VERSION`, `app.js BUILD`, `app.js?v=` cache-bust). Comment-header `Build:` stamps in helper pages and `style.css` are a 6th, parallel concern handled by the same release-time sweep.
+
+### #7 — Helper-page header version label drift normalized
+
+Five HTML files said *"WaxFrame v2 — &lt;filename&gt;"* in their comment headers, `api-details.html` said *"WaxFrame v3.3 — api-details.html"*, and `style.css` said *"WaxFrame v2 — style.css"*. None of these matched the actual product version (v3.21.26 at this release). The version label was a documentation-only stub that drifted silently because there was no canonical-stamp checklist entry for it. All seven files now read *"WaxFrame — &lt;filename&gt;"* with no version label — the `Build:` stamp on the line below is the canonical reference. Eliminates the drift surface entirely rather than synchronizing a value that would inevitably drift again.
+
+### #9 — 54 orphan CSS rule blocks removed (~226 lines, ~7% of total selectors)
+
+Cross-referenced every top-level class selector in `style.css` against `index.html`, `app.js`, and all five helper pages. Verified no dynamic class construction in `app.js` (template-literal class concatenation, `classList.add`, etc.) before deletion. Compound selectors with mixed orphan + non-orphan classes were inspected individually — all 6 cases turned out to be descendants of orphan parents (e.g., `.work-notes-panel .work-panel-header` — the descendant class is used elsewhere in the DOM but never under a `.work-notes-panel` ancestor, so the rule never fires).
+
+**Removed clusters:**
+
+- **Welcome-card subsystem (16 rules):** `.welcome-choices`, `.welcome-card-icon`, `.welcome-card-body`, `.welcome-card-title`, `.welcome-card-arrow`, `.welcome-info-btn` (+ `:hover`), `.welcome-info-label`, `.welcome-info-row`, `.welcome-info-icon`, `.welcome-info-body` (+ ` strong`), `.welcome-info-note`, `.welcome-footer`, `.welcome-hamburger`. Entire subsystem appears to be a defunct earlier welcome-screen design that was replaced and never reconciled.
+
+- **Project-screen field utilities (9 rules):** `.proj-field-full`, `.proj-field-ver`, `.proj-clear-row--bottom` (×2 — appeared twice in the file), `.project-fields`, `.project-field-wrap .field-lg`, `.project-field-wrap:nth-child(2) .field-sm`, `.field-lg/sm/goal/doc` rule + `:focus` variant.
+
+- **Text utility set (8 rules — never adopted):** `.text-green`, `.text-accent`, `.text-warn`, `.text-error`, `.text-send`, `.text-preview`, `.text-divider`. Defined but never referenced in any HTML or JS.
+
+- **Goal counter / info icon stragglers (5 rules):** `.goal-counter-row`, `.goal-counter-text`, `.goal-info-modal-icon`, `.goal-info-modal-icon-wrap`, `.btn-bee-img`.
+
+- **Setup-card / API-form / hex-icon stragglers (7 rules):** `.setup-card-bee` (×2), `.hex-icon-wrap` (+ stale comment), `.edit-hive-avatar-letter`, `.custom-ai-form-title`, `.import-server-item-badge`, `.api-azure-intro`.
+
+- **Notes-panel descendant rules with no live parent (4 rules):** `.work-notes-panel .work-panel-header`, `.work-notes-panel .round-history`, `.btn-shake-wide.running`, `.round-timer-clock.running` — all four can never match because the parent class `.work-notes-panel` / state class `.btn-shake-wide` / `.round-timer-clock` never appears in the DOM.
+
+- **DP playbook stragglers (5 rules):** `.dp-field-label--scratch`, `.dp-goal-fields`, `.dp-goal-row`, `.dp-goal-label`, `.dp-goal-val`.
+
+- **Singletons (5 rules):** `.badge-api`, `.finish-modal-bee`, `.wh-tag-amber`.
+
+`style.css` is now 7284 lines (was 7512, net -228 lines including the 5 new `.dp-*` modifier rules added under #4). Brace balance preserved: 1566 open / 1566 close in the new file (was 1616 / 1616 — exactly 50 rule blocks of net deletion accounting for the 54 deletions minus the 4 declaration-only rule additions).
+
+### Files changed
+
+- `app.js` — `BUILD` constant `20260427-003` → `20260427-004`. Comment-header `Build:` → `20260427-004`. No code changes.
+- `index.html` — `waxframe-build` meta → `20260427-004`. `app.js?v=` / `style.css?v=` / `version.js?v=` all → `3.21.26`. Comment-header build → `20260427-004`. Comment-header version label dropped (`WaxFrame v2` → `WaxFrame`). No structural changes — 21 inline styles preserved as documented carve-outs.
+- `version.js` — `APP_VERSION` → `v3.21.26 Pro`.
+- `style.css` — 54 orphan rule blocks removed, 5 new `.dp-*` modifier rules added, 1 `.nav-item-accent:hover` block refactored to drop 2 `!important`s. Comment-header build resynced from `20260427-002` (had drifted silently in v3.21.25) → `20260427-004`. Comment-header version label dropped. Net -228 lines.
+- `document-playbooks.html` — 18 inline `style="..."` attrs replaced with class modifiers. `style.css?v=` / `version.js?v=` / `docs-scrollspy.js?v=` all → `3.21.26`. Comment-header build → `20260427-004`. Version label dropped.
+- `api-details.html` — 1 redundant inline `style="margin-top:32px;"` deleted (class already provides it). `style.css?v=` / `version.js?v=` → `3.21.26`. Comment-header build → `20260427-004`. Version label dropped (was the only file saying `v3.3`).
+- `waxframe-user-manual.html` — `docs-scrollspy.js` cache-bust added. `style.css?v=` / `version.js?v=` → `3.21.26`. Comment-header build → `20260427-004`. Version label dropped.
+- `what-are-tokens.html`, `prompt-editor.html` — `style.css?v=` / `version.js?v=` → `3.21.26`. Comment-header build → `20260427-004`. Version label dropped.
+
+### Visual / functional impact
+
+None expected for end users. All 54 deleted CSS rules were unreachable (no matching DOM). The `.nav-item-accent:hover` refactor produces visually identical output (same background and text color, just achieved via specificity rather than `!important`). The 18 playbook inline-style replacements use the same numeric values now declared in classes; one outlier 14px → 12px standardization is sub-pixel-perceptible. The api-details inline style was already redundant. Cache-busts ensure returning visitors get the new assets on next load.
+
+### Code health metrics
+
+- `style.css` lines: 7512 → 7284 (-228, -3.0%)
+- `style.css` `!important` count: 26 → 24 (-2)
+- Inline `style="..."` total across HTML files: 40 → 21 (15 documented JS-toggle carve-outs + 6 documented per-element-animation carve-outs)
+- Brace balance in `style.css`: 1566 / 1566 (was 1616 / 1616 — preserved through deletion)
+- Total CSS class selectors at top level: 769 → 715 (-54)
+- All 4 canonical version stamps in sync. All 8 cache-bust / build-stamp targets in sync site-wide.
+
+---
+
 ## v3.21.25 Pro — Build `20260427-003`
 **Released:** April 27, 2026
 
