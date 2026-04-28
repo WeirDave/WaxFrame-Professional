@@ -2,6 +2,87 @@
 
 ---
 
+## v3.22.0 Pro — Build `20260427-007`
+**Released:** April 27, 2026
+
+**Work-screen chrome alignment** — first release in a planned cohesion sweep that will eventually unify chrome (header, footer, menu) across every helper page in the WaxFrame ecosystem. v3.22.0 itself only touches the work screen — moving the theme buttons and mute button up to the topbar so they're top-right on every page that has them, moving the license pill down to the footer so it sits next to a new About link, and removing a stale dark-text version stamp that had been rendering illegibly in the upper-right corner of the work topbar.
+
+### What changed
+
+- **`index.html`** — Work-screen topbar-right gains the four theme controls (Light, Auto, Dark, Mute) that used to live in the footer. Work-screen footer-right loses those four controls and gains the license badge (relocated from the topbar) plus a new `ℹ️ About` button that opens the existing About modal. The broken `.work-version-stamp` `<span>` in the topbar-right was deleted entirely — version is already shown in the slide-in nav menu header and in the About modal, so the upper-right placement was redundant on top of being illegible.
+- **`style.css`** — Removed the now-orphaned `.work-version-stamp` rule (its sole consumer was the deleted `<span>`; no descendant selectors, no JS toggling, no `display: contents` role — safe to delete per the v3.21.26 lessons-learned checklist). Added one new rule block for `.footer-about-btn` styling — dashed border, transparent background, accent border on hover, sized to sit visually quieter than the action buttons in the same footer. The license-pill and theme/mute buttons reuse their existing classes so no new rules were needed for the relocation itself.
+- **All canonical stamps** updated to v3.22.0 / `20260427-007`. Site-wide cache-bust `?v=3.22.0`.
+
+### Why this layout shuffle matters
+
+The work-screen topbar previously had **two** items rendering against a busy background — the license badge and a dark-text version stamp — neither of which fits the topbar's pattern of action buttons. The version stamp in particular was unreadable against the work-screen surface in dark mode and barely visible in light mode. Both items were noise that didn't serve the topbar's purpose.
+
+Meanwhile, the work-screen footer was carrying **four** controls (mute and three theme buttons) that conceptually belong with chrome controls site-wide. Moving them to the topbar puts them in the same visual zone where chrome controls (theme toggle, mute) appear on the welcome screen and where they will appear on every helper page once the universal-chrome work continues in v3.22.1+.
+
+After this release:
+- **Work-screen topbar-right:** Notes, Reference, Finish, Mute, Light, Auto, Dark — all chrome controls grouped together.
+- **Work-screen footer-right:** License badge (clickable, opens existing license-manage modal), About button (opens existing About modal) — both centered as documentation/status, not action.
+
+The license badge stays clickable and behaves identically — only its position changed. The About modal contents are unchanged in this release; visual restyling of the modal will happen alongside the helper-page chrome work in later v3.22.x releases.
+
+### What's next (v3.22.1 onward)
+
+The remaining v3.22.x releases will apply the same chrome pattern to each helper page one at a time:
+
+- **v3.22.1** — `waxframe-user-manual.html` (longest, most complex — hardest first)
+- **v3.22.2** — `document-playbooks.html`
+- **v3.22.3** — `prompt-editor.html`
+- **v3.22.4** — `api-details.html` (already partially done with the v3.21.28 honeycomb-header intro)
+- **v3.22.5** — `what-are-tokens.html`
+
+Each helper page will get a setup-screen-style header (logo + WaxFrame tagline `Many minds, one refined result.` + version stamp + hamburger menu) with theme buttons added top-right, and a work-screen-style thin footer with License pill + About link centered. The hamburger menu structure will be unified across every page so navigation is identical no matter where the user is reading. After all helper pages are unified, a final v3.22.x release will revisit content-card primitives (the green/orange `info-card` / `note-box` consistency mess identified during the api-details review).
+
+### Items still queued from the work-session triage
+
+Deferred so the chrome work can ship cleanly without scope creep:
+
+- **#7** Model update detection + opt-in swap prompt
+- **#8** `MODEL_LABELS` strategy decision
+- **#10** Model catalog (Appendix B flow) — stop filtering already-added AIs
+- **#12** Mute button muted-state icon — clearer glyph
+- **#13** Reference Material — multi-document support
+- **#14** Excel/.xlsx ingestion
+- **#15** Shareable hive presets (client-side export/import)
+- **#16** "CONFLICTS DETECTED BUT COULD NOT BE PARSED" diagnostics surfacing
+- **#17** Holdout suggestion clickability — wrap-aware numbering or section-anchor primary
+- **#18** Clock CSS audit (number colors, header colors, paused amber/black across themes)
+- **#19** Export-flag regression (`_finishExported` wiped between Finish-modal opens)
+- **#22** api-details bottom buttons — deprecate `Open All Billing Pages` + `Open All API Consoles` to single button matching Worker Bees (folds into v3.22.4)
+- **#23** Work-screen upper-right version stamp (closed in this release — stamp removed)
+
+### Validation
+
+- `style.css` brace balance: 1625 open / 1625 close ✓
+- `index.html` div balance: 539 / 539 ✓
+- `.work-version-stamp` orphan check: 0 references in index.html, style.css, or app.js ✓
+- All 4 canonical version stamps verified at v3.22.0 / `20260427-007`
+- All 6 helper-page cache-busts verified at `?v=3.22.0`
+
+### Test plan
+
+1. Drop files into `C:\Users\weird\Dropbox\Websites\WaxFrame-Professional`, hard-refresh (`Ctrl+Shift+R`).
+2. Walk through to the work screen.
+3. Confirm topbar-right (left to right): Notes, Reference, Finish, 🔊 mute button, ☀️ Light, ⚙️ Auto, 🌙 Dark.
+4. Confirm footer-right shows the license pill (clickable, opens license-manage modal) and the new `ℹ️ About` button (opens existing About modal).
+5. Confirm there is no version stamp in the upper-right of the topbar — it should be gone entirely. Version still appears in the slide-in nav menu header and in the About modal.
+6. Click the theme buttons — Light / Auto / Dark switching should work identically to before, just from the new location.
+7. Click the mute button — sound toggle should work identically to before.
+8. Click the license pill in the footer — should open the license-manage modal (replace key, remove key) just like it did from the topbar.
+9. Click the About button in the footer — should open the existing About modal with author/version/credits content.
+10. Walk every setup screen — Worker Bees, Choose Builder, Your Project, Reference Material, Starting Document. They should look identical to v3.21.28. The chrome work in v3.22.0 only touched the work screen.
+11. Confirm the slide-in nav menu (hamburger) opens normally on every screen and shows the existing menu structure unchanged. The menu restructure is planned for a later release; v3.22.0 only does chrome positioning.
+
+### Upgrade
+
+Pull and hard-refresh. Cache-busts at `3.22.0` ensure returning visitors get the updated assets immediately. No session migration. Existing IndexedDB sessions, license keys, project state, and backups load unchanged.
+
+---
+
 ## v3.21.28 Pro — Build `20260427-006`
 **Released:** April 27, 2026
 
