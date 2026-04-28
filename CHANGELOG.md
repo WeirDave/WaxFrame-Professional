@@ -2,6 +2,89 @@
 
 ---
 
+## v3.22.3 Pro — Build `20260427-010`
+**Released:** April 27, 2026
+
+**Helper-page chrome unification — round 1 of 5: `waxframe-user-manual.html`.** First helper page brought into the unified header/footer pattern. Hardest-first per project plan — the user manual is the longest helper file with the most complex internal structure (sticky sidebar, scroll-spy, print mode), so getting the chrome pattern right here proves it for the four shorter helper pages that follow.
+
+This release lands the chrome shell only — header, footer, About modal. The hamburger menu that the unified header is designed to contain ships in v3.22.4 once the markup pattern, JS wiring, and CSS for a slim helper-page-specific menu are designed and tested. The header reserves space for the hamburger so v3.22.4 is a markup-only addition with no layout shift.
+
+### What changed
+
+- **`waxframe-user-manual.html` — header rewritten.** The old header layout (`page-header-spacer / page-header-brand / page-header-spacer / page-header-controls`) used spacer divs to fake a centered brand with controls on the right. The new layout uses semantic `page-header-left / page-header-brand / page-header-controls` matching the work-screen and setup-screen language. The brand-block `tag` slot now reads **`Many minds, one refined result.`** instead of `User Manual` — the WaxFrame tagline goes where the tagline belongs, and the page-specific name moves to the body H1 where it belongs as document content. The theme buttons in `.page-header-controls` simplified from `☀️ Light / ⚙️ Auto / 🌙 Dark` (icon + word) to icon-only `☀️ / ⚙️ / 🌙` matching the work-screen treatment shipped in v3.22.0. The hamburger placeholder slot on the left is reserved as a `.page-header-left` element so v3.22.4 can drop the hamburger button in without re-flowing the header.
+- **`waxframe-user-manual.html` — footer rewritten.** The old footer mixed three categories of items in one row: AGPL/GitHub branding links, a Save-as-PDF action, and a Close-tab utility plus a version stamp. The new layout pulls the branding links (AGPL and GitHub) out of the footer entirely — they now live in the new helper About modal where project metadata belongs. The footer becomes thin (`8px 24px` padding matching the work-screen footer), with secondary actions (`Save as PDF`, `Close this tab`) on the left and a centered cluster of `version pill` + `ℹ️ About` button. The thin-and-centered shape matches the work-screen footer's visual language.
+- **`waxframe-user-manual.html` — body H2 promoted to H1.** The `<h2>WaxFrame User Manual</h2>` inside the existing `wh-intro` block becomes `<h1 class="wh-intro-title">WaxFrame User Manual</h1>`. With the tagline now in header chrome, the page-name needs to be the document's primary heading. Semantic improvement only; the `.wh-intro-text` CSS rule was updated to target both `h2` (legacy fallback) and the new `.wh-intro-title` class so styling is preserved with no visual change.
+- **`waxframe-user-manual.html` — About modal added.** New `aboutModalHelper` modal with the same content shape as the in-app `aboutModal`: Version (auto-stamped from `app-version-stamp`), License (AGPL-3.0 with link to gnu.org), Source (GitHub link), Author (R David Paine III with weirdave.com link), Testing (Candy), Stack (Vanilla HTML/CSS/JS), and the closing build line. Modal opens from the new footer About button. Same visual treatment as in-app modals — `.finish-modal-overlay` + `.finish-modal.goal-info-modal`.
+- **`waxframe-user-manual.html` — stale build stamp fix.** The `<meta name="waxframe-build">` tag was reading `20260427-002` while the rest of the page had been bumped through several releases. This silent drift is now corrected to `20260427-010` and will be checked on every helper page touched in v3.22.4 onward.
+- **`style.css`** — Three additions, one update. Added `.page-header-left` and `.page-header-brand-text` for the new helper-page header layout. Added `.page-footer.page-footer-unified`, `.page-footer-actions`, `.page-footer-center`, and `.footer-version-pill` for the new helper-page footer layout. Updated `.wh-intro-text h2` selector to `.wh-intro-text h2, .wh-intro-text .wh-intro-title` so the H2 → H1 promotion preserves styling without depending on the descendant tag.
+
+### What didn't change
+
+- All v3.22.0 work-screen chrome — preserved exactly.
+- All v3.22.1 / v3.22.2 hamburger menu structure on the work screen — preserved exactly.
+- `index.html` body markup — only version stamp updates.
+- `app.js` — only `BUILD` constant. No code changes.
+- All other helper pages (`api-details.html`, `document-playbooks.html`, `prompt-editor.html`, `what-are-tokens.html`) — content unchanged. Cache-busts updated to `?v=3.22.3` so returning visitors get the updated `style.css` immediately.
+- User manual body content — unchanged. Sidebar, sections, scroll-spy, print mode, all working as before.
+
+### Why the menu wasn't included in v3.22.3
+
+The agreed helper-page menu is a slim variant of the work-screen menu — drops Navigation/Tools/Advanced sections (they need an in-app session to be useful), keeps Documentation alphabetical, adds a `CREATE SOMETHING` section with a single `Open WaxFrame` link in a new tab, and a `SUPPORT` section with `Buy WaxFrame Pro`. That structure needs:
+
+1. New nav-panel markup tailored for helper pages
+2. JS for `openNavMenu` / `closeNavMenu` (these live in `app.js` which helper pages don't load)
+3. Either a shared `nav-helper.js` file or inline `<script>` blocks in each helper page
+4. CSS for the helper-specific menu structure
+
+That's enough scope to deserve its own release rather than getting bundled into the chrome shell. v3.22.4 lands the menu across all five helper pages at once so the markup, JS, and CSS get designed once and applied consistently.
+
+### What changed (file-by-file)
+
+| File | Changes |
+|------|---------|
+| `waxframe-user-manual.html` | Header rewritten with unified pattern. Footer rewritten thin + centered. Body H2 → H1. New `aboutModalHelper`. Stale `meta` build stamp fixed (`002` → `010`). |
+| `style.css` | Two new layout rule blocks (`.page-header-left`, `.page-header-brand-text`) plus four for the unified footer (`.page-footer.page-footer-unified`, `.page-footer-actions`, `.page-footer-center`, `.footer-version-pill`). One selector update to keep wh-intro H1 styling. Build header. |
+| `index.html` | Version stamps only. |
+| `app.js` | `BUILD` constant only. |
+| `version.js` | `APP_VERSION` → `v3.22.3 Pro`. |
+| `api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` | Build header + cache-busts only. Chrome unification on these pages comes in v3.22.5 onward after the menu lands in v3.22.4. |
+
+### Validation
+
+- `style.css` brace balance: 1633 open / 1633 close ✓
+- All HTML files div balance verified clean (538/538, 381/381, 164/164, 405/405, 29/29, 70/70) ✓
+- All 4 canonical version stamps verified at v3.22.3 / `20260427-010` ✓
+- All 6 helper-page cache-busts verified at `?v=3.22.3` ✓
+- User manual `meta name="waxframe-build"` corrected from drifted `002` to current `010` ✓
+
+### Upgrade
+
+Pull and hard-refresh (`Ctrl+Shift+R` / `Cmd+Shift+R`). Cache-busts at `3.22.3` ensure returning visitors get the updated assets immediately. No session migration. Existing IndexedDB sessions, license keys, project state, and backups load unchanged.
+
+### Test plan
+
+1. Drop files into the repo, hard-refresh.
+2. Open `waxframe-user-manual.html` in the browser.
+3. **Header check (dark + light themes):**
+   - Logo on left-of-center, `WaxFrame` name large, tagline `MANY MINDS, ONE REFINED RESULT.` in small caps below, version stamp below the tagline
+   - Theme buttons on the right are icon-only (☀️ ⚙️ 🌙) — no longer have word labels
+   - Left side has reserved space (currently empty) for the v3.22.4 hamburger
+4. **Body check:** the H1 at the top should still read `WaxFrame User Manual` with identical styling to before. Sidebar, all sections, scroll-spy all work unchanged.
+5. **Footer check:**
+   - Left side: `Save as PDF` and `Close this tab` buttons (these used to be split with branding links — branding moved to About modal)
+   - Center: small version pill (`v3.22.3 Pro`) + `ℹ️ About` button
+   - No longer shows the orange `Save as PDF` accent — it's now a regular `.btn` matching `Close this tab`
+   - Footer is thinner than before (8px vertical padding, was 14px)
+6. **About modal:** click `ℹ️ About` in the footer. Modal opens with version, license (AGPL-3.0 with link), source (GitHub link), author (weirdave.com link), testing credit (Candy), stack info, build line. Click "Got it →" or click outside the modal to close.
+7. **Cross-page check:** open `api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — all should still look exactly like they did in v3.22.2. Only the user manual got the chrome treatment in this release.
+8. **App check:** open `index.html` — work screen, setup screens, hamburger menu, all unchanged from v3.22.2.
+
+### What's next — v3.22.4
+
+Helper-page hamburger menu lands across all five helper pages at once: Documentation list (alphabetical), `CREATE SOMETHING → Open WaxFrame`, `SUPPORT → Buy WaxFrame Pro`. Slim variant of the work-screen menu. After v3.22.4 ships, the four remaining helper pages (`api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`) get the same chrome treatment in v3.22.5 / v3.22.6 / v3.22.7 / v3.22.8.
+
+---
+
 ## v3.22.2 Pro — Build `20260427-009`
 **Released:** April 27, 2026
 
