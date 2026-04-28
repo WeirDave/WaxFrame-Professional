@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-006
+   Build: 20260427-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -423,13 +423,6 @@ html, body {
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-top: 3px;
-}
-
-.work-version-stamp {
-  display: inline;
-  margin-top: 0;
-  font-size: 10px;
-  opacity: 0.5;
 }
 
 .welcome-brand h1 {
@@ -2275,6 +2268,27 @@ html, body {
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
+}
+/* About button in work-screen footer (v3.22.0) — sits next to the license pill,
+   visually quieter than the action buttons in the same footer. */
+.footer-about-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 4px 10px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.footer-about-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 
 .bee-status-card.is-active { border-color: var(--border2); }
