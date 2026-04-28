@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-007
+   Build: 20260427-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1184,6 +1184,30 @@ html, body {
   text-transform: uppercase;
   margin-top: 1px;
   line-height: 1.2;
+}
+/* About button in nav-panel header (v3.22.1) — sits below the version stamp
+   in the brand block, matches the dashed-button visual language used by other
+   small chrome buttons. Compact since it lives inside the menu's brand block. */
+.nav-panel-about-btn {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 6px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 11px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.12s;
+  white-space: nowrap;
+}
+.nav-panel-about-btn:hover {
+  border-color: var(--accent);
+  color: var(--text);
 }
 .nav-close-btn {
   background: transparent;
