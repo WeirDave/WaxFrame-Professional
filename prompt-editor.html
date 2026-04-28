@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — prompt-editor.html
-     Build: 20260427-013
+     Build: 20260427-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-013">
+  <meta name="waxframe-build" content="20260427-014">
   <title>WaxFrame — Prompt Editor</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.22.6">
+  <link rel="stylesheet" href="style.css?v=3.22.7">
 </head>
 <body class="helper-body">
 
@@ -84,22 +84,21 @@
 
 <div class="page-main">
 
-  <!-- SAVE BAR -->
-  <div class="save-bar">
-    <div class="save-bar-left">
-      <img src="images/WaxFrame_Prompt_Editor_Bee_v1.png" alt="" class="save-bar-bee">
-      <div>
-        <div class="save-bar-title">Prompt Editor</div>
-        <div class="save-bar-note">Prompts are the instructions WaxFrame sends to each AI on your behalf. You can read them here for full transparency into what's being sent — your API key, your money. Most users never need to change anything, and if you do experiment, Reset to Defaults will always restore the original instructions exactly. Changes are saved to your browser only and never leave your device.</div>
+  <div class="hp-section">
+    <div class="hp-section-header">
+      <img src="images/WaxFrame_Prompt_Editor_Bee_v1.png" alt="" class="hp-section-bee">
+      <div class="hp-section-title-block">
+        <h1 class="hp-section-title">Prompt Editor</h1>
+        <p class="hp-section-sub">Prompts are the instructions WaxFrame sends to each AI on your behalf. You can read them here for full transparency into what's being sent — your API key, your money. Most users never need to change anything, and if you do experiment, Reset to Defaults will always restore the original instructions exactly. Changes are saved to your browser only and never leave your device.</p>
       </div>
     </div>
-    <div class="save-bar-center"></div>
-    <div class="save-bar-actions">
-      <span class="status-toast" id="statusToast"></span>
-      <button class="btn btn-red" onclick="resetAll()">↺ Reset All to Defaults</button>
-      <button class="btn btn-accent" onclick="saveAll()">💾 Save All Prompts</button>
-    </div>
-  </div>
+    <div class="hp-section-body">
+
+      <div class="prompt-editor-actions">
+        <span class="status-toast" id="statusToast"></span>
+        <button class="btn btn-red" onclick="resetAll()">↺ Reset All to Defaults</button>
+        <button class="btn btn-accent" onclick="saveAll()">💾 Save All Prompts</button>
+      </div>
 
   <div class="prompts-grid" id="promptsGrid">
 
@@ -217,6 +216,9 @@
     </div>
 
   </div>
+
+    </div><!-- /hp-section-body -->
+  </div><!-- /hp-section -->
 
 </div>
 
