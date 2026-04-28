@@ -1640,7 +1640,9 @@ html, body {
    WORKING DOCUMENT PANEL — clean rewrite
 ══════════════════════════════════════ */
 
-/* Outer card — floats over honeycomb */
+/* Outer card — transparent so the body honeycomb shows through around
+   the floating glass header strip, matching .work-left-panel and
+   .work-right-panel. v3.22.7. */
 .work-doc-panel {
   display: flex;
   flex-direction: column;
@@ -1651,11 +1653,8 @@ html, body {
   font-size: 13px;
   flex-shrink: 0;
   margin: 8px 0;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(6px);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+  background: transparent;
+  border-radius: 10px 10px 0 0;
 }
 .work-panel-header {
   display: flex;
@@ -1688,6 +1687,76 @@ html, body {
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .work-panel-header.honeycomb-header .work-section-title { color: #ffffff; }
 }
+
+/* Working Document strip is wider than the others because the document
+   body editor below it spans the full .work-doc-panel width. Zero out
+   the side margins (top/bottom kept for the floating gap) so the strip
+   stretches edge-to-edge to align with the document body. Specificity
+   0,2,0 ties .work-panel-header.honeycomb-header (also 0,2,0) — declared
+   after, wins by source order. */
+.work-doc-panel > .work-panel-header.honeycomb-header {
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 8px;
+}
+
+/* Working Document header has two rows: title+buttons (row 1) and the
+   stats counter (row 2). When the strip wraps a .work-panel-header-row
+   child, switch the strip from row layout to column layout so the rows
+   stack. The .work-panel-header-row child carries the original row
+   layout (title left, buttons right). */
+.work-panel-header.honeycomb-header:has(> .work-panel-header-row) {
+  flex-direction: column;
+  align-items: stretch;
+  padding: 6px 12px 4px;
+}
+.work-panel-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* doc-stats-row, when nested inside the floating glass strip, drops its
+   own background fills (originally dark in dark mode / white in light
+   mode) and rides the strip's glass. Centered, slim, sits below the
+   title+buttons row. */
+.work-panel-header.honeycomb-header > .doc-stats-row {
+  background: transparent;
+  padding: 8px 0 0;
+  min-height: 0;
+}
+[data-theme="light"] .work-panel-header.honeycomb-header > .doc-stats-row {
+  background: transparent;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .work-panel-header.honeycomb-header > .doc-stats-row {
+    background: transparent;
+  }
+}
+
+/* The .doc-stats pill chip, when riding the glass strip, keeps its
+   accent (amber) color and border so it reads as a distinct chip
+   against the white title and white buttons. Background goes
+   transparent so it inherits the strip's glass instead of carrying
+   its own surface2 fill. */
+.work-panel-header.honeycomb-header > .doc-stats-row > .doc-stats {
+  color: var(--accent);
+  background: transparent;
+  border-color: var(--accent);
+}
+[data-theme="light"] .work-panel-header.honeycomb-header > .doc-stats-row > .doc-stats {
+  color: var(--accent);
+  background: transparent;
+  border-color: var(--accent);
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .work-panel-header.honeycomb-header > .doc-stats-row > .doc-stats {
+    color: var(--accent);
+    background: transparent;
+    border-color: var(--accent);
+  }
+}
 /* ══ DOC EDITOR ══ */
 /* ══ DOC EDITOR — single scroll container, notebook paper background ══ */
 .work-doc-editor {
@@ -1696,7 +1765,7 @@ html, body {
   min-height: 0;
   overflow-y: auto;
   overflow-x: auto;
-  border-radius: 0 0 12px 12px;
+  border-radius: 12px;
   background: var(--surface);
   scrollbar-width: thin;
   scrollbar-gutter: stable;
@@ -2113,20 +2182,21 @@ html, body {
 [data-theme="light"] .dcw-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; box-shadow: inset 0 2px 4px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.1); }
 [data-theme="light"] .dcw-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; box-shadow: inset 0 1px 4px rgba(0,0,0,0.1); }
 [data-theme="light"] .dcw-digits { color: #1a1d2a; }
-[data-theme="light"] .dcw-digits.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
-[data-theme="light"] .dcw-digits-project.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
+[data-theme="light"] .dcw-digits.running { color: #00b300; text-shadow: 0 0 8px rgba(0,179,0,0.5); }
+[data-theme="light"] .dcw-digits-project.running { color: var(--accent); text-shadow: 0 0 8px rgba(245,166,35,0.5); }
+[data-theme="light"] .dcw-digits-project.paused { color: var(--accent); }
 [data-theme="light"] .dcw-label-top { color: #384060; }
 [data-theme="light"] .dcw-label-bot { color: #384060; }
-[data-theme="light"] .dcw-label-bot.running { color: #047857; }
-[data-theme="light"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
+[data-theme="light"] .dcw-label-bot.running { color: #00b300; }
+[data-theme="light"] .dcw-ctrl-btn { border-color: #7880a0; color: #384060; }
 [data-theme="light"] .dcw-ctrl-btn:not(.active):hover { border-color: var(--accent); color: var(--accent); }
 [data-theme="light"] .dcw-ctrl-btn--start.active {
-  border-color: #047857;
-  color: #047857;
+  border-color: #00b300;
+  color: #00b300;
 }
 [data-theme="light"] .dcw-ctrl-btn--pause.active {
-  border-color: #a06000;
-  color: #a06000;
+  border-color: var(--accent);
+  color: var(--accent);
 }
 [data-theme="light"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 @media (prefers-color-scheme: light) {
@@ -2134,18 +2204,19 @@ html, body {
   [data-theme="auto"] .dcw-bezel { background: linear-gradient(145deg, #e8eaf0, #ffffff); border-color: #d0d4e8; }
   [data-theme="auto"] .dcw-screen { background: linear-gradient(180deg, #f0f2f8 0%, #e8eaf4 100%); border-color: #d0d4e8; }
   [data-theme="auto"] .dcw-digits { color: #1a1d2a; }
-  [data-theme="auto"] .dcw-digits.running { color: #047857; text-shadow: 0 0 8px rgba(4,120,87,0.4); }
-  [data-theme="auto"] .dcw-digits-project.running { color: #a06000; text-shadow: 0 0 8px rgba(160,96,0,0.4); }
+  [data-theme="auto"] .dcw-digits.running { color: #00b300; text-shadow: 0 0 8px rgba(0,179,0,0.5); }
+  [data-theme="auto"] .dcw-digits-project.running { color: var(--accent); text-shadow: 0 0 8px rgba(245,166,35,0.5); }
+  [data-theme="auto"] .dcw-digits-project.paused { color: var(--accent); }
   [data-theme="auto"] .dcw-label-top { color: #7880a0; }
   [data-theme="auto"] .dcw-label-bot { color: #7880a0; }
-  [data-theme="auto"] .dcw-ctrl-btn { border-color: #d0d4e8; color: #7880a0; }
+  [data-theme="auto"] .dcw-ctrl-btn { border-color: #7880a0; color: #384060; }
   [data-theme="auto"] .dcw-ctrl-btn--start.active {
-    border-color: #047857;
-    color: #047857;
+    border-color: #00b300;
+    color: #00b300;
   }
   [data-theme="auto"] .dcw-ctrl-btn--pause.active {
-    border-color: #a06000;
-    color: #a06000;
+    border-color: var(--accent);
+    color: var(--accent);
   }
   [data-theme="auto"] .dcw-divider { background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.12), transparent); }
 }
@@ -2231,6 +2302,7 @@ html, body {
     color: #0a0c12; border-color: var(--accent); background: var(--accent);
   }
 }
+
 .footer-status {
   font-size: 13px;
   font-style: italic;
@@ -7375,6 +7447,21 @@ kbd {
   border-color: var(--border2);
   flex-shrink: 0;
 }
+/* New v3.22.7 mid-position Clear Project button — relocated from inside
+   the H1 title (where it was clipped behind the glass strip on the bee
+   variant) to a row between the Project Goal sub paragraph and the
+   goal-fields grid. Right-aligned so it doesn't fight the field layout. */
+.proj-goal-section-hdr + .proj-clear-row {
+  justify-content: flex-end;
+  margin: 4px 0 12px;
+}
+.proj-clear-mid-btn {
+  font-size: var(--fs-sm);
+  padding: 5px 12px;
+  color: var(--text-dim);
+  border-color: var(--border2);
+  flex-shrink: 0;
+}
 /* ── proj-field-wrap: label + input stacked ── */
 .proj-field-wrap {
   display: flex;
@@ -7766,7 +7853,10 @@ kbd {
   min-width: 0;
 }
 
-.hp-section-title {
+/* All title typography uses 3-class specificity (0,3,0) so it beats
+   .helper-body .page-main h1 (0,2,1) which would otherwise override
+   font-family, size, weight, letter-spacing, color, and margin. */
+.hp-section .hp-section-header .hp-section-title {
   font-family: var(--font);
   font-size: 18px;
   font-weight: 700;
@@ -7782,23 +7872,31 @@ kbd {
   flex-wrap: wrap;
 }
 
-.hp-section-header.is-bare .hp-section-title {
+.hp-section .hp-section-header.is-bare .hp-section-title {
   font-size: 15px;
   margin: 0;
 }
 
-.hp-section-sub {
+/* Sub paragraph — same 3-class specificity to beat
+   .helper-body .page-main p (0,2,1). */
+.hp-section .hp-section-header .hp-section-sub {
+  font-family: var(--font);
   font-size: 14px;
+  font-weight: 400;
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.85);
   margin: 0;
+  text-transform: none;
+  letter-spacing: normal;
 }
-.hp-section-sub + .hp-section-sub { margin-top: 8px; }
-.hp-section-sub a {
+.hp-section .hp-section-header .hp-section-sub + .hp-section-sub {
+  margin-top: 8px;
+}
+.hp-section .hp-section-header .hp-section-sub a {
   color: var(--accent);
   text-decoration: underline;
 }
-.hp-section-sub strong { color: #ffffff; }
+.hp-section .hp-section-header .hp-section-sub strong { color: #ffffff; }
 
 .hp-section-body {
   background: var(--surface);
@@ -7820,14 +7918,15 @@ kbd {
 }
 
 /* Force white header text in light + auto modes — glass strip is dark
-   in all themes regardless of base theme. */
-[data-theme="light"] .hp-section-title { color: #ffffff; }
-[data-theme="light"] .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
-[data-theme="light"] .hp-section-sub strong { color: #ffffff; }
+   in all themes regardless of base theme. 4-class specificity (0,4,0)
+   beats any [data-theme="light"] .helper-body .page-main h1 override. */
+[data-theme="light"] .hp-section .hp-section-header .hp-section-title { color: #ffffff; }
+[data-theme="light"] .hp-section .hp-section-header .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
+[data-theme="light"] .hp-section .hp-section-header .hp-section-sub strong { color: #ffffff; }
 @media (prefers-color-scheme: light) {
-  [data-theme="auto"] .hp-section-title { color: #ffffff; }
-  [data-theme="auto"] .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
-  [data-theme="auto"] .hp-section-sub strong { color: #ffffff; }
+  [data-theme="auto"] .hp-section .hp-section-header .hp-section-title { color: #ffffff; }
+  [data-theme="auto"] .hp-section .hp-section-header .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
+  [data-theme="auto"] .hp-section .hp-section-header .hp-section-sub strong { color: #ffffff; }
 }
 
 /* Helper-body context — page-main flex container for hp-sections.
@@ -7839,17 +7938,71 @@ kbd {
 }
 
 /* Setup-screen context — fs-body-single houses one hp-section per
-   screen. Override fs-body-single padding so the hp-section's own
-   margins control spacing. */
-.fs-body-single:has(> .hp-section) {
-  padding: 0 24px;
-  display: block;
-  overflow-y: auto;
+   screen. Replace the legacy var(--surface2) flat fill on .fs-body-single
+   with the honeycomb pattern (mirrors .helper-body's declaration) so the
+   new .hp-section panels float over honeycomb the same way work-screen
+   panels do. The flex layout, align-items: center, and overflow-y: auto
+   on .fs-body-single are all preserved — the panel sizes to its content
+   naturally, honeycomb shows below on tall viewports, body scrolls when
+   content overflows on short viewports. */
+.fs-body-single {
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)),
+    url('images/WaxFrame_Honeycomb_BG_Dark.png');
+  background-size: auto, 300px auto;
+  background-repeat: repeat, repeat;
+}
+[data-theme="light"] .fs-body-single {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
+    url('images/WaxFrame_Honeycomb_BG_Light.png');
+  background-size: auto, 300px auto;
+  background-repeat: repeat, repeat;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .fs-body-single {
+    background-image:
+      linear-gradient(rgba(0,0,0,0.25), rgba(0,0,0,0.25)),
+      url('images/WaxFrame_Honeycomb_BG_Light.png');
+    background-size: auto, 300px auto;
+    background-repeat: repeat, repeat;
+  }
 }
 
-/* When .hp-section-body sits inside fs-body-single, allow it to grow
-   so setup-screen content (ai-setup-grid, doc-input-tabs, etc.) has
-   room without scrollbars on the body itself. */
+/* hp-section width inside setup screens — match legacy .setup-single-card
+   max-width: 1390px so panels fill horizontally the same way the old card
+   did. Parent's align-items: center handles horizontal centering. Margins
+   are zeroed because fs-body-single's own padding (16px) provides the gap.
+   flex: 1 makes the panel fill the body vertically — same behavior as the
+   legacy .setup-single-card flex:1 + display:flex + flex-direction:column. */
+.fs-body-single > .hp-section {
+  max-width: 1390px;
+  width: 100%;
+  margin: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Body fills remaining vertical space inside the panel so short content
+   doesn't leave a half-empty card with empty space below it. Also
+   establishes flex column + position:relative so descendant flex chains
+   (e.g. .doc-tab-panel.active → .drop-zone / .proj-ta-editor) can resolve
+   their flex:1 height fill, and so the watermark ::after on #panel-paste,
+   #panel-upload, #panel-ref-paste, #panel-ref-upload, #panel-scratch
+   anchors against the panel itself. */
+.fs-body-single > .hp-section > .hp-section-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Slightly more breathing room inside the body for setup-screen forms
+   and grids than the default 24px helper-page padding. */
 .fs-body-single > .hp-section .hp-section-body {
   padding: 24px 28px;
 }

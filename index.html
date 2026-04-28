@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-014">
+  <meta name="waxframe-build" content="20260428-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.7">
+  <link rel="stylesheet" href="style.css?v=3.22.8">
 </head>
 <body>
 
@@ -199,7 +199,7 @@
         <div class="hp-section-header">
           <img src="images/WaxFrame_Project_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
-            <h1 class="hp-section-title">Your Project <button class="btn btn-sm proj-clear-top-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button></h1>
+            <h1 class="hp-section-title">Your Project</h1>
             <p class="hp-section-sub">Name your project, set a version, then describe what you're building. Fields marked <span class="req-star">*</span> are required to continue.</p>
           </div>
         </div>
@@ -219,6 +219,10 @@
         <div class="proj-goal-section-hdr">
           <h3 class="proj-goal-section-title">Project Goal <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h3>
           <p class="proj-goal-section-sub">These fields are assembled into a structured brief every AI reads before each round. Fill in as many as apply — the more specific, the better.</p>
+        </div>
+
+        <div class="proj-clear-row">
+          <button class="btn btn-sm proj-clear-mid-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
         </div>
 
         <div class="goal-fields">
@@ -574,16 +578,18 @@
       <div class="work-gap"></div>
 
       <div class="work-doc-panel">
-        <div class="work-panel-header">
-          <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-          <div class="flex-row">
-            <button class="btn" onclick="exportDocument()">💾 Export</button>
-            <button class="btn" onclick="copyDocument()">📋 Copy</button>
-            <button class="btn" onclick="clearDocument()">✕ Clear</button>
+        <div class="work-panel-header honeycomb-header">
+          <div class="work-panel-header-row">
+            <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
+            <div class="flex-row">
+              <button class="btn" onclick="exportDocument()">💾 Export</button>
+              <button class="btn" onclick="copyDocument()">📋 Copy</button>
+              <button class="btn" onclick="clearDocument()">✕ Clear</button>
+            </div>
           </div>
-        </div>
-        <div class="doc-stats-row">
-          <span class="doc-stats" id="docStats"></span>
+          <div class="doc-stats-row">
+            <span class="doc-stats" id="docStats"></span>
+          </div>
         </div>
         <div class="reextract-banner" id="reExtractBanner" style="display:none">
           <span class="reextract-banner-text">📄 Imported from PDF — if the text looks garbled, re-extract it using AI vision.</span>
@@ -1538,7 +1544,7 @@
 </div>
 
 <script src="version.js?v=3.22.6"></script>
-<script src="app.js?v=3.22.7"></script>
+<script src="app.js?v=3.22.8"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
