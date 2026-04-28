@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260428-002
+     Build: 20260428-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260428-002">
+  <meta name="waxframe-build" content="20260428-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.23.0">
+  <link rel="stylesheet" href="style.css?v=3.23.1">
 </head>
 <body>
 
@@ -91,6 +91,7 @@
         <div class="hp-section-body">
           <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
           <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Running a portable copy of WaxFrame against a model server (Open WebUI, Ollama, an internal gateway)? Use <strong>Hide All Defaults</strong> to clear the public AIs out of the way so your imported models are the only hive in your workspace.</p>
+          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Seeing a CORS error or red ✗ on Test All Keys? CORS is a browser security rule — when the API endpoint doesn't whitelist <code>weirdave.github.io</code> the browser blocks the response. Most common with custom endpoints (Open WebUI, internal gateways like Alfredo). The 6 default providers all have CORS configured. Click the ⓘ on the Test All Keys results to open the troubleshooting reference.</p>
           <div class="bee-controls-row-setup">
             <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
             <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
@@ -1166,7 +1167,7 @@
     <div class="custom-ai-modal-hdr">
       <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
       <div>
-        <div class="custom-ai-modal-title" id="tkpTitle">Testing API keys…</div>
+        <div class="custom-ai-modal-title"><span id="tkpTitle">Testing API keys…</span> <button class="goal-info-btn" onclick="document.getElementById('infoTroubleshootingModal').classList.add('active')" title="Troubleshooting reference"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></div>
         <div class="custom-ai-modal-sub">Click any row to see what was sent and received</div>
       </div>
     </div>
@@ -1195,6 +1196,76 @@
   </div>
 </div>
 
+<!-- TEST ALL KEYS — TROUBLESHOOTING REFERENCE MODAL -->
+<div class="finish-modal-overlay" id="infoTroubleshootingModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">Test All Keys — Troubleshooting</h2>
+    <div class="goal-info-body">
+      <p>The Test All Keys check sends a one-word prompt (<code>Reply with exactly one word: CONNECTED</code>) to every saved AI and reports the result. A red ✗ means something blocked the request. Use the table below to identify the cause from the row's status code, then jump to the matching provider billing console at the bottom of this guide.</p>
+
+      <div class="goal-info-row">
+        <span class="info-label">Red ✗ on a row</span>
+        <span class="goal-info-desc">The API call returned a non-2xx response, or the network call itself failed. Click the row to load the raw status and response body in the Received pane on the right — the error message there will be one of the cases below.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">HTTP 401 — Unauthorized</span>
+        <span class="goal-info-desc">The API key is invalid, expired, revoked, or wasn't sent. Most often this means the key was copy-pasted with extra whitespace, or the provider rotated keys after a billing event. Open the provider's console (links below), generate a fresh key, paste it back into the AI's row in Setup 1.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">HTTP 403 — Forbidden</span>
+        <span class="goal-info-desc">The key authenticated, but the provider refused to fulfill the request. Almost always a billing/permissions issue — payment method missing, credit balance exhausted, or organizational restrictions on the API key. Open the provider's billing console and confirm there's credit on file.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">HTTP 429 — Rate Limited</span>
+        <span class="goal-info-desc">You've sent more requests than your plan allows in the current time window. Common error phrases: <em>"rate limit exceeded"</em>, <em>"Some resource has been exhausted"</em>, <em>"quota exceeded"</em>. Wait a few minutes and retry. If you hit 429 during normal WaxFrame use, your plan tier is too low for your hive size — upgrade the plan or reduce the bee count.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">CORS error</span>
+        <span class="goal-info-desc">The browser blocked the response because the API endpoint didn't return an <code>Access-Control-Allow-Origin</code> header that permits <code>weirdave.github.io</code>. WaxFrame runs entirely in your browser and cannot bypass CORS. You'll see this almost exclusively with <strong>custom endpoints</strong> — internal company gateways like Alfredo, self-hosted Open WebUI / Ollama, or other proxies that haven't whitelisted browser origins. Fix is on the gateway side: have the operator add <code>Access-Control-Allow-Origin: *</code> (or specifically <code>https://weirdave.github.io</code>) to the gateway's CORS configuration. The 6 default providers all have CORS pre-configured.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Network timeout / network error</span>
+        <span class="goal-info-desc">The browser couldn't reach the endpoint at all. Could be DNS, a corporate firewall, VPN interception, the network being down, or the endpoint server itself being unresponsive. Verify you're online, double-check the endpoint URL in Setup 1 is correct, then retry — most network errors are transient.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Empty / malformed response</span>
+        <span class="goal-info-desc">The endpoint returned 200 OK but the body was empty, truncated, or not in the JSON shape WaxFrame expected. Click the row to see what was actually returned. Usual culprits: rate-limit messages buried inside 200 responses, HTML error pages from misconfigured proxies, or model-name typos that cause provider-specific empty replies.</span>
+      </div>
+
+      <hr class="modal-section-divider">
+
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Provider billing &amp; console links</strong> — open the right one for whichever AI is failing.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Anthropic</span>
+        <span class="goal-info-desc"><a href="https://console.anthropic.com/settings/billing" target="_blank" class="link-accent">console.anthropic.com → Billing ↗</a></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">OpenAI</span>
+        <span class="goal-info-desc"><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" class="link-accent">platform.openai.com → Billing ↗</a></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Google (Gemini)</span>
+        <span class="goal-info-desc"><a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-accent">aistudio.google.com → API key ↗</a></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">DeepSeek</span>
+        <span class="goal-info-desc"><a href="https://platform.deepseek.com/top_up" target="_blank" class="link-accent">platform.deepseek.com → Top Up ↗</a></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">xAI (Grok)</span>
+        <span class="goal-info-desc"><a href="https://console.x.ai/billing" target="_blank" class="link-accent">console.x.ai → Billing ↗</a></span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Perplexity</span>
+        <span class="goal-info-desc"><a href="https://console.perplexity.ai" target="_blank" class="link-accent">console.perplexity.ai → Billing ↗</a></span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Custom AIs added via <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> won't appear above — only the 6 default providers have known billing URLs. For custom endpoints, billing/permissions are handled wherever you got the endpoint from.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoTroubleshootingModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
 <!-- CONSOLE ERROR DETAIL MODAL -->
 <div class="custom-ai-modal-overlay" id="consoleErrorDetailModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="custom-ai-modal console-error-detail-modal">
@@ -1212,7 +1283,7 @@
       </div>
     </div>
     <div class="custom-ai-form-footer">
-      <a id="cedBillingLink" class="link-accent" href="#" target="_blank" style="display:none;"></a>
+      <a id="cedBillingLink" class="link-accent is-hidden" href="#" target="_blank"></a>
       <button class="btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')">← Close</button>
     </div>
   </div>
@@ -1286,6 +1357,10 @@
       <div class="goal-info-row">
         <span class="info-label">Toggling AIs per session</span>
         <span class="goal-info-desc">On the Work screen you can toggle individual AIs on or off for the current session using the Edit Hive button — without losing their saved keys. Useful if you want a faster round or are testing specific reviewers.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">CORS errors</span>
+        <span class="goal-info-desc">CORS is a browser security rule that decides whether a webpage running at <code>weirdave.github.io</code> is allowed to read responses from a given API endpoint. The 6 default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity) all whitelist browser clients, so you'll never see CORS errors with default keys. You'll see them with <strong>custom endpoints</strong> — Open WebUI / Ollama / internal gateways like Alfredo — when the gateway operator hasn't added <code>Access-Control-Allow-Origin</code> for browser callers. The fix is on the gateway side, not on WaxFrame's side. Click the ⓘ on Test All Keys for the full troubleshooting reference.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step1" target="_blank" class="link-accent">Read the full guide in the user manual — Step 1: Set Up Your Worker Bees ↗</a></p>
@@ -1543,8 +1618,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.23.0"></script>
-<script src="app.js?v=3.23.0"></script>
+<script src="version.js?v=3.23.1"></script>
+<script src="app.js?v=3.23.1"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

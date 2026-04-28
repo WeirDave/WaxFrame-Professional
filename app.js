@@ -382,7 +382,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260428-002';         // build stamp — update each session
+const BUILD       = '20260428-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2639,6 +2639,7 @@ async function testAllKeys() {
     window._tkpData[ai.id] = {
       name: ai.name, endpoint: '', sentBody: '', status: '', rcvBody: '',
       done: false, ok: false,
+      consoleUrl: ai.apiConsole || null,
     };
   });
 
@@ -2739,7 +2740,11 @@ function renderTkpDetail(id) {
 
   // RECEIVED pane — status + response body
   if (rec.done) {
+    const billingLinkHtml = (!rec.ok && rec.consoleUrl)
+      ? `<a class="tkp-billing-link" href="${esc(rec.consoleUrl)}" target="_blank">Open ${esc(rec.name)} billing console →</a>`
+      : '';
     rcvPane.innerHTML = `
+      ${billingLinkHtml}
       <div class="tkp-detail-label">Status</div>
       <pre class="tkp-detail-pre">${esc(rec.status || '—')}</pre>
       <div class="tkp-detail-label">Response body</div>
@@ -2772,9 +2777,9 @@ function openConsoleErrorDetail(id) {
     if (data.consoleUrl) {
       linkEl.href        = data.consoleUrl;
       linkEl.textContent = `Open ${data.aiName || 'provider'} billing console →`;
-      linkEl.style.display = '';
+      linkEl.classList.remove('is-hidden');
     } else {
-      linkEl.style.display = 'none';
+      linkEl.classList.add('is-hidden');
     }
   }
   modal.classList.add('active');

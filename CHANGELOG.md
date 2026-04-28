@@ -2,6 +2,44 @@
 
 ---
 
+## v3.23.1 Pro — Build `20260428-003`
+**Released:** April 28, 2026
+
+**CORS troubleshooting reference + per-error billing links on Test All Keys.** The Test All Keys flow already gives users the raw status and response body in a three-pane modal, but a new user staring at "HTTP 401" or a CORS rejection has no easy path from "I see the error" to "I'm fixing it." This release adds two new explanation surfaces: a CORS-aware tip in Setup 1 (Worker Bees), a full troubleshooting reference modal launched from a new ⓘ button on the Test All modal, and an inline "Open billing console →" link in the Received pane on every failed default-provider row. Also fixes one inline-CSS rule violation as part of the same touch.
+
+### CORS info in Setup 1 (Worker Bees)
+
+- **New `.fs-col-tip` callout** added to Setup 1 alongside the existing two — explains when CORS errors appear (custom endpoints, internal gateways like Alfredo) and points users to the new troubleshooting reference modal. Matches the existing Setup 1 callout pattern, no new visual primitive introduced for this screen.
+- **CORS section added to `infoBeesModal`** as a new `.goal-info-row` — gives users who open the existing ⓘ button next to "Your Worker Bees" a full explanation of CORS, why the 6 default providers don't trigger it, and where to fix it (gateway side, not WaxFrame side).
+
+### Test All Keys troubleshooting reference modal
+
+- **New `infoTroubleshootingModal`** launched from a new ⓘ button placed next to the "Testing API keys…" title in the Test All modal header. Reuses the established `.goal-info-modal` pattern — no new modal styling introduced.
+- **Sections covering all common failure modes**: red ✗, HTTP 401 (auth), HTTP 403 (permissions/billing), HTTP 429 (rate limit), CORS, network timeout, empty/malformed response. Each section explains what the error means and what the user should do about it.
+- **Provider billing/console reference list at the bottom** of the modal, separated by a new `.modal-section-divider` rule. Lists all 6 default providers with their billing console URLs as `link-accent` anchor links: Anthropic, OpenAI, Google (Gemini), DeepSeek, xAI (Grok), Perplexity.
+- **Custom AI disclaimer** included — billing references only apply to the 6 default providers; custom AIs added via "Add Custom AI" or "Import from Model Server" handle billing wherever the endpoint came from.
+
+### Per-error billing links in Test All Received pane
+
+- **`renderTkpDetail` updated** — when a row has completed AND failed AND the AI has a known `apiConsole` URL (i.e., it's a default provider), the Received pane now renders an "Open [Provider] billing console →" link at the top, above the Status and Response body sections.
+- **Reuses existing `ai.apiConsole` field** — no new constant, no new mapping. The console URL is already populated for every default AI and used by other features in the app (the per-row `↗` button on Setup 1 cards, the existing `consoleErrorDetailModal` for general console errors). Adding it to the Test All rec object was a one-line change at `_tkpData[ai.id]` initialization.
+- **Custom endpoints (Alfredo, Open WebUI, Ollama, etc.)** have `apiConsole` null — link is suppressed, so users with custom endpoints don't see misleading or broken links.
+- **New `.tkp-billing-link` style** added to `style.css` — themed amber pill matching the rest of the app's accent treatment, with hover invert. Distinct enough from the surrounding `.tkp-detail-label` mono labels that users notice it without it being shouty.
+
+### Inline-CSS rule violation fix on `cedBillingLink`
+
+- **Removed** `style="display:none;"` inline attribute from the `cedBillingLink` anchor inside the existing `consoleErrorDetailModal` (the Debug Mode error-detail modal). Replaced with `class="link-accent is-hidden"`.
+- **Updated `openConsoleErrorDetail()`** in `app.js` — `linkEl.style.display = ''` and `linkEl.style.display = 'none'` swapped for `linkEl.classList.remove('is-hidden')` and `linkEl.classList.add('is-hidden')` respectively.
+- **New `.is-hidden` utility class** added to `style.css` near the BASE block — `display: none !important;`. Available for future toggleable-visibility cases that don't warrant a feature-specific class.
+- The existing `consoleErrorDetailModal` feature itself (clickable arrow on console error/warning lines opening a detail modal with raw response + billing link) remains fully wired and behaviorally unchanged. Only the rule violation was fixed.
+
+### Build-stamp sweep
+
+- All four required stamp locations bumped: meta `waxframe-build` (`20260428-003`), `version.js` `APP_VERSION` (`v3.23.1 Pro`), `app.js` `BUILD` (`20260428-003`), and `app.js?v=` cache-bust query string (`3.23.1`).
+- All 6 helper-page comment-header build stamps and `style.css?v=` / `version.js?v=` cache-busts swept to `3.23.1`.
+
+---
+
 ## v3.23.0 Pro — Build `20260428-002`
 **Released:** April 28, 2026
 
