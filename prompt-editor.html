@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — prompt-editor.html
-     Build: 20260427-012
+     Build: 20260427-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-012">
+  <meta name="waxframe-build" content="20260427-013">
   <title>WaxFrame — Prompt Editor</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.22.5">
+  <link rel="stylesheet" href="style.css?v=3.22.6">
 </head>
 <body class="helper-body">
 
@@ -39,9 +39,12 @@
     <div class="nav-section-label">Documentation</div>
     <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
@@ -50,6 +53,10 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -222,6 +229,9 @@
   </div>
   <div class="page-footer-center">
     <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
 </div>
@@ -246,6 +256,38 @@
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
 
 <script>
   const LS_PROMPTS = 'waxframe_v2_prompts';
@@ -446,8 +488,9 @@ You have repeatedly raised the following after the user already resolved them. T
   loadPrompts();
 </script>
 <script src="theme.js"></script>
-<script src="nav-helper.js?v=3.22.5"></script>
-<script src="version.js?v=3.22.5"></script>
+<script src="nav-helper.js?v=3.22.6"></script>
+<script src="license-helper.js?v=3.22.6"></script>
+<script src="version.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

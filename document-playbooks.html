@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260427-012
+     Build: 20260427-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-012">
+  <meta name="waxframe-build" content="20260427-013">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.5">
+  <link rel="stylesheet" href="style.css?v=3.22.6">
 </head>
 <body class="helper-body">
 
@@ -39,9 +39,12 @@
     <div class="nav-section-label">Documentation</div>
     <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
@@ -50,6 +53,10 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -77,10 +84,10 @@
 
 <div class="page-main" id="top">
 
-  <div class="dp-intro">
-    <img src="images/WaxFrame_Project_Bee_v2.png" alt="🐝" class="dp-bee">
-    <div class="dp-intro-text">
-      <h1 class="dp-intro-title">Put the hive to work on a real document</h1>
+  <div class="wf-intro">
+    <img src="images/WaxFrame_Project_Bee_v2.png" alt="🐝" class="wf-intro-bee">
+    <div class="wf-intro-text">
+      <h1>Put the hive to work on a real document</h1>
       <p>Each playbook gives you the exact text to enter into every WaxFrame field for a specific document type. Open WaxFrame on one screen and this page on another. Work through the fields top to bottom — replace anything in [brackets] with your own information.</p>
       <p>New to WaxFrame? Read the <a href="waxframe-user-manual.html" target="_blank" class="link-accent">User Manual</a> first — it walks you through every screen step by step.</p>
     </div>
@@ -184,9 +191,9 @@
           </div>
         </div>
 
-        <div class="dp-tip">
-          <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-          <p>Once the cookies run converges, you've seen the full WaxFrame flow end to end. Export the final recipe if you want a souvenir, then click <strong>🏁 Finish</strong> on the work screen and choose <strong>Start New Project</strong> to wipe the session and begin work on your real document. The playbooks below have field-by-field templates for common document types — pick the one closest to what you're writing.</p>
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Once the cookies run converges, you've seen the full WaxFrame flow end to end. Export the final recipe if you want a souvenir, then click <strong>🏁 Finish</strong> on the work screen and choose <strong>Start New Project</strong> to wipe the session and begin work on your real document. The playbooks below have field-by-field templates for common document types — pick the one closest to what you're writing.</p></div>
         </div>
 
       <a href="#top" class="dp-back-top">↑ Back to top</a>
@@ -266,10 +273,10 @@
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>On Setup 4 — Reference Material, paste the full job description. The hive will see it every round and check that your cover letter language, emphasis, and examples actually match what the employer is asking for. The AIs cannot visit URLs, but a pasted JD gives them direct authoritative source to cite against — much more reliable than describing the role in Notes.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>On Setup 4 — Reference Material, paste the full job description. The hive will see it every round and check that your cover letter language, emphasis, and examples actually match what the employer is asking for. The AIs cannot visit URLs, but a pasted JD gives them direct authoritative source to cite against — much more reliable than describing the role in Notes.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -378,10 +385,10 @@ Culture: small team, we fix our own mistakes, no politics, no unnecessary meetin
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>Before Round 1, open Notes and write: <em>"Flag any must-have requirement that could reasonably be a nice-to-have — overly strict requirements reduce applicant quality by narrowing the pool too early."</em></p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Before Round 1, open Notes and write: <em>"Flag any must-have requirement that could reasonably be a nice-to-have — overly strict requirements reduce applicant quality by narrowing the pool too early."</em></p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -508,10 +515,10 @@ Things I forgot to include in my resume:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>On Setup 4 — Reference Material, paste the full job description from the posting. The hive will align language, emphasis, and skill phrasing to the actual role on every round — this is one of the highest-leverage moves you can make on a résumé. Notes are cleared after each round; reference material persists, so you only have to paste it once.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>On Setup 4 — Reference Material, paste the full job description from the posting. The hive will align language, emphasis, and skill phrasing to the actual role on every round — this is one of the highest-leverage moves you can make on a résumé. Notes are cleared after each round; reference material persists, so you only have to paste it once.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -611,10 +618,10 @@ What we want him to know:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>If the result sounds like a corporate email instead of a personal letter, add a Note before the next round: <em>"This should sound like a real person wrote it, not a template. Rewrite any sentence that sounds generic or corporate."</em></p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the result sounds like a corporate email instead of a personal letter, add a Note before the next round: <em>"This should sound like a real person wrote it, not a template. Rewrite any sentence that sounds generic or corporate."</em></p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -695,10 +702,10 @@ What we want him to know:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>Before Round 1, open Notes and write one sentence about the client's biggest pain point or objection. This shapes how the AIs frame every section of the proposal around what the client actually cares about.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Before Round 1, open Notes and write one sentence about the client's biggest pain point or objection. This shapes how the AIs frame every section of the proposal around what the client actually cares about.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -797,10 +804,10 @@ Sender:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>Short emails sometimes produce conflicts over single word choices. If a conflict feels trivial, use the Builder Decision path and let the Builder decide — or bypass it if you have already made the edit directly in the document.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Short emails sometimes produce conflicts over single word choices. If a conflict feels trivial, use the Builder Decision path and let the Builder decide — or bypass it if you have already made the edit directly in the document.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -872,10 +879,10 @@ Sender:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>If the AIs keep adding detail back in, open Notes before the next round and write: <em>"Do not expand this document. Only tighten and clarify what is already here. Remove anything that does not directly support the recommendation."</em></p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the AIs keep adding detail back in, open Notes before the next round and write: <em>"Do not expand this document. Only tighten and clarify what is already here. Remove anything that does not directly support the recommendation."</em></p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -947,10 +954,10 @@ Sender:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>If the RFP has a page or word limit, enter it in the <strong>Length Constraint</strong> field on the Project screen — that is where it belongs, not in the goal fields. WaxFrame will enforce it as a hard constraint every round.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the RFP has a page or word limit, enter it in the <strong>Length Constraint</strong> field on the Project screen — that is where it belongs, not in the goal fields. WaxFrame will enforce it as a hard constraint every round.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -1059,10 +1066,10 @@ Call to action at the end: link to a tool that automates this — multiple model
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>If the voice starts sounding generic after a few rounds, open Notes and describe the author's style in a sentence — even a few adjectives like <em>"direct, slightly sarcastic, uses short sentences"</em> will steer the hive back toward a distinct voice.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the voice starts sounding generic after a few rounds, open Notes and describe the author's style in a sentence — even a few adjectives like <em>"direct, slightly sarcastic, uses short sentences"</em> will steer the hive back toward a distinct voice.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -1171,10 +1178,10 @@ Hard constraints:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>WaxFrame outputs plain text. Once the outline is where you want it, export it and use it as your script layer when building the actual slides in PowerPoint or Keynote. Each slide's bullet points become your speaker notes.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>WaxFrame outputs plain text. Once the outline is where you want it, export it and use it as your script layer when building the actual slides in PowerPoint or Keynote. Each slide's bullet points become your speaker notes.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -1254,10 +1261,10 @@ Hard constraints:
         </div>
       </div>
 
-      <div class="dp-tip">
-        <div class="dp-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></div>
-        <p>If you want the recipe to stay true to a specific cuisine or tradition, state it explicitly in Scope &amp; constraints: <em>"Keep this authentic to Southern Italian technique — do not substitute ingredients or modernise methods."</em> Without this the AIs will suggest variations freely.</p>
-      </div>
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If you want the recipe to stay true to a specific cuisine or tradition, state it explicitly in Scope &amp; constraints: <em>"Keep this authentic to Southern Italian technique — do not substitute ingredients or modernise methods."</em> Without this the AIs will suggest variations freely.</p></div>
+        </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
     </div>
@@ -1279,6 +1286,9 @@ Hard constraints:
   </div>
   <div class="page-footer-center">
     <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
 </div>
@@ -1303,11 +1313,44 @@ Hard constraints:
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
 
 <script src="theme.js"></script>
-<script src="nav-helper.js?v=3.22.5"></script>
-<script src="version.js?v=3.22.5"></script>
-<script src="docs-scrollspy.js?v=3.22.5"></script>
+<script src="nav-helper.js?v=3.22.6"></script>
+<script src="license-helper.js?v=3.22.6"></script>
+<script src="version.js?v=3.22.6"></script>
+<script src="docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

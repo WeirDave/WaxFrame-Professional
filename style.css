@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-012
+   Build: 20260427-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5597,7 +5597,7 @@ kbd {
   box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   padding: 16px 20px;
 }
-.api-intro-strip.honeycomb-header .api-intro-title {
+.helper-body .api-intro-strip.honeycomb-header .api-intro-title {
   font-family: var(--font);
   font-size: 15px;
   font-weight: 700;
@@ -5607,14 +5607,14 @@ kbd {
   text-shadow: none;
   margin: 0 0 6px;
 }
-.api-intro-strip.honeycomb-header .api-intro-desc {
+.helper-body .api-intro-strip.honeycomb-header .api-intro-desc {
   color: rgba(255,255,255,0.85);
 }
-[data-theme="light"] .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
-[data-theme="light"] .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
+[data-theme="light"] .helper-body .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
+[data-theme="light"] .helper-body .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
 @media (prefers-color-scheme: light) {
-  [data-theme="auto"] .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
-  [data-theme="auto"] .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
+  [data-theme="auto"] .helper-body .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
+  [data-theme="auto"] .helper-body .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
 }
 .api-intro-bee-wrap {
   flex-shrink: 0;
@@ -5648,28 +5648,6 @@ kbd {
   filter: drop-shadow(0 6px 20px rgba(0,0,0,0.5));
 }
 
-/* ── Section title ── */
-.section-title {
-  font-family: var(--font-display);
-  font-size: 24px; font-weight: 800;
-  color: var(--text);
-  margin-bottom: 8px;
-  letter-spacing: -0.01em;
-}
-
-/* ── Cards (tokens page) ── */
-.card {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-radius: var(--radius-md); padding: 18px 22px;
-}
-.card.accent { border-left: 4px solid var(--accent); }
-.card.amber  { border-left: 4px solid var(--amber); }
-.card.green  { border-left: 4px solid var(--green); padding: 0; overflow: hidden; }
-.card h3 { font-family: var(--font-display); font-size: 16px; font-weight: 700; margin-bottom: 10px; color: var(--text); }
-.card p { color: var(--text-dim); font-size: 14px; line-height: 1.75; margin-bottom: 10px; }
-.card p:last-child { margin-bottom: 0; }
-.card strong { color: var(--text); }
-
 /* ── Table (tokens page) ── */
 .ai-table { width: 100%; border-collapse: collapse; font-size: 13px; }
 .ai-table th {
@@ -5680,21 +5658,6 @@ kbd {
 .ai-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); color: var(--text-dim); vertical-align: middle; }
 .ai-table tr:last-child td { border-bottom: none; }
 .ai-table strong { color: var(--text); }
-
-/* ── Info cards (api page) ── */
-.info-card {
-  background: var(--surface2); border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  border-radius: var(--radius-md); padding: 16px 20px;
-}
-.info-card.green {
-  background: var(--green-dim); border: 1px solid var(--green);
-  border-left: 4px solid var(--green);
-}
-.info-card h2 { font-family: var(--font-display); font-size: 15px; font-weight: 700; margin-bottom: 8px; }
-.info-card h3 { font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--green); }
-.info-card p { color: var(--text-dim); font-size: 14px; line-height: 1.7; margin-bottom: 8px; }
-.info-card p:last-child { margin-bottom: 0; }
 
 /* ── AI cards (api page) ── */
 .ai-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
@@ -5911,43 +5874,12 @@ kbd {
   color: var(--text-dim);
   letter-spacing: 0.06em;
 }
-.api-intro-title {
-  font-family: var(--font-display);
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--text);
-  margin: 0 0 6px;
-}
-.api-intro-desc {
-  font-size: 14px;
-  color: var(--text-dim);
-  line-height: 1.6;
-  margin: 0;
-}
-.helper-note-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.helper-note-card .helper-note {
-  margin: 0;
-}
 .helper-info-img {
   width: 72px;
   height: 72px;
   display: block;
   margin: 0 auto;
 }
-.helper-note {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.6;
-  margin-top: 8px;
-}
-.card-push-bottom {
-  margin-top: auto;
-}
-.footer-note { color: var(--text-dim); font-size: 13px; }
 
 /* =========================================
    WAXFRAME FINISH ANIMATION — Bee Fly-In
@@ -6462,18 +6394,8 @@ kbd {
 
 .goal-info-modal-icon-wrap { text-align: center; margin-bottom: 8px; }
 
-/* ── Helper pages — tip icon image (20px, used in wh-tip-icon / kyh-tip-icon) ── */
+/* ── Helper pages — tip icon image (20px, used in helper-tip-icon-img) ── */
 .helper-tip-icon-img { width: 20px; height: 20px; display: block; }
-
-/* ── api-details.html — General Tips section ── */
-.info-card-tips      { margin-top: 32px; }
-.kyh-tips-title      { font-family: var(--font-display); font-size: 18px; font-weight: 800; margin-bottom: 12px; }
-.kyh-tips-p          { font-size: 14px; color: var(--text-dim); line-height: 1.7; margin-bottom: 10px; }
-.kyh-tips-p-last     { margin-bottom: 0; }
-.kyh-tips-strong     { color: var(--text); }
-
-/* ── api-details.html — Azure intro paragraph ── */
-.api-azure-intro     { margin: 10px 0 6px; }
 
 /* ── Finish modal button subtitles ── */
 .finish-modal-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; }
@@ -6519,11 +6441,6 @@ kbd {
 [data-theme="auto"] .hex-cell.is-clean::after { color: #d97706; opacity: 1; }
 
 /* ── USER MANUAL PAGE (waxframe-user-manual.html) ── */
-.wh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
-.wh-intro-text h2,
-.wh-intro-text .wh-intro-title { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
-.wh-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
-.wh-bee { width:80px; flex-shrink:0; }
 
 .wh-section { background:transparent; border-radius:var(--radius-lg); margin-bottom:32px; scroll-margin-top:72px; }
 .wh-section-hdr { display:flex; align-items:center; gap:14px; padding:14px 22px; background:rgba(0,0,0,0.55); backdrop-filter:blur(6px); border-bottom:1px solid rgba(255,255,255,0.1); border-radius:var(--radius-lg) var(--radius-lg) 0 0; }
@@ -6539,10 +6456,6 @@ kbd {
 .wh-block ul,
 .wh-block ol:not(.wh-steps) { font-size:14px; color:var(--text-dim); line-height:1.7; margin:4px 0 8px; padding-left:20px; }
 .wh-block li:not(.wh-step) { margin-bottom:4px; }
-
-.wh-tip { display:flex; gap:10px; align-items:flex-start; background:var(--accent-dim); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:12px 14px; margin-top:10px; }
-.wh-tip-icon { flex-shrink:0; margin-top:1px; display:flex; align-items:center; }
-.wh-tip p { font-size:14px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
 
 .wh-warn { display:flex; gap:10px; align-items:flex-start; background:rgba(239,68,68,0.07); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-md); padding:12px 14px; margin-top:10px; }
 .wh-warn p { font-size:14px; color:#f87171; line-height:1.5; margin:0; }
@@ -6569,11 +6482,6 @@ kbd {
 /* ══════════════════════════════════════
    DOCUMENT PLAYBOOKS (document-playbooks.html)
 ══════════════════════════════════════ */
-.dp-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:28px; }
-.dp-intro-text h2,
-.dp-intro-text .dp-intro-title { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
-.dp-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
-.dp-bee { width:80px; flex-shrink:0; }
 
 /* ── Two-column layout: sticky sidebar + main column (shared by docs pages) ── */
 .doc-layout {
@@ -6761,11 +6669,6 @@ kbd {
 .dp-field-value { font-size:14px; color:var(--text-dim); line-height:1.6; }
 .dp-field-value code { font-family:'Courier New', monospace; font-size:13px; background:rgba(255,255,255,0.05); border:1px solid var(--border2); border-radius:4px; padding:1px 6px; color:var(--text); display:inline-block; margin-top:2px; }
 .dp-field-divider { height:1px; background:var(--border2); margin:2px 0; }
-
-.dp-tip { display:flex; gap:10px; align-items:flex-start; background:var(--accent-dim); border:1px solid rgba(245,158,11,0.3); border-radius:var(--radius-md); padding:12px 14px; }
-.dp-tip-icon { flex-shrink:0; margin-top:1px; }
-.dp-tip-icon img { width:20px; height:20px; display:block; }
-.dp-tip p { font-size:14px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
 
 .dp-rounds { display:inline-flex; align-items:center; gap:6px; font-size:14px; color:var(--muted); margin-top:4px; }
 .dp-rounds-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
@@ -7649,4 +7552,573 @@ kbd {
 }
 .notes-drawer-ta.ref-drawer-ta {
   height: 440px;
+}
+
+
+/* ══════════════════════════════════════════════════════════════
+   HELPER-PAGES DESIGN SYSTEM (v3.22.6)
+   ══════════════════════════════════════════════════════════════
+   Canonical primitives for all standalone helper pages:
+     - waxframe-user-manual.html
+     - api-details.html
+     - document-playbooks.html
+     - what-are-tokens.html
+     - prompt-editor.html
+   All rules scoped under .helper-body so they never leak into the
+   working console (.work-screen) or setup screens (.fs-screen).
+   Uses theme tokens — automatic dark/light/auto theming included.
+   When adding a new helper page, just give it body class="helper-body"
+   and these primitives apply.
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Heading hierarchy ───────────────────────────────────────── */
+
+.helper-body .page-main h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.01em;
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+.helper-body .page-main h2 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  margin: 32px 0 10px;
+  line-height: 1.3;
+}
+.helper-body .page-main h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 20px 0 8px;
+  line-height: 1.35;
+}
+.helper-body .page-main h4 {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 18px 0 6px;
+}
+
+/* First heading right after a section divider has tighter top margin */
+.helper-body .page-main hr + h2,
+.helper-body .page-main .wf-section-divider + h2 {
+  margin-top: 0;
+}
+
+/* ── Body paragraph and text ─────────────────────────────────── */
+
+.helper-body .page-main p {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+.helper-body .page-main p:last-child {
+  margin-bottom: 0;
+}
+.helper-body .page-main strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.helper-body .page-main em {
+  font-style: italic;
+}
+.helper-body .page-main code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  color: var(--accent);
+}
+.helper-body .page-main pre {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  color: var(--text);
+  overflow-x: auto;
+  line-height: 1.55;
+  margin: 12px 0;
+}
+.helper-body .page-main pre code {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* ── Lists ───────────────────────────────────────────────────── */
+
+.helper-body .page-main ul,
+.helper-body .page-main ol {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-dim);
+  margin: 0 0 14px;
+  padding-left: 24px;
+}
+.helper-body .page-main ul {
+  list-style: disc;
+}
+.helper-body .page-main ol {
+  list-style: decimal;
+}
+.helper-body .page-main li {
+  margin-bottom: 4px;
+}
+.helper-body .page-main li:last-child {
+  margin-bottom: 0;
+}
+.helper-body .page-main li > ul,
+.helper-body .page-main li > ol {
+  margin: 4px 0 4px;
+}
+.helper-body .page-main li strong {
+  color: var(--text);
+}
+
+/* ── Card primitive (.wf-card) ───────────────────────────────── */
+
+.helper-body .wf-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  margin: 0 0 16px;
+}
+.helper-body .wf-card.is-accent {
+  border-left-color: var(--accent);
+}
+.helper-body .wf-card.is-green {
+  border-left-color: var(--green);
+}
+.helper-body .wf-card.is-amber {
+  border-left-color: var(--amber);
+}
+.helper-body .wf-card.is-blue {
+  border-left-color: var(--blue);
+}
+.helper-body .wf-card.is-red {
+  border-left-color: var(--red);
+}
+.helper-body .wf-card-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
+  line-height: 1.3;
+}
+.helper-body .wf-card-body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+.helper-body .wf-card p {
+  margin: 0 0 10px;
+}
+.helper-body .wf-card p:last-child {
+  margin-bottom: 0;
+}
+.helper-body .wf-card h2,
+.helper-body .wf-card h3 {
+  margin-top: 0;
+  margin-bottom: 8px;
+}
+
+/* ── Tip primitive (.wf-tip) ─────────────────────────────────── */
+
+.helper-body .wf-tip {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  margin: 14px 0;
+}
+.helper-body .wf-tip-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.helper-body .wf-tip-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.helper-body .wf-tip-body {
+  font-family: var(--font);
+  font-size: var(--fs-sm);
+  line-height: 1.6;
+  color: var(--text-dim);
+  font-style: italic;
+}
+.helper-body .wf-tip-body strong {
+  color: var(--text);
+  font-style: normal;
+}
+.helper-body .wf-tip-body p {
+  margin: 0 0 6px;
+}
+.helper-body .wf-tip-body p:last-child {
+  margin-bottom: 0;
+}
+
+/* ── Section divider ─────────────────────────────────────────── */
+
+.helper-body .wf-section-divider {
+  border: 0;
+  border-top: 1px solid var(--border2);
+  margin: 40px 0 28px;
+}
+
+/* ── Section heading (large) ─────────────────────────────────── */
+
+.helper-body .wf-section-heading {
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text);
+  letter-spacing: -0.005em;
+  margin: 0 0 8px;
+  line-height: 1.25;
+}
+.helper-body .wf-section-heading-sub {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.65;
+  color: var(--text-dim);
+  margin: 0 0 24px;
+}
+
+/* ── Pill primitive (.wf-pill) ───────────────────────────────── */
+/* Small inline label — used for category tags, AI badges, etc. */
+
+.helper-body .wf-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px dashed var(--border2);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.helper-body .wf-pill.is-accent {
+  background: var(--accent-dim);
+  border-style: solid;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.helper-body .wf-pill.is-green {
+  background: var(--green-dim);
+  border-style: solid;
+  border-color: var(--green);
+  color: var(--green);
+}
+.helper-body .wf-pill.is-amber {
+  background: rgba(251,191,36,0.10);
+  border-style: solid;
+  border-color: var(--amber);
+  color: var(--amber);
+}
+.helper-body .wf-pill.is-blue {
+  background: var(--blue-dim);
+  border-style: solid;
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.helper-body .wf-pill.is-red {
+  background: var(--red-dim);
+  border-style: solid;
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* ── Intro panel (page-level hero block at top of page) ──────── */
+/* Replaces .wh-intro / .dp-intro / .kyh-intro / .api-intro variants. */
+
+.helper-body .wf-intro {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  padding: 22px 28px;
+  margin: 0 0 32px;
+}
+.helper-body .wf-intro-bee {
+  width: 80px;
+  height: 80px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.helper-body .wf-intro-text {
+  flex: 1;
+  min-width: 0;
+}
+.helper-body .wf-intro-text h1 {
+  margin: 0 0 8px;
+}
+.helper-body .wf-intro-text p {
+  margin: 0;
+}
+.helper-body .wf-intro-text p + p {
+  margin-top: 8px;
+}
+
+/* ── Two-column grid layout ──────────────────────────────────── */
+/* Used by what-are-tokens. Keeps existing .two-col / .col markup
+   working but applies design-system spacing. */
+
+.helper-body .two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-bottom: 24px;
+}
+.helper-body .two-col .col {
+  min-width: 0;
+}
+.helper-body .col-bee {
+  width: 80px;
+  height: auto;
+  display: block;
+  margin: 0 0 12px;
+}
+
+/* ── KYH-card AI personality cards (api-details specific) ────── */
+/* Special component — keeps its own structure (icon + name + badges
+   + body sections + tip) but visually aligned with .wf-card. */
+
+.helper-body .kyh-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+  margin: 0 0 24px;
+}
+.helper-body .kyh-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.helper-body .kyh-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border2);
+}
+.helper-body .kyh-card-icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.helper-body .kyh-card-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.helper-body .kyh-card-model {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  margin-top: 2px;
+}
+.helper-body .kyh-badges {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.helper-body .kyh-body {
+  padding: 14px 18px 16px;
+  flex: 1;
+}
+.helper-body .kyh-section {
+  margin-bottom: 12px;
+}
+.helper-body .kyh-section:last-child {
+  margin-bottom: 0;
+}
+.helper-body .kyh-section-title {
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+.helper-body .kyh-section p {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.6;
+  margin: 0;
+}
+.helper-body .kyh-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* ── AI signup card (api-details specific, section 1) ────────── */
+/* Each AI's signup card with steps and links — keeps its existing
+   markup, picks up consistent visual styling. */
+
+.helper-body .ai-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: 18px 22px;
+  margin: 0 0 16px;
+}
+.helper-body .ai-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+}
+.helper-body .ai-card-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.helper-body .ai-card-body {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  line-height: 1.7;
+  color: var(--text-dim);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   END HELPER-PAGES DESIGN SYSTEM
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── KYH-card badge variants (api-details specific) ──────────── */
+/* The colored pills shown on each AI personality card header
+   indicating its role and tier. */
+
+.helper-body .kyh-badge {
+  font-family: var(--font);
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.helper-body .kyh-badge-builder {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+}
+.helper-body .kyh-badge-reviewer {
+  background: rgba(52,211,153,0.12);
+  border: 1px solid rgba(52,211,153,0.4);
+  color: #34d399;
+}
+.helper-body .kyh-badge-free {
+  background: var(--blue-dim);
+  border: 1px solid var(--blue);
+  color: var(--blue);
+}
+
+/* ── KYH-card pill variants (api-details specific) ───────────── */
+/* Strengths / Watch out for / Cost descriptors inside each card body. */
+
+.helper-body .kyh-pill {
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px dashed var(--border2);
+  color: var(--text-dim);
+}
+.helper-body .kyh-pill-good {
+  border-color: rgba(52,211,153,0.4);
+  color: #34d399;
+  background: rgba(52,211,153,0.08);
+}
+.helper-body .kyh-pill-warn {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.helper-body .kyh-pill-bad {
+  border-color: rgba(248,113,113,0.4);
+  color: var(--red);
+  background: var(--red-dim);
+}
+
+/* ── KYH inline tip inside a card ────────────────────────────── */
+/* The italic note at the bottom of each AI personality card. */
+
+.helper-body .kyh-tip {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  margin-top: 12px;
+}
+.helper-body .kyh-tip-icon {
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  width: 20px;
+  height: 20px;
+}
+.helper-body .kyh-tip-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.helper-body .kyh-tip p {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
 }

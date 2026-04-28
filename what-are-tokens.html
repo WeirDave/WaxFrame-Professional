@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — what-are-tokens.html
-     Build: 20260427-012
+     Build: 20260427-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-012">
+  <meta name="waxframe-build" content="20260427-013">
   <title>WaxFrame — What Are Tokens?</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.22.5">
+  <link rel="stylesheet" href="style.css?v=3.22.6">
 </head>
 <body class="helper-body">
 
@@ -39,9 +39,12 @@
     <div class="nav-section-label">Documentation</div>
     <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
@@ -50,6 +53,10 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -76,6 +83,10 @@
 </div>
 
 <div class="page-main">
+
+  <h1>What Are Tokens?</h1>
+  <p>Tokens are how AI models bill you for reading and writing text. This page explains what they are, why your Builder needs more of them than your Worker Bees do, and how to keep your costs under control as you run rounds.</p>
+
 <div class="two-col">
 
   <!-- LEFT COLUMN -->
@@ -83,23 +94,23 @@
 
     <img src="images/WaxFrame_Token_Bee_v1.png" alt="" class="col-bee">
 
-    <div class="section-title">The Basics</div>
+    <h2>The Basics</h2>
 
-    <div class="card accent">
-      <h3>What is a token?</h3>
+    <div class="wf-card is-accent">
+      <h3 class="wf-card-title">What is a token?</h3>
       <p>Tokens are the unit of measurement AI models use to read and write text. Roughly speaking, <strong>1 token ≈ ¾ of a word</strong>. A typical paragraph is about 100 tokens. A full-page document might be 500–800 tokens.</p>
       <p>Every time WaxFrame runs a round, your Builder AI reads your entire document plus the full prompt, then writes back the updated version. That is a lot of tokens — both in and out — every single round.</p>
     </div>
 
-    <div class="card amber">
-      <h3>Why does this matter for your Builder?</h3>
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">Why does this matter for your Builder?</h3>
       <p>Free-tier AI accounts have token limits — a cap on how much they can read and write per minute, per hour, or per day. If your Builder hits that limit mid-session, it will either fail or make you wait before it can continue.</p>
       <p><strong>Worker Bees</strong> only send numbered suggestions, so they use far fewer tokens. Free-tier AIs work fine as Worker Bees. The Builder is the one that needs headroom.</p>
     </div>
 
-    <div class="info-card green card-push-bottom helper-note-card">
-      <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="goal-info-btn-img">
-      <p class="helper-note">WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
+    <div class="wf-tip">
+      <span class="wf-tip-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt=""></span>
+      <div class="wf-tip-body">WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></div>
     </div>
 
   </div>
@@ -107,9 +118,9 @@
   <!-- RIGHT COLUMN -->
   <div class="col">
 
-    <div class="section-title">Best Builder Choices</div>
+    <h2>Best Builder Choices</h2>
 
-    <div class="card green">
+    <div class="wf-card is-green">
       <p class="token-rates-notice">💡 Billing rates are subject to change. Check each provider's billing page at least monthly to stay current with pricing.</p>
       <table class="ai-table">
         <tr>
@@ -164,23 +175,23 @@
       </table>
     </div>
 
-    <div class="card">
-      <h3>A practical example</h3>
+    <div class="wf-card">
+      <h3 class="wf-card-title">A practical example</h3>
       <p>Say you are working on a 2,000-word report. That is roughly 2,700 tokens. Your Builder reads the full document plus the prompt (~500 tokens) = about 3,200 tokens in, then writes back the updated version at roughly the same length. That is <strong>~6,000 tokens per round</strong>.</p>
       <p>Over 5 rounds, that is ~30,000 tokens from your Builder alone. With a paid API key this costs a few cents. On a free tier with strict limits, this could hit the cap by round 2 or 3.</p>
       <p><strong>Bottom line:</strong> use a paid API key for your Builder, or use Gemini's free tier which is genuinely generous. Keep cost-conscious or free-tier AIs as Worker Bees where the token load is light.</p>
     </div>
 
-    <div class="card">
-      <h3>Tips for managing token costs</h3>
+    <div class="wf-card">
+      <h3 class="wf-card-title">Tips for managing token costs</h3>
       <p><strong>Keep your document focused.</strong> The longer your document, the more tokens your Builder uses every round. Trim content that is no longer relevant as the document improves.</p>
       <p><strong>Switch Builders if a round fails.</strong> DeepSeek is the best value for most documents. If a round fails with a missing output structure error — especially on a large or complex document — try switching to ChatGPT or Gemini as your Builder and retrying. Some AIs are less consistent at following strict formatting instructions under heavy load. This is a behavioral difference between models, not a hard size limit.</p>
       <p><strong>Use Worker Bees wisely.</strong> You can disable individual AIs per session from the work screen. If an AI is consistently unhelpful, turn it off — fewer Worker Bees means less input for the Builder to process.</p>
       <p><strong>Start small.</strong> For your first session, try a shorter document or a simpler goal. Once you understand how the rounds work you can take on larger projects confidently.</p>
     </div>
 
-    <div class="card">
-      <h3>Reference material and your token budget</h3>
+    <div class="wf-card">
+      <h3 class="wf-card-title">Reference material and your token budget</h3>
       <p>If you have used <strong>Setup 4 — Reference Material</strong> to paste an RFP, job description, style guide, or scoring rubric, that material is sent to <em>every reviewer every round</em> alongside your document. The hive needs to see it on every pass to cite against it, and that has a real cost.</p>
       <p><strong>The math.</strong> A 5,000-character RFP is roughly 1,250 tokens. A six-bee hive running four rounds spends about 30,000 tokens just transmitting the reference material — before any document content, project goal, or AI response is counted. That is on top of the per-round Builder cost above.</p>
       <p><strong>Two practical consequences.</strong></p>
@@ -225,6 +236,9 @@
   </div>
   <div class="page-footer-center">
     <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
 </div>
@@ -249,10 +263,43 @@
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
 
 <script src="theme.js"></script>
-<script src="nav-helper.js?v=3.22.5"></script>
-<script src="version.js?v=3.22.5"></script>
+<script src="nav-helper.js?v=3.22.6"></script>
+<script src="license-helper.js?v=3.22.6"></script>
+<script src="version.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

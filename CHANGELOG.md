@@ -2,6 +2,236 @@
 
 ---
 
+## v3.22.6 Pro — Build `20260427-013`
+**Released:** April 27, 2026
+
+**Helper-page consolidation release.** Three things land in one focused release: license pill rolls out to every helper page footer with full parity to the work-screen behavior; the navigation menus on the work-screen and helper pages are tightened; and a brand-new helper-page design system unifies cards, tips, intros, headings, lists, and section dividers across all five helper pages so they finally read as the same product.
+
+This is the biggest single helper-page release since the chrome unification work in v3.22.5. After this release, content presentation across user manual, API key guide, document playbooks, what are tokens, and prompt editor all draw from the same set of CSS primitives.
+
+### Why this release exists
+
+Helper pages had drifted into five different content vocabularies. Every page invented its own `.card` system (api-details had THREE coexisting card classes — `.info-card`, `.kyh-card`, `.ai-card`), every page invented its own `.tip` class (`.wh-tip` on user manual, `.dp-tip` on playbooks, `.kyh-tip` plus `.kyh-tips-*` on api-details), every page used different heading sizes for the same job, and `api-details.html` was carrying a 35-line inline `<style>` block — a direct violation of the project's NO inline CSS rule. Lists were unstyled or styled inconsistently. Three of the five pages had no `<h1>` at all.
+
+Rather than fix each page individually, this release introduces a scoped helper-pages design system. All rules live under `.helper-body`, so they never touch the working console (locked) or setup screens (locked). Every helper page now uses the same primitives.
+
+### What changed
+
+#### License pill rollout — every helper page footer
+
+The footer-right slot on every helper page now shows the same green Licensed pill (or Trial / Trial expired status) as the work-screen footer. Click behavior is full parity with the in-app pill:
+
+- Click while licensed → opens Manage License modal (replace key, remove key, or close)
+- Click while trialing or expired → opens License Entry modal with Gumroad verification
+- Status updates immediately on save / replace / remove, on the page where the action happened AND on next-load of any other helper page (shared `LS_LICENSE` localStorage key)
+
+Implemented via a new shared file `license-helper.js` (160 lines, mirrors the in-app license functions in `app.js` minus the trial-rounds increment counter — helper pages don't run rounds, so the trial counter is read-only). Both license modals (entry + manage) are now injected into the markup of every helper page.
+
+The footer structure was restructured from v3.22.5's two-section layout (`Save as PDF` | `version + About` cluster) to a three-section layout matching the work-screen pattern:
+
+```
+[Save as PDF]              [v3.22.6 PRO]              [✓ Licensed] [ℹ️ About]
+   left                       center                      right
+```
+
+The version pill in the center is plain dim text (no border, no padding, no border-radius) — it's a stamp, not a button.
+
+#### Menu refinements — work screen and helper pages
+
+The work-screen Tools section item `🔑 Enter License Key` is renamed to `🔑 License Key`. The shorter label is more accurate — clicking it goes to either the entry or manage modal depending on license state. "Enter" implied entry-only.
+
+Helper-page hamburger menus now have FIVE sections instead of three, mirroring the structure of the in-app menu:
+
+```
+DOCUMENTATION (alphabetical)
+  🔑 API Key Guide
+  📋 Document Playbooks
+  📖 User Manual
+  🪙 What Are Tokens?
+
+TOOLS
+  🔑 License Key
+
+CREATE SOMETHING
+  🚀 Open WaxFrame
+
+SUPPORT
+  🛒 Buy WaxFrame Pro
+
+ADVANCED
+  ✏️ Prompt Editor
+```
+
+`✏️ Prompt Editor` moved out of Documentation and into Advanced, mirroring its placement in the in-app menu. New Tools section contains `🔑 License Key`, providing a menu entry point in addition to the footer pill.
+
+#### NEW: Helper-pages design system in `style.css`
+
+A new section at the end of `style.css` titled `HELPER-PAGES DESIGN SYSTEM (v3.22.6)`. All rules scoped under `.helper-body` so they apply only to the five helper pages — never the work screen, never setup screens. Built on the existing theme tokens (`var(--surface)`, `var(--accent)`, etc.) so dark/light/auto theming is automatic.
+
+Primitives introduced:
+
+- **Heading hierarchy** — `h1` (28px), `h2` (20px), `h3` (16px), `h4` (13px uppercase accent). Consistent margins. Font-family always `var(--font-display)` (DM Sans). All scoped under `.helper-body .page-main`.
+- **Body text** — paragraph, strong, em, code, pre, with consistent line-height (1.7) and color (`var(--text-dim)`).
+- **Lists** — `ul` and `ol` under `.helper-body .page-main` with consistent indent (24px), line-height (1.7), bullet style (disc / decimal), nested-list spacing.
+- **`.wf-card`** — the one and only card primitive. Surface background, border, left-edge accent stripe. Color modifiers: `.is-accent`, `.is-green`, `.is-amber`, `.is-blue`, `.is-red`. Sub-elements `.wf-card-title` and `.wf-card-body`.
+- **`.wf-tip`** — the one and only tip primitive. Flex row with icon + body. Accent-tinted background, accent border, italic body text.
+- **`.wf-section-divider`** — horizontal rule between major sections.
+- **`.wf-section-heading` + `.wf-section-heading-sub`** — large section heading + subtitle pair.
+- **`.wf-pill`** — small inline pill label. Color modifiers same as `.wf-card`.
+- **`.wf-intro`** — page-level hero block at the top of a page (logo + headline + intro paragraph). Replaces the per-page `.wh-intro` / `.dp-intro` / `.kyh-intro` variants.
+
+Page-specific rich components kept distinct because they aren't generic content (different visual job from a generic card):
+
+- **`.kyh-card`** — AI personality cards on api-details (icon + name + role badges + body sections + tip footer). Visually aligned with `.wf-card` (same border-radius, same border-left-accent pattern) but keeps its rich structure.
+- **`.kyh-badge-builder` / `.kyh-badge-reviewer` / `.kyh-badge-free`** — colored pills shown on each AI personality card header.
+- **`.kyh-pill-good` / `.kyh-pill-warn` / `.kyh-pill-bad`** — descriptors inside each KYH card body.
+- **`.ai-card`** — AI signup cards (api-details section 1) with icon + name + steps and links.
+
+#### Migrations applied
+
+Every helper page now uses the design system primitives.
+
+**`api-details.html`:**
+- Inline `<style>` block (35 lines) DELETED. All rules now live in the design system or in supporting helper-body-scoped rules.
+- `.info-card section-title-top` "What is an API key?" panel → `.wf-card.is-accent` with `<h2 class="wf-card-title">`
+- `.info-card.green` "Your keys never leave your device" → `.wf-card.is-green` with `<h3 class="wf-card-title">`
+- `.info-card.info-card-tips` "General Tips" → `.wf-card.is-accent` with `<h2 class="wf-card-title">` and clean `<p><strong>` paragraphs (no more `.kyh-tips-p`/`.kyh-tips-strong` classes)
+- `.section-divider` → `.wf-section-divider`
+- All `<div class="section-title">TEXT</div>` (column headers like "Free or low-cost AIs", "Pay-as-you-go AIs") converted to plain `<h2>TEXT</h2>` and styled by the design system.
+- `<h2 class="api-intro-title">Get Your API Keys</h2>` promoted to `<h1>` (this IS the page title).
+- Specificity fix: `.api-intro-strip.honeycomb-header .api-intro-title` rules re-scoped to `.helper-body .api-intro-strip.honeycomb-header .api-intro-title` so they win cascade-priority over the new design-system H1 rule.
+
+**`what-are-tokens.html`:**
+- New `<h1>What Are Tokens?</h1>` and intro paragraph added at top of `page-main` (page previously had no H1).
+- `.card.accent` → `.wf-card.is-accent`
+- `.card.amber` → `.wf-card.is-amber`
+- `.card.green` → `.wf-card.is-green`
+- bare `.card` → `.wf-card`
+- All `<h3>` inside cards → `<h3 class="wf-card-title">`
+- `.section-title` divs → plain `<h2>` elements (styled by design system)
+- `.info-card.green.card-push-bottom.helper-note-card` "Learn more" block → `.wf-tip` structure with `WaxFrame_InfoButton_v1.png` icon
+
+**`document-playbooks.html`:**
+- All 12 `.dp-tip` blocks converted to `.wf-tip` structure (`<div class="wf-tip"><span class="wf-tip-icon"><img></span><div class="wf-tip-body">…</div></div>`)
+- `.dp-intro` → `.wf-intro`, `.dp-bee` → `.wf-intro-bee`, `.dp-intro-text` → `.wf-intro-text`, `<h1 class="dp-intro-title">` → plain `<h1>`
+- Other `dp-*` page-specific scaffolding (`.dp-playbook`, `.dp-field`, `.dp-category-*`, `.dp-back-top`, `.dp-real-example`) intentionally KEPT — they're page-specific structural components, not generic content primitives.
+
+**`waxframe-user-manual.html`:**
+- All 14 `.wh-tip` blocks converted to `.wf-tip` structure
+- `.wh-intro` → `.wf-intro`, `.wh-bee` → `.wf-intro-bee`, `.wh-intro-text` → `.wf-intro-text`, `<h1 class="wh-intro-title">` → plain `<h1>`
+- `<ul class="wh-list">` (2 occurrences) stripped to plain `<ul>` — design system handles list styling
+- Page-specific components kept: `.wh-section`, `.wh-section-hdr`, `.wh-section-title`, `.wh-block`, `.wh-step`, `.wh-warn`, `.wh-tag`, `.wh-back-top`, `.wh-table` — these are user-manual-specific structural components, not generic primitives.
+
+**`prompt-editor.html`:**
+- Body NOT migrated — pure tool surface (`.save-bar` + `.prompts-grid` + `.prompt-block`). No narrative content with cards, tips, or intros to consolidate. The white-header concern raised during testing was confirmed to be light-theme rendering correctly (the `.page-header` rule has a `[data-theme="light"]` background of `#f0f2f8` which is correctly applied).
+- License pill, About modal, and menu changes still applied.
+
+#### Dead CSS removed
+
+The orphaned old rules previously serving the migrated markup are deleted from `style.css`. This is the riskiest part of the release per the v3.21.26 lesson (orphan-by-grep ≠ safe-to-delete), so each rule was checked for any remaining HTML/JS references before deletion. Rules that LOOKED orphaned but were actually still in use (`.ai-card`, `.ai-table`, `.wh-section`, `.wh-block`, `.wh-step`, `.wh-warn`, `.wh-tag`, `.wh-back-top`, `.wh-table`, `.dp-playbook`, `.dp-field`, `.dp-category-*`, `.kyh-section-title`) were KEPT.
+
+Rules genuinely orphaned and DELETED:
+
+- `.section-title` (24px page-section header)
+- `.section-divider` (horizontal rule)
+- `.section-heading`, `.section-heading-sub` (lived in inline style, gone with that block)
+- `.card`, `.card.accent`, `.card.amber`, `.card.green`, `.card h3`, `.card p`, `.card strong`
+- `.info-card`, `.info-card.green`, `.info-card h2`, `.info-card h3`, `.info-card p`
+- `.info-card-tips`, `.kyh-tips-title`, `.kyh-tips-p`, `.kyh-tips-strong`, `.kyh-tips-p-last`
+- `.api-intro-title` and `.api-intro-desc` fallback rules (only used inside the honeycomb-header panel which has its own scoped rules)
+- `.api-azure-intro` (single-paragraph margin tweak, now redundant)
+- `.helper-note-card`, `.helper-note`, `.card-push-bottom`
+- `.footer-note` (was on prompt-editor footer-left, now removed by the v3.22.5 footer restructure)
+- `.wh-intro`, `.wh-bee`, `.wh-intro-text h2`, `.wh-intro-text .wh-intro-title`, `.wh-intro-text p`
+- `.wh-tip`, `.wh-tip-icon`, `.wh-tip p`
+- `.dp-intro`, `.dp-bee`, `.dp-intro-text h2`, `.dp-intro-text .dp-intro-title`, `.dp-intro-text p`
+- `.dp-tip`, `.dp-tip-icon`, `.dp-tip-icon img`, `.dp-tip p`
+
+Net `style.css` line change: +472 (8124 lines vs 7652 in v3.22.5). The design system added more than the orphans removed, expected for a structural addition. Brace count balanced 1675/1675.
+
+### What didn't change
+
+- Work screen, setup screens, welcome screen, in-app About modal contents — all unchanged.
+- The structure or content of any helper page section — all unchanged. Only chrome and visual presentation were touched.
+- All `app.js` JavaScript — only `BUILD` constant updated. No code changes.
+- All in-app navigation — preserved exactly.
+- `theme.js`, `docs-scrollspy.js`, `api-links.js`, `nav-helper.js` — unchanged.
+- Setup screens still deliberately have no theme buttons and no hamburger menu — unchanged from prior releases.
+
+### What changed (file-by-file)
+
+| File | Changes |
+|------|---------|
+| `license-helper.js` | NEW — 160-line shared file with full license badge + modal flow for helper pages. |
+| `style.css` | NEW design-system section appended (~470 lines). KYH supporting rules block appended (~80 lines). Specificity fix on `.api-intro-strip.honeycomb-header` rules. ~14 orphan rule blocks deleted. Net +472 lines. |
+| `index.html` | Menu: `🔑 Enter License Key` → `🔑 License Key`. Version stamps. |
+| `waxframe-user-manual.html` | 5-section menu. License modals + license-helper.js. Footer License pill. 14 `.wh-tip` blocks migrated to `.wf-tip`. `.wh-intro` → `.wf-intro`. `.wh-list` stripped. Build stamps. |
+| `api-details.html` | 5-section menu. License modals + license-helper.js. Footer License pill. Inline `<style>` block deleted. Three `.info-card` blocks migrated to `.wf-card`. `.kyh-tips-*` block migrated to plain `.wf-card`. `.section-title` divs → `<h2>`. `.section-divider` → `.wf-section-divider`. `<h2>` page title promoted to `<h1>`. Build stamps. |
+| `document-playbooks.html` | 5-section menu. License modals + license-helper.js. Footer License pill. 12 `.dp-tip` blocks migrated to `.wf-tip`. `.dp-intro` → `.wf-intro`. Build stamps. |
+| `what-are-tokens.html` | 5-section menu. License modals + license-helper.js. Footer License pill. New `<h1>` + intro paragraph at top. All `.card` variants migrated to `.wf-card` with appropriate `.is-*` modifier. `.section-title` divs → `<h2>`. Card `<h3>` → `<h3 class="wf-card-title">`. `.info-card` "Learn more" block migrated to `.wf-tip`. Build stamps. |
+| `prompt-editor.html` | 5-section menu. License modals + license-helper.js. Footer License pill. Body left untouched (pure tool surface, no narrative content to migrate). Build stamps. |
+| `app.js`, `version.js` | Version stamps only. |
+
+### Items shipped from the queue
+
+- **Helper-page content consistency** — five different card systems collapsed to one. Five different tip systems collapsed to one. (resolved)
+- **api-details inline `<style>` block** — rule violation closed. (resolved)
+- **Helper-page H1 missing on three of five pages** — H1 added to api-details, what-are-tokens. Already present on user manual and document playbooks. Prompt editor's body has no narrative content so no H1 needed. (resolved)
+- **License pill on helper pages** — promised in v3.22.5 work, now delivered. (resolved)
+- **Menu refinements** — License Key label, Tools section on helper pages, Prompt Editor moved to Advanced. (resolved)
+
+### Items still queued
+
+- **#7** Model update detection + opt-in swap prompt
+- **#8** `MODEL_LABELS` strategy decision
+- **#10** Model catalog (Appendix B flow) — stop filtering already-added AIs
+- **#12** Mute button muted-state icon — clearer glyph
+- **#13** Reference Material — multi-document support
+- **#14** Excel/.xlsx ingestion
+- **#15** Shareable hive presets (client-side export/import)
+- **#16** "CONFLICTS DETECTED BUT COULD NOT BE PARSED" diagnostics surfacing
+- **#17** Holdout suggestion clickability — wrap-aware numbering or section-anchor primary
+- **#18** Clock CSS audit
+- **#19** Export-flag regression (`_finishExported`)
+
+### Validation
+
+- `style.css` brace balance: 1675 open / 1675 close ✓
+- All HTML files div-balanced (538/538, 403/403, 194/194, 435/435, 60/60, 101/101) ✓
+- Zero stale class references on any helper page (no orphaned `wh-tip`, `dp-tip`, `kyh-tips-*`, `info-card`, bare `.card`, `.section-title`, `.section-divider`, `.helper-note-card`, etc.) ✓
+- All design-system primitives have CSS rules defined (`.wf-card`, `.wf-tip`, `.wf-intro`, `.wf-pill`, `.wf-section-divider`, `.kyh-card`, `.ai-card`) ✓
+- All page-specific kept components have CSS rules (`.wh-section`, `.wh-block`, `.dp-playbook`, `.dp-field`, `.kyh-section-title`) ✓
+- All 4 canonical version stamps verified at v3.22.6 / `20260427-013` ✓
+- All 5 helper-page meta `waxframe-build` tags verified at `20260427-013` ✓
+- All cache-busts verified at `?v=3.22.6` across `style.css`, `version.js`, `nav-helper.js`, `license-helper.js`, `docs-scrollspy.js`, `app.js` ✓
+- License-helper.js loaded on all 5 helper pages after nav-helper.js ✓
+
+### Upgrade
+
+Pull and hard-refresh. **`license-helper.js` is a new file — make sure it's added to the repo, not just modified.**
+
+### Test plan
+
+1. Drop files into the repo (`license-helper.js` is new — confirm it's added). Hard-refresh in browser.
+2. **License pill behavior on each helper page.** Open each helper page in a fresh tab. Confirm the green ✓ Licensed pill (or Trial — N rounds left) appears in footer-right next to ℹ️ About button. Click the pill:
+   - Licensed → Manage License modal opens with masked key (last 8 chars visible). Test Replace Key (opens entry modal). Test Remove Key (confirm dialog → license cleared, badge updates, alert shown).
+   - Not licensed → License Entry modal opens. Test invalid key shows error. Test valid key from Gumroad receipt verifies and updates badge to ✓ Licensed.
+3. **Cross-page license sync.** License a key on one helper page, refresh another helper page tab — should show ✓ Licensed. Refresh main app — should show ✓ Licensed.
+4. **Menu refinements:**
+   - Main menu: confirm "🔑 License Key" replaces previous "🔑 Enter License Key" in the Tools section.
+   - Helper-page menus: confirm 5 sections (Documentation alphabetical / Tools with License Key / Create Something with Open WaxFrame / Support with Buy Pro / Advanced with Prompt Editor). Click each item to confirm the route works.
+5. **Footer layout on each helper page:** confirm `[Save as PDF] | [version pill] | [Licensed] [About]` three-section layout. Version pill is plain dim text (no border, no padding). License pill is green and clickable. About button works.
+6. **Design system migration — visual smoke test:**
+   - Open `what-are-tokens.html`. Confirm: H1 "What Are Tokens?" + intro paragraph at top. The cards in left/right columns have border-left in accent (left col first), amber, then accent again; right col cards have green, then plain (no left-edge color), plain, plain. Card titles (`.wf-card-title`) are 16px bold. Bottom-left "Learn more" block is now a `.wf-tip` (italic note in tinted box with InfoButton icon).
+   - Open `api-details.html`. Confirm: H1 "Get Your API Keys" inside the honeycomb-header panel (white text, uppercase, letter-spaced — same as before). Two-column layout. The "What is an API key?" card has accent left-edge, "Your keys never leave your device" card has green left-edge. Section H2s "Free or low-cost AIs" / "Pay-as-you-go AIs" use design-system H2 (20px bold). KYH cards (Know Your Hive section) preserve their rich layout (icon + name + role badges + body sections + tip footer). General Tips card at bottom has accent left-edge with H2 title.
+   - Open `document-playbooks.html`. Confirm: `.wf-intro` panel at top with bee + H1 "Put the hive to work on a real document" + intro paragraphs. The 12 tip blocks throughout the playbooks (Quick Start, Cover Letter, Resume, etc.) all render as `.wf-tip` (italic text with TipButton icon, accent-tinted background, accent border).
+   - Open `waxframe-user-manual.html`. Confirm: `.wf-intro` panel at top with bee + H1 "WaxFrame User Manual". Sticky sidebar still works, scrollspy still highlights current section. The 14 tip blocks throughout render as `.wf-tip`. Lists in `.wh-block` still readable (page-specific `.wh-block ul/ol` rules still apply).
+   - Open `prompt-editor.html`. Confirm: save-bar at top with bee, title, note, Save All / Reset All buttons. Three prompt groups (Reviewer / Builder / System Injections). License pill in footer. About modal works.
+7. **Theme regression:** Switch each page through Light / Auto / Dark. All `.wf-card`, `.wf-tip`, `.wf-pill` etc. should adapt automatically via tokens.
+8. **App regression check:** Open `index.html`. Work screen, setup screens, About modal, hamburger menu — all unchanged from v3.22.5 (except License Key label).
+
+---
+
 ## v3.22.5 Pro — Build `20260427-012`
 **Released:** April 27, 2026
 
