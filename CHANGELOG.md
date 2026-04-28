@@ -2,6 +2,164 @@
 
 ---
 
+## v3.22.5 Pro — Build `20260427-012`
+**Released:** April 27, 2026
+
+**Helper-page chrome unification — complete.** The slim hamburger menu lands on every helper page in one release, the four remaining helper pages get the same unified header/footer/About modal treatment as the user manual, and several smaller items get folded in (sidebar clip fix, queue item #22 deprecation, vestigial sidebar labels removed, page-name H2→H1 promotions, multiple stale meta build-stamp drift fixes).
+
+Reverses the earlier course of micro-splitting these changes across one release per helper page. The pattern is proven (v3.22.3/v3.22.4 on user manual), risk is well-understood, and shipping the rollout in one focused release moves the project forward rather than dribbling four near-identical follow-ups across the next hour.
+
+### What changed
+
+#### New shared file: `nav-helper.js`
+
+New 24-line file providing `openNavMenu()` and `closeNavMenu()` for helper pages. Mirrors the in-app `app.js` versions exactly so the visual + behavior are identical. ESC key closes the menu. Loaded by all five helper pages with a `?v=3.22.5` cache-bust.
+
+#### All five helper pages — unified header
+
+Every helper page (`waxframe-user-manual.html`, `api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`) now uses the same header structure:
+
+- **Left:** `nav-hamburger` button calling `openNavMenu()`
+- **Center:** logo + `WaxFrame` name + tagline `Many minds, one refined result.` + version stamp (replaces the page-specific name that had been in the tag slot)
+- **Right:** theme controls — icon-only `☀️ ⚙️ 🌙` (the four pages that hadn't already been simplified in v3.22.3 dropped their `Light` / `Auto` / `Dark` word labels)
+
+Old `<div class="page-header-spacer">` faux-centering pattern replaced with the semantic `.page-header-left` slot used by the user manual since v3.22.3.
+
+#### All five helper pages — slim hamburger menu
+
+Each helper page now contains the same nav-panel markup. Visual treatment matches the in-app menu; item set is reduced for doc-page context:
+
+```
+HEADER
+  WaxFrame brand block + version + ℹ️ About
+
+DOCUMENTATION (alphabetical, target="_blank")
+  🔑 API Key Guide
+  📋 Document Playbooks
+  ✏️ Prompt Editor
+  📖 User Manual
+  🪙 What Are Tokens?
+
+CREATE SOMETHING
+  🚀 Open WaxFrame   (target="_blank" → index.html)
+
+SUPPORT
+  🛒 Buy WaxFrame Pro
+```
+
+The work-screen menu sections (Navigation, Tools, Advanced) deliberately don't appear on helper pages — those items need an in-app session to be useful, useless on a static doc page.
+
+#### All five helper pages — sticky unified footer
+
+Footer pattern from v3.22.3/v3.22.4 is now applied site-wide. Sticky to viewport bottom. Save-as-PDF on the left, version pill (plain text) + ℹ️ About button centered. Replaces every helper page's previous footer (which had varied across pages — some had AGPL/GitHub branding links, some had a Close-tab button, some had an open-source one-liner). Branding links now live in the About modal where project metadata belongs; window.close was redundant (browser tab close already does the same job).
+
+#### All five helper pages — About modal
+
+Each helper page now includes its own `aboutModalHelper` modal with metadata-only content (Version, License, Source, Author, Testing credit, Stack info, build line). Same content shape as the in-app About modal so users get consistent metadata regardless of where they opened the modal from. Reachable from two places per the v3.22.3 pattern: footer About button and nav-panel header About button.
+
+#### `api-details.html` — queue item #22 deprecation
+
+The footer `Open All Billing Pages` and `Open All API Consoles` buttons collapsed into a single `Open default AI websites` button matching the Worker Bees screen. Resolves item #22 from the work-session queue.
+
+#### `api-details.html` — meta `waxframe-build` tag added
+
+Page had only the comment-block build stamp, no `<meta name="waxframe-build">` tag. Added the meta tag for site-wide consistency with `index.html`, `waxframe-user-manual.html`, and the others.
+
+#### `document-playbooks.html` — Jump to a playbook label removed from sidebar
+
+Same vestigial-label pattern as the user manual's `Contents` label that came out in v3.22.4. The sidebar IS the contents; labelling it is redundant. The first sidebar item (Quick Start) is now the topmost sidebar element with its existing styling providing the natural top boundary.
+
+#### `document-playbooks.html` — body H2 → H1 promotion
+
+`<h2>Put the hive to work on a real document</h2>` becomes `<h1 class="dp-intro-title">`. Same semantic correction as the user manual's H2 → H1 promotion in v3.22.3 — the page's primary heading should be H1 once the tagline is in header chrome. CSS selector updated to handle both `h2` (legacy fallback) and `.dp-intro-title`.
+
+#### Three stale meta `waxframe-build` stamps fixed
+
+`document-playbooks.html`, `what-are-tokens.html`, and `prompt-editor.html` were all reading `20260427-002` while the rest of the site had been bumped through several releases (and v3.22.3 had only fixed the user manual's drift). All three now corrected to `20260427-012` along with the rest of the site.
+
+#### `style.css` — sidebar clip fix
+
+`.doc-sidebar` `max-height` was `calc(100vh - 140px)` which only accounted for the sticky header. With the v3.22.4 sticky footer, the sidebar was running under the footer at long scroll positions. Updated to `calc(100vh - 140px - 64px)` so the sticky sidebar clips above the sticky footer.
+
+### What didn't change
+
+- Work screen, setup screens, welcome screen, About modal contents — all unchanged.
+- Helper page content (sections, copy, code samples) — all unchanged. Only chrome and structural elements (sidebar labels, intro headings) modified.
+- All `app.js` JavaScript — only `BUILD` constant updated. No code changes.
+- All in-app navigation — preserved exactly.
+- `theme.js`, `docs-scrollspy.js`, `api-links.js` — unchanged.
+- Setup screens still deliberately have no theme buttons and no hamburger menu — unchanged from prior releases.
+
+### What changed (file-by-file)
+
+| File | Changes |
+|------|---------|
+| `nav-helper.js` | NEW — 24-line shared script with `openNavMenu`/`closeNavMenu` plus ESC-key handler. |
+| `waxframe-user-manual.html` | Hamburger menu added (was empty placeholder slot). nav-helper.js loaded. Stale meta build stamp `010` → `012`. |
+| `api-details.html` | Header rewritten with unified pattern + nav menu + hamburger. Footer rewritten with unified sticky pattern. About modal added. Bottom buttons consolidated to single `Open default AI websites` (item #22). New meta `waxframe-build` tag. nav-helper.js loaded. Light/Auto/Dark word labels dropped. |
+| `document-playbooks.html` | Header rewritten + nav menu + hamburger. Footer rewritten with sticky pattern. About modal added. Sidebar `Jump to a playbook` label removed. Body H2 → H1. nav-helper.js loaded. Stale meta build `002` → `012`. Light/Auto/Dark word labels dropped. |
+| `what-are-tokens.html` | Header rewritten + nav menu + hamburger. Footer rewritten with sticky pattern. About modal added. nav-helper.js loaded. Stale meta build `002` → `012`. Light/Auto/Dark word labels dropped. |
+| `prompt-editor.html` | Header rewritten + nav menu + hamburger. Footer rewritten with sticky pattern (replacing the open-source one-liner footer-note). About modal added. nav-helper.js loaded. Stale meta build `002` → `012`. Light/Auto/Dark word labels dropped. The `.save-bar` and editor surface in the body left untouched — that's tool surface, not chrome. |
+| `style.css` | `.doc-sidebar` `max-height` clip fix. `.dp-intro-text` selector extended to include `.dp-intro-title`. Build header. |
+| `index.html` | Version stamps only. |
+| `app.js` | `BUILD` constant only. |
+| `version.js` | `APP_VERSION` → `v3.22.5 Pro`. |
+
+### Items shipped from the queue
+
+- **#22** api-details bottom buttons → `Open default AI websites` (resolved)
+- **Sidebar clip fix** flagged during v3.22.4 testing (resolved)
+- **Helper-page hamburger menu** promised in v3.22.3 release notes (resolved)
+- **Helper-page chrome unification** promised in v3.22.3 release notes (resolved across all five pages)
+
+### Items still queued
+
+- **#7** Model update detection + opt-in swap prompt
+- **#8** `MODEL_LABELS` strategy decision
+- **#10** Model catalog (Appendix B flow) — stop filtering already-added AIs
+- **#12** Mute button muted-state icon — clearer glyph
+- **#13** Reference Material — multi-document support
+- **#14** Excel/.xlsx ingestion
+- **#15** Shareable hive presets (client-side export/import)
+- **#16** "CONFLICTS DETECTED BUT COULD NOT BE PARSED" diagnostics surfacing
+- **#17** Holdout suggestion clickability — wrap-aware numbering or section-anchor primary
+- **#18** Clock CSS audit
+- **#19** Export-flag regression (`_finishExported`)
+
+### Validation
+
+- `style.css` brace balance: 1634 open / 1634 close ✓
+- All HTML files div-balanced (538/538, 391/391, 184/184, 423/423, 49/49, 89/89) ✓
+- All 4 canonical version stamps verified at v3.22.5 / `20260427-012` ✓
+- All 6 helper-page cache-busts verified at `?v=3.22.5` ✓
+- All 6 helper-page meta `waxframe-build` tags verified at `20260427-012` ✓
+- New `nav-helper.js` file present, 24 lines ✓
+- All 5 helper pages reference `nav-helper.js?v=3.22.5` ✓
+
+### Upgrade
+
+Pull and hard-refresh.
+
+### Test plan
+
+1. Drop files into the repo (`nav-helper.js` is new — make sure it's added). Hard-refresh.
+2. Open each helper page in a fresh tab: `waxframe-user-manual.html`, `api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`.
+3. **Header check on every helper page:**
+   - Hamburger button on the left
+   - Brand block centered with logo, WaxFrame name, tagline `Many minds, one refined result.`, version stamp
+   - Theme buttons icon-only on the right (☀️ ⚙️ 🌙)
+4. **Hamburger menu:** click the hamburger on each helper page. Menu should slide in with brand-block header + About button + three sections (Documentation alphabetical / Create Something / Support). Click outside the panel or press ESC to close.
+5. **Documentation links:** click each Documentation item from the menu. Each should open in a new tab. Confirm `Open WaxFrame` opens `index.html` in a new tab. Confirm `Buy WaxFrame Pro` opens Gumroad in a new tab.
+6. **Sticky footer:** scroll each helper page. Footer should stay pinned at the bottom of the viewport at all scroll positions. Last lines of content should remain readable above the footer.
+7. **About modal:** click `ℹ️ About` in the footer of each helper page. Modal opens with metadata only (Version, License, Source, Author, Testing, Stack). Close via "Got it →" or by clicking outside.
+8. **api-details.html footer:** confirm the new `Open default AI websites` button replaces the previous `Open All Billing Pages` and `Open All API Consoles` buttons. Click it — should open all the default AI signup pages.
+9. **document-playbooks.html sidebar:** confirm the topmost item is the `⭐ Quick Start` link — no `Jump to a playbook` label above it. Confirm the body H1 reads `Put the hive to work on a real document`.
+10. **User manual sidebar (regression check):** scroll the user manual to a long section. The sticky sidebar should clip above the sticky footer (no overlap).
+11. **Theme toggle (regression check):** light/auto/dark switching should work on every helper page, persists across reloads.
+12. **App check:** open `index.html` — work screen, setup screens, hamburger menu, all unchanged from v3.22.4.
+
+---
+
 ## v3.22.4 Pro — Build `20260427-011`
 **Released:** April 27, 2026
 

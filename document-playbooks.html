@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260427-011
+     Build: 20260427-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,28 +9,69 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-002">
+  <meta name="waxframe-build" content="20260427-012">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.4">
+  <link rel="stylesheet" href="style.css?v=3.22.5">
 </head>
 <body class="helper-body">
 
+<!-- ========================================================
+     SLIM HELPER-PAGE NAV MENU (v3.22.5)
+     ======================================================== -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Documentation</div>
+    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Create Something</div>
+    <a class="nav-item" href="index.html" target="_blank" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Support</div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+  </div>
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE HEADER (v3.22.5)
+     ======================================================== -->
 <div class="page-header">
-  <div class="page-header-spacer"></div>
+  <div class="page-header-left">
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+  </div>
   <div class="page-header-brand">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
-    <div>
+    <div class="page-header-brand-text">
       <div class="page-header-name">WaxFrame</div>
-      <div class="page-header-tag">Document Playbooks</div>
+      <div class="page-header-tag">Many minds, one refined result.</div>
       <span class="app-version-stamp helper-version-stamp"></span>
     </div>
   </div>
-  <div class="page-header-spacer"></div>
   <div class="page-header-controls">
-    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️ Light</button>
-    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️ Auto</button>
-    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙 Dark</button>
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
   </div>
 </div>
 
@@ -39,7 +80,7 @@
   <div class="dp-intro">
     <img src="images/WaxFrame_Project_Bee_v2.png" alt="🐝" class="dp-bee">
     <div class="dp-intro-text">
-      <h2>Put the hive to work on a real document</h2>
+      <h1 class="dp-intro-title">Put the hive to work on a real document</h1>
       <p>Each playbook gives you the exact text to enter into every WaxFrame field for a specific document type. Open WaxFrame on one screen and this page on another. Work through the fields top to bottom — replace anything in [brackets] with your own information.</p>
       <p>New to WaxFrame? Read the <a href="waxframe-user-manual.html" target="_blank" class="link-accent">User Manual</a> first — it walks you through every screen step by step.</p>
     </div>
@@ -49,8 +90,6 @@
 
     <aside class="doc-sidebar">
       <div class="doc-sidebar-inner">
-        <div class="doc-sidebar-title">Jump to a playbook</div>
-
         <a href="#quick-start" class="doc-sidebar-quickstart">
           <span class="doc-sidebar-quickstart-star">⭐</span>
           <span>
@@ -1231,20 +1270,44 @@ Hard constraints:
 
 </div>
 
-<div class="page-footer">
-  <div class="page-footer-btns">
-    <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="btn">📄 AGPL-3.0</a>
-    <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="btn">⭐ GitHub</a>
+<!-- ========================================================
+     UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
+     ======================================================== -->
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions">
+    <button class="btn" onclick="window.print()" title="Save as PDF via your browser's print dialog">⬇ Save as PDF</button>
   </div>
-  <div class="page-footer-right">
-    <button class="btn" onclick="window.close()">✕ Close this tab</button>
-    <span class="app-version-stamp helper-version-stamp"></span>
+  <div class="page-footer-center">
+    <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<!-- ========================================================
+     ABOUT MODAL — helper-page version. Metadata only.
+     ======================================================== -->
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
+    <h2 class="finish-modal-title">WaxFrame</h2>
+    <p class="about-modal-subtitle">About</p>
+    <div class="goal-info-body">
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.22.4"></script>
-<script src="docs-scrollspy.js?v=3.22.4"></script>
+<script src="nav-helper.js?v=3.22.5"></script>
+<script src="version.js?v=3.22.5"></script>
+<script src="docs-scrollspy.js?v=3.22.5"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
