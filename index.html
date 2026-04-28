@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-006">
+  <meta name="waxframe-build" content="20260427-007">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.28">
+  <link rel="stylesheet" href="style.css?v=3.22.0">
 </head>
 <body>
 
@@ -534,8 +534,10 @@
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
         <button class="btn" onclick="openReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
-        <span class="license-badge" id="licenseBadge" title="License status"></span>
-        <span class="app-version-stamp work-version-stamp"></span>
+        <button class="theme-opt mute-btn" id="workMuteBtn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
       </div>
     </div>
 
@@ -660,10 +662,8 @@
         </button>
       </div>
       <div class="footer-right">
-        <button class="theme-opt mute-btn" id="workMuteBtn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
-        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
-        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
-        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
+        <span class="license-badge" id="licenseBadge" title="License status"></span>
+        <button class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
     </div>
   </div>
@@ -1533,8 +1533,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.21.28"></script>
-<script src="app.js?v=3.21.28"></script>
+<script src="version.js?v=3.22.0"></script>
+<script src="app.js?v=3.22.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
