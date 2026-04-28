@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260427-012
+     Build: 20260427-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-012">
+  <meta name="waxframe-build" content="20260427-013">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.5">
+  <link rel="stylesheet" href="style.css?v=3.22.6">
 </head>
 <body class="helper-body">
 
@@ -42,9 +42,12 @@
     <div class="nav-section-label">Documentation</div>
     <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
@@ -53,6 +56,10 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -86,10 +93,10 @@
     <div class="print-header-sub">weirdave.github.io/WaxFrame-Professional — Many minds, one refined result.</div>
   </div>
 
-  <div class="wh-intro">
-    <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="wh-bee">
-    <div class="wh-intro-text">
-      <h1 class="wh-intro-title">WaxFrame User Manual</h1>
+  <div class="wf-intro">
+    <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="wf-intro-bee">
+    <div class="wf-intro-text">
+      <h1>WaxFrame User Manual</h1>
       <p>WaxFrame puts a team of AI assistants to work on your document at the same time. One AI writes and refines — the rest review, challenge, and suggest improvements. Round by round, your document gets sharper. This manual covers every screen, every button, and every field in the exact order you encounter them. Appendices and reference sections follow at the end for advanced features and troubleshooting.</p>
     </div>
   </div>
@@ -172,9 +179,9 @@
       <div class="wh-block-title">What you will need before you start</div>
       <p>WaxFrame connects to AI providers using <strong>API keys</strong>. An API key is a unique code — like a password — that gives WaxFrame permission to use a specific AI on your behalf. You need at least two API keys from any combination of the supported providers: ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Grok (xAI), Perplexity, or DeepSeek.</p>
       <p>You pay each AI provider directly for the tokens you use. WaxFrame itself does not charge per use — it requires only a one-time license fee after your first three free rounds.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>If you are not sure how to get API keys or which providers to use, open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> — it has step-by-step instructions and direct links to each provider's signup and key console pages.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>If you are not sure how to get API keys or which providers to use, open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> — it has step-by-step instructions and direct links to each provider's signup and key console pages.</p></div>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -354,9 +361,9 @@
         <li class="wh-step"><span class="wh-step-num">4</span><span>Click the <strong>Test</strong> button that now appears next to the key field. Confirm the test passes before continuing.</span></li>
         <li class="wh-step"><span class="wh-step-num">5</span><span>Repeat steps 1–4 for at least one more AI. You need a minimum of two AIs with saved, working keys before you can proceed.</span></li>
       </ol>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Do not have API keys yet? Click the <strong>API Key Guide</strong> button in the toolbar above the list — it has direct links to each provider's signup page and walks you through getting a key for each one.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Do not have API keys yet? Click the <strong>API Key Guide</strong> button in the toolbar above the list — it has direct links to each provider's signup page and walks you through getting a key for each one.</p></div>
       </div>
     </div>
 
@@ -397,9 +404,9 @@
       <div class="wh-block-title">The Builder picker — what you see</div>
       <p>The right panel displays a grid of cards, one for each AI that has a saved API key. AIs without a saved key do not appear here — you must save a key for an AI in Step 1 before it can be selected as Builder.</p>
       <p>Each card shows the AI's name and icon. Click a card to select that AI as your Builder. The selected card is highlighted and marked with a small <strong>Builder badge</strong> in the top-right corner — a crowned bee icon that indicates this AI is the current Builder. Only one AI can be the Builder at a time. You can change your Builder at any time, including from the Work screen during an active session, where the selected Builder is shown with a 👑 crown label in the Change Builder modal.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the other providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a></p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the other providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a></p></div>
       </div>
     </div>
 
@@ -442,9 +449,9 @@
       </ul>
       <p>When set, WaxFrame formats the constraint and includes it in every prompt sent to your AIs in a standardised way, instructing them to keep the document within the limit. Leave both fields blank if your document has no length requirement.</p>
       <p><strong>Important:</strong> put your length limit here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you set it here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.</p></div>
       </div>
     </div>
 
@@ -505,13 +512,13 @@
       <p><span class="wh-tag wh-tag-green">Much better</span> <em>"This is a wireless network infrastructure upgrade proposal for a 950,000 sq ft warehouse. Audience: IT Director (technical) and VP of Facilities (budget-focused). The technical sections and vendor comparison table are solid — do not change them. Focus all improvements on the executive summary, which is too long and too jargon-heavy for the VP, and on the cost justification section, which needs a clearer ROI narrative. Tone: confident and direct, not salesy. Do not add any new sections."</em></p>
       <p><span class="wh-tag wh-tag-red">Too vague</span> <em>"Write a report about wireless networking."</em></p>
       <p><span class="wh-tag wh-tag-green">Much better</span> <em>"Technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience: IT infrastructure team evaluating a campus-wide refresh. Scope: strictly wireless — APs, controllers, cloud management, licensing. Exclude switching, routing, firewalls. Tone: technical and neutral. Include a summary comparison table at the top, a dedicated section per vendor covering strengths, weaknesses, and pricing, then a shortlist recommendation."</em></p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for common document types. Open it from the Menu.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Not sure what to write? The <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a> has ready-made goals for common document types. Open it from the Menu.</p></div>
       </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>Do not put a target length in the goal. Use the <strong>Length Constraint</strong> field below the goal instead — WaxFrame sends it automatically in a standardised format every round.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Do not put a target length in the goal. Use the <strong>Length Constraint</strong> field below the goal instead — WaxFrame sends it automatically in a standardised format every round.</p></div>
       </div>
     </div>
 
@@ -557,7 +564,7 @@
     <div class="wh-block">
       <div class="wh-block-title">When to use it</div>
       <p>Reference material is the right tool when there is a specific document the hive needs to cross-check against. Common cases:</p>
-      <ul class="wh-list">
+      <ul>
         <li><strong>RFP responses</strong> — paste the RFP itself so the hive can verify your response addresses every required section, scoring criterion, and constraint.</li>
         <li><strong>Cover letters and résumés</strong> — paste the job description so every revision is checked against the actual role requirements, not a generic idea of the job.</li>
         <li><strong>Brand or style guides</strong> — paste your organization's style rules so the hive enforces them on every round without needing you to repeat them in Notes.</li>
@@ -601,7 +608,7 @@
       <div class="wh-block-title">Token cost reality</div>
       <p>Reference material is sent to <em>every reviewer every round</em>. A 5,000-character RFP is roughly 1,250 tokens per request. A six-bee hive running four rounds is 30,000 tokens spent just transmitting the reference material — before any document content, project goal, or response is counted.</p>
       <p>Two consequences follow:</p>
-      <ul class="wh-list">
+      <ul>
         <li><strong>Trim aggressively.</strong> Paste only what is most important. If a 40-page RFP has three pages of substantive requirements and 37 pages of boilerplate, paste the three pages.</li>
         <li><strong>Pick a cost-conscious Builder.</strong> When reference material is large, switch your Builder to a model with low input-token pricing — DeepSeek and Gemini Flash are typically the cheapest options. The Builder is sent the largest prompt every round, so changing it has the biggest cost impact.</li>
       </ul>
@@ -613,9 +620,9 @@
       <p>Once you launch a session, the Work screen toolbar shows a new <strong>📚 Reference</strong> button between Notes and Finish. Clicking it opens a drawer that slides up from the bottom of the screen, showing the current reference material in an editable textarea with the same character / word / token counter.</p>
       <p>Edits saved from this drawer apply to the <em>next</em> round — past rounds keep the snapshot of the reference material that was active when they ran. This is intentional: each entry in Round History stores the reference material as it existed at the moment that round was generated, so the transcript stays internally consistent even if you change the source material between rounds.</p>
       <p>The drawer has three actions: <strong>📋 Copy</strong> (copies the current text to your clipboard), <strong>✕ Clear</strong> (wipes the field with confirmation — does not affect past rounds), and <strong>💾 Save &amp; Close</strong> (commits the edit and closes the drawer).</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to <strong>Menu → Setup 2 — Builder</strong>, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.</p></div>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -652,9 +659,9 @@
         <li>Or drag your file from any folder on your computer and drop it directly onto the drop zone.</li>
       </ul>
       <p>Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p><strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — files exported from Word, Google Docs, or similar applications. Scanned documents and PDFs created from images do not contain extractable text and will produce garbled or empty results. If your PDF was scanned, use the <strong>📋 Paste Text</strong> option instead and copy the text from a version of the document you can select text in.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — files exported from Word, Google Docs, or similar applications. Scanned documents and PDFs created from images do not contain extractable text and will produce garbled or empty results. If your PDF was scanned, use the <strong>📋 Paste Text</strong> option instead and copy the text from a version of the document you can select text in.</p></div>
       </div>
       <div class="wh-warn">
         <p>⚠️ <strong>Large file tip:</strong> If you import a very large file — a dense report, a long PowerPoint, or any document that produces a very high word count — and a round later fails with a structure error, this usually means the document exceeded your Builder's token limit for a single request. Switch your Builder to ChatGPT or Gemini using the Change Builder button on the Work screen and retry. Both handle large context windows reliably.</p>
@@ -910,9 +917,9 @@
       <p>The Notes drawer has a <strong>🔒 Lock a line</strong> template button that pre-fills this format for you. Paste the exact text into the placeholder and run the round.</p>
       <p><strong>Step 2 — Add it to your Project Goal.</strong> If the same issue returns after two rounds of Notes reinforcement, it means the AI is not reading the resolution at all — it needs the instruction in the permanent brief. Open the Project screen via the Menu, add the constraint to <strong>Additional instructions</strong>, and return to the Work screen. The goal is sent every round; Notes are cleared after each round.</p>
       <p><strong>Step 3 — Remove the offending AI.</strong> If one specific AI keeps re-raising a resolved conflict after both Notes and goal reinforcement, it is not reading your instructions. Use <strong>Edit Hive</strong> (laptop) or toggle its card directly (desktop) to remove it from the session. The hive will converge faster without it.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>When quoting text to lock it, use the exact words from the document — not a paraphrase. The Builder pattern-matches against what it sees in the document. A near-match may not trigger the lock.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>When quoting text to lock it, use the exact words from the document — not a paraphrase. The Builder pattern-matches against what it sees in the document. A near-match may not trigger the lock.</p></div>
       </div>
     </div>
 
@@ -977,9 +984,9 @@
       <p>Use the <strong>🔒 Lock a line</strong> template button in the Notes drawer. It pre-fills:</p>
       <p><em>"Lock this line exactly as written — do not change it: "[PASTE THE EXACT LINE HERE]""</em></p>
       <p>Replace the placeholder with the exact text from your document — copy and paste it directly. Then run the round. If the issue persists after two rounds of this, add the same instruction to your <strong>Additional instructions</strong> goal field so it is sent permanently, not just for one round.</p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>The Notes field is cleared after every round. If a constraint needs to survive every round permanently, put it in <strong>Additional instructions</strong> on the Project screen — not in Notes.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>The Notes field is cleared after every round. If a constraint needs to survive every round permanently, put it in <strong>Additional instructions</strong> on the Project screen — not in Notes.</p></div>
       </div>
     </div>
 
@@ -1166,17 +1173,17 @@
         <li class="wh-step"><span class="wh-step-num">4</span><span>Adjust the checklist as needed. All available models are checked by default. Use <strong>All</strong> or <strong>None</strong> at the top of the list to toggle everything. Edit any model's display name in the text field beside its ID.</span></li>
         <li class="wh-step"><span class="wh-step-num">5</span><span>Click <strong>Add N to Hive</strong> in the footer. WaxFrame adds each selected model as a separate AI in your Worker Bees list, using the Chat Endpoint you provided and the model ID for each one. The server config is saved for next time.</span></li>
       </ol>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>WaxFrame remembers the last server you successfully added models from. The next time you open <strong>Import from Model Server</strong>, the three fields are pre-filled, a <strong>🔑 saved</strong> indicator appears next to the API Key label, and WaxFrame automatically fetches the current model list for you — every open is a live query, never a cached list. Just tick any new models and click <strong>Add N to Hive</strong>. To switch to a different server, pick a new preset from Quick Add or type new URLs — the new values are saved on your next successful add. To clear the saved server, click <strong>Forget saved server</strong> below the Fetch Models button.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>WaxFrame remembers the last server you successfully added models from. The next time you open <strong>Import from Model Server</strong>, the three fields are pre-filled, a <strong>🔑 saved</strong> indicator appears next to the API Key label, and WaxFrame automatically fetches the current model list for you — every open is a live query, never a cached list. Just tick any new models and click <strong>Add N to Hive</strong>. To switch to a different server, pick a new preset from Quick Add or type new URLs — the new values are saved on your next successful add. To clear the saved server, click <strong>Forget saved server</strong> below the Fetch Models button.</p></div>
       </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>The <strong>📋 View raw response</strong> button swaps the right region to show the endpoint, HTTP status, and full JSON the server returned — useful when a server returns models in an unusual format or when you want to verify exactly what WaxFrame received. Click <strong>← Back to models</strong> on the same button to return to the checklist. The raw response is hidden by default since it is a diagnostic most users never need.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>The <strong>📋 View raw response</strong> button swaps the right region to show the endpoint, HTTP status, and full JSON the server returned — useful when a server returns models in an unusual format or when you want to verify exactly what WaxFrame received. Click <strong>← Back to models</strong> on the same button to return to the checklist. The raw response is hidden by default since it is a diagnostic most users never need.</p></div>
       </div>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>If a fetch fails, the right region switches to an error panel that explains what likely went wrong and suggests next steps. Common causes: an incorrect Models Endpoint path, an invalid or missing API Key, CORS restrictions on the server, or mixed-content blocking when WaxFrame is loaded from <code>https://</code> but the server URL is <code>http://localhost</code>. For the mixed-content case, download WaxFrame and open it from a <code>file://</code> URL instead, or serve it from a local web server on the same origin as your model server.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>If a fetch fails, the right region switches to an error panel that explains what likely went wrong and suggests next steps. Common causes: an incorrect Models Endpoint path, an invalid or missing API Key, CORS restrictions on the server, or mixed-content blocking when WaxFrame is loaded from <code>https://</code> but the server URL is <code>http://localhost</code>. For the mixed-content case, download WaxFrame and open it from a <code>file://</code> URL instead, or serve it from a local web server on the same origin as your model server.</p></div>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1286,9 +1293,9 @@
       <div class="wh-block-title">You pay the AI providers directly — not WaxFrame</div>
       <p>WaxFrame does not charge per use. The cost of running rounds comes from the API calls WaxFrame makes to your AI providers on your behalf — and those are billed directly to your account at each provider. WaxFrame requires only a one-time license fee after the first three free rounds.</p>
       <p>API costs are measured in <strong>tokens</strong> — small units of text (roughly 0.75 words per token). You are charged for both the tokens sent in the prompt and the tokens returned in the response. For a detailed explanation of how tokens work and how to estimate your costs, see <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a></p>
-      <div class="wh-tip">
-        <div class="wh-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></div>
-        <p>DeepSeek consistently produces high-quality output at a fraction of the cost of OpenAI, Anthropic, or Google. It is an excellent choice as both a reviewer and Builder when managing costs matters.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>DeepSeek consistently produces high-quality output at a fraction of the cost of OpenAI, Anthropic, or Google. It is an excellent choice as both a reviewer and Builder when managing costs matters.</p></div>
       </div>
     </div>
 
@@ -1342,6 +1349,9 @@
   </div>
   <div class="page-footer-center">
     <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
 </div>
@@ -1368,11 +1378,44 @@
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
 
 <script src="theme.js"></script>
-<script src="nav-helper.js?v=3.22.5"></script>
-<script src="version.js?v=3.22.5"></script>
-<script src="docs-scrollspy.js?v=3.22.5"></script>
+<script src="nav-helper.js?v=3.22.6"></script>
+<script src="license-helper.js?v=3.22.6"></script>
+<script src="version.js?v=3.22.6"></script>
+<script src="docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

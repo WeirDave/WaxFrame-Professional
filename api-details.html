@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260427-012
+     Build: 20260427-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,46 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-012">
+  <meta name="waxframe-build" content="20260427-013">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.5">
-  <style>
-    .kyh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
-    .kyh-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
-    .kyh-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
-    .kyh-bee { width:80px; flex-shrink:0; }
-    .kyh-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:20px; }
-    .kyh-card { background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); overflow:hidden; }
-    .kyh-card-header { display:flex; align-items:center; gap:14px; padding:18px 20px 14px; border-bottom:1px solid var(--border2); }
-    .kyh-card-icon { width:36px; height:36px; object-fit:contain; flex-shrink:0; }
-    .kyh-card-name { font-family:var(--font-display); font-size:16px; font-weight:800; color:var(--text); }
-    .kyh-card-model { font-size:11px; color:var(--text-dim); font-family:var(--font-mono); margin-top:2px; }
-    .kyh-badges { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; }
-    .kyh-badge { font-size:10px; font-weight:700; padding:3px 8px; border-radius:20px; letter-spacing:0.04em; white-space:nowrap; }
-    .kyh-badge-builder { background:var(--accent-dim); border:1px solid var(--accent); color:var(--accent); }
-    .kyh-badge-reviewer { background:rgba(52,211,153,0.12); border:1px solid rgba(52,211,153,0.4); color:#34d399; }
-    .kyh-badge-free { background:rgba(59,130,246,0.12); border:1px solid rgba(59,130,246,0.4); color:#7ab8ff; }
-    .kyh-body { padding:16px 20px 20px; }
-    .kyh-section { margin-bottom:14px; }
-    .kyh-section:last-child { margin-bottom:0; }
-    .kyh-section-title { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--accent); margin-bottom:6px; }
-    .kyh-section p { font-size:13px; color:var(--text-dim); line-height:1.6; margin:0; }
-    .kyh-pills { display:flex; flex-wrap:wrap; gap:6px; }
-    .kyh-pill { font-size:12px; padding:3px 10px; border-radius:20px; border:1px dashed var(--border2); color:var(--text-dim); }
-    .kyh-pill-good { border-color:rgba(52,211,153,0.4); color:#34d399; background:rgba(52,211,153,0.08); }
-    .kyh-pill-warn { border-color:rgba(245,166,35,0.4); color:var(--accent); background:var(--accent-dim); }
-    .kyh-pill-bad { border-color:rgba(239,68,68,0.4); color:#f87171; background:rgba(239,68,68,0.08); }
-    .kyh-tip { display:flex; gap:10px; align-items:flex-start; background:var(--surface2); border-radius:var(--radius-md); padding:10px 12px; margin-top:12px; }
-    .kyh-tip-icon { flex-shrink:0; margin-top:1px; display:flex; align-items:center; }
-    .kyh-tip p { font-size:12px; color:var(--text-dim); line-height:1.5; margin:0; font-style:italic; }
-    .section-divider { border:none; border-top:1px solid var(--border2); margin:40px 0 32px; }
-    .section-heading { font-family:var(--font-display); font-size:22px; font-weight:800; color:var(--text); margin-bottom:8px; }
-    .section-heading-sub { font-size:14px; color:var(--text-dim); line-height:1.6; margin-bottom:28px; }
-    [data-theme="light"] .kyh-card { background:#ffffff; }
-    [data-theme="light"] .kyh-intro { background:#ffffff; }
-    @media (prefers-color-scheme:light) { [data-theme="auto"] .kyh-card { background:#ffffff; } [data-theme="auto"] .kyh-intro { background:#ffffff; } }
-  </style>
+  <link rel="stylesheet" href="style.css?v=3.22.6">
 </head>
 <body class="helper-body">
 
@@ -77,9 +41,12 @@
     <div class="nav-section-label">Documentation</div>
     <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
@@ -88,6 +55,10 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -122,7 +93,7 @@
     <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="col-bee">
   </div>
   <div class="api-intro-text">
-    <h2 class="api-intro-title">Get Your API Keys</h2>
+    <h1 class="api-intro-title">Get Your API Keys</h1>
     <p class="api-intro-desc">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
   </div>
 </div>
@@ -132,16 +103,16 @@
   <!-- LEFT COLUMN -->
   <div class="col">
 
-    <div class="section-title">Free or low-cost AIs</div>
+    <h2>Free or low-cost AIs</h2>
 
-    <div class="info-card section-title-top">
-      <h2>What is an API key?</h2>
+    <div class="wf-card is-accent">
+      <h2 class="wf-card-title">What is an API key?</h2>
       <p>In Pro mode, WaxFrame sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets WaxFrame talk to each AI on your behalf.</p>
       <p>Without API keys you can use <a href="https://weirdave.github.io/WaxFrame-Free/" target="_blank" class="link-accent">WaxFrame Free</a> — the same hive workflow, but you copy and paste prompts manually between WaxFrame and each AI's web interface. API keys are only needed for the fully automated Pro experience.</p>
     </div>
 
-    <div class="info-card green">
-      <h3>Your keys never leave your device</h3>
+    <div class="wf-card is-green">
+      <h3 class="wf-card-title">Your keys never leave your device</h3>
       <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. WaxFrame has no server — your keys are never shared with any third party.</p>
       <p>WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
     </div>
@@ -191,7 +162,7 @@
   <!-- RIGHT COLUMN -->
   <div class="col">
 
-    <div class="section-title">Pay-as-you-go AIs</div>
+    <h2>Pay-as-you-go AIs</h2>
 
     <div class="ai-card">
       <div class="ai-card-header">
@@ -279,7 +250,7 @@
 </div><!-- /two-col -->
 
 <!-- ── SECTION 2: KNOW YOUR HIVE ── -->
-<hr class="section-divider">
+<hr class="wf-section-divider">
 
 <div class="kyh-intro">
   <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="kyh-bee">
@@ -545,20 +516,12 @@
 </div><!-- /kyh-grid -->
 
 <!-- GENERAL TIPS -->
-<div class="info-card info-card-tips">
-  <h2 class="kyh-tips-title">General Tips</h2>
-  <p class="kyh-tips-p">
-    <strong class="kyh-tips-strong">You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.
-  </p>
-  <p class="kyh-tips-p">
-    <strong class="kyh-tips-strong">Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.
-  </p>
-  <p class="kyh-tips-p">
-    <strong class="kyh-tips-strong">Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.
-  </p>
-  <p class="kyh-tips-p kyh-tips-p-last">
-    <strong class="kyh-tips-strong">Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.
-  </p>
+<div class="wf-card is-accent">
+  <h2 class="wf-card-title">General Tips</h2>
+  <p><strong>You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.</p>
+  <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
+  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.</p>
+  <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
 </div>
 
 </div><!-- /page-main -->
@@ -597,6 +560,9 @@
   </div>
   <div class="page-footer-center">
     <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
   </div>
 </div>
@@ -622,11 +588,44 @@
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
 
 <script src="theme.js"></script>
-<script src="nav-helper.js?v=3.22.5"></script>
+<script src="nav-helper.js?v=3.22.6"></script>
+<script src="license-helper.js?v=3.22.6"></script>
 <script src="api-links.js"></script>
-<script src="version.js?v=3.22.5"></script>
+<script src="version.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
