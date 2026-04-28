@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260427-011
+     Build: 20260427-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,23 +9,60 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-010">
+  <meta name="waxframe-build" content="20260427-012">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.4">
+  <link rel="stylesheet" href="style.css?v=3.22.5">
 </head>
 <body class="helper-body">
 
 <!-- ========================================================
+     SLIM HELPER-PAGE NAV MENU (v3.22.5)
+     Same as the other four helper pages — Documentation /
+     Create Something / Support. Visual treatment matches the
+     in-app nav-panel; item set is reduced for doc-page context.
+     ======================================================== -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Documentation</div>
+    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Create Something</div>
+    <a class="nav-item" href="index.html" target="_blank" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Support</div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+  </div>
+</div>
+
+<!-- ========================================================
      UNIFIED HEADER — matches setup-screen brand block
      plus theme controls on the right (helper-page addition).
-     Hamburger menu wiring will be added in v3.22.4.
      ======================================================== -->
 <div class="page-header">
   <div class="page-header-left">
-    <!-- Hamburger placeholder for v3.22.4 nav menu wiring. Reserved space
-         keeps left/right symmetry with the brand block while the nav-panel
-         markup and openNavMenu() function are still local to index.html. -->
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
   </div>
   <div class="page-header-brand">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
@@ -1333,8 +1370,9 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.22.4"></script>
-<script src="docs-scrollspy.js?v=3.22.4"></script>
+<script src="nav-helper.js?v=3.22.5"></script>
+<script src="version.js?v=3.22.5"></script>
+<script src="docs-scrollspy.js?v=3.22.5"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
