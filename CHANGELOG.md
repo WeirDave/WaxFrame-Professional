@@ -2,6 +2,83 @@
 
 ---
 
+## v3.22.1 Pro — Build `20260427-008`
+**Released:** April 27, 2026
+
+**Hamburger menu restructure** — second release in the chrome cohesion sweep. The slide-in nav menu has been rewritten from the v3.21.28-era five-section layout (`Navigate` / `License` / `Reference` / `Session` / unlabeled-Dev) into a four-section layout (`Navigation` / `Tools` / `Documentation` / `Advanced`) with a new About button promoted to the menu's brand-block header. Three menu items removed entirely as redundant or relocated. No items lost — every action that existed before is still reachable, just in a more sensible group.
+
+### What changed in the menu
+
+**New header section.** The menu's brand-block (logo, WaxFrame name, tagline, version stamp) now also includes a compact `ℹ️ About` button directly under the version stamp. Clicking it closes the menu and opens the existing About modal — same modal that opens from the new footer About button shipped in v3.22.0. About is now reachable from two consistent places (footer, menu header) instead of being buried four-deep in the old `Reference` section.
+
+**`Navigate` → `Navigation`.** Section name normalized to match the rest of the new noun-form labels. Items inside this section: Home, Setup 1–5, plus `Working Console` (renamed from `Work Screen` per the work-as-a-console framing). The Round History item moved out of Navigation and into Tools where it belongs alongside the other session-state actions.
+
+**New `Tools` section.** Replaces the old separate `License` and `Session` sections, merged into one bucket since they're all session-state operations. Items in order: `🛒 Buy WaxFrame Pro`, `📖 Round History`, `💾 Backup Session`, `📂 Import Backup`, `🔑 Enter License Key`. The old `Session` items (Backup, Import) and the old `License` items (Enter Key, Buy) are now together in this single `Tools` section.
+
+**`Reference` → `Documentation`.** Rebranded and trimmed. Items now alphabetical: `🔑 API Key Guide`, `📋 Document Playbooks`, `📖 User Manual`, `🪙 What Are Tokens?`. All open in new tabs (`target="_blank"`) which supports the multi-monitor walk-through workflow — open the user manual on one monitor, work in WaxFrame on another. Three items removed from this section: `⚙️ API Key Setup` (duplicate of the in-app Worker Bees screen), `📄 Open Source License` and `⭐ WaxFrame on GitHub` (both relocated into the About modal where they belong as project metadata, not navigation), and `ℹ️ About WaxFrame` (promoted to the menu header). One item moved out of Reference: `✏️ Prompt Editor` is moved to the new `Advanced` section since it's a power-user tool, not core documentation.
+
+**New `Advanced` section.** Replaces the old unlabeled trailing section. Contains `🛠 Dev Tools`, `✏️ Prompt Editor`, and the existing `🚪 Exit Dev Mode` button (only visible when dev mode is active). This section labels what's actually advanced functionality so users know to skip it unless they have a reason not to.
+
+### What was deleted vs. moved
+
+- **`⚙️ API Key Setup`** — deleted as a redundant menu link. The `Setup 1 — Worker Bees` link in Navigation goes to the same screen with the same effect for normal users. The `openSettings()` function in `app.js` is preserved (sets `_settingsReturnToWork = true` and navigates to bees) but no longer has a menu entry point. If a future workflow wants the mid-session-return-to-keys behavior again, the function is ready to be wired up to a new entry point.
+- **`📄 Open Source License`** — moved into the About modal alongside the GitHub link. The About modal has had the AGPL-3.0 reference since v3.21.x; the standalone menu link to the GNU AGPL-3.0 page is no longer a primary nav item.
+- **`⭐ WaxFrame on GitHub`** — moved into the About modal alongside the license. Project source is project metadata, not menu navigation.
+- **`ℹ️ About WaxFrame`** — promoted from a deep-in-Reference menu item to the new About button in the menu's brand-block header.
+
+### What stayed exactly the same
+
+- All nav-item handlers — `confirmGoHome()`, `goToScreen()`, `openRoundHistoryModal()`, `showLicenseModal()`, `backupSession()`, `importSession()`, `showDevModal()`, `exitDevMode()` — unchanged. Menu reorganization is pure HTML restructure, no JS behavior changed.
+- All target page URLs unchanged. Documentation links still point at `api-details.html`, `waxframe-user-manual.html`, etc.
+- About modal contents — unchanged in this release. The About button (footer in v3.22.0, menu header in v3.22.1) opens the same existing modal. Visual restyle of the modal still queued for the helper-page chrome work in v3.22.2+.
+- Setup screens — untouched. v3.22.1 only modifies the work-screen nav panel.
+- Helper pages — unchanged in content. Their cache-bust query strings updated to `?v=3.22.1` so returning visitors get the updated `style.css` immediately.
+
+### What changed (file-by-file)
+
+| File | Changes |
+|------|---------|
+| `index.html` | `nav-panel-header` brand-block gains an `ℹ️ About` button under the version stamp. `nav-body` rewritten — five old sections (`Navigate`, `License`, `Reference`, `Session`, unlabeled-Dev) collapsed to four new sections (`Navigation`, `Tools`, `Documentation`, `Advanced`). Three menu items deleted (redundant or relocated to About modal). Items reordered within sections to alphabetize Documentation. All 4 canonical version stamps. |
+| `style.css` | One new rule block added for `.nav-panel-about-btn` — dashed-border button matching the visual language of the v3.22.0 `.footer-about-btn`, sized compact to fit inside the menu's brand block. Build header. |
+| `app.js` | `BUILD` constant → `20260427-008`. The `openSettings()` function is preserved as orphan-by-grep (no menu entry point) but kept defined for future re-wiring. |
+| `version.js` | `APP_VERSION` → `v3.22.1 Pro`. |
+| `api-details.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` | Build header + cache-busts only — no content changes. |
+
+### Items shipped from the queue
+
+The menu restructure was implicit in the v3.22.0 chrome plan. Now formally closed.
+
+### Validation
+
+- `style.css` brace balance: 1627 open / 1627 close ✓
+- `index.html` div balance: 538 / 538 ✓
+- Four `nav-section-label` blocks present, in order: Navigation / Tools / Documentation / Advanced ✓
+- All 4 canonical version stamps verified at v3.22.1 / `20260427-008`
+- All 6 helper-page cache-busts verified at `?v=3.22.1`
+- `openSettings()` preserved in `app.js`; no stale references in `index.html` ✓
+
+### Upgrade
+
+Pull and hard-refresh (`Ctrl+Shift+R` / `Cmd+Shift+R`). Cache-busts at `3.22.1` ensure returning visitors get the updated assets immediately. No session migration. Existing IndexedDB sessions, license keys, project state, and backups load unchanged.
+
+### Test plan
+
+1. Drop files into the repo, hard-refresh.
+2. Open the hamburger menu on the work screen.
+3. **Header section:** confirm the brand block shows logo, WaxFrame title, tagline, version stamp (`v3.22.1 Pro`), and a new `ℹ️ About` button below the version. Click About — should close the menu and open the existing About modal.
+4. **Navigation section:** Home, Setup 1–5, Working Console. Confirm `Working Console` is the new label (was `Work Screen`).
+5. **Tools section:** Buy WaxFrame Pro, Round History, Backup Session, Import Backup, Enter License Key. Confirm Round History opens the existing round history modal.
+6. **Documentation section:** API Key Guide, Document Playbooks, User Manual, What Are Tokens? — alphabetical order, all open in new tabs.
+7. **Advanced section:** Dev Tools, Prompt Editor. Plus Exit Dev Mode if dev mode is active. Confirm Prompt Editor opens in a new tab.
+8. Confirm the items removed in v3.22.1 are gone: there should be no `⚙️ API Key Setup`, no `📄 Open Source License`, no `⭐ WaxFrame on GitHub`, no `ℹ️ About WaxFrame` link inside the body of the menu (About is now in the header instead).
+9. Walk every setup screen and confirm the menu shows the same structure on every screen — menu is shared markup, but worth verifying it renders identically.
+
+### What's next — v3.22.2
+
+Helper-page chrome unification begins. Hardest first: `waxframe-user-manual.html` gets the unified header + footer + same hamburger menu (this menu, now finalized) applied as the proven pattern. Subsequent releases apply the same pattern to playbooks, prompt-editor, api-details, what-are-tokens.
+
+---
+
 ## v3.22.0 Pro — Build `20260427-007`
 **Released:** April 27, 2026
 
