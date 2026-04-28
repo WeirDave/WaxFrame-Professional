@@ -2,6 +2,38 @@
 
 ---
 
+## v3.23.0 Pro — Build `20260428-002`
+**Released:** April 28, 2026
+
+**Help-system unification + light-mode green fix.** The `api-details.html` page had drifted into running three different info-callout dialects (`.note-box`, `.note-box.green`, and `.kyh-tip`) — none of which matched the `.wf-tip` standard used everywhere else in the helper-page system. This release unifies them all to a single primitive, fixes a light-mode color contrast bug in the Know-Your-Hive strength/weakness pills, and shores up the `--green` token so callouts and pills both read cleanly on white surfaces. No new features; structural cleanup that pays back on every future helper-page edit.
+
+### Help-callout unification on `api-details.html`
+
+- **All 7 `.note-box` provider notes converted to `.wf-tip`** primitive markup. The two billing/save-money callouts (Gemini-is-free, DeepSeek-low-cost, Perplexity-$5/month) use the new `.wf-tip-good` green variant; the five "you need credit" notes use the standard amber `.wf-tip`. Each gets the `WaxFrame_TipButton_v1.png` icon at 24px and italic `--text-dim` body copy in line with the rest of the help system.
+- **All 6 `.kyh-tip` per-card AI personality notes converted to `.wf-tip`.** Inside-the-card italic notes about each AI (ChatGPT/Claude/DeepSeek/Gemini/Grok/Perplexity working-style tips) now share the same callout styling as the rest of the help system instead of the previous gray-surface2 minimal treatment.
+- **CSS cleanup.** Removed `.note-box`, `.note-box.green`, `.kyh-tip`, `.kyh-tip-icon`, `.kyh-tip-icon img`, and `.kyh-tip p` rule blocks — total of ~28 lines of CSS retired. Both classes were exclusive to `api-details.html`, so the removal is safe and uncovered by any other page.
+
+### `.wf-tip-good` green variant
+
+- **New variant** added immediately after the base `.wf-tip` rule block. Inherits all flex/icon/body sizing from `.wf-tip` and only overrides `background: var(--green-dim)` and `border-color: var(--green)`. Body text stays `--text-dim` for readability — no green-on-green washout. Used for "good news / save money" callouts where amber (the default) would dilute the at-a-glance pricing signal.
+
+### Light-mode `--green` and `--green-dim` token fix
+
+- **Light-mode `--green` shifted from `#059669` (emerald-600) to `#047857` (emerald-700).** The deeper hue gives borders and pill text more presence against white surfaces without crossing into shouty saturation. Dark mode `--green: #00b300` unchanged.
+- **Light-mode `--green-dim` opacity bumped from 0.12 to 0.18.** At 12% over white the tint was effectively invisible — callouts had a border but the body fill was indistinguishable from the page surface. 18% gives the callout enough visual presence to read as a distinct band of color while still staying subtle. Dark mode `--green-dim` unchanged. Both light-mode declarations updated — the explicit `[data-theme="light"]` block and the `@media (prefers-color-scheme: light) [data-theme="auto"]` block.
+
+### Theme-token cleanup on Know-Your-Hive pills
+
+- **`.kyh-pill-good` tokenized.** Was hardcoding `#34d399` (Tailwind emerald-400, a mint that only reads in dark mode) for both the text color and the rgba-based background. In light mode, mint text on a near-white background was washed out and low-contrast — the visible bug in the screenshot review. Replaced with `var(--green)` and `var(--green-dim)` tokens so the pill now follows the theme system instead of bypassing it. Dark mode look preserved; light mode now actually readable.
+- **`.kyh-pill-bad` tokenized.** Same pattern — was hardcoding `rgba(248,113,113,0.4)` for the border color (Tailwind red-400 at 40%) instead of using the existing `var(--red)` token already declared in both themes. Now matches `.kyh-pill-warn`'s clean three-token pattern (border-color, color, background all theme-driven).
+
+### Build-stamp drift fix
+
+- **`index.html` comment-header build was `20260428-005`** while the meta tag and `app.js` BUILD constant had moved on to `20260428-001` in the v3.22.8 release — silent drift that's surfaced before. All four required stamp locations (meta, version.js APP_VERSION, app.js BUILD, app.js cache-bust query) plus the comment-header build stamps in all 5 helper pages now sync to `20260428-002` and `v3.23.0`.
+- **Helper-page `version.js?v=` cache-bust drift fix.** All 6 helper pages were loading `version.js?v=3.22.6` (stuck two releases behind) — meaning a cached `version.js` could persist across two releases on returning visitors. Now bumped to `version.js?v=3.23.0` everywhere alongside `style.css?v=3.23.0`.
+
+---
+
 ## v3.22.8 Pro — Build `20260428-001`
 **Released:** April 28, 2026
 

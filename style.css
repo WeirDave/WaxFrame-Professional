@@ -107,8 +107,8 @@ input, textarea, select { font-family: inherit; }
   --blue-dim:     rgba(37,99,235,0.12);
   --purple:       #7c3aed;
   --purple-dim:   rgba(124,58,237,0.10);
-  --green:        #059669;
-  --green-dim:    rgba(5,150,105,0.12);
+  --green:        #047857;
+  --green-dim:    rgba(4,120,87,0.18);
   --red:          #b91c1c;
   --red-dim:      rgba(185,28,28,0.10);
   --amber:        #b45309;
@@ -138,8 +138,8 @@ input, textarea, select { font-family: inherit; }
     --blue-dim:     rgba(29,78,216,0.10);
     --purple:       #7c3aed;
     --purple-dim:   rgba(124,58,237,0.10);
-    --green:        #059669;
-    --green-dim:    rgba(5,150,105,0.12);
+    --green:        #047857;
+    --green-dim:    rgba(4,120,87,0.18);
     --red:          #b91c1c;
     --red-dim:      rgba(185,28,28,0.10);
     --amber:        #b45309;
@@ -5765,14 +5765,6 @@ kbd {
   border-radius: 50%; color: var(--accent); font-size: 10px; font-weight: 700;
 }
 
-/* ── Note boxes (api page) ── */
-.note-box {
-  background: var(--amber-dim); border: 1px solid var(--amber);
-  border-radius: var(--radius-sm); color: var(--text-dim);
-  font-size: 13px; margin-top: 10px; padding: 10px 13px; line-height: 1.6;
-}
-.note-box.green { background: var(--green-dim); border-color: var(--green); }
-
 /* ── Model line (api page) ── */
 .model-line {
   display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
@@ -8123,6 +8115,12 @@ kbd {
   margin-bottom: 0;
 }
 
+/* Green variant — for "good news / save money" callouts (free tier, low cost, etc.) */
+.helper-body .wf-tip-good {
+  background: var(--green-dim);
+  border-color: var(--green);
+}
+
 /* ── Section divider ─────────────────────────────────────────── */
 
 .helper-body .wf-section-divider {
@@ -8409,9 +8407,9 @@ kbd {
   color: var(--text-dim);
 }
 .helper-body .kyh-pill-good {
-  border-color: rgba(52,211,153,0.4);
-  color: #34d399;
-  background: rgba(52,211,153,0.08);
+  border-color: var(--green);
+  color: var(--green);
+  background: var(--green-dim);
 }
 .helper-body .kyh-pill-warn {
   border-color: var(--accent);
@@ -8419,40 +8417,11 @@ kbd {
   background: var(--accent-dim);
 }
 .helper-body .kyh-pill-bad {
-  border-color: rgba(248,113,113,0.4);
+  border-color: var(--red);
   color: var(--red);
   background: var(--red-dim);
 }
 
 /* ── KYH inline tip inside a card ────────────────────────────── */
 /* The italic note at the bottom of each AI personality card. */
-
-.helper-body .kyh-tip {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  background: var(--surface2);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  margin-top: 12px;
-}
-.helper-body .kyh-tip-icon {
-  flex-shrink: 0;
-  margin-top: 1px;
-  display: flex;
-  align-items: center;
-  width: 20px;
-  height: 20px;
-}
-.helper-body .kyh-tip-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-.helper-body .kyh-tip p {
-  font-size: 12px;
-  color: var(--text-dim);
-  line-height: 1.5;
-  margin: 0;
-  font-style: italic;
-}
+/* (.kyh-tip removed in v3.23.0 — unified to .wf-tip primitive) */
