@@ -2,6 +2,82 @@
 
 ---
 
+## v3.22.8 Pro — Build `20260428-001`
+**Released:** April 28, 2026
+
+**Honeycomb Visual Language polish pass.** v3.22.7 shipped the structural migration to `.hp-section` and the layered glass-strip-plus-surface-body pattern. Real-world testing on the live site exposed a series of edge-case bugs and visual-cohesion gaps. This release closes all of them. No new features, no architecture changes — just the cleanup that makes v3.22.7 actually feel finished.
+
+### Setup screens
+
+- **Honeycomb background restored.** `.fs-body-single` was inheriting `var(--surface2)` (a flat dark fill) and covering up the body's honeycomb tile. Replaced with the same `linear-gradient + url('images/WaxFrame_Honeycomb_BG_Dark.png')` declaration that `.helper-body` uses, including matching theme variants for explicit-light and auto-light. Setup panels now float over the same honeycomb backdrop the work screen uses.
+- **Panel width restored to 1390px.** The `.hp-section` primitive defaults to 1200px max-width for helper pages; setup screens needed the legacy 1390px to give the AI grid, Builder picker, and Project form their original breathing room. Scoped override via `.fs-body-single > .hp-section { max-width: 1390px; width: 100%; flex: 1; display: flex; flex-direction: column; min-height: 0 }`.
+- **Vertical fill restored.** Legacy `.setup-single-card` had `flex: 1` and a flex-column chain that let drop zones, paste editors, and the scratch notebook fill the body height. The new primitive needed the same chain. Added `display: flex; flex-direction: column` to `.fs-body-single > .hp-section > .hp-section-body` plus `flex: 1; min-height: 0; overflow-y: auto` so the chain resolves end-to-end. Drop zones, paste editors, and the scratch notebook on Reference Material and Starting Document fill their panels exactly the way they did in v3.22.6.
+- **Watermark hex restored.** The pulsing `Waxframe_logo_v19.png` watermark on `#panel-paste`, `#panel-upload`, `#panel-scratch`, `#panel-ref-paste`, and `#panel-ref-upload` is a `::after` pseudo-element with `position: absolute`. It needs an `position: relative` ancestor; broken flex chain meant it was anchoring to the wrong parent and rendering off-canvas. Fixing the flex chain (above) restored its correct anchor inside `.doc-tab-panel.active`, which has `position: relative` declared.
+- **Project screen Clear Project button relocated.** Was inside the `<h1 class="hp-section-title">` where it was clipping against the glass strip with the bee variant on tight viewports. Moved to a right-aligned row between the Project Goal sub paragraph and the goal-fields grid. New `.proj-clear-mid-btn` style mirrors the visual treatment of the previous `.proj-clear-top-btn`.
+
+### Helper pages
+
+- **what-are-tokens.html restructured to a single column.** The `.two-col` layout was hanging content off the right edge once it was wrapped in an `.hp-section`. The two columns (Basics / Best Builder Choices) now stack vertically inside the section body with a `<hr class="wf-section-divider">` between them. Full-page-width gives the wide builder-comparison table room to breathe without horizontal overflow.
+- **Light-mode hp-section title color.** Title and sub paragraph inside the glass strip were inheriting the helper-page `[data-theme="light"] .helper-body .page-main h1` rules (specificity 0,2,1) and rendering as dark text on the dark glass strip — invisible. Bumped the override selectors to `.hp-section .hp-section-header .hp-section-title` (specificity 0,3,0) plus `[data-theme="light"]` and `[data-theme="auto"] @prefers-color-scheme: light` variants at 0,4,0. Title and sub now stay white in all theme paths regardless of any helper-page color rules. No `!important` needed.
+
+### Working Document panel — full visual cohesion with the other three work-screen panels
+
+Working Document was the only work-screen panel that didn't visually match The Hive, Conflicts, and Live Console. v3.22.7 moved it part of the way; v3.22.8 finishes the job:
+
+- **Header is now a floating glass strip** matching `.work-panel-header.honeycomb-header`. The previous `.work-panel-header` (no honeycomb-header) was the immediate light-mode bug — base `[data-theme="light"] .work-panel-header { background: #ffffff }` was painting the whole strip white in light mode. Adding `.honeycomb-header` to the markup pulled it onto the same compound-selector branch the other two glass-strip panels use.
+- **53 lines of stale override CSS deleted.** A previous session had a Working-Document-specific light-mode override block (lines 2235–2287 of `style.css`) whose stated premise was "Working Document header lacks honeycomb-header class." That premise is no longer true after the markup change above, and the rules in that block were actively fighting the new floating glass strip. Removed in full. Net code reduction.
+- **`.work-doc-panel` made transparent.** Was `background: rgba(0,0,0,0.6)` with backdrop-blur, border, border-radius, and box-shadow — its own opaque-ish dark card. The strip's margin gap was showing the panel's darker fill behind it instead of the body honeycomb, breaking visual parity with `.work-left-panel` (Hive/Conflicts container) and `.work-right-panel` (Console container) — both of which are transparent. Now matches.
+- **Strip stretches edge-to-edge with the document body.** Default `.work-panel-header.honeycomb-header { margin: 6px 8px 4px }` was insetting the strip 8px on each side, leaving it visibly narrower than the document body editor below it. Scoped override `.work-doc-panel > .work-panel-header.honeycomb-header { margin-left: 0; margin-right: 0; margin-bottom: 8px }` zeroes out the side margins (top/bottom kept for floating gap) and bumps the bottom gap from 4px to 8px to match the visual breathing room on the other three panels.
+- **Document body top corners rounded.** `.work-doc-editor` was `border-radius: 0 0 12px 12px` (bottom-only) when its top sat flush against the old attached header. With the new floating strip and the gap between, the flat top corners no longer made sense. Now `border-radius: 12px` (all four).
+- **`.work-doc-panel` itself given `border-radius: 10px 10px 0 0`** so its `overflow: hidden` doesn't clip the strip's rounded top corners against a square panel edge.
+- **Doc-stats row moved into the strip.** The chars/words/lines counter was a separate row between the strip and the document body, with its own `rgba(0,0,0,0.4)` (dark) / `#ffffff` (light) background. Now sits inside the glass strip as a second line below the title+buttons row. Strip restructured from row layout to column layout via `.work-panel-header.honeycomb-header:has(> .work-panel-header-row)` (scoped so Live Console's strip is unaffected). New `.work-panel-header-row` wrapper carries the row 1 layout (title left, buttons right). Doc-stats chip keeps its amber text + amber border (the original styling), but background switches to transparent so it rides the glass instead of carrying its own pill fill. Theme variants included.
+- **8px breathing-room padding** between the buttons row and the stats line so they don't crowd each other.
+
+### Light-mode clock visibility
+
+Several clock states were either invisible or mis-colored in light mode because the colors were dimmed too aggressively for "accessibility on light backgrounds":
+
+| State | Before (light) | After (light) |
+|---|---|---|
+| Round clock running digits | `#047857` (dim green) | `#00b300` (bright green, matches dark mode) |
+| Round clock running label | `#047857` (dim green) | `#00b300` (bright green) |
+| Project clock running digits | `#a06000` (dim amber, read as black) | `var(--accent)` (bright amber, matches dark mode) |
+| Project clock paused digits | `#1a1d2a` (dark navy — lost specificity battle) | `var(--accent)` (bright amber, now wins specificity) |
+| Idle control button border | `#d0d4e8` (near-invisible pale) | `#7880a0` (medium gray-blue, visible) |
+| Idle control button symbol | `#7880a0` (pale) | `#384060` (deep navy, readable) |
+| Start active button | `#047857` (dim green) | `#00b300` (matches running digits) |
+| Pause active button | `#a06000` (dim amber) | `var(--accent)` (matches paused digits) |
+
+All eight changes mirrored in the `[data-theme="auto"]` block under `prefers-color-scheme: light` so auto-theme on light systems gets the same treatment.
+
+The paused-amber fix is worth calling out separately: `.dcw-digits-project.paused { color: var(--accent) }` and `[data-theme="light"] .dcw-digits { color: #1a1d2a }` were both at specificity (0,2,0). Source order put the dim-base rule after the paused rule, so it was winning in light mode and painting the pulsing digits dark navy instead of amber. Adding `[data-theme="light"] .dcw-digits-project.paused { color: var(--accent) }` puts the paused override after the dim-base rule and at the same specificity — so the paused state correctly wins by source order in light mode.
+
+### Specificity and code health
+
+No `!important` declarations were added anywhere in this release. The `!important` count in `style.css` stayed flat at 24 (all pre-existing). Every override in this release was solved by either adjusting selector specificity or by careful source-ordering of equal-specificity rules.
+
+Net code change: approximately −55 lines across the cleanup (53 lines of stale override block removed, plus minor refactoring elsewhere). The Working Document panel now has fewer CSS rules dedicated to it than before this release shipped.
+
+### Files touched
+
+- `style.css` — `.hp-section` setup-screen flex chain + width fix, light-mode hp-section title color override (specificity bump), `.work-doc-panel` transparency, Working Document strip side-margin override + bottom-gap, `.work-doc-editor` border-radius, `.work-doc-panel` top border-radius, doc-stats-row in-strip restyle (transparent background, amber text/border preserved, 8px top padding), `.work-panel-header.honeycomb-header:has(> .work-panel-header-row)` flex-column switch, `.work-panel-header-row` wrapper styling, `.proj-clear-mid-btn` style, light-mode clock running/paused/control-button colors, deletion of stale Working Document light-mode override block (53 lines removed)
+- `index.html` — Working Document header `.honeycomb-header` class added, doc-stats-row moved inside the strip with new `.work-panel-header-row` wrapper, Project screen Clear Project button moved from H1 title to mid-row
+- `what-are-tokens.html` — `.two-col` removed; content stacks single-column inside the section body
+- `app.js` — `BUILD` constant → `20260428-001`
+- `version.js` — `APP_VERSION` → `'v3.22.8 Pro'`
+
+All four primary version stamp locations and all five helper-page comment-header stamps updated in lockstep.
+
+### Validation
+
+- All HTML files: div balance verified (each file's `<div` count matches `</div>` count).
+- `!important` count: 24 (unchanged from start of release).
+- All hp-section pages render correctly in dark, light, and auto-light theme paths.
+- Watermark hex confirmed visible on Reference Material and Starting Document setup screens after deployment.
+- All four work-screen panel headers (Hive, Conflicts, Working Document, Live Console) confirmed visually equivalent in both themes.
+
+---
+
 ## v3.22.7 Pro — Build `20260427-014`
 **Released:** April 27, 2026
 
