@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-013">
+  <meta name="waxframe-build" content="20260427-014">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.6">
+  <link rel="stylesheet" href="style.css?v=3.22.7">
 </head>
 <body>
 
@@ -80,29 +80,29 @@
     </div>
 
     <div class="fs-body-single">
-      <div class="setup-single-card">
-        <div class="setup-intro">
-          <img src="images/WaxFrame_Worker_Bee_v2.png" class="setup-intro-bee" alt="">
-          <div class="setup-intro-body">
-            <div class="fs-col-header">
-              <h2 class="fs-col-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
-              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
-              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Running a portable copy of WaxFrame against a model server (Open WebUI, Ollama, an internal gateway)? Use <strong>Hide All Defaults</strong> to clear the public AIs out of the way so your imported models are the only hive in your workspace.</p>
-            </div>
+      <div class="hp-section">
+        <div class="hp-section-header">
+          <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
+            <p class="hp-section-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
           </div>
         </div>
-        <div class="bee-controls-row-setup">
-          <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
-          <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
-          <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
-          <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
-          <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>
-          <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
-          <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
+        <div class="hp-section-body">
+          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
+          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Running a portable copy of WaxFrame against a model server (Open WebUI, Ollama, an internal gateway)? Use <strong>Hide All Defaults</strong> to clear the public AIs out of the way so your imported models are the only hive in your workspace.</p>
+          <div class="bee-controls-row-setup">
+            <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
+            <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
+            <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
+            <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
+            <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>
+            <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
+            <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
+          </div>
+          <div class="hive-count-chip" id="hiveCountChip"></div>
+          <div class="ai-setup-grid" id="aiSetupGrid"></div>
         </div>
-        <div class="hive-count-chip" id="hiveCountChip"></div>
-        <div class="ai-setup-grid" id="aiSetupGrid"></div>
       </div>
     </div>
 
@@ -143,18 +143,18 @@
     </div>
 
     <div class="fs-body-single">
-      <div class="setup-single-card setup-single-card--centered">
-        <div class="setup-intro">
-          <img src="images/WaxFrame_Builder_v3.png" class="setup-intro-bee" alt="">
-          <div class="setup-intro-body">
-            <div class="fs-col-header">
-              <h2 class="fs-col-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-              <p class="fs-col-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-              <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
-            </div>
+      <div class="hp-section">
+        <div class="hp-section-header">
+          <img src="images/WaxFrame_Builder_v3.png" class="hp-section-bee" alt="">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
+            <p class="hp-section-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
           </div>
         </div>
-        <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+        <div class="hp-section-body">
+          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
+          <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+        </div>
       </div>
     </div>
 
@@ -195,18 +195,15 @@
     </div>
 
     <div class="fs-body-single">
-      <div class="setup-single-card setup-single-card--centered">
-
-        <div class="setup-intro">
-          <img src="images/WaxFrame_Project_Bee_v2.png" class="setup-intro-bee" alt="">
-          <div class="setup-intro-body">
-            <div class="proj-title-row">
-              <h2 class="fs-col-title">Your Project</h2>
-              <button class="btn btn-sm proj-clear-top-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
-            </div>
-            <p class="fs-col-sub">Name your project, set a version, then describe what you're building. Fields marked <span class="req-star">*</span> are required to continue.</p>
+      <div class="hp-section">
+        <div class="hp-section-header">
+          <img src="images/WaxFrame_Project_Bee_v2.png" class="hp-section-bee" alt="">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Your Project <button class="btn btn-sm proj-clear-top-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button></h1>
+            <p class="hp-section-sub">Name your project, set a version, then describe what you're building. Fields marked <span class="req-star">*</span> are required to continue.</p>
           </div>
         </div>
+        <div class="hp-section-body">
 
         <div class="proj-meta-row">
           <div class="proj-field-wrap proj-field-wrap--name">
@@ -300,6 +297,7 @@
           <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Document type leads every round and always survives the 300-character trim when a document exists. Use it for the rule the AIs must never forget.
         </div>
 
+        </div>
       </div>
     </div>
 
@@ -343,12 +341,14 @@
     </div>
 
     <div class="fs-body-single">
-      <div class="setup-single-card setup-single-card--centered">
-
-        <div class="fs-col-header">
-          <h2 class="fs-col-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-          <p class="fs-col-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
+            <p class="hp-section-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
+          </div>
         </div>
+        <div class="hp-section-body">
 
         <div class="doc-input-tabs">
           <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
@@ -393,6 +393,7 @@
           </div>
         </div>
 
+        </div>
       </div>
     </div>
 
@@ -433,12 +434,14 @@
     </div>
 
     <div class="fs-body-single">
-      <div class="setup-single-card setup-single-card--centered">
-
-        <div class="fs-col-header">
-          <h2 class="fs-col-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h2>
-          <p class="fs-col-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your project goal.</p>
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
+            <p class="hp-section-sub">Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your project goal.</p>
+          </div>
         </div>
+        <div class="hp-section-body">
 
         <div class="doc-input-tabs">
           <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
@@ -493,6 +496,7 @@
           </div>
         </div>
 
+        </div>
       </div>
     </div>
 
@@ -1534,7 +1538,7 @@
 </div>
 
 <script src="version.js?v=3.22.6"></script>
-<script src="app.js?v=3.22.6"></script>
+<script src="app.js?v=3.22.7"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
