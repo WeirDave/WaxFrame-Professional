@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260427-005
+     Build: 20260427-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -11,7 +11,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.27">
+  <link rel="stylesheet" href="style.css?v=3.21.28">
   <style>
     .kyh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
     .kyh-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
@@ -72,7 +72,7 @@
 
 <!-- ── SECTION 1: API KEY SETUP ── -->
 
-<div class="api-intro-strip">
+<div class="api-intro-strip honeycomb-header">
   <div class="api-intro-bee-wrap">
     <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="col-bee">
   </div>
@@ -92,16 +92,13 @@
     <div class="info-card section-title-top">
       <h2>What is an API key?</h2>
       <p>In Pro mode, WaxFrame sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets WaxFrame talk to each AI on your behalf.</p>
-      <p>Without a key, WaxFrame works in Free mode — you copy/paste prompts manually. API keys are only needed for the fully automated Pro experience.</p>
+      <p>Without API keys you can use <a href="https://weirdave.github.io/WaxFrame-Free/" target="_blank" class="link-accent">WaxFrame Free</a> — the same hive workflow, but you copy and paste prompts manually between WaxFrame and each AI's web interface. API keys are only needed for the fully automated Pro experience.</p>
     </div>
 
     <div class="info-card green">
       <h3>Your keys never leave your device</h3>
       <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. WaxFrame has no server — your keys are never shared with any third party.</p>
-      <div class="helper-note-card">
-        <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="goal-info-btn-img">
-        <p class="helper-note">WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
-      </div>
+      <p>WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
     </div>
 
     <div class="ai-card">
@@ -228,7 +225,7 @@
           <li>Paste it into the Perplexity field in WaxFrame and press Enter.</li>
         </ol>
         <div class="note-box">Requires credit balance — add at <a href="https://console.perplexity.ai" target="_blank">console.perplexity.ai → Billing → Add Credits</a>.</div>
-        <div class="note-box green">Perplexity offers a recurring API subscription for as low as $5/month — sign up for it while that price is available. It gives you a solid monthly credit allocation that covers most WaxFrame usage without thinking about per-call costs.</div>
+        <div class="note-box green">Perplexity offers a recurring API subscription as low as <strong>$5/month — but you must enable auto-pay during signup to lock in that price</strong>. Without auto-pay, the recurring rate jumps to $50/month. The $5 tier provides a solid monthly credit allocation that covers most WaxFrame usage without thinking about per-call costs.</div>
       </div>
     </div>
 
@@ -243,7 +240,7 @@
   <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="kyh-bee">
   <div class="kyh-intro-text">
     <h2>Know Your Hive</h2>
-    <p>Every AI in your hive has its own personality, strengths, and quirks. Knowing how each one behaves helps you pick the right Builder, get the most out of your reviewers, and decide when to toggle them off. This guide is based on real-world observations using WaxFrame in production.</p>
+    <p>Every AI in your hive has its own personality, strengths, and quirks. Knowing how each one behaves helps you pick the right Builder, get the most out of your reviewers, and decide when to toggle them off. This guide is based on real-world observations using WaxFrame in production — and on the hive itself, since each AI's profile below was refined by passing it through the hive for self-description and peer review.</p>
   </div>
 </div>
 
@@ -558,7 +555,7 @@
 
 <script src="theme.js"></script>
 <script src="api-links.js"></script>
-<script src="version.js?v=3.21.27"></script>
+<script src="version.js?v=3.21.28"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260427-005
+     Build: 20260427-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -12,7 +12,7 @@
   <meta name="waxframe-build" content="20260427-002">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.21.27">
+  <link rel="stylesheet" href="style.css?v=3.21.28">
 </head>
 <body class="helper-body">
 
@@ -1072,7 +1072,7 @@
         <li><strong>404</strong> — wrong endpoint URL or path</li>
         <li><strong>405</strong> — method not allowed — the endpoint may not support chat completions at this path</li>
         <li><strong>429</strong> — rate limited — wait a moment and try again</li>
-        <li><strong>Network Error</strong> — the endpoint is unreachable, or a CORS policy is blocking the request from a local file origin</li>
+        <li><strong>Network Error</strong> — the endpoint is unreachable, or a CORS policy is blocking the request from a local file origin (CORS — Cross-Origin Resource Sharing — is the browser security check that decides whether one origin is allowed to call another; see the CORS troubleshooting block below)</li>
       </ul>
       <div class="wh-warn">
         <p>⚠️ The <strong>Add to Hive</strong> button only appears after a successful test result. If you change any field after a passing test, the result resets and you must test again before the Add to Hive button reappears. This prevents accidentally adding a misconfigured AI.</p>
@@ -1301,8 +1301,8 @@
 </div>
 
 <script src="theme.js"></script>
-<script src="version.js?v=3.21.27"></script>
-<script src="docs-scrollspy.js?v=3.21.27"></script>
+<script src="version.js?v=3.21.28"></script>
+<script src="docs-scrollspy.js?v=3.21.28"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

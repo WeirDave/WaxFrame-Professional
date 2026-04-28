@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-005
+   Build: 20260427-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5527,6 +5527,39 @@ kbd {
   gap: 24px;
   padding: 20px 16px 0;
   justify-content: center;
+}
+/* Honeycomb-header treatment for api-intro-strip — same dark translucent panel
+   as the work-screen WORKING DOCUMENT / CONFLICTS / LIVE CONSOLE headers.
+   Compound selector beats the .api-intro-strip base padding above. Block declared
+   isolated rather than refactoring .work-panel-header.honeycomb-header to avoid
+   any risk of regressing the work screen's panel header layout. */
+.api-intro-strip.honeycomb-header {
+  margin: 6px 8px 4px;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  padding: 16px 20px;
+}
+.api-intro-strip.honeycomb-header .api-intro-title {
+  font-family: var(--font);
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: none;
+  margin: 0 0 6px;
+}
+.api-intro-strip.honeycomb-header .api-intro-desc {
+  color: rgba(255,255,255,0.85);
+}
+[data-theme="light"] .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
+[data-theme="light"] .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .api-intro-strip.honeycomb-header .api-intro-title { color: #ffffff; }
+  [data-theme="auto"] .api-intro-strip.honeycomb-header .api-intro-desc { color: rgba(255,255,255,0.85); }
 }
 .api-intro-bee-wrap {
   flex-shrink: 0;
