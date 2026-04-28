@@ -2,6 +2,78 @@
 
 ---
 
+## v3.21.28 Pro — Build `20260427-006`
+**Released:** April 27, 2026
+
+Text and copy cleanup batch + first surface-card treatment for an api-details intro panel. Ten queued items from the work session knocked out together since none of them touched the layout subsystems that v3.21.26 broke and v3.21.27 reverted. All changes are surgical: text rewrites, one button rename, one panel restyle (additive CSS only), one redundant button removal, one CORS definition added on first mention, and a min-screen-overlay copy fix that was discovered during the v3.21.26 layout regression debug.
+
+### What changed
+
+- **`index.html`** — Worker Bees screen: button label `Open API Websites` → `Open default AI websites` for clarity in portable model-server deployments. New tip line under the keys-billing tip pointing portable / Open WebUI / Ollama users at the **Hide All Defaults** button. "Haven't exported anything yet" modal: redundant `Dismiss` button removed (the existing `← Go back and export` button calls the same `closeDiscardConfirm()` handler). Min-screen-overlay copy rewritten to match CSS reality — overlay triggers at viewport `≤1421 wide` or `≤810 tall`, so the message now correctly states **1422 × 811 px minimum** with a recommended **1600+ wide** for the multi-panel work screen, replacing the stale `1024px` figure that hadn't matched the CSS gate for some time.
+- **`api-details.html`** — Five copy and structure changes. (1) Top intro strip wrapped in the work-screen `.honeycomb-header` panel pattern — same dark translucent surface, blur, border, rounded corners, white uppercase letterspaced title — so the page intro reads as a panel-header against the helper-page honeycomb background instead of floating prose. (2) "No key = Free mode" paragraph rephrased to point users at `weirdave.github.io/WaxFrame-Free/` by name, with the `WaxFrame Free` link styled `.link-accent`. (3) Perplexity recurring-subscription note now correctly warns that **auto-pay must be enabled during signup to lock in the $5/month rate**, otherwise the recurring rate jumps to $50/month — previously the note framed it as a price-availability concern rather than the auto-pay gating issue. (4) First green info-card (`Your keys never leave your device`) had a `.helper-note-card` icon row that none of the other green info-boxes had — icon row dropped, text becomes a clean second paragraph, all four green info-boxes now have consistent treatment. (5) Know Your Hive intro adds attribution: descriptions are based on real-world observations *and* on the hive itself, since each AI's profile was refined by passing it through the hive for self-description and peer review.
+- **`waxframe-user-manual.html`** — CORS gets a first-mention parenthetical definition in the Network Error bullet of the test-result interpretation list. Previously the term appeared cold in the bullet at line 1075 and wasn't defined until the troubleshooting block at line 1174. New parenthetical: *"CORS — Cross-Origin Resource Sharing — is the browser security check that decides whether one origin is allowed to call another"* with a forward reference to the existing detailed block.
+- **`style.css`** — One additive block for the api-intro-strip honeycomb-header treatment. Block declared isolated under `.api-intro-strip.honeycomb-header` rather than refactoring the existing `.work-panel-header.honeycomb-header` rule into a shared base — explicit duplication chosen over a shared-base refactor to eliminate any risk of regressing the work-screen panel header layout, per the v3.21.26 lesson on load-bearing rules. Theme-aware overrides for light and auto modes included so the white title and rgba(255,255,255,0.85) description text stay correct against the dark translucent panel in both themes.
+- **`document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`** — Build header → `20260427-006`; all `?v=` cache-bust query strings → `3.21.28` (style.css, version.js, and where applicable docs-scrollspy.js).
+- **All canonical stamps** updated to v3.21.28 / `20260427-006`. Site-wide cache-bust `?v=3.21.28`.
+
+### Items shipped from the queue
+
+The following queue items from the work-session triage are now closed:
+
+| # | Item | Status |
+|---|------|--------|
+| 1 | Rename `Open API Websites` button to `Open default AI websites` | Shipped |
+| 2 | API-details title intro panel (work-screen header treatment) | Shipped |
+| 3 | Rephrase no-key paragraph + WaxFrame Free link | Shipped |
+| 4 | Perplexity auto-pay $5 vs $50 clarification | Shipped |
+| 5 | Info-icon consistency on green info-boxes | Shipped (icon row removed from first card) |
+| 6 | Know Your Hive — hive self-description attribution | Shipped |
+| 9 | Worker Bees portable-deployment hide-defaults note | Shipped |
+| 11 | Define CORS on first mention | Shipped |
+| 20 | Remove redundant Dismiss button on "haven't exported" modal | Shipped |
+| 21 | Min-screen-overlay copy mismatch (1024 vs 1421/810) | Shipped (copy fixed to match CSS reality) |
+
+### Items still queued (deferred to later releases)
+
+- **#7** Model update detection + opt-in swap prompt (feature)
+- **#8** `MODEL_LABELS` strategy decision — curated drift, no per-role differentiation, irrelevant for closed/gated rosters
+- **#10** Model catalog (Appendix B flow) — stop filtering already-added AIs; mark visually
+- **#12** Mute button muted-state icon — clearer glyph
+- **#13** Reference Material — multi-document support
+- **#14** Excel/.xlsx ingestion
+- **#15** Shareable hive presets (client-side export/import)
+- **#16** "CONFLICTS DETECTED BUT COULD NOT BE PARSED" diagnostics surfacing
+- **#17** Holdout suggestion clickability — wrap-aware numbering or section-anchor primary
+- **#18** Clock CSS audit (number colors, header colors, paused amber/black)
+- **#19** Export-flag regression (`_finishExported` wiped between Finish-modal opens)
+
+### Validation
+
+- `style.css` brace balance: 1624 open / 1624 close
+- `index.html` div balance: 539 / 539
+- `api-details.html` div balance: 164 / 164
+- `waxframe-user-manual.html` div balance: 373 / 373
+- All 4 canonical version stamps verified at v3.21.28 / `20260427-006`
+- All 6 helper-page cache-busts verified at `?v=3.21.28`
+
+### Upgrade
+
+Pull and hard-refresh (Ctrl+Shift+R / Cmd+Shift+R). Cache-busts at `3.21.28` ensure returning visitors get the updated assets immediately. No session migration. Existing IndexedDB sessions, license keys, project state, and backups load unchanged.
+
+### Test plan
+
+1. Open api-details.html in dark and light themes — top intro strip should render as a dark translucent panel with white uppercase letterspaced title, matching the visual language of the work-screen panel headers (THE HIVE, WORKING DOCUMENT, CONFLICTS, LIVE CONSOLE).
+2. Confirm the "Your keys never leave your device" green card no longer has the small info icon — it now reads as a clean two-paragraph card consistent with the other three green info-boxes.
+3. Confirm the Perplexity green note-box shows the bolded "but you must enable auto-pay during signup to lock in that price" emphasis and the explicit $50/month fallback.
+4. Worker Bees screen — confirm the **Open default AI websites** button label and the new portable-deployment tip line under the API Key Guide tip.
+5. Trigger the "haven't exported anything yet" modal (Finish modal → New Project before exporting) — confirm only two buttons remain: `← Go back and export` and `🗑️ Discard and start fresh`. The bottom `← Dismiss` link should be gone.
+6. Resize browser below `1422 × 811` — the min-screen overlay should appear with the corrected copy referencing 1422 × 811 minimum and 1600+ recommended.
+7. User manual → search for **CORS** — first mention now includes the parenthetical definition; troubleshooting block at the end is unchanged.
+8. Walk every setup screen — Worker Bees, Choose Builder, Your Project, Reference Material, Starting Document. All should render full-width as restored in v3.21.27 with no layout regression.
+9. Walk the work screen — full three-panel layout, hex grid, all panel headers render correctly.
+
+---
+
 ## v3.21.27 Pro — Build `20260427-005`
 **Released:** April 27, 2026
 
