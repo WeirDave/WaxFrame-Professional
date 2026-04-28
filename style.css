@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-009
+   Build: 20260427-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5555,6 +5555,23 @@ kbd {
   align-items: center;
   gap: 6px;
 }
+/* Helper-page header — left-side reserved space for the hamburger menu
+   that lands in v3.22.4. Width matches .page-header-controls on the right
+   so the centered brand block stays optically centered. (v3.22.3) */
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+.page-header-brand-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  min-width: 0;
+}
 
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
@@ -5844,6 +5861,38 @@ kbd {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+}
+/* Unified helper-page footer (v3.22.3) — thin like the work-screen footer,
+   with secondary actions (Save PDF, Close tab) on the left and About + version
+   centered. Matches the visual feel established on the work screen.
+   The .page-footer-unified compound class beats .page-footer base padding. */
+.page-footer.page-footer-unified {
+  padding: 8px 24px;
+  margin-top: 16px;
+  justify-content: space-between;
+}
+.page-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.page-footer-center {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  justify-content: center;
+}
+.footer-version-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+  padding: 3px 9px;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
 }
 .helper-version-stamp {
   display: inline;
@@ -6461,7 +6510,8 @@ kbd {
 
 /* ── USER MANUAL PAGE (waxframe-user-manual.html) ── */
 .wh-intro { display:flex; align-items:center; gap:24px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--radius-lg); padding:24px 28px; margin-bottom:32px; }
-.wh-intro-text h2 { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
+.wh-intro-text h2,
+.wh-intro-text .wh-intro-title { font-family:var(--font-display); font-size:20px; font-weight:800; color:var(--text); margin-bottom:6px; }
 .wh-intro-text p { font-size:14px; color:var(--text-dim); line-height:1.6; margin:0; }
 .wh-bee { width:80px; flex-shrink:0; }
 
