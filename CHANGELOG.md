@@ -2,6 +2,46 @@
 
 ---
 
+## v3.22.2 Pro — Build `20260427-009`
+**Released:** April 27, 2026
+
+**Hotfix for v3.22.1 menu sandwich bug.** The Advanced section in v3.22.1's restructured hamburger menu rendered with `Prompt Editor` visually sandwiched between two dev-related items: `Dev Tools` immediately above it and the conditional `Exit Dev Mode` `<div>` immediately below it. The Exit Dev Mode div is hidden via `display: none` for non-dev-mode users, so the visual issue only fully resolved when dev mode was inactive — but Prompt Editor still read as "between two dev things" because of source order. Item order in Advanced is now `Prompt Editor` → `Dev Tools` → conditional `Exit Dev Mode`, which puts the always-visible items first (Prompt Editor as the more commonly accessed of the two) and the dev-only conditional at the bottom where it belongs.
+
+### What changed
+
+- **`index.html`** — Lines 1614–1615 swapped: `✏️ Prompt Editor` is now line 1614, `🛠 Dev Tools` is line 1615. The conditional `<div class="nav-dev-section">` containing `🚪 Exit Dev Mode` stays as the last element. No new items, no removed items, no functional change — pure source-order correction.
+- **All canonical stamps** updated to v3.22.2 / `20260427-009`. Site-wide cache-bust `?v=3.22.2` ensures returning visitors who loaded the broken v3.22.1 get the corrected order on hard-refresh.
+
+### What didn't change
+
+- All v3.22.0 work-screen chrome (theme/mute up, license/about down, version stamp removed) — preserved.
+- All v3.22.1 menu sections (Navigation / Tools / Documentation / Advanced) and section names — preserved.
+- Items removed in v3.22.1 (`API Key Setup`, `Open Source License`, `WaxFrame on GitHub`) — still removed.
+- About button in nav-panel header — preserved.
+- All footer chrome (license pill, About button) — preserved.
+- All helper pages — content unchanged, cache-busts updated.
+
+### Validation
+
+- `style.css` brace balance: 1627 open / 1627 close ✓
+- `index.html` div balance: 538 / 538 ✓
+- All 4 canonical version stamps verified at v3.22.2 / `20260427-009` ✓
+- All 6 helper-page cache-busts verified at `?v=3.22.2` ✓
+- Advanced section order verified: Prompt Editor → Dev Tools → conditional Exit Dev Mode ✓
+
+### Upgrade
+
+Pull and hard-refresh. Cache-busts at `3.22.2` ensure returning visitors who loaded v3.22.1 get the corrected order immediately.
+
+### Test plan
+
+1. Drop files into the repo, hard-refresh.
+2. Open the hamburger menu on the work screen.
+3. **Advanced section:** confirm the order top-to-bottom is `✏️ Prompt Editor`, `🛠 Dev Tools`. If dev mode is active, `🚪 Exit Dev Mode` appears at the bottom.
+4. Confirm Prompt Editor is no longer visually sandwiched between Dev Tools and any other dev-related element.
+
+---
+
 ## v3.22.1 Pro — Build `20260427-008`
 **Released:** April 27, 2026
 
@@ -17,7 +57,7 @@
 
 **`Reference` → `Documentation`.** Rebranded and trimmed. Items now alphabetical: `🔑 API Key Guide`, `📋 Document Playbooks`, `📖 User Manual`, `🪙 What Are Tokens?`. All open in new tabs (`target="_blank"`) which supports the multi-monitor walk-through workflow — open the user manual on one monitor, work in WaxFrame on another. Three items removed from this section: `⚙️ API Key Setup` (duplicate of the in-app Worker Bees screen), `📄 Open Source License` and `⭐ WaxFrame on GitHub` (both relocated into the About modal where they belong as project metadata, not navigation), and `ℹ️ About WaxFrame` (promoted to the menu header). One item moved out of Reference: `✏️ Prompt Editor` is moved to the new `Advanced` section since it's a power-user tool, not core documentation.
 
-**New `Advanced` section.** Replaces the old unlabeled trailing section. Contains `🛠 Dev Tools`, `✏️ Prompt Editor`, and the existing `🚪 Exit Dev Mode` button (only visible when dev mode is active). This section labels what's actually advanced functionality so users know to skip it unless they have a reason not to.
+**New `Advanced` section.** Replaces the old unlabeled trailing section. Contains `🛠 Dev Tools`, `✏️ Prompt Editor`, and the existing `🚪 Exit Dev Mode` button (only visible when dev mode is active). This section labels what's actually advanced functionality so users know to skip it unless they have a reason not to. *(Note: this order created a visual sandwich bug — Prompt Editor between Dev Tools and the conditional Exit Dev Mode `<div>`. Fixed in v3.22.2.)*
 
 ### What was deleted vs. moved
 
