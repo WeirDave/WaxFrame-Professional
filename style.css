@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-010
+   Build: 20260427-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5862,14 +5862,26 @@ kbd {
   align-items: center;
   flex-shrink: 0;
 }
-/* Unified helper-page footer (v3.22.3) — thin like the work-screen footer,
-   with secondary actions (Save PDF, Close tab) on the left and About + version
-   centered. Matches the visual feel established on the work screen.
-   The .page-footer-unified compound class beats .page-footer base padding. */
+/* Unified helper-page footer (v3.22.3 / v3.22.4) — thin like the work-screen
+   footer, with secondary actions on the left and About + version centered.
+   Matches the visual feel established on the work screen.
+   v3.22.4: footer is sticky to the viewport bottom so it stays visible while
+   reading long doc pages, matching the always-visible footer pattern on the
+   work screen and setup screens. The .helper-body bottom-padding rule below
+   reserves clearance so the last lines of content don't render under the
+   sticky footer. */
 .page-footer.page-footer-unified {
   padding: 8px 24px;
   margin-top: 16px;
   justify-content: space-between;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+}
+/* Reserve space at the bottom of helper-page main content equal to the sticky
+   footer height (~50px) so the last lines of the doc aren't hidden under it. */
+.helper-body .page-main {
+  padding-bottom: 64px;
 }
 .page-footer-actions {
   display: flex;
@@ -5884,15 +5896,13 @@ kbd {
   flex: 1;
   justify-content: center;
 }
+/* v3.22.4 — version pill is plain dim text, not a bordered button shape. */
 .footer-version-pill {
   display: inline-flex;
   align-items: center;
   font-size: 10px;
   color: var(--text-dim);
   letter-spacing: 0.06em;
-  padding: 3px 9px;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
 }
 .helper-version-stamp {
   display: inline;

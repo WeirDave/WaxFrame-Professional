@@ -2,6 +2,69 @@
 
 ---
 
+## v3.22.4 Pro — Build `20260427-011`
+**Released:** April 27, 2026
+
+**v3.22.3 chrome refinements on the user manual.** Four small fixes on the helper-page chrome shipped in v3.22.3, all driven by walking through the rendered page and hitting friction. No new structure — just polish on what just landed.
+
+### What changed
+
+- **`waxframe-user-manual.html` — `Close this tab` button removed from footer.** The browser already provides a tab close mechanism (the `×` on the tab itself), so a footer button doing the same thing was redundant chrome. Removed. The footer's left-side actions area now contains only `⬇ Save as PDF`.
+- **`waxframe-user-manual.html` — `Contents` label removed from sidebar.** The sidebar IS the contents — labelling it `Contents` was vestigial. The first `.doc-sidebar-category` block (`Before You Start`) is now the topmost element in the sidebar, and its existing `border-top` + `padding-top` provide the natural top boundary. This recovers vertical space at the top of the sidebar.
+- **`style.css` — Version pill no longer renders as a button.** The `.footer-version-pill` rule had `padding: 3px 9px`, `border: 1px solid var(--border2)`, and `border-radius: var(--radius-sm)` — visually that read as a clickable button. Stripped all three properties; version pill is now plain dim 10px text with letterspacing, matching its semantic role as a passive label.
+- **`style.css` — Helper-page footer is now sticky to viewport bottom.** Added `position: sticky; bottom: 0; z-index: 50` to `.page-footer.page-footer-unified`, plus a new `.helper-body .page-main { padding-bottom: 64px }` rule to reserve clearance so the last lines of the document don't render hidden under the sticky footer. This matches the always-visible footer pattern on the work screen and setup screens — Save as PDF and About are now reachable at any scroll position without scrolling to the absolute bottom of the page.
+
+### What didn't change
+
+- All v3.22.3 unified header structure (logo, tagline in tagline slot, theme buttons icon-only on right) — preserved.
+- All v3.22.3 footer items (Save PDF, version pill, About) — preserved positions, just refined visually.
+- About modal contents — unchanged.
+- Body H1 — unchanged.
+- All other helper pages — content unchanged. Cache-busts updated.
+- Work screen and setup screens — unchanged.
+
+### Why these fixes weren't bundled into v3.22.3
+
+The v3.22.3 release shipped a bigger chrome shell change (header restructure + footer restructure + About modal + body H1 + meta build stamp drift fix) and got pushed before walking through the rendered result. The four fixes in v3.22.4 are exactly the kind of polish that only surfaces after a real page is in front of you. Splitting the polish into v3.22.4 keeps the release diffs surgical — v3.22.3 lands the structural change, v3.22.4 lands the visual refinement, neither carries scope creep into the other.
+
+### What changed (file-by-file)
+
+| File | Changes |
+|------|---------|
+| `waxframe-user-manual.html` | Footer: `Close this tab` button removed. Sidebar: `Contents` label removed. Build header + cache-busts. |
+| `style.css` | `.page-footer.page-footer-unified` gains `position: sticky; bottom: 0; z-index: 50`. New `.helper-body .page-main { padding-bottom: 64px }` rule for sticky-footer clearance. `.footer-version-pill` strips border + padding + border-radius (now plain text). Build header. |
+| `index.html` | Version stamps only. |
+| `app.js` | `BUILD` constant only. |
+| `version.js` | `APP_VERSION` → `v3.22.4 Pro`. |
+| `api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` | Build header + cache-busts only. Same chrome treatment as user manual coming in v3.22.5+. |
+
+### Validation
+
+- `style.css` brace balance: 1634 open / 1634 close ✓
+- `waxframe-user-manual.html` div balance: 380 / 380 (one less than v3.22.3's 381 — the removed Contents div) ✓
+- All 4 canonical version stamps verified at v3.22.4 / `20260427-011` ✓
+- All 6 helper-page cache-busts verified at `?v=3.22.4` ✓
+
+### Upgrade
+
+Pull and hard-refresh.
+
+### Test plan
+
+1. Drop files into the repo, hard-refresh.
+2. Open `waxframe-user-manual.html`.
+3. **Sidebar:** confirm the topmost item is `Before You Start` — no `Contents` label above it.
+4. **Footer center:** the version pill should look like plain dim text, not a button — no border, no rounded corners, no padding box. About button next to it stays a button (correctly, it IS a button).
+5. **Footer left:** only `⬇ Save as PDF` button — no `Close this tab` next to it.
+6. **Sticky footer:** scroll the user manual. The thin footer should stay pinned to the bottom of the viewport at all scroll positions, not just at the bottom of the document. The last lines of the document content should remain readable above the footer (not hidden under it).
+7. **App check:** open `index.html` — work screen, setup screens, all unchanged from v3.22.3.
+
+### What's next — v3.22.5
+
+The slim helper-page hamburger menu lands across all five helper pages: Documentation list (alphabetical), `CREATE SOMETHING → Open WaxFrame` (target="_blank"), `SUPPORT → Buy WaxFrame Pro`. After that, the four remaining helper pages (`api-details.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html`) get the unified chrome treatment in v3.22.6 / v3.22.7 / v3.22.8 / v3.22.9 — one per release for surgical safety.
+
+---
+
 ## v3.22.3 Pro — Build `20260427-010`
 **Released:** April 27, 2026
 
