@@ -2,6 +2,128 @@
 
 ---
 
+## v3.22.7 Pro — Build `20260427-014`
+**Released:** April 27, 2026
+
+**Honeycomb Visual Language release.** Helper pages and setup screens now render in the same layered "glass strip + solid surface body" pattern as the work-screen panel headers (Working Document, Conflicts, Live Console). A new `.hp-section` CSS primitive replaces the per-page intro vocabularies (`.api-intro-strip`, `.kyh-intro`, `.wf-intro`, `.save-bar`) and the per-screen `.setup-single-card` container. After this release, every screen with a content panel — work, setup, helper — reads as part of the same visual system.
+
+### Why this release exists
+
+The work-screen panel pattern (`.work-panel-header.honeycomb-header`) was the cleanest layered look in the app — a translucent dark glass strip floating over the honeycomb background, with a solid `var(--surface)` body card directly attached underneath. That pattern was confined to one place. Setup screens had `.setup-single-card` (a flat surface card with the bee tucked inside the card body, no glass strip on top). Helper pages had a different per-page intro pattern each: `api-details.html` had `.api-intro-strip honeycomb-header` (a partial port of the work-screen pattern, only on that one page), `what-are-tokens.html` and the user manual used `.wf-intro` (bee + h1 + paragraph, no glass), the prompt editor used `.save-bar` (a custom strip with bee + actions), and document playbooks used yet another `.wf-intro` variant.
+
+Five different intro vocabularies for the same job. This release unifies all of them onto one primitive and applies the work-screen layered look everywhere a content panel exists outside the work screen itself. The work screen is unchanged — the existing `.work-panel-header.honeycomb-header` rule remains the visual reference point.
+
+### What changed
+
+#### New `.hp-section` primitive
+
+A new ~165-line CSS block was added to `style.css` immediately before the `.wf-card` primitive. The structure is intentionally simple:
+
+```html
+<div class="hp-section">
+  <div class="hp-section-header">                       <!-- bee variant -->
+    <img class="hp-section-bee" src="…">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">…</h1>
+      <p class="hp-section-sub">…</p>
+    </div>
+  </div>
+  <div class="hp-section-body">…content cards…</div>
+</div>
+```
+
+The glass header values (`rgba(0,0,0,0.55)` background, `blur(6px)` backdrop, `1px rgba(255,255,255,0.1)` border, `box-shadow 0 2px 8px rgba(0,0,0,0.3)`, `border-radius 10px 10px 0 0`) are copied verbatim from `.work-panel-header.honeycomb-header` so the three contexts read identically. The body is a standard `var(--surface)` card with `border-top: none` and `border-radius 0 0 10px 10px`, attaching flush underneath the glass strip.
+
+Three variants ship with the primitive:
+
+- **Bee variant (default).** 16px-20px header padding, 180px bee on the left, title + sub paragraph stacked on the right. Used for first-of-page intros and setup screens 1–3.
+- **`.is-bare` variant.** 10px-20px header padding, no bee, single-line title + optional sub. Used for setup screens 4–5 (Reference Material, Starting Document) and for subsequent sections inside helper pages where a stacked bee per section would be visually heavy.
+- **Strip-only variant.** When `.hp-section-header` is the only child of `.hp-section`, the header gets full `border-radius: 10px` instead of top-only. Used for the page-level intros at the top of helper pages above `.doc-layout`.
+
+Theme handling forces white header text in light + auto modes (the glass strip is dark in all themes regardless of base theme).
+
+#### Setup screens — five panels
+
+All five setup screens migrated from `.setup-single-card` to `.hp-section`:
+
+| Screen | Bee | Header variant |
+|---|---|---|
+| 1 — Worker Bees | Worker Bee v2 | bee |
+| 2 — Builder | Builder v3 | bee |
+| 3 — Project | Project Bee v2 | bee (Clear Project button kept inline in title) |
+| 4 — Reference Material | none | `.is-bare` |
+| 5 — Starting Document | none | `.is-bare` |
+
+The 5-screen setup flow (introduced in v3.21.0 with Reference Material) now reads as five layered panels instead of five flat surface cards. Per-screen tip paragraphs (`.fs-col-tip`) move from inside the intro card into the body of the new `.hp-section`, where they live alongside the existing controls/grids/forms.
+
+#### Helper pages — six panels each on the long pages
+
+Each helper page now uses `.hp-section` for its top-level content groupings:
+
+- **api-details.html** — 3 sections: API Key Setup (API Bee glass header) / Know Your Hive (Worker Bee) / General Tips (`.is-bare`). The pre-existing `.api-intro-strip honeycomb-header` was removed in favour of the new primitive; `<hr class="wf-section-divider">` between sections is gone since the visible honeycomb gap between panels does that job now.
+- **prompt-editor.html** — 1 section (Prompt Editor Bee v1 glass header). The custom `.save-bar` is gone; the Reset / Save action buttons + status toast moved into a new `.prompt-editor-actions` row at the top of the section body (right-aligned, ~10 lines of new CSS).
+- **what-are-tokens.html** — 1 section wrapping the page (Token Bee v1 glass header). The redundant `.col-bee` inside the left column was removed since the bee now lives in the glass strip above. The two-column layout for Basics / Best Builder Choices stays inside the body.
+- **document-playbooks.html** — 6 sections: top page-intro (Project Bee v2, strip-only above `.doc-layout`) + 5 sections inside `.doc-main` (Quick Start / Career & Hiring / Business & Sales / Content & Marketing / Personal & Everyday — all `.is-bare`). Each `.dp-category-hdr` is gone; the category title + sub now live in the glass header of that section's panel.
+- **waxframe-user-manual.html** — 6 sections: top page-intro (Worker Bee v2, strip-only) + 5 sections inside `.doc-main` (Before You Start / Setup / Work Flow / Appendices / Reference — all `.is-bare`). The 11 `.wh-section` blocks (step1–step11) split into Setup (1–5) and Work Flow (6–11) at the natural setup-vs-work boundary; the sidebar nav still groups all 11 as "Step-by-Step Guide" and the per-step anchor links continue to work.
+
+A small helper rule `.doc-main .hp-section { max-width: none; }` lets the in-sidebar sections fill the available main-column width instead of capping at 1200px (the sidebar already constrains horizontally).
+
+#### Bee assignments
+
+The release locks bee assignments per context. The mascot-mismatch rule (API Bee = auth/endpoint contexts, Worker Bee = bee/hive contexts) is preserved:
+
+| Context | Bee |
+|---|---|
+| Setup 1 — Worker Bees | Worker Bee v2 |
+| Setup 2 — Builder | Builder v3 |
+| Setup 3 — Project | Project Bee v2 |
+| Setup 4–5 — Reference / Document | none (`.is-bare`) |
+| User Manual page intro | Worker Bee v2 |
+| Document Playbooks page intro | Project Bee v2 |
+| What Are Tokens? | Token Bee v1 |
+| Prompt Editor | Prompt Editor Bee v1 |
+| API Details Section 1 | API Bee v1 |
+| API Details Section 2 (Know Your Hive) | Worker Bee v2 |
+
+For helper pages with multiple sections, only the page-level intro section gets a bee. Subsequent sections within the same page use `.is-bare` to avoid stacking five bees down the page.
+
+### Known follow-up — v3.22.8 cleanup target
+
+This release is **additive**. The new `.hp-section` primitive ships, the HTML migrations land, but the CSS rules for the now-orphaned legacy classes are still in `style.css` and not removed. 23 classes are confirmed orphaned (`.setup-single-card` + `--centered`, `.setup-intro` + `-bee` + `-body`, `.api-intro-strip`, `.api-intro-bee-wrap`, `.api-intro-text`, `.api-intro-title`, `.api-intro-desc`, `.kyh-intro`, `.kyh-bee`, `.kyh-intro-text`, `.save-bar` + all `save-bar-*` sub-classes, `.wf-intro` + `-bee` + `-text`, `.dp-category-hdr`, `.dp-category-title`, `.dp-category-sub`, `.fs-col-header`, `.fs-col-title`, `.fs-col-sub`, `.proj-title-row`). All of them have zero remaining HTML usage and zero JS references — verified by grep across all `.html` and `app.js` files. Removing them is a 50-ish-line CSS sweep that v3.22.8 will handle in isolation so this release can stay scoped to "the migration."
+
+`.fs-col-tip` is **not** orphaned — it survives in 3 places inside the new `.hp-section-body` of setup screens 1, 2, and 3 (the tip paragraphs that used to live in `.fs-col-header`). It stays.
+
+### Files touched
+
+- `style.css` — `.hp-section` primitive block (+165 lines), `.prompt-editor-actions` row (+10 lines), `.doc-main .hp-section` width override (+4 lines)
+- `index.html` — 5 setup-screen migrations (`.setup-single-card` → `.hp-section`)
+- `waxframe-user-manual.html` — 6 sections, page intro + 5 inside `.doc-main`
+- `document-playbooks.html` — 6 sections, page intro + 5 inside `.doc-main`
+- `what-are-tokens.html` — 1 section wrapping the page
+- `api-details.html` — 3 sections, replaces `.api-intro-strip` precedent
+- `prompt-editor.html` — 1 section, replaces `.save-bar`
+- `app.js` — `BUILD` constant → `20260427-014`
+- `version.js` — `APP_VERSION` → `'v3.22.7 Pro'`
+
+All four version stamp locations were updated in lockstep. All six helper-page comment-header build stamps were synced.
+
+### Validation
+
+Each migrated file was checked for div balance with `grep -oE '<div\b' | wc -l` vs `grep -oE '</div>' | wc -l`:
+
+| File | div open | div close | hp-section refs | Legacy class refs |
+|---|---|---|---|---|
+| index.html | 542 | 542 | 33 | 0 |
+| api-details.html | 201 | 201 | 25 | 0 |
+| prompt-editor.html | 99 | 99 | 9 | 0 |
+| what-are-tokens.html | 64 | 64 | 9 | 0 |
+| document-playbooks.html | 452 | 452 | 47 | 0 |
+| waxframe-user-manual.html | 424 | 424 | 46 | 0 |
+
+Working console is **unchanged** — the existing `.work-panel-header.honeycomb-header` rule was not touched. The new primitive lives alongside it as a generalisation, not a refactor.
+
+---
+
 ## v3.22.6 Pro — Build `20260427-013`
 **Released:** April 27, 2026
 

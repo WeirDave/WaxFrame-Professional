@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260427-013
+     Build: 20260427-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260427-013">
+  <meta name="waxframe-build" content="20260427-014">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.22.6">
+  <link rel="stylesheet" href="style.css?v=3.22.7">
 </head>
 <body class="helper-body">
 
@@ -88,15 +88,15 @@
 
 <!-- ── SECTION 1: API KEY SETUP ── -->
 
-<div class="api-intro-strip honeycomb-header">
-  <div class="api-intro-bee-wrap">
-    <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="col-bee">
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">Get Your API Keys</h1>
+      <p class="hp-section-sub">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
+    </div>
   </div>
-  <div class="api-intro-text">
-    <h1 class="api-intro-title">Get Your API Keys</h1>
-    <p class="api-intro-desc">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
-  </div>
-</div>
+  <div class="hp-section-body">
 
 <div class="two-col">
 
@@ -249,16 +249,20 @@
 
 </div><!-- /two-col -->
 
-<!-- ── SECTION 2: KNOW YOUR HIVE ── -->
-<hr class="wf-section-divider">
+  </div><!-- /hp-section-body Section 1 -->
+</div><!-- /hp-section Section 1 -->
 
-<div class="kyh-intro">
-  <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="kyh-bee">
-  <div class="kyh-intro-text">
-    <h2>Know Your Hive</h2>
-    <p>Every AI in your hive has its own personality, strengths, and quirks. Knowing how each one behaves helps you pick the right Builder, get the most out of your reviewers, and decide when to toggle them off. This guide is based on real-world observations using WaxFrame in production — and on the hive itself, since each AI's profile below was refined by passing it through the hive for self-description and peer review.</p>
+<!-- ── SECTION 2: KNOW YOUR HIVE ── -->
+
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">Know Your Hive</h1>
+      <p class="hp-section-sub">Every AI in your hive has its own personality, strengths, and quirks. Knowing how each one behaves helps you pick the right Builder, get the most out of your reviewers, and decide when to toggle them off. This guide is based on real-world observations using WaxFrame in production — and on the hive itself, since each AI's profile below was refined by passing it through the hive for self-description and peer review.</p>
+    </div>
   </div>
-</div>
+  <div class="hp-section-body">
 
 <div class="kyh-grid">
 
@@ -515,14 +519,28 @@
 
 </div><!-- /kyh-grid -->
 
-<!-- GENERAL TIPS -->
+  </div><!-- /hp-section-body Section 2 -->
+</div><!-- /hp-section Section 2 -->
+
+<!-- ── SECTION 3: GENERAL TIPS ── -->
+
+<div class="hp-section">
+  <div class="hp-section-header is-bare">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">General Tips</h1>
+    </div>
+  </div>
+  <div class="hp-section-body">
+
 <div class="wf-card is-accent">
-  <h2 class="wf-card-title">General Tips</h2>
   <p><strong>You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.</p>
   <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
   <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.</p>
   <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
 </div>
+
+  </div><!-- /hp-section-body Section 3 -->
+</div><!-- /hp-section Section 3 -->
 
 </div><!-- /page-main -->
 

@@ -7694,6 +7694,187 @@ kbd {
   color: var(--text);
 }
 
+/* ════════════════════════════════════════════════════════════════
+   .hp-section — Honeycomb-Layered Section primitive (v3.22.7)
+
+   Glass header strip on top + solid surface body card directly attached
+   below, sitting on the honeycomb background with a visible gap between
+   sections. Generalises the .work-panel-header.honeycomb-header pattern
+   from the work screen so helper pages and setup screens share the
+   working console's layered visual language.
+
+   Structure:
+     <div class="hp-section">
+       <div class="hp-section-header">                <!-- bee variant -->
+         <img class="hp-section-bee" src="…">
+         <div class="hp-section-title-block">
+           <h1 class="hp-section-title">…</h1>
+           <p class="hp-section-sub">…</p>
+         </div>
+       </div>
+       <div class="hp-section-body">…content cards…</div>
+     </div>
+
+   Bee-less variant: add .is-bare to .hp-section-header (shorter padding,
+   no bee image, intended for screens where a bee would be redundant).
+   Glass strip values mirror .work-panel-header.honeycomb-header verbatim
+   so all three contexts (work screen / setup / helper) read as one
+   visual system. Compound class names avoid collision with .wh-section,
+   .work-panel-header, .api-intro-strip and existing helper structures.
+   ──────────────────────────────────────────────────────────────── */
+
+.hp-section {
+  max-width: 1200px;
+  margin: 0 auto 32px;
+  display: block;
+}
+.hp-section:first-of-type { margin-top: 24px; }
+.hp-section:last-of-type  { margin-bottom: 32px; }
+
+.hp-section-header {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 16px 20px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px 10px 0 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.hp-section-header.is-bare {
+  padding: 10px 20px;
+  gap: 0;
+}
+
+/* Strip-only section (no body) — full radius on the lonely header */
+.hp-section-header:only-child {
+  border-radius: 10px;
+}
+
+.hp-section-bee {
+  flex-shrink: 0;
+  width: 180px;
+  height: auto;
+  display: block;
+}
+
+.hp-section-title-block {
+  flex: 1;
+  min-width: 0;
+}
+
+.hp-section-title {
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  text-shadow: none;
+  margin: 0 0 6px;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hp-section-header.is-bare .hp-section-title {
+  font-size: 15px;
+  margin: 0;
+}
+
+.hp-section-sub {
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+}
+.hp-section-sub + .hp-section-sub { margin-top: 8px; }
+.hp-section-sub a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.hp-section-sub strong { color: #ffffff; }
+
+.hp-section-body {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-top: none;
+  border-radius: 0 0 10px 10px;
+  padding: 24px;
+}
+
+/* Inline goal-info button alignment inside title */
+.hp-section-title .goal-info-btn {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+/* Force white header text in light + auto modes — glass strip is dark
+   in all themes regardless of base theme. */
+[data-theme="light"] .hp-section-title { color: #ffffff; }
+[data-theme="light"] .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
+[data-theme="light"] .hp-section-sub strong { color: #ffffff; }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .hp-section-title { color: #ffffff; }
+  [data-theme="auto"] .hp-section-sub   { color: rgba(255, 255, 255, 0.85); }
+  [data-theme="auto"] .hp-section-sub strong { color: #ffffff; }
+}
+
+/* Helper-body context — page-main flex container for hp-sections.
+   Helper pages use a vertically-scrolling .page-main; hp-sections
+   stack inside it with native flow, no grid required. */
+.helper-body .page-main {
+  /* page-main already has padding from earlier rules — hp-section
+     handles its own horizontal centering via max-width + margin auto. */
+}
+
+/* Setup-screen context — fs-body-single houses one hp-section per
+   screen. Override fs-body-single padding so the hp-section's own
+   margins control spacing. */
+.fs-body-single:has(> .hp-section) {
+  padding: 0 24px;
+  display: block;
+  overflow-y: auto;
+}
+
+/* When .hp-section-body sits inside fs-body-single, allow it to grow
+   so setup-screen content (ai-setup-grid, doc-input-tabs, etc.) has
+   room without scrollbars on the body itself. */
+.fs-body-single > .hp-section .hp-section-body {
+  padding: 24px 28px;
+}
+
+/* Sidebar-layout helper pages — fill the available .doc-main width
+   instead of capping at 1200px since the sidebar already constrains
+   horizontally. Top-of-page intro sections (outside .doc-main) keep
+   the default 1200px cap. */
+.doc-main .hp-section {
+  max-width: none;
+}
+
+/* Prompt-editor action row — Reset/Save buttons row at top of body */
+.prompt-editor-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.prompt-editor-actions .status-toast {
+  margin-right: auto;
+}
+
 /* ── Card primitive (.wf-card) ───────────────────────────────── */
 
 .helper-body .wf-card {
