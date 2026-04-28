@@ -152,6 +152,10 @@ input, textarea, select { font-family: inherit; }
 }
 
 /* ── BASE ── */
+
+/* Toggleable display utility — used in place of inline style="display:none;" */
+.is-hidden { display: none !important; }
+
 html, body {
   height: 100%;
   color: var(--text);
@@ -3327,6 +3331,13 @@ kbd {
   margin: 12px 0 16px;
 }
 .goal-info-body p { margin: 0; }
+.modal-section-divider {
+  border: 0;
+  height: 1px;
+  background: var(--border);
+  margin: 8px 0 4px;
+  width: 100%;
+}
 .goal-info-row {
   display: flex;
   gap: 10px;
@@ -7070,6 +7081,23 @@ kbd {
 }
 .tkp-detail-label + .tkp-detail-pre {
   margin-bottom: 12px;
+}
+.tkp-billing-link {
+  display: inline-block;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin: 0 0 12px;
+  text-decoration: none;
+}
+.tkp-billing-link:hover {
+  background: var(--accent);
+  color: var(--bg);
 }
 .tkp-detail-pre {
   font-family: var(--font-mono);
