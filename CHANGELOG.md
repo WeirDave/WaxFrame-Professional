@@ -2,6 +2,78 @@
 
 ---
 
+## v3.26.8 Pro — Build `20260429-017`
+**Released:** April 29, 2026
+
+**The dropdown finally tells the truth.** Every static descriptor in `MODEL_LABELS` was a guess about what each model is best at — guesses that drift the moment a provider ships a new tier. v3.26.4 stripped "Recommended" tags, but kept everything else (`Fast`, `Budget`, `Balanced`, `Most Capable`). v3.26.8 strips them all and replaces them with live AI-generated tags.
+
+### The new architecture
+
+When you click **Have AI Recommend**, the AI returns FOUR categorized picks instead of one:
+
+```
+PICK: <best overall — gets ✨ + auto-active>
+WHY: <one sentence>
+BUDGET: <cheapest decent option for review tasks>
+BUDGET_WHY: <one sentence>
+FAST: <fastest decent option for review tasks>
+FAST_WHY: <one sentence>
+CAPABLE: <most capable for review tasks regardless of cost>
+CAPABLE_WHY: <one sentence>
+```
+
+Those four (or fewer if duplicates) become the dropdown tags. Other models in the live list render as bare ids — David's principle: trust what the AI returned, don't guess about the rest.
+
+A model can hold multiple tags. If today's most-capable also happens to be the best overall pick, the dropdown shows `✨ gpt-5.5-pro-2026-04-23 — Best Overall · Most Capable`. The cache stores the labels alongside the pick.
+
+### What you see in the dropdown
+
+```
+Pick a model: [✨ gpt-5.5-pro-2026-04-23 — Best Overall · Most Capable    ▾]  [Have AI Recommend]
+✨ Latest flagship; strongest writing/reasoning across long contexts.
+```
+
+Open the dropdown:
+
+```
+✨ gpt-5.5-pro-2026-04-23 — Best Overall · Most Capable
+gpt-5.5-mini-2026-04-23 — Budget
+gpt-5.4-fast — Fast
+gpt-5.4
+gpt-5.4-base
+gpt-5.4-instruct
+gpt-4o-2024-08-06
+...
+```
+
+The 4 categorized models surface to the top of utility (Best Overall first, then power-users can scan for Budget/Fast/Capable). Switching to one of them updates the note line below to that model's WHY. Switching to an untagged model clears the note line.
+
+### "Pick a model:" label
+
+Added before the dropdown. Makes the relationship explicit — the button is named "Have AI Recommend" so users understand what it does without parsing emoji.
+
+### Fixed dropdown width
+
+All `.model-select` elements now render at exactly `520px`. With the old `min-width: 220px / max-width: 340px` rule, dropdowns sized to their content — so each row's dropdown was a different width and the button + note column never aligned across rows. Fixed-width fixes the rag and gives breathing room for ~70 character model ids with tag annotations.
+
+### Custom WaxFrame confirm modal
+
+Replaced the browser's native `confirm()` dialog (which is unstyleable and feels jarring against the WaxFrame palette) with a Promise-based `wfConfirm(title, message, opts)` that renders a properly styled modal:
+
+- `Reset to Defaults` confirmation
+- `Remove "Perplexity" from your hive?` confirmation
+- `Hide "X" from the setup list?` confirmation
+- `Hide all N default AIs?` confirmation
+- `Remove the saved API key for X?` confirmation
+
+Destructive actions (Remove, Delete) get a red-tinted OK button via `{ destructive: true }` option. Cancel keeps the WaxFrame modal language.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-017` and `3.26.8`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.7 Pro — Build `20260429-016`
 **Released:** April 29, 2026
 
