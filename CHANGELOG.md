@@ -2,6 +2,53 @@
 
 ---
 
+## v3.25.3 Pro — Build `20260429-004`
+**Released:** April 29, 2026
+
+**Reference Material — confirmation modal, Clear All, copy cleanup.** Replaces the native browser `confirm()` dialog that fired when removing reference docs (and clearing all of them) with a proper WaxFrame-styled modal. Adds a Clear All button to Setup 4 (it had only existed on the work-screen drawer before). Folds in the queued Setup 4 footer copy fix from memory + a parallel drawer-subtitle fix surfaced during this work.
+
+### Native confirm() → WaxFrame-styled modal
+
+The previous `confirm()` dialog showed an OS-styled popup with `weirdave.github.io` in the header and unstyled buttons — visually jarring against the rest of the app. Worse, the body copy ("This wipes the field but does not affect past rounds") was both stale single-doc language ("the field" — there hasn't been a singular field since v3.24.0 made Reference Material multi-doc) and contextually nonsensical pre-launch (mentioning "past rounds" on Setup 4 of a fresh project, before any rounds have been run, was confusing rather than helpful).
+
+The new modal (`#refConfirmModal`) reuses the existing `.finish-modal-overlay` + `.round-error-modal` pattern shared with `discardConfirmModal`, so the visual treatment matches the rest of the app — same dashed-border styling, same Cancel/destructive-action button layout, same backdrop blur. Three new helpers handle the flow:
+
+- `showRefConfirm({ title, body, okLabel, onConfirm })` — opens the modal with parameterized text and stores the pending action
+- `closeRefConfirmModal()` — closes and clears the pending action
+- `executeRefConfirm()` — runs the pending action and closes (called by the OK button)
+
+### Context-aware confirmation copy
+
+Both `removeReferenceDoc(id)` and `clearAllReferenceMaterial()` now check `history.length > 0` to decide which message to show:
+
+- **Pre-launch (no rounds run yet):** simple, plain message — `Remove "Anduril_RFP.xlsx → Instructions"?` or `This removes all 7 reference documents. You can re-add them anytime.` The past-rounds caveat is omitted because there are no past rounds to caveat against — mentioning them only created confusion.
+- **Post-launch (rounds exist):** full warning — `Remove "X"? Past rounds keep their original snapshot — this only affects the next round forward.` The caveat is included only when it's actually relevant to the user's situation.
+
+The empty/near-empty doc shortcut (≤20 chars of content) still removes silently with no confirmation, which prevents nag-popups when the user is just clearing out a paste card they haven't typed in yet.
+
+### Clear All button on Setup 4
+
+`clearAllReferenceMaterial()` was already wired into the work-screen reference drawer (visible mid-session) but had no Setup 4 counterpart. Users on Setup 4 with multiple imported docs had to click the X on each card individually — friction at exactly the moment when bulk action is most useful (after an Excel ingest creates 5+ cards from a multi-sheet workbook). The new button lives at the right end of the counter row (`#refClearAllSetup`), small and subtle, hidden via `is-hidden` class when there are zero docs (so it doesn't clutter the empty state). Hover state shifts color to the warn-yellow accent. Visibility toggled inside `updateRefGrandTotals()` alongside the other count-driven UI updates.
+
+### Copy fixes
+
+- Setup 4 footer hint (`.ref-optional-hint`): `Skip this step if your project does not need source material to cite against.` → `Skip this step if your project has no source material for The Hive to reference.` Matches the v3.25.1 phrasing standard. Was queued in memory for the next code change.
+- Work-screen drawer subtitle (`.notes-drawer-sub`): `Source material the hive cites against every round but never edits.` → `Source material The Hive will reference on every round but never edit.` Same phrasing-standard alignment. Surfaced during this audit.
+- Confirmation copy: dropped `wipes the field` (stale single-doc language) entirely. Action verbs are now plain English (`remove`, `clear`).
+
+### What did not change
+
+- Setup 5 (Starting Document) — untouched.
+- File processing logic, sheet picker, drag-and-drop wiring — untouched.
+- All other native `confirm()` calls in the app (license removal, API key removal) — out of scope; same treatment can be applied later if desired.
+- Empty-doc removal still silent (no confirmation) — preserved behavior.
+
+### Build-stamp sweep
+
+All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=`, `version.js?v=`, `app.js?v=`, and `lib/*.js?v=` cache-busts swept to `20260429-004` / `3.25.3`.
+
+---
+
 ## v3.25.2 Pro — Build `20260429-003`
 **Released:** April 29, 2026
 

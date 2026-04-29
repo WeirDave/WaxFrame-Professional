@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-003';         // build stamp — update each session
+const BUILD       = '20260429-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5520,16 +5520,69 @@ function addReferenceDoc() {
 // Remove a reference doc by id. Confirmation prompt only fires if the doc
 // has non-trivial content (>20 chars) — empty/short cards remove silently
 // to avoid annoying the user mid-cleanup.
+// ── Reference Material confirmation modal helpers (v3.25.3) ──
+// Replaces the previous use of native confirm() for per-doc remove and
+// clear-all. WaxFrame-styled modal matches the rest of the app and copy
+// adapts to context (pre-launch vs post-launch). Module-level pending-action
+// holder is set when the modal opens, executed on confirm, cleared on cancel.
+let _refConfirmAction = null;
+
+function showRefConfirm({ title, body, okLabel, onConfirm }) {
+  const overlay = document.getElementById('refConfirmModal');
+  if (!overlay) {
+    // Fallback if markup is missing for any reason — preserve safe behavior
+    // by skipping the action rather than triggering an unconfirmed destructive op.
+    console.warn('refConfirmModal markup missing — aborting confirm');
+    return;
+  }
+  const titleEl = document.getElementById('refConfirmTitle');
+  const bodyEl  = document.getElementById('refConfirmBody');
+  const okBtn   = document.getElementById('refConfirmOkBtn');
+  if (titleEl) titleEl.textContent = title || 'Are you sure?';
+  if (bodyEl)  bodyEl.textContent  = body  || '';
+  if (okBtn)   okBtn.textContent   = okLabel || 'Confirm';
+  _refConfirmAction = onConfirm;
+  overlay.classList.add('active');
+}
+
+function closeRefConfirmModal() {
+  const overlay = document.getElementById('refConfirmModal');
+  if (overlay) overlay.classList.remove('active');
+  _refConfirmAction = null;
+}
+
+function executeRefConfirm() {
+  const fn = _refConfirmAction;
+  closeRefConfirmModal();
+  if (typeof fn === 'function') fn();
+}
+
 function removeReferenceDoc(id) {
   const doc = referenceDocs.find(d => d.id === id);
   if (!doc) return;
-  if ((doc.text || '').trim().length > 20) {
-    if (!confirm(`Remove "${doc.name}"? This wipes the field but does not affect past rounds.`)) return;
+  const performRemove = () => {
+    referenceDocs = referenceDocs.filter(d => d.id !== id);
+    renderReferenceCards();
+    updateRefGrandTotals();
+    saveProject();
+  };
+  // Empty / near-empty cards remove silently — no confirmation noise for trivial undo.
+  if ((doc.text || '').trim().length <= 20) {
+    performRemove();
+    return;
   }
-  referenceDocs = referenceDocs.filter(d => d.id !== id);
-  renderReferenceCards();
-  updateRefGrandTotals();
-  saveProject();
+  // Has substantive content — confirm. Body adapts to whether rounds have run yet:
+  // pre-launch the past-rounds caveat is meaningless (and the message confused users
+  // pre-v3.25.3); post-launch it's the actually-relevant detail.
+  const hasRunRounds = (typeof history !== 'undefined' && history && history.length > 0);
+  showRefConfirm({
+    title: 'Remove this reference?',
+    body: hasRunRounds
+      ? `Remove "${doc.name}"? Past rounds keep their original snapshot — this only affects the next round forward.`
+      : `Remove "${doc.name}"?`,
+    okLabel: '🗑️ Remove',
+    onConfirm: performRemove
+  });
 }
 
 // Reorder by swapping with neighbor. Direction changes prompt-envelope
@@ -5606,6 +5659,10 @@ function updateRefGrandTotals() {
     if (!el) return;
     el.classList.toggle('is-hidden', totalTokens < REF_TOKEN_SOFT_WARN);
   });
+  // Clear All button on Setup 4 — only visible when there's something to clear.
+  // Drawer's Clear All button always visible since drawer only opens mid-session.
+  const setupClearBtn = document.getElementById('refClearAllSetup');
+  if (setupClearBtn) setupClearBtn.classList.toggle('is-hidden', referenceDocs.length === 0);
 }
 
 // File drop / select handlers — both routed through processRefFile which
@@ -5668,18 +5725,30 @@ function closeReferenceMaterialDrawer() {
   if (drawer) drawer.classList.remove('active');
 }
 
-// "Clear all" — wipes every reference doc. Single confirmation guards the
+// "Clear all" — wipes every reference doc. Confirmation modal guards the
 // whole-list nuke. Past rounds' snapshots are unaffected (history captures
-// referenceMaterialAtRound at round-fire time, not at clear time).
+// referenceMaterialAtRound at round-fire time, not at clear time) — the
+// modal body only mentions this caveat post-launch when it's actually relevant.
 function clearAllReferenceMaterial() {
   if (!referenceDocs.length) { toast('Nothing to clear'); return; }
-  if (!confirm(`Clear ALL ${referenceDocs.length} reference document${referenceDocs.length === 1 ? '' : 's'}? This wipes the field but does not affect past rounds.`)) return;
-  referenceDocs = [];
-  renderReferenceCards();
-  updateRefGrandTotals();
-  saveProject();
-  consoleLog(`📚 Reference material cleared — applies to next round`, 'info');
-  toast('📚 Reference material cleared');
+  const count = referenceDocs.length;
+  const docNoun = count === 1 ? 'reference' : 'references';
+  const hasRunRounds = (typeof history !== 'undefined' && history && history.length > 0);
+  showRefConfirm({
+    title: count === 1 ? 'Clear this reference?' : `Clear all ${count} ${docNoun}?`,
+    body: hasRunRounds
+      ? `This removes ${count === 1 ? 'the reference' : `all ${count} reference documents`}. Past rounds keep their original snapshot — only the next round forward is affected.`
+      : `This removes ${count === 1 ? 'the reference' : `all ${count} reference documents`}. You can re-add them anytime.`,
+    okLabel: count === 1 ? '🗑️ Remove' : `🗑️ Clear all ${count}`,
+    onConfirm: () => {
+      referenceDocs = [];
+      renderReferenceCards();
+      updateRefGrandTotals();
+      saveProject();
+      consoleLog(`📚 Reference material cleared — applies to next round`, 'info');
+      toast('📚 Reference material cleared');
+    }
+  });
 }
 
 // Copy ALL reference material (concatenated with section headers) to clipboard.
