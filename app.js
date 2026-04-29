@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-014
+//  Build: 20260429-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -503,7 +503,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-014';         // build stamp — update each session
+const BUILD       = '20260429-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2568,29 +2568,16 @@ function saveKeyForAI(id, val, inputEl) {
   saveSettings();
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
-  if (val.trim() && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length)) {
-    // v3.26.0/v3.26.2: fetch models AND ask the provider which model is best.
-    // For providers without /v1/models (like Perplexity), recommendForDefault
-    // falls back to MODEL_FALLBACKS as the candidate list.
-    // Falls back silently to whatever model was already configured if the
-    // recommend call fails (network, malformed reply, hallucinated id, etc.).
-    toast(`🔑 ${ai.name} key saved · checking best model…`, 2500);
-    (async () => {
-      const result = await recommendForDefault(ai.provider);
-      if (result?.model && result.model !== cfg.model) {
-        cfg.model = result.model;
-        saveSettings();
-        renderAIRow(id);
-        const cachedTag = result.cached ? ' (cached)' : '';
-        toast(`✨ ${ai.name}: ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 6000);
-      } else {
-        renderAIRow(id);
-      }
-    })();
-  } else {
-    renderAIRow(id);
-    toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
-  }
+  // v3.26.6: NO LONGER auto-fires recommend pipeline on key save. Auto-fire
+  // race-condition'd with the user's natural verification flow (paste → click
+  // eyeball to verify → hit Test → optionally hit Recommend). The renderAIRow
+  // re-render that followed the recommend would destroy the eyeball mid-click
+  // and re-mount the row in a different state. Recommend is now manual-only
+  // via the per-row 🤖 button on the model dropdown row. Startup migration
+  // (migrateRecommendOnStartup, runs once 1.5s after load) still keeps users
+  // current without active interference.
+  renderAIRow(id);
+  toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
 }
 
 function renderAIRow(id) {

@@ -2,6 +2,32 @@
 
 ---
 
+## v3.26.6 Pro — Build `20260429-015`
+**Released:** April 29, 2026
+
+**Stop auto-firing recommend on key save.** UX testing exposed a real interaction problem: when you paste a key and hit Enter, three things kicked off simultaneously — focus blurred, "checking best model…" toast appeared, recommend pipeline ran async, then `renderAIRow` rebuilt the row HTML mid-interaction. Trying to click the eyeball to verify the pasted key was effectively a race against the row tearing itself down.
+
+### What changed
+
+`saveKeyForAI` no longer fires `recommendForDefault` after a key save. Just save the key, render the row once, show a clean `🔑 X key saved` toast. Done.
+
+### What you can still do
+
+- **🤖 Recommend button** on every default-AI row (sits next to the model dropdown) — manual trigger any time
+- **Silent first-load migration** runs 1.5s after page load for any keyed default AI without a cached recommendation. Doesn't block any active interaction since it fires before users typically engage with the form.
+
+### Why this is the right call
+
+The principle: **automation that interrupts active user interaction creates more problems than it solves.** The eyeball verification flow (paste → eyeball → confirm → save) is fundamental UX. Anything that runs async during that flow and triggers DOM re-renders breaks it. Manual buttons preserve user agency and predictable timing.
+
+The recommend pipeline architecture is unchanged — only its trigger point moved from "automatic on key save" to "manual on button click."
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-015` and `3.26.6`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.5 Pro — Build `20260429-014`
 **Released:** April 29, 2026
 
