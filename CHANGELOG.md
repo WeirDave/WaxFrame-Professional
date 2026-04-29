@@ -2,6 +2,35 @@
 
 ---
 
+## v3.27.2 Pro — Build `20260429-021`
+**Released:** April 29, 2026
+
+**Critical regression fix from v3.27.1.** The custom-AI dropdown disappeared entirely after add. Plus the button-text consistency pass.
+
+### Critical: Custom AI dropdown rendered empty after add
+
+`getModelsForProvider(provider)` reads from `waxframe_models_${provider}` localStorage. For default 6, `fetchModelsForProvider` populates that cache. For custom AIs, NOTHING was writing to that cache at add time. v3.27.1 added a write inside `recheckModelForAI`'s custom path — but that only fires when the user clicks Recommend.
+
+So the gap: between add and first Recommend click, `buildModelSelector` got an empty model list and returned `''` — the dropdown didn't render AT ALL, which also meant the Recommend button didn't render. Custom AI rows showed input + Test button, then nothing where the dropdown belonged.
+
+Fix: `addCustomAI` now persists the modal's fetched model list (the one populated by Fetch Models) to `waxframe_models_${id}` on add. The dropdown renders immediately post-add with the same model list the user just selected from. Clicking Recommend then refreshes that list with a live fetch (existing v3.27.1 behavior, unchanged).
+
+### Button text consistency
+
+| Was | Now |
+|---|---|
+| `Have AI Recommend` (Worker Bee row) | `Recommend a Model` |
+| `🤖 Recommend a model` (Add modal Basic button) | `Recommend a Model` |
+| `🤖 Asking…` (loading state, both places) | `Asking…` |
+
+The 🤖 emoji is gone from button labels. Toast messages keep their emoji flair (transient, not chrome).
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-021` and `3.27.2`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.27.1 Pro — Build `20260429-020`
 **Released:** April 29, 2026
 
