@@ -2,6 +2,88 @@
 
 ---
 
+## v3.25.0 Pro — Build `20260429-001`
+**Released:** April 29, 2026
+
+**Unified file ingestion + Excel support + full-fidelity extraction.** The biggest restructuring of file handling since the original PDF support landed. Four self-hosted libraries replace the CDN dependencies that broke air-gap deployments. All four extractors (PDF, DOCX, PPTX, plus the new XLSX) rewritten to capture the maximum recoverable content from each format — not just raw text. The Starting Document handler and the Reference Material handler now share a single `extractFromFile` core, eliminating ~70% of the previous duplication. Vision provider list expanded from {ChatGPT, Gemini} to {ChatGPT, Claude, Gemini, Grok} for OCR routing.
+
+### New: Excel workbook ingestion (.xlsx, .xlsm)
+
+- **SheetJS Community Edition full build** (~950KB, Apache 2.0) self-hosted in `/lib/`. The full build (not the mini build) is required because the higher-fidelity bar needs access to merged-cell metadata, cell comments, defined names, and per-sheet hidden-state flags.
+- **Sheet picker modal** appears for workbooks with 2+ visible sheets. Each row shows the sheet name, cell count, and an estimated token count so users can make informed selections before ingesting. Hidden sheets are surfaced via count and name list with no option to include — `Workbook.Sheets[].Hidden` flag is respected.
+- **Mode-aware behavior** — Reference Material upload uses `multi` mode where each selected sheet becomes its own independent ref doc with its own card, name, and token chip (leverages the v3.24.0 multi-doc architecture). Starting Document upload uses `single` mode where selected sheets concatenate into one combined doc with `## Sheet:` H2 dividers.
+- **Conversion fidelity** — formulas evaluated to displayed values via `raw: false` (preserves `$1,250.00`, `15%`, formatted dates), merged cells flattened by repeating the top-left value across the merge span, leading/trailing empty rows and columns trimmed aggressively, cell comments captured as a per-sheet footer section, and workbook-level defined names surfaced as a glossary header.
+- **Provenance line** — every Excel-derived doc starts with an italic note describing what was preserved and what was skipped (formulas evaluated, merged cells flattened, hidden sheets skipped, cell formatting/colors not preserved). Visible to both the user (in the doc card) and the hive (in the prompt envelope) so AIs know they're looking at a flattened representation.
+- **Wide-sheet warning** — sheets with >15 columns prepend a warning that markdown table comprehension by AIs may degrade past that width. No hard cap; respects the project's "no caps" stance while preventing silent quality issues.
+
+### Self-hosted libraries — air-gap support
+
+The four file-format libraries previously lazy-loaded from `cdnjs.cloudflare.com` are now self-hosted in `/lib/` and boot-loaded via `<script src>` tags in `index.html`. Total ~3.1MB added to first-load:
+- `lib/pdf.min.js` + `lib/pdf.worker.min.js` (PDF.js 3.11.174, Apache 2.0)
+- `lib/mammoth.browser.min.js` (Mammoth 1.6.0, BSD-2-Clause)
+- `lib/jszip.min.js` (JSZip 3.10.1, MIT)
+- `lib/xlsx.full.min.js` (SheetJS CE 0.20.3, Apache 2.0)
+
+Defense-network and other air-gapped deployments now work end-to-end with no CDN reach-back. Boot-load (vs. lazy) means every subsequent file import is instant — no first-import latency. The PDF.js worker is configured to load from `lib/pdf.worker.min.js` once per session via `window.pdfjsLib.GlobalWorkerOptions.workerSrc`.
+
+### PDF — full-fidelity extraction
+
+Previously: position-aware text + scanned-PDF vision fallback. Now adds:
+- **Document outline (TOC)** via `pdf.getOutline()` — heading hierarchy is no longer lost. Rendered as a `## Document Outline` section at the top of the extracted text with bullet indentation reflecting nesting depth.
+- **Form field values** via `pdf.getFieldObjects()` — fillable PDFs (AcroForm) had their field values silently dropped before. Now appended as a `## Form Fields` section listing each named field and its current value.
+- **Annotations** via `page.getAnnotations()` — sticky notes, highlights with comments, and other text annotations are inlined as `[Note on page N (subtype): contents]` markers at the page where they appear.
+- **Table detection and conversion** — contiguous spans of 3+ lines with consistent column X-positions are detected as tables and emitted as markdown tables instead of being collapsed into space-separated text. Column tolerance ±6 units; minimum 2 columns to qualify.
+- **Heuristic OCR pass for sparse pages** — pages with <200 chars of extracted text in an otherwise text-rich document are rendered to JPEG and OCR'd via the user's vision-capable AI. Catches the common "screenshot of a table embedded in an otherwise text PDF" case that previously dropped silently. Additive — original text is preserved, OCR'd content appended as `## OCR Pass (sparse pages: N, M)`. Skipped with a warning if no vision AI is available.
+
+### DOCX — full-fidelity extraction
+
+Switched from `mammoth.extractRawText` (which dropped all structure) to `mammoth.convertToMarkdown` which preserves headings, lists, tables, bold/italic. Then JSZip-based direct XML parsing adds:
+- **Comments** from `word/comments.xml` — author + comment text per entry, appended as `## Comments`
+- **Footnotes** from `word/footnotes.xml` — numbered, with built-in separator/continuation pseudo-footnotes filtered out, appended as `## Footnotes`
+- **Endnotes** from `word/endnotes.xml` — same treatment as footnotes, appended as `## Endnotes`
+- **Headers and footers** from `word/header*.xml` / `word/footer*.xml` — deduplicated (boilerplate appears once), appended as `## Headers & Footers`
+- **Text boxes** from `<w:txbxContent>` in `word/document.xml` — Mammoth flagged but didn't extract these; now captured directly, appended as `## Text Boxes`
+- **Track-change handling** — `<w:ins>` content is preserved (treats inserted text as accepted), `<w:del>` content is dropped (treats deletions as accepted). Matches typical reading intent for documents shared mid-review.
+
+### PPTX — full-fidelity extraction
+
+Replaced the fragile `<a:t[^>]*>([^<]*)</a:t>` regex with a proper `DOMParser` walk. Adds:
+- **Speaker notes** from `ppt/notesSlides/notesSlide{N}.xml` — captured per slide and rendered as `**Speaker notes:** ...` directly under the slide section. Auto-generated slide-number placeholders are filtered out. For decks where the substantive content lives in notes (common in technical and sales decks), this is the difference between a useful import and a useless one.
+- **Title vs. body separation** — placeholder type `title` and `ctrTitle` are detected and the title text becomes the slide section heading (`## Slide N: Title`) instead of getting lost in the body content stream.
+- **Embedded tables** — `<a:tbl>` blocks are converted to markdown tables instead of being flattened to space-separated runs. Column count taken from the first row; pipe characters in cell content are escaped.
+- **SmartArt diagrams** — text content from `ppt/diagrams/data*.xml` `<dgm:pt>` nodes is captured and appended as `## SmartArt Diagrams`.
+- **Chart data labels** — chart titles, category labels, and series names from `ppt/charts/chart*.xml` are extracted and appended as `## Charts`.
+
+### Vision provider expansion
+
+The OCR routing previously hardcoded `['chatgpt', 'gemini']` even though Claude has supported vision since Claude 3 (early 2024) and Grok has supported it across the 2.x and 4.x lines. Now the `VISION_PROVIDERS` list is `['chatgpt', 'claude', 'gemini', 'grok']` and `runVisionTranscription` has per-provider request bodies for each:
+- **ChatGPT** — GPT-4o via `/v1/chat/completions` with `image_url` content blocks.
+- **Claude** — current Builder model (Sonnet/Opus 4 family) via the WaxFrame proxy with `image` source/base64 content blocks. Required for users whose only vision-capable key is Anthropic.
+- **Gemini** — current Builder model (1.5+) via `:generateContent` with `inline_data` parts.
+- **Grok** — current Builder model via OpenAI-compatible `/v1/chat/completions` with `image_url` content blocks (xAI mirrors the OpenAI shape).
+
+A new `getVisionCapableAI()` helper centralizes the lookup logic; both initial PDF OCR and the work-screen Re-extract button use it. Users with a Claude or Grok key but no ChatGPT/Gemini key can now use vision OCR — previously they were stuck with garbled text and a misleading "add a ChatGPT or Gemini key" warning.
+
+### Architectural consolidation
+
+- **`extractFromFile(file, options)`** — single shared core that knows nothing about UI. Sniffs extension, dispatches to the appropriate extractor, returns `Array<{text, warnings, sourceType, suggestedName}>`. Single-result extractors (txt, md, pdf, docx, pptx) return one-element arrays for symmetry; XLSX may return N elements (one per selected sheet in `multi` mode).
+- **`processFile`** (Starting Document) and **`processRefFile`** (Reference Material) collapsed to thin UI wrappers around `extractFromFile`. Each handles its own status pill, doc-array vs. docText assignment, and save logic — but the entire extension-routing / extractor-dispatch / warning-aggregation block is shared.
+- **Backward compatibility** — return shape and warning semantics for all existing call sites are preserved. No history-format change. No backup-format change. No prompt-envelope change.
+
+### File `.accept` extension
+
+Both file inputs (`#fileInput` and `#refFileInput`) extend `accept` from `.docx,.pdf,.pptx,.txt,.md` to `.docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm`. Drop-zone copy unchanged.
+
+### User manual
+
+Setup 5 file-format paragraph rewritten to explicitly enumerate what each format extracts and what's deliberately skipped. Setup 4 Reference Material paragraph adds Excel mention. Sets correct expectations and serves as the canonical reference for the deficiencies disclosure.
+
+### Build-stamp sweep
+
+All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=` and `version.js?v=` cache-busts swept to `20260429-001` / `3.25.0`.
+
+---
+
 ## v3.24.1 Pro — Build `20260428-008`
 **Released:** April 28, 2026
 
