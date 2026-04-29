@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-011
+//  Build: 20260429-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -321,7 +321,7 @@ function getModelsForProvider(provider) {
   return MODEL_FALLBACKS[provider] || [];
 }
 
-function buildModelSelector(aiId, provider, currentModel) {
+function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
   const options = models.map(m => {
@@ -334,11 +334,20 @@ function buildModelSelector(aiId, provider, currentModel) {
   const noteHtml = labelInfo?.note
     ? `<span class="model-select-note">${esc(labelInfo.note)}</span>`
     : '';
+  // v3.26.3: 🤖 Recommend button moved here from the key row. Conceptually
+  // it belongs WITH the model dropdown (it changes which model is selected),
+  // not next to the Test button (which validates the API key). Rename from
+  // "Recheck" to "Recommend" to match the Custom AI flow language and avoid
+  // confusion with key Test action.
+  const recheckBtn = showRecheck
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's API which of its models is best for WaxFrame">🤖 Recommend</button>`
+    : '';
   return `<div class="model-select-wrap">
     <select class="model-select" id="modelsel-${aiId}"
       onchange="saveModelForAI('${aiId}', this.value)">
       ${options}
     </select>
+    ${recheckBtn}
     ${noteHtml}
   </div>`;
 }
@@ -433,7 +442,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-011';         // build stamp — update each session
+const BUILD       = '20260429-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2387,7 +2396,8 @@ function renderAISetupGrid() {
     const key = cfg?._key || '';
     const hasKey = !!key;
     const consoleUrl = ai.apiConsole || '#';
-    const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '') : '';
+    const showRecheck = hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length);
+    const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
     // Defaults get a Hide button; custom AIs get the 🗑 remove button
     const actionBtn = isCustom
       ? `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`
@@ -2414,7 +2424,6 @@ function renderAISetupGrid() {
         <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
         ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
         ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
-        ${hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
       </div>
       ${modelSelector}
     </div>`;
@@ -2526,14 +2535,14 @@ function renderAIRow(id) {
     <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
     ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
     ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test connection">Test</button>` : ''}
-    ${hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
     <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
     <button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>
   `;
   // Insert/update model selector after key-wrap (its own full-width row)
   let modelSelWrap = rowEl.querySelector('.model-select-wrap');
   if (hasKey) {
-    const modelSel = buildModelSelector(ai.id, ai.provider, cfg?.model || '');
+    const showRecheck = !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length);
+    const modelSel = buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck);
     if (modelSelWrap) {
       modelSelWrap.outerHTML = modelSel;
     } else {
@@ -3274,8 +3283,11 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
       body = JSON.stringify({ model: askingModel, max_tokens: 300, messages: [{ role: 'user', content: prompt }] });
     } else if (format === 'google') {
-      url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent?key=${encodeURIComponent(key)}`;
-      headers = { 'Content-Type': 'application/json' };
+      // v3.26.3: use header-based auth (x-goog-api-key) instead of query-string
+      // ?key= — matches the production review flow's auth method, more robust
+      // against tier behavior differences and CORS quirks.
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent`;
+      headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
       body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
     } else {
       url = endpoint;
@@ -3285,7 +3297,13 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     }
 
     const resp = await fetch(url, { method: 'POST', headers, body });
-    if (!resp.ok) return null;
+    if (!resp.ok) {
+      // v3.26.3: log status + body so user can diagnose 4xx/5xx without guessing
+      let errBody = '';
+      try { errBody = await resp.text(); } catch(e) {}
+      console.warn(`[recommend] HTTP ${resp.status} ${resp.statusText} from ${url.split('?')[0]} — body:`, errBody.slice(0, 500));
+      return null;
+    }
     const data = await resp.json();
 
     let text = '';
@@ -3358,8 +3376,11 @@ async function recommendForDefault(provider) {
 }
 
 // v3.26.1 — manual recheck button handler for default-AI rows. Sits next to
-// the Test button, fires the recommend pipeline force-fresh (cache cleared
-// first so user gets a current answer rather than a 24h-old cached one).
+// the model dropdown (moved from the key row in v3.26.3 to disambiguate from
+// the Test button). Fires the recommend pipeline force-fresh — both the
+// recommendation cache AND the models cache are cleared so the user gets
+// truly current data, not stale 7-day-cached lists.
+//
 // This is the migration path for users whose keys were saved before v3.26.0
 // shipped — saveKeyForAI never fired for them, so they're still on the
 // hardcoded MODEL_LABELS picks.
@@ -3369,29 +3390,51 @@ async function recheckModelForAI(id) {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg?._key) { toast(`⚠️ ${ai.name} has no API key`); return; }
 
-  // Force-fresh: clear the cache for this provider so the user gets a current
-  // answer, not whatever was cached last time
-  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) {}
+  // v3.26.3: force-fresh BOTH caches so the user gets a current answer.
+  // Clearing only the recommendation cache (v3.26.1 behavior) wasn't enough
+  // because fetchModelsForProvider has its own 7-day cache that can keep
+  // returning a stale candidate list.
+  try {
+    localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`);
+    localStorage.removeItem(`waxframe_models_${ai.provider}`);
+  } catch(e) {}
 
   const btn = document.getElementById(`recheckbtn-${id}`);
   const origLabel = btn ? btn.innerHTML : null;
-  if (btn) { btn.disabled = true; btn.innerHTML = '…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = '🤖 Asking…'; }
 
   toast(`🤖 ${ai.name}: asking for best model…`, 3000);
+  const previousModel = cfg.model;
   const result = await recommendForDefault(ai.provider);
 
   if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
 
-  if (result?.model) {
-    if (result.model !== cfg.model) {
-      cfg.model = result.model;
-      saveSettings();
-    }
-    renderAIRow(id);
-    toast(`✨ ${ai.name}: ${result.model}${result.why ? ' — ' + result.why : ''}`, 6000);
-  } else {
-    toast(`⚠️ ${ai.name}: couldn't get a recommendation — model unchanged. Check console for details.`);
+  // v3.26.3: always log to console with full context so DevTools tells the
+  // story unambiguously — even when the user thinks "nothing happened" the
+  // console will say exactly what did or didn't happen.
+  console.info(`[recheck] ${ai.name}:`, {
+    previous: previousModel,
+    result,
+    cleared: ['recommend cache', 'models cache']
+  });
+
+  if (!result?.model) {
+    toast(`⚠️ ${ai.name}: couldn't get a recommendation — model unchanged. Open DevTools console for the raw response.`, 6000);
+    return;
   }
+
+  if (result.model === previousModel) {
+    // v3.26.3: differentiated success toast — call DID succeed, the AI just
+    // confirmed the existing model. Without this users see the dropdown not
+    // change and assume the call failed.
+    toast(`✓ ${ai.name}: ${result.model} — already the recommended pick${result.why ? '. ' + result.why : ''}`, 6000);
+    return;
+  }
+
+  cfg.model = result.model;
+  saveSettings();
+  renderAIRow(id);
+  toast(`✨ ${ai.name}: switched to ${result.model}${result.why ? ' — ' + result.why : ''}`, 6000);
 }
 
 // v3.26.1 — first-load migration. Runs ONCE per session after the hive is

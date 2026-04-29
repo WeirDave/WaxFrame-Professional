@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-011
+   Build: 20260429-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2678,15 +2678,18 @@ html, body {
 [data-theme="dark"] .custom-ai-flow-badge--basic    { color: #58d68d; }
 [data-theme="dark"] .custom-ai-flow-badge--advanced { color: #c39bd3; }
 
-/* v3.26.1 — per-row Recheck Model button on default-AI rows. Sits next to
-   the Test button. Only visible when the AI has a saved key. Compact, same
-   sizing as Test, glow on hover. */
+/* v3.26.1 / v3.26.3 — per-row 🤖 Recommend button on default-AI rows.
+   v3.26.3 moved this from the key row down to the model selector row so
+   it sits next to the dropdown it actually changes (was confusable with
+   the Test button when colocated). Flex-shrink-0 so it never collapses
+   when the dropdown is wide. */
 .ai-recheck-btn {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex-shrink: 0;
   font-size: 12px;
-  padding: 4px 8px;
+  padding: 4px 10px;
   background: rgba(155, 89, 182, 0.14);
   color: var(--accent);
   border: 1px solid rgba(155, 89, 182, 0.28);

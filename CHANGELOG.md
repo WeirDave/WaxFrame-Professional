@@ -2,6 +2,49 @@
 
 ---
 
+## v3.26.3 Pro — Build `20260429-012`
+**Released:** April 29, 2026
+
+**Recheck UX cleanup + Gemini auth fix + better diagnostics.** v3.26.1/v3.26.2 left two real problems: the Recheck button looked identical to the Test button (different action, same visual treatment, easy to confuse), and Gemini recheck calls were silently failing because the recommend pipeline used query-string auth that didn't always match the production review flow's behavior.
+
+### Recheck button moved + renamed
+
+The button moved from the API key row down to the model selector row — where it actually belongs conceptually. Test validates the API key, the new button changes which model is selected. Putting them on the same row was visually confusing.
+
+Renamed from **🤖 Recheck** to **🤖 Recommend** to match the Custom AI flow's language. Same word, same emoji, same intent. Tooltip updated to "Ask the provider's API which of its models is best for WaxFrame."
+
+### Gemini auth — switched to x-goog-api-key header
+
+The recommend pipeline was using `?key=KEY` query-string auth for Google. The production review flow uses `x-goog-api-key` header auth. These behave differently across API tiers and have different CORS implications. v3.26.3 switches the recommend call to use the header method, matching production exactly.
+
+This is the most likely root cause of David's "Gemini Recheck does nothing" report. If a regression remains, the new diagnostics (below) will surface the actual HTTP status.
+
+### Force-fresh BOTH caches on Recheck
+
+Previously Recheck cleared only the recommendation cache (`waxframe_recommend_default-{provider}`) but left the models cache (`waxframe_models_{provider}`, 7-day TTL) alone. If the models cache was stale, the candidate list passed to the recommend call was stale too. v3.26.3 clears both so Recheck always sends fresh data.
+
+### Differentiated outcome toasts
+
+Recheck now distinguishes three outcomes instead of two:
+
+| Outcome | Toast |
+|---|---|
+| Model changed | `✨ ChatGPT: switched to gpt-X — <why>` |
+| Same model returned | `✓ ChatGPT: gpt-X — already the recommended pick. <why>` |
+| Failed | `⚠️ ChatGPT: couldn't get a recommendation — model unchanged. Open DevTools console for the raw response.` |
+
+Without the "already the recommended pick" path, users seeing no dropdown change would assume the call failed. Now success without change is its own clear state.
+
+### Always-log diagnostics
+
+Every Recheck completion now writes a structured `console.info('[recheck] <name>:', { previous, result, cleared })` line. Plus on HTTP failure: `console.warn('[recommend] HTTP <status> <statusText> from <url> — body: <first 500 chars>')`. DevTools tells the full story unambiguously.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-012` and `3.26.3`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.2 Pro — Build `20260429-011`
 **Released:** April 29, 2026
 
