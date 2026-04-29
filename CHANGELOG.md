@@ -2,6 +2,23 @@
 
 ---
 
+## v3.24.1 Pro — Build `20260428-008`
+**Released:** April 28, 2026
+
+**Setup 4 mascot — Reference Bee.** Setup 4 (Reference Material) was the only Setup screen without a mascot in its section header. This release adds the Reference Bee (`WaxFrame_Reference_Bee_v1.png`) to the H1 row, mirroring the Worker Bee on Setup 1, the Project Bee on Setup 2 and Setup 3, and the Project Bee on Setup 5. With v3.24.0's multi-document upgrade, Reference Material is now a first-class concept that earns its own mascot identity rather than living under the generic "no bee" `is-bare` header variant. No behavioral change; visual consistency across the Setup flow.
+
+### Setup 4 H1 — Reference Bee added
+
+- **Markup change** — the `.hp-section-header` on Setup 4 (Reference Material) loses the `is-bare` modifier and gains an `<img class="hp-section-bee">` referencing `WaxFrame_Reference_Bee_v1.png`. Same structural pattern as Setup 1, 2, 3, and 5.
+- **No new CSS needed** — `.hp-section-bee` and `.hp-section-header` (without `is-bare`) styles already exist from prior Setup screens. The bee size, gap, and alignment match the other Setup screens automatically.
+- **Asset prerequisite** — `images/WaxFrame_Reference_Bee_v1.png` must be present in the repo `images/` folder. Filename matches the Reference Bee asset Kai or the design pipeline produced.
+
+### Build-stamp sweep
+
+- All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=` and `version.js?v=` cache-busts swept to `20260428-008` / `3.24.1`.
+
+---
+
 ## v3.24.0 Pro — Build `20260428-007`
 **Released:** April 28, 2026
 
