@@ -2,6 +2,31 @@
 
 ---
 
+## v3.26.2 Pro — Build `20260429-011`
+**Released:** April 29, 2026
+
+**Recommend pipeline now includes Perplexity.** v3.26.1 migration ran clean for ChatGPT, Claude, DeepSeek, Gemini, and Grok — but skipped Perplexity entirely because Perplexity's API doesn't expose a `/v1/models` endpoint. The recheck button also wasn't drawn for Perplexity rows.
+
+### Root cause
+
+Three places in v3.26.1 gated on `MODEL_FILTERS[provider] !== null` to decide whether to run the recommend pipeline. Perplexity has `MODEL_FILTERS.perplexity = null` because it lacks a dynamic models endpoint. Result: Perplexity was excluded from migration, recheck button rendering, and key-save recommend trigger.
+
+### The fix
+
+Perplexity has chat completions just fine — it just doesn't have a list-models endpoint. Since we already maintain a hardcoded `MODEL_FALLBACKS.perplexity` list (`sonar-pro`, `sonar-reasoning-pro`, `sonar-reasoning`, `sonar-deep-research`, `sonar`), we can feed that list as the candidate set and let Perplexity itself pick which one is best.
+
+`recommendForDefault` now falls back to `MODEL_FALLBACKS[provider]` when `fetchModelsForProvider` returns null. Three gating sites — both `renderAIRow` paths, `migrateRecommendOnStartup`, and `saveKeyForAI` — relaxed from `MODEL_FILTERS !== null` to `(MODEL_FILTERS !== null || MODEL_FALLBACKS?.length > 0)`. Any provider with either a dynamic endpoint or a hardcoded fallback list now participates.
+
+### What you'll see
+
+After upgrading, Perplexity's row gets a 🤖 Recheck button next to Test like the other 5 defaults. The first-load migration won't re-fire (it's once-per-session and already ran), so to migrate Perplexity right away, click Recheck on its row. Future page loads will include Perplexity in the migration pass automatically.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-011` and `3.26.2`. Comment-header build stamps in `app.js` and `style.css` synced. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.1 Pro — Build `20260429-010`
 **Released:** April 29, 2026
 
