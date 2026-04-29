@@ -7729,6 +7729,16 @@ kbd {
 .ref-counter-info {
   margin-left: auto;
 }
+.ref-clear-all-btn {
+  font-size: 11px !important;
+  padding: 4px 10px !important;
+  color: var(--text-dim);
+  border-color: var(--border2);
+}
+.ref-clear-all-btn:hover {
+  color: var(--warn, #fbbf24);
+  border-color: var(--warn, #fbbf24);
+}
 
 /* ── Reference Material — multi-document cards (v3.24.0) ── */
 .ref-doc-count-chip {

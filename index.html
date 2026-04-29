@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-003
+     Build: 20260429-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-003">
+  <meta name="waxframe-build" content="20260429-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.25.2">
+  <link rel="stylesheet" href="style.css?v=3.25.3">
 </head>
 <body>
 
@@ -360,6 +360,7 @@
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span id="refCountWords">0</span></span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span id="refCountTokens">0</span></span>
           <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
+          <button class="btn btn-sm ref-clear-all-btn is-hidden" id="refClearAllSetup" onclick="clearAllReferenceMaterial()" title="Remove all reference documents">✕ Clear All</button>
         </div>
 
         <div class="ref-soft-warning is-hidden" id="refSoftWarning">
@@ -398,7 +399,7 @@
       <div class="fs-footer-spacer"></div>
       <div class="launch-requirements">
         <span class="launch-req-title">Reference material is optional</span>
-        <span class="launch-req-item ref-optional-hint">Skip this step if your project does not need source material to cite against.</span>
+        <span class="launch-req-item ref-optional-hint">Skip this step if your project has no source material for The Hive to reference.</span>
       </div>
       <button class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
@@ -728,7 +729,7 @@
 <div class="notes-drawer ref-drawer" id="referenceMaterialDrawer">
   <div class="notes-drawer-hdr">
     <span class="notes-drawer-title">📚 Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-    <span class="notes-drawer-sub">Source material the hive cites against every round but never edits. Edits apply to the next round.</span>
+    <span class="notes-drawer-sub">Source material The Hive will reference on every round but never edit. Edits apply to the next round.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyReferenceMaterial()">📋 Copy All</button>
       <button class="btn" onclick="clearAllReferenceMaterial()">✕ Clear All</button>
@@ -1087,6 +1088,20 @@
      in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
      looked jarring against the WaxFrame aesthetic. Opened by openDiscardConfirm()
      which also fires playAlertSound(). -->
+<!-- REFERENCE MATERIAL CONFIRMATION MODAL (v3.25.3) — replaces native confirm() dialogs for per-doc remove and clear-all actions on Setup 4 and the work-screen drawer -->
+<div class="finish-modal-overlay" id="refConfirmModal" onclick="if(event.target===this)closeRefConfirmModal()">
+  <div class="finish-modal round-error-modal">
+    <h2 class="finish-modal-title round-error-title" id="refConfirmTitle">Remove this reference?</h2>
+    <div class="round-error-body">
+      <p class="round-error-msg" id="refConfirmBody"></p>
+    </div>
+    <div class="round-error-actions">
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="closeRefConfirmModal()">← Cancel</button>
+      <button class="finish-modal-btn finish-modal-btn-new" id="refConfirmOkBtn" onclick="executeRefConfirm()">🗑️ Remove</button>
+    </div>
+  </div>
+</div>
+
 <!-- SHEET PICKER MODAL (v3.25.0) — appears when an .xlsx workbook with multiple visible sheets is uploaded -->
 <div class="finish-modal-overlay" id="sheetPickerModal">
   <div class="finish-modal sheet-picker-modal">
@@ -1641,12 +1656,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.25.2"></script>
-<script src="lib/mammoth.browser.min.js?v=3.25.2"></script>
-<script src="lib/jszip.min.js?v=3.25.2"></script>
-<script src="lib/xlsx.full.min.js?v=3.25.2"></script>
-<script src="version.js?v=3.25.2"></script>
-<script src="app.js?v=3.25.2"></script>
+<script src="lib/pdf.min.js?v=3.25.3"></script>
+<script src="lib/mammoth.browser.min.js?v=3.25.3"></script>
+<script src="lib/jszip.min.js?v=3.25.3"></script>
+<script src="lib/xlsx.full.min.js?v=3.25.3"></script>
+<script src="version.js?v=3.25.3"></script>
+<script src="app.js?v=3.25.3"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
