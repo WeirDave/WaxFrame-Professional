@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-009
+     Build: 20260429-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-009">
+  <meta name="waxframe-build" content="20260429-010">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.26.0">
+  <link rel="stylesheet" href="style.css?v=3.26.1">
 </head>
 <body>
 
@@ -815,8 +815,10 @@
           <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest" oninput="resetCustomAITest()">
           <select id="customAIModelSelect" class="custom-ai-select" style="display:none;" onchange="resetCustomAITest()"></select>
           <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
-          <button class="btn btn-sm custom-ai-recommend-btn" id="customAIRecommendBtn" type="button" onclick="recommendCustomAIModel()" title="Ask the provider's API which model is best for WaxFrame"><span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>🤖 Recommend</button>
-          <a id="customAIChooseModelLink" class="custom-ai-choose-model-link" href="#" target="_blank" rel="noopener noreferrer" title="Open this provider's model catalog in a new tab"><span class="custom-ai-flow-badge custom-ai-flow-badge--advanced">advanced</span>Help me choose →</a>
+        </div>
+        <div class="custom-ai-model-aids" id="customAIModelAids">
+          <button class="btn btn-sm custom-ai-recommend-btn" id="customAIRecommendBtn" type="button" onclick="recommendCustomAIModel()" title="Ask the provider's API which model is best for WaxFrame"><span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>🤖 Recommend a model</button>
+          <a id="customAIChooseModelLink" class="custom-ai-choose-model-link" href="#" target="_blank" rel="noopener noreferrer" title="Open this provider's model catalog in a new browser tab"><span class="custom-ai-flow-badge custom-ai-flow-badge--advanced">advanced</span>↗ Browse models on website</a>
         </div>
       </div>
     </div>
@@ -1729,12 +1731,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.26.0"></script>
-<script src="lib/mammoth.browser.min.js?v=3.26.0"></script>
-<script src="lib/jszip.min.js?v=3.26.0"></script>
-<script src="lib/xlsx.full.min.js?v=3.26.0"></script>
-<script src="version.js?v=3.26.0"></script>
-<script src="app.js?v=3.26.0"></script>
+<script src="lib/pdf.min.js?v=3.26.1"></script>
+<script src="lib/mammoth.browser.min.js?v=3.26.1"></script>
+<script src="lib/jszip.min.js?v=3.26.1"></script>
+<script src="lib/xlsx.full.min.js?v=3.26.1"></script>
+<script src="version.js?v=3.26.1"></script>
+<script src="app.js?v=3.26.1"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

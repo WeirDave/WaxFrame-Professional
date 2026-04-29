@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-009
+//  Build: 20260429-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-009';         // build stamp — update each session
+const BUILD       = '20260429-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2414,6 +2414,7 @@ function renderAISetupGrid() {
         <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
         ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
         ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
+        ${hasKey && !isCustom && MODEL_FILTERS[ai.provider] !== null ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
       </div>
       ${modelSelector}
     </div>`;
@@ -2523,6 +2524,7 @@ function renderAIRow(id) {
     <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
     ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
     ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test connection">Test</button>` : ''}
+    ${hasKey && !isCustom && MODEL_FILTERS[ai.provider] !== null ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
     <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
     <button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>
   `;
@@ -3149,25 +3151,10 @@ function getActivePreset(currentUrl) {
   return key ? QUICK_ADD_PROVIDERS[key] : null;
 }
 
-// ── v3.25.7: "Help me choose" link toggle ──────────────────────────────────
-// Toggles visibility of the link sitting next to the Fetch Models button.
-// Visible only when the current URL matches a Quick Add preset that declares
-// a chooseModelLink. URL matched via getActivePreset(), so manually editing
-// the URL off-preset hides the link automatically — no extra state to track.
-function updateChooseModelLink() {
-  const link = document.getElementById('customAIChooseModelLink');
-  if (!link) return;
-  const url = document.getElementById('customAIUrl')?.value || '';
-  const preset = getActivePreset(url);
-  const target = preset?.chooseModelLink;
-  if (target) {
-    link.href = target;
-    link.classList.add('is-visible');
-  } else {
-    link.classList.remove('is-visible');
-    link.removeAttribute('href');
-  }
-}
+// ── v3.25.7: Custom AI decision aids — see updateModelAids() ───────────────
+// (v3.25.7 originally defined updateChooseModelLink here; v3.26.1 unified the
+// recommend + browse-models visibility into updateModelAids and converted this
+// into a thin shim. See line ~3460 for the unified implementation.)
 
 // ── v3.25.7: Quick Add preset already-in-hive markers ──────────────────────
 // Decorates the Quick Add preset dropdown options with "✓ already in your
@@ -3304,17 +3291,23 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     else                          text = data?.choices?.[0]?.message?.content || '';
 
-    if (!text) return null;
+    if (!text) {
+      console.warn('[recommend] empty response from provider:', data);
+      return null;
+    }
 
     const pickMatch = text.match(/PICK:\s*([^\n\r]+)/i);
     const whyMatch  = text.match(/WHY:\s*([^\n\r]+)/i);
-    if (!pickMatch) return null;
+    if (!pickMatch) {
+      console.warn('[recommend] no PICK line in provider response. Raw text:', text);
+      return null;
+    }
 
-    const model = pickMatch[1].trim().replace(/^[`'"]|[`'"]$/g, '');
-    const why = whyMatch ? whyMatch[1].trim() : '';
+    const model = pickMatch[1].trim().replace(/^[`'"*]|[`'"*]$/g, '');
+    const why = whyMatch ? whyMatch[1].trim().replace(/^[`'"*]|[`'"*]$/g, '') : '';
 
     if (!models.includes(model)) {
-      console.warn('[recommend] hallucinated model not in list:', model);
+      console.warn('[recommend] picked model not in fetched list. Picked:', model, 'List:', models);
       return null;
     }
 
@@ -3354,9 +3347,100 @@ async function recommendForDefault(provider) {
   });
 }
 
+// v3.26.1 — manual recheck button handler for default-AI rows. Sits next to
+// the Test button, fires the recommend pipeline force-fresh (cache cleared
+// first so user gets a current answer rather than a 24h-old cached one).
+// This is the migration path for users whose keys were saved before v3.26.0
+// shipped — saveKeyForAI never fired for them, so they're still on the
+// hardcoded MODEL_LABELS picks.
+async function recheckModelForAI(id) {
+  const ai = aiList.find(a => a.id === id);
+  if (!ai) return;
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg?._key) { toast(`⚠️ ${ai.name} has no API key`); return; }
+
+  // Force-fresh: clear the cache for this provider so the user gets a current
+  // answer, not whatever was cached last time
+  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) {}
+
+  const btn = document.getElementById(`recheckbtn-${id}`);
+  const origLabel = btn ? btn.innerHTML : null;
+  if (btn) { btn.disabled = true; btn.innerHTML = '…'; }
+
+  toast(`🤖 ${ai.name}: asking for best model…`, 3000);
+  const result = await recommendForDefault(ai.provider);
+
+  if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+
+  if (result?.model) {
+    if (result.model !== cfg.model) {
+      cfg.model = result.model;
+      saveSettings();
+    }
+    renderAIRow(id);
+    toast(`✨ ${ai.name}: ${result.model}${result.why ? ' — ' + result.why : ''}`, 6000);
+  } else {
+    toast(`⚠️ ${ai.name}: couldn't get a recommendation — model unchanged. Check console for details.`);
+  }
+}
+
+// v3.26.1 — first-load migration. Runs ONCE per session after the hive is
+// loaded. Iterates default AIs that have a saved key but no cached
+// recommendation, and silently fires recommendForDefault for each in
+// parallel. Updates the model and re-renders the row when each completes.
+//
+// This makes existing users (who had keys saved before v3.26.0 shipped) get
+// migrated to live-recommend models the next time they open the app —
+// without having to manually click 🤖 on every row.
+//
+// Silent on failure. No toast spam. Console logs only.
+async function migrateRecommendOnStartup() {
+  if (window._waxframeMigrationRan) return;
+  window._waxframeMigrationRan = true;
+
+  const candidates = aiList.filter(ai => {
+    if (!DEFAULT_AIS.find(d => d.id === ai.id)) return false; // defaults only
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg?._key) return false; // needs a key
+    if (MODEL_FILTERS[ai.provider] === null) return false; // no /v1/models endpoint
+    // Skip if we already have a cached recommendation
+    const cached = getCachedRecommendation(`default-${ai.provider}`);
+    return !cached;
+  });
+
+  if (!candidates.length) return;
+
+  console.info(`[recommend-migrate] checking ${candidates.length} default AIs for live recommendations…`);
+
+  let changed = 0;
+  await Promise.all(candidates.map(async (ai) => {
+    try {
+      const result = await recommendForDefault(ai.provider);
+      const cfg = API_CONFIGS[ai.provider];
+      if (result?.model && cfg && result.model !== cfg.model) {
+        cfg.model = result.model;
+        changed++;
+        renderAIRow(ai.id);
+        console.info(`[recommend-migrate] ${ai.name}: ${result.model} — ${result.why}`);
+      }
+    } catch(e) {
+      console.warn(`[recommend-migrate] ${ai.name} failed:`, e);
+    }
+  }));
+
+  if (changed > 0) {
+    saveSettings();
+    toast(`✨ Updated ${changed} model${changed === 1 ? '' : 's'} to current provider recommendations`, 5000);
+  } else {
+    console.info('[recommend-migrate] no model changes');
+  }
+}
+
 // Custom AI button handler — onclick of #customAIRecommendBtn.
 // Uses the currently fetched models in the dropdown to ask, autofills the
 // dropdown with the recommendation, surfaces WHY in a toast.
+// v3.26.1: more visible loading state (dropdown disabled + "Asking…" text),
+// clearer error messages, brief success highlight on the dropdown.
 async function recommendCustomAIModel() {
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
@@ -3389,9 +3473,13 @@ async function recommendCustomAIModel() {
     ? selectEl.value
     : models[0];
 
+  // Visible loading state — button + dropdown both indicate "working"
   recBtn.disabled = true;
   const origLabel = recBtn.innerHTML;
-  recBtn.innerHTML = '🤖 Asking…';
+  recBtn.innerHTML = '<span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>🤖 Asking…';
+  selectEl.disabled = true;
+
+  toast(`🤖 Asking ${askingModel} for a recommendation…`, 3000);
 
   const result = await recommendModel({
     cacheId: url.replace(/\/+$/, ''),
@@ -3404,28 +3492,63 @@ async function recommendCustomAIModel() {
 
   recBtn.disabled = false;
   recBtn.innerHTML = origLabel;
+  selectEl.disabled = false;
 
   if (result?.model) {
     selectEl.value = result.model;
     resetCustomAITest();
     const cachedTag = result.cached ? ' (cached)' : '';
-    toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 6000);
+    toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 7000);
   } else {
-    toast('⚠️ Could not get a clean recommendation — pick manually');
+    toast('⚠️ No clean recommendation — provider may not have followed the format. Pick manually or check console for details.', 6000);
   }
 }
 
-// Update the visibility of the Recommend button based on whether the
-// fetched-models dropdown is currently shown with options. Mirrors the
-// updateChooseModelLink lifecycle but tied to fetch state instead of preset.
-function updateRecommendBtn() {
-  const btn = document.getElementById('customAIRecommendBtn');
-  if (!btn) return;
+// ── v3.25.7 / v3.26.1: Custom AI decision aids (Recommend + Browse models) ──
+// Both aids only make sense AFTER Fetch Models has populated the dropdown:
+// - 🤖 Recommend has nothing to ask about until there's a model list
+// - ↗ Browse models is contextual — visible only for known Quick Add presets
+//   that declare a chooseModelLink
+// The aids row container is toggled when EITHER aid is showable, individual
+// aids are toggled by their own logic. v3.26.1 moved the aids out of the
+// model input wrap onto their own row to fix a flex-squashing bug.
+function updateModelAids() {
+  const aidsRow  = document.getElementById('customAIModelAids');
+  const recBtn   = document.getElementById('customAIRecommendBtn');
+  const link     = document.getElementById('customAIChooseModelLink');
   const selectEl = document.getElementById('customAIModelSelect');
-  const hasFetched = selectEl && selectEl.style.display !== 'none' && selectEl.options.length > 0;
-  if (hasFetched) btn.classList.add('is-visible');
-  else btn.classList.remove('is-visible');
+  if (!aidsRow || !recBtn || !link || !selectEl) return;
+
+  const hasFetched = selectEl.style.display !== 'none' && selectEl.options.length > 0;
+
+  // Recommend: shown when fetched, regardless of preset
+  if (hasFetched) recBtn.classList.add('is-visible');
+  else            recBtn.classList.remove('is-visible');
+
+  // Browse models: shown when fetched AND we have a chooseModelLink
+  const url = document.getElementById('customAIUrl')?.value || '';
+  const preset = getActivePreset(url);
+  const target = preset?.chooseModelLink;
+  if (hasFetched && target) {
+    link.href = target;
+    link.classList.add('is-visible');
+  } else {
+    link.classList.remove('is-visible');
+    link.removeAttribute('href');
+  }
+
+  // The aids row is visible if either child is visible
+  if (recBtn.classList.contains('is-visible') || link.classList.contains('is-visible')) {
+    aidsRow.classList.add('is-visible');
+  } else {
+    aidsRow.classList.remove('is-visible');
+  }
 }
+
+// Back-compat shims: older code paths still call these names; redirect to the
+// unified updater so everything stays in sync.
+function updateChooseModelLink() { updateModelAids(); }
+function updateRecommendBtn()    { updateModelAids(); }
 
 function applyQuickAdd(value) {
   resetCustomAITest();
@@ -9645,6 +9768,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
   initMuteBtn();
+
+  // v3.26.1 — silently migrate any default AI with a saved key but no
+  // cached recommendation to a live-recommend model. Runs once per session.
+  // Deferred to setTimeout so the initial UI paint isn't blocked while we
+  // hit external APIs in parallel.
+  setTimeout(() => { migrateRecommendOnStartup(); }, 1500);
 
   // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);
