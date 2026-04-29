@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260428-008';         // build stamp — update each session
+const BUILD       = '20260429-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4082,57 +4082,68 @@ function handlePasteTextInput() {
 // (removed in v3.24.0 — single-doc helper retired with multi-doc rewrite;
 //  per-card clear lives in the card actions row)
 
+// ============================================================
+//  v3.25.0 — UNIFIED FILE INGESTION
+//  Single shared core (extractFromFile) used by both the
+//  Starting Document handler and the Reference Material handler.
+//  All four extractors rewritten for full-fidelity content
+//  capture instead of "best-effort raw text".
+//  Libraries are boot-loaded via index.html — no lazy fetches.
+// ============================================================
+
+// Provider keys whose underlying models support vision input.
+// Each provider has its own request shape — see runVisionTranscription.
+const VISION_PROVIDERS = ['chatgpt', 'claude', 'gemini', 'grok'];
+
+// Find the first vision-capable AI from the user's keyed providers.
+// Returns { cfg, key, provider } or null. Used by both initial PDF OCR
+// and the work-screen re-extract button.
+function getVisionCapableAI() {
+  for (const provider of VISION_PROVIDERS) {
+    const cfg = API_CONFIGS[provider];
+    if (cfg?._key) return { cfg: { ...cfg, provider }, key: cfg._key, provider };
+  }
+  return null;
+}
+
+// ── Starting Document handler ──
+// Thin UI wrapper around extractFromFile. XLSX uses 'single' mode
+// (radio-button picker if multi-sheet) since there is only one
+// starting document.
 async function processFile(file) {
   // Guard: if a session is already running, warn before overwriting the live document
-  // Skip on Setup 4 — user is still in setup, not an active session
+  // Skip on Setup 5 — user is still in setup, not an active session
   const onSetupScreen = document.getElementById('screen-document')?.classList.contains('active');
   if (!onSetupScreen && (history.length > 0 || docText)) {
     const proceed = confirm(
-      `⚠️ You have an active session with a working document.
-
-Loading a new file will replace your current document. This cannot be undone.
-
-If you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.
-
-Proceed and replace the document?`
+      `⚠️ You have an active session with a working document.\n\nLoading a new file will replace your current document. This cannot be undone.\n\nIf you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.\n\nProceed and replace the document?`
     );
     if (!proceed) return;
   }
   const status = document.getElementById('fileStatus');
-  const ext = file.name.split('.').pop().toLowerCase();
   status.style.display = 'block';
   status.textContent = `⏳ Reading ${file.name}…`;
   setFileStatusState(status, 'loading');
 
   try {
-    let result = { text: '', warnings: [], sourceType: ext };
+    const docs = await extractFromFile(file, { xlsxMode: 'single' });
+    if (!docs || !docs.length) throw new Error('No content extracted from file');
+    const doc = docs[0]; // starting doc takes the first/only result
 
-    if (ext === 'txt' || ext === 'md') {
-      result.text = await file.text();
-    } else if (ext === 'pdf') {
-      result = await extractPDF(file);
-    } else if (ext === 'docx') {
-      result = await extractDOCX(file);
-    } else if (ext === 'pptx') {
-      result = await extractPPTX(file);
-    } else {
-      throw new Error('Unsupported file type');
-    }
-
-    docText = result.text.trim();
+    docText = (doc.text || '').trim();
     saveSession();
     try {
       localStorage.setItem('waxframe_v2_filename', file.name);
-      localStorage.setItem('waxframe_v2_source_type', result.sourceType);
+      localStorage.setItem('waxframe_v2_source_type', doc.sourceType || file.name.split('.').pop().toLowerCase());
     } catch(e) {}
 
     // Show status — green if clean, amber if warnings
-    if (result.warnings.length > 0) {
-      status.textContent = `⚠️ ${docText.length.toLocaleString()} chars from ${file.name} — ${result.warnings[0]}`;
+    const warnings = doc.warnings || [];
+    if (warnings.length > 0) {
+      status.textContent = `⚠️ ${docText.length.toLocaleString()} chars from ${file.name} — ${warnings[0]}`;
       setFileStatusState(status, 'warn');
-      // Show all warnings as stacked lines below
-      if (result.warnings.length > 1) {
-        result.warnings.slice(1).forEach(w => {
+      if (warnings.length > 1) {
+        warnings.slice(1).forEach(w => {
           const line = document.createElement('div');
           line.className = 'file-status-line';
           line.textContent = '↳ ' + w;
@@ -4148,29 +4159,157 @@ Proceed and replace the document?`
     if (clearRow) clearRow.style.display = 'block';
     updateLaunchRequirements();
   } catch(e) {
+    console.error('Starting doc extraction failed:', e);
     status.textContent = `❌ Could not read file: ${e.message}`;
     setFileStatusState(status, 'error');
   }
 }
 
+// ── Reference Material file handler ──
+// Thin UI wrapper around extractFromFile. XLSX uses 'multi' mode
+// (checkbox picker, one ref doc per selected sheet) so each sheet
+// gets its own independent card with its own token chip.
+async function processRefFile(file) {
+  // Mid-session-overwrite warning preserved from single-doc behavior.
+  // With multi-doc, adding a doc never overwrites — but the warning still
+  // educates users about which round will see the new doc.
+  const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
+  if (!onSetupScreen && history.length > 0) {
+    const proceed = confirm(`Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`);
+    if (!proceed) return;
+  }
+
+  const status = document.getElementById('refFileStatus');
+  if (status) {
+    status.style.display = 'block';
+    status.textContent = `⏳ Reading ${file.name}…`;
+    setFileStatusState(status, 'loading');
+  }
+
+  try {
+    const docs = await extractFromFile(file, { xlsxMode: 'multi' });
+    if (!docs || !docs.length) throw new Error('No content extracted from file');
+
+    let totalChars = 0;
+    const allWarnings = [];
+    for (const docResult of docs) {
+      const text = (docResult.text || '').trim();
+      if (!text) continue;
+      totalChars += text.length;
+      const newDoc = {
+        id: generateRefDocId(),
+        name: docResult.suggestedName || file.name,
+        text,
+        source: 'upload',
+        filename: file.name,
+      };
+      referenceDocs.push(newDoc);
+      if (docResult.warnings && docResult.warnings.length) {
+        allWarnings.push(...docResult.warnings);
+      }
+    }
+
+    renderReferenceCards();
+    updateRefGrandTotals();
+    saveProject();
+
+    if (status) {
+      const docCount = docs.length;
+      const docNoun = docCount === 1 ? 'doc' : 'docs';
+      const msg = allWarnings.length
+        ? `⚠️ Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) — ${allWarnings[0]}`
+        : `📚 Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) as reference material`;
+      status.textContent = msg;
+      setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
+      setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
+    }
+  } catch (e) {
+    console.error('Ref file extraction failed:', e);
+    if (status) {
+      status.textContent = `❌ Could not read ${file.name}: ${e.message}`;
+      setFileStatusState(status, 'error');
+    }
+  }
+}
+
+// ── SHARED INGESTION CORE ──
+// Returns Promise<Array<{ text, warnings, sourceType, suggestedName }>>.
+// Single-result extractors (txt/md/pdf/docx/pptx) return one-element arrays.
+// XLSX may return multiple elements (one per selected sheet in multi mode).
+// options.xlsxMode: 'single' (starting doc — radio picker, returns 1)
+//                   'multi'  (reference — checkbox picker, returns N)
+async function extractFromFile(file, options = {}) {
+  const ext = file.name.split('.').pop().toLowerCase();
+
+  if (ext === 'txt' || ext === 'md') {
+    const text = await file.text();
+    return [{ text, warnings: [], sourceType: ext, suggestedName: file.name }];
+  }
+  if (ext === 'pdf') {
+    const r = await extractPDF(file);
+    return [{ ...r, suggestedName: file.name }];
+  }
+  if (ext === 'docx') {
+    const r = await extractDOCX(file);
+    return [{ ...r, suggestedName: file.name }];
+  }
+  if (ext === 'pptx') {
+    const r = await extractPPTX(file);
+    return [{ ...r, suggestedName: file.name }];
+  }
+  if (ext === 'xlsx' || ext === 'xlsm') {
+    return await extractXLSX(file, options);
+  }
+  throw new Error(`Unsupported file type: .${ext}. Accepted: .txt, .md, .pdf, .docx, .pptx, .xlsx, .xlsm`);
+}
+
+// ============================================================
+//  PDF EXTRACTION (v3.25.0 — full-fidelity)
+//  Beyond text: outline (TOC), form fields, annotations, and
+//  heuristic image-OCR pass for low-density pages.
+// ============================================================
 async function extractPDF(file) {
   const result = { text: '', warnings: [], sourceType: 'pdf' };
 
-  // Load PDF.js
   if (!window.pdfjsLib) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js');
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    throw new Error('PDF.js not loaded — refresh the page and try again');
   }
+  // Self-hosted worker — set once per session.
+  if (!window._pdfjsWorkerSet) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
+    window._pdfjsWorkerSet = true;
+  }
+
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
-  // Step 1: attempt position-aware text extraction
-  let text = '';
+  // ── Outline (TOC) capture ──
+  let outlineText = '';
+  try {
+    const outline = await pdf.getOutline();
+    if (outline && outline.length) {
+      const lines = [];
+      const walk = (items, depth) => {
+        for (const it of items) {
+          lines.push('  '.repeat(depth) + '• ' + (it.title || ''));
+          if (it.items && it.items.length) walk(it.items, depth + 1);
+        }
+      };
+      walk(outline, 0);
+      if (lines.length) outlineText = `## Document Outline\n${lines.join('\n')}\n\n`;
+    }
+  } catch(e) { /* no outline — fine */ }
+
+  // ── Per-page text + table + annotation extraction ──
+  let bodyText = '';
+  const pageOcrCandidates = [];
+  let totalChars = 0;
+  let totalAnnotations = 0;
+
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
     const rawContent = await page.getTextContent();
-    // Collect all items with position data
+
     const items = [];
     for (const item of rawContent.items) {
       if (!item.str || !item.str.trim()) continue;
@@ -4181,20 +4320,31 @@ async function extractPDF(file) {
         w: item.width || 0
       });
     }
-    // Group items into lines by Y value (tolerance 3 units handles slight baseline shifts)
+
+    // Group items into lines by Y value.
     const lines = [];
     for (const item of items) {
       const line = lines.find(l => Math.abs(l.y - item.y) <= 3);
-      if (line) { line.items.push(item); }
-      else { lines.push({ y: item.y, items: [item] }); }
+      if (line) line.items.push(item);
+      else lines.push({ y: item.y, items: [item] });
     }
-    // Sort lines top-to-bottom (PDF Y coords are bottom-up so descending = top first)
     lines.sort((a, b) => b.y - a.y);
-    // Sort items within each line left-to-right
     for (const line of lines) line.items.sort((a, b) => a.x - b.x);
-    // Reconstruct text — insert newline or double newline based on Y gap between lines
+
+    // Table detection — find groups of 3+ consecutive lines with similar
+    // column X-positions. If found, render those lines as a markdown table.
+    const tableSpans = detectTableSpans(lines);
+
+    // Reconstruct text — emit table-shape blocks where detected, prose elsewhere.
     let pageText = '';
-    for (let li = 0; li < lines.length; li++) {
+    let li = 0;
+    while (li < lines.length) {
+      const inTable = tableSpans.find(s => li >= s.start && li <= s.end);
+      if (inTable) {
+        pageText += '\n' + linesToMarkdownTable(lines.slice(inTable.start, inTable.end + 1)) + '\n';
+        li = inTable.end + 1;
+        continue;
+      }
       if (li > 0) {
         const yGap = lines[li - 1].y - lines[li].y;
         pageText += yGap > 18 ? '\n\n' : '\n';
@@ -4212,64 +4362,193 @@ async function extractPDF(file) {
         lastItemW = item.w;
       }
       pageText += lineText;
+      li++;
     }
-    text += pageText + '\n';
-  }
-  text = text.trim();
+    bodyText += pageText + '\n';
+    totalChars += pageText.length;
 
-  // Step 2: detect garbled or scanned output
-  // Trigger 1: scanned/image PDF — less than 80 chars per page
-  const avgCharsPerPage = text.length / pdf.numPages;
-  // Trigger 2: character-spacing artifacts — average word length under 2.5
-  const tokens = text.split(/\s+/).filter(Boolean);
-  const avgWordLen = tokens.length > 20
-    ? tokens.reduce((s, t) => s + t.length, 0) / tokens.length
-    : 99;
+    // ── Annotation capture (comments, highlights with notes) ──
+    try {
+      const annots = await page.getAnnotations();
+      for (const a of annots) {
+        if (a.contents && a.contents.trim()) {
+          bodyText += `\n[Note on page ${i}${a.subtype ? ' (' + a.subtype + ')' : ''}: ${a.contents.trim()}]\n`;
+          totalAnnotations++;
+        }
+      }
+    } catch(e) { /* annotations unavailable — fine */ }
+
+    // Track low-density pages — candidate for OCR pass after main extraction.
+    if (pageText.trim().length < 200) pageOcrCandidates.push(i);
+  }
+  bodyText = bodyText.trim();
+
+  // ── Form field capture (AcroForm) ──
+  let formText = '';
+  try {
+    const fields = await pdf.getFieldObjects();
+    if (fields) {
+      const filled = [];
+      for (const fieldName of Object.keys(fields)) {
+        const arr = fields[fieldName];
+        for (const f of arr) {
+          if (f.value !== undefined && f.value !== null && f.value !== '') {
+            filled.push(`- **${fieldName}**: ${String(f.value)}`);
+          }
+        }
+      }
+      if (filled.length) formText = `\n\n## Form Fields\n${filled.join('\n')}\n`;
+    }
+  } catch(e) { /* no form fields — fine */ }
+
+  let assembledText = outlineText + bodyText + formText;
+
+  // ── OCR detection ──
+  const avgCharsPerPage = totalChars / Math.max(1, pdf.numPages);
+  const tokens = bodyText.split(/\s+/).filter(Boolean);
+  const avgWordLen = tokens.length > 20 ? tokens.reduce((s, t) => s + t.length, 0) / tokens.length : 99;
   const isScanned = avgCharsPerPage < 80;
   const isGarbled = avgWordLen < 2.5;
 
   if (!isScanned && !isGarbled) {
-    // Clean extraction — store page images for re-extract just in case
-    result.text = text;
+    // Clean text extraction. Run heuristic OCR pass on low-density pages
+    // to catch embedded screenshot-tables and image-only sections that
+    // would otherwise be lost silently. This is additive — original text
+    // is preserved and OCR appends per-page below.
+    result.text = assembledText;
+    if (totalAnnotations > 0) result.warnings.push(`${totalAnnotations} annotation${totalAnnotations === 1 ? '' : 's'} extracted from PDF comments/highlights`);
+
+    if (pageOcrCandidates.length > 0) {
+      const visionAI = getVisionCapableAI();
+      if (visionAI) {
+        const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
+        if (status) {
+          status.textContent = `⏳ ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} detected — running OCR pass for embedded images via ${visionAI.cfg.label}…`;
+          setFileStatusState(status, 'loading');
+        }
+        try {
+          // Render only the candidate pages.
+          const sparseImages = [];
+          for (const pageNum of pageOcrCandidates) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+            const canvas = document.createElement('canvas');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+            await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+            sparseImages.push({ pageNum, b64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] });
+          }
+          const ocrText = await runVisionTranscription(sparseImages.map(s => s.b64), visionAI.cfg, visionAI.key);
+          if (ocrText && ocrText.trim()) {
+            result.text += `\n\n## OCR Pass (sparse pages: ${pageOcrCandidates.join(', ')})\n${ocrText.trim()}\n`;
+            result.warnings.push(`OCR pass added content from sparse pages ${pageOcrCandidates.join(', ')} via ${visionAI.cfg.label} — verify accuracy`);
+          }
+        } catch(ocrErr) {
+          result.warnings.push(`OCR pass failed (${ocrErr.message}) — sparse pages may have unrecovered image content`);
+        }
+      } else {
+        result.warnings.push(`${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} detected — add a ChatGPT, Claude, Gemini, or Grok key to OCR embedded images`);
+      }
+    }
+
     await storePDFPageImages(pdf);
     return result;
   }
 
-  // Step 3: bad extraction detected — attempt vision transcription
+  // ── Full-document vision transcription (scanned/garbled) ──
   const reason = isScanned ? 'scanned/image-based PDF detected' : 'character-spacing artifacts detected';
-  const status = document.getElementById('fileStatus');
+  const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
   if (status) {
     status.textContent = `⏳ ${reason.charAt(0).toUpperCase() + reason.slice(1)} — sending to AI for vision transcription. This may take 15–30 seconds…`;
     setFileStatusState(status, 'loading');
   }
 
-  // Render pages to images for vision and store for re-extract
   const pageImages = await renderPDFToImages(pdf);
   window._lastPDFPages = pageImages;
   try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) {}
 
-  // Find vision-capable AI — ONLY chatgpt and gemini support vision
-  // Do not use Builder if it's not a vision-capable provider
-  const visionProviders = ['chatgpt', 'gemini'];
-  let visionCfg = null;
-  let visionKey = null;
-  for (const provider of visionProviders) {
-    const cfg = API_CONFIGS[provider];
-    if (cfg?._key) { visionCfg = { ...cfg, provider }; visionKey = cfg._key; break; }
-  }
-
-  if (!visionCfg) {
-    // No vision AI available — return garbled text with a warning so user knows
-    result.text = text;
-    result.warnings.push('Text may be garbled — no vision AI key available to fix it. Use the Re-extract button on the work screen after adding a ChatGPT or Gemini key, or paste the text manually.');
+  const visionAI = getVisionCapableAI();
+  if (!visionAI) {
+    result.text = assembledText;
+    result.warnings.push('Text may be garbled — no vision-capable AI key available (ChatGPT, Claude, Gemini, or Grok). Use the Re-extract button on the work screen after adding one, or paste the text manually.');
     return result;
   }
 
-  const transcribed = await runVisionTranscription(pageImages, visionCfg, visionKey);
-  result.text = transcribed;
+  const transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
+  result.text = (outlineText + transcribed + formText).trim();
   result.sourceType = 'pdf-vision';
-  result.warnings.push(`Extracted via AI vision (${visionCfg.label}) — check for accuracy before running rounds`);
+  result.warnings.push(`Extracted via AI vision (${visionAI.cfg.label}) — check for accuracy before running rounds`);
   return result;
+}
+
+// Detect contiguous line spans that look like a table (3+ lines sharing
+// 2+ column X-positions within tolerance). Returns array of {start,end}
+// span indices into the lines array.
+function detectTableSpans(lines) {
+  const spans = [];
+  const TOL = 6;
+  const MIN_ROWS = 3;
+  const MIN_COLS = 2;
+
+  let i = 0;
+  while (i < lines.length) {
+    const seedXs = lines[i].items.map(it => it.x).sort((a, b) => a - b);
+    if (seedXs.length < MIN_COLS) { i++; continue; }
+    let j = i + 1;
+    while (j < lines.length) {
+      const cur = lines[j].items.map(it => it.x).sort((a, b) => a - b);
+      if (cur.length < MIN_COLS) break;
+      // Count how many seedXs have a match in cur within TOL.
+      let matches = 0;
+      for (const sx of seedXs) {
+        if (cur.some(cx => Math.abs(cx - sx) <= TOL)) matches++;
+      }
+      if (matches < MIN_COLS) break;
+      j++;
+    }
+    if (j - i >= MIN_ROWS) {
+      spans.push({ start: i, end: j - 1 });
+      i = j;
+    } else {
+      i++;
+    }
+  }
+  return spans;
+}
+
+// Convert a span of aligned-column lines into a markdown table.
+// First row is treated as the header.
+function linesToMarkdownTable(lines) {
+  if (!lines.length) return '';
+  // Build the canonical column X-positions from the first line.
+  const colXs = lines[0].items.map(it => it.x).sort((a, b) => a - b);
+  const TOL = 6;
+
+  const rows = lines.map(line => {
+    const cells = colXs.map(() => '');
+    for (const item of line.items) {
+      let bestCol = 0;
+      let bestDist = Infinity;
+      for (let c = 0; c < colXs.length; c++) {
+        const d = Math.abs(item.x - colXs[c]);
+        if (d < bestDist) { bestDist = d; bestCol = c; }
+      }
+      if (bestDist <= TOL * 3) {
+        cells[bestCol] = (cells[bestCol] ? cells[bestCol] + ' ' : '') + item.str;
+      }
+    }
+    return cells.map(c => c.trim() || ' ');
+  });
+
+  const header = rows[0];
+  const body = rows.slice(1);
+  const sep = header.map(() => '---');
+  const out = [
+    '| ' + header.join(' | ') + ' |',
+    '| ' + sep.join(' | ') + ' |',
+    ...body.map(r => '| ' + r.join(' | ') + ' |')
+  ];
+  return out.join('\n');
 }
 
 // Render PDF pages to base64 JPEG images
@@ -4297,10 +4576,675 @@ async function storePDFPageImages(pdf) {
   }
 }
 
-// Run vision transcription against stored page images
+// ============================================================
+//  DOCX EXTRACTION (v3.25.0 — full-fidelity)
+//  Beyond raw text: structure preserved (headings, lists,
+//  tables, bold/italic) plus comments, footnotes, headers/
+//  footers, track-changes, and text boxes.
+// ============================================================
+async function extractDOCX(file) {
+  const result = { text: '', warnings: [], sourceType: 'docx' };
+  if (!window.mammoth) throw new Error('Mammoth not loaded — refresh the page and try again');
+  if (!window.JSZip)   throw new Error('JSZip not loaded — refresh the page and try again');
+
+  const arrayBuffer = await file.arrayBuffer();
+
+  // ── Mammoth: structured markdown via convertToMarkdown ──
+  // This preserves headings, lists, tables, bold/italic — not just raw text.
+  let mainBody = '';
+  let mammothMessages = [];
+  try {
+    const mr = await window.mammoth.convertToMarkdown({ arrayBuffer });
+    mainBody = mr.value || '';
+    mammothMessages = mr.messages || [];
+  } catch(e) {
+    // Fall back to raw text if markdown conversion fails.
+    const mr = await window.mammoth.extractRawText({ arrayBuffer });
+    mainBody = mr.value || '';
+    mammothMessages = mr.messages || [];
+    result.warnings.push('Structured-markdown conversion failed — falling back to raw text (formatting lost)');
+  }
+
+  const skippedCount = mammothMessages.filter(m => m.type === 'warning').length;
+  if (skippedCount > 0) {
+    result.warnings.push(`${skippedCount} element${skippedCount > 1 ? 's' : ''} couldn't be extracted (text boxes, embedded objects, or SmartArt) — see appended sections below if recoverable`);
+  }
+
+  // ── JSZip parse for content mammoth doesn't expose directly ──
+  const zip = await window.JSZip.loadAsync(arrayBuffer);
+  const parser = new DOMParser();
+
+  const readXML = async (path) => {
+    if (!zip.files[path]) return null;
+    const xml = await zip.files[path].async('text');
+    return parser.parseFromString(xml, 'text/xml');
+  };
+
+  // Helper — get all text in a w:p paragraph (respecting w:ins, dropping w:del).
+  const paraText = (pNode) => {
+    const out = [];
+    const walk = (node, inDel) => {
+      for (const child of Array.from(node.childNodes)) {
+        if (child.nodeType !== 1) continue;
+        const ln = child.localName;
+        if (ln === 'del') { /* dropped — change-acceptance behavior */ continue; }
+        if (ln === 'ins') { walk(child, inDel); continue; }
+        if (ln === 't' && !inDel) { out.push(child.textContent || ''); continue; }
+        walk(child, inDel);
+      }
+    };
+    walk(pNode, false);
+    return out.join('');
+  };
+
+  const collectParagraphs = (doc) => {
+    if (!doc) return [];
+    const ps = doc.getElementsByTagNameNS('*', 'p');
+    const lines = [];
+    for (const p of Array.from(ps)) {
+      const t = paraText(p).trim();
+      if (t) lines.push(t);
+    }
+    return lines;
+  };
+
+  // ── Comments ──
+  let commentsText = '';
+  try {
+    const cdoc = await readXML('word/comments.xml');
+    if (cdoc) {
+      const comments = cdoc.getElementsByTagNameNS('*', 'comment');
+      const lines = [];
+      for (const c of Array.from(comments)) {
+        const author = c.getAttribute('w:author') || c.getAttributeNS('*', 'author') || 'Unknown';
+        const text = collectParagraphs({ getElementsByTagNameNS: c.getElementsByTagNameNS.bind(c) }).join(' ').trim();
+        if (text) lines.push(`- **${author}**: ${text}`);
+      }
+      if (lines.length) commentsText = `\n\n## Comments\n${lines.join('\n')}\n`;
+    }
+  } catch(e) { /* no comments — fine */ }
+
+  // ── Footnotes ──
+  let footnotesText = '';
+  try {
+    const fdoc = await readXML('word/footnotes.xml');
+    if (fdoc) {
+      const fns = fdoc.getElementsByTagNameNS('*', 'footnote');
+      const lines = [];
+      let n = 0;
+      for (const f of Array.from(fns)) {
+        const ftype = f.getAttribute('w:type') || f.getAttributeNS('*', 'type');
+        // Skip Word's built-in separator/continuation pseudo-footnotes.
+        if (ftype === 'separator' || ftype === 'continuationSeparator') continue;
+        n++;
+        const text = collectParagraphs({ getElementsByTagNameNS: f.getElementsByTagNameNS.bind(f) }).join(' ').trim();
+        if (text) lines.push(`${n}. ${text}`);
+      }
+      if (lines.length) footnotesText = `\n\n## Footnotes\n${lines.join('\n')}\n`;
+    }
+  } catch(e) { /* no footnotes — fine */ }
+
+  // ── Endnotes ──
+  let endnotesText = '';
+  try {
+    const edoc = await readXML('word/endnotes.xml');
+    if (edoc) {
+      const ens = edoc.getElementsByTagNameNS('*', 'endnote');
+      const lines = [];
+      let n = 0;
+      for (const e of Array.from(ens)) {
+        const etype = e.getAttribute('w:type') || e.getAttributeNS('*', 'type');
+        if (etype === 'separator' || etype === 'continuationSeparator') continue;
+        n++;
+        const text = collectParagraphs({ getElementsByTagNameNS: e.getElementsByTagNameNS.bind(e) }).join(' ').trim();
+        if (text) lines.push(`${n}. ${text}`);
+      }
+      if (lines.length) endnotesText = `\n\n## Endnotes\n${lines.join('\n')}\n`;
+    }
+  } catch(e) { /* no endnotes — fine */ }
+
+  // ── Headers / Footers ──
+  // Aggregate unique header/footer text — boilerplate appears once not per-page.
+  const seenHF = new Set();
+  const hfLines = [];
+  for (const path of Object.keys(zip.files)) {
+    if (!/^word\/(header|footer)\d*\.xml$/.test(path)) continue;
+    try {
+      const hfDoc = await readXML(path);
+      const lines = collectParagraphs(hfDoc);
+      const joined = lines.join(' ').trim();
+      if (joined && !seenHF.has(joined)) {
+        seenHF.add(joined);
+        hfLines.push(`- ${joined}`);
+      }
+    } catch(e) { /* skip */ }
+  }
+  let hfText = '';
+  if (hfLines.length) hfText = `\n\n## Headers & Footers\n${hfLines.join('\n')}\n`;
+
+  // ── Text boxes (w:txbxContent) ──
+  // Mammoth flags but doesn't extract these. Pull them from document.xml directly.
+  let txbxText = '';
+  try {
+    const ddoc = await readXML('word/document.xml');
+    if (ddoc) {
+      const txBoxes = ddoc.getElementsByTagNameNS('*', 'txbxContent');
+      const lines = [];
+      for (const tb of Array.from(txBoxes)) {
+        const t = collectParagraphs({ getElementsByTagNameNS: tb.getElementsByTagNameNS.bind(tb) }).join(' ').trim();
+        if (t) lines.push(`- ${t}`);
+      }
+      if (lines.length) txbxText = `\n\n## Text Boxes\n${lines.join('\n')}\n`;
+    }
+  } catch(e) { /* no text boxes — fine */ }
+
+  // ── Completeness check ──
+  const fileSizeKB = file.size / 1024;
+  const charsPerKB = (mainBody + commentsText + footnotesText + endnotesText + hfText + txbxText).length / fileSizeKB;
+  if (fileSizeKB > 20 && charsPerKB < 10) {
+    result.warnings.push('Output seems short for the file size — the document may contain mostly images, complex SmartArt, or embedded objects that couldn\'t be extracted');
+  }
+
+  result.text = (mainBody + commentsText + footnotesText + endnotesText + hfText + txbxText).trim();
+  return result;
+}
+
+// ============================================================
+//  PPTX EXTRACTION (v3.25.0 — full-fidelity)
+//  Replaces fragile <a:t> regex with proper DOMParser walk.
+//  Adds: speaker notes, slide title separation, embedded
+//  tables → markdown, SmartArt diagrams, and chart labels.
+// ============================================================
+async function extractPPTX(file) {
+  const result = { text: '', warnings: [], sourceType: 'pptx' };
+  if (!window.JSZip) throw new Error('JSZip not loaded — refresh the page and try again');
+
+  const arrayBuffer = await file.arrayBuffer();
+  const zip = await window.JSZip.loadAsync(arrayBuffer);
+  const parser = new DOMParser();
+
+  // Sorted slide list.
+  const slideFiles = Object.keys(zip.files)
+    .filter(name => /^ppt\/slides\/slide[0-9]+\.xml$/.test(name))
+    .sort((a, b) => parseInt(a.match(/slide(\d+)/)[1]) - parseInt(b.match(/slide(\d+)/)[1]));
+
+  // Helper — read XML and parse.
+  const readXML = async (path) => {
+    if (!zip.files[path]) return null;
+    const xml = await zip.files[path].async('text');
+    return parser.parseFromString(xml, 'text/xml');
+  };
+
+  // Helper — collect text from <a:t> nodes inside a node, in document order.
+  const collectText = (node) => {
+    const ts = node.getElementsByTagNameNS('*', 't');
+    const out = [];
+    for (const t of Array.from(ts)) {
+      const txt = (t.textContent || '').trim();
+      if (txt) out.push(txt);
+    }
+    return out.join(' ').trim();
+  };
+
+  // Helper — paragraph-by-paragraph text (a:p) preserving line breaks.
+  const collectParas = (node) => {
+    const ps = node.getElementsByTagNameNS('*', 'p');
+    return Array.from(ps).map(p => collectText(p)).filter(Boolean);
+  };
+
+  // Helper — convert an <a:tbl> to a markdown table.
+  const tblToMarkdown = (tblNode) => {
+    const rows = tblNode.getElementsByTagNameNS('*', 'tr');
+    if (!rows.length) return '';
+    const matrix = [];
+    for (const tr of Array.from(rows)) {
+      const cells = tr.getElementsByTagNameNS('*', 'tc');
+      const cellTexts = Array.from(cells).map(tc => collectText(tc).replace(/\|/g, '\\|'));
+      matrix.push(cellTexts);
+    }
+    if (!matrix.length) return '';
+    const cols = matrix[0].length;
+    const sep = Array(cols).fill('---');
+    const lines = [
+      '| ' + matrix[0].map(c => c || ' ').join(' | ') + ' |',
+      '| ' + sep.join(' | ') + ' |',
+      ...matrix.slice(1).map(row => '| ' + row.map(c => c || ' ').join(' | ') + ' |')
+    ];
+    return lines.join('\n');
+  };
+
+  let allText = '';
+  const warningSlides = [];
+  let totalNotes = 0;
+  let totalTables = 0;
+  let totalSmartArt = 0;
+  let totalCharts = 0;
+
+  for (const slideFile of slideFiles) {
+    const slideNum = parseInt(slideFile.match(/slide(\d+)/)[1]);
+    const slideDoc = await readXML(slideFile);
+    if (!slideDoc) continue;
+
+    // ── Title detection ──
+    // Look for shapes with placeholder type "title" or "ctrTitle".
+    let title = '';
+    const sps = slideDoc.getElementsByTagNameNS('*', 'sp');
+    let titleSp = null;
+    let bodySps = [];
+    for (const sp of Array.from(sps)) {
+      const phs = sp.getElementsByTagNameNS('*', 'ph');
+      let isTitle = false;
+      for (const ph of Array.from(phs)) {
+        const ptype = ph.getAttribute('type');
+        if (ptype === 'title' || ptype === 'ctrTitle') { isTitle = true; break; }
+      }
+      if (isTitle && !titleSp) titleSp = sp;
+      else bodySps.push(sp);
+    }
+    if (titleSp) title = collectText(titleSp);
+
+    // ── Body content (non-title shapes) ──
+    const bodyParas = [];
+    for (const sp of bodySps) {
+      const paras = collectParas(sp);
+      bodyParas.push(...paras);
+    }
+
+    // ── Embedded tables ──
+    const tables = slideDoc.getElementsByTagNameNS('*', 'tbl');
+    const tableMd = [];
+    for (const tbl of Array.from(tables)) {
+      const md = tblToMarkdown(tbl);
+      if (md) { tableMd.push(md); totalTables++; }
+    }
+
+    // ── Slide section assembly ──
+    const heading = title ? `## Slide ${slideNum}: ${title}` : `## Slide ${slideNum}`;
+    let slideOut = heading + '\n';
+    if (bodyParas.length) slideOut += bodyParas.map(p => `- ${p}`).join('\n') + '\n';
+    if (tableMd.length) slideOut += '\n' + tableMd.join('\n\n') + '\n';
+
+    if (!title && !bodyParas.length && !tableMd.length) {
+      warningSlides.push(slideNum);
+      continue;
+    }
+
+    // ── Speaker notes ──
+    // notesSlide files reference their slide via _rels — but the simpler
+    // 1:1 mapping (notesSlideN.xml ↔ slideN.xml) works for typical decks.
+    const notesPath = `ppt/notesSlides/notesSlide${slideNum}.xml`;
+    if (zip.files[notesPath]) {
+      const notesDoc = await readXML(notesPath);
+      if (notesDoc) {
+        // Strip the auto-generated slide-number placeholder text that always
+        // appears at the bottom of the notes slide.
+        const notesText = collectParas(notesDoc).filter(p => !/^\d+$/.test(p)).join(' ').trim();
+        if (notesText) {
+          slideOut += `\n**Speaker notes:** ${notesText}\n`;
+          totalNotes++;
+        }
+      }
+    }
+
+    allText += slideOut + '\n';
+  }
+
+  // ── SmartArt (diagrams) ──
+  const diagramPaths = Object.keys(zip.files).filter(p => /^ppt\/diagrams\/data\d+\.xml$/.test(p));
+  if (diagramPaths.length) {
+    const lines = [];
+    for (const dp of diagramPaths) {
+      const ddoc = await readXML(dp);
+      if (!ddoc) continue;
+      // pt elements contain the actual node text.
+      const pts = ddoc.getElementsByTagNameNS('*', 'pt');
+      for (const pt of Array.from(pts)) {
+        const t = collectText(pt);
+        if (t) lines.push(`- ${t}`);
+      }
+      totalSmartArt++;
+    }
+    if (lines.length) allText += `\n## SmartArt Diagrams\n${lines.join('\n')}\n`;
+  }
+
+  // ── Chart data ──
+  const chartPaths = Object.keys(zip.files).filter(p => /^ppt\/charts\/chart\d+\.xml$/.test(p));
+  if (chartPaths.length) {
+    const lines = [];
+    for (const cp of chartPaths) {
+      const cdoc = await readXML(cp);
+      if (!cdoc) continue;
+      const titles = cdoc.getElementsByTagNameNS('*', 'title');
+      for (const tt of Array.from(titles)) {
+        const t = collectText(tt);
+        if (t) lines.push(`- Chart title: ${t}`);
+      }
+      const cats = cdoc.getElementsByTagNameNS('*', 'cat');
+      for (const cn of Array.from(cats)) {
+        const t = collectText(cn);
+        if (t) lines.push(`- Categories: ${t}`);
+      }
+      const sers = cdoc.getElementsByTagNameNS('*', 'ser');
+      for (const sn of Array.from(sers)) {
+        const tx = sn.getElementsByTagNameNS('*', 'tx');
+        if (tx.length) {
+          const t = collectText(tx[0]);
+          if (t) lines.push(`- Series: ${t}`);
+        }
+      }
+      totalCharts++;
+    }
+    if (lines.length) allText += `\n## Charts\n${lines.join('\n')}\n`;
+  }
+
+  if (!allText.trim()) {
+    throw new Error('No text found in this PowerPoint — the presentation may be entirely image-based. Try Paste Text instead.');
+  }
+
+  if (warningSlides.length > 0) {
+    result.warnings.push(`Slide${warningSlides.length > 1 ? 's' : ''} ${warningSlides.join(', ')} had no extractable text — may be image-only. Check those slides and paste any missing content into the working document manually.`);
+  }
+  if (totalNotes > 0) result.warnings.push(`Speaker notes captured from ${totalNotes} slide${totalNotes === 1 ? '' : 's'}`);
+  if (totalTables > 0) result.warnings.push(`${totalTables} embedded table${totalTables === 1 ? '' : 's'} converted to markdown`);
+
+  result.text = allText.trim();
+  return result;
+}
+
+// ============================================================
+//  XLSX EXTRACTION (v3.25.0 — new)
+//  All visible sheets converted to markdown tables. Multi-sheet
+//  workbooks present a sheet picker (radio in single mode for
+//  Starting Doc, checkboxes in multi mode for Reference Material).
+//  Formulas evaluated to displayed values. Merged cells flattened.
+//  Hidden sheets surfaced via warning. Cell comments and defined
+//  names captured in footer/header sections.
+// ============================================================
+async function extractXLSX(file, options = {}) {
+  if (!window.XLSX) throw new Error('SheetJS not loaded — refresh the page and try again');
+
+  const arrayBuffer = await file.arrayBuffer();
+  const wb = window.XLSX.read(arrayBuffer, {
+    type: 'array',
+    cellFormula: false,    // formulas evaluated to displayed values
+    cellHTML: false,
+    cellNF: false,
+    sheetStubs: true,
+    cellDates: true,
+  });
+
+  const visibleSheets = [];
+  const hiddenSheets = [];
+  for (const name of wb.SheetNames) {
+    // Workbook-level Sheets entry has Hidden: 0/1/2 (visible/hidden/very-hidden).
+    const wbSheet = (wb.Workbook && wb.Workbook.Sheets) ? wb.Workbook.Sheets.find(s => s.name === name) : null;
+    const hiddenFlag = wbSheet ? wbSheet.Hidden : 0;
+    if (hiddenFlag && hiddenFlag !== 0) hiddenSheets.push(name);
+    else visibleSheets.push(name);
+  }
+
+  if (!visibleSheets.length) {
+    throw new Error('Workbook has no visible sheets — all sheets are hidden');
+  }
+
+  const baseFileName = file.name;
+  const mode = options.xlsxMode || 'multi'; // 'single' = starting doc, 'multi' = ref material
+
+  // Defined names (workbook-level) — surface as a glossary header.
+  let definedNamesText = '';
+  if (wb.Workbook && wb.Workbook.Names && wb.Workbook.Names.length) {
+    const lines = wb.Workbook.Names
+      .filter(n => n.Name && n.Ref)
+      .map(n => `- **${n.Name}** → ${n.Ref}${n.Comment ? ' — ' + n.Comment : ''}`);
+    if (lines.length) definedNamesText = `## Defined Names\n${lines.join('\n')}\n\n`;
+  }
+
+  // Single sheet — auto-pick, no modal.
+  if (visibleSheets.length === 1) {
+    const sheetName = visibleSheets[0];
+    const sheetMd = sheetToMarkdown(wb, sheetName);
+    const provenance = `> *Converted from Excel — formulas evaluated, merged cells flattened, hidden sheets ${hiddenSheets.length ? `(${hiddenSheets.length}) skipped` : 'none'}, cell formatting/colors not preserved*`;
+    const text = `${provenance}\n\n${definedNamesText}## Sheet: ${sheetName}\n\n${sheetMd}`;
+
+    const warnings = [];
+    if (hiddenSheets.length) warnings.push(`${hiddenSheets.length} hidden sheet${hiddenSheets.length === 1 ? '' : 's'} skipped: ${hiddenSheets.join(', ')}`);
+    return [{
+      text,
+      warnings,
+      sourceType: 'xlsx',
+      suggestedName: `${baseFileName} → ${sheetName}`
+    }];
+  }
+
+  // Multiple visible sheets — show picker.
+  const picked = await showSheetPickerModal(wb, visibleSheets, hiddenSheets, mode, baseFileName);
+  if (!picked || !picked.length) {
+    throw new Error('Sheet selection cancelled');
+  }
+
+  const provenance = `> *Converted from Excel — formulas evaluated, merged cells flattened, hidden sheets ${hiddenSheets.length ? `(${hiddenSheets.length}) skipped` : 'none'}, cell formatting/colors not preserved*`;
+
+  if (mode === 'single') {
+    // Concatenate selected sheets into a single doc for the Starting Doc.
+    const sections = picked.map(name => `## Sheet: ${name}\n\n${sheetToMarkdown(wb, name)}`);
+    const text = `${provenance}\n\n${definedNamesText}${sections.join('\n\n')}`;
+    const warnings = [];
+    if (hiddenSheets.length) warnings.push(`${hiddenSheets.length} hidden sheet${hiddenSheets.length === 1 ? '' : 's'} skipped: ${hiddenSheets.join(', ')}`);
+    if (picked.length < visibleSheets.length) warnings.push(`${visibleSheets.length - picked.length} of ${visibleSheets.length} visible sheets skipped per your selection`);
+    return [{
+      text,
+      warnings,
+      sourceType: 'xlsx',
+      suggestedName: picked.length === 1 ? `${baseFileName} → ${picked[0]}` : `${baseFileName} (${picked.length} sheets)`
+    }];
+  }
+
+  // multi mode — one ref doc per selected sheet.
+  return picked.map(name => {
+    const sheetMd = sheetToMarkdown(wb, name);
+    const text = `${provenance}\n\n${definedNamesText}## Sheet: ${name}\n\n${sheetMd}`;
+    const warnings = [];
+    if (hiddenSheets.length) warnings.push(`${hiddenSheets.length} hidden sheet${hiddenSheets.length === 1 ? '' : 's'} skipped from workbook: ${hiddenSheets.join(', ')}`);
+    return {
+      text,
+      warnings,
+      sourceType: 'xlsx',
+      suggestedName: `${baseFileName} → ${name}`
+    };
+  });
+}
+
+// Convert a single XLSX sheet into a markdown table.
+// Handles merged cells (value repetition), trims empty rows/cols,
+// captures cell comments as a footer section, and surfaces a column-
+// width warning for very wide sheets.
+function sheetToMarkdown(wb, sheetName) {
+  const sheet = wb.Sheets[sheetName];
+  if (!sheet || !sheet['!ref']) return '_(empty sheet)_';
+
+  // Use sheet_to_json with header:1 to get a row-of-arrays structure,
+  // then format ourselves so we can apply merge handling and trimming.
+  const rows = window.XLSX.utils.sheet_to_json(sheet, {
+    header: 1,
+    raw: false,         // formatted strings (e.g., "$1,250.00", "15%")
+    defval: '',
+    blankrows: false,
+  });
+
+  if (!rows.length) return '_(empty sheet)_';
+
+  // Apply merged-cell flattening — repeat top-left value across span.
+  const merges = sheet['!merges'] || [];
+  for (const m of merges) {
+    const tl = rows[m.s.r] && rows[m.s.r][m.s.c];
+    if (tl === undefined || tl === '') continue;
+    for (let r = m.s.r; r <= m.e.r; r++) {
+      for (let c = m.s.c; c <= m.e.c; c++) {
+        if (r === m.s.r && c === m.s.c) continue;
+        if (!rows[r]) rows[r] = [];
+        rows[r][c] = tl;
+      }
+    }
+  }
+
+  // Determine the actual column count used (max row length across all rows).
+  let maxCols = 0;
+  for (const row of rows) {
+    if (row && row.length > maxCols) maxCols = row.length;
+  }
+
+  // Pad ragged rows to maxCols.
+  for (let r = 0; r < rows.length; r++) {
+    if (!rows[r]) rows[r] = [];
+    while (rows[r].length < maxCols) rows[r].push('');
+  }
+
+  // Trim leading/trailing empty columns.
+  const colHasContent = new Array(maxCols).fill(false);
+  for (const row of rows) {
+    for (let c = 0; c < maxCols; c++) {
+      if (row[c] !== '' && row[c] !== null && row[c] !== undefined) colHasContent[c] = true;
+    }
+  }
+  let firstCol = colHasContent.indexOf(true);
+  let lastCol = colHasContent.lastIndexOf(true);
+  if (firstCol === -1) return '_(empty sheet)_';
+
+  const trimmedRows = rows
+    .map(row => row.slice(firstCol, lastCol + 1))
+    .filter(row => row.some(v => v !== '' && v !== null && v !== undefined));
+
+  if (!trimmedRows.length) return '_(empty sheet)_';
+
+  // Escape pipes in cell content and stringify.
+  const cellStr = (v) => {
+    if (v === null || v === undefined) return '';
+    let s = String(v);
+    if (s instanceof Date || (typeof v === 'object' && v.toISOString)) s = v.toISOString();
+    return s.replace(/\|/g, '\\|').replace(/\r?\n/g, ' ').trim();
+  };
+
+  const cols = trimmedRows[0].length;
+  const header = trimmedRows[0].map(cellStr).map(c => c || ' ');
+  const sep = Array(cols).fill('---');
+  const body = trimmedRows.slice(1).map(row => row.map(cellStr).map(c => c || ' '));
+
+  const lines = [
+    '| ' + header.join(' | ') + ' |',
+    '| ' + sep.join(' | ') + ' |',
+    ...body.map(r => '| ' + r.join(' | ') + ' |')
+  ];
+
+  // Cell comments → footer.
+  const commentLines = [];
+  for (const addr of Object.keys(sheet)) {
+    if (addr[0] === '!') continue;
+    const cell = sheet[addr];
+    if (cell && cell.c && cell.c.length) {
+      const text = cell.c.map(c => (c.t || '').trim()).filter(Boolean).join(' ');
+      if (text) commentLines.push(`- **${addr}**: ${text}`);
+    }
+  }
+
+  let out = lines.join('\n');
+  if (commentLines.length) {
+    out += `\n\n**Cell notes:**\n${commentLines.join('\n')}`;
+  }
+  if (cols > 15) {
+    out = `> *Wide sheet (${cols} columns) — markdown table comprehension by AIs may degrade past ~15 columns*\n\n` + out;
+  }
+  return out;
+}
+
+// ── Sheet picker modal ──
+// Returns Promise<Array<string>> — names of selected sheets, or empty array
+// on cancel. Mode 'single' uses radio buttons (forces one selection, but
+// the user can still pick multiple via the checkbox toggle for combined import).
+// Mode 'multi' uses checkboxes (one ref doc per selected sheet).
+function showSheetPickerModal(wb, visibleSheets, hiddenSheets, mode, fileName) {
+  return new Promise((resolve) => {
+    const overlay = document.getElementById('sheetPickerModal');
+    if (!overlay) { resolve([]); return; }
+
+    const isSingle = mode === 'single';
+    const inputType = isSingle ? 'checkbox' : 'checkbox'; // both modes: checkboxes; single concatenates
+
+    const titleEl = overlay.querySelector('.sheet-picker-title');
+    const subtitleEl = overlay.querySelector('.sheet-picker-subtitle');
+    const listEl = overlay.querySelector('.sheet-picker-list');
+    const hiddenEl = overlay.querySelector('.sheet-picker-hidden');
+    const confirmBtn = overlay.querySelector('.sheet-picker-confirm');
+    const cancelBtn = overlay.querySelector('.sheet-picker-cancel');
+
+    titleEl.textContent = `📊 Select sheets from ${fileName}`;
+    subtitleEl.textContent = isSingle
+      ? 'Selected sheets will be combined into a single Starting Document, separated by sheet headings.'
+      : 'Each selected sheet becomes its own Reference Material document with independent token tracking and reordering.';
+
+    // Estimate token count per sheet for the picker display.
+    const rows = listEl;
+    rows.innerHTML = '';
+    visibleSheets.forEach((name, idx) => {
+      const sheet = wb.Sheets[name];
+      const ref = sheet && sheet['!ref'] ? window.XLSX.utils.decode_range(sheet['!ref']) : null;
+      const cellCount = ref ? (ref.e.r - ref.s.r + 1) * (ref.e.c - ref.s.c + 1) : 0;
+      // Quick token estimate — convert sheet to simple text and chars/4.
+      let approxTokens = 0;
+      try {
+        const sample = window.XLSX.utils.sheet_to_csv(sheet, { FS: ' ', RS: ' ' });
+        approxTokens = Math.round(sample.length / 4);
+      } catch(e) {}
+      const row = document.createElement('label');
+      row.className = 'sheet-picker-row';
+      row.innerHTML = `
+        <input type="${inputType}" class="sheet-picker-checkbox" value="${idx}" checked>
+        <span class="sheet-picker-name">${escapeHtml(name)}</span>
+        <span class="sheet-picker-meta">${cellCount.toLocaleString()} cells · ~${approxTokens.toLocaleString()} tokens</span>
+      `;
+      rows.appendChild(row);
+    });
+
+    if (hiddenSheets.length) {
+      hiddenEl.textContent = `${hiddenSheets.length} hidden sheet${hiddenSheets.length === 1 ? '' : 's'} skipped: ${hiddenSheets.join(', ')}`;
+      hiddenEl.style.display = 'block';
+    } else {
+      hiddenEl.style.display = 'none';
+    }
+
+    const cleanup = () => {
+      overlay.classList.remove('active');
+      confirmBtn.onclick = null;
+      cancelBtn.onclick = null;
+      overlay.onclick = null;
+    };
+
+    confirmBtn.onclick = () => {
+      const checked = Array.from(listEl.querySelectorAll('.sheet-picker-checkbox:checked'));
+      const selected = checked.map(cb => visibleSheets[parseInt(cb.value, 10)]);
+      cleanup();
+      resolve(selected);
+    };
+    cancelBtn.onclick = () => { cleanup(); resolve([]); };
+    overlay.onclick = (e) => { if (e.target === overlay) { cleanup(); resolve([]); } };
+
+    overlay.classList.add('active');
+  });
+}
+
+// Lightweight HTML escape for the sheet picker labels.
+function escapeHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+// ============================================================
+//  VISION TRANSCRIPTION (v3.25.0 — multi-provider)
+//  Supports the four built-in vision providers: ChatGPT (GPT-4o),
+//  Claude (Sonnet/Opus 4 family), Gemini (1.5+), and Grok (vision).
+// ============================================================
 async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   const prompt = 'Transcribe all text from these document pages exactly as it appears. Preserve paragraph breaks and section structure. Return only the plain text — no commentary, no formatting symbols.';
 
+  // ── ChatGPT (OpenAI) ──
   if (visionCfg.provider === 'chatgpt') {
     const body = JSON.stringify({
       model: 'gpt-4o',
@@ -4317,11 +5261,35 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
     });
     const data = await resp.json();
     const transcribed = data?.choices?.[0]?.message?.content || '';
-    if (!transcribed.trim()) throw new Error('Vision transcription returned no text');
+    if (!transcribed.trim()) throw new Error('ChatGPT vision returned no text');
     return transcribed;
   }
 
+  // ── Claude (Anthropic) — via WaxFrame proxy ──
+  if (visionCfg.provider === 'claude') {
+    const claudeModel = visionCfg.model || 'claude-sonnet-4-6';
+    const body = JSON.stringify({
+      model: claudeModel,
+      max_tokens: 4096,
+      messages: [{ role: 'user', content: [
+        ...pageImages.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
+        { type: 'text', text: prompt }
+      ]}]
+    });
+    const resp = await fetch(visionCfg.endpoint || 'https://waxframe-claude-proxy.weirdave.workers.dev', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': visionKey, 'anthropic-version': '2023-06-01' },
+      body
+    });
+    const data = await resp.json();
+    const transcribed = data?.content?.[0]?.text || '';
+    if (!transcribed.trim()) throw new Error('Claude vision returned no text');
+    return transcribed;
+  }
+
+  // ── Gemini (Google) ──
   if (visionCfg.provider === 'gemini') {
+    const geminiModel = visionCfg.model || 'gemini-2.5-flash';
     const body = JSON.stringify({
       contents: [{ parts: [
         ...pageImages.map(b64 => ({ inline_data: { mime_type: 'image/jpeg', data: b64 } })),
@@ -4329,93 +5297,42 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
       ]}]
     });
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${visionKey}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
+      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+      { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': visionKey }, body }
     );
     const data = await resp.json();
     const transcribed = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!transcribed.trim()) throw new Error('Vision transcription returned no text');
+    if (!transcribed.trim()) throw new Error('Gemini vision returned no text');
     return transcribed;
   }
 
-  throw new Error('No supported vision provider available');
-}
-
-async function extractDOCX(file) {
-  const result = { text: '', warnings: [], sourceType: 'docx' };
-  if (!window.mammoth) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js');
-  }
-  const arrayBuffer = await file.arrayBuffer();
-  const mammothResult = await window.mammoth.extractRawText({ arrayBuffer });
-  result.text = mammothResult.value;
-
-  // Mammoth returns messages about content it couldn't extract
-  if (mammothResult.messages && mammothResult.messages.length > 0) {
-    const skipped = mammothResult.messages.filter(m => m.type === 'warning').length;
-    if (skipped > 0) {
-      result.warnings.push(`${skipped} element${skipped > 1 ? 's' : ''} couldn't be extracted (text boxes, embedded objects, or SmartArt) — check the working document for gaps`);
-    }
-  }
-
-  // Completeness check — warn if output seems very short for the file size
-  const fileSizeKB = file.size / 1024;
-  const charsPerKB = result.text.length / fileSizeKB;
-  if (fileSizeKB > 20 && charsPerKB < 10) {
-    result.warnings.push('Output seems short for the file size — the document may contain mostly images, tables, or embedded objects that couldn\'t be extracted');
-  }
-
-  return result;
-}
-
-async function extractPPTX(file) {
-  const result = { text: '', warnings: [], sourceType: 'pptx' };
-  if (!window.JSZip) {
-    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js');
-  }
-  const arrayBuffer = await file.arrayBuffer();
-  const zip = await window.JSZip.loadAsync(arrayBuffer);
-
-  const slideFiles = Object.keys(zip.files)
-    .filter(name => /^ppt\/slides\/slide[0-9]+\.xml$/.test(name))
-    .sort((a, b) => {
-      const na = parseInt(a.match(/slide(\d+)/)[1]);
-      const nb = parseInt(b.match(/slide(\d+)/)[1]);
-      return na - nb;
+  // ── Grok (xAI) — OpenAI-compatible ──
+  if (visionCfg.provider === 'grok') {
+    const grokModel = visionCfg.model || 'grok-4';
+    const body = JSON.stringify({
+      model: grokModel,
+      messages: [{ role: 'user', content: [
+        ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
+        { type: 'text', text: prompt }
+      ]}],
+      max_tokens: 4096
     });
-
-  let text = '';
-  const warningSlides = [];
-
-  for (const slideFile of slideFiles) {
-    const slideNum = parseInt(slideFile.match(/slide(\d+)/)[1]);
-    const xml = await zip.files[slideFile].async('text');
-    const runs = [];
-    const runRegex = /<a:t[^>]*>([^<]*)<\/a:t>/g;
-    let m;
-    while ((m = runRegex.exec(xml)) !== null) {
-      const t = m[1]
-        .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-        .replace(/&quot;/g, '"').replace(/&apos;/g, "'").trim();
-      if (t) runs.push(t);
-    }
-    if (runs.length === 0) { warningSlides.push(slideNum); continue; }
-    text += `--- Slide ${slideNum} ---\n${runs.join(' ')}\n\n`;
+    const resp = await fetch('https://api.x.ai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${visionKey}` },
+      body
+    });
+    const data = await resp.json();
+    const transcribed = data?.choices?.[0]?.message?.content || '';
+    if (!transcribed.trim()) throw new Error('Grok vision returned no text');
+    return transcribed;
   }
 
-  if (!text.trim()) {
-    throw new Error('No text found in this PowerPoint — the presentation may be entirely image-based. Try Paste Text instead.');
-  }
-
-  if (warningSlides.length > 0) {
-    const slideList = warningSlides.join(', ');
-    result.warnings.push(`Slide${warningSlides.length > 1 ? 's' : ''} ${slideList} had no extractable text — may be image-only or use embedded objects. Check those slides and paste any missing content into the working document manually.`);
-  }
-
-  result.text = text.trim();
-  return result;
+  throw new Error(`Provider ${visionCfg.provider} does not have a vision integration`);
 }
 
+// loadScript retained for any future on-demand needs but is no longer
+// called by the extractors — all libs are boot-loaded via index.html.
 function loadScript(src) {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
@@ -4432,7 +5349,6 @@ function showReExtractBanner() {
   // Only show for PDF imports, only before any rounds have run
   if ((sourceType === 'pdf' || sourceType === 'pdf-vision') && round === 1 && history.length === 0) {
     banner.style.display = 'flex';
-    // Update button state based on whether we have stored pages
     const btn = document.getElementById('reExtractBtn');
     if (btn) {
       btn.disabled = !hasPDFPages && !window._lastPDFPages;
@@ -4450,17 +5366,9 @@ async function reExtractWithVision() {
   const banner = document.getElementById('reExtractBanner');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ Extracting — this may take 15–30 seconds…'; }
 
-  // Find vision AI — only chatgpt and gemini support vision
-  const visionProviders = ['chatgpt', 'gemini'];
-  let visionCfg = null;
-  let visionKey = null;
-  for (const provider of visionProviders) {
-    const cfg = API_CONFIGS[provider];
-    if (cfg?._key) { visionCfg = { ...cfg, provider }; visionKey = cfg._key; break; }
-  }
-
-  if (!visionCfg) {
-    toast('⚠️ No vision AI available — add a ChatGPT or Gemini API key first');
+  const visionAI = getVisionCapableAI();
+  if (!visionAI) {
+    toast('⚠️ No vision AI available — add a ChatGPT, Claude, Gemini, or Grok API key first');
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Re-extract with AI Vision'; }
     return;
   }
@@ -4473,18 +5381,17 @@ async function reExtractWithVision() {
       return;
     }
 
-    consoleLog(`🔍 Re-extracting PDF via ${visionCfg.label} vision…`, 'info');
-    const transcribed = await runVisionTranscription(pageImages, visionCfg, visionKey);
+    consoleLog(`🔍 Re-extracting PDF via ${visionAI.cfg.label} vision…`, 'info');
+    const transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
 
-    // Update working document
     docText = transcribed;
     const docTa = document.getElementById('workDocument');
     if (docTa) { docTa.value = transcribed; updateLineNumbers(); }
     saveSession();
     localStorage.setItem('waxframe_v2_source_type', 'pdf-vision');
 
-    consoleLog(`✅ Re-extraction complete — ${transcribed.length.toLocaleString()} characters via ${visionCfg.label}`, 'success');
-    toast(`✅ Document re-extracted successfully via ${visionCfg.label}`);
+    consoleLog(`✅ Re-extraction complete — ${transcribed.length.toLocaleString()} characters via ${visionAI.cfg.label}`, 'success');
+    toast(`✅ Document re-extracted successfully via ${visionAI.cfg.label}`);
     if (banner) banner.style.display = 'none';
   } catch(e) {
     consoleLog(`❌ Re-extraction failed: ${e.message}`, 'error');
@@ -4492,6 +5399,7 @@ async function reExtractWithVision() {
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Re-extract with AI Vision'; }
   }
 }
+
 
 // ============================================================
 //  v3.21.0 — REFERENCE MATERIAL MODULE
@@ -4719,69 +5627,6 @@ function handleRefFileSelect(e) {
   if (e.target) e.target.value = '';
 }
 
-async function processRefFile(file) {
-  // Mid-session-overwrite warning preserved from single-doc behavior.
-  // With multi-doc, adding a doc never overwrites — but the warning still
-  // educates users about which round will see the new doc.
-  const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
-  if (!onSetupScreen && history.length > 0) {
-    const proceed = confirm(`Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`);
-    if (!proceed) return;
-  }
-
-  const status = document.getElementById('refFileStatus');
-  const ext = file.name.split('.').pop().toLowerCase();
-  if (status) {
-    status.style.display = 'block';
-    status.textContent = `⏳ Reading ${file.name}…`;
-    setFileStatusState(status, 'loading');
-  }
-
-  try {
-    let result = { text: '', warnings: [], sourceType: ext };
-    if (ext === 'txt' || ext === 'md') {
-      result.text = await file.text();
-    } else if (ext === 'pdf') {
-      result = await extractPDF(file);
-    } else if (ext === 'docx') {
-      result = await extractDOCX(file);
-    } else if (ext === 'pptx') {
-      result = await extractPPTX(file);
-    } else {
-      throw new Error('Unsupported file type');
-    }
-
-    const text = (result.text || '').trim();
-    const newDoc = {
-      id: generateRefDocId(),
-      name: file.name,
-      text,
-      source: 'upload',
-      filename: file.name,
-    };
-    referenceDocs.push(newDoc);
-    renderReferenceCards();
-    updateRefGrandTotals();
-    saveProject();
-
-    if (status) {
-      const msg = result.warnings && result.warnings.length
-        ? `⚠️ Added "${file.name}" (${text.length.toLocaleString()} chars) — ${result.warnings[0]}`
-        : `📚 Added "${file.name}" (${text.length.toLocaleString()} chars) as reference material`;
-      status.textContent = msg;
-      setFileStatusState(status, result.warnings && result.warnings.length ? 'warn' : 'ok');
-      // Auto-clear the status pill after 6s — once the card renders the
-      // pill becomes redundant noise above the card list.
-      setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
-    }
-  } catch (e) {
-    console.error('Ref file extraction failed:', e);
-    if (status) {
-      status.textContent = `❌ Could not read ${file.name}: ${e.message}`;
-      setFileStatusState(status, 'error');
-    }
-  }
-}
 
 // chars/4 is the standard rule of thumb for English text in OpenAI-family tokenizers.
 // Real tokenizers vary by model; this is an estimate, not a contract.
