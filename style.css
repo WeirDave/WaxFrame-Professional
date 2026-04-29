@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-017
+   Build: 20260429-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -3335,12 +3335,19 @@ html, body {
   flex-shrink: 0;
 }
 .model-select-note {
+  /* v3.26.9: force note to its own line below the dropdown row. Previously
+     the parent's flex-wrap only kicked in when content overflowed — short
+     WHYs (Claude) wrapped, long WHYs (ChatGPT) overflowed off the right
+     edge instead. Now: flex-basis 100% always wraps it, and removing the
+     nowrap rule lets long lines wrap naturally instead of truncating. */
+  flex-basis: 100%;
   font-size: 11px;
   color: var(--text-dim);
   font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.4;
+  /* Visually align with the dropdown column — the label "Pick a model:"
+     plus the gap take ~110px on the left. */
+  padding-left: 110px;
 }
 .ai-remove-btn {
   background: transparent;
