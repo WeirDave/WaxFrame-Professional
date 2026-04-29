@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-001';         // build stamp — update each session
+const BUILD       = '20260429-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5611,13 +5611,33 @@ function updateRefGrandTotals() {
 // File drop / select handlers — both routed through processRefFile which
 // PUSHES a new upload-source doc into the array instead of replacing
 // the singleton (the v3.21.0–v3.23.4 behavior).
-function handleRefDragOver(e) {
+// Drag/drop counter — tracks enter/leave events across child buttons inside
+// the drop row so the .drag-over visual state doesn't flicker when the cursor
+// crosses internal element boundaries (a common gotcha with HTML5 drag events).
+let _refDragCounter = 0;
+
+function handleRefDragEnter(e) {
   e.preventDefault();
-  document.getElementById('refDropZone')?.classList.add('drag-over');
+  _refDragCounter++;
+  document.getElementById('refDropRow')?.classList.add('drag-over');
+}
+function handleRefDragOver(e) {
+  // preventDefault is required on dragover for the drop event to fire.
+  e.preventDefault();
+  if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy';
+}
+function handleRefDragLeave(e) {
+  e.preventDefault();
+  _refDragCounter--;
+  if (_refDragCounter <= 0) {
+    _refDragCounter = 0;
+    document.getElementById('refDropRow')?.classList.remove('drag-over');
+  }
 }
 function handleRefFileDrop(e) {
   e.preventDefault();
-  document.getElementById('refDropZone')?.classList.remove('drag-over');
+  _refDragCounter = 0;
+  document.getElementById('refDropRow')?.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (file) processRefFile(file);
 }

@@ -7894,12 +7894,17 @@ kbd {
   text-align: center;
   padding: 8px 12px;
   border-radius: var(--radius-sm);
-  border: 1px dashed transparent;
+  pointer-events: none; /* decorative hint label — drag events handled on parent .ref-add-row so the whole row is the drop target */
+  transition: color 0.15s;
+}
+.ref-add-row {
   transition: border-color 0.15s, background 0.15s;
 }
-.ref-add-dropzone.drag-over {
+.ref-add-row.drag-over {
   border-color: var(--accent);
   background: var(--accent-dim);
+}
+.ref-add-row.drag-over .ref-add-dropzone {
   color: var(--accent);
   font-style: normal;
   font-weight: 600;
