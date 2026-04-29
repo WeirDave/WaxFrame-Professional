@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-010
+//  Build: 20260429-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-010';         // build stamp — update each session
+const BUILD       = '20260429-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2414,7 +2414,7 @@ function renderAISetupGrid() {
         <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
         ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
         ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
-        ${hasKey && !isCustom && MODEL_FILTERS[ai.provider] !== null ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
+        ${hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
       </div>
       ${modelSelector}
     </div>`;
@@ -2475,8 +2475,10 @@ function saveKeyForAI(id, val, inputEl) {
   saveSettings();
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
-  if (val.trim() && MODEL_FILTERS[ai.provider] !== null) {
-    // v3.26.0: fetch models AND ask the provider which model is best.
+  if (val.trim() && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length)) {
+    // v3.26.0/v3.26.2: fetch models AND ask the provider which model is best.
+    // For providers without /v1/models (like Perplexity), recommendForDefault
+    // falls back to MODEL_FALLBACKS as the candidate list.
     // Falls back silently to whatever model was already configured if the
     // recommend call fails (network, malformed reply, hallucinated id, etc.).
     toast(`🔑 ${ai.name} key saved · checking best model…`, 2500);
@@ -2524,7 +2526,7 @@ function renderAIRow(id) {
     <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
     ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
     ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test connection">Test</button>` : ''}
-    ${hasKey && !isCustom && MODEL_FILTERS[ai.provider] !== null ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
+    ${hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length) ? `<button class="ai-recheck-btn" id="recheckbtn-${ai.id}" onclick="recheckModelForAI('${ai.id}')" title="Ask the provider's API which model is best — updates the selected model">🤖 Recheck</button>` : ''}
     <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
     <button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>
   `;
@@ -3320,13 +3322,21 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
 }
 
 // Default-AI wrapper. Called from saveKeyForAI after a key is saved for one
-// of the built-in 6. Fetches the provider's model list, asks the provider
-// itself which of those is best, and updates API_CONFIGS[provider].model.
-// Returns null silently on any failure — caller should leave existing model
-// in place, falling back to whatever MODEL_LABELS / MODEL_FALLBACKS already set.
+// of the built-in 6. Fetches the provider's model list (or falls back to
+// MODEL_FALLBACKS for providers without a /v1/models endpoint like Perplexity),
+// asks the provider itself which of those is best, and updates
+// API_CONFIGS[provider].model. Returns null silently on any failure — caller
+// should leave existing model in place.
 async function recommendForDefault(provider) {
-  const models = await fetchModelsForProvider(provider);
-  if (!models?.length) return null;
+  // v3.26.2: try live fetch first, then fall back to MODEL_FALLBACKS for
+  // providers that don't expose /v1/models. Perplexity is the canonical
+  // case — it has chat completions but no models endpoint, so we still
+  // ask it to pick from our hardcoded sonar-* list.
+  let models = await fetchModelsForProvider(provider);
+  if (!models?.length) {
+    models = MODEL_FALLBACKS[provider] || [];
+  }
+  if (!models.length) return null;
   const cfg = API_CONFIGS[provider];
   if (!cfg?._key) return null;
 
@@ -3402,7 +3412,13 @@ async function migrateRecommendOnStartup() {
     if (!DEFAULT_AIS.find(d => d.id === ai.id)) return false; // defaults only
     const cfg = API_CONFIGS[ai.provider];
     if (!cfg?._key) return false; // needs a key
-    if (MODEL_FILTERS[ai.provider] === null) return false; // no /v1/models endpoint
+    // v3.26.2: accept providers without a /v1/models endpoint as long as we
+    // have a hardcoded MODEL_FALLBACKS list to feed the recommend call.
+    // Perplexity is the canonical case — chat completions work, but no
+    // models endpoint exists, so we use the sonar-* fallback list.
+    const hasDynamicEndpoint = MODEL_FILTERS[ai.provider] !== null;
+    const hasFallbackList = MODEL_FALLBACKS[ai.provider]?.length > 0;
+    if (!hasDynamicEndpoint && !hasFallbackList) return false;
     // Skip if we already have a cached recommendation
     const cached = getCachedRecommendation(`default-${ai.provider}`);
     return !cached;
