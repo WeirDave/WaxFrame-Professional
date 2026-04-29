@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-004';         // build stamp — update each session
+const BUILD       = '20260429-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5450,6 +5450,12 @@ function refCardMarkup(doc, index) {
 
   const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">↑</button>` : '';
   const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">↓</button>` : '';
+  // Position badge sits between the up/down arrows so the number changes
+  // visibly right where the user clicks — no manual needed to explain that
+  // first-listed material reads as most authoritative to the hive.
+  const positionLabel = total > 1
+    ? `<span class="ref-card-position" title="Position ${index + 1} of ${total} — first-listed material reads as most authoritative to The Hive. Use the arrows to reorder.">${index + 1}</span>`
+    : '';
 
   const body = doc.source === 'upload'
     ? `<div class="ref-card-upload-status">📄 <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
@@ -5458,13 +5464,14 @@ function refCardMarkup(doc, index) {
   return `
 <div class="ref-card" data-ref-id="${idAttr}">
   <div class="ref-card-hdr">
+    <span class="ref-card-position" title="Position ${index + 1} of ${total} — first-listed material reads as most authoritative to the hive. Use the arrows to reorder.">${index + 1}</span>
     <span class="ref-card-source-badge" title="${sourceLabel}">${sourceIcon}</span>
     <input type="text" class="ref-card-name" value="${esc(doc.name)}"
            oninput="renameReferenceDoc('${idAttr}', this.value)"
            aria-label="Reference document name"
            placeholder="Reference name…">
     <div class="ref-card-actions">
-      ${upBtn}${downBtn}
+      ${upBtn}${positionLabel}${downBtn}
       <button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
     </div>
   </div>

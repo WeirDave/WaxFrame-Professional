@@ -2,6 +2,38 @@
 
 ---
 
+## v3.25.4 Pro — Build `20260429-005`
+**Released:** April 29, 2026
+
+**Reference card position numbers.** Adds a small position chip between the up/down arrows on each reference card showing its current position in the list (1, 2, 3…). The chip auto-updates whenever cards are reordered or removed, so the cause-and-effect is immediate — click the up arrow, the number next to it decreases. The position matters because first-listed reference material reads as most-authoritative to the hive in the prompt envelope; until now that ordering was implicit (geographic only) and required reading the user manual to understand. Now the UI teaches itself.
+
+### What changed
+
+- **`refCardMarkup(doc, index)`** now builds a `positionLabel` variable that renders as a `<span class="ref-card-position">` containing `${index + 1}`. It's only rendered when `total > 1` — single-doc lists have no meaningful ordering, matching the existing pattern where the up/down arrows are also hidden in that case.
+- **Placement** — the position chip lives between the up and down arrows in the `.ref-card-actions` flex row (markup order: `${upBtn}${positionLabel}${downBtn}`). Tightly couples the visual to the action that changes it. Since `renderReferenceCards()` rebuilds the list on every reorder, the numbers re-render automatically with no extra wiring.
+- **Tooltip on the chip** — `Position N of M — first-listed material reads as most authoritative to The Hive. Use the arrows to reorder.` Surfaces the authority-weighting concept without forcing it into the user manual.
+- **Edge cases** — first card has no up arrow (`<empty>` `1` `↓`); last card has no down arrow (`↑` `N` `<empty>`). Single-card lists show no chip and no arrows. All consistent with the existing reorder-arrow rendering rules.
+
+### Styling
+
+`.ref-card-position` is small (22×22 px minimum, 6 px horizontal padding), accent-tinted background, accent-colored text, no border (so it doesn't compete visually with the actual buttons). `font-variant-numeric: tabular-nums` keeps multi-digit numbers (10, 11, 12…) from shifting button alignment as they roll over.
+
+### Why now
+
+David's original feedback: numbering exists "where you click up or down and you move them up or down it changes the number" — and the goal is foolproofness without expanding the user manual. Putting the number between the arrows is exactly that pattern: the action and its effect sit in the same visual neighborhood. No documentation needed.
+
+### What did not change
+
+- All other reference card behavior — naming, char/word/token counters, remove, drag-drop, paste vs upload distinction — untouched.
+- Setup 5 (Starting Document) — untouched.
+- File processing logic, sheet picker, drag-and-drop wiring — untouched.
+
+### Build-stamp sweep
+
+All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=`, `version.js?v=`, `app.js?v=`, and `lib/*.js?v=` cache-busts swept to `20260429-005` / `3.25.4`.
+
+---
+
 ## v3.25.3 Pro — Build `20260429-004`
 **Released:** April 29, 2026
 

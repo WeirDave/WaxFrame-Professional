@@ -7793,10 +7793,46 @@ kbd {
   background: var(--surface2);
   border-bottom: 1px solid var(--border);
 }
+.ref-card-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  cursor: help;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
 .ref-card-source-badge {
   font-size: 16px;
   flex-shrink: 0;
   cursor: help;
+}
+.ref-card-position {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  margin: 0 2px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  cursor: help;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
 }
 .ref-card-name {
   flex: 1 1 auto;
