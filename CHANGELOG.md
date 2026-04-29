@@ -2,6 +2,51 @@
 
 ---
 
+## v3.25.7 Pro — Build `20260429-008`
+**Released:** April 29, 2026
+
+**Custom AI UX completion pass.** Two small features that finish stories started in the v3.25.5/v3.25.6 run. The "Help me choose" link infrastructure laid down in v3.25.6 finally surfaces in the UI, and the Quick Add preset dropdown now shows users which providers are already in their hive — closing the matching parallel to the fetched-models marker that shipped in v3.25.5.
+
+### "Help me choose" link wired into Custom AI flow
+
+The `chooseModelLink` field added to every `QUICK_ADD_PROVIDERS` entry in v3.25.6 was sitting unused. v3.25.7 ships it:
+
+| Quick Add preset | Help me choose link |
+|---|---|
+| Mistral | `https://docs.mistral.ai/getting-started/models/models_overview/` |
+| Together AI | `https://docs.together.ai/docs/serverless-models` |
+| Cohere | `https://docs.cohere.com/docs/models` |
+| Ollama | `https://ollama.com/library` |
+| LM Studio | `https://lmstudio.ai/docs/basics/download-model` |
+
+A new `<a id="customAIChooseModelLink">` element sits to the right of the Fetch Models button. New helper `updateChooseModelLink()` reads the URL field, runs it through `getActivePreset()`, and toggles the `.is-visible` class plus `href` based on the result.
+
+The link is visible only when the URL matches a known Quick Add preset that declares a `chooseModelLink`. Manually editing the URL off-preset hides the link automatically — `getActivePreset()` is the single source of truth for "is the user currently in a known preset" and the link rides that signal. No extra state to track.
+
+Hooked into three call sites: `applyQuickAdd()` (preset selection), the URL input's `oninput` handler (manual URL edit), and `showAddCustomAI()` (modal open with stale state).
+
+Opens in a new tab with `rel="noopener noreferrer"` so the WaxFrame tab is never replaced.
+
+### Quick Add preset dropdown — already-in-hive markers
+
+Closes the second half of the #11 story. v3.25.5 added "✓ already in your hive" markers to the **fetched models dropdown** (matching by endpoint URL + model ID — exact duplicates disabled). v3.25.7 adds the same kind of marker to the **Quick Add preset dropdown** itself (matching by endpoint URL only — provider-level awareness, not model-level).
+
+New helper `populateQuickAddOptions()` reads the current `aiList`, normalizes endpoint URLs (trailing-slash stripped), and decorates each Quick Add `<option>` element with a `✓ already in your hive` suffix when the preset's URL matches any AI already in the hive.
+
+Original option labels are cached on `data-base-label` on first decorate so the suffix can be cleanly reapplied or removed without label drift on subsequent modal opens.
+
+Critical UX choice: **options stay enabled, not disabled.** Adding multiple models from the same provider is a valid flow — for example, configuring both `mistral-large-latest` and `mistral-medium-latest` from the same Mistral endpoint as separate AI cards. The marker informs without blocking. This differs from the fetched-models dropdown where exact model+endpoint duplicates ARE blocked, since adding the literal same model twice has no purpose.
+
+Hooked into `showAddCustomAI()` so the markers always reflect the current hive state when the modal opens. After a successful add, the modal closes; on next open, decoration runs fresh.
+
+### Build sweep
+
+All four canonical stamp locations bumped to `20260429-008` and `3.25.7`. Comment-header build stamps in `app.js` and `style.css` synced (had drifted to `20260427-013` over recent releases — fixed). All six pages — `index.html` plus the five helper pages — bumped on `style.css?v=` and `version.js?v=` cache-busts. `index.html` also bumped on `app.js?v=`, `pdf.min.js?v=`, `mammoth.browser.min.js?v=`, `jszip.min.js?v=`, `xlsx.full.min.js?v=`. Helper-page comment-header `Build:` stamps and `<meta name="waxframe-build">` content all swept.
+
+No changes to prompt envelope, session schema, backup format, or working console. Surgical Custom AI flow only.
+
+---
+
 ## v3.25.6 Pro — Build `20260429-007`
 **Released:** April 29, 2026
 

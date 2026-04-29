@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260427-013
+   Build: 20260429-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2612,6 +2612,23 @@ html, body {
 }
 .custom-ai-model-input-wrap input,
 .custom-ai-model-input-wrap select { flex: 1; min-width: 0; }
+
+/* v3.25.7 — "Help me choose" link sits next to the Fetch Models button.
+   Hidden by default; .is-visible toggled by JS when a Quick Add preset is
+   active and that preset declares a chooseModelLink. Sized to feel like a
+   secondary action, not a primary button — small, no background, accent
+   underlined on hover. */
+.custom-ai-choose-model-link {
+  display: none;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  padding: 6px 4px;
+}
+.custom-ai-choose-model-link.is-visible { display: inline-block; }
+.custom-ai-choose-model-link:hover { text-decoration: underline; }
 
 .custom-ai-key-wrap {
   display: flex;
