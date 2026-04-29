@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260428-006
+     Build: 20260428-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260428-006">
+  <meta name="waxframe-build" content="20260428-007">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.23.4">
+  <link rel="stylesheet" href="style.css?v=3.24.0">
 </head>
 <body>
 
@@ -352,48 +352,32 @@
         </div>
         <div class="hp-section-body">
 
-        <div class="doc-input-tabs">
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-upload" onclick="switchRefTab('upload')">📄 Upload File</button>
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-ref-paste" onclick="switchRefTab('paste')">📋 Paste Text</button>
-        </div>
-        <p id="refTabHint" class="doc-tab-hint">Pick <strong>Upload File</strong> or <strong>Paste Text</strong> to provide reference material — or skip this step entirely if your project does not need any.</p>
-
         <div class="ref-counter-row" id="refCounterRow">
-          <span class="ref-counter-label">📚 Reference size</span>
+          <span class="ref-counter-label">📚 Total reference size</span>
+          <span class="ref-counter-item ref-doc-count-chip" id="refDocCount">0 docs</span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span id="refCountChars">0</span></span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span id="refCountWords">0</span></span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span id="refCountTokens">0</span></span>
           <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
         </div>
 
-        <div class="doc-tab-panel" id="panel-ref-upload">
-          <div class="drop-zone" id="refDropZone" onclick="document.getElementById('refFileInput').click()"
-               ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
-            <div class="drop-zone-icon">📚</div>
-            <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
-            <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), or Markdown (.md)</div>
-            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleRefFileSelect(event)">
-          </div>
-          <div id="refFileStatus" class="file-status" style="display:none;"></div>
-          <div id="refFileClearRow" class="file-clear-row" style="display:none;">
-            <button class="btn btn-sm" onclick="clearRefUploadedFile()">✕ Remove file</button>
-          </div>
+        <div class="ref-soft-warning is-hidden" id="refSoftWarning">
+          ⚠️ Total reference material exceeds ~150,000 tokens. Some AI models have smaller context windows and may truncate or reject the request. Consider splitting across rounds, removing low-priority documents, or using a long-context Builder.
         </div>
 
-        <div class="doc-tab-panel" id="panel-ref-paste">
-          <div class="proj-ta-editor">
-            <div class="proj-ta-scroll">
-              <div class="proj-ta-nums" id="refPasteNums"><div>1</div></div>
-              <div class="proj-ta-inner">
-                <textarea id="refPasteText" class="proj-ta" placeholder="Paste reference material here — RFP requirements, job description, style guide, scoring rubric, prior decisions, vendor claims, etc.&#10;&#10;The hive will see this every round and cite against it, but will never propose edits to it."
-                  oninput="updateProjLineNums('refPasteNums', this); handleRefPasteInput()"></textarea>
-              </div>
-            </div>
-          </div>
-          <div class="file-clear-row">
-            <button class="btn btn-sm" onclick="clearRefPasteText()">✕ Clear text</button>
+        <div class="ref-cards-container" id="refCardsSetup">
+          <div class="ref-cards-empty">No reference material yet. Add a paste-text card or upload a file below.</div>
+        </div>
+
+        <div class="ref-add-row">
+          <button class="btn btn-accent" onclick="addReferenceDoc()">+ Add Paste-Text Reference</button>
+          <button class="btn" onclick="document.getElementById('refFileInput').click()">📄 Upload File as Reference</button>
+          <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md" style="display:none" onchange="handleRefFileSelect(event)">
+          <div class="ref-add-dropzone" id="refDropZone" ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
+            …or drag &amp; drop a file here (.docx, .pdf, .pptx, .txt, .md)
           </div>
         </div>
+        <div id="refFileStatus" class="file-status" style="display:none;"></div>
 
         </div>
       </div>
@@ -735,18 +719,27 @@
     <span class="notes-drawer-title">📚 Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
     <span class="notes-drawer-sub">Source material the hive cites against every round but never edits. Edits apply to the next round.</span>
     <div class="notes-drawer-actions">
-      <button class="btn" onclick="copyReferenceMaterial()">📋 Copy</button>
-      <button class="btn" onclick="clearReferenceMaterialFromDrawer()">✕ Clear</button>
-      <button class="btn btn-accent" onclick="saveReferenceMaterialFromDrawer()">💾 Save &amp; Close</button>
+      <button class="btn" onclick="copyReferenceMaterial()">📋 Copy All</button>
+      <button class="btn" onclick="clearAllReferenceMaterial()">✕ Clear All</button>
+      <button class="btn btn-accent" onclick="closeReferenceMaterialDrawer()">✕ Close</button>
     </div>
   </div>
   <div class="ref-drawer-counter-row">
+    <span class="ref-counter-item ref-doc-count-chip" id="refDrawerDocCount">0 docs</span>
     <span class="ref-counter-item"><span class="ref-counter-label">Chars:</span> <span id="refDrawerCountChars">0</span></span>
     <span class="ref-counter-item"><span class="ref-counter-label">Words:</span> <span id="refDrawerCountWords">0</span></span>
     <span class="ref-counter-item"><span class="ref-counter-label">Tokens (est.):</span> <span id="refDrawerCountTokens">0</span> <button class="goal-info-btn" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
   </div>
-  <textarea id="refDrawerTextarea" class="notes-drawer-ta ref-drawer-ta" oninput="updateRefDrawerCounter()"
-    placeholder="Paste reference material here — RFP requirements, job description, style guide, scoring rubric, prior decisions, vendor claims, etc."></textarea>
+  <div class="ref-soft-warning is-hidden" id="refDrawerSoftWarning">
+    ⚠️ Total reference material exceeds ~150,000 tokens. Some AI models have smaller context windows and may truncate or reject the request.
+  </div>
+  <div class="ref-cards-container ref-cards-container--drawer" id="refCardsDrawer">
+    <div class="ref-cards-empty">No reference material yet. Add a paste-text card below.</div>
+  </div>
+  <div class="ref-add-row ref-add-row--drawer">
+    <button class="btn btn-accent" onclick="addReferenceDoc()">+ Add Paste-Text Reference</button>
+    <span class="ref-add-drawer-note">To upload files, use Setup 4 — Reference Material from the menu.</span>
+  </div>
 </div>
 
 <!-- ── Add Custom AI Modal ── -->
@@ -1619,8 +1612,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.23.4"></script>
-<script src="app.js?v=3.23.4"></script>
+<script src="version.js?v=3.24.0"></script>
+<script src="app.js?v=3.24.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
