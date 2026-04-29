@@ -621,7 +621,7 @@
       <p>Two buttons below the card list add new documents:</p>
       <ul>
         <li><strong>+ Add Paste-Text Reference</strong> creates a new editable card with an empty textarea. Paste your text in and it becomes the card's content. The card name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
-        <li><strong>📄 Upload File as Reference</strong> opens a file picker, or you can drag &amp; drop a file onto the dropzone next to the buttons. The file is read once and its content is loaded into a new read-only card with the original filename as the card name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears so you can choose which sheets to ingest — each selected sheet becomes its own independent card with its own token chip.</li>
+        <li><strong>📄 Upload File as Reference</strong> opens a file picker, or you can drag &amp; drop a file onto the dropzone next to the buttons. The file is read once and its content is loaded into a new read-only card with the original filename as the card name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears and each selected sheet becomes its own independent card. For the canonical breakdown of what gets extracted from each format and what does not, see <a href="#file-ingestion" class="link-accent">File Ingestion ↓</a>.</li>
       </ul>
       <p>Each card has the same controls: an editable name field, character / word / token counts, ⬆️ and ⬇️ arrows to reorder (the hive sees cards in the order shown), and a 🗑️ remove button. Paste cards are fully editable; upload cards are read-only — to replace an uploaded card's content, remove it and re-upload.</p>
       <p>A soft warning banner appears at the top of Setup 4 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.</p>
@@ -686,8 +686,7 @@
         <li>Click anywhere inside the drop zone to open your operating system's file browser. Navigate to your file and select it.</li>
         <li>Or drag your file from any folder on your computer and drop it directly onto the drop zone.</li>
       </ul>
-      <p>Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), Excel workbooks (.xlsx, .xlsm), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count.</p>
-      <p><strong>What gets extracted:</strong> WaxFrame's importer aims for full-fidelity content capture — not just raw text. <strong>Word</strong> documents preserve heading hierarchy, lists, tables, bold/italic, comments, footnotes, endnotes, headers/footers, text boxes, and track-change accepted text. <strong>PDFs</strong> capture position-aware text with detected tables converted to markdown, plus document outline (TOC), AcroForm field values, annotation comments and highlights, and a per-page heuristic OCR pass for embedded screenshot-tables on sparse pages (requires a vision-capable AI key — ChatGPT, Claude, Gemini, or Grok). Scanned/image-only PDFs route to full-document AI vision transcription automatically. <strong>PowerPoint</strong> decks separate slide titles from body content, capture speaker notes, convert embedded tables to markdown, and pull text from SmartArt diagrams and chart labels. <strong>Excel</strong> workbooks convert each visible sheet to a markdown table with formulas evaluated to displayed values, merged cells flattened by repetition, cell comments captured, and defined names surfaced. Hidden sheets are skipped (count surfaced); cell colors and conditional formatting are not preserved.</p>
+      <p>Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), Excel workbooks (.xlsx, .xlsm), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count. For Excel workbooks with multiple visible sheets, a sheet picker appears and selected sheets are concatenated into a single document with <code>## Sheet:</code> dividers. For the canonical breakdown of what gets extracted from each format and what does not, see <a href="#file-ingestion" class="link-accent">File Ingestion — What Gets Extracted ↓</a>.</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p><strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — files exported from Word, Google Docs, or similar applications. Scanned documents and PDFs created from images do not contain extractable text and will produce garbled or empty results. If your PDF was scanned, use the <strong>📋 Paste Text</strong> option instead and copy the text from a version of the document you can select text in.</p></div>
@@ -1295,10 +1294,86 @@
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
             <h2 class="hp-section-title">Reference</h2>
-            <p class="hp-section-sub">Troubleshooting common problems and a primer on API costs and billing.</p>
+            <p class="hp-section-sub">File ingestion details, troubleshooting common problems, and a primer on API costs and billing.</p>
           </div>
         </div>
         <div class="hp-section-body">
+
+  <div class="wh-section" id="file-ingestion">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">📥</div>
+      <div class="wh-section-title">File Ingestion — What Gets Extracted From Your Files</div>
+    </div>
+
+    <p>Both <strong>Setup 4 (Reference Material)</strong> and <strong>Setup 5 (Starting Document)</strong> use the same importer, so everything described here applies equally to both surfaces. The importer aims for full-fidelity content capture — not just raw text. Because AIs only consume plain text, anything visual or structural must be flattened in some way or it is lost. This section is the canonical reference for exactly what makes the cut and what does not, format by format.</p>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Accepted formats at a glance</div>
+      <table class="wh-table">
+        <thead><tr><th>Format</th><th>Extensions</th><th>What it is good for</th></tr></thead>
+        <tbody>
+          <tr><td>Word</td><td>.docx</td><td>Most documents that originated in Word — proposals, reports, letters, templates, résumés.</td></tr>
+          <tr><td>PDF</td><td>.pdf</td><td>Anything you cannot get back to its original source — published reports, downloaded specs, scanned documents.</td></tr>
+          <tr><td>PowerPoint</td><td>.pptx</td><td>Slide decks, especially when the substance lives in speaker notes rather than on-slide bullets.</td></tr>
+          <tr><td>Excel</td><td>.xlsx, .xlsm</td><td>Tabular data — pricing sheets, requirement matrices, scoring rubrics, comparison tables.</td></tr>
+          <tr><td>Plain text</td><td>.txt</td><td>Already-clean text from any source.</td></tr>
+          <tr><td>Markdown</td><td>.md</td><td>Already-clean structured text. Markdown formatting is preserved as-is.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Word documents (.docx)</div>
+      <p><strong>Preserved:</strong> Heading hierarchy rendered as markdown headings, bullet and numbered lists, tables, bold and italic emphasis, comments rendered as a Comments section with author and text, footnotes and endnotes (numbered), headers and footers (deduplicated so boilerplate appears once), text boxes (Word's native text-box content that other importers silently drop), and tracked-change accepted text — insertions are kept, deletions are dropped.</p>
+      <p><strong>Not preserved:</strong> Embedded images, charts, exact fonts and styling, page break locations, drop caps, watermarks. The text and structure survive; the visual layout does not.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">PDFs (.pdf)</div>
+      <p><strong>Native text PDFs:</strong> Position-aware text extraction with detected tables converted to markdown, plus the document outline (TOC) when present, AcroForm form-field values when filled, and annotation comments and highlights inlined as <code>[Note on page N: contents]</code> markers at the page where they appear. Table detection is heuristic — works well for clean grid-aligned tables, may miss heavily-styled tables or those with merged-cell headers.</p>
+      <p><strong>Scanned or image-only PDFs:</strong> Routed automatically to AI vision transcription using the first vision-capable AI in your hive (ChatGPT, Claude, Gemini, or Grok). The result appears as the working document with a warning to verify accuracy. If no vision-capable AI key is configured, the importer returns whatever text it could extract along with a warning.</p>
+      <p><strong>Mixed PDFs (mostly text with sparse pages):</strong> Pages with very little extractable text in an otherwise text-rich document trigger a heuristic OCR pass. The sparse pages are rendered to images and OCR'd via your vision-capable AI. The OCR output is appended as a separate section so the original text is preserved alongside it. This catches the common "screenshot of a table embedded in an otherwise text PDF" case that previously dropped silently.</p>
+      <p><strong>Re-extract on demand:</strong> If the initial extraction for a PDF looks garbled or wrong, the work screen shows a banner offering to re-extract using AI vision. This re-runs the full-document vision transcription regardless of the original detection.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">PowerPoint (.pptx)</div>
+      <p><strong>Preserved:</strong> Slide order, slide titles separated from body content (each slide becomes <code>## Slide N: Title</code>), bullet content on each slide, speaker notes (rendered as <code>**Speaker notes:**</code> directly under each slide), embedded tables converted to markdown, SmartArt diagram text, and chart titles, category labels, and series names.</p>
+      <p><strong>Not preserved:</strong> Slide layouts and themes, animations and transitions, embedded images, chart visualizations themselves (only the labels survive), per-element positioning. Decks that rely heavily on visual composition rather than text content will lose most of their meaning — paste the key takeaways manually if that is what matters.</p>
+      <p><strong>Note on speaker notes:</strong> The importer maps notes to slides by filename (<code>notesSlide1.xml</code> ↔ <code>slide1.xml</code>). For typical decks this works correctly. For decks rebuilt from templates with non-default note ordering, notes may appear under the wrong slide — rare but worth knowing about.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Excel (.xlsx, .xlsm)</div>
+      <p>Workbooks with two or more visible sheets show a <strong>sheet picker modal</strong> on import. Pick which sheets to ingest. The picker shows the cell count and an estimated token count for each sheet so you can make informed selections. Single-sheet workbooks ingest directly with no modal.</p>
+      <p><strong>Setup 4 (Reference Material):</strong> Each selected sheet becomes its own independent reference card with its own name, token chip, and reorder controls. Leverages the multi-document support added in v3.24.0.</p>
+      <p><strong>Setup 5 (Starting Document):</strong> Selected sheets are concatenated into a single document with <code>## Sheet:</code> H2 dividers between them. If you only want one sheet, uncheck the others in the picker.</p>
+      <p><strong>Per-sheet conversion:</strong> Cell values are extracted with formulas evaluated to their displayed values — a cell showing <code>$1,250.00</code> from a SUM formula appears as <code>$1,250.00</code> in the output, not the raw number or the formula text. Merged cells are flattened by repeating the top-left value across the merged span. Cell comments are captured in a per-sheet <code>**Cell notes:**</code> footer. Workbook-level defined names are surfaced as a glossary header. Sheets with more than 15 columns prepend a warning that markdown table comprehension by AIs may degrade past that width — there is no hard cap.</p>
+      <p><strong>Not preserved:</strong> Cell colors and conditional formatting, chart visualizations and embedded images, pivot table source data (cached display values are shown for pivots), macros (not run), hidden sheets (skipped — count surfaced via warning).</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Plain text (.txt) and Markdown (.md)</div>
+      <p>Read directly into the working document or reference card with no transformation. Markdown formatting is preserved as-is — most reviewers handle markdown structure naturally and will respect heading hierarchy, lists, and emphasis when reasoning about the document.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Vision OCR fallback — when and how it fires</div>
+      <p>Vision OCR runs automatically when the standard text extraction yields garbled or near-empty output (scanned PDFs, image-only PDFs, or PDFs with sparse-text pages where embedded screenshots dominate). It uses the first vision-capable AI from your hive in this priority order: ChatGPT, Claude, Gemini, Grok. If none of those four providers have a key configured, the importer skips the OCR step and returns whatever text it could extract along with a warning suggesting which keys to add.</p>
+      <p>OCR runs add latency — typically 15–30 seconds for a short document, longer for many pages. They also add cost (a vision API call per page or batch of pages). The importer is conservative about firing OCR — it only does so when the standard extraction quality is genuinely poor.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When to paste manually instead</div>
+      <p>The importer is best-effort. For documents where exact wording matters — a legal contract, a regulatory specification, a customer email you must respond to verbatim — paste the text manually rather than relying on extraction. Two clicks of copy/paste from the source application will always be more accurate than any importer because there is no extraction step at all.</p>
+      <p>For documents where structure and bulk content matter more than exact wording — research papers, long reports, drafts you want feedback on, RFP requirements you want the hive to cite against — the importer is more than good enough. Spot-check the result if you have any doubt about a critical passage.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Air-gap and secure-network deployment</div>
+      <p>All four ingestion libraries (PDF.js, Mammoth, JSZip, SheetJS) ship inside the WaxFrame source tree at <code>/lib/</code>. There is no CDN reach-back at runtime — the page works end-to-end on networks that block external fetches. This is the recommended configuration for defense, healthcare, financial, and other secure environments. Total library footprint is approximately 3.1 MB added to first-load.</p>
+    </div>
+  </div>
 
   <div class="wh-section" id="problems">
     <div class="wh-section-hdr">
