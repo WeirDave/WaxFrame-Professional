@@ -2,6 +2,64 @@
 
 ---
 
+## v3.26.0 Pro — Build `20260429-009`
+**Released:** April 29, 2026
+
+**Recommend Model pipeline.** Architectural shift: every Add AI path — both the default 6 (ChatGPT, Claude, Gemini, Grok, DeepSeek, Perplexity) and Custom AI — now asks the provider's own API which of its models to use. Hardcoded `MODEL_LABELS` / `MODEL_FALLBACKS` demoted to safety net. Solves the staleness and ghost-model problem permanently.
+
+### Why this change
+
+`MODEL_LABELS` and `MODEL_FALLBACKS` were the source of truth for "which model is the right default for provider X." That model goes stale every time a provider releases a new flagship, and ghosts like `gpt-5.4` accumulate when models get renamed or deprecated. The fix: stop pretending we know more about a provider's catalog than the provider does. Delegate the question to whichever AI you're adding.
+
+### How it works
+
+A new `recommendModel({ cacheId, endpoint, format, key, models, askingModel })` function constructs a structured prompt using `{MODEL_LIST}` substitution, fires it at the provider's API using `askingModel` (one of the fetched models, used to ask the question), parses a strict `PICK:` / `WHY:` reply, validates that PICK is in the fetched list (rejects hallucinations), and caches the result for 24 hours keyed by `cacheId`.
+
+Two wrappers consume it:
+
+**`recommendForDefault(provider)`** — fired from `saveKeyForAI` after the user pastes an API key for any of the default 6. Background-fetches `/v1/models`, runs the recommend call, swaps `API_CONFIGS[provider].model` to the recommendation if successful. Toast shows the WHY. Falls back silently to existing model if anything in the chain fails — air-gap-safe and graceful.
+
+**`recommendCustomAIModel()`** — onclick handler for a new 🤖 Recommend button in the Custom AI flow. User hits Fetch Models, then Recommend. Autofills the dropdown with the pick and surfaces the WHY in a toast. Confirmation happens through the existing Test Connection / Add to Hive flow.
+
+### Custom AI flow — basic / advanced labeling
+
+The Recommend button (basic) sits next to the Help me choose link (advanced) below the model field. Both visible only when relevant:
+
+- **🤖 Recommend** — visible after Fetch Models populates the dropdown (needs models to ask about). Green "basic" badge.
+- **Help me choose** — visible when a Quick Add preset is active (needs a `chooseModelLink` URL). Purple "advanced" badge.
+
+Two paths for two user types: people who want the AI to decide click Recommend, people who want to research themselves click the link.
+
+### Prompt transparency
+
+The recommendation prompt is exposed in `prompt-editor.html` as `recommend_model`. Power users can edit it freely — the `{MODEL_LIST}` placeholder is the only required token; everything else is open. Default prompt lives in `MODEL_RECOMMENDATION_PROMPT_DEFAULT` in `app.js` and is kept in sync with the prompt-editor `DEFAULTS.recommend_model` entry.
+
+### Cache + cost
+
+Cache TTL: 24 hours, keyed by `cacheId`:
+- Default 6: `default-{provider}` (e.g., `default-chatgpt`)
+- Custom AI: trailing-slash-stripped URL
+
+Adding three slots of the same provider on the same day = one recommend call total. Recommend calls cost roughly $0.0001 each (one chat completion, ~200 tokens) — absorbed silently.
+
+### Defense-in-depth
+
+Every link in the chain has a graceful failure mode:
+- `/v1/models` fetch fails → `MODEL_FALLBACKS[provider]` still has reasonable defaults
+- Recommend call fails (network, 401, malformed response) → existing `cfg.model` preserved
+- Recommend returns a hallucinated model not in the list → rejected with a `console.warn`, existing `cfg.model` preserved
+- User can override the recommendation anytime via the existing model selector dropdown
+
+`MODEL_LABELS` / `MODEL_FALLBACKS` aren't going away — they're the safety net. Demoted, not deleted.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-009` and `3.26.0`. Comment-header build stamps in `app.js` and `style.css` synced. All six pages — `index.html` plus the five helper pages — bumped on `style.css?v=` and `version.js?v=` cache-busts. `index.html` also bumped on `app.js?v=`, `pdf.min.js?v=`, `mammoth.browser.min.js?v=`, `jszip.min.js?v=`, `xlsx.full.min.js?v=`.
+
+No prompt envelope changes. No session schema changes. No working console changes.
+
+---
+
 ## v3.25.7 Pro — Build `20260429-008`
 **Released:** April 29, 2026
 

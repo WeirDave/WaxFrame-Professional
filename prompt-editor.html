@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — prompt-editor.html
-     Build: 20260429-008
+     Build: 20260429-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-008">
+  <meta name="waxframe-build" content="20260429-009">
   <title>WaxFrame — Prompt Editor</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.25.7">
+  <link rel="stylesheet" href="style.css?v=3.26.0">
 </head>
 <body class="helper-body">
 
@@ -211,6 +211,17 @@
           <button class="prompt-reset-btn" onclick="resetOne('ai_warning')">Reset</button>
         </div>
         <textarea class="prompt-ta" id="ta-ai_warning" oninput="markModified('ai_warning')"></textarea>
+      </div>
+
+      <div class="prompt-block">
+        <div class="prompt-block-header">
+          <div>
+            <div class="prompt-block-label">Model Recommendation (v3.26.0) <span class="modified-badge" id="badge-recommend_model">Modified</span></div>
+            <div class="prompt-block-desc">Sent to a provider's API when the user adds a new AI (default 6 or Custom AI). The provider returns a PICK and WHY which WaxFrame uses to auto-select the best model. The {MODEL_LIST} placeholder is replaced at runtime with the actual fetched model list — keep that token verbatim.</div>
+          </div>
+          <button class="prompt-reset-btn" onclick="resetOne('recommend_model')">Reset</button>
+        </div>
+        <textarea class="prompt-ta" id="ta-recommend_model" oninput="markModified('recommend_model')"></textarea>
       </div>
 
     </div>
@@ -416,7 +427,25 @@ The user has made final decisions on the following. Do NOT re-raise these as con
 The user has made final decisions on the following. Do NOT suggest any changes to the chosen text or to the same concept, even using different wording. These are closed.`,
 
     ai_warning: `SPECIFIC WARNINGS FOR YOU — REPEATED VIOLATIONS:
-You have repeatedly raised the following after the user already resolved them. This is your final notice — do NOT raise these again under any circumstances:`
+You have repeatedly raised the following after the user already resolved them. This is your final notice — do NOT raise these again under any circumstances:`,
+
+    recommend_model: `You are helping a user pick one of YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool.
+
+The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. The ideal model:
+- Has strong writing quality and structured reasoning
+- Has a long context window
+- Is a recent flagship or general-purpose model — NOT a coding-only, embedding, or specialized variant
+- Is currently supported (not deprecated)
+
+Available models on this endpoint:
+{MODEL_LIST}
+
+Pick ONE model id from the list above. Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
+
+PICK: <exact model id from list>
+WHY: <one sentence, max 120 chars>
+
+If multiple models are roughly equivalent flagships, prefer the most recently released.`
   };
 
   // ── Load saved prompts or defaults ──
@@ -492,7 +521,7 @@ You have repeatedly raised the following after the user already resolved them. T
 <script src="theme.js"></script>
 <script src="nav-helper.js?v=3.22.6"></script>
 <script src="license-helper.js?v=3.22.6"></script>
-<script src="version.js?v=3.25.7"></script>
+<script src="version.js?v=3.26.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
