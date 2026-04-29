@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-012
+//  Build: 20260429-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -202,31 +202,35 @@ const API_CONFIGS = {
 // ── MODEL LABELS & STATIC FALLBACKS ──
 // Label lookup for known model IDs — shown in the model selector dropdown
 // Maintained here so adding a new model label never requires touching UI code
+// v3.26.4: MODEL_LABELS no longer carries "Recommended" tags — the live
+// recommend pipeline decides what's recommended now, and buildModelSelector
+// renders a ✨ marker dynamically next to whichever model the cached
+// recommendation picked. Static labels are pure descriptors.
 const MODEL_LABELS = {
   // OpenAI
-  'gpt-4.1':        { tag: 'Recommended · Fast',       note: 'Best instruction following, low cost' },
+  'gpt-4.1':        { tag: 'Fast',                     note: 'Strong instruction following, low cost' },
   'gpt-4.1-mini':   { tag: 'Budget',                   note: 'Faster, cheaper, good for reviewers' },
   'gpt-5.4':        { tag: 'Latest · Most Capable',    note: 'Best quality, higher cost' },
   'gpt-5.4-mini':   { tag: 'Fast · Capable',           note: 'GPT-5 class at lower cost' },
   // Anthropic
-  'claude-sonnet-4-6': { tag: 'Recommended',           note: 'Best balance of quality and cost' },
+  'claude-sonnet-4-6': { tag: 'Balanced',              note: 'Best balance of quality and cost' },
   'claude-opus-4-6':   { tag: 'Most Capable',          note: 'Highest quality, higher cost' },
   'claude-haiku-4-5':  { tag: 'Budget · Fast',         note: 'Fastest, most affordable' },
   // Gemini
-  'gemini-2.5-flash':  { tag: 'Recommended',           note: 'Best balance, free tier available' },
+  'gemini-2.5-flash':  { tag: 'Balanced',              note: 'Best balance, free tier available' },
   'gemini-2.5-pro':    { tag: 'Most Capable',          note: 'Higher quality, may cost more' },
   // Grok
-  'grok-4-fast-non-reasoning': { tag: 'Recommended · Fast',    note: 'Best speed/quality balance, low cost' },
-  'grok-4-fast-reasoning':     { tag: 'Reasoning · Fast',      note: 'Adds reasoning for complex tasks' },
-  'grok-4':                    { tag: 'Flagship',              note: 'Full flagship model' },
-  'grok-4.20-0309-non-reasoning': { tag: 'Latest · Fast',     note: 'Newest generation, no reasoning' },
-  'grok-4.20-0309-reasoning':  { tag: 'Latest · Reasoning',   note: 'Newest generation with reasoning' },
-  'grok-3':                    { tag: 'Previous',              note: 'Previous generation' },
-  'grok-3-mini':               { tag: 'Budget',                note: 'Lighter, faster, cheaper' },
+  'grok-4-fast-non-reasoning': { tag: 'Fast',                   note: 'Strong speed/quality balance, low cost' },
+  'grok-4-fast-reasoning':     { tag: 'Reasoning · Fast',       note: 'Adds reasoning for complex tasks' },
+  'grok-4':                    { tag: 'Flagship',               note: 'Full flagship model' },
+  'grok-4.20-0309-non-reasoning': { tag: 'Latest · Fast',       note: 'Newest generation, no reasoning' },
+  'grok-4.20-0309-reasoning':  { tag: 'Latest · Reasoning',     note: 'Newest generation with reasoning' },
+  'grok-3':                    { tag: 'Previous',               note: 'Previous generation' },
+  'grok-3-mini':               { tag: 'Budget',                 note: 'Lighter, faster, cheaper' },
   // DeepSeek
-  'deepseek-chat':     { tag: 'Recommended · Budget',  note: 'Best value Builder, very low cost' },
+  'deepseek-chat':     { tag: 'Budget',                note: 'Best value Builder, very low cost' },
   // Perplexity
-  'sonar-pro':              { tag: 'Recommended',      note: 'Best for factual review tasks' },
+  'sonar-pro':              { tag: 'Balanced',         note: 'Strong factual review' },
   'sonar-reasoning-pro':    { tag: 'Reasoning',        note: 'Deep reasoning with web search' },
   'sonar-reasoning':        { tag: 'Reasoning · Fast', note: 'Lighter reasoning with search' },
   'sonar-deep-research':    { tag: 'Research',         note: 'Long-form research reports' },
@@ -243,15 +247,33 @@ const MODEL_FALLBACKS = {
   perplexity: ['sonar-pro', 'sonar-reasoning-pro', 'sonar-reasoning', 'sonar-deep-research', 'sonar'],
 };
 
-// Filters to keep only chat-relevant models from dynamic lists
+// v3.26.4: shared structural filter — only blocks models whose API contract
+// fundamentally differs from chat-completion (different request shape,
+// different response shape, requires special tooling). Stops there.
+//
+// Per-provider naming heuristics removed. We can't keep regex patterns
+// current with 6 providers' release cadences, and AIs make better
+// decisions from a full live list than from our pruned subset.
+//
+// "nano-banana" is Google's image-gen model — no naming pattern catches it,
+// but the AI knows what it is and won't recommend it. Trust the AI.
+const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana/i;
+
+// MODEL_FILTERS — null means "this provider has no /v1/models endpoint, use
+// MODEL_FALLBACKS instead" (Perplexity). Otherwise everyone shares the same
+// structural filter.
 const MODEL_FILTERS = {
-  chatgpt: id => /^gpt-[45]/.test(id) && !/instruct|audio|realtime|search|image|tts|whisper|embed|transcribe|babbage|davinci|curie|ada/.test(id),
-  claude:  id => /^claude-/.test(id),
-  gemini:  id => /^gemini-[23]/.test(id) && !/embed|image|video|audio|tts|veo|lyria|imagine/.test(id),
-  grok:    id => /^grok-[0-9]/.test(id) && !/imagine|video|vision-beta/.test(id),
-  deepseek: id => /^deepseek-(chat|reasoner)/.test(id),
-  perplexity: null, // no dynamic endpoint — always use fallback
+  chatgpt:    id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  claude:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  gemini:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  grok:       id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  deepseek:   id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  perplexity: null,
 };
+
+// Custom AI Add flow uses the same structural filter — naming was previously
+// duplicated as NON_CHAT_RE, now an alias of STRUCTURAL_NON_CHAT_RE.
+const NON_CHAT_RE = STRUCTURAL_NON_CHAT_RE;
 
 // Cache key prefix and TTL (7 days)
 const MODELS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
@@ -324,21 +346,35 @@ function getModelsForProvider(provider) {
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
+
+  // v3.26.4: dynamically mark the live-recommended model with ✨. Source of
+  // truth is the recommend cache (set by recommendForDefault on key save,
+  // migration, or Recheck). The marker moves with the recommendation as
+  // models change — no static "Recommended" labels to go stale.
+  const cached = getCachedRecommendation(`default-${provider}`);
+  const recommendedModel = cached?.model || null;
+
   const options = models.map(m => {
     const label = MODEL_LABELS[m];
-    const display = label ? `${m} — ${label.tag}` : m;
+    const tag = label?.tag || '';
+    const baseDisplay = tag ? `${m} — ${tag}` : m;
+    const display = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
     const selected = m === currentModel ? 'selected' : '';
     return `<option value="${m}" ${selected}>${esc(display)}</option>`;
   }).join('');
+
+  // Note line under the dropdown — combines static descriptor note with
+  // the live recommendation's WHY when current model matches the rec.
   const labelInfo = MODEL_LABELS[currentModel];
-  const noteHtml = labelInfo?.note
-    ? `<span class="model-select-note">${esc(labelInfo.note)}</span>`
-    : '';
+  const isRecommended = currentModel === recommendedModel;
+  const recWhy = isRecommended && cached?.why ? `✨ ${esc(cached.why)}` : '';
+  const staticNote = labelInfo?.note ? esc(labelInfo.note) : '';
+  const noteText = recWhy || staticNote;
+  const noteHtml = noteText ? `<span class="model-select-note">${noteText}</span>` : '';
+
   // v3.26.3: 🤖 Recommend button moved here from the key row. Conceptually
   // it belongs WITH the model dropdown (it changes which model is selected),
-  // not next to the Test button (which validates the API key). Rename from
-  // "Recheck" to "Recommend" to match the Custom AI flow language and avoid
-  // confusion with key Test action.
+  // not next to the Test button (which validates the API key).
   const recheckBtn = showRecheck
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's API which of its models is best for WaxFrame">🤖 Recommend</button>`
     : '';
@@ -442,7 +478,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-012';         // build stamp — update each session
+const BUILD       = '20260429-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3200,10 +3236,8 @@ function populateQuickAddOptions() {
 }
 
 // Models that should never appear as Hive reviewers regardless of provider.
-// Embeddings, moderation/safety, speech-to-text, text-to-speech, audio,
-// real-time, reranking, image generation. The Hive expects chat-completion
-// behavior; these models will either error or produce non-chat output.
-const NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|veo|lyria|stable-diffusion|safety/i;
+// (NON_CHAT_RE is defined alongside MODEL_FILTERS at the top of this file —
+// see STRUCTURAL_NON_CHAT_RE. Custom AI uses the same filter as default 6.)
 
 // ── v3.26.0: Model recommendation pipeline ────────────────────────────────
 // The Recommend pipeline asks a provider's own API which of its available
@@ -3358,8 +3392,20 @@ async function recommendForDefault(provider) {
   const cfg = API_CONFIGS[provider];
   if (!cfg?._key) return null;
 
-  // Ask using whatever model is currently configured (already a flagship default).
-  const askingModel = cfg.model || models[0];
+  // v3.26.4: pick a STABLE askingModel rather than just trusting cfg.model.
+  // The user might have manually picked something incompatible with regular
+  // chat completions (Gemini's Computer Use models reject standard calls,
+  // for example). Prefer in this order:
+  //   1. First MODEL_FALLBACKS entry that's actually in the candidate list
+  //      (these are curated as known-good chat models)
+  //   2. cfg.model if it's in the candidate list (fallback for providers
+  //      without MODEL_FALLBACKS coverage)
+  //   3. First model in the list (last resort)
+  const fallbackList = MODEL_FALLBACKS[provider] || [];
+  const stableFallback = fallbackList.find(m => models.includes(m));
+  const askingModel = stableFallback
+    || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
+    || models[0];
 
   let format = 'openai';
   if (provider === 'claude') format = 'anthropic';
