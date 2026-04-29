@@ -373,16 +373,67 @@ let history   = [];
 let docText   = '';
 let docTab    = 'upload';
 // ── REFERENCE MATERIAL state (v3.21.0) ──
-let refTab      = '';        // 'upload', 'paste', or '' (no selection — neither panel visible until user picks)
-let refMaterial = '';        // active reference material text
-let refFilename = '';        // filename if uploaded (informational only)
+// ── Reference Material — multi-document support (v3.24.0+) ──
+// Each entry: { id, name, text, source: 'upload'|'paste', filename }
+//   - source 'upload' → text is read-only in UI (stored as fetched), filename set
+//   - source 'paste'  → text is user-editable in UI, filename = null
+//   - name → user-visible label, used as section header in prompt envelope
+// Replaces the v3.21.0–v3.23.4 single-doc model (`refMaterial` string +
+// `refFilename` string). Backup format v4 stores this as an array;
+// v3 backups auto-migrate on restore — see loadProject().
+let referenceDocs = [];
+
+// Generate a stable session-local doc ID — unique within the active
+// referenceDocs array; not globally unique by design.
+function generateRefDocId() {
+  return 'ref_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
+}
+
+// Build the labeled prompt-envelope block for all reference docs.
+// Returns empty string if no docs are present, so callers can append unconditionally.
+// Multi-doc setups get a count line + per-doc section headers so AIs can cite
+// specific documents by name when relevant.
+function buildReferenceMaterialBlock(sep) {
+  if (!referenceDocs.length) return '';
+  const docs = referenceDocs.filter(d => (d.text || '').trim());
+  if (!docs.length) return '';
+  const docCount = docs.length;
+  let block = `REFERENCE MATERIAL — read-only source the user is citing against. Do NOT propose edits to this material. Do NOT rewrite it or include it in your output. Treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules.\n`;
+  if (docCount > 1) {
+    block += `(${docCount} reference documents follow, each labeled with its name. Cite the specific document by name when relevant.)\n`;
+  }
+  block += '\n';
+  docs.forEach(doc => {
+    const text = (doc.text || '').trim();
+    block += `${sep}\n## Reference: ${doc.name}\n${sep}\n${text}\n${sep}\n\n`;
+  });
+  return block;
+}
+
+// Snapshot reference docs for history capture — returns a deep-enough copy
+// so later edits to the live referenceDocs array don't mutate historical entries.
+function snapshotReferenceDocs() {
+  return referenceDocs.map(d => ({ ...d }));
+}
+
+// Sum total text across all docs — used by counters, the soft-warning
+// threshold check, and the "is reference material present" gate elsewhere.
+function getTotalReferenceText() {
+  return referenceDocs.map(d => d.text || '').join('\n\n');
+}
+
+// Reference Material is "present" if at least one doc has non-empty text.
+// Used in screen-guard checks ("you have unsaved reference material").
+function hasReferenceMaterial() {
+  return referenceDocs.some(d => (d.text || '').trim());
+}
 let workDocSaveTimer = null;
 let pasteTextSaveTimer = null;
 let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260428-006';         // build stamp — update each session
+const BUILD       = '20260428-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1717,29 +1768,12 @@ function goToScreen(id) {
     setTimeout(updateDocRequirements, 0);
   }
   if (id === 'screen-reference') {
-    // Restore saved tab + content state when navigating back to the Reference
-    // Material screen. Without this, returning to the screen mid-project leaves
-    // both tabs in an unselected state with no panel visible — even though the
-    // size readout shows data is loaded. Mirrors the screen-document pattern.
-    if (refTab) {
-      switchRefTab(refTab, true);
-    } else if (refMaterial) {
-      // User had data but no saved tab choice — default to the tab that matches
-      // the source: 'upload' if a file was processed, otherwise 'paste'.
-      switchRefTab(refFilename ? 'upload' : 'paste', true);
-    }
-    // Re-sync the file-status pill if a file was uploaded — the DOM state may
-    // have been cleared between page load and screen re-entry.
-    if (refFilename && refMaterial) {
-      const status = document.getElementById('refFileStatus');
-      if (status) {
-        status.style.display = 'block';
-        status.textContent = `📚 ${refFilename} — ${refMaterial.length.toLocaleString()} chars loaded`;
-        if (typeof setFileStatusState === 'function') setFileStatusState(status, 'ok');
-      }
-      const clearRow = document.getElementById('refFileClearRow');
-      if (clearRow) clearRow.style.display = 'flex';
-    }
+    // Re-render reference cards when the user navigates back to Setup 4.
+    // The cards' DOM state is owned entirely by renderReferenceCards() —
+    // referenceDocs is the source of truth, so a single render call is all
+    // we need to fully re-establish the screen.
+    if (typeof renderReferenceCards === 'function') renderReferenceCards();
+    if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
   }
 }
 
@@ -1906,9 +1940,7 @@ function saveProject() {
     lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
     docTab,
     pastedDocument: document.getElementById('pasteText')?.value || '',
-    referenceMaterial: refMaterial,
-    referenceFilename: refFilename,
-    refTab,
+    referenceDocs: snapshotReferenceDocs(),
   };
   try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) {}
   updateLaunchRequirements();
@@ -2006,24 +2038,14 @@ async function clearProject() {
   if (fileStatus) { fileStatus.style.display = 'none'; fileStatus.textContent = ''; }
   docTab = 'upload';
   switchDocTab('upload');
-  // ── REFERENCE MATERIAL wipe (v3.21.0) ──
-  refMaterial = '';
-  refFilename = '';
-  refTab = '';
-  const refTa = document.getElementById('refPasteText');
-  if (refTa) { refTa.value = ''; updateProjLineNums('refPasteNums', refTa); }
+  // ── REFERENCE MATERIAL wipe (v3.24.0 — multi-doc) ──
+  referenceDocs = [];
   const refStatus = document.getElementById('refFileStatus');
   if (refStatus) { refStatus.style.display = 'none'; refStatus.textContent = ''; }
-  const refClearRow = document.getElementById('refFileClearRow');
-  if (refClearRow) refClearRow.style.display = 'none';
   const refFileInput = document.getElementById('refFileInput');
   if (refFileInput) refFileInput.value = '';
-  if (typeof updateRefCounter === 'function') updateRefCounter();
-  // Clear any active tab/panel state — first-visit-like neutral state
-  document.querySelectorAll('#screen-reference .doc-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#screen-reference .doc-tab-panel').forEach(p => p.classList.remove('active'));
-  const refHintEl = document.getElementById('refTabHint');
-  if (refHintEl) refHintEl.innerHTML = 'Pick <strong>Upload File</strong> or <strong>Paste Text</strong> to provide reference material — or skip this step entirely if your project does not need any.';
+  if (typeof renderReferenceCards === 'function') renderReferenceCards();
+  if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
   round = 1; phase = 'draft'; history = []; docText = '';
   window._resolvedDecisions = [];
   // Reset Finish-modal export state — this used to live in showFinishModal()
@@ -2177,29 +2199,34 @@ function loadSettings() {
           if (typeof updateProjLineNums === 'function') updateProjLineNums('projPasteNums', pasteTa);
         }
       }
-      // ── REFERENCE MATERIAL restore (v3.21.0) ──
-      if (typeof p.referenceMaterial === 'string') refMaterial = p.referenceMaterial;
-      if (typeof p.referenceFilename === 'string') refFilename = p.referenceFilename;
-      if (p.refTab) refTab = p.refTab;
-      const refTa = document.getElementById('refPasteText');
-      if (refTa) {
-        refTa.value = refMaterial;
-        if (typeof updateProjLineNums === 'function') updateProjLineNums('refPasteNums', refTa);
+      // ── REFERENCE MATERIAL restore (v3.24.0 — multi-doc with v3-format migration) ──
+      // v4 (v3.24.0+) stores p.referenceDocs as array of {id, name, text, source, filename}.
+      // v3 (v3.21.0–v3.23.4) stored p.referenceMaterial string + p.referenceFilename string.
+      // If we see the old shape we convert it to a single-element array so no data is lost.
+      if (Array.isArray(p.referenceDocs)) {
+        referenceDocs = p.referenceDocs
+          .filter(d => d && typeof d === 'object')
+          .map(d => ({
+            id:       d.id       || generateRefDocId(),
+            name:     d.name     || 'Reference',
+            text:     d.text     || '',
+            source:   d.source === 'upload' ? 'upload' : 'paste',
+            filename: d.filename || null,
+          }));
+      } else if (typeof p.referenceMaterial === 'string' && p.referenceMaterial.trim()) {
+        const isUpload = typeof p.referenceFilename === 'string' && p.referenceFilename.trim();
+        referenceDocs = [{
+          id:       generateRefDocId(),
+          name:     isUpload ? p.referenceFilename : 'Reference 1',
+          text:     p.referenceMaterial,
+          source:   isUpload ? 'upload' : 'paste',
+          filename: isUpload ? p.referenceFilename : null,
+        }];
+      } else {
+        referenceDocs = [];
       }
-      if (typeof updateRefCounter === 'function') updateRefCounter();
-      // Only restore an active tab if the user previously picked one.
-      // First-visit / no-prior-selection → leave neither tab selected.
-      if (refTab && typeof switchRefTab === 'function') switchRefTab(refTab, true);
-      if (refFilename) {
-        const status = document.getElementById('refFileStatus');
-        if (status) {
-          status.style.display = 'block';
-          status.textContent = `📚 ${refFilename} — ${refMaterial.length.toLocaleString()} chars loaded`;
-          if (typeof setFileStatusState === 'function') setFileStatusState(status, 'ok');
-        }
-        const clearRow = document.getElementById('refFileClearRow');
-        if (clearRow) clearRow.style.display = '';
-      }
+      if (typeof renderReferenceCards === 'function') renderReferenceCards();
+      if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
       updateGoalCounter();
     }
 
@@ -4041,7 +4068,7 @@ function clearPasteText() {
 // Persists pasted text to LS_PROJECT (debounced 250ms) so refreshing before
 // launch no longer loses the paste — mirrors how uploaded files persist
 // immediately on processFile and how reference material persists on every
-// keystroke via handleRefPasteInput → saveProject.
+// keystroke via updateReferenceDocText → saveProject.
 function handlePasteTextInput() {
   const ta = document.getElementById('pasteText');
   if (!ta) return;
@@ -4052,16 +4079,8 @@ function handlePasteTextInput() {
 }
 
 // Clear the Reference Material Paste Text textarea
-function clearRefPasteText() {
-  const ta = document.getElementById('refPasteText');
-  if (!ta) return;
-  ta.value = '';
-  refMaterial = '';
-  updateProjLineNums('refPasteNums', ta);
-  if (typeof updateRefCounter === 'function') updateRefCounter();
-  saveProject();
-  ta.focus();
-}
+// (removed in v3.24.0 — single-doc helper retired with multi-doc rewrite;
+//  per-card clear lives in the card actions row)
 
 async function processFile(file) {
   // Guard: if a session is already running, warn before overwriting the live document
@@ -4481,70 +4500,235 @@ async function reExtractWithVision() {
 //  the Starting Document (the artifact under construction).
 // ============================================================
 
-function switchRefTab(tab, suppressSave) {
-  refTab = tab;
-  document.querySelectorAll('#screen-reference .doc-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('#screen-reference .doc-tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-ref-'   + tab)?.classList.add('active');
-  document.getElementById('panel-ref-' + tab)?.classList.add('active');
-  // Init line numbers when switching to paste tab
-  if (tab === 'paste') {
-    const ta = document.getElementById('refPasteText');
-    if (ta) updateProjLineNums('refPasteNums', ta);
-  }
-  // Update the hint copy
-  const hintEl = document.getElementById('refTabHint');
-  if (hintEl) {
-    hintEl.textContent = tab === 'upload'
-      ? 'Click the area below to browse for a file, or drag and drop one directly onto it.'
-      : 'Paste source material below — the hive will be told to cite against it but never edit it.';
-  }
-  if (!suppressSave) saveProject();
+// ── Reference Material multi-document helpers (v3.24.0) ──
+// Source of truth is the `referenceDocs` array (declared near top of file).
+// All UI actions mutate that array, then trigger a re-render of the cards
+// container(s) and a recompute of the grand-total counter row.
+
+// Soft-warning threshold — total reference material exceeding this many
+// estimated tokens triggers a non-blocking UI hint that some AIs may
+// truncate or reject. Most provider context windows in 2026 are 100k–1M
+// tokens; 150k is a conservative midpoint that flags genuinely heavy use
+// without nagging routine sessions.
+const REF_TOKEN_SOFT_WARN = 150000;
+
+// Render the card list into both surfaces if present (Setup 4 + work drawer).
+// Called after any structural change (add / remove / move). Text and name
+// edits do NOT call this — they mutate state in place via per-input handlers
+// to preserve focus and avoid re-render churn while typing.
+function renderReferenceCards() {
+  ['refCardsSetup', 'refCardsDrawer'].forEach(containerId => {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    if (!referenceDocs.length) {
+      container.innerHTML = `<div class="ref-cards-empty">No reference material yet. Add a paste-text card or upload a file below.</div>`;
+      return;
+    }
+    container.innerHTML = referenceDocs.map((doc, idx) => refCardMarkup(doc, idx)).join('');
+  });
 }
 
+// Build a single card's markup. Source-mode determines whether the body shows
+// a textarea (paste) or a read-only file-status row (upload). The name input
+// is always editable. Up/Down arrows hide on first/last to avoid no-op clicks.
+function refCardMarkup(doc, index) {
+  const total = referenceDocs.length;
+  const isFirst = index === 0;
+  const isLast  = index === total - 1;
+  const stats = computeRefStats(doc.text);
+  const sourceIcon  = doc.source === 'upload' ? '📄' : '📋';
+  const sourceLabel = doc.source === 'upload' ? 'Uploaded file' : 'Pasted text';
+  const idAttr = esc(doc.id);
+
+  const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">↑</button>` : '';
+  const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">↓</button>` : '';
+
+  const body = doc.source === 'upload'
+    ? `<div class="ref-card-upload-status">📄 <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
+    : `<textarea class="ref-card-ta" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>`;
+
+  return `
+<div class="ref-card" data-ref-id="${idAttr}">
+  <div class="ref-card-hdr">
+    <span class="ref-card-source-badge" title="${sourceLabel}">${sourceIcon}</span>
+    <input type="text" class="ref-card-name" value="${esc(doc.name)}"
+           oninput="renameReferenceDoc('${idAttr}', this.value)"
+           aria-label="Reference document name"
+           placeholder="Reference name…">
+    <div class="ref-card-actions">
+      ${upBtn}${downBtn}
+      <button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
+    </div>
+  </div>
+  <div class="ref-card-body">
+    ${body}
+    <div class="ref-card-counters" id="refCardCounters-${idAttr}">
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span class="ref-card-count-chars">${stats.chars.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span class="ref-card-count-words">${stats.words.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span class="ref-card-count-tokens">${stats.tokens.toLocaleString()}</span></span>
+    </div>
+  </div>
+</div>`;
+}
+
+// Per-doc stats helper — chars, words, estimated tokens. Used by card render
+// and by the grand-total computation. Token estimate uses chars/4 rule of
+// thumb (same as estimateTokens elsewhere) which is a rough but consistent
+// English-text approximation.
+function computeRefStats(text) {
+  const t = text || '';
+  const chars = t.length;
+  const words = t.trim() ? t.trim().split(/\s+/).filter(Boolean).length : 0;
+  const tokens = Math.round(chars / 4);
+  return { chars, words, tokens };
+}
+
+// Add a new empty paste-mode reference document and focus its textarea so
+// the user can start typing immediately. Auto-named with the next available
+// "Reference N" slot — N is one past the highest existing default index.
+function addReferenceDoc() {
+  const usedNumbers = referenceDocs
+    .map(d => /^Reference (\d+)$/.exec(d.name))
+    .filter(Boolean)
+    .map(m => parseInt(m[1], 10));
+  const nextN = (usedNumbers.length ? Math.max(...usedNumbers) : 0) + 1;
+  referenceDocs.push({
+    id: generateRefDocId(),
+    name: `Reference ${nextN}`,
+    text: '',
+    source: 'paste',
+    filename: null,
+  });
+  renderReferenceCards();
+  updateRefGrandTotals();
+  saveProject();
+  // Focus the new card's textarea so the user can start typing
+  setTimeout(() => {
+    const newCard = document.querySelector(`[data-ref-id="${referenceDocs[referenceDocs.length - 1].id}"] .ref-card-ta`);
+    if (newCard) newCard.focus();
+  }, 50);
+}
+
+// Remove a reference doc by id. Confirmation prompt only fires if the doc
+// has non-trivial content (>20 chars) — empty/short cards remove silently
+// to avoid annoying the user mid-cleanup.
+function removeReferenceDoc(id) {
+  const doc = referenceDocs.find(d => d.id === id);
+  if (!doc) return;
+  if ((doc.text || '').trim().length > 20) {
+    if (!confirm(`Remove "${doc.name}"? This wipes the field but does not affect past rounds.`)) return;
+  }
+  referenceDocs = referenceDocs.filter(d => d.id !== id);
+  renderReferenceCards();
+  updateRefGrandTotals();
+  saveProject();
+}
+
+// Reorder by swapping with neighbor. Direction changes prompt-envelope
+// section order, which AIs use to weight authority — first-listed material
+// reads as most-canonical. No-ops at array edges.
+function moveReferenceDocUp(id) {
+  const idx = referenceDocs.findIndex(d => d.id === id);
+  if (idx <= 0) return;
+  [referenceDocs[idx - 1], referenceDocs[idx]] = [referenceDocs[idx], referenceDocs[idx - 1]];
+  renderReferenceCards();
+  saveProject();
+}
+function moveReferenceDocDown(id) {
+  const idx = referenceDocs.findIndex(d => d.id === id);
+  if (idx < 0 || idx >= referenceDocs.length - 1) return;
+  [referenceDocs[idx], referenceDocs[idx + 1]] = [referenceDocs[idx + 1], referenceDocs[idx]];
+  renderReferenceCards();
+  saveProject();
+}
+
+// Live name update — does NOT re-render. Empty input is silently ignored
+// (we don't replace name with empty string; user can keep editing).
+function renameReferenceDoc(id, newName) {
+  const doc = referenceDocs.find(d => d.id === id);
+  if (!doc) return;
+  const trimmed = (newName || '').trim();
+  if (trimmed) doc.name = trimmed;
+  saveProject();
+}
+
+// Live text update — does NOT re-render the card. Updates only this card's
+// counter and the grand totals, so focus and cursor position survive.
+function updateReferenceDocText(id, value) {
+  const doc = referenceDocs.find(d => d.id === id);
+  if (!doc) return;
+  doc.text = value;
+  // Update this card's counters in place
+  const stats = computeRefStats(value);
+  const c = document.getElementById('refCardCounters-' + id);
+  if (c) {
+    const charsEl  = c.querySelector('.ref-card-count-chars');
+    const wordsEl  = c.querySelector('.ref-card-count-words');
+    const tokensEl = c.querySelector('.ref-card-count-tokens');
+    if (charsEl)  charsEl.textContent  = stats.chars.toLocaleString();
+    if (wordsEl)  wordsEl.textContent  = stats.words.toLocaleString();
+    if (tokensEl) tokensEl.textContent = stats.tokens.toLocaleString();
+  }
+  updateRefGrandTotals();
+  // Save project (debounced through localStorage)
+  saveProject();
+}
+
+// Update the grand-total counter row(s) and the soft-warning banner.
+// Renders the totals into both Setup 4 and the work drawer if both surfaces
+// have the relevant DOM nodes.
+function updateRefGrandTotals() {
+  let totalChars = 0, totalWords = 0, totalTokens = 0;
+  referenceDocs.forEach(doc => {
+    const s = computeRefStats(doc.text);
+    totalChars  += s.chars;
+    totalWords  += s.words;
+    totalTokens += s.tokens;
+  });
+  ['refCountChars',       'refDrawerCountChars'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = totalChars.toLocaleString(); });
+  ['refCountWords',       'refDrawerCountWords'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = totalWords.toLocaleString(); });
+  ['refCountTokens',      'refDrawerCountTokens'].forEach(id => { const el = document.getElementById(id); if (el) el.textContent = totalTokens.toLocaleString(); });
+  ['refDocCount',         'refDrawerDocCount'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = referenceDocs.length === 1 ? '1 doc' : `${referenceDocs.length} docs`;
+  });
+  ['refSoftWarning',      'refDrawerSoftWarning'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.toggle('is-hidden', totalTokens < REF_TOKEN_SOFT_WARN);
+  });
+}
+
+// File drop / select handlers — both routed through processRefFile which
+// PUSHES a new upload-source doc into the array instead of replacing
+// the singleton (the v3.21.0–v3.23.4 behavior).
 function handleRefDragOver(e) {
   e.preventDefault();
   document.getElementById('refDropZone')?.classList.add('drag-over');
 }
-
 function handleRefFileDrop(e) {
   e.preventDefault();
   document.getElementById('refDropZone')?.classList.remove('drag-over');
   const file = e.dataTransfer.files[0];
   if (file) processRefFile(file);
 }
-
 function handleRefFileSelect(e) {
   const file = e.target.files[0];
   if (file) processRefFile(file);
-}
-
-function clearRefUploadedFile() {
-  refMaterial = '';
-  refFilename = '';
-  saveProject();
-  const status = document.getElementById('refFileStatus');
-  if (status) { status.style.display = 'none'; status.textContent = ''; }
-  const clearRow = document.getElementById('refFileClearRow');
-  if (clearRow) clearRow.style.display = 'none';
-  const fileInput = document.getElementById('refFileInput');
-  if (fileInput) fileInput.value = '';
-  updateRefCounter();
+  if (e.target) e.target.value = '';
 }
 
 async function processRefFile(file) {
-  // Guard: warn if a session is already running and reference material would change mid-flight
+  // Mid-session-overwrite warning preserved from single-doc behavior.
+  // With multi-doc, adding a doc never overwrites — but the warning still
+  // educates users about which round will see the new doc.
   const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
-  if (!onSetupScreen && (history.length > 0 || refMaterial)) {
-    const proceed = confirm(
-      `⚠️ You have an active session.
-
-Loading a new reference file will replace the current reference material starting on the NEXT round. Past rounds keep their original snapshot.
-
-Proceed?`
-    );
+  if (!onSetupScreen && history.length > 0) {
+    const proceed = confirm(`Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`);
     if (!proceed) return;
   }
+
   const status = document.getElementById('refFileStatus');
   const ext = file.name.split('.').pop().toLowerCase();
   if (status) {
@@ -4555,7 +4739,6 @@ Proceed?`
 
   try {
     let result = { text: '', warnings: [], sourceType: ext };
-
     if (ext === 'txt' || ext === 'md') {
       result.text = await file.text();
     } else if (ext === 'pdf') {
@@ -4568,28 +4751,29 @@ Proceed?`
       throw new Error('Unsupported file type');
     }
 
-    refMaterial = (result.text || '').trim();
-    refFilename = file.name;
+    const text = (result.text || '').trim();
+    const newDoc = {
+      id: generateRefDocId(),
+      name: file.name,
+      text,
+      source: 'upload',
+      filename: file.name,
+    };
+    referenceDocs.push(newDoc);
+    renderReferenceCards();
+    updateRefGrandTotals();
     saveProject();
 
     if (status) {
-      if (result.warnings && result.warnings.length > 0) {
-        status.textContent = `⚠️ ${refMaterial.length.toLocaleString()} chars from ${file.name} — ${result.warnings[0]}`;
-        setFileStatusState(status, 'warn');
-      } else {
-        status.textContent = `📚 ${refMaterial.length.toLocaleString()} chars from ${file.name} loaded as reference material`;
-        setFileStatusState(status, 'ok');
-      }
+      const msg = result.warnings && result.warnings.length
+        ? `⚠️ Added "${file.name}" (${text.length.toLocaleString()} chars) — ${result.warnings[0]}`
+        : `📚 Added "${file.name}" (${text.length.toLocaleString()} chars) as reference material`;
+      status.textContent = msg;
+      setFileStatusState(status, result.warnings && result.warnings.length ? 'warn' : 'ok');
+      // Auto-clear the status pill after 6s — once the card renders the
+      // pill becomes redundant noise above the card list.
+      setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
     }
-    const clearRow = document.getElementById('refFileClearRow');
-    if (clearRow) clearRow.style.display = '';
-    // Mirror into the paste textarea so the user can edit if needed
-    const refTa = document.getElementById('refPasteText');
-    if (refTa) {
-      refTa.value = refMaterial;
-      updateProjLineNums('refPasteNums', refTa);
-    }
-    updateRefCounter();
   } catch (e) {
     console.error('Ref file extraction failed:', e);
     if (status) {
@@ -4599,22 +4783,6 @@ Proceed?`
   }
 }
 
-function handleRefPasteInput() {
-  const ta = document.getElementById('refPasteText');
-  if (!ta) return;
-  refMaterial = ta.value;
-  // Pasting overrides any previously uploaded filename — clarify the source
-  if (refFilename) {
-    refFilename = '';
-    const status = document.getElementById('refFileStatus');
-    if (status) { status.style.display = 'none'; status.textContent = ''; }
-    const clearRow = document.getElementById('refFileClearRow');
-    if (clearRow) clearRow.style.display = 'none';
-  }
-  updateRefCounter();
-  saveProject();
-}
-
 // chars/4 is the standard rule of thumb for English text in OpenAI-family tokenizers.
 // Real tokenizers vary by model; this is an estimate, not a contract.
 function estimateTokens(text) {
@@ -4622,82 +4790,46 @@ function estimateTokens(text) {
   return Math.round(text.length / 4);
 }
 
-function updateRefCounter() {
-  const text  = refMaterial || '';
-  const chars = text.length;
-  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-  const tok   = estimateTokens(text);
-  const c = document.getElementById('refCountChars');  if (c) c.textContent = chars.toLocaleString();
-  const w = document.getElementById('refCountWords');  if (w) w.textContent = words.toLocaleString();
-  const t = document.getElementById('refCountTokens'); if (t) t.textContent = tok.toLocaleString();
-}
-
-function updateRefDrawerCounter() {
-  const ta = document.getElementById('refDrawerTextarea');
-  const text = ta ? ta.value : '';
-  const chars = text.length;
-  const words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
-  const tok   = estimateTokens(text);
-  const c = document.getElementById('refDrawerCountChars');  if (c) c.textContent = chars.toLocaleString();
-  const w = document.getElementById('refDrawerCountWords');  if (w) w.textContent = words.toLocaleString();
-  const t = document.getElementById('refDrawerCountTokens'); if (t) t.textContent = tok.toLocaleString();
-}
-
 // ── Work-screen drawer handlers ──
 function openReferenceMaterialDrawer() {
   const drawer = document.getElementById('referenceMaterialDrawer');
   if (!drawer) return;
-  const ta = document.getElementById('refDrawerTextarea');
-  if (ta) ta.value = refMaterial;
-  updateRefDrawerCounter();
+  renderReferenceCards();
+  updateRefGrandTotals();
   drawer.classList.add('active');
-  setTimeout(() => document.getElementById('refDrawerTextarea')?.focus(), 100);
 }
-
 function closeReferenceMaterialDrawer() {
   const drawer = document.getElementById('referenceMaterialDrawer');
   if (drawer) drawer.classList.remove('active');
 }
 
-function saveReferenceMaterialFromDrawer() {
-  const ta = document.getElementById('refDrawerTextarea');
-  if (!ta) return;
-  const before = refMaterial;
-  refMaterial = ta.value;
-  // If filename was set from an upload but the user has now edited the text,
-  // drop the filename so the source label reflects the live state.
-  if (refFilename && refMaterial !== before) refFilename = '';
-  // Mirror back into Setup 4 paste textarea so navigation back stays in sync
-  const setupTa = document.getElementById('refPasteText');
-  if (setupTa) {
-    setupTa.value = refMaterial;
-    if (typeof updateProjLineNums === 'function') updateProjLineNums('refPasteNums', setupTa);
-  }
-  updateRefCounter();
+// "Clear all" — wipes every reference doc. Single confirmation guards the
+// whole-list nuke. Past rounds' snapshots are unaffected (history captures
+// referenceMaterialAtRound at round-fire time, not at clear time).
+function clearAllReferenceMaterial() {
+  if (!referenceDocs.length) { toast('Nothing to clear'); return; }
+  if (!confirm(`Clear ALL ${referenceDocs.length} reference document${referenceDocs.length === 1 ? '' : 's'}? This wipes the field but does not affect past rounds.`)) return;
+  referenceDocs = [];
+  renderReferenceCards();
+  updateRefGrandTotals();
   saveProject();
-  closeReferenceMaterialDrawer();
-  if (refMaterial !== before) {
-    consoleLog(`📚 Reference material updated — applies to next round`, 'info');
-    toast('📚 Reference material saved — applies to next round');
-  }
+  consoleLog(`📚 Reference material cleared — applies to next round`, 'info');
+  toast('📚 Reference material cleared');
 }
 
-function clearReferenceMaterialFromDrawer() {
-  if (!confirm('Clear all reference material? This wipes the field but does not affect past rounds.')) return;
-  const ta = document.getElementById('refDrawerTextarea');
-  if (ta) ta.value = '';
-  updateRefDrawerCounter();
-}
-
+// Copy ALL reference material (concatenated with section headers) to clipboard.
+// Uses the same prompt-envelope assembly so what's copied is exactly what
+// AIs receive — useful for debugging or sharing the full context.
 function copyReferenceMaterial() {
-  const ta = document.getElementById('refDrawerTextarea');
-  const text = ta ? ta.value : refMaterial;
-  if (!text) { toast('Nothing to copy'); return; }
+  if (!referenceDocs.length) { toast('Nothing to copy'); return; }
+  const sep = '────────────────────────────────────────';
+  const text = buildReferenceMaterialBlock(sep) || referenceDocs.map(d => d.text).join('\n\n');
   navigator.clipboard.writeText(text).then(
     () => toast('📋 Reference material copied'),
     () => toast('❌ Copy failed')
   );
 }
+
 
 async function startSession() {
   const name = document.getElementById('projectName').value.trim();
@@ -4791,7 +4923,7 @@ async function startSession() {
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Original Document',
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     renderRoundHistory();
     saveSession();
@@ -5901,8 +6033,9 @@ function buildPromptForAI(ai, reviewerResponses) {
   // Standing source material the hive cites against every round but never edits.
   // Sent to all reviewers and the Builder. Distinct from Notes (round-to-round Builder directives)
   // and from CURRENT DOCUMENT (the artifact under construction).
-  if (refMaterial && refMaterial.trim()) {
-    prompt += `REFERENCE MATERIAL — read-only source the user is citing against. Do NOT propose edits to this material. Do NOT rewrite it or include it in your output. Treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules:\n${sep}\n${refMaterial}\n${sep}\n\n`;
+  const refBlock = buildReferenceMaterialBlock(sep);
+  if (refBlock) {
+    prompt += refBlock;
   }
 
   // Inject length constraint if set
@@ -6046,8 +6179,9 @@ async function runBuilderOnly() {
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
   if (goal) prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0,300)+'…' : goal}\n\n`;
   // ── REFERENCE MATERIAL injection (v3.21.0) — Builder Only path ──
-  if (refMaterial && refMaterial.trim()) {
-    prompt += `REFERENCE MATERIAL — read-only source the user is citing against. Do NOT propose edits to this material. Do NOT rewrite it or include it in your output. Treat it as authoritative source of truth for facts, requirements, scoring criteria, or style rules:\n${sep}\n${refMaterial}\n${sep}\n\n`;
+  const refBlock = buildReferenceMaterialBlock(sep);
+  if (refBlock) {
+    prompt += refBlock;
   }
   prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
@@ -6147,7 +6281,7 @@ async function runBuilderOnly() {
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Builder Only',
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
     round++;
@@ -6178,7 +6312,7 @@ async function runBuilderOnly() {
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
       failDetails:    _failedRoundDetails || '',
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     renderRoundHistory();
     saveSession();
@@ -6321,7 +6455,7 @@ async function runRound() {
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
     round++;
@@ -6363,7 +6497,7 @@ async function runRound() {
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
     round++;
@@ -6502,7 +6636,7 @@ async function runRound() {
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
   });
   window._lastConflicts = null;
 
@@ -6569,7 +6703,7 @@ async function runRound() {
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
       failDetails:    _failedRoundDetails || '',
-      referenceMaterialAtRound: refMaterial
+      referenceMaterialAtRound: snapshotReferenceDocs()
     });
     renderRoundHistory();
     saveSession();
@@ -8046,7 +8180,7 @@ async function backupSession() {
 
   const backup = {
     _waxframe_backup:         true,
-    _waxframe_backup_version: 3, // v3 = LS mirror removed (v3.21.12+); v2 (v3.21.10/11) included LS_SESSION_MIRROR
+    _waxframe_backup_version: 4, // v4 = referenceDocs array (v3.24.0+); v3 = LS mirror removed (v3.21.12+); v2 (v3.21.10/11) included LS_SESSION_MIRROR
     _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
     _waxframe_backup_ts:      Date.now(),
     LS_HIVE:           hive,
@@ -8197,6 +8331,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   const buildEl = document.getElementById('aboutBuild');
   if (buildEl) buildEl.textContent = BUILD;
   updateSetupRequirements();
+
+  // Initial reference cards render — paints the empty state on Setup 4
+  // and the work drawer immediately. loadProject() may overwrite this with
+  // restored docs a moment later; that's fine, the render is idempotent.
+  if (typeof renderReferenceCards === 'function') renderReferenceCards();
+  if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
 
   // Request persistent storage from the browser. Without this, IndexedDB
   // session data (round history, document, console) is "best-effort" and

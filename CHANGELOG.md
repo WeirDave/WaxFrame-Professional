@@ -2,6 +2,64 @@
 
 ---
 
+## v3.24.0 Pro — Build `20260428-007`
+**Released:** April 28, 2026
+
+**Reference Material — multi-document support.** The v3.21.0–v3.23.4 single-doc model (one `refMaterial` string + one `refFilename` string) becomes a true multi-document system. Users can now add unlimited reference documents — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, etc. Each doc is independently named, ordered, removable, and editable. The hive sees them in array order with labeled section headers in the prompt envelope so AIs can cite specific documents by name. Full v3-format backup migration on restore. No data loss for existing users.
+
+### Storage shape
+
+- **`referenceDocs` array** replaces the `refMaterial` + `refFilename` string pair. Each entry is `{id, name, text, source: 'upload'|'paste', filename}`. Source `'upload'` makes the textarea read-only with the original filename as the source-of-truth; source `'paste'` makes it editable; remove and re-upload to replace an uploaded doc.
+- **Stable per-doc IDs** generated via `generateRefDocId()` — base36 timestamp + 5-char random suffix. Session-local uniqueness only, not globally unique by design (no cross-project collision concerns since each project loads its own array).
+- **`generateRefDocId`, `buildReferenceMaterialBlock`, `snapshotReferenceDocs`, `getTotalReferenceText`, `hasReferenceMaterial`** — five new helpers replacing direct string manipulation throughout the codebase.
+
+### Backup format v3 → v4
+
+- **`p.referenceDocs`** array stored in project save format. Older `p.referenceMaterial` string + `p.referenceFilename` string fields removed from new saves.
+- **v3 backup migration on restore** in `loadProject()`. If `p.referenceDocs` is an array, restored as-is (with field defaults filled in for any malformed entries). Otherwise if `p.referenceMaterial` is a non-empty string, converted to a single-element array preserving filename if present, defaulting to `'Reference 1'` if pasted-text. Otherwise empty array. Existing v3-format backups continue to restore correctly with no data loss.
+- **Dead `refTab` state variable removed** — was a single-doc tab toggle (Upload File / Paste Text) that doesn't apply to the multi-doc UI. Removed from declaration, `saveProject` write, `loadProject` restore, and `clearProject` wipe.
+
+### Setup 4 (Reference Material) UI
+
+- **Stacked-cards layout** replaces the single Upload-File / Paste-Text tabbed panel. Each card has a header with source badge, inline-editable name field, ↑↓ reorder arrows (when multiple docs exist), and ✕ remove button. Body shows the editable textarea (paste-text source) or read-only filename status (upload source).
+- **"+ Add Paste-Text Reference"** button creates a new empty paste-text card. Cards auto-save via `saveProject()` on every keystroke through `updateReferenceDocText()`.
+- **"📄 Upload File as Reference"** button opens the same file picker that drag-and-drop uses. Uploaded files become read-only cards with the filename pinned to the source-of-truth field.
+- **Counter row at the top** shows total chars / words / token estimate across all docs combined, plus a doc-count chip ("3 docs"). Soft-warning band appears when total tokens cross ~150,000 — a non-blocking heads-up that some AI models have smaller context windows.
+- **Reorder rationale** — array order = prompt-envelope order. Earlier-positioned docs receive different attention weighting in the model's context, so users can move the most important reference to the top without re-uploading. Uses ↑↓ arrow buttons rather than drag-and-drop for simplicity and zero accessibility concerns on this desktop-only app.
+
+### Work-screen drawer (mid-session edit)
+
+- **Reference button on work toolbar** opens the same multi-card UI as Setup 4 but in drawer form. Users can add new paste-text reference docs mid-session; uploads are restricted to Setup 4 to keep the drawer footprint tight.
+- **Auto-save on every keystroke** — no Save button needed. The drawer's old "💾 Save & Close" replaced with simple "✓ Close." Old per-textarea save flow retired since each card auto-saves to its own array entry.
+- **"Copy All" and "Clear All"** preserve the existing convenience verbs but now act on the entire `referenceDocs` array. Clear All requires confirmation and only wipes the live array — past rounds' history snapshots are unaffected.
+
+### Prompt envelope changes
+
+- **`buildReferenceMaterialBlock(sep)`** generates the labeled multi-doc block. Single-doc setups behave like v3.21.0 (one block, no extra label). Multi-doc setups get a count-line preamble ("3 reference documents follow, each labeled with its name. Cite the specific document by name when relevant.") followed by per-doc sections with `## Reference: {name}` headers. Empty docs are filtered out automatically.
+- **Both `buildPromptForAI` callsites migrated** to call `buildReferenceMaterialBlock` instead of inlining the old single-doc block. Identical envelope structure as v3.21.0 when a user has only one doc; meaningful new structure when they have many.
+
+### History capture
+
+- **`referenceMaterialAtRound: snapshotReferenceDocs()`** at all 7 history-write callsites. Was previously a string; now an array of doc snapshots so historical rounds can show "what reference material existed at that point in time" rather than just one concatenated dump.
+- **`snapshotReferenceDocs()`** returns a shallow-deep copy (each doc spread into a new object) so subsequent edits to the live `referenceDocs` array don't mutate historical entries.
+
+### Soft-warning threshold
+
+- **150,000 token total threshold** triggers a non-blocking amber warning band on Setup 4 and the work-screen drawer when total reference material exceeds it. Respects the user's stated "no caps — pay for the tokens if you want to" stance while preventing the cryptic-failure modes that come from silently busting model context windows.
+- **No hard limit** on document count, per-doc size, or total size. Users with massive budgets can pile in as much as they want.
+
+### Removed legacy code
+
+- All `refMaterial` and `refFilename` direct usages eliminated from the codebase (only the documentation comment in the multi-doc block header retains the names for migration-history context).
+- `refTab` state variable + 4 references removed.
+- Dead-code paths in `clearProject` referencing IDs that no longer exist in markup (`refPasteText`, `refFileClearRow`, `refTabHint`, `.doc-tab` / `.doc-tab-panel` queryAll) removed. Replaced with clean multi-doc reset.
+
+### Build-stamp sweep
+
+- All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=` and `version.js?v=` cache-busts swept to `20260428-007` / `3.24.0`.
+
+---
+
 ## v3.23.4 Pro — Build `20260428-006`
 **Released:** April 28, 2026
 
