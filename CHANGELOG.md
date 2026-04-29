@@ -2,6 +2,59 @@
 
 ---
 
+## v3.25.5 Pro — Build `20260429-006`
+**Released:** April 29, 2026
+
+**Welcome-screen ⓘ pattern + Custom AI flow keeps already-added models visible.** Two unrelated UX gaps closed in a single small release. Welcome screen finally gets the section-info ⓘ pattern that every Setup screen has shipped since v3.21.0, and the Add Custom AI fetched-models dropdown stops silently re-listing models that are already in the hive.
+
+### Welcome-screen ⓘ pattern (item #12)
+
+The welcome screen had zero info buttons before this release, while every Setup-screen section title (Worker Bees, Builder, Project Goal, Reference Material, Starting Document) has shipped them for nearly a year. Two new ⓘ buttons added on the welcome screen, both inline:
+
+- **Pitch paragraph ⓘ** — placed at the end of the existing welcome pitch copy. Opens `#infoWelcomeHowModal` titled **How the Hive Works**, covering: Reviewers vs Builder roles, what a round actually does, typical convergence (5–20 rounds), the convergence-from-scratch principle, and the Notes vs Reference Material distinction. Closes with the locking-text-by-quoting tip.
+- **Menu hint ⓘ** — placed at the end of the "New here? Open the Menu…" hint paragraph. Opens `#infoWelcomeMenuModal` titled **What's in the Menu**, covering every menu drawer item: User Manual, API Key Guide, Document Playbooks, What Are Tokens?, Prompt Editor, License & Account.
+
+Both modals reuse the established `.finish-modal-overlay` + `.goal-info-modal` markup pattern shared with `infoBeesModal` and the rest of the family — zero new modal CSS, just markup. They live next to the worker-bees / builder info modals in the modals block so the family stays co-located.
+
+Skipped: the theme-toggle row. Three labeled buttons (Light / Auto / Dark) are self-explanatory enough that adding a fourth ⓘ icon would clutter the row without buying clarity.
+
+### Custom AI fetched-models marker (item #11)
+
+`fetchCustomAIModels` previously rendered every fetched model as a plain `<option>` regardless of whether that exact model was already added to the hive at the same chat-completions endpoint. Re-fetching from a known endpoint (e.g. an internal gateway, an OpenAI-compatible provider) registered as "wait, where's the model I added yesterday?" — the same pattern problem that `renderImportServerChecklist` solved for the bulk import flow back in v3.21.x.
+
+Now: already-in-hive models stay visible in the dropdown but render as `<option disabled>` prefixed with `✓` and suffixed with `— already in your hive`. Browsers default to selecting the first `<option>` regardless of disabled state, so the code now also auto-selects the first non-disabled model so the field always shows a usable value out of the gate.
+
+Match comparison is endpoint URL plus model ID, with trailing-slash normalization on the URL — so `https://endpoint.example/v1/chat/completions` and `https://endpoint.example/v1/chat/completions/` register as the same endpoint.
+
+### Toast feedback after Fetch Models
+
+- All new models: `✅ N models loaded` (unchanged)
+- Some already in hive: `✅ N new · M already in your hive`
+- All already in hive: `⚠️ All N models from this endpoint are already in your hive` (6s duration)
+
+### Why now
+
+Welcome screen: the page promises "many minds, one refined result" with no immediate way to learn what that means without committing to clicking "Let's get started". Every other onboarding surface in the app has had this affordance for a year. Closes the gap.
+
+Custom AI fetch: the single-model add flow was lagging the bulk-import flow on a UX pattern that's already proven. This release brings them into parity for the most common Alfredo / Open WebUI / Ollama re-import scenario.
+
+### Styling
+
+`.welcome-info-inline` is the one new CSS rule — scoped to welcome-screen ⓘ buttons. Sized 22×22 px (vs the default 36×36 px `.info-btn-img-lg`) and vertical-aligned `-5px` so it sits cleanly inline with the 15px pitch and menu-hint paragraphs without overpowering the body text.
+
+### What did not change
+
+- Default `.goal-info-btn` and `.info-btn-img-lg` rules used elsewhere — untouched.
+- `renderImportServerChecklist` (the bulk import flow) — already had this behavior since v3.21.x; reused as the pattern reference, no code change.
+- `addCustomAI`, `testCustomAIConnection`, the Add Custom AI modal layout/fields — untouched.
+- `MODEL_LABELS` / `MODEL_FALLBACKS` and items #10, #13 — deliberately deferred to a separate release. Bundling architectural model-fetching work with cosmetic UI cleanups would have made both harder to review and roll back.
+
+### Build-stamp sweep
+
+Full sweep across all required locations: 4 main-app stamp locations (`meta waxframe-build`, `APP_VERSION`, `BUILD` const, `app.js?v=` cache-bust) plus all 5 helper-page meta `waxframe-build` stamps + comment-header `Build:` stamps + `style.css?v=` + `version.js?v=` cache-busts. All locations now consistent at `20260429-006` / `3.25.5`. Verified zero stragglers via straight grep across all 6 HTML files.
+
+---
+
 ## v3.25.4 Pro — Build `20260429-005`
 **Released:** April 29, 2026
 

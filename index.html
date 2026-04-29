@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-005
+     Build: 20260429-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-005">
+  <meta name="waxframe-build" content="20260429-006">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.25.4">
+  <link rel="stylesheet" href="style.css?v=3.25.5">
 </head>
 <body>
 
@@ -40,9 +40,9 @@
       </div>
     </div>
     <div class="welcome-pitch">
-      <p>WaxFrame puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better. Whether you're starting from scratch, refining an existing document, or generating the text for a presentation or any other format — the hive handles it.</p>
+      <p>WaxFrame puts multiple AI assistants to work on your document at the same time. One acts as the <strong>Builder</strong> — writing and refining. The rest act as <strong>Reviewers</strong> — giving specific, numbered suggestions. Round by round, your document gets better. Whether you're starting from scratch, refining an existing document, or generating the text for a presentation or any other format — the hive handles it. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoWelcomeHowModal').classList.add('active')" title="How the hive works"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
     </div>
-    <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more.</p>
+    <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoWelcomeMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
 
     <button class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
       <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
@@ -1368,6 +1368,77 @@
   </div>
 </div>
 
+<!-- WELCOME — HOW THE HIVE WORKS -->
+<div class="finish-modal-overlay" id="infoWelcomeHowModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">How the Hive Works</h2>
+    <div class="goal-info-body">
+      <p>Every WaxFrame session has two AI roles and one document, processed in <strong>rounds</strong>. Each round is the same loop: reviewers read, Builder rewrites, you decide what to keep.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Reviewers (Worker Bees)</span>
+        <span class="goal-info-desc">Each reviewer reads the current document independently and produces a numbered list of specific suggestions — wording fixes, missing context, structural issues, factual concerns. Reviewers don't see each other's output. They write in parallel, which keeps their perspectives genuinely independent.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Builder</span>
+        <span class="goal-info-desc">The Builder reads all of the reviewers' suggestions plus the full document, then produces the rewritten version. It also flags any suggestions where reviewers disagreed (the <strong>Conflicts</strong> panel) so you can decide which option wins. Because the Builder rewrites the whole document every round, it uses significantly more tokens than reviewers — pick a paid plan with capacity.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Rounds</span>
+        <span class="goal-info-desc">A round runs all reviewers in parallel, then the Builder. You read the result, resolve any conflicts, optionally add Notes for the next round, and run again. Documents typically converge in 5–20 rounds depending on starting quality and complexity.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Convergence tip</span>
+        <span class="goal-info-desc">Starting from a blank page often converges <strong>faster</strong> than refining a heavily misaligned existing document. If your current draft fights the document's actual purpose, the hive will spend rounds debating reframing rather than building. When in doubt, start fresh and let the hive build it correctly the first time.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Notes &amp; Reference Material</span>
+        <span class="goal-info-desc">Two ways to steer mid-stream: <strong>Notes</strong> are per-round directives (e.g., "lock the company name spelling exactly as written"). <strong>Reference Material</strong> is source-of-truth content the hive consults but never edits (job descriptions, style guides, prior drafts). Both are injected directly into every reviewer and Builder prompt for the round.</span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Quoting exact contested text in Notes is more reliable than citing line numbers — line numbers shift as the document evolves.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html" target="_blank" class="link-accent">Read the full guide in the user manual ↗</a></p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoWelcomeHowModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- WELCOME — WHAT'S IN THE MENU -->
+<div class="finish-modal-overlay" id="infoWelcomeMenuModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
+    <h2 class="finish-modal-title">What's in the Menu</h2>
+    <div class="goal-info-body">
+      <p>The Menu is the navigation drawer you'll find at the top-left of every screen. It's where reference material, account tools, and helper guides live — none of it is needed to run a round, but all of it helps when you want to go deeper.</p>
+      <div class="goal-info-row">
+        <span class="info-label">User Manual</span>
+        <span class="goal-info-desc">Step-by-step walkthrough of every screen and feature, written like a long-form guide rather than a reference card. The best entry point if you're new.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">API Key Guide</span>
+        <span class="goal-info-desc">How to get an API key from each of the six default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity), with direct billing links and the exact paid-plan tier you need for the Builder role.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Document Playbooks</span>
+        <span class="goal-info-desc">Worked examples of WaxFrame on common document types — résumés, job descriptions, thank-you letters — with the exact Project Goal and Notes payload that converged the document, and how many rounds it took.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">What Are Tokens?</span>
+        <span class="goal-info-desc">Plain-English explanation of tokens, the unit each AI provider charges by, and how to read the round-cost numbers WaxFrame surfaces.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Prompt Editor</span>
+        <span class="goal-info-desc">View and override the exact prompts WaxFrame sends to reviewers and the Builder. Most users never need it, but if you're tuning behavior or debugging an oddly-behaved AI, this is where you'd look.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">License &amp; Account</span>
+        <span class="goal-info-desc">Manage your WaxFrame Professional license key — replace, remove, or check status. Trial round count is preserved across license changes.</span>
+      </div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Helper pages open in new browser tabs — your in-progress WaxFrame session won't be disturbed.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('infoWelcomeMenuModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
 <!-- WORKER BEES INFO -->
 <div class="finish-modal-overlay" id="infoBeesModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
@@ -1656,12 +1727,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.25.4"></script>
-<script src="lib/mammoth.browser.min.js?v=3.25.4"></script>
-<script src="lib/jszip.min.js?v=3.25.4"></script>
-<script src="lib/xlsx.full.min.js?v=3.25.4"></script>
-<script src="version.js?v=3.25.4"></script>
-<script src="app.js?v=3.25.4"></script>
+<script src="lib/pdf.min.js?v=3.25.5"></script>
+<script src="lib/mammoth.browser.min.js?v=3.25.5"></script>
+<script src="lib/jszip.min.js?v=3.25.5"></script>
+<script src="lib/xlsx.full.min.js?v=3.25.5"></script>
+<script src="version.js?v=3.25.5"></script>
+<script src="app.js?v=3.25.5"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

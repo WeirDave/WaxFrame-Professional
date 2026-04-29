@@ -490,6 +490,17 @@ html, body {
 }
 .welcome-pitch strong { color: var(--text); }
 
+/* Inline ⓘ button used on the welcome screen — sized down from the default
+   36px helper-info-img to match the 15px paragraph context so it reads as a
+   discrete affordance rather than a basketball next to body text. */
+.welcome-info-inline {
+  width: 22px;
+  height: 22px;
+  vertical-align: -5px;
+  margin-left: 4px;
+}
+.welcome-info-inline img { width: 22px; height: 22px; }
+
 .welcome-choices {
   display: flex;
   flex-direction: column;
