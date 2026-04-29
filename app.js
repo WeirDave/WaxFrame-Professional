@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-016
+//  Build: 20260429-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -347,38 +347,43 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
 
-  // v3.26.4: dynamically mark the live-recommended model with ✨. Source of
-  // truth is the recommend cache (set by recommendForDefault on key save,
-  // migration, or Recheck). The marker moves with the recommendation as
-  // models change — no static "Recommended" labels to go stale.
+  // v3.26.8: source of truth is the AI's own categorized recommendation cache.
+  // Static MODEL_LABELS no longer drive option text — they were stale guesses.
+  // The AI returns up to 4 categorized picks (Best Overall + Budget + Fast +
+  // Most Capable) and those become the dropdown tags. ✨ marks the Best Overall
+  // pick. All other models render as bare ids — David's principle: trust what
+  // the AI returned, don't guess about the rest.
   const cached = getCachedRecommendation(`default-${provider}`);
   const recommendedModel = cached?.model || null;
+  const labels = cached?.labels || {};
 
   const options = models.map(m => {
-    const label = MODEL_LABELS[m];
-    const tag = label?.tag || '';
-    const baseDisplay = tag ? `${m} — ${tag}` : m;
+    const lbl = labels[m];
+    const tagPart = lbl?.tag ? ` — ${lbl.tag}` : '';
+    const baseDisplay = `${m}${tagPart}`;
     const display = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
     const selected = m === currentModel ? 'selected' : '';
     return `<option value="${m}" ${selected}>${esc(display)}</option>`;
   }).join('');
 
-  // Note line under the dropdown — combines static descriptor note with
-  // the live recommendation's WHY when current model matches the rec.
-  const labelInfo = MODEL_LABELS[currentModel];
-  const isRecommended = currentModel === recommendedModel;
-  const recWhy = isRecommended && cached?.why ? `✨ ${esc(cached.why)}` : '';
-  const staticNote = labelInfo?.note ? esc(labelInfo.note) : '';
-  const noteText = recWhy || staticNote;
+  // Note line shows the WHY for the currently-selected model, drawn from the
+  // labels map. If current is the Best Overall pick, prefix with ✨. If current
+  // has no AI-provided WHY (e.g. user picked an un-tagged model), show nothing.
+  let noteText = '';
+  if (currentModel && labels[currentModel]?.why) {
+    const isRec = currentModel === recommendedModel;
+    noteText = isRec ? `✨ ${esc(labels[currentModel].why)}` : esc(labels[currentModel].why);
+  }
   const noteHtml = noteText ? `<span class="model-select-note">${noteText}</span>` : '';
 
-  // v3.26.3: 🤖 Recommend button moved here from the key row. Conceptually
-  // it belongs WITH the model dropdown (it changes which model is selected),
-  // not next to the Test button (which validates the API key).
+  // v3.26.8: button text dropped emoji and renamed "Have AI Recommend" — clearer
+  // about what it does. Conceptually pairs with the dropdown (it changes which
+  // model is selected) rather than the Test button.
   const recheckBtn = showRecheck
-    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's API which of its models is best for WaxFrame">🤖 Recommend</button>`
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Have AI Recommend</button>`
     : '';
   return `<div class="model-select-wrap">
+    <span class="model-select-label">Pick a model:</span>
     <select class="model-select" id="modelsel-${aiId}"
       onchange="saveModelForAI('${aiId}', this.value)">
       ${options}
@@ -503,7 +508,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-016';         // build stamp — update each session
+const BUILD       = '20260429-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2514,8 +2519,11 @@ function renderHiveCountChip() {
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
 
 
-function resetBeesToDefaults() {
-  if (!confirm('Reset to the 6 default AIs? Your saved API keys will be kept. Custom AIs will be removed.')) return;
+async function resetBeesToDefaults() {
+  if (!await wfConfirm(
+    'Reset to Defaults',
+    'Reset to the 6 default AIs? Your saved API keys will be kept. Custom AIs will be removed.'
+  )) return;
   // Save existing keys before reset
   const savedKeys = {};
   Object.keys(API_CONFIGS).forEach(id => {
@@ -3011,12 +3019,14 @@ function applyNotesTemplate(template) {
   updateNotesBtnPriority();
 }
 
-function removeAI(id) {
+async function removeAI(id) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
-  const label = isDefault ? `Remove "${ai.name}" from your hive? You can restore defaults with ↺ Defaults.` : `Remove "${ai.name}" from your hive?`;
-  if (!confirm(label)) return;
+  const msg = isDefault
+    ? `Remove "${ai.name}" from your hive? You can restore defaults with ↺ Reset to Defaults.`
+    : `Remove "${ai.name}" from your hive?`;
+  if (!await wfConfirm('Remove AI', msg, { okText: 'Remove', destructive: true })) return;
   aiList    = aiList.filter(a => a.id !== id);
   activeAIs = activeAIs.filter(a => a.id !== id);
   if (builder === id) builder = null;
@@ -3038,10 +3048,10 @@ function removeAI(id) {
   toast(`🗑 ${ai.name} removed`);
 }
 
-function hideDefaultAI(id) {
+async function hideDefaultAI(id) {
   const ai = DEFAULT_AIS.find(d => d.id === id);
   if (!ai) return;
-  if (!confirm(`Hide "${ai.name}" from the setup list? It won't appear or run. You can restore it with ↺ Reset to Defaults.`)) return;
+  if (!await wfConfirm('Hide Default AI', `Hide "${ai.name}" from the setup list? It won't appear or run. You can restore it with ↺ Reset to Defaults.`)) return;
   hiddenDefaultIds = [...new Set([...hiddenDefaultIds, id])];
   aiList    = aiList.filter(a => a.id !== id);
   activeAIs = activeAIs.filter(a => a.id !== id);
@@ -3051,10 +3061,13 @@ function hideDefaultAI(id) {
   toast(`👁 ${ai.name} hidden — use ↺ Defaults to restore`);
 }
 
-function hideAllDefaultAIs() {
+async function hideAllDefaultAIs() {
   const visible = DEFAULT_AIS.filter(d => !hiddenDefaultIds.includes(d.id) && aiList.find(a => a.id === d.id));
   if (!visible.length) { toast('All default AIs are already hidden'); return; }
-  if (!confirm(`Hide all ${visible.length} default AIs? Only your custom AIs will remain. You can restore them anytime with Reset to Defaults.`)) return;
+  if (!await wfConfirm(
+    'Hide All Defaults',
+    `Hide all ${visible.length} default AIs? Only your custom AIs will remain. You can restore them anytime with Reset to Defaults.`
+  )) return;
   visible.forEach(d => {
     hiddenDefaultIds = [...new Set([...hiddenDefaultIds, d.id])];
     aiList    = aiList.filter(a => a.id !== d.id);
@@ -3116,10 +3129,10 @@ function openAllConsoles() {
   }
 }
 
-function clearKeyForAI(id) {
+async function clearKeyForAI(id) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
-  if (!confirm(`Remove the saved API key for ${ai.name}?`)) return;
+  if (!await wfConfirm('Remove API Key', `Remove the saved API key for ${ai.name}?`, { okText: 'Remove', destructive: true })) return;
   const cfg = API_CONFIGS[ai.provider];
   if (cfg) delete cfg._key;
   saveSettings();
@@ -3304,21 +3317,25 @@ const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
 const MODEL_RECOMMENDATION_PROMPT_DEFAULT =
 `You are helping a user pick one of YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool.
 
-The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. The ideal model:
-- Has strong writing quality and structured reasoning
-- Has a long context window
-- Is a recent flagship or general-purpose model — NOT a coding-only, embedding, or specialized variant
-- Is currently supported (not deprecated)
+The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. Ideal Reviewers have strong writing quality, structured reasoning, long context windows, and are recent flagship or general-purpose models — NOT coding-only, embedding, or specialized variants.
 
 Available models on this endpoint:
 {MODEL_LIST}
 
-Pick ONE model id from the list above. Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
+You will recommend FOUR labeled selections. Each MUST be an exact model id from the list above. The same model id MAY appear in multiple slots if it genuinely is the best for that category (e.g. today's most-capable model might also be the best overall pick).
 
-PICK: <exact model id from list>
-WHY: <one sentence, max 120 chars>
+Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
 
-If multiple models are roughly equivalent flagships, prefer the most recently released.`;
+PICK: <model id — your single best overall recommendation>
+WHY: <one sentence, max 120 chars, explaining why this is the best overall>
+BUDGET: <model id — cheapest decent option for review tasks>
+BUDGET_WHY: <one sentence, max 120 chars>
+FAST: <model id — fastest decent option for review tasks>
+FAST_WHY: <one sentence, max 120 chars>
+CAPABLE: <model id — most capable for review tasks regardless of cost>
+CAPABLE_WHY: <one sentence, max 120 chars>
+
+If multiple models are roughly equivalent flagships in a category, prefer the most recently released.`;
 
 function getRecommendationPrompt() {
   try {
@@ -3339,11 +3356,51 @@ function getCachedRecommendation(cacheId) {
   return null;
 }
 
-function setCachedRecommendation(cacheId, model, why) {
+// ── v3.26.8: WAXFRAME CONFIRM MODAL ──
+// Promise-based replacement for native `confirm()`. Browser dialogs are jarring
+// against WaxFrame's design language and can't be styled. Usage:
+//   if (await wfConfirm('Title', 'Body text')) { ... }
+// or with options:
+//   if (await wfConfirm('Title', 'Body', { okText: 'Remove', destructive: true })) ...
+let _wfConfirmResolve = null;
+
+function wfConfirm(title, message, opts = {}) {
+  return new Promise(resolve => {
+    _wfConfirmResolve = resolve;
+    const modal   = document.getElementById('wfConfirmModal');
+    const titleEl = document.getElementById('wfConfirmTitle');
+    const msgEl   = document.getElementById('wfConfirmMsg');
+    const okBtn   = document.getElementById('wfConfirmOkBtn');
+    const cancelBtn = document.getElementById('wfConfirmCancelBtn');
+    if (!modal) { resolve(window.confirm(message || title)); return; }
+    if (titleEl) titleEl.textContent = title || 'Confirm';
+    if (msgEl)   msgEl.textContent   = message || '';
+    if (okBtn) {
+      okBtn.textContent = opts.okText || 'OK';
+      okBtn.classList.toggle('wf-confirm-danger', !!opts.destructive);
+    }
+    if (cancelBtn) cancelBtn.textContent = opts.cancelText || 'Cancel';
+    modal.classList.add('active');
+  });
+}
+
+function wfConfirmOk() {
+  const modal = document.getElementById('wfConfirmModal');
+  if (modal) modal.classList.remove('active');
+  if (_wfConfirmResolve) { _wfConfirmResolve(true); _wfConfirmResolve = null; }
+}
+
+function wfConfirmCancel() {
+  const modal = document.getElementById('wfConfirmModal');
+  if (modal) modal.classList.remove('active');
+  if (_wfConfirmResolve) { _wfConfirmResolve(false); _wfConfirmResolve = null; }
+}
+
+function setCachedRecommendation(cacheId, model, why, labels) {
   if (!cacheId || !model) return;
   const key = `waxframe_recommend_${cacheId}`;
   try {
-    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), model, why }));
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), model, why, labels: labels || {} }));
   } catch(e) {}
 }
 
@@ -3401,23 +3458,59 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       return null;
     }
 
-    const pickMatch = text.match(/PICK:\s*([^\n\r]+)/i);
-    const whyMatch  = text.match(/WHY:\s*([^\n\r]+)/i);
+    // v3.26.8: parse all 4 categorized picks. PICK is the active recommendation
+    // (gets ✨); BUDGET/FAST/CAPABLE annotate the dropdown so power users can
+    // override based on cost/speed/capability tradeoffs. A model can hold
+    // multiple tags (today's most-capable might also be the best PICK).
+    const pickMatch    = text.match(/^PICK:\s*([^\n\r]+)/im);
+    const whyMatch     = text.match(/^WHY:\s*([^\n\r]+)/im);
+    const budgetMatch  = text.match(/^BUDGET:\s*([^\n\r]+)/im);
+    const budgetWhyM   = text.match(/^BUDGET_WHY:\s*([^\n\r]+)/im);
+    const fastMatch    = text.match(/^FAST:\s*([^\n\r]+)/im);
+    const fastWhyM     = text.match(/^FAST_WHY:\s*([^\n\r]+)/im);
+    const capableMatch = text.match(/^CAPABLE:\s*([^\n\r]+)/im);
+    const capableWhyM  = text.match(/^CAPABLE_WHY:\s*([^\n\r]+)/im);
+
     if (!pickMatch) {
       console.warn('[recommend] no PICK line in provider response. Raw text:', text);
       return null;
     }
 
-    const model = pickMatch[1].trim().replace(/^[`'"*]|[`'"*]$/g, '');
-    const why = whyMatch ? whyMatch[1].trim().replace(/^[`'"*]|[`'"*]$/g, '') : '';
+    const cleanId = s => s.trim().replace(/^[`'"*]|[`'"*]$/g, '');
+    const model = cleanId(pickMatch[1]);
+    const why = whyMatch ? cleanId(whyMatch[1]) : '';
 
     if (!models.includes(model)) {
       console.warn('[recommend] picked model not in fetched list. Picked:', model, 'List:', models);
       return null;
     }
 
-    setCachedRecommendation(cacheId, model, why);
-    return { model, why, cached: false };
+    // Build labels map. Each entry: { tag: 'Budget'|'Fast'|'Most Capable'|'Best Overall', why: string }
+    // If the same id appears in multiple categories, the labels concatenate (e.g.
+    // "Best Overall · Most Capable"). Validates each picked id is in the live list.
+    const labels = {};
+    const addLabel = (matchObj, whyMatchObj, tag) => {
+      if (!matchObj) return;
+      const id = cleanId(matchObj[1]);
+      if (!models.includes(id)) {
+        console.warn(`[recommend] ${tag} pick "${id}" not in fetched list — skipping`);
+        return;
+      }
+      const w = whyMatchObj ? cleanId(whyMatchObj[1]) : '';
+      if (labels[id]) {
+        labels[id].tag = `${labels[id].tag} · ${tag}`;
+        // Keep first WHY — they're the same model so either reason applies
+      } else {
+        labels[id] = { tag, why: w };
+      }
+    };
+    addLabel(pickMatch,    whyMatch,    'Best Overall');
+    addLabel(budgetMatch,  budgetWhyM,  'Budget');
+    addLabel(fastMatch,    fastWhyM,    'Fast');
+    addLabel(capableMatch, capableWhyM, 'Most Capable');
+
+    setCachedRecommendation(cacheId, model, why, labels);
+    return { model, why, labels, cached: false };
   } catch(e) {
     console.warn('[recommend] failed:', e);
     return null;
