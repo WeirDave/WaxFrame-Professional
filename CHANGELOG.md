@@ -2,6 +2,51 @@
 
 ---
 
+## v3.27.0 Pro — Build `20260429-019`
+**Released:** April 29, 2026
+
+**Three categories instead of four. Icons. Second-click bug fix. WHY wraps to its own line.**
+
+### Categories simplified to BEST / FASTEST / BUDGET
+
+v3.26.8 had four labeled picks (PICK / BUDGET / FAST / CAPABLE). User-driven critique: "Best Overall" and "Most Capable" carried the same meaning once the task was fixed. Both answer "best for the Reviewer task" — there was no useful distinction.
+
+v3.27.0 collapses them:
+
+| Category | Icon | What it answers |
+|---|---|---|
+| **Best** | 🎯 | Which of your models does the Reviewer task best? (default — gets ✨) |
+| **Fastest** | ⚡ | …does it fastest while still producing real reviews? |
+| **Budget** | 💰 | …does it cheapest while still producing real reviews? |
+
+Three real tradeoff axes. Everything else collapsed into noise.
+
+### Category icons
+
+Each category prefixes its icon next to the model id in the dropdown so the categorized picks pop visually against the sea of un-tagged models. Concatenations join icons too — a model that's both Fastest and Budget shows as `⚡ 💰 deepseek-chat — Fastest · Budget`.
+
+The ✨ marker continues to denote the active "Best" pick — orthogonal to category icons, not duplicative.
+
+### "Quality floor" framing in the prompt
+
+Both Fastest and Budget now carry the qualifier "that can still produce a useful review." This stops the AI from picking a tiny model that technically runs but produces garbage. It says "give us a real review, just optimize for speed/cost within that constraint."
+
+Full new prompt in `prompt-editor.html` as `recommend_model`. If you've previously customized the prompt, your version still loads — but it's the OLD format that returns PICK/CAPABLE/FAST/BUDGET. Either delete your custom version (falls back to v3.27.0 default) or update it to match BEST/FASTEST/BUDGET.
+
+### Second-click bug fix
+
+`recheckModelForAI` now always re-renders the row after a successful recommend, even when the AI confirms the existing model is still the best pick. Previously the function returned early on `result.model === previousModel`, so the freshly-cached labels stayed in localStorage but didn't surface in the dropdown. Users reported "first click did nothing, second click worked" — the second click wasn't actually a second recommend, it was the first recommend's cache finally rendering after a manual model change forced a re-render.
+
+### WHY note wraps to its own line
+
+The `.model-select-note` styling now uses `flex-basis: 100%` to force the note onto a new line below the dropdown row regardless of WHY length. v3.26.8's `white-space: nowrap` caused short WHYs (Claude) to wrap correctly while long WHYs (ChatGPT) overflowed past the right edge instead. (This fix was originally tagged v3.26.9 but rolled into this release.)
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-019` and `3.27.0`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.8 Pro — Build `20260429-017`
 **Released:** April 29, 2026
 

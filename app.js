@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-017
+//  Build: 20260429-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -347,28 +347,37 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
 
-  // v3.26.8: source of truth is the AI's own categorized recommendation cache.
-  // Static MODEL_LABELS no longer drive option text — they were stale guesses.
-  // The AI returns up to 4 categorized picks (Best Overall + Budget + Fast +
-  // Most Capable) and those become the dropdown tags. ✨ marks the Best Overall
-  // pick. All other models render as bare ids — David's principle: trust what
-  // the AI returned, don't guess about the rest.
+  // v3.27.0: source of truth is the AI's own categorized recommendation cache.
+  // The AI returns 3 categorized picks (Best + Fastest + Budget) and those
+  // become the dropdown tags with category icons. ✨ marks the BEST pick.
+  // All other models render as bare ids — David's principle: trust what the
+  // AI returned, don't guess about the rest.
   const cached = getCachedRecommendation(`default-${provider}`);
   const recommendedModel = cached?.model || null;
   const labels = cached?.labels || {};
 
+  // Map a tag string (possibly concatenated like "Best · Fastest") to icons.
+  // Each known category gets a single emoji; the icons join in tag order.
+  const iconForTag = (tagStr) => {
+    if (!tagStr) return '';
+    const map = { 'Best': '🎯', 'Fastest': '⚡', 'Budget': '💰' };
+    return tagStr.split(' · ').map(t => map[t] || '').filter(Boolean).join(' ');
+  };
+
   const options = models.map(m => {
     const lbl = labels[m];
+    const icons = iconForTag(lbl?.tag);
     const tagPart = lbl?.tag ? ` — ${lbl.tag}` : '';
-    const baseDisplay = `${m}${tagPart}`;
+    const iconPart = icons ? `${icons} ` : '';
+    const baseDisplay = `${iconPart}${m}${tagPart}`;
     const display = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
     const selected = m === currentModel ? 'selected' : '';
     return `<option value="${m}" ${selected}>${esc(display)}</option>`;
   }).join('');
 
-  // Note line shows the WHY for the currently-selected model, drawn from the
-  // labels map. If current is the Best Overall pick, prefix with ✨. If current
-  // has no AI-provided WHY (e.g. user picked an un-tagged model), show nothing.
+  // Note line shows the WHY for the currently-selected model from the labels
+  // map. If current is the BEST pick, prefix with ✨. If current has no
+  // AI-provided WHY (user picked an un-tagged model), show nothing.
   let noteText = '';
   if (currentModel && labels[currentModel]?.why) {
     const isRec = currentModel === recommendedModel;
@@ -404,11 +413,16 @@ function saveModelForAI(aiId, modelId) {
     cfg.endpoint = cfg.endpointFn(modelId);
   }
   saveSettings();
-  // Update the note under the selector
+  // v3.27.0: read the note from the AI's cached labels rather than the dead
+  // MODEL_LABELS table. If the user picks an un-tagged model, the note
+  // clears (correct — we have no AI-provided WHY for that model).
   const noteEl = document.querySelector(`#airow-${aiId} .model-select-note`);
   if (noteEl) {
-    const label = MODEL_LABELS[modelId];
-    noteEl.textContent = label?.note || '';
+    const cached = getCachedRecommendation(`default-${ai.provider}`);
+    const labels = cached?.labels || {};
+    const isRec = modelId === cached?.model;
+    const lblWhy = labels[modelId]?.why || '';
+    noteEl.textContent = lblWhy ? (isRec ? `✨ ${lblWhy}` : lblWhy) : '';
   }
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
@@ -508,7 +522,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-017';         // build stamp — update each session
+const BUILD       = '20260429-019';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3315,27 +3329,23 @@ function populateQuickAddOptions() {
 const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
 
 const MODEL_RECOMMENDATION_PROMPT_DEFAULT =
-`You are helping a user pick one of YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool.
-
-The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. Ideal Reviewers have strong writing quality, structured reasoning, long context windows, and are recent flagship or general-purpose models — NOT coding-only, embedding, or specialized variants.
+`You are helping a user pick from YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool. The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. It needs strong writing, structured reasoning, and a long context window — NOT a coding-only, embedding, or specialized variant.
 
 Available models on this endpoint:
 {MODEL_LIST}
 
-You will recommend FOUR labeled selections. Each MUST be an exact model id from the list above. The same model id MAY appear in multiple slots if it genuinely is the best for that category (e.g. today's most-capable model might also be the best overall pick).
+Recommend three options for the WaxFrame Reviewer task. Each MUST be an exact model id from the list above. The same id MAY appear in multiple slots if it is genuinely the best in more than one category (e.g. your fastest model might also be your cheapest).
 
 Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
 
-PICK: <model id — your single best overall recommendation>
-WHY: <one sentence, max 120 chars, explaining why this is the best overall>
-BUDGET: <model id — cheapest decent option for review tasks>
+BEST: <best model for the Reviewer task>
+BEST_WHY: <one sentence, max 120 chars>
+FASTEST: <fastest model that can still produce a useful review>
+FASTEST_WHY: <one sentence, max 120 chars>
+BUDGET: <cheapest model that can still produce a useful review>
 BUDGET_WHY: <one sentence, max 120 chars>
-FAST: <model id — fastest decent option for review tasks>
-FAST_WHY: <one sentence, max 120 chars>
-CAPABLE: <model id — most capable for review tasks regardless of cost>
-CAPABLE_WHY: <one sentence, max 120 chars>
 
-If multiple models are roughly equivalent flagships in a category, prefer the most recently released.`;
+If multiple models are roughly equivalent in a category, prefer the most recently released.`;
 
 function getRecommendationPrompt() {
   try {
@@ -3458,36 +3468,35 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       return null;
     }
 
-    // v3.26.8: parse all 4 categorized picks. PICK is the active recommendation
-    // (gets ✨); BUDGET/FAST/CAPABLE annotate the dropdown so power users can
-    // override based on cost/speed/capability tradeoffs. A model can hold
-    // multiple tags (today's most-capable might also be the best PICK).
-    const pickMatch    = text.match(/^PICK:\s*([^\n\r]+)/im);
-    const whyMatch     = text.match(/^WHY:\s*([^\n\r]+)/im);
+    // v3.27.0: parse 3 categorized picks. BEST is the active recommendation
+    // (gets ✨ + auto-selected); FASTEST and BUDGET annotate the dropdown so
+    // power users can pick based on speed/cost tradeoffs. Tags carry their
+    // icon for the dropdown to render directly (🎯 BEST, ⚡ FASTEST, 💰 BUDGET).
+    const bestMatch    = text.match(/^BEST:\s*([^\n\r]+)/im);
+    const bestWhyM     = text.match(/^BEST_WHY:\s*([^\n\r]+)/im);
+    const fastestMatch = text.match(/^FASTEST:\s*([^\n\r]+)/im);
+    const fastestWhyM  = text.match(/^FASTEST_WHY:\s*([^\n\r]+)/im);
     const budgetMatch  = text.match(/^BUDGET:\s*([^\n\r]+)/im);
     const budgetWhyM   = text.match(/^BUDGET_WHY:\s*([^\n\r]+)/im);
-    const fastMatch    = text.match(/^FAST:\s*([^\n\r]+)/im);
-    const fastWhyM     = text.match(/^FAST_WHY:\s*([^\n\r]+)/im);
-    const capableMatch = text.match(/^CAPABLE:\s*([^\n\r]+)/im);
-    const capableWhyM  = text.match(/^CAPABLE_WHY:\s*([^\n\r]+)/im);
 
-    if (!pickMatch) {
-      console.warn('[recommend] no PICK line in provider response. Raw text:', text);
+    if (!bestMatch) {
+      console.warn('[recommend] no BEST line in provider response. Raw text:', text);
       return null;
     }
 
     const cleanId = s => s.trim().replace(/^[`'"*]|[`'"*]$/g, '');
-    const model = cleanId(pickMatch[1]);
-    const why = whyMatch ? cleanId(whyMatch[1]) : '';
+    const model = cleanId(bestMatch[1]);
+    const why = bestWhyM ? cleanId(bestWhyM[1]) : '';
 
     if (!models.includes(model)) {
-      console.warn('[recommend] picked model not in fetched list. Picked:', model, 'List:', models);
+      console.warn('[recommend] BEST model not in fetched list. Picked:', model, 'List:', models);
       return null;
     }
 
-    // Build labels map. Each entry: { tag: 'Budget'|'Fast'|'Most Capable'|'Best Overall', why: string }
-    // If the same id appears in multiple categories, the labels concatenate (e.g.
-    // "Best Overall · Most Capable"). Validates each picked id is in the live list.
+    // Build labels map. Each entry: { tag: 'Best' | 'Fastest' | 'Budget' | concatenations, why }
+    // Concatenations use ' · ' separator when same id appears in multiple categories.
+    // The icon prefix is added by buildModelSelector when rendering, not here, so
+    // future label changes don't require parser updates.
     const labels = {};
     const addLabel = (matchObj, whyMatchObj, tag) => {
       if (!matchObj) return;
@@ -3499,15 +3508,13 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       const w = whyMatchObj ? cleanId(whyMatchObj[1]) : '';
       if (labels[id]) {
         labels[id].tag = `${labels[id].tag} · ${tag}`;
-        // Keep first WHY — they're the same model so either reason applies
       } else {
         labels[id] = { tag, why: w };
       }
     };
-    addLabel(pickMatch,    whyMatch,    'Best Overall');
+    addLabel(bestMatch,    bestWhyM,    'Best');
+    addLabel(fastestMatch, fastestWhyM, 'Fastest');
     addLabel(budgetMatch,  budgetWhyM,  'Budget');
-    addLabel(fastMatch,    fastWhyM,    'Fast');
-    addLabel(capableMatch, capableWhyM, 'Most Capable');
 
     setCachedRecommendation(cacheId, model, why, labels);
     return { model, why, labels, cached: false };
@@ -3613,10 +3620,16 @@ async function recheckModelForAI(id) {
     return;
   }
 
+  // v3.27.0: always re-render the row after a successful recommend so the
+  // dropdown picks up the freshly-cached labels (BEST/FASTEST/BUDGET tags +
+  // their WHYs). Previously, when the AI confirmed the existing model
+  // (`result.model === previousModel`), the function returned early WITHOUT
+  // calling renderAIRow — meaning the new labels lived in the cache but
+  // weren't visible. Users reported "first click did nothing, second click
+  // worked" because changing the model manually triggered a re-render that
+  // finally surfaced the cached labels.
   if (result.model === previousModel) {
-    // v3.26.3: differentiated success toast — call DID succeed, the AI just
-    // confirmed the existing model. Without this users see the dropdown not
-    // change and assume the call failed.
+    renderAIRow(id);
     toast(`✓ ${ai.name}: ${result.model} — already the recommended pick${result.why ? '. ' + result.why : ''}`, 6000);
     return;
   }
