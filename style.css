@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-009
+   Build: 20260429-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2613,13 +2613,37 @@ html, body {
 .custom-ai-model-input-wrap input,
 .custom-ai-model-input-wrap select { flex: 1; min-width: 0; }
 
-/* v3.25.7 — "Help me choose" link sits next to the Fetch Models button.
-   Hidden by default; .is-visible toggled by JS when a Quick Add preset is
-   active and that preset declares a chooseModelLink. Sized to feel like a
-   secondary action, not a primary button — small, no background, accent
-   underlined on hover. */
-.custom-ai-choose-model-link {
+/* v3.25.7 / v3.26.0 / v3.26.1 — Decision aids row (sits BELOW the model
+   field, not inline with it). Holds the 🤖 Recommend button and the
+   ↗ Browse models link. Hidden by default; .is-visible toggled by JS only
+   AFTER Fetch Models has populated the dropdown — both aids need a fetched
+   list of models to make sense. Putting them on their own row solves the
+   squashed-dropdown layout bug from v3.26.0 where 4 elements competed for
+   horizontal space inside .custom-ai-model-input-wrap. */
+.custom-ai-model-aids {
   display: none;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+.custom-ai-model-aids.is-visible { display: flex; }
+
+.custom-ai-recommend-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.custom-ai-recommend-btn:disabled { opacity: 0.6; cursor: wait; }
+
+.custom-ai-choose-model-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
   font-size: 12px;
   color: var(--accent);
@@ -2627,26 +2651,9 @@ html, body {
   white-space: nowrap;
   padding: 6px 4px;
 }
-.custom-ai-choose-model-link.is-visible { display: inline-flex; align-items: center; gap: 6px; }
 .custom-ai-choose-model-link:hover { text-decoration: underline; }
 
-/* v3.26.0 — Recommend button sits to the LEFT of "Help me choose" link.
-   Hidden until Fetch Models populates the dropdown (recommend has nothing
-   to ask about until then). Distinct from a regular .btn — slightly less
-   prominent visually so it pairs with the link as a "decision aid" duo
-   rather than competing with the primary Test Connection / Add buttons. */
-.custom-ai-recommend-btn {
-  display: none;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-}
-.custom-ai-recommend-btn.is-visible { display: inline-flex; }
-.custom-ai-recommend-btn:disabled { opacity: 0.6; cursor: wait; }
-
-/* v3.26.0 — basic / advanced badges that label the recommend vs choose flow.
-   Tiny pill-shape, color-coded so users can tell them apart at a glance.
+/* v3.26.0 — basic / advanced badges that label the recommend vs browse flow.
    `basic` = the AI does the work for you (autofill).
    `advanced` = you research and decide (link to provider docs). */
 .custom-ai-flow-badge {
@@ -2670,6 +2677,26 @@ html, body {
 }
 [data-theme="dark"] .custom-ai-flow-badge--basic    { color: #58d68d; }
 [data-theme="dark"] .custom-ai-flow-badge--advanced { color: #c39bd3; }
+
+/* v3.26.1 — per-row Recheck Model button on default-AI rows. Sits next to
+   the Test button. Only visible when the AI has a saved key. Compact, same
+   sizing as Test, glow on hover. */
+.ai-recheck-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  padding: 4px 8px;
+  background: rgba(155, 89, 182, 0.14);
+  color: var(--accent);
+  border: 1px solid rgba(155, 89, 182, 0.28);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+.ai-recheck-btn:hover { background: rgba(155, 89, 182, 0.28); }
+.ai-recheck-btn:disabled { opacity: 0.6; cursor: wait; }
 
 .custom-ai-key-wrap {
   display: flex;
