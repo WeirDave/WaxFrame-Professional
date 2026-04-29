@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-020
+//  Build: 20260429-021
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -403,7 +403,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   // about what it does. Conceptually pairs with the dropdown (it changes which
   // model is selected) rather than the Test button.
   const recheckBtn = showRecheck
-    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Have AI Recommend</button>`
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Recommend a Model</button>`
     : '';
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
@@ -536,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-020';         // build stamp — update each session
+const BUILD       = '20260429-021';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3619,7 +3619,7 @@ async function recheckModelForAI(id) {
 
   const btn = document.getElementById(`recheckbtn-${id}`);
   const origLabel = btn ? btn.innerHTML : null;
-  if (btn) { btn.disabled = true; btn.innerHTML = '🤖 Asking…'; }
+  if (btn) { btn.disabled = true; btn.innerHTML = 'Asking…'; }
 
   toast(`🤖 ${ai.name}: asking for best model…`, 3000);
   const previousModel = cfg.model;
@@ -3785,7 +3785,7 @@ async function recommendCustomAIModel() {
   // Visible loading state — button + dropdown both indicate "working"
   recBtn.disabled = true;
   const origLabel = recBtn.innerHTML;
-  recBtn.innerHTML = '<span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>🤖 Asking…';
+  recBtn.innerHTML = '<span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>Asking…';
   selectEl.disabled = true;
 
   toast(`🤖 Asking ${askingModel} for a recommendation…`, 3000);
@@ -4217,6 +4217,20 @@ function addCustomAI() {
     ...base
   };
   if (key) API_CONFIGS[id]._key = key;
+
+  // v3.27.2: persist the model list from the modal's dropdown (populated by
+  // fetchCustomAIModels) into the same localStorage cache the worker bee row
+  // uses (`waxframe_models_${id}`). Without this, the post-add row had NO
+  // model dropdown AND NO Recommend button — buildModelSelector returned ''
+  // because getModelsForProvider had nothing to return for the new id.
+  try {
+    const modelOptions = modelSelect && modelSelect.style.display !== 'none'
+      ? Array.from(modelSelect.options).filter(o => o.value && !o.disabled).map(o => o.value)
+      : [model]; // fallback: at least cache the single model the user typed
+    if (modelOptions.length) {
+      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: modelOptions }));
+    }
+  } catch(e) { console.warn('[addCustomAI] failed to cache model list:', e); }
 
   aiList.push(ai);
   activeAIs.push(ai);
