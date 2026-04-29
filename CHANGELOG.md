@@ -2,6 +2,36 @@
 
 ---
 
+## v3.23.4 Pro — Build `20260428-006`
+**Released:** April 28, 2026
+
+**Global text-selection contrast fix + Import from Model Server "already in hive" markers.** Two unrelated UX fixes shipped together because each was small and surgical. First, the browser's default cyan selection highlight in dark mode produced unreadable contrast against the muted gray text in the Notes panel and elsewhere — a global `::selection` rule using the brand accent color now guarantees readable selection in every theme. Second, the Import from Model Server flow used to silently filter out models already in the user's hive, leading to "wait, where's the model I added yesterday?" confusion when re-importing — those models now render as visually distinct, non-interactive rows with a green "Already in your hive" badge instead.
+
+### Global text-selection styling
+
+- **New global `::selection` rule** added to `style.css` near the BASE block. Uses `var(--accent)` as background with explicit text color (`#0a0c12` in dark mode, `#ffffff` in light mode) — same pattern the working-document textarea has had since earlier releases, just now applied page-wide.
+- **Existing `.work-doc-ta::selection` rules left intact** — they have higher specificity and continue to take precedence on the working document, where the same visual outcome happens to be the result.
+- **Trigger** — visible in the Notes panel sub-text and elsewhere where browser-default selection produced cyan-on-muted-gray text in dark mode. Fixed everywhere with one rule.
+
+### Import from Model Server — keep already-in-hive models visible
+
+- **`renderImportServerChecklist` refactored** to render ALL models from the fetched list, not just available ones. Previously the function filtered in-hive models out entirely, leaving users wondering whether the import had failed when their previously-imported models didn't appear.
+- **In-hive rows render with a disabled checkbox** and a green "✓ Already in your hive" badge in place of the nickname input. Row gets `.import-server-item--in-hive` modifier class for the dimmed, non-interactive treatment (`opacity: 0.55`, no hover background, default cursor on label and checkbox).
+- **`_importAvailableCount` and `_importInHiveCount` math preserved** exactly — the footer "Add N to Hive" button and the "X available · Y selected · Z already in hive" count line all show the right numbers without further changes.
+- **`importServerSelectAll` and `importServerSelectNone`** scoped to `.import-server-check:not(:disabled)` — bulk-toggle no longer affects the disabled in-hive rows. Without this, calling Select All would have bumped the count incorrectly and could have produced ghost selections that the import-confirm path would then ignore (since only `:checked` enabled rows get imported). Cleaner to just exclude them from toggle entirely.
+- **Confirm-import flow unchanged** — uses `.import-server-check:checked` to identify selections. Disabled checkboxes are not checked by default, so they never enter the import path. Behavioral parity with v3.23.3.
+
+### CSS additions
+
+- **`.import-server-item--in-hive`** — opacity dim, default cursor, no hover background.
+- **`.import-server-in-hive-badge`** — green-themed pill (`var(--green)` border + text, `var(--green-dim)` background) with the same sizing and font-weight pattern as the existing orphan `.import-server-item-badge` styling.
+
+### Build-stamp sweep
+
+- All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=` and `version.js?v=` cache-busts swept to `20260428-006` / `3.23.4`.
+
+---
+
 ## v3.23.3 Pro — Build `20260428-005`
 **Released:** April 28, 2026
 

@@ -382,7 +382,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260428-005';         // build stamp — update each session
+const BUILD       = '20260428-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3825,19 +3825,33 @@ function renderImportServerChecklist() {
       .filter(Boolean)
   );
 
-  // Filter in-hive models OUT of the checklist entirely — purpose of this screen
-  // is "what can I add?", not "what do I already have?". Removing them from the
-  // hive happens on the Worker Bees page via the per-AI delete button.
-  const available = _importServerModels.filter(model => {
-    const modelId = typeof model === 'object' ? model.id : model;
-    return !existingForThisServer.has(modelId);
-  });
-  _importAvailableCount = available.length;
-  _importInHiveCount    = _importServerModels.length - available.length;
+  // Render ALL models — already-in-hive entries stay visible but get a disabled
+  // checkbox and an "Already in your hive" badge instead of the nickname input.
+  // This avoids the "wait, where's the model I added yesterday?" confusion when
+  // users re-import from the same endpoint. Available counter still reflects
+  // only the selectable rows so the footer "Add N to Hive" math stays correct.
+  const allModels = _importServerModels;
+  const inHiveCount = allModels.filter(m => {
+    const id = typeof m === 'object' ? m.id : m;
+    return existingForThisServer.has(id);
+  }).length;
+  _importAvailableCount = allModels.length - inHiveCount;
+  _importInHiveCount    = inHiveCount;
 
-  items.innerHTML = available.map((model, i) => {
+  items.innerHTML = allModels.map((model, i) => {
     const modelId   = typeof model === 'object' ? model.id   : model;
     const modelName = typeof model === 'object' ? model.name : model;
+    const inHive    = existingForThisServer.has(modelId);
+
+    if (inHive) {
+      return `
+    <div class="import-server-item import-server-item--in-hive">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" disabled>
+      <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
+      <span class="import-server-in-hive-badge">✓ Already in your hive</span>
+    </div>`;
+    }
+
     return `
     <div class="import-server-item">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
@@ -3862,12 +3876,12 @@ function renderImportServerChecklist() {
 }
 
 function importServerSelectAll() {
-  document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = true);
+  document.querySelectorAll('.import-server-check:not(:disabled)').forEach(cb => cb.checked = true);
   updateChecklistCount();
 }
 
 function importServerSelectNone() {
-  document.querySelectorAll('.import-server-check').forEach(cb => cb.checked = false);
+  document.querySelectorAll('.import-server-check:not(:disabled)').forEach(cb => cb.checked = false);
   updateChecklistCount();
 }
 

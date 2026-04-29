@@ -156,6 +156,23 @@ input, textarea, select { font-family: inherit; }
 /* Toggleable display utility — used in place of inline style="display:none;" */
 .is-hidden { display: none !important; }
 
+/* Global text selection — guarantees readable contrast in both themes regardless
+   of where the user selects from. Mirrors the .work-doc-ta::selection pattern. */
+::selection {
+  background: var(--accent);
+  color: #0a0c12;
+}
+[data-theme="light"] ::selection {
+  background: var(--accent);
+  color: #ffffff;
+}
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] ::selection {
+    background: var(--accent);
+    color: #ffffff;
+  }
+}
+
 html, body {
   height: 100%;
   color: var(--text);
@@ -3010,6 +3027,26 @@ html, body {
 }
 .import-server-item:last-child { border-bottom: none; }
 .import-server-item:hover { background: var(--surface2); }
+
+/* In-hive row variant — dimmed, non-interactive, replaces the nickname input
+   with a green "Already in your hive" badge. Disabled checkbox visually but
+   stays in the markup so :not(:disabled) selectors target it correctly. */
+.import-server-item--in-hive { opacity: 0.55; cursor: default; }
+.import-server-item--in-hive:hover { background: transparent; }
+.import-server-item--in-hive .import-server-check,
+.import-server-item--in-hive .import-server-item-label { cursor: default; }
+.import-server-in-hive-badge {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  color: var(--green);
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  border-radius: var(--radius-sm);
+  padding: 3px 8px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 .import-server-check {
   flex-shrink: 0;
   accent-color: var(--accent);
