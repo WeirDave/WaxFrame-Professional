@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260427-013
+//  Build: 20260429-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-007';         // build stamp — update each session
+const BUILD       = '20260429-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3066,6 +3066,8 @@ function showAddCustomAI() {
   if (keyLink)    keyLink.style.display = 'none';
   resetModelField();
   resetCustomAITest();
+  populateQuickAddOptions();
+  updateChooseModelLink();
   modal.classList.add('active');
   document.getElementById('customAIQuickAdd')?.focus();
 }
@@ -3133,6 +3135,58 @@ function getActivePreset(currentUrl) {
   return key ? QUICK_ADD_PROVIDERS[key] : null;
 }
 
+// ── v3.25.7: "Help me choose" link toggle ──────────────────────────────────
+// Toggles visibility of the link sitting next to the Fetch Models button.
+// Visible only when the current URL matches a Quick Add preset that declares
+// a chooseModelLink. URL matched via getActivePreset(), so manually editing
+// the URL off-preset hides the link automatically — no extra state to track.
+function updateChooseModelLink() {
+  const link = document.getElementById('customAIChooseModelLink');
+  if (!link) return;
+  const url = document.getElementById('customAIUrl')?.value || '';
+  const preset = getActivePreset(url);
+  const target = preset?.chooseModelLink;
+  if (target) {
+    link.href = target;
+    link.classList.add('is-visible');
+  } else {
+    link.classList.remove('is-visible');
+    link.removeAttribute('href');
+  }
+}
+
+// ── v3.25.7: Quick Add preset already-in-hive markers ──────────────────────
+// Decorates the Quick Add preset dropdown options with "✓ already in your
+// hive" suffixes so the user can see at a glance which providers are already
+// configured. Match by endpoint URL, trailing-slash normalized.
+//
+// Options stay ENABLED — adding multiple models from the same provider
+// (e.g. two Mistral models) is a valid flow. This differs from the
+// fetched-models dropdown (v3.25.6) where exact model+endpoint duplicates
+// are disabled, since adding the literal same model twice IS a duplicate.
+function populateQuickAddOptions() {
+  const sel = document.getElementById('customAIQuickAdd');
+  if (!sel) return;
+  const norm = u => (u || '').replace(/\/+$/, '').trim();
+  const inHiveUrls = new Set(
+    aiList
+      .map(ai => norm(API_CONFIGS[ai.provider]?.endpoint))
+      .filter(Boolean)
+  );
+  Array.from(sel.options).forEach(opt => {
+    const key = opt.value;
+    if (!key) return; // skip placeholder
+    const preset = QUICK_ADD_PROVIDERS[key];
+    if (!preset) return;
+    if (!opt.dataset.baseLabel) opt.dataset.baseLabel = opt.textContent;
+    const baseLabel = opt.dataset.baseLabel;
+    const presetUrl = norm(preset.url);
+    opt.textContent = (presetUrl && inHiveUrls.has(presetUrl))
+      ? `${baseLabel}  ✓ already in your hive`
+      : baseLabel;
+  });
+}
+
 // Models that should never appear as Hive reviewers regardless of provider.
 // Embeddings, moderation/safety, speech-to-text, text-to-speech, audio,
 // real-time, reranking, image generation. The Hive expects chat-completion
@@ -3150,11 +3204,12 @@ function applyQuickAdd(value) {
 
   if (!value) {
     if (keyLink) keyLink.style.display = 'none';
+    updateChooseModelLink();
     return;
   }
 
   const preset = QUICK_ADD_PROVIDERS[value];
-  if (!preset) return;
+  if (!preset) { updateChooseModelLink(); return; }
 
   if (urlInput)  { urlInput.value = preset.url; }
   if (fmtSelect) fmtSelect.value = preset.format;
@@ -3169,6 +3224,8 @@ function applyQuickAdd(value) {
       keyLink.style.display = 'none';
     }
   }
+
+  updateChooseModelLink();
 }
 
 function resetModelField() {

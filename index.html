@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-007
+     Build: 20260429-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-007">
+  <meta name="waxframe-build" content="20260429-008">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.25.6">
+  <link rel="stylesheet" href="style.css?v=3.25.7">
 </head>
 <body>
 
@@ -784,7 +784,7 @@
     <div class="custom-ai-form-row">
       <div class="custom-ai-field-wrap">
         <label>URL <span class="field-required">*</span></label>
-        <input type="text" id="customAIUrl" placeholder="https://your-endpoint.com/api" oninput="autoFillAIName(this.value); resetCustomAITest()">
+        <input type="text" id="customAIUrl" placeholder="https://your-endpoint.com/api" oninput="autoFillAIName(this.value); resetCustomAITest(); updateChooseModelLink();">
       </div>
       <div class="custom-ai-field-wrap">
         <label>Name <span class="field-optional">(auto-detected)</span></label>
@@ -815,6 +815,7 @@
           <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest" oninput="resetCustomAITest()">
           <select id="customAIModelSelect" class="custom-ai-select" style="display:none;" onchange="resetCustomAITest()"></select>
           <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
+          <a id="customAIChooseModelLink" class="custom-ai-choose-model-link" href="#" target="_blank" rel="noopener noreferrer" title="Open this provider's model catalog in a new tab">Help me choose →</a>
         </div>
       </div>
     </div>
@@ -1727,12 +1728,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.25.6"></script>
-<script src="lib/mammoth.browser.min.js?v=3.25.6"></script>
-<script src="lib/jszip.min.js?v=3.25.6"></script>
-<script src="lib/xlsx.full.min.js?v=3.25.6"></script>
-<script src="version.js?v=3.25.6"></script>
-<script src="app.js?v=3.25.6"></script>
+<script src="lib/pdf.min.js?v=3.25.7"></script>
+<script src="lib/mammoth.browser.min.js?v=3.25.7"></script>
+<script src="lib/jszip.min.js?v=3.25.7"></script>
+<script src="lib/xlsx.full.min.js?v=3.25.7"></script>
+<script src="version.js?v=3.25.7"></script>
+<script src="app.js?v=3.25.7"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
