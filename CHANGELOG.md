@@ -2,6 +2,69 @@
 
 ---
 
+## v3.26.4 Pro — Build `20260429-013`
+**Released:** April 29, 2026
+
+**Stop guessing what's a chat model — let the AI decide.** v3.26.0–v3.26.3 layered increasingly specific regex patterns onto MODEL_FILTERS to filter "non-chat" models from each provider's `/v1/models` response. Real-world testing showed both bugs (Gemini Computer Use breaks recommend; manually-picked models used as askingModel) and a deeper architectural mistake: hardcoded naming heuristics go stale the same way `MODEL_LABELS` did, just slower.
+
+### Architectural shift — structural-only filter
+
+All five filtered providers now share a single regex that catches only models whose API contract fundamentally differs from chat-completion:
+
+```
+embed | moderation | whisper | tts | speech | transcribe | rerank | audio
+| realtime | guard | dall-e | imagen | imagine | veo | lyria
+| stable-diffusion | safety | computer-use | nano-banana
+```
+
+Removed: per-provider version prefix requirements (`^gpt-[45]`, `^claude-`, `^gemini-[23]`, `^grok-[0-9]`, `^deepseek-(chat|reasoner)`), legacy-name patterns (`babbage|davinci|curie|ada`), speculative variant exclusions (`live-|native-audio|exp-|vision-beta`), and other naming-pattern heuristics that drift with provider release cadence.
+
+Custom AI's `NON_CHAT_RE` is now an alias of the same shared regex. One source of truth.
+
+The AI receiving the recommend prompt has explicit guidance to skip coding-only, embedding, and specialized variants — and AIs make better calls from a full live list than from our pruned subset. "nano-banana" is Google's image-gen model; no naming pattern catches it, but the AI knows. Trust the AI.
+
+### Stable askingModel from MODEL_FALLBACKS
+
+The recommend pipeline previously used `cfg.model || models[0]` as the courier — the model that carries the recommendation question to the provider's API. If the user manually picked something incompatible with chat completions (Gemini's Computer Use models reject standard calls; Google returns 400), the courier itself failed.
+
+v3.26.4 picks askingModel in this order:
+1. First entry of `MODEL_FALLBACKS[provider]` that's actually in the live candidate list (curated as known-good chat models)
+2. `cfg.model` if it's in the candidate list
+3. First model in the list (last resort)
+
+This means even if you manually pick a Gemini Computer Use model for testing, hitting Recheck still works — because we courier the question through `gemini-2.5-flash`, not your weird test pick.
+
+### MODEL_LABELS — strip "Recommended" tags
+
+Static labels like `gpt-4.1 — Recommended · Fast` and `claude-sonnet-4-6 — Recommended` were hardcoded for a world without the live recommend pipeline. Now they conflict with whatever the AI actually picked. Stripped:
+
+| Was | Now |
+|---|---|
+| `Recommended · Fast` | `Fast` |
+| `Recommended · Budget` | `Budget` |
+| `Recommended` (alone) | `Balanced` |
+
+Static labels are pure descriptors now. Live recommendation is the source of truth for "what's recommended."
+
+### ✨ marker on the live-recommended model
+
+`buildModelSelector` reads the cached recommendation (`waxframe_recommend_default-{provider}`, set by recommendForDefault on key save / migration / Recheck) and prefixes the matching dropdown option with `✨`:
+
+```
+gpt-4.1 — Fast
+gpt-4.1-mini — Budget
+✨ gpt-5.4-pro-2026-04-23 — Latest · Most Capable
+gpt-5.4 — Latest · Most Capable
+```
+
+The marker moves dynamically. If Recheck switches the recommendation to a different model, the ✨ moves there on next render. The note line under the dropdown also changes — when current model matches the recommendation, the note shows the WHY from the recommend call (e.g., `✨ latest flagship with strong reasoning`) instead of the static descriptor.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-013` and `3.26.4`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.3 Pro — Build `20260429-012`
 **Released:** April 29, 2026
 
