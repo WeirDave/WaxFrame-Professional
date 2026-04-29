@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-001
+     Build: 20260429-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-001">
+  <meta name="waxframe-build" content="20260429-002">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.25.0">
+  <link rel="stylesheet" href="style.css?v=3.25.1">
 </head>
 <body>
 
@@ -348,7 +348,7 @@
           <img src="images/WaxFrame_Reference_Bee_v1.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Optional. Source material the hive should cite against every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
+            <p class="hp-section-sub">Optional. Source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -370,11 +370,15 @@
           <div class="ref-cards-empty">No reference material yet. Add a paste-text card or upload a file below.</div>
         </div>
 
-        <div class="ref-add-row">
+        <div class="ref-add-row" id="refDropRow"
+             ondragenter="handleRefDragEnter(event)"
+             ondragover="handleRefDragOver(event)"
+             ondragleave="handleRefDragLeave(event)"
+             ondrop="handleRefFileDrop(event)">
           <button class="btn btn-accent" onclick="addReferenceDoc()">+ Add Paste-Text Reference</button>
           <button class="btn" onclick="document.getElementById('refFileInput').click()">📄 Upload File as Reference</button>
           <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" style="display:none" onchange="handleRefFileSelect(event)">
-          <div class="ref-add-dropzone" id="refDropZone" ondragover="handleRefDragOver(event)" ondrop="handleRefFileDrop(event)">
+          <div class="ref-add-dropzone" id="refDropZone">
             …or drag &amp; drop a file here (.docx, .pdf, .pptx, .xlsx, .txt, .md)
           </div>
         </div>
@@ -1631,12 +1635,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.25.0"></script>
-<script src="lib/mammoth.browser.min.js?v=3.25.0"></script>
-<script src="lib/jszip.min.js?v=3.25.0"></script>
-<script src="lib/xlsx.full.min.js?v=3.25.0"></script>
-<script src="version.js?v=3.25.0"></script>
-<script src="app.js?v=3.25.0"></script>
+<script src="lib/pdf.min.js?v=3.25.1"></script>
+<script src="lib/mammoth.browser.min.js?v=3.25.1"></script>
+<script src="lib/jszip.min.js?v=3.25.1"></script>
+<script src="lib/xlsx.full.min.js?v=3.25.1"></script>
+<script src="version.js?v=3.25.1"></script>
+<script src="app.js?v=3.25.1"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
