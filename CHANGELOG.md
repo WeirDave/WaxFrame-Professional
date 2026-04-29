@@ -2,6 +2,51 @@
 
 ---
 
+## v3.26.5 Pro — Build `20260429-014`
+**Released:** April 29, 2026
+
+**Critical fix — saving API keys silently failed after Remove + Reset to Defaults.** Long-standing bug surfaced cleanly during v3.26.x testing. Users who removed a default AI (e.g., Perplexity) and then re-added it via Reset to Defaults could paste a new key, hit Enter, and nothing would save. No toast, no error, just silence.
+
+### Root cause
+
+`removeAI` did `delete API_CONFIGS[id]` for ALL AIs — including default 6. For custom AIs that's correct (the entire config is user-defined). For defaults, the structural config (endpoint, headersFn, bodyFn, extractFn) is hardcoded at module load time. Deleting it destroyed something only a full page reload could restore.
+
+When `resetBeesToDefaults` re-added Perplexity to `aiList`, the structural `API_CONFIGS.perplexity` entry remained missing. `saveKeyForAI` then silently no-op'd:
+
+```js
+const cfg = API_CONFIGS[ai.provider];  // undefined
+if (cfg) cfg._key = val.trim();        // skipped silently — no toast, no error
+saveSettings();
+```
+
+That `if (cfg)` guard was eating the failure. Three observed user-reported symptoms — "Enter doesn't save," "eyeball doesn't activate" (no key state to display), "5 with keys instead of 6 after reset" — all explained by this single defect.
+
+### Four-part fix
+
+**1. Snapshot DEFAULT_API_CONFIGS at module load time.** A new `const DEFAULT_API_CONFIGS` captures each default provider's structural config — endpoint, format-specific headers/body/extract functions, label, model. Used by the restoration paths below to recreate destroyed entries without page reload.
+
+**2. `removeAI` keeps structural config for defaults.** For default AIs, only `_key` is cleared. Custom AIs continue to have the full config dropped (correct behavior — they're user-defined). Recommend cache for the provider is also cleared so a re-add starts fresh on the live recommend pipeline.
+
+**3. `resetBeesToDefaults` and `restoreHiddenDefaults` restore structural configs from the snapshot.** Even if a user is somehow already in the broken state from a prior version, hitting Reset to Defaults now self-repairs `API_CONFIGS` from `DEFAULT_API_CONFIGS`.
+
+**4. `saveKeyForAI` self-heals + surfaces failures loudly.** As defense-in-depth, if `cfg` is still undefined when a key save is attempted, `saveKeyForAI` first attempts to restore from the snapshot. If that also fails (truly orphaned config), it now throws a console.error AND shows a toast (`⚠️ X configuration is missing — try Reset to Defaults`) instead of silently doing nothing. No more silent failures.
+
+### What you'll see after upgrade
+
+- Remove Perplexity → Reset to Defaults → paste key → Enter → key saves, recommend fires, model migrates. Behavior matches removing Custom AIs.
+- If you're already in the broken state from before v3.26.5, hit Reset to Defaults once. The structural configs auto-restore from the snapshot.
+- Any future bug that leaves API_CONFIGS in a partial state will throw a visible error instead of silently failing.
+
+### Cookie warning note
+
+The `__cf_bm` "Partitioned" cookie warning some users see in DevTools is unrelated to WaxFrame code. It's set by Cloudflare on the Claude proxy (`waxframe-claude-proxy.weirdave.workers.dev`) for bot mitigation. Cloudflare will update the cookie's `Partitioned` attribute on their platform schedule. No user-facing functionality affected.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-014` and `3.26.5`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.4 Pro — Build `20260429-013`
 **Released:** April 29, 2026
 
