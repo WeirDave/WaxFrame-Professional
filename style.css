@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-008
+   Build: 20260429-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2627,8 +2627,49 @@ html, body {
   white-space: nowrap;
   padding: 6px 4px;
 }
-.custom-ai-choose-model-link.is-visible { display: inline-block; }
+.custom-ai-choose-model-link.is-visible { display: inline-flex; align-items: center; gap: 6px; }
 .custom-ai-choose-model-link:hover { text-decoration: underline; }
+
+/* v3.26.0 — Recommend button sits to the LEFT of "Help me choose" link.
+   Hidden until Fetch Models populates the dropdown (recommend has nothing
+   to ask about until then). Distinct from a regular .btn — slightly less
+   prominent visually so it pairs with the link as a "decision aid" duo
+   rather than competing with the primary Test Connection / Add buttons. */
+.custom-ai-recommend-btn {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.custom-ai-recommend-btn.is-visible { display: inline-flex; }
+.custom-ai-recommend-btn:disabled { opacity: 0.6; cursor: wait; }
+
+/* v3.26.0 — basic / advanced badges that label the recommend vs choose flow.
+   Tiny pill-shape, color-coded so users can tell them apart at a glance.
+   `basic` = the AI does the work for you (autofill).
+   `advanced` = you research and decide (link to provider docs). */
+.custom-ai-flow-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.custom-ai-flow-badge--basic {
+  background: rgba(46, 204, 113, 0.18);
+  color: #1e8449;
+}
+.custom-ai-flow-badge--advanced {
+  background: rgba(155, 89, 182, 0.18);
+  color: #7d3c98;
+}
+[data-theme="dark"] .custom-ai-flow-badge--basic    { color: #58d68d; }
+[data-theme="dark"] .custom-ai-flow-badge--advanced { color: #c39bd3; }
 
 .custom-ai-key-wrap {
   display: flex;

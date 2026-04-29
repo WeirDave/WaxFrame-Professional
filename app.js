@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-008
+//  Build: 20260429-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-008';         // build stamp — update each session
+const BUILD       = '20260429-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2474,13 +2474,27 @@ function saveKeyForAI(id, val, inputEl) {
   saveSettings();
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
-  // Background fetch models for this provider if key was just added
   if (val.trim() && MODEL_FILTERS[ai.provider] !== null) {
-    fetchModelsForProvider(ai.provider).then(() => renderAIRow(id));
+    // v3.26.0: fetch models AND ask the provider which model is best.
+    // Falls back silently to whatever model was already configured if the
+    // recommend call fails (network, malformed reply, hallucinated id, etc.).
+    toast(`🔑 ${ai.name} key saved · checking best model…`, 2500);
+    (async () => {
+      const result = await recommendForDefault(ai.provider);
+      if (result?.model && result.model !== cfg.model) {
+        cfg.model = result.model;
+        saveSettings();
+        renderAIRow(id);
+        const cachedTag = result.cached ? ' (cached)' : '';
+        toast(`✨ ${ai.name}: ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 6000);
+      } else {
+        renderAIRow(id);
+      }
+    })();
+  } else {
+    renderAIRow(id);
+    toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
   }
-  // Re-render just this row so the ✕ Key button appears/disappears correctly
-  renderAIRow(id);
-  toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
 }
 
 function renderAIRow(id) {
@@ -3193,6 +3207,226 @@ function populateQuickAddOptions() {
 // behavior; these models will either error or produce non-chat output.
 const NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|veo|lyria|stable-diffusion|safety/i;
 
+// ── v3.26.0: Model recommendation pipeline ────────────────────────────────
+// The Recommend pipeline asks a provider's own API which of its available
+// models is the best fit for WaxFrame Reviewer duty. Replaces the prior
+// hardcoded MODEL_LABELS-as-source-of-truth design with a delegate-to-provider
+// architecture. MODEL_LABELS / MODEL_FALLBACKS demoted to safety net for
+// when the live recommend call fails (network, key missing, malformed reply).
+//
+// Cache: 24hr keyed by stable cacheId (provider name for default 6, raw URL
+// for Custom AI). User can manually swap model anytime via existing dropdown.
+const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
+
+const MODEL_RECOMMENDATION_PROMPT_DEFAULT =
+`You are helping a user pick one of YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool.
+
+The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. The ideal model:
+- Has strong writing quality and structured reasoning
+- Has a long context window
+- Is a recent flagship or general-purpose model — NOT a coding-only, embedding, or specialized variant
+- Is currently supported (not deprecated)
+
+Available models on this endpoint:
+{MODEL_LIST}
+
+Pick ONE model id from the list above. Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
+
+PICK: <exact model id from list>
+WHY: <one sentence, max 120 chars>
+
+If multiple models are roughly equivalent flagships, prefer the most recently released.`;
+
+function getRecommendationPrompt() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('waxframe_v2_prompts') || '{}');
+    return saved.recommend_model || MODEL_RECOMMENDATION_PROMPT_DEFAULT;
+  } catch(e) {
+    return MODEL_RECOMMENDATION_PROMPT_DEFAULT;
+  }
+}
+
+function getCachedRecommendation(cacheId) {
+  if (!cacheId) return null;
+  const key = `waxframe_recommend_${cacheId}`;
+  try {
+    const cached = JSON.parse(localStorage.getItem(key) || 'null');
+    if (cached && (Date.now() - cached.ts) < RECOMMEND_CACHE_TTL) return cached;
+  } catch(e) {}
+  return null;
+}
+
+function setCachedRecommendation(cacheId, model, why) {
+  if (!cacheId || !model) return;
+  const key = `waxframe_recommend_${cacheId}`;
+  try {
+    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), model, why }));
+  } catch(e) {}
+}
+
+// Core recommendation call. Returns { model, why, cached } or null on failure.
+// Caller filters models list to chat-compatible BEFORE passing in.
+async function recommendModel({ cacheId, endpoint, format, key, models, askingModel }) {
+  if (!cacheId || !models?.length || !askingModel) return null;
+
+  const cached = getCachedRecommendation(cacheId);
+  if (cached && models.includes(cached.model)) {
+    return { model: cached.model, why: cached.why, cached: true };
+  }
+
+  const promptTemplate = getRecommendationPrompt();
+  const prompt = promptTemplate.replace('{MODEL_LIST}', models.map(m => `- ${m}`).join('\n'));
+
+  let url, headers, body;
+
+  try {
+    if (format === 'anthropic') {
+      url = endpoint;
+      headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
+      body = JSON.stringify({ model: askingModel, max_tokens: 300, messages: [{ role: 'user', content: prompt }] });
+    } else if (format === 'google') {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent?key=${encodeURIComponent(key)}`;
+      headers = { 'Content-Type': 'application/json' };
+      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+    } else {
+      url = endpoint;
+      headers = { 'Content-Type': 'application/json' };
+      if (key) headers['Authorization'] = `Bearer ${key}`;
+      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
+    }
+
+    const resp = await fetch(url, { method: 'POST', headers, body });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+
+    let text = '';
+    if (format === 'anthropic')   text = data?.content?.[0]?.text || '';
+    else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    else                          text = data?.choices?.[0]?.message?.content || '';
+
+    if (!text) return null;
+
+    const pickMatch = text.match(/PICK:\s*([^\n\r]+)/i);
+    const whyMatch  = text.match(/WHY:\s*([^\n\r]+)/i);
+    if (!pickMatch) return null;
+
+    const model = pickMatch[1].trim().replace(/^[`'"]|[`'"]$/g, '');
+    const why = whyMatch ? whyMatch[1].trim() : '';
+
+    if (!models.includes(model)) {
+      console.warn('[recommend] hallucinated model not in list:', model);
+      return null;
+    }
+
+    setCachedRecommendation(cacheId, model, why);
+    return { model, why, cached: false };
+  } catch(e) {
+    console.warn('[recommend] failed:', e);
+    return null;
+  }
+}
+
+// Default-AI wrapper. Called from saveKeyForAI after a key is saved for one
+// of the built-in 6. Fetches the provider's model list, asks the provider
+// itself which of those is best, and updates API_CONFIGS[provider].model.
+// Returns null silently on any failure — caller should leave existing model
+// in place, falling back to whatever MODEL_LABELS / MODEL_FALLBACKS already set.
+async function recommendForDefault(provider) {
+  const models = await fetchModelsForProvider(provider);
+  if (!models?.length) return null;
+  const cfg = API_CONFIGS[provider];
+  if (!cfg?._key) return null;
+
+  // Ask using whatever model is currently configured (already a flagship default).
+  const askingModel = cfg.model || models[0];
+
+  let format = 'openai';
+  if (provider === 'claude') format = 'anthropic';
+  else if (provider === 'gemini') format = 'google';
+
+  return await recommendModel({
+    cacheId: `default-${provider}`,
+    endpoint: cfg.endpoint,
+    format,
+    key: cfg._key,
+    models,
+    askingModel
+  });
+}
+
+// Custom AI button handler — onclick of #customAIRecommendBtn.
+// Uses the currently fetched models in the dropdown to ask, autofills the
+// dropdown with the recommendation, surfaces WHY in a toast.
+async function recommendCustomAIModel() {
+  const urlInput  = document.getElementById('customAIUrl');
+  const fmtSelect = document.getElementById('customAIFormat');
+  const keyInput  = document.getElementById('customAIKey');
+  const selectEl  = document.getElementById('customAIModelSelect');
+  const recBtn    = document.getElementById('customAIRecommendBtn');
+
+  if (!urlInput || !selectEl || !recBtn) return;
+
+  const url = urlInput.value.trim();
+  const format = fmtSelect.value;
+  const key = keyInput.value.trim();
+
+  if (!url || selectEl.style.display === 'none' || !selectEl.options.length) {
+    toast('⚠️ Hit Fetch Models first');
+    return;
+  }
+
+  // Only consider models that aren't disabled (already-in-hive ones are skipped)
+  const models = Array.from(selectEl.options)
+    .filter(o => !o.disabled && o.value)
+    .map(o => o.value);
+
+  if (!models.length) {
+    toast('⚠️ No available models to recommend from');
+    return;
+  }
+
+  const askingModel = selectEl.value && !selectEl.options[selectEl.selectedIndex]?.disabled
+    ? selectEl.value
+    : models[0];
+
+  recBtn.disabled = true;
+  const origLabel = recBtn.innerHTML;
+  recBtn.innerHTML = '🤖 Asking…';
+
+  const result = await recommendModel({
+    cacheId: url.replace(/\/+$/, ''),
+    endpoint: url,
+    format,
+    key,
+    models,
+    askingModel
+  });
+
+  recBtn.disabled = false;
+  recBtn.innerHTML = origLabel;
+
+  if (result?.model) {
+    selectEl.value = result.model;
+    resetCustomAITest();
+    const cachedTag = result.cached ? ' (cached)' : '';
+    toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 6000);
+  } else {
+    toast('⚠️ Could not get a clean recommendation — pick manually');
+  }
+}
+
+// Update the visibility of the Recommend button based on whether the
+// fetched-models dropdown is currently shown with options. Mirrors the
+// updateChooseModelLink lifecycle but tied to fetch state instead of preset.
+function updateRecommendBtn() {
+  const btn = document.getElementById('customAIRecommendBtn');
+  if (!btn) return;
+  const selectEl = document.getElementById('customAIModelSelect');
+  const hasFetched = selectEl && selectEl.style.display !== 'none' && selectEl.options.length > 0;
+  if (hasFetched) btn.classList.add('is-visible');
+  else btn.classList.remove('is-visible');
+}
+
 function applyQuickAdd(value) {
   resetCustomAITest();
   resetModelField();
@@ -3235,6 +3469,7 @@ function resetModelField() {
   if (textInput)  { textInput.value = ''; textInput.style.display = ''; }
   if (selectEl)   { selectEl.style.display = 'none'; selectEl.innerHTML = ''; }
   if (fetchBtn)   { fetchBtn.textContent = 'Fetch Models'; fetchBtn.disabled = false; }
+  updateRecommendBtn();
 }
 
 async function fetchCustomAIModels() {
@@ -3335,6 +3570,7 @@ async function fetchCustomAIModels() {
     fetchBtn.textContent = '↺ Refresh';
     fetchBtn.disabled = false;
     resetCustomAITest();
+    updateRecommendBtn();
 
     // Compose the toast — most informative first
     if (availCount === 0) {
