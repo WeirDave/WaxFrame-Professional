@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-013
+//  Build: 20260429-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -408,6 +408,31 @@ function saveModelForAI(aiId, modelId) {
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
+// v3.26.5: snapshot the structural config of each default provider at module
+// load time. Used by resetBeesToDefaults / restoreHiddenDefaults / saveKeyForAI
+// to RECREATE the API_CONFIGS entry for a default provider that was previously
+// fully removed. Without this snapshot, removeAI's `delete API_CONFIGS[id]`
+// permanently destroyed the endpoint/headersFn/bodyFn until page reload, and
+// any subsequent restore left aiList with a default entry pointing at an
+// undefined config — saveKeyForAI silently no-op'd because `if (cfg)` failed.
+//
+// We deep-clone so any future mutations to API_CONFIGS at runtime (model
+// swaps, recommend updates, etc.) don't pollute the canonical defaults.
+// Functions can't survive JSON serialization, so we copy the object shells
+// and re-attach the function references afterward.
+const DEFAULT_API_CONFIGS = (() => {
+  const snapshot = {};
+  DEFAULT_AIS.forEach(d => {
+    const orig = API_CONFIGS[d.provider];
+    if (!orig) return;
+    snapshot[d.provider] = {
+      ...orig,
+      // function refs survive shallow-clone — these are stable closures
+    };
+  });
+  return snapshot;
+})();
+
 let aiList           = JSON.parse(JSON.stringify(DEFAULT_AIS)); // full list, active = checked ones
 let activeAIs        = [];   // AIs selected in setup
 let builder          = null; // id of builder AI
@@ -478,7 +503,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-013';         // build stamp — update each session
+const BUILD       = '20260429-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2502,6 +2527,15 @@ function resetBeesToDefaults() {
   hiddenDefaultIds = [];
   activeAIs = [...aiList];
   builder = null;
+  // v3.26.5: restore any structural API_CONFIGS that were destroyed by a prior
+  // removeAI call. Without this, default AIs in aiList point at undefined
+  // configs and saveKeyForAI silently fails. Source: DEFAULT_API_CONFIGS
+  // snapshot taken at module load.
+  DEFAULT_AIS.forEach(d => {
+    if (!API_CONFIGS[d.provider] && DEFAULT_API_CONFIGS[d.provider]) {
+      API_CONFIGS[d.provider] = { ...DEFAULT_API_CONFIGS[d.provider] };
+    }
+  });
   // Re-apply saved keys
   Object.keys(savedKeys).forEach(id => {
     if (API_CONFIGS[id]) API_CONFIGS[id]._key = savedKeys[id];
@@ -2515,8 +2549,22 @@ function resetBeesToDefaults() {
 function saveKeyForAI(id, val, inputEl) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
+  // v3.26.5: self-heal if API_CONFIGS[provider] is missing for a default AI.
+  // This shouldn't happen after the v3.26.5 removeAI fix, but defense-in-depth
+  // for any user already in a broken state from a prior version.
+  if (!API_CONFIGS[ai.provider] && DEFAULT_API_CONFIGS[ai.provider]) {
+    console.warn(`[saveKeyForAI] healing missing API_CONFIGS for ${ai.provider}`);
+    API_CONFIGS[ai.provider] = { ...DEFAULT_API_CONFIGS[ai.provider] };
+  }
   const cfg = API_CONFIGS[ai.provider];
-  if (cfg) cfg._key = val.trim();
+  if (!cfg) {
+    // Truly orphaned — neither runtime config nor default snapshot. Surface
+    // loudly instead of silently failing like prior versions did.
+    console.error(`[saveKeyForAI] no config for provider "${ai.provider}" — cannot save key`);
+    toast(`⚠️ ${ai.name} configuration is missing — try Reset to Defaults`, 5000);
+    return;
+  }
+  cfg._key = val.trim();
   saveSettings();
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
@@ -2987,7 +3035,19 @@ function removeAI(id) {
   aiList    = aiList.filter(a => a.id !== id);
   activeAIs = activeAIs.filter(a => a.id !== id);
   if (builder === id) builder = null;
-  if (API_CONFIGS[id]) delete API_CONFIGS[id];
+  // v3.26.5: only DELETE structural config for CUSTOM AIs (entirely user-defined).
+  // For DEFAULTS, keep the structural config and only clear the user's key —
+  // otherwise re-adding via Reset to Defaults leaves API_CONFIGS[provider]
+  // undefined and saveKeyForAI silently fails.
+  if (API_CONFIGS[id]) {
+    if (isDefault) {
+      delete API_CONFIGS[id]._key;
+    } else {
+      delete API_CONFIGS[id];
+    }
+  }
+  // Also clear the recommend cache so a re-add starts fresh
+  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) {}
   saveHive();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} removed`);
@@ -3030,6 +3090,12 @@ function restoreHiddenDefaults() {
     if (!aiList.find(a => a.id === d.id)) {
       aiList.push(JSON.parse(JSON.stringify(d)));
       activeAIs.push(aiList[aiList.length - 1]);
+    }
+    // v3.26.5: restore structural API_CONFIGS if it was previously destroyed
+    // by a removeAI call. Without this, the row renders but saveKeyForAI
+    // silently fails because cfg is undefined.
+    if (!API_CONFIGS[d.provider] && DEFAULT_API_CONFIGS[d.provider]) {
+      API_CONFIGS[d.provider] = { ...DEFAULT_API_CONFIGS[d.provider] };
     }
   });
   saveHive();
