@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-015
+//  Build: 20260429-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -503,7 +503,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-015';         // build stamp — update each session
+const BUILD       = '20260429-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2480,8 +2480,7 @@ function renderAISetupGrid() {
           placeholder="Paste key — Enter to save…"
           value="${esc(key)}"
           ${!isActive ? 'disabled' : ''}
-          onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
-          onchange="saveKeyForAI('${ai.id}',this.value,this)">
+          onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}">
         <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
         ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
         ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
@@ -2601,8 +2600,7 @@ function renderAIRow(id) {
       placeholder="Paste key — Enter to save…"
       value="${esc(key)}"
       ${!isActive ? 'disabled' : ''}
-      onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
-      onchange="saveKeyForAI('${ai.id}',this.value,this)">
+      onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}">
     <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
     ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
     ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test connection">Test</button>` : ''}

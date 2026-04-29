@@ -2,6 +2,47 @@
 
 ---
 
+## v3.26.7 Pro — Build `20260429-016`
+**Released:** April 29, 2026
+
+**Critical UX bug — eyeball click was indirectly triggering save.** v3.26.6 removed the auto-fire of the recommend pipeline on save, but a deeper interaction bug remained: the input element had two save handlers — `onkeydown` (fires on Enter) AND `onchange` (fires when value has changed AND focus leaves). The `onchange` was dangerous because it created a delayed-fuse pattern.
+
+### The bug
+
+1. User pastes key into Perplexity input. Value changes, but `onchange` doesn't fire yet — focus is still in the input.
+2. User clicks the eyeball button to verify the pasted key looks right.
+3. Eyeball click moves focus out of the input → `onchange` fires NOW → `saveKeyForAI` runs.
+4. From the user's POV, clicking the eyeball saved the key. The row re-renders with full button layout (`✕ Key`, `Test`, `↗`, `🗑`), and the model dropdown appears.
+5. **Worse:** the `🗑 Delete` button now sits in the position the eyeball was a moment ago. A reflexive second click to toggle the eyeball off can hit Delete instead.
+
+User feedback verbatim: *"Total UX failure."*
+
+### Fix
+
+Both render paths (initial render and per-row re-render) had:
+
+```html
+onkeydown="if(event.key==='Enter'){saveKeyForAI(...);}"
+onchange="saveKeyForAI(...)"
+```
+
+The `onchange` handler is removed. Save now requires explicit Enter press.
+
+### New flow
+
+1. Paste key → no save, no row re-render
+2. Click eyeball → key plaintext flips on, layout stays put
+3. Click eyeball again → flips off
+4. Hit Enter → key saves, toast confirms, row re-renders to with-key state — but only when the user has explicitly committed
+
+This matches the universal expectation set by the placeholder: `Paste key — Enter to save…`. The placeholder has always told the truth; the code just didn't follow it.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-016` and `3.26.7`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.6 Pro — Build `20260429-015`
 **Released:** April 29, 2026
 
