@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-005';         // build stamp — update each session
+const BUILD       = '20260429-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3194,14 +3194,50 @@ async function fetchCustomAIModels() {
 
     if (!models.length) throw new Error('No models returned');
 
-    // Switch to dropdown
-    selectEl.innerHTML = models.map(m => `<option value="${m}">${m}</option>`).join('');
+    // ── #11: already-in-hive markers ───────────────────────────────────────
+    // Don't filter already-added models out of the dropdown — that creates the
+    // "wait, where's the model I added yesterday?" confusion. Instead show
+    // them disabled with a clear "✓ already in your hive" suffix so the user
+    // can SEE what's already there and pick something genuinely new.
+    // Match by chat-completions endpoint URL (trailing-slash normalized).
+    const norm = u => (u || '').replace(/\/+$/, '');
+    const targetUrl = norm(url);
+    const existingForThisUrl = new Set(
+      aiList
+        .filter(ai => norm(API_CONFIGS[ai.provider]?.endpoint) === targetUrl)
+        .map(ai => API_CONFIGS[ai.provider]?.model)
+        .filter(Boolean)
+    );
+    const inHiveCount = models.filter(m => existingForThisUrl.has(m)).length;
+    const availCount  = models.length - inHiveCount;
+
+    // Switch to dropdown — already-in-hive entries stay visible but disabled
+    selectEl.innerHTML = models.map(m => {
+      if (existingForThisUrl.has(m)) {
+        return `<option value="${esc(m)}" disabled>✓ ${esc(m)} — already in your hive</option>`;
+      }
+      return `<option value="${esc(m)}">${esc(m)}</option>`;
+    }).join('');
+
+    // Browsers will pre-select the first <option> regardless of disabled
+    // state. Force selection to the first AVAILABLE model so the field shows
+    // a usable value out of the gate.
+    const firstAvailable = models.find(m => !existingForThisUrl.has(m));
+    if (firstAvailable) selectEl.value = firstAvailable;
+
     textInput.style.display = 'none';
     selectEl.style.display = '';
     fetchBtn.textContent = '↺ Refresh';
     fetchBtn.disabled = false;
     resetCustomAITest();
-    toast(`✅ ${models.length} models loaded`);
+
+    if (availCount === 0) {
+      toast(`⚠️ All ${models.length} models from this endpoint are already in your hive`, 6000);
+    } else if (inHiveCount > 0) {
+      toast(`✅ ${availCount} new · ${inHiveCount} already in your hive`);
+    } else {
+      toast(`✅ ${models.length} models loaded`);
+    }
 
   } catch(e) {
     fetchBtn.textContent = 'Fetch Models';
