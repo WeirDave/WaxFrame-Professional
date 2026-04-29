@@ -382,7 +382,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260428-003';         // build stamp — update each session
+const BUILD       = '20260428-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2643,69 +2643,127 @@ async function testAllKeys() {
     };
   });
 
-  let passed = 0, failed = 0;
-
   for (const ai of keyed) {
-    const statusEl  = document.getElementById(`tkpstatusicon-${ai.id}`);
-    const cfg = API_CONFIGS[ai.provider];
-    const rec = window._tkpData[ai.id];
-
-    if (!cfg || !cfg._key) {
-      if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; }
-      rec.done = true; rec.status = 'No key saved';
-      if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
-      failed++; continue;
-    }
-
-    const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
-    rec.endpoint = cfg.endpoint;
-    try { rec.sentBody = JSON.stringify(JSON.parse(sentBody), null, 2); }
-    catch { rec.sentBody = sentBody; }
-
-    // If this row is currently selected, live-update the sent pane so the
-    // user sees data populate as tests run. Received updates below on completion.
-    if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
-
-    const t0 = Date.now();
-    try {
-      const response = await fetch(cfg.endpoint, { method: 'POST', headers: cfg.headersFn(cfg._key), body: sentBody });
-      const ms = Date.now() - t0;
-      let rawText = '';
-      try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
-      let pretty = rawText;
-      try { pretty = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
-      rec.status  = `HTTP ${response.status} — ${ms}ms`;
-      rec.rcvBody = pretty;
-      rec.done    = true;
-      if (!response.ok) {
-        let errMsg = `HTTP ${response.status}`;
-        try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
-        if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = errMsg; }
-        rec.ok = false;
-        failed++;
-      } else {
-        let extracted = '';
-        try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
-        if (statusEl) { statusEl.textContent = `✓`; statusEl.className = 'tkp-status tkp-pass'; statusEl.title = extracted.trim().substring(0, 60); }
-        rec.ok = true;
-        passed++;
-      }
-    } catch(e) {
-      const ms = Date.now() - t0;
-      if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = e.message; }
-      rec.status  = `Network Error — ${ms}ms`;
-      rec.rcvBody = e.message;
-      rec.done    = true;
-      rec.ok      = false;
-      failed++;
-    }
-    // If this row is currently selected, refresh the received pane
-    if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
+    await runSingleKeyTest(ai);
     await new Promise(r => setTimeout(r, 300));
   }
 
-  if (title) title.textContent = `Done — ${passed} passed, ${failed} failed`;
+  updateTkpTally();
   if (closeBtn) { closeBtn.disabled = false; closeBtn.textContent = '← Close'; }
+}
+
+// Per-AI test logic — runs one key against its provider, updates the row icon
+// and the _tkpData record. Used by both the initial Test All run and the
+// retest flows (single row + retest-all-failures). Does NOT compute tally —
+// callers run updateTkpTally() once after their batch completes.
+async function runSingleKeyTest(ai) {
+  const statusEl = document.getElementById(`tkpstatusicon-${ai.id}`);
+  const cfg      = API_CONFIGS[ai.provider];
+  const rec      = window._tkpData?.[ai.id];
+  if (!rec) return;
+
+  if (!cfg || !cfg._key) {
+    if (statusEl) { statusEl.textContent = 'No key'; statusEl.className = 'tkp-status tkp-fail'; }
+    rec.done = true; rec.ok = false; rec.status = 'No key saved';
+    if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
+    return;
+  }
+
+  const sentBody = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
+  rec.endpoint = cfg.endpoint;
+  try { rec.sentBody = JSON.stringify(JSON.parse(sentBody), null, 2); }
+  catch { rec.sentBody = sentBody; }
+
+  if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
+
+  const t0 = Date.now();
+  try {
+    const response = await fetch(cfg.endpoint, { method: 'POST', headers: cfg.headersFn(cfg._key), body: sentBody });
+    const ms = Date.now() - t0;
+    let rawText = '';
+    try { rawText = await response.text(); } catch { rawText = '(could not read body)'; }
+    let pretty = rawText;
+    try { pretty = JSON.stringify(JSON.parse(rawText), null, 2); } catch { /* leave as-is */ }
+    rec.status  = `HTTP ${response.status} — ${ms}ms`;
+    rec.rcvBody = pretty;
+    rec.done    = true;
+    if (!response.ok) {
+      let errMsg = `HTTP ${response.status}`;
+      try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
+      if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = errMsg; }
+      rec.ok = false;
+    } else {
+      let extracted = '';
+      try { extracted = cfg.extractFn(JSON.parse(rawText)); } catch { extracted = '(parse error)'; }
+      if (statusEl) { statusEl.textContent = `✓`; statusEl.className = 'tkp-status tkp-pass'; statusEl.title = extracted.trim().substring(0, 60); }
+      rec.ok = true;
+    }
+  } catch(e) {
+    const ms = Date.now() - t0;
+    if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = e.message; }
+    rec.status  = `Network Error — ${ms}ms`;
+    rec.rcvBody = e.message;
+    rec.done    = true;
+    rec.ok      = false;
+  }
+
+  if (window._tkpSelected === ai.id) renderTkpDetail(ai.id);
+}
+
+// Re-run a single AI's test from the Received pane "↻ Retest" button.
+// Used after a user fixes their billing/key and wants to verify without
+// re-running the full Test All. Updates row + detail pane + tally + retest-all
+// button visibility in lockstep.
+async function retestSingleKey(aiId) {
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  const rec = window._tkpData?.[aiId];
+  if (!rec) return;
+
+  // Reset row visually + clear prior result so renderTkpDetail shows pending state
+  const statusEl = document.getElementById(`tkpstatusicon-${aiId}`);
+  if (statusEl) { statusEl.textContent = '…'; statusEl.className = 'tkp-status tkp-pending'; statusEl.title = ''; }
+  rec.done = false; rec.ok = false; rec.status = ''; rec.rcvBody = '';
+  if (window._tkpSelected === aiId) renderTkpDetail(aiId);
+
+  await runSingleKeyTest(ai);
+  if (window._tkpSelected === aiId) renderTkpDetail(aiId);
+  updateTkpTally();
+}
+
+// Re-run every currently-failed row sequentially. Triggered by the
+// "↻ Retest all failures" footer button which is only visible when failures
+// are present (managed by updateTkpTally).
+async function retestAllFailures() {
+  const failureIds = Object.keys(window._tkpData || {})
+    .filter(id => {
+      const r = window._tkpData[id];
+      return r && r.done && !r.ok;
+    });
+  if (!failureIds.length) return;
+
+  const btn = document.getElementById('tkpRetryAllBtn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Retesting…'; }
+
+  for (const id of failureIds) {
+    await retestSingleKey(id);
+    await new Promise(r => setTimeout(r, 300));
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = '↻ Retest all failures'; }
+  updateTkpTally();
+}
+
+// Compute pass/fail tally from _tkpData and sync the title text + retest-all
+// button visibility. Called after Test All completes, after every retest.
+function updateTkpTally() {
+  const recs = Object.values(window._tkpData || {});
+  const passed = recs.filter(r => r.done && r.ok).length;
+  const failed = recs.filter(r => r.done && !r.ok).length;
+  const titleEl = document.getElementById('tkpTitle');
+  if (titleEl) titleEl.textContent = `Done — ${passed} passed, ${failed} failed`;
+  const btn = document.getElementById('tkpRetryAllBtn');
+  if (btn) btn.classList.toggle('is-hidden', failed === 0);
 }
 
 // Click a row → select it and render its data into the Sent + Received panes.
@@ -2743,8 +2801,11 @@ function renderTkpDetail(id) {
     const billingLinkHtml = (!rec.ok && rec.consoleUrl)
       ? `<a class="tkp-billing-link" href="${esc(rec.consoleUrl)}" target="_blank">Open ${esc(rec.name)} billing console →</a>`
       : '';
+    const retestBtnHtml = (!rec.ok)
+      ? `<button class="tkp-retest-btn" type="button" onclick="retestSingleKey('${esc(id)}')">↻ Retest ${esc(rec.name)}</button>`
+      : '';
     rcvPane.innerHTML = `
-      ${billingLinkHtml}
+      ${billingLinkHtml}${retestBtnHtml}
       <div class="tkp-detail-label">Status</div>
       <pre class="tkp-detail-pre">${esc(rec.status || '—')}</pre>
       <div class="tkp-detail-label">Response body</div>

@@ -2,6 +2,44 @@
 
 ---
 
+## v3.23.2 Pro — Build `20260428-004`
+**Released:** April 28, 2026
+
+**Setup-1 callout cleanup + Test All retest flows.** Two distinct improvements that share the same surface area. First, the three inline `.fs-col-tip` callouts on Setup 1 (Worker Bees) — Don't-have-keys, Hide-All-Defaults, and the v3.23.1 CORS tip — moved into `infoBeesModal` where they belong. Second, the Test All Keys flow gains "↻ Retest" affordances on every failed row (so when a user clicks "Open billing console →", tops off their account, and comes back, they can verify the fix without re-running every key) plus a "↻ Retest all failures" button in the modal footer for batch retry.
+
+### Setup 1 (Worker Bees) callout cleanup
+
+- **All three `.fs-col-tip` callouts removed from inline Setup 1 markup.** The Don't-have-keys content remained available via the toolbar's "API Key Guide" button and the existing `goal-info-tip` link inside `infoBeesModal`. The Hide-All-Defaults and CORS content needed homes inside the modal — see below.
+- **New "Custom AIs &amp; model servers" row added to `infoBeesModal`** as a `.goal-info-row`. Replaces the inline Hide-All-Defaults tip with a more comprehensive explanation that covers Add Custom AI, Import from Model Server, Hide All Defaults, and the typical use case (Alfredo, Open WebUI, Ollama, internal gateways).
+- **CORS row already present** in `infoBeesModal` from v3.23.1 — no change needed there beyond removing the now-redundant inline callout. The modal's CORS row is more comprehensive than the inline tip was, so users lose nothing.
+- **Net result on Setup 1:** the section header sub-paragraph + the buttons row + the AI grid sit cleaner together with no callouts crowding the top. All explanatory content is one click away via the existing ⓘ button next to "Your Worker Bees" — same one-click pattern as the rest of the help system.
+
+### Test All Keys — single-row retest
+
+- **New "↻ Retest [AI name]" button** rendered in the Received detail pane on every completed failed row. Sits next to the "Open billing console →" link from v3.23.1 (when the AI is a default provider) or stands alone (when the AI is a custom endpoint with no `apiConsole` URL).
+- **Use case:** user clicks "Open billing console →" on a failed row, tops off their account in the new tab, comes back, and clicks "↻ Retest" instead of re-running the entire Test All. Row's status icon flips back to pending (`…`), then to ✓ or ✗ when the new test completes. Detail pane re-renders with the fresh response.
+- **Per-AI test logic extracted** from `testAllKeys()` into a new `runSingleKeyTest(ai)` function. The original loop body remained intact behaviorally — same fetch, same status-icon updates, same `_tkpData` mutations. The extraction makes the same logic reusable from retest flows.
+- **Pass/fail tally now computed from `_tkpData`** via a new `updateTkpTally()` helper instead of running counters in `testAllKeys()`. This ensures the title text ("Done — N passed, N failed") stays accurate whether the user just ran Test All, retested a single row, or retested all failures at once.
+
+### Test All Keys — retest all failures
+
+- **New "↻ Retest all failures" button** added to the Test All modal footer alongside the Close button. Hidden via the v3.23.1 `.is-hidden` utility class until at least one failure is present in `_tkpData` — managed by `updateTkpTally()`. Users on a clean Test All run never see the button.
+- **`retestAllFailures()` function** iterates `_tkpData`, picks every row where `done && !ok`, and sequentially calls `retestSingleKey()` for each. Disables the button during the run, re-enables it when complete.
+- **`retestSingleKey(aiId)` function** does the per-row reset + retest + tally update, reused by both the inline button and the bulk retry. Single source of truth for retest behavior.
+- **Sequential not parallel** — preserves the existing 300ms gap between requests that `testAllKeys` already used. Keeps provider rate limits happy on retry waves.
+
+### CSS additions
+
+- **`.tkp-retest-btn`** — neutral/secondary visual weight (surface2 background, plain border, default text color). Visually subordinate to the amber `.tkp-billing-link` so the billing link stays the primary call-to-action when both are present on a row's Received pane.
+- **`.tkp-retest-all-btn`** — minor styling tweaks to the standard `.btn` for the footer button.
+
+### Build-stamp sweep
+
+- All four required stamp locations bumped: meta `waxframe-build` (`20260428-004`), `version.js` `APP_VERSION` (`v3.23.2 Pro`), `app.js` `BUILD` (`20260428-004`), and `app.js?v=` cache-bust (`3.23.2`).
+- All 6 helper-page comment-header builds and `style.css?v=` / `version.js?v=` cache-busts swept to `3.23.2`.
+
+---
+
 ## v3.23.1 Pro — Build `20260428-003`
 **Released:** April 28, 2026
 

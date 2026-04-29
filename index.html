@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260428-003
+     Build: 20260428-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260428-003">
+  <meta name="waxframe-build" content="20260428-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.23.1">
+  <link rel="stylesheet" href="style.css?v=3.23.2">
 </head>
 <body>
 
@@ -89,9 +89,6 @@
           </div>
         </div>
         <div class="hp-section-body">
-          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? <a href="api-details.html" target="_blank" class="link-accent">Open the API Key Guide →</a> for step-by-step instructions and direct billing links for each AI.</p>
-          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Running a portable copy of WaxFrame against a model server (Open WebUI, Ollama, an internal gateway)? Use <strong>Hide All Defaults</strong> to clear the public AIs out of the way so your imported models are the only hive in your workspace.</p>
-          <p class="fs-col-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Seeing a CORS error or red ✗ on Test All Keys? CORS is a browser security rule — when the API endpoint doesn't whitelist <code>weirdave.github.io</code> the browser blocks the response. Most common with custom endpoints (Open WebUI, internal gateways like Alfredo). The 6 default providers all have CORS configured. Click the ⓘ on the Test All Keys results to open the troubleshooting reference.</p>
           <div class="bee-controls-row-setup">
             <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
             <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
@@ -1190,7 +1187,7 @@
       </div>
     </div>
     <div class="custom-ai-form-footer">
-      <span></span>
+      <button class="btn tkp-retest-all-btn is-hidden" id="tkpRetryAllBtn" onclick="retestAllFailures()">↻ Retest all failures</button>
       <button class="btn" id="tkpDismiss" onclick="dismissTestPanel()">← Close</button>
     </div>
   </div>
@@ -1357,6 +1354,10 @@
       <div class="goal-info-row">
         <span class="info-label">Toggling AIs per session</span>
         <span class="goal-info-desc">On the Work screen you can toggle individual AIs on or off for the current session using the Edit Hive button — without losing their saved keys. Useful if you want a faster round or are testing specific reviewers.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Custom AIs &amp; model servers</span>
+        <span class="goal-info-desc">Running WaxFrame against an internal gateway (Alfredo), self-hosted Open WebUI, Ollama, or any other custom endpoint? Use <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> to get those endpoints into your hive. If you want a clean workspace with only your imported models visible, use <strong>Hide All Defaults</strong> to clear the public AIs out of the way — they stay in the system and can be reset back in with one click.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">CORS errors</span>
@@ -1618,8 +1619,8 @@
   </div>
 </div>
 
-<script src="version.js?v=3.23.1"></script>
-<script src="app.js?v=3.23.1"></script>
+<script src="version.js?v=3.23.2"></script>
+<script src="app.js?v=3.23.2"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
