@@ -2,6 +2,30 @@
 
 ---
 
+## v3.25.1 Pro — Build `20260429-002`
+**Released:** April 29, 2026
+
+**Setup 4 drag-and-drop fix.** The drag-and-drop file-upload affordance on Setup 4 (Reference Material) was effectively non-functional in v3.25.0 and earlier. The drop handlers (`ondragover`, `ondrop`) were attached to the inner `.ref-add-dropzone` div — a small italic-text hint between the two action buttons — rather than to the visible `.ref-add-row` container that users actually saw and aimed at. Dropping a file onto the buttons (the largest visible target in the row) triggered the browser's default file-handling behavior (opening the file in a new tab) because no handler called `preventDefault()` for that area. The dropzone hint also had a `border: 1px dashed transparent` style that made it invisible until mid-drag, removing any visual cue that drops were even possible.
+
+This release moves the drag-and-drop handlers to the outer `.ref-add-row` div so the entire row is the drop target — the dashed border that already wraps the row now correctly signals what it has always implied. The state-management bug where moving the cursor across child buttons inside the row would flicker the `.drag-over` class on and off (because `dragleave` fires on every internal element boundary) is fixed via a counter pattern that increments on `dragenter` and decrements on `dragleave`, only removing the visual state when the counter reaches zero.
+
+### What changed
+
+- **`index.html`** — drag-and-drop handlers moved from the inner `#refDropZone` div onto the outer `.ref-add-row`, which gains `id="refDropRow"`. New `ondragenter` and `ondragleave` handlers added; `ondragover` retained but now only calls `preventDefault()` and sets `dropEffect = 'copy'` (it no longer manipulates classes — the enter/leave handlers do).
+- **`app.js`** — new `handleRefDragEnter` and `handleRefDragLeave` functions added. `handleRefDragOver` simplified to just `preventDefault()` plus `dropEffect`. `handleRefFileDrop` resets the drag counter on completion. New module-level `_refDragCounter` integer tracks enter/leave events to handle the dragleave-on-child-element flicker correctly.
+- **`style.css`** — `.ref-add-dropzone.drag-over` styling moved to `.ref-add-row.drag-over` so the entire row gets the visual feedback. The inner hint label gets `pointer-events: none` so it does not interfere with drag events on its parent. Inner-hint color/style still updates as a child selector (`.ref-add-row.drag-over .ref-add-dropzone`) for the existing "italic gray → bold accent" transition.
+
+### What did not change
+
+- Setup 5 (Starting Document) drag-and-drop was already wired correctly — handlers were on the visible `.drop-zone` element. Untouched.
+- File processing logic (`processRefFile`), accepted file types, and the sheet picker modal flow all behave identically. This is a pure event-routing + visual-affordance fix.
+
+### Build-stamp sweep
+
+All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=`, `version.js?v=`, `app.js?v=`, and `lib/*.js?v=` cache-busts swept to `20260429-002` / `3.25.1`.
+
+---
+
 ## v3.25.0 Pro — Build `20260429-001`
 **Released:** April 29, 2026
 
