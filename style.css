@@ -7099,6 +7099,27 @@ kbd {
   background: var(--accent);
   color: var(--bg);
 }
+.tkp-retest-btn {
+  display: inline-block;
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  margin: 0 0 12px 8px;
+  cursor: pointer;
+}
+.tkp-retest-btn:hover {
+  background: var(--surface3);
+  border-color: var(--border2);
+}
+.tkp-retest-all-btn {
+  font-size: 13px;
+  font-weight: 600;
+}
 .tkp-detail-pre {
   font-family: var(--font-mono);
   font-size: 11px;
