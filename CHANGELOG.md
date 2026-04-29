@@ -2,6 +2,67 @@
 
 ---
 
+## v3.25.6 Pro — Build `20260429-007`
+**Released:** April 29, 2026
+
+**Custom AI flow gets smarter about model selection.** Three small fixes to the Add Custom AI dropdown that close the "I added Mistral and got `codestral-2508` selected by default" footgun. Plus an unrelated default-provider filter fix that was leaking transcribe-only models into the hive.
+
+### Non-chat models filtered out of Custom AI dropdown
+
+`fetchCustomAIModels` now filters fetched models through a new `NON_CHAT_RE` constant before rendering the dropdown. The pattern catches embeddings, moderation, speech-to-text, text-to-speech, audio, real-time, reranking, image generation, safety/guard, and content-filter models — none of which are valid as Hive reviewers (they error or produce non-chat output). Match is case-insensitive substring.
+
+This kills `mistral-embed`, `mistral-embed-2312`, `codestral-embed`, `codestral-embed-2505`, anything with `whisper` / `tts` / `transcribe` / `dall-e` / `imagen` / `veo` / `lyria` / `stable-diffusion` in the model ID. Provider-agnostic — works the same for Mistral, Together, Cohere, Ollama, LM Studio, internal gateways, anything OpenAI-compatible.
+
+If after filtering there are zero valid chat models, the fetch errors out cleanly with a clear message instead of presenting an empty dropdown.
+
+### Smart default per Quick Add preset
+
+`QUICK_ADD_PROVIDERS` now carries a `defaultModel` field on each preset that has a clear flagship:
+
+| Preset | Default model |
+|---|---|
+| Mistral | `mistral-large-latest` |
+| Together AI | `meta-llama/Llama-3.3-70B-Instruct-Turbo` |
+| Cohere | `command-r-plus` |
+| Ollama (local) | none — depends on what user has installed |
+| LM Studio (local) | none — same reason |
+
+After Fetch Models completes, `fetchCustomAIModels` calls a new helper `getActivePreset(url)` that matches the user's current URL field against `QUICK_ADD_PROVIDERS` (trailing-slash normalized). If the URL matches a preset AND that preset declares a `defaultModel` AND the model is in the fetched list AND it isn't already in the user's hive, that model is auto-selected instead of the alphabetical first.
+
+The match-by-URL approach means no state to track — if the user picks a preset and then manually edits the URL, `getActivePreset` returns null and the preset's default no longer applies. Self-consistent.
+
+If the preset's declared default isn't in the fetched list (e.g., model was renamed or deprecated), the code falls back to the alphabetical first available model — same as before. No hard error, no breakage.
+
+### Toast feedback expanded
+
+The post-fetch toast now distinguishes more cases. Order is most-informative first:
+
+| Scenario | Toast |
+|---|---|
+| All loaded fresh, no preset | `✅ N loaded` |
+| Some already in hive | `✅ N loaded · M already in hive` |
+| Some non-chat filtered | `✅ N loaded · K non-chat skipped` |
+| Preset default applied | `✅ N loaded · default: <model-id>` |
+| All combined | `✅ N loaded · M already in hive · K non-chat skipped · default: <model-id>` |
+| All already in hive | `⚠️ All N models from this endpoint are already in your hive` (6s) |
+| Zero chat models after filter | thrown error: `No chat-compatible models returned` |
+
+### Bonus: `transcribe` added to default chatgpt MODEL_FILTERS
+
+Caught during the recon for this release: `MODEL_FILTERS.chatgpt` was excluding `audio | realtime | image | tts | whisper | embed | ...` but **not** `transcribe`. That meant `gpt-4o-transcribe`, `gpt-4o-transcribe-diarize`, `gpt-4o-mini-transcribe`, `gpt-4o-mini-transcribe-2025-03-20`, `gpt-4o-mini-transcribe-2025-12-15` all leaked into the default-provider dropdown for OpenAI keys. They're speech-to-text models and would error out hard if a user picked one as a reviewer. Single-word fix added to the existing regex.
+
+### What did not change
+
+- The 6 default providers' model lists (`MODEL_FALLBACKS`) and curated tags/notes (`MODEL_LABELS`) — untouched. The staleness problem there is still open and will be addressed in items #10 + #13.
+- `chooseModelLink` field added to each `QUICK_ADD_PROVIDERS` entry but **not yet wired into the UI**. Plumbing is in place for a "Help me choose" link below the model dropdown when a Quick Add preset is active — surface in a future release if it earns its place.
+- `addCustomAI`, `testCustomAIConnection`, the modal layout, and the existing #11 already-in-hive markers — all unchanged.
+
+### Build-stamp sweep
+
+Full sweep across all required locations: 4 main-app stamps + 5 supplementary `index.html` cache-busts + 5 helper-page meta `waxframe-build` stamps + comment-header `Build:` stamps + `style.css?v=` + `version.js?v=` cache-busts. All consistent at `20260429-007` / `3.25.6`. Verified zero stragglers via grep across all 9 code files.
+
+---
+
 ## v3.25.5 Pro — Build `20260429-006`
 **Released:** April 29, 2026
 

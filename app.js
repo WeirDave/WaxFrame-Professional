@@ -245,7 +245,7 @@ const MODEL_FALLBACKS = {
 
 // Filters to keep only chat-relevant models from dynamic lists
 const MODEL_FILTERS = {
-  chatgpt: id => /^gpt-[45]/.test(id) && !/instruct|audio|realtime|search|image|tts|whisper|embed|babbage|davinci|curie|ada/.test(id),
+  chatgpt: id => /^gpt-[45]/.test(id) && !/instruct|audio|realtime|search|image|tts|whisper|embed|transcribe|babbage|davinci|curie|ada/.test(id),
   claude:  id => /^claude-/.test(id),
   gemini:  id => /^gemini-[23]/.test(id) && !/embed|image|video|audio|tts|veo|lyria|imagine/.test(id),
   grok:    id => /^grok-[0-9]/.test(id) && !/imagine|video|vision-beta/.test(id),
@@ -433,7 +433,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-006';         // build stamp — update each session
+const BUILD       = '20260429-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3077,37 +3077,67 @@ const QUICK_ADD_PROVIDERS = {
     url: 'https://api.mistral.ai/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://console.mistral.ai/api-keys',
-    keyLinkLabel: 'Get your Mistral API key →'
+    keyLinkLabel: 'Get your Mistral API key →',
+    defaultModel: 'mistral-large-latest',
+    chooseModelLink: 'https://docs.mistral.ai/getting-started/models/models_overview/'
   },
   together: {
     name: 'Together AI',
     url: 'https://api.together.xyz/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://api.together.ai/settings/api-keys',
-    keyLinkLabel: 'Get your Together AI key →'
+    keyLinkLabel: 'Get your Together AI key →',
+    defaultModel: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+    chooseModelLink: 'https://docs.together.ai/docs/serverless-models'
   },
   cohere: {
     name: 'Cohere',
     url: 'https://api.cohere.ai/compatibility/v1/chat/completions',
     format: 'openai',
     keyLink: 'https://dashboard.cohere.com/api-keys',
-    keyLinkLabel: 'Get your Cohere API key →'
+    keyLinkLabel: 'Get your Cohere API key →',
+    defaultModel: 'command-r-plus',
+    chooseModelLink: 'https://docs.cohere.com/docs/models'
   },
   ollama: {
     name: 'Ollama',
     url: 'http://localhost:11434/v1/chat/completions',
     format: 'openai',
     keyLink: null,
-    keyLinkLabel: null
+    keyLinkLabel: null,
+    defaultModel: null,
+    chooseModelLink: 'https://ollama.com/library'
   },
   lmstudio: {
     name: 'LM Studio',
     url: 'http://localhost:1234/v1/chat/completions',
     format: 'openai',
     keyLink: null,
-    keyLinkLabel: null
+    keyLinkLabel: null,
+    defaultModel: null,
+    chooseModelLink: 'https://lmstudio.ai/docs/basics/download-model'
   }
 };
+
+// Match the user's current URL against a Quick Add preset (trailing-slash
+// normalized). Used by fetchCustomAIModels to decide which preset's
+// defaultModel to apply. Returns null if the URL has been manually edited
+// off-preset.
+function getActivePreset(currentUrl) {
+  const norm = u => (u || '').replace(/\/+$/, '').trim();
+  const target = norm(currentUrl);
+  if (!target) return null;
+  const key = Object.keys(QUICK_ADD_PROVIDERS).find(k =>
+    norm(QUICK_ADD_PROVIDERS[k].url) === target
+  );
+  return key ? QUICK_ADD_PROVIDERS[key] : null;
+}
+
+// Models that should never appear as Hive reviewers regardless of provider.
+// Embeddings, moderation/safety, speech-to-text, text-to-speech, audio,
+// real-time, reranking, image generation. The Hive expects chat-completion
+// behavior; these models will either error or produce non-chat output.
+const NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|veo|lyria|stable-diffusion|safety/i;
 
 function applyQuickAdd(value) {
   resetCustomAITest();
@@ -3194,6 +3224,15 @@ async function fetchCustomAIModels() {
 
     if (!models.length) throw new Error('No models returned');
 
+    // ── v3.25.6: filter non-chat models ────────────────────────────────────
+    // Strip embeddings, moderation, speech, audio, real-time, image-gen,
+    // reranking models — none are valid Hive reviewers. Track count for
+    // the toast so users know we did something on their behalf.
+    const rawCount = models.length;
+    models = models.filter(m => !NON_CHAT_RE.test(m));
+    const filteredOutCount = rawCount - models.length;
+    if (!models.length) throw new Error('No chat-compatible models returned (all results were embeddings/audio/image)');
+
     // ── #11: already-in-hive markers ───────────────────────────────────────
     // Don't filter already-added models out of the dropdown — that creates the
     // "wait, where's the model I added yesterday?" confusion. Instead show
@@ -3219,11 +3258,20 @@ async function fetchCustomAIModels() {
       return `<option value="${esc(m)}">${esc(m)}</option>`;
     }).join('');
 
-    // Browsers will pre-select the first <option> regardless of disabled
-    // state. Force selection to the first AVAILABLE model so the field shows
-    // a usable value out of the gate.
+    // ── v3.25.6: smart default selection ───────────────────────────────────
+    // 1. If the user came in via a Quick Add preset AND that preset declares
+    //    a defaultModel that exists in the available list, select THAT
+    //    instead of letting alphabetical order pick. Prevents the "I added
+    //    Mistral and got codestral-2508 by default" footgun.
+    // 2. Otherwise fall back to first available model.
+    const preset = getActivePreset(url);
+    const presetDefault = preset?.defaultModel;
+    const presetMatch = (presetDefault && !existingForThisUrl.has(presetDefault) && models.includes(presetDefault))
+      ? presetDefault
+      : null;
     const firstAvailable = models.find(m => !existingForThisUrl.has(m));
-    if (firstAvailable) selectEl.value = firstAvailable;
+    const initialPick = presetMatch || firstAvailable;
+    if (initialPick) selectEl.value = initialPick;
 
     textInput.style.display = 'none';
     selectEl.style.display = '';
@@ -3231,12 +3279,15 @@ async function fetchCustomAIModels() {
     fetchBtn.disabled = false;
     resetCustomAITest();
 
+    // Compose the toast — most informative first
     if (availCount === 0) {
       toast(`⚠️ All ${models.length} models from this endpoint are already in your hive`, 6000);
-    } else if (inHiveCount > 0) {
-      toast(`✅ ${availCount} new · ${inHiveCount} already in your hive`);
     } else {
-      toast(`✅ ${models.length} models loaded`);
+      const parts = [`✅ ${availCount} loaded`];
+      if (inHiveCount > 0)      parts.push(`${inHiveCount} already in hive`);
+      if (filteredOutCount > 0) parts.push(`${filteredOutCount} non-chat skipped`);
+      if (presetMatch)          parts.push(`default: ${presetMatch}`);
+      toast(parts.join(' · '), filteredOutCount > 0 || presetMatch ? 5000 : 3000);
     }
 
   } catch(e) {
