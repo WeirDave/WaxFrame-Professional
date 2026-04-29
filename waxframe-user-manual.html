@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260429-002
+     Build: 20260429-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-002">
+  <meta name="waxframe-build" content="20260429-003">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.25.1">
+  <link rel="stylesheet" href="style.css?v=3.25.2">
 </head>
 <body class="helper-body">
 
@@ -618,10 +618,10 @@
     <div class="wh-block">
       <div class="wh-block-title">Adding reference documents</div>
       <p>Setup 4 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, ordered, removable, and editable. The hive sees them in array order with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
-      <p>Two buttons below the card list add new documents:</p>
+      <p>Two action panels above the reference list let you add new ones:</p>
       <ul>
-        <li><strong>+ Add Paste-Text Reference</strong> creates a new editable card with an empty textarea. Paste your text in and it becomes the card's content. The card name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
-        <li><strong>📄 Upload File as Reference</strong> opens a file picker, or you can drag &amp; drop a file onto the dropzone next to the buttons. The file is read once and its content is loaded into a new read-only card with the original filename as the card name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears and each selected sheet becomes its own independent card. For the canonical breakdown of what gets extracted from each format and what does not, see <a href="#file-ingestion" class="link-accent">File Ingestion ↓</a>.</li>
+        <li><strong>📋 Paste Text</strong> — clicking this panel adds a new editable reference with an empty textarea below. Paste your text in and it becomes the reference's content. The reference name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
+        <li><strong>📚 Upload File</strong> — clicking this panel opens a file picker, or you can drag &amp; drop a file directly onto it (the panel is the drop target). The file is read once and its content is loaded into a new read-only reference with the original filename as the name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears and each selected sheet becomes its own independent reference. For the canonical breakdown of what gets extracted from each format and what does not, see <a href="#file-ingestion" class="link-accent">File Ingestion ↓</a>.</li>
       </ul>
       <p>Each card has the same controls: an editable name field, character / word / token counts, ⬆️ and ⬇️ arrows to reorder (the hive sees cards in the order shown), and a 🗑️ remove button. Paste cards are fully editable; upload cards are read-only — to replace an uploaded card's content, remove it and re-upload.</p>
       <p>A soft warning banner appears at the top of Setup 4 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.</p>
@@ -1556,7 +1556,7 @@
 <script src="theme.js"></script>
 <script src="nav-helper.js?v=3.22.6"></script>
 <script src="license-helper.js?v=3.22.6"></script>
-<script src="version.js?v=3.25.1"></script>
+<script src="version.js?v=3.25.2"></script>
 <script src="docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

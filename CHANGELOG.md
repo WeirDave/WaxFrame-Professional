@@ -2,6 +2,49 @@
 
 ---
 
+## v3.25.2 Pro — Build `20260429-003`
+**Released:** April 29, 2026
+
+**Setup 4 layout overhaul + copy cleanup.** Restructures the Reference Material screen so the action area lives ABOVE the cards list (consistent with how it worked pre-multi-doc) instead of below it where v3.24.0 had moved it. Replaces the awkward inline button row + invisible-until-hover dropzone with two compact dashed-border panels side-by-side, mirroring Setup 5's `.drop-zone` visual language but smaller. Drops several pieces of bad copy ("paste-text card") flagged as not-human-language.
+
+### Layout — action panels above, cards below
+
+The previous layout (counter row → cards → action row at bottom) caused the action controls to drift further down the page as cards were added. The new layout (counter row → action row → cards) keeps the action controls in a stable position; cards stack downward from below them. Matches the pre-multi-doc mental model and respects laptop viewport space.
+
+### Action panels — two compact drop-zone-style targets
+
+Replaces the old single-row layout (two buttons + small italic hint dropzone) with a 2-column grid of drop-zone-style panels:
+
+- **Left panel — `📋 Paste Text`** — clicking adds a new editable reference and the user pastes content into the textarea that appears in the cards list below.
+- **Right panel — `📚 Upload File`** — clicking opens the file picker. Drag-and-drop targets this panel directly. Subtext lists supported formats inline (Word, PDF, PowerPoint, Excel, .txt, .md).
+
+Both panels have a **permanent dashed border** (2px dashed `--border2`, ~130px tall, ~50% width each on the standard layout) so the drop affordance is visible at all times, not just during drag-over. Hover and dragover both transition the border to `--accent` and the background to `--accent-dim`. Mirrors Setup 5's `.drop-zone` pattern exactly — same icon-above-text-above-subtext layout, same transitions, same color tokens — but compact and split into two columns.
+
+### Copy cleanup
+
+- **Empty state simplified** — `No reference material yet. Add a paste-text card or upload a file below.` → `No reference material yet.` Both the HTML initial state and the JS-rendered state in `renderReferenceCards()` updated.
+- **Drawer button label** — `+ Add Paste-Text Reference` → `+ Paste Text Reference`
+- **Drawer empty state** — `No reference material yet. Add a paste-text card below.` → `No reference material yet.`
+- **Info modal** — `Add as many reference cards as you need — paste-text cards alongside uploaded-file cards.` → `Add as many references as you need — paste your own text or upload files.`
+- **User manual Setup 4 section** — updated button labels to reflect new panel layout (`+ Add Paste-Text Reference` → `📋 Paste Text`, `📄 Upload File as Reference` → `📚 Upload File`); changed "Two buttons below the card list" to "Two action panels above the reference list".
+
+### Why this changed
+
+Two rounds of feedback converged here. First was the v3.25.1 drag-and-drop fix, which addressed a functional bug (handlers on the wrong element) but left the underlying layout problem in place — drop zone was still inside a row at the bottom of the page, and the affordance was still visually quiet. Second was a separate observation that "paste-text card" isn't language anyone would actually say out loud. The right fix was to step back from the inline-row pattern entirely and reuse Setup 5's drop-zone treatment, which already works and is already familiar to users from the Starting Document upload step. Consistency over innovation.
+
+### What did not change
+
+- Setup 5 (Starting Document) drag-and-drop and layout — untouched.
+- File processing logic (`processRefFile`, `extractFromFile`, all extractors), accepted file types, sheet picker modal flow — untouched.
+- Drawer (work-screen Reference panel) layout — untouched. The drawer is paste-only and its single-button layout is appropriate; only the button label was tweaked.
+- All drag-and-drop event handlers (`handleRefDragEnter`, `handleRefDragOver`, `handleRefDragLeave`, `handleRefFileDrop`) — they target `#refDropRow` which is now the right action panel; no code change required.
+
+### Build-stamp sweep
+
+All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=`, `version.js?v=`, `app.js?v=`, and `lib/*.js?v=` cache-busts swept to `20260429-003` / `3.25.2`.
+
+---
+
 ## v3.25.1 Pro — Build `20260429-002`
 **Released:** April 29, 2026
 
