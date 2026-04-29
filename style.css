@@ -294,12 +294,30 @@ html, body {
   border-color: var(--accent);
   color: var(--accent);
 }
-/* Mute button — sits left of theme toggles, separated by a small gap */
-.mute-btn { margin-right: 4px; }
+/* Mute button — color-coded state indicator. Green = sounds on, red = muted.
+   Sits left of theme toggles, separated by a small gap. Overrides the dim
+   transparent .theme-opt base because mute is a state indicator, not a
+   radio-group selector — different control type, different visual weight. */
+.mute-btn {
+  margin-right: 4px;
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+}
+.mute-btn:hover:not(.is-muted) {
+  background: var(--green);
+  border-color: var(--green);
+  color: var(--bg);
+}
 .mute-btn.is-muted {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red);
+}
+.mute-btn.is-muted:hover {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--bg);
 }
 .theme-toggle {
   display: flex;

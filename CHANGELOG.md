@@ -2,6 +2,26 @@
 
 ---
 
+## v3.23.3 Pro — Build `20260428-005`
+**Released:** April 28, 2026
+
+**Mute button color-state indicator.** The unmuted/muted state on the work-screen mute button was previously communicated via the speaker glyph alone (🔊 vs 🔇), with both states sharing similar transparent or amber-tinted button chrome. At button size the slash on the muted glyph was hard to read at a glance — the button required attention to determine state. This release replaces glyph-as-signal with color-as-signal, matching industry convention (Zoom, Teams, Discord all do this).
+
+### Mute button — green default, red when muted
+
+- **Default state (sounds on)** — button is now green-tinted: `background: var(--green-dim)`, `border-color: var(--green)`, `color: var(--green)`. Hover inverts to solid green with bg-color text.
+- **Muted state (`.is-muted`)** — button is now red-tinted: `background: var(--red-dim)`, `border-color: var(--red)`, `color: var(--red)`. Hover inverts to solid red.
+- **Hover overrides scoped to `.mute-btn:hover:not(.is-muted)`** so the inherited `.theme-opt:hover:not(.active)` amber treatment doesn't bleed into the mute button's hover state. Specificity matches the inherited rule (0,3,0); source order resolves to the mute-specific rule winning.
+- **Speaker icons (🔊 / 🔇) preserved** as secondary visual reinforcement. Color carries the primary signal now; the glyph reinforces it for users who notice both.
+- **Tokens used (`--green`, `--green-dim`, `--red`, `--red-dim`)** are theme-aware in both light and dark mode — light-mode `--green` got cleaned up in v3.23.0, so the contrast is good in both themes without further tuning.
+- **Why the visual asymmetry vs. theme toggles is intentional** — the mute button is a binary state indicator, not a multi-state radio selector. Auto/Dark/Light theme toggles share visual weight because they're alternatives in a group; mute stands alone as a discrete on/off control. Distinct visual treatment reinforces the distinction in control type.
+
+### Build-stamp sweep
+
+- All four required stamp locations + all 6 helper-page comment-header builds + all 6 helper-page `style.css?v=` and `version.js?v=` cache-busts swept to `20260428-005` / `3.23.3`.
+
+---
+
 ## v3.23.2 Pro — Build `20260428-004`
 **Released:** April 28, 2026
 
