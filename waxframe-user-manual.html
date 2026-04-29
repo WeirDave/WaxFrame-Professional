@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260428-008
+     Build: 20260429-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260428-001">
+  <meta name="waxframe-build" content="20260429-001">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.24.1">
+  <link rel="stylesheet" href="style.css?v=3.25.0">
 </head>
 <body class="helper-body">
 
@@ -616,10 +616,15 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Two ways to provide it</div>
-      <p>Setup 4 has two tabs at the top — <strong>📄 Upload File</strong> and <strong>📋 Paste Text</strong>. Pick one. They are mutually exclusive — pasting after uploading replaces the uploaded content, and uploading after pasting replaces the pasted content. If you have multiple reference documents, concatenate them into one paste with clear section headers like <code>=== JOB DESCRIPTION ===</code> and <code>=== STYLE GUIDE ===</code> so the hive can tell them apart.</p>
-      <p>The <strong>📄 Upload File</strong> tab accepts the same formats as Setup 5: Word (.docx), PDF, PowerPoint (.pptx), plain text (.txt), and Markdown (.md). The file is read once and its text content is loaded into memory; you can then edit the text directly via the paste textarea or via the Reference button on the Work screen.</p>
-      <p>The <strong>📋 Paste Text</strong> tab is the more common choice. Most reference material lives somewhere already — a job posting in your browser, an RFP in another document, a style guide in a wiki — and pasting is faster and gives you direct control over what the hive actually sees.</p>
+      <div class="wh-block-title">Adding reference documents</div>
+      <p>Setup 4 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, ordered, removable, and editable. The hive sees them in array order with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
+      <p>Two buttons below the card list add new documents:</p>
+      <ul>
+        <li><strong>+ Add Paste-Text Reference</strong> creates a new editable card with an empty textarea. Paste your text in and it becomes the card's content. The card name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
+        <li><strong>📄 Upload File as Reference</strong> opens a file picker, or you can drag &amp; drop a file onto the dropzone next to the buttons. The file is read once and its content is loaded into a new read-only card with the original filename as the card name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears so you can choose which sheets to ingest — each selected sheet becomes its own independent card with its own token chip.</li>
+      </ul>
+      <p>Each card has the same controls: an editable name field, character / word / token counts, ⬆️ and ⬇️ arrows to reorder (the hive sees cards in the order shown), and a 🗑️ remove button. Paste cards are fully editable; upload cards are read-only — to replace an uploaded card's content, remove it and re-upload.</p>
+      <p>A soft warning banner appears at the top of Setup 4 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.</p>
     </div>
 
     <div class="wh-block">
@@ -681,7 +686,8 @@
         <li>Click anywhere inside the drop zone to open your operating system's file browser. Navigate to your file and select it.</li>
         <li>Or drag your file from any folder on your computer and drop it directly onto the drop zone.</li>
       </ul>
-      <p>Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count.</p>
+      <p>Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), Excel workbooks (.xlsx, .xlsm), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count.</p>
+      <p><strong>What gets extracted:</strong> WaxFrame's importer aims for full-fidelity content capture — not just raw text. <strong>Word</strong> documents preserve heading hierarchy, lists, tables, bold/italic, comments, footnotes, endnotes, headers/footers, text boxes, and track-change accepted text. <strong>PDFs</strong> capture position-aware text with detected tables converted to markdown, plus document outline (TOC), AcroForm field values, annotation comments and highlights, and a per-page heuristic OCR pass for embedded screenshot-tables on sparse pages (requires a vision-capable AI key — ChatGPT, Claude, Gemini, or Grok). Scanned/image-only PDFs route to full-document AI vision transcription automatically. <strong>PowerPoint</strong> decks separate slide titles from body content, capture speaker notes, convert embedded tables to markdown, and pull text from SmartArt diagrams and chart labels. <strong>Excel</strong> workbooks convert each visible sheet to a markdown table with formulas evaluated to displayed values, merged cells flattened by repetition, cell comments captured, and defined names surfaced. Hidden sheets are skipped (count surfaced); cell colors and conditional formatting are not preserved.</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p><strong>PDF tip:</strong> PDF extraction works best with standard digitally-created documents — files exported from Word, Google Docs, or similar applications. Scanned documents and PDFs created from images do not contain extractable text and will produce garbled or empty results. If your PDF was scanned, use the <strong>📋 Paste Text</strong> option instead and copy the text from a version of the document you can select text in.</p></div>
@@ -1475,7 +1481,7 @@
 <script src="theme.js"></script>
 <script src="nav-helper.js?v=3.22.6"></script>
 <script src="license-helper.js?v=3.22.6"></script>
-<script src="version.js?v=3.24.1"></script>
+<script src="version.js?v=3.25.0"></script>
 <script src="docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
