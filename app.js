@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-019
+//  Build: 20260429-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -343,24 +343,38 @@ function getModelsForProvider(provider) {
   return MODEL_FALLBACKS[provider] || [];
 }
 
+// v3.27.1: unified recommend-cache key resolver. Defaults use the provider
+// name (which equals the id for the built-in 6); customs use the AI's
+// generated id. Lets buildModelSelector and recheckModelForAI share one
+// lookup convention regardless of AI type.
+function getCacheIdForAI(aiId) {
+  const isDefault = !!DEFAULT_AIS.find(d => d.id === aiId);
+  return isDefault ? `default-${aiId}` : `custom-${aiId}`;
+}
+
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
 
   // v3.27.0: source of truth is the AI's own categorized recommendation cache.
-  // The AI returns 3 categorized picks (Best + Fastest + Budget) and those
-  // become the dropdown tags with category icons. ✨ marks the BEST pick.
-  // All other models render as bare ids — David's principle: trust what the
-  // AI returned, don't guess about the rest.
-  const cached = getCachedRecommendation(`default-${provider}`);
+  // The AI returns 3 categorized picks (Best Overall + Fastest + Budget) and
+  // those become the dropdown tags. ✨ marks the BEST pick. All other models
+  // render as bare ids.
+  // v3.27.1: cache key now branches on default vs custom — defaults use
+  // `default-${provider}`, customs use `custom-${aiId}`. For defaults
+  // aiId === provider so both schemes resolve the same key.
+  const cached = getCachedRecommendation(getCacheIdForAI(aiId));
   const recommendedModel = cached?.model || null;
   const labels = cached?.labels || {};
 
-  // Map a tag string (possibly concatenated like "Best · Fastest") to icons.
-  // Each known category gets a single emoji; the icons join in tag order.
+  // Map a tag string (possibly concatenated like "Best Overall · Fastest") to
+  // icons. v3.27.1: dropped 🎯 icon for Best Overall — the ✨ marker on the
+  // recommended model row already conveys "this is the best pick", so a
+  // category icon would be redundant. Fastest and Budget keep their icons
+  // because they're meaningfully distinct categories the user might pick.
   const iconForTag = (tagStr) => {
     if (!tagStr) return '';
-    const map = { 'Best': '🎯', 'Fastest': '⚡', 'Budget': '💰' };
+    const map = { 'Fastest': '⚡', 'Budget': '💰' };
     return tagStr.split(' · ').map(t => map[t] || '').filter(Boolean).join(' ');
   };
 
@@ -418,7 +432,7 @@ function saveModelForAI(aiId, modelId) {
   // clears (correct — we have no AI-provided WHY for that model).
   const noteEl = document.querySelector(`#airow-${aiId} .model-select-note`);
   if (noteEl) {
-    const cached = getCachedRecommendation(`default-${ai.provider}`);
+    const cached = getCachedRecommendation(getCacheIdForAI(aiId));
     const labels = cached?.labels || {};
     const isRec = modelId === cached?.model;
     const lblWhy = labels[modelId]?.why || '';
@@ -522,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-019';         // build stamp — update each session
+const BUILD       = '20260429-020';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2476,7 +2490,7 @@ function renderAISetupGrid() {
     const key = cfg?._key || '';
     const hasKey = !!key;
     const consoleUrl = ai.apiConsole || '#';
-    const showRecheck = hasKey && !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length);
+    const showRecheck = hasKey;
     const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
     // Defaults get a Hide button; custom AIs get the 🗑 remove button
     const actionBtn = isCustom
@@ -2632,7 +2646,7 @@ function renderAIRow(id) {
   // Insert/update model selector after key-wrap (its own full-width row)
   let modelSelWrap = rowEl.querySelector('.model-select-wrap');
   if (hasKey) {
-    const showRecheck = !isCustom && (MODEL_FILTERS[ai.provider] !== null || MODEL_FALLBACKS[ai.provider]?.length);
+    const showRecheck = true;
     const modelSel = buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck);
     if (modelSelWrap) {
       modelSelWrap.outerHTML = modelSel;
@@ -3493,7 +3507,7 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       return null;
     }
 
-    // Build labels map. Each entry: { tag: 'Best' | 'Fastest' | 'Budget' | concatenations, why }
+    // Build labels map. Each entry: { tag: 'Best Overall' | 'Fastest' | 'Budget' | concatenations, why }
     // Concatenations use ' · ' separator when same id appears in multiple categories.
     // The icon prefix is added by buildModelSelector when rendering, not here, so
     // future label changes don't require parser updates.
@@ -3512,7 +3526,7 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
         labels[id] = { tag, why: w };
       }
     };
-    addLabel(bestMatch,    bestWhyM,    'Best');
+    addLabel(bestMatch,    bestWhyM,    'Best Overall');
     addLabel(fastestMatch, fastestWhyM, 'Fastest');
     addLabel(budgetMatch,  budgetWhyM,  'Budget');
 
@@ -3587,13 +3601,20 @@ async function recheckModelForAI(id) {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg?._key) { toast(`⚠️ ${ai.name} has no API key`); return; }
 
-  // v3.26.3: force-fresh BOTH caches so the user gets a current answer.
-  // Clearing only the recommendation cache (v3.26.1 behavior) wasn't enough
-  // because fetchModelsForProvider has its own 7-day cache that can keep
-  // returning a stale candidate list.
+  const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
+
+  // v3.27.1: clear caches before fetching. For defaults this matches the
+  // previous behavior; for customs we clear the custom-{id} recommend cache
+  // and the waxframe_models_{id} cache so the call re-fetches a fresh
+  // candidate list from the endpoint.
   try {
-    localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`);
-    localStorage.removeItem(`waxframe_models_${ai.provider}`);
+    if (isDefault) {
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`);
+      localStorage.removeItem(`waxframe_models_${ai.provider}`);
+    } else {
+      localStorage.removeItem(`waxframe_recommend_custom-${id}`);
+      localStorage.removeItem(`waxframe_models_${id}`);
+    }
   } catch(e) {}
 
   const btn = document.getElementById(`recheckbtn-${id}`);
@@ -3602,17 +3623,48 @@ async function recheckModelForAI(id) {
 
   toast(`🤖 ${ai.name}: asking for best model…`, 3000);
   const previousModel = cfg.model;
-  const result = await recommendForDefault(ai.provider);
+
+  let result = null;
+  try {
+    if (isDefault) {
+      result = await recommendForDefault(ai.provider);
+    } else {
+      // v3.27.1: custom AI path. Fetch live model list from the endpoint
+      // using the same logic as the Add modal's Fetch Models button. Then
+      // call recommendModel directly with custom-{id} cacheId.
+      const format = cfg.format || 'openai';
+      const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key);
+      if (!models?.length) throw new Error('No chat-compatible models returned');
+      // Cache the model list so buildModelSelector renders the full dropdown
+      try {
+        localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models }));
+      } catch(e) {}
+      // Stable askingModel: prefer cfg.model if it's in the live list,
+      // otherwise first in list. No MODEL_FALLBACKS for customs since we
+      // don't curate stable models for arbitrary endpoints.
+      const askingModel = (cfg.model && models.includes(cfg.model)) ? cfg.model : models[0];
+      result = await recommendModel({
+        cacheId: `custom-${id}`,
+        endpoint: cfg.endpoint,
+        format,
+        key: cfg._key,
+        models,
+        askingModel
+      });
+    }
+  } catch(e) {
+    console.warn('[recheck] custom AI fetch failed:', e);
+    if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
+    toast(`⚠️ ${ai.name}: ${e.message || 'recommend failed'}`, 6000);
+    return;
+  }
 
   if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
 
-  // v3.26.3: always log to console with full context so DevTools tells the
-  // story unambiguously — even when the user thinks "nothing happened" the
-  // console will say exactly what did or didn't happen.
   console.info(`[recheck] ${ai.name}:`, {
     previous: previousModel,
     result,
-    cleared: ['recommend cache', 'models cache']
+    isDefault
   });
 
   if (!result?.model) {
@@ -3621,13 +3673,8 @@ async function recheckModelForAI(id) {
   }
 
   // v3.27.0: always re-render the row after a successful recommend so the
-  // dropdown picks up the freshly-cached labels (BEST/FASTEST/BUDGET tags +
-  // their WHYs). Previously, when the AI confirmed the existing model
-  // (`result.model === previousModel`), the function returned early WITHOUT
-  // calling renderAIRow — meaning the new labels lived in the cache but
-  // weren't visible. Users reported "first click did nothing, second click
-  // worked" because changing the model manually triggered a re-render that
-  // finally surfaced the cached labels.
+  // dropdown picks up the freshly-cached labels, even when the AI confirms
+  // the existing model is still the best pick.
   if (result.model === previousModel) {
     renderAIRow(id);
     toast(`✓ ${ai.name}: ${result.model} — already the recommended pick${result.why ? '. ' + result.why : ''}`, 6000);
@@ -3855,6 +3902,41 @@ function resetModelField() {
   if (selectEl)   { selectEl.style.display = 'none'; selectEl.innerHTML = ''; }
   if (fetchBtn)   { fetchBtn.textContent = 'Fetch Models'; fetchBtn.disabled = false; }
   updateRecommendBtn();
+}
+
+// v3.27.1: extracted from fetchCustomAIModels so the Custom-AI recheck flow
+// can reuse the same model-fetching logic without going through the Add modal
+// form fields. Returns a string array of chat-compatible model ids, or throws
+// on any failure (caller handles UI feedback).
+async function fetchModelsFromEndpoint(url, format, key) {
+  let modelsEndpoint, headers;
+  if (format === 'anthropic') {
+    modelsEndpoint = 'https://api.anthropic.com/v1/models';
+    headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
+  } else if (format === 'google') {
+    modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`;
+    headers = {};
+  } else {
+    const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+    modelsEndpoint = `${base}/v1/models`;
+    headers = key ? { 'Authorization': `Bearer ${key}` } : {};
+  }
+  const resp = await fetch(modelsEndpoint, { headers });
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const data = await resp.json();
+  let models = [];
+  if (format === 'anthropic') {
+    models = (data?.data || []).map(m => m.id);
+  } else if (format === 'google') {
+    models = (data?.models || [])
+      .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+      .map(m => m.name.replace('models/', ''));
+  } else {
+    models = (data?.data || []).map(m => m.id).sort();
+  }
+  // Same structural-only filter the default 6 use
+  models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
+  return models;
 }
 
 async function fetchCustomAIModels() {
@@ -4129,6 +4211,9 @@ function addCustomAI() {
     model,
     endpoint: url.replace(/\/$/, ''),
     note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
+    // v3.27.1: store format so recheckModelForAI can rebuild the recommend
+    // call without going through the Add modal form fields.
+    format,
     ...base
   };
   if (key) API_CONFIGS[id]._key = key;
