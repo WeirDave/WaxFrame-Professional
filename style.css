@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-016
+   Build: 20260429-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -3310,6 +3310,9 @@ html, body {
 }
 
 /* ── MODEL SELECTOR ── */
+/* v3.26.8: fixed width (not min/max) so dropdowns across all 6 default rows
+   line up identically regardless of model-id length. Wide enough to accommodate
+   id + " — Most Capable" tag + ✨ prefix without truncation for typical names. */
 .model-select {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -3318,12 +3321,19 @@ html, body {
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   padding: 4px 8px;
-  min-width: 220px;
-  max-width: 340px;
+  width: 520px;
+  flex-shrink: 0;
   cursor: pointer;
   transition: border-color 0.12s;
 }
 .model-select:focus { border-color: var(--accent); outline: none; }
+.model-select-label {
+  font-family: var(--font-display);
+  font-size: 12px;
+  color: var(--text-dim);
+  font-weight: 500;
+  flex-shrink: 0;
+}
 .model-select-note {
   font-size: 11px;
   color: var(--text-dim);
@@ -5361,6 +5371,39 @@ kbd {
   border-color: var(--accent);
   color: var(--accent);
   background: var(--accent-dim);
+}
+
+/* ══════════════════════════════════════
+   WAXFRAME CONFIRM MODAL (v3.26.8)
+   Promise-based replacement for native confirm()
+══════════════════════════════════════ */
+.wf-confirm-modal {
+  max-width: 480px;
+  text-align: center;
+}
+.wf-confirm-modal .finish-modal-msg {
+  text-align: left;
+  white-space: pre-wrap;
+}
+.wf-confirm-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+}
+.wf-confirm-actions .finish-modal-cancel {
+  margin-top: 0;
+}
+#wfConfirmOkBtn.wf-confirm-danger {
+  background: rgba(220, 70, 70, 0.18);
+  border-color: rgba(220, 70, 70, 0.5);
+  color: #ff8a8a;
+}
+#wfConfirmOkBtn.wf-confirm-danger:hover {
+  background: rgba(220, 70, 70, 0.32);
+  border-color: rgba(220, 70, 70, 0.8);
+  color: #ffaaaa;
 }
 
 /* ══════════════════════════════════════
