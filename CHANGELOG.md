@@ -2,6 +2,43 @@
 
 ---
 
+## v3.27.1 Pro — Build `20260429-020`
+**Released:** April 29, 2026
+
+**Custom AIs now get the full recommend treatment.** Three things bundled into one release:
+
+### 1. Custom AI / Server recommend support
+
+The **Have AI Recommend** button is now rendered on Custom AI rows (Alfredo, self-hosted Open WebUI, anything else with a /v1/models endpoint). Click flow for custom AIs:
+
+1. Re-fetches the live model list from the configured endpoint (same logic the Add modal uses)
+2. Filters out non-chat structural variants (embeddings, audio, image-gen, etc.)
+3. Calls the recommend pipeline against the full list with `cacheId: custom-${ai.id}`
+4. Updates `API_CONFIGS[id].model` to the BEST pick if it changed
+5. Re-renders the row with the new dropdown labels (Best Overall + Fastest + Budget tags + WHYs)
+
+Three plumbing changes made this work:
+
+- New helper `fetchModelsFromEndpoint(url, format, key)` extracted from the Add modal's `fetchCustomAIModels` so post-add recheck can reuse the same fetch path
+- Custom AI's `format` (openai/anthropic/google) now stored on `API_CONFIGS[id]` at add time so recheck can find it later
+- New helper `getCacheIdForAI(aiId)` resolves the right recommend-cache key — `default-${id}` for built-ins, `custom-${id}` for customs. `buildModelSelector` and `saveModelForAI` both use it now
+
+The `!isCustom` gate that previously suppressed the button on Custom AI rows is gone. If the AI has a saved key, it gets the button.
+
+### 2. Drop redundant 🎯 icon on Best Overall pick
+
+The ✨ marker already conveys "this is the recommended pick" — adding 🎯 next to it on the Best Overall row was visual redundancy. Icon map now only carries ⚡ for Fastest and 💰 for Budget. Concatenations like `Fastest · Budget` still show both icons.
+
+### 3. Rename `Best` → `Best Overall`
+
+Cleaner phrasing in the dropdown and the AI's WHY note.
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-020` and `3.27.1`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.27.0 Pro — Build `20260429-019`
 **Released:** April 29, 2026
 
