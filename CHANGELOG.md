@@ -2,6 +2,47 @@
 
 ---
 
+## v3.26.1 Pro — Build `20260429-010`
+**Released:** April 29, 2026
+
+**v3.26.0 follow-up patch.** Three real bugs and one cold-start gap surfaced within minutes of v3.26.0 going live. All fixed.
+
+### Bug — Custom AI Model row layout collapsed when aids were added
+
+v3.26.0 packed Fetch Models, 🤖 Recommend, and Help me choose into the same flexbox as the model dropdown. With four flex children competing for horizontal space, the dropdown got squeezed to a few pixels — unreadable. v3.26.1 moves the two decision aids onto their own row below the model field via a new `.custom-ai-model-aids` container.
+
+### Bug — Aids visible too early, out of order
+
+Both aids previously appeared before the user clicked Fetch Models. With nothing fetched, the user had to guess the right order. v3.26.1 hides BOTH aids until after Fetch Models populates the dropdown. This makes the workflow strictly linear: paste URL → Fetch Models → optionally Recommend or Browse.
+
+### Bug / UX — "Help me choose" didn't read as external
+
+Renamed to **↗ Browse models on website** with the standard external-link arrow prefix. Tooltip clarifies "Open this provider's model catalog in a new browser tab." Now visually unambiguous.
+
+### Gap — Existing users got nothing from v3.26.0
+
+The recommend pipeline only fired from `saveKeyForAI`, which means it only ran when the user pasted a NEW key. Anyone who already had keys saved from a prior version saw zero behavior change. v3.26.1 closes this two ways:
+
+**Per-row 🤖 Recheck button** — sits next to the Test button on every default AI row that has a saved key. Click → force-fresh recommend call (cache cleared) → toast shows the new pick. Manual control for power users who want to refresh on demand.
+
+**Silent first-load migration** — runs once per session, 1.5 seconds after the app loads. For each default AI with a saved key but no cached recommendation, fires `recommendForDefault` in parallel. Updates models silently and surfaces a single combined toast at the end (`✨ Updated N models to current provider recommendations`). Runs only once per session via `window._waxframeMigrationRan` flag. After the migration, subsequent loads do nothing — the cached recommendations are good for 24 hours.
+
+### Improved feedback on Custom AI Recommend button
+
+User reported "I clicked Recommend and nothing happened." Root cause was a too-subtle loading state. Fixes:
+
+- Button now reads `🤖 Asking…` while in flight (was just `🤖 Asking…` plain text)
+- Dropdown now disables while in flight so the user sees something change
+- Pre-call toast surfaces which model is being asked: `🤖 Asking gpt-4o for a recommendation…`
+- Failure toast longer and more specific: `⚠️ No clean recommendation — provider may not have followed the format. Pick manually or check console for details.`
+- Console logs the raw response on parse failure so users can debug provider-specific quirks
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-010` and `3.26.1`. Comment-header build stamps in `app.js` and `style.css` synced. All six pages bumped on cache-busts.
+
+---
+
 ## v3.26.0 Pro — Build `20260429-009`
 **Released:** April 29, 2026
 
