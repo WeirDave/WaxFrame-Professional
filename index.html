@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-025
+     Build: 20260429-026
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-025">
+  <meta name="waxframe-build" content="20260429-026">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.27.6">
+  <link rel="stylesheet" href="style.css?v=3.27.7">
 </head>
 <body>
 
@@ -198,9 +198,10 @@
         <div class="hp-section-header">
           <img src="images/WaxFrame_Project_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
-            <h1 class="hp-section-title">Your Project</h1>
-            <p class="hp-section-sub">Fields marked <span class="req-star">*</span> are required to continue.</p>
+            <h1 class="hp-section-title">Your Project <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About this brief"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
+            <p class="hp-section-sub">Define what you're building. Each Worker Bee reads this brief before every round of refinement — specific inputs produce consistent outputs across rounds. Fields marked <span class="req-star">*</span> are required to continue.</p>
           </div>
+          <button class="btn btn-sm hp-section-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
         </div>
         <div class="hp-section-body">
 
@@ -213,15 +214,6 @@
             <label class="proj-field-label" for="projectVersion">Version <span class="req-star">*</span></label>
             <input type="text" id="projectVersion" placeholder="e.g. v1" class="goal-field-input" oninput="saveProject();updateProjectRequirements()">
           </div>
-        </div>
-
-        <div class="proj-goal-section-hdr">
-          <h3 class="proj-goal-section-title">Project Goal <button class="goal-info-btn" onclick="document.getElementById('goalInfoModal').classList.add('active')" title="About the project goal"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h3>
-          <p class="proj-goal-section-sub">These fields are assembled into a structured brief every AI reads before each round. Fill in as many as apply — the more specific, the better.</p>
-        </div>
-
-        <div class="proj-clear-row">
-          <button class="btn btn-sm proj-clear-mid-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
         </div>
 
         <div class="goal-fields">
@@ -281,11 +273,6 @@
           </div>
         </div>
 
-        <div class="goal-counter-bar">
-          <span id="goalCounter"></span>
-          <button class="btn btn-sm proj-clear-btn" onclick="clearGoal()">✕ Clear Goal</button>
-        </div>
-
         <div id="goalRefinePreview" class="goal-refine-preview-panel">
           <div class="goal-refine-preview-hdr">
             <span class="goal-refine-preview-label">Refine rounds will receive</span>
@@ -294,10 +281,6 @@
           <p class="goal-refine-preview-sub" id="goalRefinePreviewSub"></p>
           <div id="goalRefinePreviewText" class="goal-refine-preview-text"></div>
           <div id="goalRefinePreviewEmpty" class="goal-refine-preview-empty">Your assembled goal is under 300 chars — the full text will be sent each refine round.</div>
-        </div>
-
-        <div class="setup-card-tip">
-          <img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Tip:</strong> Document type leads every round and always survives the 300-character trim when a document exists. Use it for the rule the AIs must never forget.
         </div>
 
         </div>
@@ -1744,12 +1727,12 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.27.6"></script>
-<script src="lib/mammoth.browser.min.js?v=3.27.6"></script>
-<script src="lib/jszip.min.js?v=3.27.6"></script>
-<script src="lib/xlsx.full.min.js?v=3.27.6"></script>
-<script src="version.js?v=3.27.6"></script>
-<script src="app.js?v=3.27.6"></script>
+<script src="lib/pdf.min.js?v=3.27.7"></script>
+<script src="lib/mammoth.browser.min.js?v=3.27.7"></script>
+<script src="lib/jszip.min.js?v=3.27.7"></script>
+<script src="lib/xlsx.full.min.js?v=3.27.7"></script>
+<script src="version.js?v=3.27.7"></script>
+<script src="app.js?v=3.27.7"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
