@@ -3449,18 +3449,8 @@ kbd {
 .proj-field-ver {
   width: 180px;
 }
-.proj-clear-row {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-start;
-}
-.proj-clear-row--bottom {
-  justify-content: flex-end;
-}
-.proj-clear-btn {
-  font-size: 12px;
-  padding: 5px 14px;
-}
+/* v3.27.7: removed .proj-clear-row, .proj-clear-row--bottom, .proj-clear-btn —
+   project-screen restructure eliminated all referencing markup. */
 
 /* ── GOAL INFO BUTTON & MODAL ── */
 .goal-info-btn {
@@ -3632,29 +3622,10 @@ kbd {
   letter-spacing: -0.01em;
 }
 
-/* ── GOAL COUNTER STATS ── */
-#goalCounter {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-.goal-stat {
-  color: var(--text-dim);
-  font-size: 11px;
-}
-.goal-stat-label {
-  color: var(--muted);
-  font-size: 11px;
-}
-.goal-stat-warn {
-  color: var(--amber);
-}
-.goal-stat-sep {
-  color: var(--border2);
-  font-size: 11px;
-}
+/* v3.27.7: removed #goalCounter rule + .goal-stat, .goal-stat-label,
+   .goal-stat-warn, .goal-stat-sep — only consumed by the goalCounter
+   inline-html block in updateGoalCounter, which was deleted along with
+   the goal-counter-bar markup in the project-screen restructure. */
 
 /* ── EXPORT MASK ROW ── */
 .export-mask-row {
@@ -6616,12 +6587,7 @@ kbd {
   font-style: italic;
   line-height: 1.6;
 }
-.proj-clear-row--bottom {
-  flex-shrink: 0;
-  padding: 10px 0 16px;
-  border-top: 1px dashed var(--border);
-  margin-top: 10px;
-}
+/* v3.27.7: second .proj-clear-row--bottom rule removed (orphan). */
 
 /* ── Work topbar — project info clickable ── */
 .work-project-info-clickable { cursor: pointer; }
@@ -7602,18 +7568,8 @@ kbd {
   padding: 0 2px;
 }
 
-/* ── goal-counter-bar: stats + clear button below fields ── */
-.goal-counter-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-top: 1px solid var(--border);
-  margin-bottom: 16px;
-  font-size: var(--fs-sm);
-  color: var(--text-dim);
-}
+/* v3.27.7: removed .goal-counter-bar — element eliminated in the
+   project-screen restructure. */
 
 /* ── Minimum screen overlay (< 1422px wide or < 811px tall) ── */
 .min-screen-overlay {
@@ -7715,17 +7671,26 @@ kbd {
    the H1 title (where it was clipped behind the glass strip on the bee
    variant) to a row between the Project Goal sub paragraph and the
    goal-fields grid. Right-aligned so it doesn't fight the field layout. */
-.proj-goal-section-hdr + .proj-clear-row {
-  justify-content: flex-end;
-  margin: 4px 0 12px;
-}
-.proj-clear-mid-btn {
+/* v3.27.7: Clear Project button relocated into .hp-section-header.
+   margin-left: auto pushes it to the right edge of the flex container.
+   align-self: flex-start aligns it to the top of the header band (flush
+   with the title row) rather than centering with the bee mascot below. */
+.hp-section-clear-btn {
+  margin-left: auto;
+  flex-shrink: 0;
+  align-self: flex-start;
   font-size: var(--fs-sm);
-  padding: 5px 12px;
+  padding: 6px 14px;
   color: var(--text-dim);
   border-color: var(--border2);
-  flex-shrink: 0;
 }
+
+/* v3.27.7: removed .proj-goal-section-hdr, .proj-goal-section-title,
+   .proj-goal-section-sub, .proj-clear-mid-btn, and the
+   .proj-goal-section-hdr + .proj-clear-row sibling rule. The Project Goal
+   sub-section heading + standalone Clear Project row were eliminated in the
+   project-screen restructure — those classes are no longer referenced in
+   any HTML. */
 /* ── proj-field-wrap: label + input stacked ── */
 .proj-field-wrap {
   display: flex;
@@ -7780,42 +7745,12 @@ kbd {
 .proj-field-wrap--name { flex: 1; min-width: 260px; }
 .proj-field-wrap--ver  { width: 160px; flex-shrink: 0; }
 
-.proj-goal-section-hdr {
-  /* v3.27.6: dropped border-top + reduced padding-top. The divider plus
-     24px meta-row margin + 20px header padding combined to make the screen
-     read as two separate cards. Project Name/Version belong with the
-     Your Project header as metadata; Project Goal is a sub-grouping under
-     the same card, not a sibling section. */
-  padding-top: 16px;
-  margin-bottom: 16px;
-}
-.proj-goal-section-title {
-  font-family: var(--font-display);
-  font-size: var(--fs-lg);
-  font-weight: 700;
-  color: var(--text);
-  margin: 0 0 6px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.proj-goal-section-sub {
-  font-size: var(--fs-base);
-  color: var(--text-dim);
-  line-height: 1.6;
-  margin: 0;
-}
+/* v3.27.7: .proj-goal-section-hdr / .proj-goal-section-title /
+   .proj-goal-section-sub rules removed — those elements were eliminated
+   in the project-screen restructure. */
 
-.setup-card-tip {
-  margin-top: 20px;
-  padding: 14px 18px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: var(--fs-sm);
-  color: var(--text-dim);
-  line-height: 1.6;
-}
+/* v3.27.7: removed .setup-card-tip — only consumer was the bottom tip on
+   the project screen, which was deleted as irrelevant in the restructure. */
 
 /* ── Document Playbooks — project goal field display ── */
 .dp-goal-fields { display: flex; flex-direction: column; gap: 8px; }

@@ -2,6 +2,35 @@
 
 ---
 
+## v3.27.7 Pro — Build `20260429-026`
+**Released:** April 29, 2026
+
+**Your Project screen restructure.** The screen had grown a redundant secondary header (Project Goal), a duplicate clear button, a word/character counter that wasn't communicating anything actionable, and a bottom tip that referred to internal mechanics rather than user-facing behavior. Restructured into one cohesive screen with a single header bar and a continuous form below it.
+
+### Changes
+
+**1. Project Goal sub-section eliminated.** The "Project Goal" h3 + its description paragraph + the standalone Clear Project row that lived between Version and Document type were all deleted. Project Name, Version, Document type, Target audience, Desired outcome, Scope & constraints, Tone & voice, and Additional instructions now flow as one continuous form below the header.
+
+**2. ⓘ info button moved into the section header next to "Your Project."** Same modal target (`goalInfoModal`), now anchored to the screen-level title rather than the deleted Project Goal sub-heading. Title text reads as the rule it's been all along: "Your Project ⓘ" — click for the brief explanation.
+
+**3. Clear Project button moved into the section header bar.** Was sitting in a standalone row below Version. Now lives at the top-right of the dark header bar, using the previously empty space next to the bee mascot. Visually present without taking up form real estate.
+
+**4. Section sub rewritten.** The header sub now describes the page's purpose: *"Define what you're building. Each Worker Bee reads this brief before every round of refinement — specific inputs produce consistent outputs across rounds. Fields marked * are required to continue."*
+
+**5. Word/character counter bar deleted.** The bar at the bottom of the goal fields surfaced raw counts that didn't communicate anything actionable — only the 300-char trim threshold matters, and the goalRefinePreview panel below already states that fact directly. The bar is gone; the refine preview stays.
+
+**6. ✕ Clear Goal button deleted.** Was redundant with Clear Project — the latter clears name, version, and all goal fields in one operation. The narrower button on the same screen invited the question "what's the difference" without delivering distinct value.
+
+**7. Bottom tip deleted.** The "Document type leads every round and always survives the 300-character trim" tip described internal mechanics that the goalRefinePreview panel already explains in user-facing terms. Removed as redundant.
+
+### Code reconciliation
+
+CSS: removed `.proj-goal-section-hdr`, `.proj-goal-section-title`, `.proj-goal-section-sub`, `.proj-goal-section-hdr + .proj-clear-row`, `.proj-clear-mid-btn`, `.proj-clear-row`, `.proj-clear-row--bottom` (both definitions), `.proj-clear-btn`, `.goal-counter-bar`, `#goalCounter`, `.goal-stat`, `.goal-stat-label`, `.goal-stat-warn`, `.goal-stat-sep`, `.setup-card-tip`. Added `.hp-section-clear-btn` for the relocated Clear Project button (uses `margin-left: auto` and `align-self: flex-start` to right-anchor inside the existing `.hp-section-header` flex container, with no impact on other screens that don't render the button).
+
+JS: removed `clearGoal()` function (zero remaining call sites). Removed dead block in `updateGoalCounter()` that wrote into `#goalCounter`. The function still updates the goalRefinePreview panel and is still wired into all six goal-field `oninput` handlers — the name kept since the function still tracks the 300-char counter threshold that drives the preview.
+
+---
+
 ## v3.27.6 Pro — Build `20260429-025`
 **Released:** April 29, 2026
 

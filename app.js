@@ -536,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-025';         // build stamp — update each session
+const BUILD       = '20260429-026';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1031,15 +1031,9 @@ function copyGoal() {
   copyToClipboard(assembleProjectGoal(), 'Goal');
 }
 
-function clearGoal() {
-  ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(id => {
-    const e = document.getElementById(id);
-    if (e) e.value = '';
-  });
-  saveProject();
-  updateGoalCounter();
-  updateProjectRequirements();
-}
+// v3.27.7: clearGoal() removed. The "✕ Clear Goal" button was eliminated in
+// the project-screen restructure as redundant with the new Clear Project
+// button now positioned in the section header. No remaining call sites.
 
 function openChangeBuilder() {
   const grid = document.getElementById('changeBuilderGrid');
@@ -6943,18 +6937,15 @@ function truncateGoalForRefine(goal) {
 
 function updateGoalCounter() {
   const goal  = assembleProjectGoal();
-  const el    = document.getElementById('goalCounter');
   const len   = goal.length;
-  const words = goal.trim() ? goal.trim().split(/\s+/).length : 0;
   const truncated = len > 300;
 
-  if (el) {
-    el.innerHTML =
-      `<span class="goal-stat">${words} <span class="goal-stat-label">words</span></span>` +
-      `<span class="goal-stat-sep">·</span>` +
-      `<span class="goal-stat ${truncated ? 'goal-stat-warn' : ''}">${len} <span class="goal-stat-label">chars</span></span>` +
-      (truncated ? `<span class="goal-stat-sep">·</span><span class="goal-stat goal-stat-warn">first 300 chars sent to refine rounds</span>` : '');
-  }
+  // v3.27.7: removed dead block that wrote words/chars stats into #goalCounter.
+  // The element + its surrounding goal-counter-bar were eliminated in the
+  // project-screen restructure. Function retained because it still updates
+  // the goalRefinePreview panel below — words/chars info is no longer
+  // surfaced as its own widget; the refine preview communicates the only
+  // counter fact that mattered (whether the goal exceeds the 300-char trim).
 
   // Update refine preview panel
   const previewWrap  = document.getElementById('goalRefinePreview');
