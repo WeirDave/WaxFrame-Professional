@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-001
+//  Build: 20260430-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -124,6 +124,25 @@ const WF_ERROR_CATALOG = [
     meaning: 'Your custom endpoint did not whitelist this WaxFrame origin. The request reached the server, but the browser refused to read the response as a security measure. Most common with self-hosted endpoints (Open WebUI, Ollama, internal gateways).',
     actions: [
       { label: 'Read CORS troubleshooting', kind: 'link', href: 'api-details.html' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.28.1 — Must match BEFORE ENDPOINT_NOT_FOUND. OpenAI returns 404 with
+    // body "This is not a chat model and thus not supported in the
+    // v1/chat/completions endpoint" when a Responses-only model (e.g.
+    // gpt-5.5-pro) gets sent to /v1/chat/completions. The status-only 404
+    // matcher would otherwise misclassify this as "wrong URL".
+    code: 'MODEL_NEEDS_DIFFERENT_ENDPOINT',
+    matches: (err, ctx, msg) =>
+      msg.includes('not a chat model') ||
+      msg.includes('not supported in the v1/chat/completions') ||
+      msg.includes('use v1/completions') ||
+      msg.includes('use v1/responses'),
+    title: 'This model needs a different endpoint',
+    meaning: 'The provider rejected this model on the chat-completions endpoint because it requires a different API (e.g. OpenAI\'s pro and reasoning models like gpt-5.5-pro use /v1/responses, not /v1/chat/completions). Pick a different model — the ones WaxFrame can call directly are listed in the dropdown.',
+    actions: [
+      { label: 'Pick a different model', kind: 'link', href: '#' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -611,11 +630,20 @@ const MODEL_FALLBACKS = {
 // but the AI knows what it is and won't recommend it. Trust the AI.
 const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana/i;
 
+// v3.28.1 — ChatGPT-specific exclusions:
+// (a) -pro / -codex variants are Responses-API-only on OpenAI as of GPT-5.5 —
+//     they 404 on /v1/chat/completions with "This is not a chat model".
+//     WaxFrame doesn't speak the Responses API yet (queued for v3.29).
+// (b) Dated snapshots like gpt-5.5-2026-04-23 clutter the dropdown — the
+//     undated alias always points at the latest snapshot anyway.
+const CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
+const DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
+
 // MODEL_FILTERS — null means "this provider has no /v1/models endpoint, use
 // MODEL_FALLBACKS instead" (Perplexity). Otherwise everyone shares the same
-// structural filter.
+// structural filter, plus per-provider extras.
 const MODEL_FILTERS = {
-  chatgpt:    id => !STRUCTURAL_NON_CHAT_RE.test(id),
+  chatgpt:    id => !STRUCTURAL_NON_CHAT_RE.test(id) && !CHATGPT_RESPONSES_ONLY_RE.test(id) && !DATED_SNAPSHOT_RE.test(id),
   claude:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
   gemini:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
   grok:       id => !STRUCTURAL_NON_CHAT_RE.test(id),
@@ -888,7 +916,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-001';         // build stamp — update each session
+const BUILD       = '20260430-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1412,14 +1440,14 @@ function closeChangeBuilder() {
 }
 
 function showRoundErrorModal(reason, details) {
-  // ── v3.28.0: route through Troubleshooting Card when Troubleshooting Mode is on ──
+  // ── v3.28.1: route through Troubleshooting Card when Troubleshooting Mode is on ──
   if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.troubleshootingOn) {
     const ctxKindMap = {
       bloat:      'builder_bloat',
       conflicts:  'builder_missing_conflicts',
       delimiters: 'builder_delimiters'
     };
-    const kind = ctxKindMap[reason]; // 'api' falls through — no kind, generic match
+    const kind = ctxKindMap[reason];
     if (kind) {
       const ctx = {
         kind,
@@ -1428,10 +1456,19 @@ function showRoundErrorModal(reason, details) {
       };
       const entry = WF_DEBUG.classify(new Error(reason), ctx);
       WF_DEBUG.showCard(entry, ctx);
-      return; // suppress legacy modal
+      return; // suppress legacy modal — Card is the surface
     }
-    // For 'api' / unknown reason, fall through to legacy modal —
-    // callAPI already showed a Card for the underlying provider error.
+    // For 'api' (Builder API failure): callAPI ALREADY fired a Card with
+    // the actual classified error and root-cause technical details. Showing
+    // the legacy generic "check your API key" modal on top of that produced
+    // a confusing double-surface where the modal contradicted the Card.
+    // v3.28.1: drop the legacy modal in this case too — the Card already
+    // told the user what to do. Round flow continues to mark the round
+    // failed and not save it; only the redundant modal goes away.
+    if (reason === 'api') {
+      return;
+    }
+    // Other unknown reason — fall through to legacy modal as a safety net.
   }
 
   const modal   = document.getElementById('roundErrorModal');

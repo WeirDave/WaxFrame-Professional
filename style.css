@@ -5386,6 +5386,21 @@ kbd {
   border-style: solid;
   color: var(--green);
 }
+
+/* v3.28.1 — Missing .finish-modal-btn-transcript definition. The Round
+   Error Modal's "Change Builder" button referenced this class but it was
+   never declared, so the button rendered invisible (transparent
+   background, no border, no color). Same dashed→solid pattern as -export
+   and -new, but accent-keyed since it's a Builder action. */
+.finish-modal-btn-transcript {
+  border: 1px dashed var(--accent);
+  color: var(--text);
+}
+.finish-modal-btn-transcript:hover {
+  background: var(--accent-dim);
+  border-style: solid;
+  color: var(--accent);
+}
 .finish-modal-btn-new-sub {
   font-size: 11px;
   font-weight: 400;

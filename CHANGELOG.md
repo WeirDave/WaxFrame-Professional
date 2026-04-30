@@ -2,6 +2,38 @@
 
 ---
 
+## v3.28.1 — Smarter classifier, model filter, modal & button fixes
+**Build:** `20260430-002` · **Released:** April 30, 2026
+
+### Critical fix — OpenAI pro models break rounds
+
+OpenAI split their API as of GPT-5.5: regular chat models stay on `/v1/chat/completions`, but pro and reasoning models (`gpt-5.5-pro`, `gpt-5.4-pro`, etc.) require `/v1/responses` instead. WaxFrame only speaks Chat Completions. When Recommend a Model picked `gpt-5.5-pro` as Best Overall, every round failed with HTTP 404 from OpenAI saying "This is not a chat model."
+
+Fixed by filtering `-pro` and `-codex` model variants out of the OpenAI model list at the source — they no longer appear in the dropdown, and Recommend a Model can no longer pick them. Full `/v1/responses` endpoint support is queued for v3.29 so the pro models become genuinely usable rather than just hidden.
+
+### Smarter error classification
+
+The Card system now matches on response body keywords, not just HTTP status. New catalog entry `MODEL_NEEDS_DIFFERENT_ENDPOINT` catches `"not a chat model"` and `"use v1/responses"` body messages and surfaces a Card titled "This model needs a different endpoint" with a "Pick a different model" action — instead of the previous misleading "Endpoint URL not found (404)" Card that pointed users at the OpenAI billing console for what was actually a model selection problem.
+
+### Cleaner OpenAI model dropdown
+
+Dated snapshot versions like `gpt-5.5-2026-04-23`, `gpt-5-2025-08-07`, etc. are now hidden from the OpenAI model list. The undated alias always tracks the latest snapshot anyway. Lots of dead clutter cleaned out.
+
+### Dual-modal suppression
+
+When a Builder API call failed, two surfaces stacked: the new Troubleshooting Card from `callAPI` showing the actual error, plus the legacy "Round Not Saved" modal showing a generic "check your API key" message. The Card already explains the real cause and lists the fix. The legacy modal was just contradicting it. Now suppressed when Troubleshooting Mode is on.
+
+### Change Builder button visibility
+
+The "👑 Change Builder" button on the Round Not Saved modal had no visible text — `.finish-modal-btn-transcript` was referenced in the markup but never declared in CSS. Added the missing class with the same dashed-to-solid hover pattern as `-export` and `-new`, accent-keyed for Builder context.
+
+### Notes
+
+- Backward compatible — no data changes, no storage changes
+- Card system foundation from v3.28.0 unchanged; this release just fixes the bugs that surfaced once it was live
+
+---
+
 ## v3.28.0 — Troubleshooting Mode + Deep Dive foundation
 **Build:** `20260430-001` · **Released:** April 30, 2026
 
