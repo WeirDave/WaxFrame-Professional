@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260429-033
+     Build: 20260430-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260429-033">
+  <meta name="waxframe-build" content="20260430-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.27.13">
+  <link rel="stylesheet" href="style.css?v=3.28.0">
 </head>
 <body>
 
@@ -1085,6 +1085,30 @@
   </div>
 </div>
 
+<!-- TROUBLESHOOTING CARD (v3.28.0) — plain-English failure surface.
+     Driven by WF_DEBUG.classify(err) → WF_ERROR_CATALOG match.
+     When Troubleshooting Mode is on (default), this surfaces instead of the
+     legacy round-error modal for known failure classes. -->
+<div class="finish-modal-overlay tc-overlay" id="troubleshootingCard" onclick="if(event.target===this)closeTroubleshootingCard()">
+  <div class="finish-modal tc-modal">
+    <h2 class="finish-modal-title tc-title-row"><span class="tc-icon">🩺</span> <span id="tcTitle">Something went wrong</span></h2>
+    <div class="tc-body">
+      <p class="tc-meaning" id="tcMeaning"></p>
+      <div class="tc-actions" id="tcActions"></div>
+      <div class="tc-details-wrap" id="tcDetailsWrap">
+        <button class="tc-details-toggle" type="button" onclick="toggleTcDetails()">
+          <span class="tc-details-arrow">▸</span> Show technical details
+        </button>
+        <pre class="tc-details" id="tcDetails"></pre>
+        <div class="tc-details-actions">
+          <button class="tc-action-btn tc-copy-btn" type="button" onclick="tcCopyDetails()">📋 Copy report</button>
+        </div>
+      </div>
+    </div>
+    <button class="finish-modal-cancel" onclick="closeTroubleshootingCard()">← Dismiss</button>
+  </div>
+</div>
+
 <!-- DISCARD CONFIRMATION MODAL — replaces the native confirm() that was used
      in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
      looked jarring against the WaxFrame aesthetic. Opened by openDiscardConfirm()
@@ -1675,6 +1699,9 @@
   <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
   <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
   <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
+  <span class="dev-toolbar-sep">|</span>
+  <button id="wfTroubleshootingToggle" onclick="WF_DEBUG.setTroubleshooting(!WF_DEBUG.troubleshootingOn)" title="Plain-English error help when something breaks">🩺 Troubleshooting</button>
+  <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
 </div>
 
 <div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
@@ -1732,8 +1759,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="version.js?v=3.27.13"></script>
-<script src="app.js?v=3.27.13"></script>
+<script src="version.js?v=3.28.0"></script>
+<script src="app.js?v=3.28.0"></script>
 <script src="api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
