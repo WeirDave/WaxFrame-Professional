@@ -2,6 +2,19 @@
 
 ---
 
+## v3.27.9 Pro — Build `20260429-029`
+**Released:** April 29, 2026
+
+**Builder card aspect-ratio fix.** Follow-up to v3.27.8. The 3+3 grid landed correctly but the cards stretched only horizontally as the viewport widened — height stayed pinned at the natural content height (~220px), so cards looked progressively letterboxed at desktop widths (each card ~580×220, ratio ~2.6). The shape didn't change with the space.
+
+### Change
+
+Added `aspect-ratio: 2 / 1` to `.builder-pick-grid-large .builder-pick-btn`. Cards now scale proportionally in both dimensions as the grid columns widen — at laptop widths (~470px) cards are ~235px tall, at full desktop (~540px) cards are ~270px tall. Content stays centered (icon + name) via the existing `justify-content: center` and `align-items: center`. Consistent landscape shape at every viewport instead of variable letterboxing.
+
+The `.builder-pick-grid-large` scope keeps the small variant in the change-builder modal unaffected.
+
+---
+
 ## v3.27.8 Pro — Build `20260429-028`
 **Released:** April 29, 2026
 

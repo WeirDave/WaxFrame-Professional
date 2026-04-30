@@ -2501,6 +2501,13 @@ html, body {
   font-size: 15px;
   text-align: center;
   justify-content: center;
+  /* v3.27.9: lock aspect-ratio so cards grow proportionally in both
+     dimensions as the viewport widens, instead of stretching only
+     horizontally and progressively letterboxing. 2:1 keeps cards a
+     deliberate landscape shape that scales naturally — at laptop widths
+     each card is ~470×235, at full desktop ~540×270, with content
+     centered in the available space at every size. */
+  aspect-ratio: 2 / 1;
 }
 /* v3.27.7: scoped icon + name overrides for the large variant only. The
    small builder-pick-grid (used in the change-builder modal) retains
