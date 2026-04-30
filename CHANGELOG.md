@@ -2,6 +2,25 @@
 
 ---
 
+## v3.27.10 Pro — Build `20260429-030`
+**Released:** April 29, 2026
+
+**Builder card laptop-mode shrink.** Follow-up to v3.27.9. The 2:1 aspect-ratio worked great at full desktop widths (2510px tested) but at laptop widths (1422px) cards were still too tall — the 56px icons + 28px top padding + 2:1 height meant cards ate too much vertical space, especially with devtools open. The aspect-ratio fix made desktop look right but laptops were stuck with desktop sizing.
+
+### Change
+
+Added a media query at the project's existing laptop threshold (`max-width: 1421px`, `max-height: 900px`) that pulls Builder cards back to a flatter, more compact shape:
+
+- Aspect ratio: `2/1` → `2.6/1` (flatter — less vertical space at constrained widths)
+- Padding: `28px 16px 22px` → `20px 14px 16px`
+- Inner gap: `14px` → `10px`
+- Icon: `56px` → `42px`
+- Name font: `15px` → `14px`
+
+At desktop (1422px+ wide AND 900px+ tall) cards keep the v3.27.9 sizing. The breakpoint matches the existing `min-screen-overlay` threshold pattern (`max-width: 1421px, max-height: 810px`) so the responsive boundaries stay aligned across the codebase.
+
+---
+
 ## v3.27.9 Pro — Build `20260429-029`
 **Released:** April 29, 2026
 
