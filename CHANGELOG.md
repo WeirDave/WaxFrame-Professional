@@ -2,6 +2,29 @@
 
 ---
 
+## v3.27.4 Pro — Build `20260429-023`
+**Released:** April 29, 2026
+
+**Import from Model Server: capture the Models Endpoint URL and cache the full server model list.** Follow-up to v3.27.3 surfaced from work-side use: imported AIs had a dropdown but it only contained the single model checked at import time, and clicking Recommend a Model on Alfredo (Open WebUI, `/api/...` paths) failed because the model-list URL was being derived from the chat URL with a `/v1/...` regex that doesn't match Open WebUI's URL scheme.
+
+### Three surgical changes
+
+**1. `addImportServerModels` now stores `_modelsEndpoint` on each `API_CONFIGS[id]`.** The Models Endpoint URL was already captured in the modal, validated by `fetchImportServerModels`, and saved to last-used defaults — but it was thrown away before reaching the AI's persistent config. Now it's persisted via `saveHive`'s `customAIConfigs` spread, alongside the chat `endpoint`.
+
+**2. `addImportServerModels` now caches the FULL server model list** (from `_importServerModels`) into `waxframe_models_${id}` for every newly-added AI, instead of caching only `[modelId]`. Each row's dropdown now reflects every model the server offers, not just the one checked at import time. Falls back to `[modelId]` defensively if `_importServerModels` is somehow empty.
+
+**3. `recheckModelForAI` and `fetchModelsFromEndpoint` honor the stored `_modelsEndpoint`.** `fetchModelsFromEndpoint` now accepts a 4th param `explicitModelsEndpoint`. When provided (and format is `openai`), it's used directly instead of the `${base}/v1/models` derivation. Anthropic/Google branches are unchanged — those endpoints are hardcoded and the param is ignored. Backward compatible: customs imported pre-v3.27.4 have `_modelsEndpoint = undefined` and fall through to the legacy derive path exactly as before.
+
+### What you'll see
+
+After importing N models from a server with M total models, each of the N rows shows a dropdown populated with all M models from that server. Clicking Recommend a Model on an Alfredo / Open WebUI import now hits the correct `/api/models` URL (whatever the user entered in the Models Endpoint field) instead of building `/api/chat/completions/v1/models` and 404-ing.
+
+### Migration
+
+AIs imported before v3.27.4 stay on the legacy single-model cache + derived models URL. To get the new full-list-dropdown + working Recommend on Alfredo, delete the existing imported AIs and re-import via Import from Model Server. The Models Endpoint field is already pre-filled from saved last-used defaults if you've imported successfully before.
+
+---
+
 ## v3.27.3 Pro — Build `20260429-022`
 **Released:** April 29, 2026
 

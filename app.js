@@ -536,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-022';         // build stamp — update each session
+const BUILD       = '20260429-023';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3632,8 +3632,11 @@ async function recheckModelForAI(id) {
       // v3.27.1: custom AI path. Fetch live model list from the endpoint
       // using the same logic as the Add modal's Fetch Models button. Then
       // call recommendModel directly with custom-{id} cacheId.
+      // v3.27.4: prefer cfg._modelsEndpoint (set by Import Server flow) so
+      // Open WebUI / Alfredo / non-`/v1/` servers fetch the correct URL
+      // instead of the broken derive path.
       const format = cfg.format || 'openai';
-      const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key);
+      const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
       if (!models?.length) throw new Error('No chat-compatible models returned');
       // Cache the model list so buildModelSelector renders the full dropdown
       try {
@@ -3908,7 +3911,7 @@ function resetModelField() {
 // can reuse the same model-fetching logic without going through the Add modal
 // form fields. Returns a string array of chat-compatible model ids, or throws
 // on any failure (caller handles UI feedback).
-async function fetchModelsFromEndpoint(url, format, key) {
+async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint = null) {
   let modelsEndpoint, headers;
   if (format === 'anthropic') {
     modelsEndpoint = 'https://api.anthropic.com/v1/models';
@@ -3917,8 +3920,16 @@ async function fetchModelsFromEndpoint(url, format, key) {
     modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`;
     headers = {};
   } else {
-    const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
-    modelsEndpoint = `${base}/v1/models`;
+    // v3.27.4: prefer the explicit modelsEndpoint stored on the AI config
+    // (set by Import Server flow). Falls back to deriving `${base}/v1/models`
+    // for legacy custom AIs that only stored a chat URL. The derive path
+    // breaks for Open WebUI / Alfredo (`/api/...` paths) — explicit URL fixes.
+    if (explicitModelsEndpoint) {
+      modelsEndpoint = explicitModelsEndpoint;
+    } else {
+      const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+      modelsEndpoint = `${base}/v1/models`;
+    }
     headers = key ? { 'Authorization': `Bearer ${key}` } : {};
   }
   const resp = await fetch(modelsEndpoint, { headers });
@@ -4791,6 +4802,16 @@ function addImportServerModels() {
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
   const icon   = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
 
+  // v3.27.4: build the full server model-id list ONCE, outside the loop.
+  // _importServerModels was populated by fetchImportServerModels and is the
+  // authoritative full list for this server. Each newly-added AI gets the
+  // ENTIRE list cached so its dropdown shows every model the server offers,
+  // not just the one selected at import time. Falls back to a single-model
+  // array if for some reason _importServerModels is empty.
+  const fullServerModelIds = (Array.isArray(_importServerModels) && _importServerModels.length)
+    ? _importServerModels.map(m => m.id).filter(Boolean)
+    : null;
+
   let added = 0;
   checked.forEach((cb, idx) => {
     const i         = cb.id.replace('isc-', '');
@@ -4806,6 +4827,11 @@ function addImportServerModels() {
       label:     name,
       model:     modelId,
       endpoint:  chatUrl,
+      // v3.27.4: store the Models Endpoint URL so recheckModelForAI can
+      // fetch the live model list later without trying to derive it from
+      // the chat URL (the derive path breaks for `/api/...` servers like
+      // Open WebUI and Alfredo). Persisted via saveHive's customAIConfigs.
+      _modelsEndpoint: modelsUrl,
       note:      `Model: ${modelId}`,
       // v3.27.3: format is needed by recheckModelForAI's custom-AI path
       // (Recommend a Model button) — Open WebUI / Alfredo / generic model
@@ -4818,15 +4844,17 @@ function addImportServerModels() {
     };
     if (key) API_CONFIGS[id]._key = key;
 
-    // v3.27.3: persist a single-model cache for this imported AI so the
-    // worker bee row's dropdown renders immediately. Without this,
-    // buildModelSelector would return '' and the row would have no dropdown
-    // AND no Recommend button. When the user clicks Recommend a Model later,
-    // recheckModelForAI's custom path fetches the full live list from the
-    // server and replaces this cache.
+    // v3.27.4: cache the FULL server model list for each newly-added AI so
+    // every row's dropdown immediately reflects everything the server offers
+    // — not just the single model that was checked at import time. This is
+    // also what buildModelSelector reads from. Falls back to [modelId] if
+    // _importServerModels was unexpectedly empty (defensive).
     try {
-      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: [modelId] }));
-    } catch(e) { console.warn('[addImportServerModels] failed to cache model:', e); }
+      const cacheModels = fullServerModelIds && fullServerModelIds.length
+        ? fullServerModelIds
+        : [modelId];
+      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: cacheModels }));
+    } catch(e) { console.warn('[addImportServerModels] failed to cache model list:', e); }
 
     aiList.push(ai);
     activeAIs.push(ai);
