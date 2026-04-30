@@ -15,7 +15,11 @@
 
 **3. Clear Project button moved into the section header bar.** Was sitting in a standalone row below Version. Now lives at the top-right of the dark header bar, using the previously empty space next to the bee mascot. Visually present without taking up form real estate.
 
-**4. Section sub rewritten.** The header sub now describes the page's purpose: *"Define what you're building. Each Worker Bee reads this brief before every round of refinement — specific inputs produce consistent outputs across rounds. Fields marked * are required to continue."*
+**4. Section sub rewritten.** The header sub now describes the page's purpose and ends with the required-fields cue:
+
+> This section defines what your project is all about. Every AI sees this information on every round. The more specific you are the better your project will be. (Garbage in Garbage out)
+>
+> *Fields marked * are required to continue.*
 
 **5. Word/character counter bar deleted.** The bar at the bottom of the goal fields surfaced raw counts that didn't communicate anything actionable — only the 300-char trim threshold matters, and the goalRefinePreview panel below already states that fact directly. The bar is gone; the refine preview stays.
 
