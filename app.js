@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-021
+//  Build: 20260429-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -536,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-021';         // build stamp — update each session
+const BUILD       = '20260429-022';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4807,11 +4807,26 @@ function addImportServerModels() {
       model:     modelId,
       endpoint:  chatUrl,
       note:      `Model: ${modelId}`,
+      // v3.27.3: format is needed by recheckModelForAI's custom-AI path
+      // (Recommend a Model button) — Open WebUI / Alfredo / generic model
+      // servers are OpenAI-compatible by definition since this flow assumes
+      // an OpenAI-compatible chat completions endpoint.
+      format:    'openai',
       headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
       bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => d?.choices?.[0]?.message?.content || ''
     };
     if (key) API_CONFIGS[id]._key = key;
+
+    // v3.27.3: persist a single-model cache for this imported AI so the
+    // worker bee row's dropdown renders immediately. Without this,
+    // buildModelSelector would return '' and the row would have no dropdown
+    // AND no Recommend button. When the user clicks Recommend a Model later,
+    // recheckModelForAI's custom path fetches the full live list from the
+    // server and replaces this cache.
+    try {
+      localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models: [modelId] }));
+    } catch(e) { console.warn('[addImportServerModels] failed to cache model:', e); }
 
     aiList.push(ai);
     activeAIs.push(ai);

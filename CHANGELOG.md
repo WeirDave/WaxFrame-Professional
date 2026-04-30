@@ -2,6 +2,49 @@
 
 ---
 
+## v3.27.3 Pro — Build `20260429-022`
+**Released:** April 29, 2026
+
+**Import from Model Server now gets the Recommend a Model treatment.** Per work-side testing on Alfredo (Open WebUI gateway proxying 38 models): the Import flow itself worked fine — modal fetched, models populated, 33 selected, 5 already-in-hive markers correct. What was missing was the categorized recommendation feature for those imported AIs once they landed in the hive.
+
+### Two surgical changes inside `addImportServerModels`
+
+**1. Store `format: 'openai'` on each `API_CONFIGS[id]`.** `recheckModelForAI`'s custom path reads `cfg.format` to decide which `/v1/models` endpoint scheme to use. Open WebUI / Alfredo / generic model servers are OpenAI-compatible by definition — that's the whole premise of the Import from Model Server flow — so we set this explicitly at add time.
+
+**2. Persist a single-model `waxframe_models_${id}` cache** for each imported AI. Without this, the worker bee row's `buildModelSelector` returned `''` (no model list to render), which meant the dropdown didn't render AND the **Recommend a Model** button didn't render either — same gap that bit Custom AI in v3.27.1, just on the Import path. Now: dropdown renders immediately post-add with at least the imported model. When user clicks Recommend a Model, the existing custom path fetches the full live list from the server (Alfredo's all 38) and the AI returns the categorized 🎯 / ⚡ / 💰 picks.
+
+### What you'll see
+
+After importing N models from Alfredo, each row now shows:
+
+```
+Pick a model: [<imported model> ▾]  [Recommend a Model]
+```
+
+Click Recommend a Model →
+
+```
+Pick a model: [✨ [Base] Claude-4-7-Opus — Best Overall ▾]  [Recommend a Model]
+✨ Top reasoning depth across long-context document review tasks.
+```
+
+Open the dropdown:
+
+```
+✨ [Base] Claude-4-7-Opus — Best Overall
+[Base] Gemini-2-5-Pro
+⚡ [Base] Gemini-2.5-Flash-Lite — Fastest
+💰 [Base] GPT-4o-Mini — Budget
+[Base] Claude-4-6-Opus
+... (the other 33)
+```
+
+### Build sweep
+
+All four canonical stamps bumped to `20260429-022` and `3.27.3`. All six pages bumped on cache-busts.
+
+---
+
 ## v3.27.2 Pro — Build `20260429-021`
 **Released:** April 29, 2026
 
