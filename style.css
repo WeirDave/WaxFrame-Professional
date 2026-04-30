@@ -2513,19 +2513,22 @@ html, body {
    established laptop threshold) and when vertically compact (≤900px tall =
    devtools open, smaller laptops). Cards at full desktop (1422px+ wide AND
    900px+ tall) keep the v3.27.7/v3.27.9 sizing — at laptop sizes those
-   numbers eat too much vertical space, especially with devtools open. */
+   numbers eat too much vertical space, especially with devtools open.
+   v3.27.11: pulled cards down significantly further — aspect 2.6→3.2,
+   icon 42→32, padding 20/14/16→14/12/12, font 14→13. The v3.27.10 numbers
+   were still too tall at 1422×811. Target ~⅔ of v3.27.10 height. */
 @media (max-width: 1421px), (max-height: 900px) {
   .builder-pick-grid-large .builder-pick-btn {
-    padding: 20px 14px 16px;
-    gap: 10px;
-    aspect-ratio: 2.6 / 1;
+    padding: 14px 12px 12px;
+    gap: 6px;
+    aspect-ratio: 3.2 / 1;
   }
   .builder-pick-grid-large .builder-pick-icon {
-    width: 42px;
-    height: 42px;
+    width: 32px;
+    height: 32px;
   }
   .builder-pick-grid-large .builder-pick-name {
-    font-size: 14px;
+    font-size: 13px;
   }
 }
 /* v3.27.7: scoped icon + name overrides for the large variant only. The

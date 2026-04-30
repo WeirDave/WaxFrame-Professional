@@ -2,6 +2,27 @@
 
 ---
 
+## v3.27.11 Pro — Build `20260429-031`
+**Released:** April 29, 2026
+
+**Builder card laptop shrink — round 2.** v3.27.10 reduced laptop card sizing but not enough — at 1422×811 with devtools open, cards were still consuming too much vertical space. Pulled the laptop sizing further down (~⅔ of v3.27.10 height).
+
+### Change
+
+Same media query as v3.27.10 (`max-width: 1421px, max-height: 900px`), more aggressive numbers:
+
+| | v3.27.10 laptop | v3.27.11 laptop |
+|---|---|---|
+| Aspect ratio | 2.6 / 1 | 3.2 / 1 |
+| Padding | 20px 14px 16px | 14px 12px 12px |
+| Inner gap | 10px | 6px |
+| Icon | 42px | 32px |
+| Name font | 14px | 13px |
+
+Desktop sizing (1422px+ wide AND 900px+ tall) is unchanged.
+
+---
+
 ## v3.27.10 Pro — Build `20260429-030`
 **Released:** April 29, 2026
 
