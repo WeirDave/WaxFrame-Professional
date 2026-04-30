@@ -536,7 +536,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-023';         // build stamp — update each session
+const BUILD       = '20260429-024';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2811,6 +2811,51 @@ async function testAllKeys() {
   if (closeBtn) { closeBtn.disabled = false; closeBtn.textContent = '← Close'; }
 }
 
+// v3.27.5 — batch recommend.
+// Runs recheckModelForAI sequentially across every AI eligible for a
+// recommendation: those with a saved key (defaults + auth'd customs) plus
+// those imported from a model server with no key but a _modelsEndpoint
+// (Ollama / LM Studio / unauth'd Open WebUI). Sequential rather than
+// parallel to avoid hammering rate limits on shared endpoints like Alfredo.
+// Per-AI feedback is delegated to recheckModelForAI's existing toasts and
+// row re-renders; this wrapper only manages confirmation, progress label
+// on the toolbar button, and a final summary toast.
+async function recommendModelsForAll() {
+  const eligible = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return !!cfg?._key || !!cfg?._modelsEndpoint;
+  });
+  if (!eligible.length) {
+    toast('⚠️ No AIs eligible for model recommendation — add a key or import from a model server first');
+    return;
+  }
+
+  if (!await wfConfirm(
+    'Recommend Models for All',
+    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best model? This runs sequentially and may take 30s–2min depending on AI count and network.`
+  )) return;
+
+  const btn = document.getElementById('recommendAllBtn');
+  const origLabel = btn ? btn.textContent : null;
+  if (btn) btn.disabled = true;
+
+  let done = 0;
+  for (const ai of eligible) {
+    if (btn) btn.textContent = `Asking ${++done}/${eligible.length}…`;
+    try {
+      await recheckModelForAI(ai.id);
+    } catch(e) {
+      // recheckModelForAI handles its own error toasts; we just log here so
+      // a thrown exception in one AI doesn't break the loop for the rest.
+      console.warn(`[recommend-all] ${ai.name} threw:`, e);
+    }
+    if (done < eligible.length) await new Promise(r => setTimeout(r, 400));
+  }
+
+  if (btn) { btn.disabled = false; btn.textContent = origLabel; }
+  toast(`✓ Recommend Models for All complete (${eligible.length} processed)`, 5000);
+}
+
 // Per-AI test logic — runs one key against its provider, updates the row icon
 // and the _tkpData record. Used by both the initial Test All run and the
 // retest flows (single row + retest-all-failures). Does NOT compute tally —
@@ -3599,7 +3644,14 @@ async function recheckModelForAI(id) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
-  if (!cfg?._key) { toast(`⚠️ ${ai.name} has no API key`); return; }
+  // v3.27.5: customs imported via the Model Server flow store _modelsEndpoint
+  // and may legitimately have no API key (Ollama / LM Studio / Open WebUI
+  // running without auth). The downstream calls (fetchModelsFromEndpoint
+  // and recommendModel) already handle empty key correctly for OpenAI-format,
+  // so the only blocker was this early guard. Defaults and customs without
+  // _modelsEndpoint still require a key.
+  const hasModelsEndpoint = !!cfg?._modelsEndpoint;
+  if (!cfg?._key && !hasModelsEndpoint) { toast(`⚠️ ${ai.name} has no API key`); return; }
 
   const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
 
@@ -4104,7 +4156,12 @@ async function testCustomAIConnection() {
 
   const baseConfigs = {
     openai: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+      // v3.27.5: omit Authorization when key is empty (see addImportServerModels for full rationale)
+      headersFn: k => {
+        const h = { 'Content-Type': 'application/json' };
+        if (k) h['Authorization'] = `Bearer ${k}`;
+        return h;
+      },
       bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] })
     },
     anthropic: {
@@ -4198,7 +4255,12 @@ function addCustomAI() {
   // Build API config based on selected format
   const baseConfigs = {
     openai: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+      // v3.27.5: omit Authorization when key is empty (see addImportServerModels for full rationale)
+      headersFn: k => {
+        const h = { 'Content-Type': 'application/json' };
+        if (k) h['Authorization'] = `Bearer ${k}`;
+        return h;
+      },
       bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => d?.choices?.[0]?.message?.content || ''
     },
@@ -4838,7 +4900,17 @@ function addImportServerModels() {
       // servers are OpenAI-compatible by definition since this flow assumes
       // an OpenAI-compatible chat completions endpoint.
       format:    'openai',
-      headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+      headersFn: k => {
+        // v3.27.5: omit Authorization entirely when no key is set rather than
+        // sending the literal string "Bearer undefined". Ollama, LM Studio,
+        // and unauth'd Open WebUI tolerate the bogus header today, but stricter
+        // implementations (or future auth changes on these servers) could
+        // reject it. Aligns with fetchModelsFromEndpoint and recommendModel,
+        // which already gate Authorization on key presence.
+        const h = { 'Content-Type': 'application/json' };
+        if (k) h['Authorization'] = `Bearer ${k}`;
+        return h;
+      },
       bodyFn:    (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] }),
       extractFn: d => d?.choices?.[0]?.message?.content || ''
     };

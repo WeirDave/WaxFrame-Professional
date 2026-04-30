@@ -2,6 +2,31 @@
 
 ---
 
+## v3.27.5 Pro — Build `20260429-024`
+**Released:** April 29, 2026
+
+**Recommend Models for All + no-auth local server support (Ollama / LM Studio / unauth'd Open WebUI).** Three related fixes that together let the model recommendation flow work without requiring delete-and-re-add, and across the full spectrum of model server auth setups.
+
+### Changes
+
+**1. New "Recommend Models for All" toolbar button on the Bees screen.** Loops `recheckModelForAI` sequentially across every eligible AI (those with a saved key OR a stored `_modelsEndpoint`). Sequential rather than parallel to avoid hammering rate limits on shared endpoints like Alfredo. Per-AI feedback is delegated to the existing per-row toasts and dropdown re-renders; the wrapper manages confirmation, button progress label (`Asking 3/8…`), and a final summary toast. 400ms gap between calls.
+
+**2. `recheckModelForAI` no longer requires an API key when the AI was imported from a model server.** The early-bail guard was rejecting Ollama / LM Studio / unauth'd Open WebUI imports because their `_key` is empty. The new guard accepts `_modelsEndpoint` as a structural marker that the AI is server-imported and may legitimately run without auth. Defaults and customs added via Add Custom AI without a key still require a key. Downstream functions (`fetchModelsFromEndpoint`, `recommendModel`) already handled empty key correctly for OpenAI-format — the early guard was the only blocker.
+
+**3. `headersFn` no longer sends literal `Authorization: Bearer undefined` when key is empty.** Three locations had the same anti-pattern: `addImportServerModels`, `addCustomAI`, and `testCustomAIConnection`. All three now conditionally include the Authorization header only when a key is present. Ollama, LM Studio, and unauth'd Open WebUI tolerate the bogus header today, but stricter implementations or future auth changes could reject it. Aligns with `fetchModelsFromEndpoint` and `recommendModel`, which already gated Authorization on key presence.
+
+### Audit cleanup
+
+Spotted during the per-release audit: `.ref-clear-all-btn` had two unnecessary `!important` declarations on `font-size` and `padding` that were preemptive overcaution. Specificity analysis: `.btn-sm` (line 286) and `.ref-clear-all-btn` (line 7881) both resolve to (0,1,0); since `.ref-clear-all-btn` appears later in the file, source order already gave it the win. Both `!important` flags removed.
+
+### Use case
+
+Renew an Anthropic key six months from now. New Claude models have shipped. Click **Recommend Models for All** on the Bees screen → every keyed AI re-evaluates against its current model list and re-tags the dropdown with ✨ (Best) / ⚡ (Fastest) / 💰 (Budget). No deletion, no re-import.
+
+For Ollama users running without auth: import the server, click Recommend a Model on any row (or use Recommend Models for All) and it now works instead of toasting "no API key".
+
+---
+
 ## v3.27.4 Pro — Build `20260429-023`
 **Released:** April 29, 2026
 
