@@ -2,6 +2,13 @@
 
 ---
 
+## v3.27.12 Pro — Build `20260429-032`
+**Released:** April 29, 2026
+
+**Builder card laptop shrink — final nudge.** v3.27.11 was close but cards needed a few more pixels off. Aspect-ratio bumped from `3.2 / 1` to `3.6 / 1`, padding tightened from `14px 12px 12px` to `12px 12px 10px`. Same media query target. Desktop unchanged.
+
+---
+
 ## v3.27.11 Pro — Build `20260429-031`
 **Released:** April 29, 2026
 
