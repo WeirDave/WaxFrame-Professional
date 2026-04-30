@@ -6544,9 +6544,10 @@ kbd {
 }
 
 /* ══════════════════════════════════════
-   TROUBLESHOOTING CARD (v3.28.0)
+   TROUBLESHOOTING CARD (v3.28.0, theming fixes v3.28.2)
    Plain-English failure surface. Composes with existing
    .finish-modal-overlay / .finish-modal scaffolding.
+   All colors flow through theme variables so dark/light auto-swap.
 ═══════════════════════════════════════ */
 .tc-overlay .tc-modal {
   max-width: 560px;
@@ -6593,7 +6594,7 @@ kbd {
 }
 .tc-action-btn:hover {
   background: var(--accent);
-  color: #000;
+  color: var(--surface);
   border-color: var(--accent);
 }
 .tc-details-wrap {
@@ -6604,7 +6605,7 @@ kbd {
 .tc-details-toggle {
   background: transparent;
   border: none;
-  color: var(--text-muted, #999);
+  color: var(--text-dim);
   font-size: 0.85rem;
   cursor: pointer;
   padding: 4px 0;
@@ -6623,7 +6624,7 @@ kbd {
 }
 .tc-details {
   display: none;
-  background: rgba(0, 0, 0, 0.35);
+  background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   padding: 12px;
@@ -6652,6 +6653,134 @@ kbd {
   font-size: 0.8rem;
   padding: 6px 12px;
 }
+/* Light theme — surface2 alone reads too bright against the modal panel,
+   so the technical-details block gets a slightly tinted variant. */
+[data-theme="light"] .tc-details {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border);
+}
+
+/* ══════════════════════════════════════
+   DEEP DIVE VIEWER (v3.28.2)
+   Modal showing the ring buffer captures as a clean table.
+   Replaces the previous "type WF_DEBUG.ringBuffer in DevTools" workflow.
+   All colors flow through theme variables; light overrides at bottom.
+═══════════════════════════════════════ */
+.ddv-overlay .ddv-modal {
+  max-width: 920px;
+  text-align: left;
+}
+.ddv-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+.ddv-icon {
+  font-size: 1.4em;
+  flex-shrink: 0;
+}
+.ddv-count-badge {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
+  letter-spacing: 0.04em;
+  font-family: var(--font);
+  margin-left: auto;
+}
+.ddv-body {
+  text-align: left;
+  margin-top: 8px;
+}
+.ddv-status {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+  margin: 0 0 14px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border2);
+  background: var(--surface2);
+}
+.ddv-status-off    { border-color: rgba(245, 166, 35, 0.45); background: rgba(245, 166, 35, 0.10); }
+.ddv-status-empty  { /* uses default surface2 */ }
+.ddv-status-on     { border-color: rgba(45, 212, 191, 0.45); background: rgba(45, 212, 191, 0.10); }
+.ddv-table-wrap {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin-bottom: 14px;
+  max-height: 440px;
+  overflow-y: auto;
+}
+.ddv-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+.ddv-table thead {
+  background: var(--surface2);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.ddv-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border-bottom: 1px solid var(--border2);
+  white-space: nowrap;
+}
+.ddv-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border2);
+  color: var(--text);
+  vertical-align: top;
+}
+.ddv-table tr:last-child td {
+  border-bottom: none;
+}
+.ddv-table tr:hover td {
+  background: var(--accent-dim);
+}
+.ddv-table .ddv-mono {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  color: var(--text);
+  word-break: break-word;
+}
+.ddv-table .ddv-num {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.8rem;
+  text-align: right;
+  white-space: nowrap;
+}
+.ddv-table .ddv-empty {
+  text-align: center;
+  padding: 32px 16px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+.ddv-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+/* Light theme — alpha-tinted status banners need stronger saturation
+   to remain visible on a white surface */
+[data-theme="light"] .ddv-status-off { background: rgba(201, 124, 6, 0.14); border-color: rgba(201, 124, 6, 0.40); }
+[data-theme="light"] .ddv-status-on  { background: rgba(13, 148, 136, 0.14); border-color: rgba(13, 148, 136, 0.40); }
 
 /* ══════════════════════════════════════
    MOBILE NOT SUPPORTED OVERLAY

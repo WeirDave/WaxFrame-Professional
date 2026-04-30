@@ -2,6 +2,44 @@
 
 ---
 
+## v3.28.2 — Deep Dive Viewer + Card theming + Troubleshooting toggle removed
+**Build:** `20260430-003` · **Released:** April 30, 2026
+
+### Troubleshooting toggle removed
+
+The `🩺 Troubleshooting` button is gone from the Dev Toolbar. Better error messages are strictly better than worse ones — there's no scenario a user wants the old terse-red-line behavior. The "toggle" framing was a mistake on my part. Cards always fire on classified errors. No knob, no menu, just how WaxFrame handles errors now.
+
+`WF_DEBUG.troubleshootingOn`, `WF_DEBUG.setTroubleshooting()`, and the `waxframe_troubleshooting` localStorage key all removed. The guards inside `showCard` and `showRoundErrorModal` removed too.
+
+### Deep Dive Capture Viewer
+
+The Deep Dive ring buffer introduced in v3.28.0 now has a proper UI — no more typing `WF_DEBUG.ringBuffer` into DevTools. New `📋 View Captures` button on the Dev Toolbar opens a modal with an eight-column table (time, AI, provider, model, elapsed, chars, words, finish reason) showing every captured round, newest first. Three actions: Copy as JSON, Clear buffer, Refresh. Smart status banner at top shows OFF / ON-empty / ON-with-data states.
+
+### Theme fixes
+
+Both the Troubleshooting Card and the Deep Dive Viewer had hardcoded `rgba(0,0,0,0.35)` and `var(--text-muted, #999)` (the variable doesn't even exist) that broke against the light theme and were inconsistent on dark. All hardcoded colors replaced with proper CSS variables (`--surface2`, `--border2`, `--text-dim`, `--accent-dim`) so the theme system handles both modes automatically. Added explicit light-theme overrides for the alpha-tinted status banners which need stronger saturation against a white surface.
+
+### Dev triggers for theme review
+
+Two new buttons on the Dev Toolbar so the developer can preview these surfaces in both themes without forcing real errors:
+
+- **▶ Test Card** — cycles through every entry in `WF_ERROR_CATALOG` on each click, firing a representative card with realistic context. After 14 clicks, wraps back to the first.
+- **▶ Test Viewer** — seeds 6 fake captures into the ring buffer and opens the Deep Dive Viewer immediately. Lets you eyeball the table layout, status banner, and theming without running real rounds.
+
+### Architecture
+
+- New methods on `WF_DEBUG`: `openViewer`, `closeViewer`, `_renderViewer`, `copyViewer`, `clearViewer`, `testCard`, `testViewer`
+- New `deepDiveViewer` modal in `index.html`, adjacent to `troubleshootingCard`, sharing `finish-modal` scaffolding
+- New CSS block for `.ddv-*` classes covering table layout, sticky header, state-keyed status banner colors with light-theme overrides
+- Two new dev triggers in the Dev Toolbar, slotted alongside the existing animation triggers (Unlock Scene / Fly-in / Majority / Unanimous)
+
+### Notes
+
+- No data changes, no storage changes, fully backward compatible
+- Capture format unchanged from v3.28.0 — what was captured then is exactly what the viewer renders now
+
+---
+
 ## v3.28.1 — Smarter classifier, model filter, modal & button fixes
 **Build:** `20260430-002` · **Released:** April 30, 2026
 
@@ -31,6 +69,7 @@ The "👑 Change Builder" button on the Round Not Saved modal had no visible tex
 
 - Backward compatible — no data changes, no storage changes
 - Card system foundation from v3.28.0 unchanged; this release just fixes the bugs that surfaced once it was live
+- File structure: All seven of WaxFrame's own JS files moved into a new `js/` subfolder to match the existing `fonts/`, `sounds/`, `images/`, `lib/` pattern. Files moved: `app.js`, `version.js`, `theme.js`, `nav-helper.js`, `license-helper.js`, `api-links.js`, `docs-scrollspy.js`. All `<script>` src references across the 6 HTML pages updated. Third-party libraries in `lib/` (PDF.js, mammoth, JSZip, SheetJS) untouched — already correctly placed. The Open Font License (`OFL.txt`) was also moved into `fonts/` where it logically belongs alongside the typeface files it covers.
 
 ---
 
