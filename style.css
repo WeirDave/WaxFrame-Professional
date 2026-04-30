@@ -7774,15 +7774,19 @@ kbd {
 .proj-meta-row {
   display: flex;
   gap: 16px;
-  margin-bottom: 24px;
+  margin-bottom: 8px;
   flex-wrap: wrap;
 }
 .proj-field-wrap--name { flex: 1; min-width: 260px; }
 .proj-field-wrap--ver  { width: 160px; flex-shrink: 0; }
 
 .proj-goal-section-hdr {
-  border-top: 1px solid var(--border);
-  padding-top: 20px;
+  /* v3.27.6: dropped border-top + reduced padding-top. The divider plus
+     24px meta-row margin + 20px header padding combined to make the screen
+     read as two separate cards. Project Name/Version belong with the
+     Your Project header as metadata; Project Goal is a sub-grouping under
+     the same card, not a sibling section. */
+  padding-top: 16px;
   margin-bottom: 16px;
 }
 .proj-goal-section-title {
