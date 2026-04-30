@@ -2,6 +2,13 @@
 
 ---
 
+## v3.27.13 Pro — Build `20260429-033`
+**Released:** April 29, 2026
+
+**Last pixel.** Aspect ratio bumped 3.6 / 1 → 3.8 / 1 to eliminate the final tiny scroll on 1422×811 laptop viewports.
+
+---
+
 ## v3.27.12 Pro — Build `20260429-032`
 **Released:** April 29, 2026
 

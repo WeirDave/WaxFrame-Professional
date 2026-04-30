@@ -2521,7 +2521,7 @@ html, body {
   .builder-pick-grid-large .builder-pick-btn {
     padding: 12px 12px 10px;
     gap: 6px;
-    aspect-ratio: 3.6 / 1;
+    aspect-ratio: 3.8 / 1;
   }
   .builder-pick-grid-large .builder-pick-icon {
     width: 32px;
