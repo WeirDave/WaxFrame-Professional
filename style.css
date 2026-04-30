@@ -7879,8 +7879,11 @@ kbd {
   margin-left: auto;
 }
 .ref-clear-all-btn {
-  font-size: 11px !important;
-  padding: 4px 10px !important;
+  /* v3.27.5: dropped the two !important flags. .btn-sm at line 286 and this
+     rule at line 7881 both have specificity (0,1,0); source order already
+     gives this rule the win. The !important was preemptive overcaution. */
+  font-size: 11px;
+  padding: 4px 10px;
   color: var(--text-dim);
   border-color: var(--border2);
 }
