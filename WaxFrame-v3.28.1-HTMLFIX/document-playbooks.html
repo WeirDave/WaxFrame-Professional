@@ -1,0 +1,1400 @@
+<!-- ============================================================
+     WaxFrame — document-playbooks.html
+     Build: 20260430-002
+     Author: WeirDave (R David Paine III) | License: AGPL-3.0
+     GitHub: github.com/WeirDave/WaxFrame-Professional
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260430-002">
+  <title>WaxFrame — Document Playbooks</title>
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.28.1">
+</head>
+<body class="helper-body">
+
+<!-- ========================================================
+     SLIM HELPER-PAGE NAV MENU (v3.22.5)
+     ======================================================== -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Documentation</div>
+    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Create Something</div>
+    <a class="nav-item" href="index.html" target="_blank" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Support</div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Advanced</div>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+  </div>
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE HEADER (v3.22.5)
+     ======================================================== -->
+<div class="page-header">
+  <div class="page-header-left">
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+  </div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
+    <div class="page-header-brand-text">
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Many minds, one refined result.</div>
+      <span class="app-version-stamp helper-version-stamp"></span>
+    </div>
+  </div>
+  <div class="page-header-controls">
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+  </div>
+</div>
+
+<div class="page-main" id="top">
+
+  <div class="hp-section">
+    <div class="hp-section-header">
+      <img src="images/WaxFrame_Project_Bee_v2.png" alt="🐝" class="hp-section-bee">
+      <div class="hp-section-title-block">
+        <h1 class="hp-section-title">Put the hive to work on a real document</h1>
+        <p class="hp-section-sub">Each playbook gives you the exact text to enter into every WaxFrame field for a specific document type. Open WaxFrame on one screen and this page on another. Work through the fields top to bottom — replace anything in [brackets] with your own information.</p>
+        <p class="hp-section-sub">New to WaxFrame? Read the <a href="waxframe-user-manual.html" target="_blank" class="link-accent">User Manual</a> first — it walks you through every screen step by step.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="doc-layout">
+
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <a href="#quick-start" class="doc-sidebar-quickstart">
+          <span class="doc-sidebar-quickstart-star">⭐</span>
+          <span>
+            <span class="doc-sidebar-quickstart-label">Quick Start</span>
+            <span class="doc-sidebar-quickstart-sub">First time? Start here.</span>
+          </span>
+        </a>
+
+        <div class="doc-sidebar-category">Career &amp; Hiring</div>
+        <a href="#cover-letter"        class="doc-sidebar-link">✉️ Cover Letter</a>
+        <a href="#job-description"     class="doc-sidebar-link">🔍 Job Description</a>
+        <a href="#resume"              class="doc-sidebar-link">📄 Résumé</a>
+        <a href="#thank-you"           class="doc-sidebar-link">🙏 Thank-You Letter</a>
+
+        <div class="doc-sidebar-category">Business &amp; Sales</div>
+        <a href="#business-proposal"   class="doc-sidebar-link">💼 Business Proposal</a>
+        <a href="#email-campaign"      class="doc-sidebar-link">📬 Email / Outreach</a>
+        <a href="#executive-summary"   class="doc-sidebar-link">📊 Executive Summary</a>
+        <a href="#rfp"                 class="doc-sidebar-link">📋 RFP Response</a>
+
+        <div class="doc-sidebar-category">Content &amp; Marketing</div>
+        <a href="#blog-post"           class="doc-sidebar-link">📝 Blog Post / Article</a>
+        <a href="#presentation"        class="doc-sidebar-link">🖥️ Presentation Outline</a>
+
+        <div class="doc-sidebar-category">Personal &amp; Everyday</div>
+        <a href="#recipe"              class="doc-sidebar-link">🍳 Recipe</a>
+      </div>
+    </aside>
+
+    <div class="doc-main">
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title">⭐ Quick Start</h2>
+            <p class="hp-section-sub">First time? Run this playbook. Universal, low stakes, converges fast, and walks you through every screen.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- QUICK START — CHOCOLATE CHIP COOKIES -->
+    <!-- ═══════════════════════════════════════════════ -->
+    <div class="dp-playbook dp-playbook--quickstart" id="quick-start">
+      <div class="dp-playbook-header dp-playbook-header--quickstart">
+        <div class="dp-playbook-icon">⭐</div>
+        <div>
+          <div class="dp-playbook-title">Quick Start — Chocolate Chip Cookies</div>
+          <div class="dp-playbook-desc">New to WaxFrame? Run this playbook first. Universal, low stakes, converges fast, and walks you through every screen.</div>
+        </div>
+      </div>
+      <div class="dp-playbook-body">
+
+        <div class="dp-quickstart-intro">
+          <p>This is a guided test run. Classic chocolate chip cookies — pantry ingredients, familiar territory for almost everyone — built from scratch by the hive. It will give you a feel for what WaxFrame does without any domain pressure. The goal fields below are written in plain human voice, the way you'd actually describe what you want to a friend. With a well-phrased goal, the hive typically converges in 2 rounds.</p>
+        </div>
+
+        <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+        <p class="dp-section-sub">Copy each value into the matching field on the Project screen. Fields marked * are required to continue.</p>
+
+        <table class="dp-table">
+          <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+          <tbody>
+            <tr><td class="dp-table-field">Project name *</td><td>Chocolate Chip Cookies</td></tr>
+            <tr><td class="dp-table-field">Version *</td><td>v1</td></tr>
+            <tr><td class="dp-table-field">Document type *</td><td>Recipe</td></tr>
+            <tr><td class="dp-table-field">Target audience *</td><td>Myself and friends that enjoy chocolate chip cookies that are easy to make</td></tr>
+            <tr><td class="dp-table-field">Desired outcome *</td><td>Create a recipe that is simple and easy but makes great cookies</td></tr>
+            <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Leave blank</td></tr>
+            <tr><td class="dp-table-field">Tone &amp; voice</td><td>Leave blank</td></tr>
+            <tr><td class="dp-table-field">Additional instructions</td><td>No extra ingredients like nuts</td></tr>
+            <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Leave blank</td></tr>
+          </tbody>
+        </table>
+
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+
+        <p>Click <strong>Start from Scratch</strong> and leave the text box empty. That's it — the six goal fields above are all the hive needs. Head to the work screen and click <strong>Smoke the Hive</strong>.</p>
+
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">Rounds</div>
+          <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>2 rounds typical — draft in round 1, majority convergence in round 2 (measured, not estimated)</div></div>
+        </div>
+        <div class="dp-field-divider"></div>
+
+        <div class="dp-field">
+          <div class="dp-field-label">What to Watch For</div>
+          <div class="dp-field-value">
+            <p class="dp-tight-p">This is your first hands-on look at the workflow. While you run it, pay attention to:</p>
+            <ul class="dp-tight-list">
+              <li>How the reviewers propose numbered changes in the Live Console</li>
+              <li>How the Builder decides which suggestions to accept, reject, or flag</li>
+              <li>How conflicts appear when AIs disagree — and how you resolve them</li>
+              <li>How the working document evolves between rounds</li>
+              <li>How quickly the hive converges when the goal is well-defined</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Once the cookies run converges, you've seen the full WaxFrame flow end to end. Export the final recipe if you want a souvenir, then click <strong>🏁 Finish</strong> on the work screen and choose <strong>Start New Project</strong> to wipe the session and begin work on your real document. The playbooks below have field-by-field templates for common document types — pick the one closest to what you're writing.</p></div>
+        </div>
+
+      <a href="#top" class="dp-back-top">↑ Back to top</a>
+      </div>
+    </div>
+
+        </div><!-- /hp-section-body Quick Start -->
+      </div><!-- /hp-section Quick Start -->
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: CAREER & HIRING -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-career">Career &amp; Hiring</h2>
+            <p class="hp-section-sub">Résumés, cover letters, job descriptions, thank-you notes. High-stakes writing where audience and positioning matter and multiple reviewers catch drift a solo AI misses.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="dp-playbook" id="cover-letter">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">✉️</div>
+      <div>
+        <div class="dp-playbook-title">Cover Letter</div>
+        <div class="dp-playbook-desc">Create or refine a cover letter that connects your background directly to a specific role.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Cover letter</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Hiring manager at [company name] reviewing applications for a [job title] position</td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader wants to interview me. Three short paragraphs: a strong opening hook, a direct connection between my experience and the role, and a confident close with a clear call to action.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Three paragraphs maximum. No generic openers like "I am writing to express my interest." No filler phrases. No sign-offs like "I look forward to hearing from you."</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Professional / conversational / enthusiastic] — pick one that fits the company</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not add claims about my experience that are not supported by what I provide. Do not fabricate anything.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a cover letter from scratch using only the talking points I provide in Notes. Three paragraphs: strong hook, direct connection to the role, confident close with a call to action.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing cover letter text using the Paste Text button.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste your talking points: why you are a fit for this specific role, one concrete accomplishment to highlight, and what specifically excites you about the company or position.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Rounds</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>6–10 rounds typical — cover letters take more rounds than other short documents because each round tunes specificity of the hook and tightens the role connection (measured, not estimated)</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-blue">Claude — voice &amp; authenticity</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — punchy rewrites</span>
+            <span class="dp-tag dp-tag-purple">Grok — tone calibration</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>On Setup 4 — Reference Material, paste the full job description. The hive will see it every round and check that your cover letter language, emphasis, and examples actually match what the employer is asking for. The AIs cannot visit URLs, but a pasted JD gives them direct authoritative source to cite against — much more reliable than describing the role in Notes.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="job-description">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">🔍</div>
+      <div>
+        <div class="dp-playbook-title">Job Description</div>
+        <div class="dp-playbook-desc">Write a job posting that attracts the right candidates and accurately represents the role.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Job description</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Candidates applying for a [job title] role — be specific: e.g. <em>Mid-level software engineers with 3–5 years of experience</em>, <em>Entry-level candidates in defense or aerospace</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Qualified candidates immediately understand the role, the requirements, and why the job is worth applying for. Unqualified candidates self-select out. Responsibilities are listed in order of importance, most critical first.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>List responsibilities from most important to least. Flag any must-have requirement that could unnecessarily narrow the candidate pool. Include a brief company culture statement at the end. Salary range: [amount or write OMIT].</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Professional / startup / enterprise] — match the culture of the company</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not add requirements that are not on my original list. Do not soften or remove must-have qualifications without flagging it as a suggestion first.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete job description for a [job title] role at a [company type] from the list of responsibilities and requirements I provide in Notes. List responsibilities by importance, most critical first.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — JD that took 21 rounds</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own role and notes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>JD — Network Engineer Altura Systems</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Job description</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Network engineers with 3 to 7 years of experience, currently at an MSP or small-to-mid enterprise, who want more hands-on work and less ticket-queue churn</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Qualified candidates read it and apply. The non-qualified self-select out — we don't need to filter through 200 resumes. Responsibilities ranked by time spent, not vanity.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Salary range goes at the top, not buried. List must-haves separately from nice-to-haves. No jargon like "ninja" or "rockstar." Include one sentence about the company culture that is actually true — we are small, loud, and nobody micromanages.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Honest and specific, not startup-cute. Write like a person, not a recruiter.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>If any required qualification looks like it would narrow the pool unnecessarily, flag it and suggest an alternative. Do not list certifications as required — list them as preferred.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Leave blank</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Notes payload (paste into the Notes drawer before clicking Smoke the Hive on Round 1):</strong></div>
+<pre>Role: Network Engineer, full-time, in-office 3 days per week, hybrid otherwise
+Location: Tampa, FL
+Salary: $95k to $120k DOE + profit share
+We are Altura Systems, 14 people, IT services for small healthcare and law firms across Florida.
+Responsibilities, in order of time spent:
+- Design and deploy small-to-mid office networks (40 to 200 users), mostly Cisco Meraki and UniFi
+- Troubleshoot client network issues — remote and on-site
+- Run site surveys and wireless heatmaps with Ekahau
+- Document everything in our internal wiki
+- Occasional after-hours cutovers, comp time given
+Must have:
+- 3+ years hands-on network engineering
+- Comfortable with Meraki or equivalent cloud-managed platform
+- Can read a switch config and know what's broken
+- Clean driving record (client site travel)
+Preferred:
+- CCNA or equivalent
+- Any wireless certs (CWNA, CWDP)
+- MSP background
+Culture: small team, we fix our own mistakes, no politics, no unnecessary meetings, you own your work end to end.</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing job description using the Paste Text button.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste your list: core responsibilities, required qualifications, nice-to-haves, and any company culture detail you want included.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈19 minutes · 21 rounds (measured, not estimated) — even from scratch with full reference materials, real convergence on a quality JD takes 20+ rounds, not 3–5. Round 21 reached majority convergence (3 of 4 AIs satisfied) with the holdout offering minor wording suggestions.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — clear structure</span>
+            <span class="dp-tag dp-tag-blue">Claude — inclusive language</span>
+            <span class="dp-tag dp-tag-green">Gemini — role benchmarking</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Before Round 1, open Notes and write: <em>"Flag any must-have requirement that could reasonably be a nice-to-have — overly strict requirements reduce applicant quality by narrowing the pool too early."</em></p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="resume">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📄</div>
+      <div>
+        <div class="dp-playbook-title">Résumé</div>
+        <div class="dp-playbook-desc">Polish a draft résumé for a specific role, or generate one from your career notes.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. Fields marked * are required to continue.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Résumé</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. <em>Hiring manager at a defense technology company</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader invites me to interview. The résumé shows clear impact and achievements, not just job duties. Every bullet demonstrates value.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Do not fabricate experience. Do not remove job titles, companies, or dates. Strengthen what is already there — do not invent.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Confident, professional, action-oriented — strong verbs, no passive voice, no "responsible for"</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not remove or change any metrics, percentages, or dates — these are factual and verified by me.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter <strong>1</strong> · select <strong>Pages</strong> for a one-page résumé, or <strong>2</strong> for two pages</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete résumé for a [job title] role from the notes I provide. Use only what I give you — do not add experience I have not mentioned.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Build only from my notes. Do not fabricate any experience, skills, or achievements.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Résumé that took 11 rounds</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own resume and notes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Resume — Dana Reyes Wireless</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Résumé</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Hiring manager at a mid-size enterprise or defense-adjacent company reviewing candidates for Senior Wireless Engineer roles</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Reader invites me to interview. The résumé leads with impact — not job duties. Every bullet shows a result, a scale, or a problem solved.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Do not invent experience. Do not remove job titles, companies, or dates. Strengthen what is there. Tighten the older entries so the more recent work gets more space. No "responsible for." No "utilized" when "used" works.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Confident, direct, active verbs.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any numbers, dates, percentages, or dollar amounts. Those are verified.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Enter <strong>1</strong> · select <strong>Pages</strong></td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Paste Text</strong> and paste the text below</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Paste this as the starting document:</strong></div>
+<pre>Dana Reyes
+Tampa, FL · dana.reyes@example.com · 813-555-0114
+
+Summary
+Wireless network engineer with 8 years of experience. CWNA, CWDP, CWAP. Aruba, Cisco Meraki, and Ruckus. Specializes in warehouse and industrial RF environments.
+
+Experience
+
+Senior Wireless Engineer, Vantage Logistics — Jan 2022 to Present
+- Responsible for wireless network across 12 warehouse sites and 3 corporate offices
+- Led migration from Cisco Meraki to Aruba ArubaOS 8
+- Did site surveys with Ekahau
+- Supported autonomous mobile robots operating on the floor
+
+Wireless Engineer, Meridian IT Services — Jun 2018 to Dec 2021
+- MSP role supporting 30+ small and mid-size clients
+- Handled escalations for wireless issues
+- Designed networks for new client buildouts
+
+Network Technician, Gulfstream Communications — Aug 2016 to May 2018
+- Installed and configured wireless access points
+- Ran cable, tested drops, closed tickets
+
+Certifications
+CWNA, CWDP, CWAP, Aruba ACMA
+
+Education
+BS Information Technology, University of South Florida — 2016</pre>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Mid-stream Notes injection — paste between Round 2 and Round 3, not at the start:</strong></div>
+        <div class="dp-real-example-sub dp-real-example-sub--continuation">This run deliberately held key facts back until Round 2 — letting the hive first read the existing draft on its own terms. After Round 2 completed, the Notes drawer (📝 Notes in the top bar) was opened and the payload below pasted in. The next launch ran as a Builder Only round, incorporating the new facts directly without another round of reviewer voting. Notes are one-shot — applied to the next round only, then cleared automatically. This is the right place to drop "I forgot to mention" details or new context mid-project without restarting from scratch.</div>
+<pre>Job posting I'm targeting: Senior Wireless Engineer at a defense technology company. They emphasize industrial RF, mobility for robotics, and large-scale deployments. Title on posting is "Senior Wireless Network Engineer."
+
+Things I forgot to include in my resume:
+- At Vantage, I cut wireless-related Tier-1 tickets by 42% year-over-year after the Aruba migration
+- Designed the RF for a 46-foot ceiling warehouse in Memphis with 6-foot aisle widths — unusual deployment, delivered on time, zero post-deployment escalations
+- At Meridian I was the only engineer with CWAP — became the go-to escalation point for wireless issues across all clients</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Upload your résumé file (Word or PDF) using the Upload File button, or paste the text using Paste Text. If uploading a PDF, use a text-based export — not a designed template file — for best results.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before clicking Smoke the Hive on Round 1, open the Notes drawer (📝 Notes in the top bar) and paste your career details: job titles, companies, dates, key achievements, skills, and education.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈11 minutes · 11 rounds (measured, not estimated) — even refining a strong existing draft with reference materials and notes, real convergence on a quality résumé takes 10+ rounds. Round 11 reached majority convergence (4 of 6 AIs satisfied) with 3 of those 4 simply confirming no further changes needed.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — clean rewrites</span>
+            <span class="dp-tag dp-tag-blue">Claude — tone &amp; structure</span>
+            <span class="dp-tag dp-tag-green">Gemini — keyword alignment</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>On Setup 4 — Reference Material, paste the full job description from the posting. The hive will align language, emphasis, and skill phrasing to the actual role on every round — this is one of the highest-leverage moves you can make on a résumé. Notes are cleared after each round; reference material persists, so you only have to paste it once.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="thank-you">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">🙏</div>
+      <div>
+        <div class="dp-playbook-title">Thank-You Letter</div>
+        <div class="dp-playbook-desc">Write a warm, genuine thank-you for any professional or personal occasion.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Thank-you letter</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>The person receiving it — be specific: e.g. <em>My hiring manager John Smith</em>, <em>A client named Sarah at Acme Corp</em>, <em>My mentor Dr. Jones</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader feels genuinely appreciated and remembers the specific moment I am referencing.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>No generic openers like "I hope this finds you well." No corporate sign-offs like "Best regards." One specific moment or gesture must be named — no vague thank-yous.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Warm and personal / professional but sincere / heartfelt] — pick one</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Reference the specific thing I am thanking them for. Do not add any details I have not provided. Do not fabricate anything.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter <strong>200</strong> · select <strong>Words</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a thank-you letter from scratch using only the bullet points I provide in Notes. Make it feel specific and genuine — not generic.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Thank-You that took 3 rounds</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own letter.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Thank-You — Marco Contractor</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Thank-you letter</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Marco Delgado, general contractor who led the remodel of our kitchen and back porch</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Marco feels genuinely appreciated and remembers the specific moment that made this job different. I want him to feel like he can use this as a reference in his own work.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>No "I hope this finds you well." No "Best regards." Name the one specific thing he did that went beyond. Handwritten tone — this is going in a card, not an email.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Warm, personal, specific — from one person to another, not a form letter</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not invent details. Only use what is in Reference Material. Don't mention price — this isn't about money.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Enter <strong>200</strong> · select <strong>Words</strong></td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Marco Delgado, owner of Delgado Build, finished our kitchen and back porch remodel last Friday.
+Things to thank him for:
+- The big one: when the countertop supplier delivered the wrong slab on day 17 and the project was going to slip two weeks, Marco drove to Orlando on a Saturday, picked up the right slab himself, and installed it Sunday morning. We had our son's birthday party on the new porch the following Saturday as planned.
+- He showed up when he said he would, every day, for six weeks.
+- His crew cleaned up every night — my wife kept commenting on it.
+- He caught a framing issue the inspector missed and fixed it before closing the wall.
+What we want him to know:
+- We'll absolutely use him again.
+- Our neighbor Janet has already asked for his number.
+- He's welcome to drop by and show the kitchen to a future client if he ever needs to.</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing draft letter using the Paste Text button.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 4 — Reference Material and paste your bullet points: who you are thanking, what specifically happened or what they did, and any particular detail you want mentioned by name. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈1 minute · 3 rounds (measured, not estimated) — short documents with bulleted Reference Material converge fast. The recent from-scratch run (Thank-You — Marco Contractor v1) reached majority convergence at Round 3.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-blue">Claude — warmth &amp; authenticity</span>
+            <span class="dp-tag dp-tag-purple">Grok — keeping it real</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — clean final polish</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the result sounds like a corporate email instead of a personal letter, add a Note before the next round: <em>"This should sound like a real person wrote it, not a template. Rewrite any sentence that sounds generic or corporate."</em></p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Career & Hiring -->
+      </div><!-- /hp-section Career & Hiring -->
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: BUSINESS & SALES -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-business">Business &amp; Sales</h2>
+            <p class="hp-section-sub">Proposals, summaries, formal responses, cold outreach. Documents where clarity, persuasion, and stakeholder alignment matter more than any single AI's style.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="dp-playbook" id="business-proposal">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">💼</div>
+      <div>
+        <div class="dp-playbook-title">Business Proposal</div>
+        <div class="dp-playbook-desc">Sharpen a proposal to win a client, secure a partnership, or pitch a new venture.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Business proposal</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>[Client name or type] — be specific: e.g. <em>IT Director at a mid-size manufacturing firm</em>, or <em>Procurement committee at [company name]</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader approves the proposal or schedules a follow-up meeting. They clearly understand what we are offering, what it costs, and what happens next.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Confident, credible, professional — not salesy</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use [PRICE] or [TIMELINE] as placeholders where I have left them blank.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter a page count if trimming is required — e.g. <strong>5</strong> · <strong>Pages</strong>. Leave blank to stay close to current length.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a business proposal for [project or service] targeting [client]. Structure it with an executive summary, problem statement, proposed solution, and pricing or next steps section.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Upload your proposal file or paste the text. You can use [PRICE] or [TIMELINE] as placeholders for sensitive figures — the AIs will work around them and leave them unchanged.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste: your core offer, key benefits for the client, any pricing or scope details you want included, and the client's primary pain point or problem.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Rounds</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>4–6 rounds — proposals have many moving parts</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — structure &amp; flow</span>
+            <span class="dp-tag dp-tag-green">Gemini — research backing</span>
+            <span class="dp-tag dp-tag-blue">Claude — persuasive language</span>
+            <span class="dp-tag dp-tag-purple">Perplexity — market context</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Before Round 1, open Notes and write one sentence about the client's biggest pain point or objection. This shapes how the AIs frame every section of the proposal around what the client actually cares about.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="email-campaign">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📬</div>
+      <div>
+        <div class="dp-playbook-title">Email &amp; Outreach</div>
+        <div class="dp-playbook-desc">Sharpen cold outreach, sales emails, follow-ups, or any important one-off message that needs to land.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Be specific about the email type: e.g. <em>Cold outreach email</em>, <em>Follow-up email after a meeting</em>, <em>Sales introduction email</em></td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Who is receiving this — be specific: e.g. <em>VP of Engineering at a mid-size SaaS company</em>, <em>A former colleague I have not spoken to in two years</em>, <em>Hiring manager who interviewed me last week</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader opens it, reads it in full, and takes one specific action — e.g. <em>replies to schedule a 20-minute call</em>, <em>clicks the link</em>, <em>responds with a yes or no</em>.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Lead with value to the recipient — not background on the sender. One clear ask only. No fluff, no jargon, no "I hope this email finds you well." Include a subject line as the first line of the document.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Professional / direct / warm] — pick one. For cold outreach, direct tends to work better than warm.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not add background about me unless I specifically provide it. The email should be about what the reader gets, not who I am.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter <strong>150</strong> · select <strong>Words</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete email from scratch using only what I provide in Notes. Lead with value to the recipient. One clear ask. Include a subject line as the first line.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Cold outreach that took 3 rounds</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own recipient and message.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Outreach — Ferris at Lightkeeper</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Cold outreach email to a potential channel partner</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Ferris Okafor, VP of Partnerships at Lightkeeper Security, a managed security services firm. We've never spoken. He's active on LinkedIn and posts about SMB cybersecurity.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Ferris replies to schedule a 20-minute intro call. One clear ask, no bait-and-switch.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Lead with value to him, not background on us. One ask. No "I hope this email finds you well." Include a subject line as the first line. Reference one thing from his recent LinkedIn activity so it doesn't read as scraped.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Direct, warm, not a vendor</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not add claims about our company unless they appear in Reference Material. Do not oversell the first call — the ask is 20 minutes, nothing more.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Enter <strong>0.5</strong> · select <strong>Pages</strong></td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Ferris's recent LinkedIn post (last week): he wrote that most SMB security incidents start with unmanaged wireless — not ransomware, not phishing. Direct quote: "your MSP partner should be treating your Wi-Fi like a security surface, not a convenience."
+
+Our company: Altura Systems, a 14-person MSP in Tampa. We run wireless for about 40 SMB clients across healthcare and legal. We've seen the same pattern Ferris is describing — clients keep getting breached through guest SSIDs that were stood up in 2019 and forgotten.
+
+The ask: 20-minute intro call to see if the pattern he's describing matches what we're seeing.
+
+Sender:
+- Name: Dana Reyes
+- Role: Director of Wireless Services, Altura Systems</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing draft email using the Paste Text button. Include the subject line at the top if you have one.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 4 — Reference Material and paste your context: who the recipient is, what you know about them (recent LinkedIn activity, prior interactions, any quote you want referenced verbatim), what you want them to do, and why it benefits them specifically. The hive cannot browse the web — anything you want it to reference must be pasted into Reference Material first. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈1 minute · 3 rounds (measured, not estimated) — short documents with bulleted Reference Material converge fast. The recent from-scratch run (Outreach — Ferris at Lightkeeper v1.0) reached majority convergence at Round 3 — same pattern as the Thank-You playbook test.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-purple">Grok — punchy subject lines</span>
+            <span class="dp-tag dp-tag-blue">Claude — concise body copy</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — CTA clarity</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>Short emails sometimes produce conflicts over single word choices. If a conflict feels trivial, use the Builder Decision path and let the Builder decide — or bypass it if you have already made the edit directly in the document.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="executive-summary">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📊</div>
+      <div>
+        <div class="dp-playbook-title">Executive Summary</div>
+        <div class="dp-playbook-desc">Distil a long report, plan, or proposal into a tight, decision-ready summary for leadership.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Executive summary</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Be specific about who reads this — e.g. <em>VP of Operations and CFO</em>, <em>Board of Directors</em>, <em>Program managers and senior leadership</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader understands the situation, the recommendation, and why it matters — in that order. They can make a decision or take action without reading the full source document.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Lead with the conclusion. Strip jargon. Do not expand — only tighten and clarify what is already here.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Direct, authoritative, jargon-free — written for someone who has 90 seconds to read it</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not add detail not present in the source material. Do not change any figures, recommendations, or conclusions.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter <strong>400</strong> · select <strong>Words</strong> — or enter <strong>1</strong> · select <strong>Pages</strong> for a one-pager</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate an executive summary for [project, report, or initiative name] from the bullet points I provide. Answer three questions in order: what is the situation, what is the recommendation, why does it matter. Lead with the conclusion.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing executive summary using Paste Text, or upload the file. Do not paste the full source document — paste only the summary itself.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste your key bullet points: the situation, the recommendation, why it matters, and any decisions or actions required. For a long source document, paste the key conclusions only — not the whole thing.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Rounds</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>3–5 rounds — AIs often disagree on what to cut</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-blue">Claude — distillation &amp; structure</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — executive language</span>
+            <span class="dp-tag dp-tag-green">Gemini — fact checking</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the AIs keep adding detail back in, open Notes before the next round and write: <em>"Do not expand this document. Only tighten and clarify what is already here. Remove anything that does not directly support the recommendation."</em></p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="rfp">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📋</div>
+      <div>
+        <div class="dp-playbook-title">RFP Response (Request for Proposal)</div>
+        <div class="dp-playbook-desc">Craft a disciplined, structured response to a formal RFP that addresses every stated requirement.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>RFP response</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Evaluation committee at [issuing organization] reviewing responses to [RFP name or number]</td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Every stated requirement in the RFP is addressed directly and clearly. Evaluators can find our response to each item without hunting for it. Our differentiators are clear and credible.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Formal, precise, no marketing language. Do not add capability claims not supported by the existing content. Address requirements in the order they appear in the RFP.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Formal, authoritative, direct — this is a compliance document, not a sales pitch</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any figures, dates, or technical specifications. Do not omit or skip any RFP requirement, even if the answer is brief.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Check the RFP for a page or word limit and enter it here — e.g. <strong>20</strong> · <strong>Pages</strong>. Leave blank if the RFP has no stated limit.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a draft RFP response for [project name] issued by [organization]. We are [brief description of your team or company]. Our relevant experience: [list]. Address each requirement in the order it appears in the RFP. Do not add capability claims not supported by what I provide.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          On Setup 4 — Reference Material, paste the full RFP requirements text. Then go to Setup 5 — Starting Document and upload your draft response (or paste the text). Every reviewer will check your draft against the RFP every round and flag any requirement that is not addressed.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          On Setup 4 — Reference Material, paste the full RFP requirements text. Then go to Setup 5 — Starting Document, click <strong>Start from Scratch</strong>, and leave the text box empty. The hive will generate a response skeleton that addresses each requirement in the order the RFP states them.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Rounds</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>20–60+ rounds — RFPs are long, complex, and contentious</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — compliance checking</span>
+            <span class="dp-tag dp-tag-green">DeepSeek — technical depth</span>
+            <span class="dp-tag dp-tag-blue">Claude — clarity &amp; concision</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the RFP has a page or word limit, enter it in the <strong>Length Constraint</strong> field on the Project screen — that is where it belongs, not in the goal fields. WaxFrame will enforce it as a hard constraint every round.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Business & Sales -->
+      </div><!-- /hp-section Business & Sales -->
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: CONTENT & MARKETING -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-content">Content &amp; Marketing</h2>
+            <p class="hp-section-sub">Published writing — blog posts, presentations, content your audience sees. Voice, structure, and narrative flow benefit from multiple reviewers with different strengths.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="dp-playbook" id="blog-post">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📝</div>
+      <div>
+        <div class="dp-playbook-title">Blog Post / Article</div>
+        <div class="dp-playbook-desc">Publish-ready content with a strong voice, clear structure, and solid flow.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Blog post — or be specific about format: e.g. <em>Opinion piece</em>, <em>How-to article</em>, <em>Listicle</em></td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Who reads this and where — e.g. <em>Small business owners new to AI, reading on LinkedIn</em>, <em>Senior engineers evaluating wireless platforms</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader finishes the post and [takes a specific action or understands a specific thing]. End with a clear call to action. e.g. <em>Reader understands the three main options and clicks through to learn more.</em></td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Must cover: [list 3–5 key points]. Do not add statistics or facts that are not already in the draft — flag anything uncertain instead of inventing it.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Be specific: e.g. <em>Direct, short sentences, slightly sarcastic, no jargon</em> or <em>Authoritative and data-driven, formal but approachable</em>. Without this the AIs will default to a bland, generic style.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change my unique angle or perspective. Strengthen the voice — do not sand it down into something that sounds like everyone else.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter your target word count — e.g. <strong>800</strong> · <strong>Words</strong></td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete [X-word] blog post on [topic] from the notes I provide. My unique angle is [describe what makes your take different]. Build the full post from my key points — do not add facts or statistics I have not provided.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Blog Post that took 16 rounds</div>
+        <div class="dp-real-example-sub">First measured <strong>refining-a-draft</strong> example in the playbook (Thank-You, Email & Outreach, JD, and Résumé examples are from-scratch or refining shorter drafts). The user uploaded an existing draft rather than starting from scratch, then provided a thesis-and-CTA payload through Reference Material. Run these exact values yourself to reproduce the convergence behavior; on later runs, swap the specifics for your own draft and notes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Blog — Why I Stopped Trusting One-Shot AI</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Blog Post</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Senior engineers and technical leads who already use ChatGPT or Claude for work, reading on LinkedIn or a company-internal blog</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Reader finishes the post and understands why running a document through multiple AI models in sequence produces meaningfully better output than a single high-quality model. They click through to the linked demo at the end.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cover: the "one-shot trap," why different models catch different issues, a concrete example with rough numbers, and what the reader can try today. Do not invent statistics.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>First-person, slightly opinionated, conversational — written the way you'd say it out loud, not how you'd write a whitepaper. Voice is someone who's been frustrated with single-model output for a year and finally solved the problem. Not promotional. Not AI-generated-sounding.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>No buzzwords like "synergy," "leverage," "revolutionary." If a section feels padded, cut it. No marketing fluff just real world shit.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Leave blank</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Upload File</strong> and select your existing draft post (a .docx, .txt, or .md file)</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Thesis: any single LLM, no matter how good, has blind spots. One model will confidently write fluff where another catches it. One model will tighten structure while another improves tone. Run the same document through 4 or 5 different models in sequence, each refining what the previous one did, and the output is better than any single model can produce on its own.
+
+Concrete example to reference (real, from last month):
+- Took a 900-word draft of a proposal
+- Ran it through Claude alone: got a polished version, maybe 15% better
+- Ran the same draft through Claude, then GPT-4, then Gemini, then back to Claude: got a version where the structural argument was noticeably stronger, the jargon was stripped, and two factual hedges had been flagged that the author hadn't noticed
+
+What the reader should try today: pick a document they care about, hand it to 3 different models in sequence with the same prompt, compare the result to running it through any one model once.
+
+Call to action at the end: link to a tool that automates this — multiple models, single document, convergence loop. (This is WaxFrame, but the post should not name it overtly — the link speaks for itself.)</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 4 — Reference Material if you have thesis statements, source material, key data points, or anything else the hive should reference but not edit. Then on Setup 5 — Starting Document, paste or upload your existing draft. The hive cannot browse the web — anything you want it to reference must be pasted into Reference Material first.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 4 — Reference Material and paste your key points, your angle, source material, and anything you specifically want included or avoided. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈13 minutes · 16 rounds (measured, not estimated) — refining a strong existing draft with Reference Material guidance. Voice-driven posts take more rounds than transactional documents because reviewers tune phrasing and rhythm sentence by sentence. The recent run (Blog — Why I Stopped Trusting One-Shot AI v1.0) reached majority convergence at Round 16.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-blue">Claude — voice &amp; readability</span>
+            <span class="dp-tag dp-tag-purple">Grok — edge &amp; personality</span>
+            <span class="dp-tag dp-tag-green">Perplexity — factual grounding</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — structure</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If the voice starts sounding generic after a few rounds, open Notes and describe the author's style in a sentence — even a few adjectives like <em>"direct, slightly sarcastic, uses short sentences"</em> will steer the hive back toward a distinct voice.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="presentation">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">🖥️</div>
+      <div>
+        <div class="dp-playbook-title">Presentation Outline</div>
+        <div class="dp-playbook-desc">Build a slide-by-slide speaker outline ready to drop into PowerPoint, Keynote, or Slides.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Presentation outline — speaker notes format</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>The audience for the talk — e.g. <em>C-suite leadership team</em>, <em>New hire onboarding group</em>, <em>External conference attendees</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>A slide-by-slide outline ready to copy into a presentation tool. Each slide must have: a slide title, 3–5 speaker note bullets, and one suggested visual or data point. Open with a strong hook, close with a clear call to action.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>[X]-minute talk. [Number] slides maximum. Bullet points only — no prose paragraphs. This is a speaker outline, not a script. WaxFrame outputs text — you will paste this into your presentation tool separately.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Informative / persuasive / conversational] — match the formality level of the audience</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not write full sentences in the speaker bullets. Keep each bullet to one line. Do not add slides beyond the count I specify.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete slide-by-slide presentation outline for a [X]-minute talk on [topic]. Each slide: title, 3–5 speaker note bullets, one suggested visual. Open with a hook, close with a call to action. Build it from the topic list I provide in Notes.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Slide deck outline that converged in 23 rounds</div>
+        <div class="dp-real-example-sub">First measured playbook in the suite where the <strong>v1 run failed to converge and v2 succeeded</strong>. The v1 run used the same Reference Material but left Length Constraint blank and used softer scope language — it ran 40 rounds without the system ever stopping on its own. The v2 run set <strong>Length Constraint = 12 paragraphs</strong>, tightened scope to <em>"Maximum 12 slides"</em>, and reached majority convergence at Round 23 with the system stopping on its own. Length Constraint is the lever that distinguishes the two outcomes.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Deck Outline — Wi-Fi 7 Readiness</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v2.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Power Point Presentation</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>IT leadership at a 1,200-person professional services firm — CIO, Director of Infrastructure, and two senior architects, sitting in a 45-minute meeting</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Audience leaves with a clear answer to one question: should we include a Wi-Fi 7 pilot in our FY27 budget? The outline should end with a concrete recommendation, not a list of considerations.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Maximum 12 slides. Each slide gets a paragraph or a couple of bullet points. Opening slide is the question, closing slide is the recommendation with a dollar figure. No "agenda" slide. No "thank you" slide.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Formal Final Draft Presentation</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td><em>(left blank)</em></td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Enter <strong>12</strong> · select <strong>Paragraphs</strong> — required for this playbook</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Reference Material payload (paste into Setup 4 — Reference Material):</strong></div>
+<pre>Driving question: "Should we pilot Wi-Fi 7 in FY27, or wait?"
+
+Recommendation: pilot in FY27 at a single floor of HQ, budget $95k, defer enterprise-wide deployment to FY28 or FY29 depending on client device penetration.
+
+Reasoning:
+- Wi-Fi 7 standard is ratified. Enterprise APs are shipping in volume from Cisco, Aruba, Juniper, Extreme.
+- Client device penetration is still low — under 12% of the user base has a Wi-Fi 7 capable endpoint as of Q1 2026. No reason to refresh the fleet now.
+- HQ 14th floor is being refreshed in FY27 anyway due to an expiring lease remodel. That gives a "free" pilot footprint.
+- Pilot goals: validate real-world throughput gains, test roaming behavior with mixed Wi-Fi 6E and Wi-Fi 7 clients, train the team on the new management platform.
+- If pilot is successful, shovel-ready plan for FY28 enterprise rollout. If not, $95k spent to learn instead of $2.1M to fail.
+
+Context the deck must establish:
+- Where we are today: Wi-Fi 6E, Aruba Central managed, last refreshed FY24
+- Where the industry is going: Wi-Fi 7 ratified, deployment guidance from Gartner suggests "selective pilots in FY26/FY27, mainstream in FY28"
+- Client device mix: 70% corporate-managed laptops, 25% BYOD phones, 5% IoT/sensors
+
+Hard constraints:
+- FY27 budget cycle closes in July 2026. Decision must happen before then.
+- Any dollar figure in the deck is directional — detailed pricing comes from the RFP, not this deck.</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 4 — Reference Material if you have source data (statistics, quotes, prior decisions, supporting analysis) the deck must reference but not edit. Then on Setup 5 — Starting Document, paste your existing outline using the Paste Text button. The hive cannot browse the web — anything the deck must reference must be pasted into Reference Material first.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 4 — Reference Material and paste your driving question, recommendation, supporting reasoning, hard constraints (dates, dollar figures), and any context the deck must establish. Then on Setup 5 — Starting Document, click <strong>Start from Scratch</strong> and leave the text box empty. Optionally, before Round 1, open the Notes drawer (📝 Notes in the top bar on the Work screen) for any one-shot Round 1 emphasis.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈30 minutes · 23 rounds (measured, not estimated) — slide-deck outlines converge only when the hive is allowed to prune wrong-audience content. The recent run (Deck Outline — Wi-Fi 7 Readiness v2.0) reached majority convergence at Round 23 with the system stopping on its own. <strong>Length Constraint must be set</strong> — runs without one polish indefinitely (a v1.0 run with the same Reference Material but no length cap ran 40 rounds without converging).</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — slide structure</span>
+            <span class="dp-tag dp-tag-blue">Claude — narrative arc</span>
+            <span class="dp-tag dp-tag-purple">Grok — audience hook</span>
+            <span class="dp-tag dp-tag-green">Perplexity — current stats &amp; data</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>WaxFrame outputs plain text. Once the outline is where you want it, export it and use it as your script layer when building the actual slides in PowerPoint or Keynote. Each slide's bullet points become your speaker notes.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Content & Marketing -->
+      </div><!-- /hp-section Content & Marketing -->
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: PERSONAL & EVERYDAY -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-personal">Personal &amp; Everyday</h2>
+            <p class="hp-section-sub">Recipes, personal letters, and everyday writing where polish and tone matter but the stakes are friendly.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="dp-playbook" id="recipe">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">🍳</div>
+      <div>
+        <div class="dp-playbook-title">Recipe</div>
+        <div class="dp-playbook-desc">Turn rough notes or a draft recipe into a polished write-up with clear instructions and consistent formatting.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Recipe</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>Who will cook from this — e.g. <em>Home cook, beginner level</em>, <em>Experienced baker</em>, <em>Meal prep audience, intermediate skill</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Anyone following this recipe can cook the dish successfully on the first try. Instructions are clear, ingredient quantities are precise, and steps are in a logical order with nothing assumed.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Do not change the core recipe — only clarify and improve what is there. Ingredient quantities and cooking times must stay as written. Include: ingredient list with quantities, numbered steps, and at least one tip on substitutions or storage.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>[Warm and conversational / precise and technical / beginner-friendly] — pick one</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not substitute ingredients without flagging it as an optional variation. Do not add unverified cooking times or techniques — flag anything uncertain instead of inventing it.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <table>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete recipe for [dish name] from the notes I provide. Include an ingredient list with quantities, numbered steps, and at least one tip on substitutions or storage. Do not add unverified techniques or cooking times.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cuisine or tradition: [e.g. Southern Italian, Korean BBQ, or leave blank]. Servings: [X]. Build only from the ingredients and details I provide.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your recipe using the Paste Text button. Include the ingredient list, quantities, and steps — even rough notes work. The AIs will shape it into a proper recipe format.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste: the dish name, cuisine or tradition, number of servings, the key ingredients you want used, and any dietary constraints.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Rounds</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>5–20+ rounds — AIs debate technique, quantities, and wording extensively</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-blue">Claude — clarity &amp; flow</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — culinary knowledge</span>
+            <span class="dp-tag dp-tag-green">Gemini — technique tips</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If you want the recipe to stay true to a specific cuisine or tradition, state it explicitly in Scope &amp; constraints: <em>"Keep this authentic to Southern Italian technique — do not substitute ingredients or modernise methods."</em> Without this the AIs will suggest variations freely.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Personal & Everyday -->
+      </div><!-- /hp-section Personal & Everyday -->
+
+    </div> <!-- /.doc-main -->
+
+  </div> <!-- /.doc-layout -->
+
+
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
+     ======================================================== -->
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions">
+    <button class="btn" onclick="window.print()" title="Save as PDF via your browser's print dialog">⬇ Save as PDF</button>
+  </div>
+  <div class="page-footer-center">
+    <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<!-- ========================================================
+     ABOUT MODAL — helper-page version. Metadata only.
+     ======================================================== -->
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
+    <h2 class="finish-modal-title">WaxFrame</h2>
+    <p class="about-modal-subtitle">About</p>
+    <div class="goal-info-body">
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+<!-- ========================================================
+     LICENSE MODALS — helper-page (v3.22.6)
+     Mirrors in-app license modals for parity. License pill in
+     footer-right toggles between these via license-helper.js.
+     ======================================================== -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
+
+<script src="js/theme.js"></script>
+<script src="js/nav-helper.js?v=3.22.6"></script>
+<script src="js/license-helper.js?v=3.22.6"></script>
+<script src="js/version.js?v=3.28.1"></script>
+<script src="js/docs-scrollspy.js?v=3.22.6"></script>
+<script>
+  document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+</script>
+</body>
+</html>
