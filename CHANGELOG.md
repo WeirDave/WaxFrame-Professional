@@ -2,6 +2,21 @@
 
 ---
 
+## v3.27.6 Pro — Build `20260429-025`
+**Released:** April 29, 2026
+
+**Your Project screen layout fix.** The Your Project setup screen was visually splitting in two: Project Name + Version sat above a horizontal divider line, with Project Goal and the rest of the goal fields below. Reads as two separate cards when it should be one cohesive section — Project Name/Version are metadata that belong directly under the Your Project header, with Project Goal as a sub-grouping inside the same card.
+
+### Changes
+
+**1. Removed `border-top: 1px solid var(--border)` on `.proj-goal-section-hdr`.** That was the divider line. With it gone, the meta row and the goal section flow as one card.
+
+**2. Tightened spacing.** `.proj-meta-row` margin-bottom dropped from 24px to 8px; `.proj-goal-section-hdr` padding-top dropped from 20px to 16px. Combined with the removed divider, the visual gap between Version and the Project Goal sub-header is now natural rather than aggressive.
+
+**3. Simplified the section sub text.** Was: *"Name your project, set a version, then describe what you're building. Fields marked * are required to continue."* Now: *"Fields marked * are required to continue."* The first sentence was procedural fluff that described the layout itself rather than orienting the user.
+
+---
+
 ## v3.27.5 Pro — Build `20260429-024`
 **Released:** April 29, 2026
 
