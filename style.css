@@ -2519,9 +2519,9 @@ html, body {
    were still too tall at 1422×811. Target ~⅔ of v3.27.10 height. */
 @media (max-width: 1421px), (max-height: 900px) {
   .builder-pick-grid-large .builder-pick-btn {
-    padding: 14px 12px 12px;
+    padding: 12px 12px 10px;
     gap: 6px;
-    aspect-ratio: 3.2 / 1;
+    aspect-ratio: 3.6 / 1;
   }
   .builder-pick-grid-large .builder-pick-icon {
     width: 32px;
