@@ -2,10 +2,10 @@
 
 ---
 
-## v3.27.7 Pro — Build `20260429-026`
+## v3.27.7 Pro — Build `20260429-027`
 **Released:** April 29, 2026
 
-**Your Project screen restructure.** The screen had grown a redundant secondary header (Project Goal), a duplicate clear button, a word/character counter that wasn't communicating anything actionable, and a bottom tip that referred to internal mechanics rather than user-facing behavior. Restructured into one cohesive screen with a single header bar and a continuous form below it.
+**Your Project screen restructure + Project copy expansion + Builder screen polish.** The Project screen had grown a redundant secondary header (Project Goal), a duplicate clear button, a word/character counter that wasn't communicating anything actionable, and a bottom tip that referred to internal mechanics rather than user-facing behavior. Restructured into one cohesive screen with a single header bar and a continuous form below it. The Project section sub was also expanded to lead with the importance argument — this is the most important page in setup. The Builder screen got two coordinated fixes: cards now lay out as 3+3 (two balanced rows for the default 6-AI hive) instead of a thin single row, and the Builder tip now sits inside a reusable gold/amber callout enclosure instead of floating as a bare italic paragraph.
 
 ### Changes
 
@@ -15,11 +15,13 @@
 
 **3. Clear Project button moved into the section header bar.** Was sitting in a standalone row below Version. Now lives at the top-right of the dark header bar, using the previously empty space next to the bee mascot. Visually present without taking up form real estate.
 
-**4. Section sub rewritten.** The header sub now describes the page's purpose and ends with the required-fields cue:
+**4. Section sub rewritten — and expanded with importance framing.** The header sub now leads with the importance argument and ends with the required-fields cue:
 
-> This section defines what your project is all about. Every AI sees this information on every round. The more specific you are the better your project will be. (Garbage in Garbage out)
+> **This is the most important page in the whole setup.** This section defines what your project is all about. Every AI sees this information on every round — it's their entire understanding of what you're trying to build. The more specific you are the better your project will be (garbage in, garbage out). A few extra minutes here pays off in every round that follows.
 >
 > *Fields marked * are required to continue.*
+
+The previous version was correct but didn't tell users why to slow down. The setup pages bracketing this one (Bees, Builder) carry similar paragraph-length guidance — Project deserves at least as much weight, and arguably more since the brief here is what every AI reads on every round.
 
 **5. Word/character counter bar deleted.** The bar at the bottom of the goal fields surfaced raw counts that didn't communicate anything actionable — only the 300-char trim threshold matters, and the goalRefinePreview panel below already states that fact directly. The bar is gone; the refine preview stays.
 
@@ -29,9 +31,17 @@
 
 ### Code reconciliation
 
-CSS: removed `.proj-goal-section-hdr`, `.proj-goal-section-title`, `.proj-goal-section-sub`, `.proj-goal-section-hdr + .proj-clear-row`, `.proj-clear-mid-btn`, `.proj-clear-row`, `.proj-clear-row--bottom` (both definitions), `.proj-clear-btn`, `.goal-counter-bar`, `#goalCounter`, `.goal-stat`, `.goal-stat-label`, `.goal-stat-warn`, `.goal-stat-sep`, `.setup-card-tip`. Added `.hp-section-clear-btn` for the relocated Clear Project button (uses `margin-left: auto` and `align-self: flex-start` to right-anchor inside the existing `.hp-section-header` flex container, with no impact on other screens that don't render the button).
+CSS: removed `.proj-goal-section-hdr`, `.proj-goal-section-title`, `.proj-goal-section-sub`, `.proj-goal-section-hdr + .proj-clear-row`, `.proj-clear-mid-btn`, `.proj-clear-row`, `.proj-clear-row--bottom` (both definitions), `.proj-clear-btn`, `.goal-counter-bar`, `#goalCounter`, `.goal-stat`, `.goal-stat-label`, `.goal-stat-warn`, `.goal-stat-sep`, `.setup-card-tip`, `.fs-col-tip`. Added `.hp-section-clear-btn` for the relocated Clear Project button (uses `margin-left: auto` and `align-self: flex-start` to right-anchor inside the existing `.hp-section-header` flex container, with no impact on other screens that don't render the button). Added `.gold-tip-card` — a reusable amber callout block generalized from the `.dp-real-example` styling used in document-playbooks.html, intended for any guidance copy that should feel official rather than incidental.
 
 JS: removed `clearGoal()` function (zero remaining call sites). Removed dead block in `updateGoalCounter()` that wrote into `#goalCounter`. The function still updates the goalRefinePreview panel and is still wired into all six goal-field `oninput` handlers — the name kept since the function still tracks the 300-char counter threshold that drives the preview.
+
+### Builder screen
+
+**Two-row card layout.** The Builder picker grid was using `repeat(auto-fill, minmax(175px, 1fr))` which produced a single thin row of cards floating above a large empty band of dark space. Replaced with explicit `repeat(3, 1fr)` so the default 6-AI hive lays out as 3+3 — two balanced rows where each card grows to fill its column at typical desktop widths. Cards feel substantial against the tall amber header band instead of being dwarfed by it. For non-multiple-of-3 hive counts the last row may be partial; that's an acceptable trade for the balanced visual the default 6-AI hive produces.
+
+**Bigger card sizing on the large variant.** Padding bumped from `20px 12px 14px` to `28px 16px 22px`. Provider icon bumped from `36px` square to `56px` square. Provider name font from `13px` to `15px`. Inner gap from `10px` to `14px`. Sizing changes scoped to `.builder-pick-grid-large` only — the small variant used in the change-builder modal retains the previous compact sizing.
+
+**Tip moved into the gold callout enclosure.** The Builder tip ("Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well…") was a bare italic paragraph using `.fs-col-tip` that read as visual filler. Now wrapped in `.gold-tip-card` — same amber background and border as the document-playbook callouts, so it reads as official guidance. The orphan `.fs-col-tip` rule was removed (this was its only consumer).
 
 ---
 

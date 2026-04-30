@@ -2480,18 +2480,37 @@ html, body {
 /* ── BUILDER PICK GRID LARGE ── */
 .builder-pick-grid-large {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
-  gap: 10px;
+  /* v3.27.7: explicit 3 columns instead of auto-fill, minmax(175px, 1fr).
+     With the default 6 AIs this produces a 3+3 layout (two balanced rows)
+     and the cards flex to fill horizontal space — so they grow to ~500px
+     each at typical desktop widths and feel substantial against the tall
+     amber header band. For non-multiple-of-3 hive counts (4, 5, 7, 8…) the
+     last row may be partial; that's an acceptable trade for the balanced
+     visual the default 6-AI hive produces. */
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
   margin-bottom: 8px;
 }
 .builder-pick-grid-large .builder-pick-btn {
   flex-direction: column;
   align-items: center;
-  gap: 10px;
-  padding: 20px 12px 14px;
-  font-size: 14px;
+  gap: 14px;
+  /* v3.27.7: bumped padding 20px 12px 14px → 28px 16px 22px for more
+     vertical presence to fill the wider card width. */
+  padding: 28px 16px 22px;
+  font-size: 15px;
   text-align: center;
   justify-content: center;
+}
+/* v3.27.7: scoped icon + name overrides for the large variant only. The
+   small builder-pick-grid (used in the change-builder modal) retains
+   36px / 13px sizing. */
+.builder-pick-grid-large .builder-pick-icon {
+  width: 56px;
+  height: 56px;
+}
+.builder-pick-grid-large .builder-pick-name {
+  font-size: 15px;
 }
 
 /* ── SECTION BEE IMAGE ── */
@@ -3855,7 +3874,26 @@ kbd {
   letter-spacing: -0.01em;
 }
 .fs-col-sub { font-size: 14px; color: var(--text-dim); line-height: 1.7; }
-.fs-col-tip { font-size: 13px; color: var(--text); font-style: italic; line-height: 1.6; margin-top: 10px; }
+/* v3.27.7: replaced .fs-col-tip with .gold-tip-card — generic gold/amber
+   callout block reusable across the app. Generalized from the .dp-real-example
+   styling used in document-playbooks.html. Use this for guidance copy that
+   should feel official rather than incidental. .fs-col-tip removed (only
+   consumer was the Builder screen, now using .gold-tip-card). */
+.gold-tip-card {
+  background: rgba(245, 166, 35, 0.05);
+  border: 1px solid rgba(245, 166, 35, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 14px 18px;
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.6;
+}
+.gold-tip-card a { color: var(--accent); }
+.gold-tip-card .tip-icon-img {
+  vertical-align: middle;
+  margin-right: 6px;
+}
 
 /* Bee — fixed block above scroll area, not absolute */
 .setup-card-bee {
