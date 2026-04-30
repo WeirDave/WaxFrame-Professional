@@ -6509,6 +6509,134 @@ kbd {
   color: #000;
   border-color: var(--accent);
 }
+/* v3.28.0 — Troubleshooting + Deep Dive toggle states */
+.dev-toolbar-sep {
+  color: var(--border2);
+  padding: 0 2px;
+  font-weight: 400;
+  user-select: none;
+}
+.dev-toolbar button.active {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+  box-shadow: 0 0 8px rgba(255, 184, 0, 0.45);
+}
+.dev-toolbar button#wfDeepDiveToggle.active {
+  background: #2dd4bf;
+  border-color: #2dd4bf;
+  box-shadow: 0 0 8px rgba(45, 212, 191, 0.55);
+}
+
+/* ══════════════════════════════════════
+   TROUBLESHOOTING CARD (v3.28.0)
+   Plain-English failure surface. Composes with existing
+   .finish-modal-overlay / .finish-modal scaffolding.
+═══════════════════════════════════════ */
+.tc-overlay .tc-modal {
+  max-width: 560px;
+  text-align: left;
+}
+.tc-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-align: left;
+  justify-content: flex-start;
+}
+.tc-icon {
+  font-size: 1.4em;
+  flex-shrink: 0;
+}
+.tc-body {
+  text-align: left;
+  margin-top: 8px;
+}
+.tc-meaning {
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text);
+  margin: 0 0 18px 0;
+}
+.tc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.tc-action-btn {
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.tc-action-btn:hover {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
+}
+.tc-details-wrap {
+  border-top: 1px solid var(--border2);
+  padding-top: 12px;
+  margin-top: 8px;
+}
+.tc-details-toggle {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #999);
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 4px 0;
+  font-family: inherit;
+  text-align: left;
+}
+.tc-details-toggle:hover {
+  color: var(--accent);
+}
+.tc-details-arrow {
+  display: inline-block;
+  transition: transform 0.15s;
+}
+.tc-details-wrap.expanded .tc-details-arrow {
+  transform: rotate(90deg);
+}
+.tc-details {
+  display: none;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 12px;
+  margin: 10px 0 0 0;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 240px;
+  overflow-y: auto;
+}
+.tc-details-wrap.expanded .tc-details {
+  display: block;
+}
+.tc-details-actions {
+  display: none;
+  margin-top: 8px;
+}
+.tc-details-wrap.expanded .tc-details-actions {
+  display: flex;
+  gap: 8px;
+}
+.tc-copy-btn {
+  font-size: 0.8rem;
+  padding: 6px 12px;
+}
 
 /* ══════════════════════════════════════
    MOBILE NOT SUPPORTED OVERLAY

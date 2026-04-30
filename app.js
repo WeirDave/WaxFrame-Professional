@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260429-022
+//  Build: 20260430-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -12,6 +12,358 @@
 //  Screen flow:
 //    screen-welcome → screen-bees → screen-builder → screen-project → screen-document → screen-work
 // ============================================================
+
+// ============================================================
+// WF_DEBUG — Two-layer Troubleshooting + Deep Dive system (v3.28.0)
+// ------------------------------------------------------------
+// Layer 1 — Troubleshooting Mode (ON by default for end users):
+//   When a known failure happens, surface a plain-English
+//   Troubleshooting Card with title / what it means / what to do.
+//
+// Layer 2 — Deep Dive Mode (OFF by default, dev-toolbar toggle):
+//   On every round capture full technical detail (prompt sent,
+//   raw response, status, elapsed ms, parse diagnostics) into
+//   a ring buffer of the last 10 rounds for forensic inspection.
+//
+// Both layers compose: when both are on, a Troubleshooting Card's
+// "Show Technical Details" expand pulls from Deep Dive's richer
+// capture. When only Troubleshooting is on, the expand still
+// exists but pulls from lightweight per-failure context.
+// ============================================================
+const WF_DEBUG = {
+  // ── State ──
+  troubleshootingOn: (localStorage.getItem('waxframe_troubleshooting') ?? '1') === '1',
+  deepDiveOn:        localStorage.getItem('waxframe_deepdive') === '1',
+  ringBuffer:        [],   // last N round captures when Deep Dive is on
+  RING_MAX:          10,
+  lastFailure:       null, // lightweight context from most recent failure
+
+  // ── Toggles ──
+  setTroubleshooting(on) {
+    this.troubleshootingOn = !!on;
+    localStorage.setItem('waxframe_troubleshooting', on ? '1' : '0');
+    const btn = document.getElementById('wfTroubleshootingToggle');
+    if (btn) btn.classList.toggle('active', !!on);
+    if (typeof toast === 'function') toast(on ? '🩺 Troubleshooting Mode ON' : '🩺 Troubleshooting Mode OFF');
+  },
+  setDeepDive(on) {
+    this.deepDiveOn = !!on;
+    localStorage.setItem('waxframe_deepdive', on ? '1' : '0');
+    const btn = document.getElementById('wfDeepDiveToggle');
+    if (btn) btn.classList.toggle('active', !!on);
+    if (!on) this.ringBuffer = []; // clear capture when turning off
+    if (typeof toast === 'function') toast(on ? '🔬 Deep Dive ON — capturing every round' : '🔬 Deep Dive OFF');
+  },
+
+  // ── Logging ──
+  // Use for backstage detail that would be noise to normal users.
+  // Always writes to console. Writes to Live Console only when Deep Dive is on.
+  log(msg, type = 'info') {
+    try { console[type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'log']('[WF_DEBUG] ' + msg); } catch(e) {}
+    if (this.deepDiveOn && typeof consoleLog === 'function') {
+      consoleLog('🔬 ' + msg, type === 'error' ? 'error' : type === 'warn' ? 'warn' : 'info');
+    }
+  },
+
+  // ── Capture (Deep Dive only) ──
+  captureRound(entry) {
+    if (!this.deepDiveOn) return;
+    const stamped = { ...entry, capturedAt: new Date().toISOString() };
+    this.ringBuffer.push(stamped);
+    if (this.ringBuffer.length > this.RING_MAX) this.ringBuffer.shift();
+  },
+
+  // ── Capture (Troubleshooting always-on lightweight) ──
+  captureFailure(ctx) {
+    this.lastFailure = {
+      ...ctx,
+      ts:        new Date().toISOString(),
+      version:   (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown'),
+      build:     (typeof BUILD !== 'undefined' ? BUILD : 'unknown'),
+      deepDive:  this.deepDiveOn
+    };
+  },
+
+  // ── Classify any error into a catalog entry ──
+  // Single source of truth replacing the prior duplication across
+  // callAPI / Test All Keys / Custom AI test / Import Server.
+  classify(err, ctx = {}) {
+    const msg = (err && err.message ? err.message : String(err || '')).toLowerCase();
+    const status = ctx.status || (msg.match(/http (\d{3})/) || [])[1] || null;
+    const isCustom = !!ctx.isCustomEndpoint;
+
+    for (const entry of WF_ERROR_CATALOG) {
+      try {
+        if (entry.matches(err, ctx, msg, status, isCustom)) return entry;
+      } catch(e) { /* matcher threw — skip */ }
+    }
+    return WF_GENERIC_ENTRY;
+  },
+
+  // ── Show a Troubleshooting Card ──
+  showCard(entry, ctx = {}) {
+    if (!this.troubleshootingOn) return;
+    this.captureFailure({ code: entry.code, ...ctx });
+    if (typeof renderTroubleshootingCard === 'function') {
+      renderTroubleshootingCard(entry, ctx);
+    }
+  }
+};
+
+// ── ERROR CATALOG ──
+// Each entry: { code, matches(err, ctx, msgLower, status, isCustom), title, meaning, actions }
+// actions are: { label, kind: 'link'|'retry'|'open-modal'|'copy', href?, handler? }
+// Order matters — first match wins. Place specific matchers above generic ones.
+const WF_ERROR_CATALOG = [
+  {
+    code: 'CORS_BLOCKED',
+    matches: (err, ctx, msg, status, isCustom) =>
+      msg.includes('cors_blocked') ||
+      (isCustom && (msg.includes('failed to fetch') || msg.includes('network')) && !status),
+    title: 'Browser blocked the response (CORS)',
+    meaning: 'Your custom endpoint did not whitelist this WaxFrame origin. The request reached the server, but the browser refused to read the response as a security measure. Most common with self-hosted endpoints (Open WebUI, Ollama, internal gateways).',
+    actions: [
+      { label: 'Read CORS troubleshooting', kind: 'link', href: 'api-details.html' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'RATE_LIMITED',
+    matches: (err, ctx, msg, status) =>
+      status === '429' || ctx.status === 429 ||
+      msg.includes('rate_limited') || msg.includes('rate limit') ||
+      msg.includes('too many') || msg.includes('quota'),
+    title: 'Rate limited by the provider',
+    meaning: 'The provider says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped this AI for the round and continued with the others. The next round usually works after 30–60 seconds. If it persists, your monthly quota may be exhausted.',
+    actions: [
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'AUTH_FAILED',
+    matches: (err, ctx, msg, status) =>
+      status === '401' || status === '403' || ctx.status === 401 || ctx.status === 403 ||
+      msg.includes('unauthorized') || msg.includes('forbidden') ||
+      msg.includes('invalid api key') || msg.includes('incorrect api key'),
+    title: 'API key was rejected',
+    meaning: 'The provider rejected the API key. Common causes: the key was deleted or rotated in the provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Re-test the key on Worker Bees → Test All Keys.',
+    actions: [
+      { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'ENDPOINT_NOT_FOUND',
+    matches: (err, ctx, msg, status) =>
+      status === '404' || ctx.status === 404 ||
+      msg.includes('endpoint not found'),
+    title: 'Endpoint URL not found (404)',
+    meaning: 'The server responded with 404 — the path you entered does not exist on this server. For chat: typically ends in /v1/chat/completions or /api/chat/completions. For models: typically /v1/models, /api/models, or /api/tags (Ollama).',
+    actions: [
+      { label: 'Read API endpoint guide', kind: 'link', href: 'api-details.html' }
+    ]
+  },
+  {
+    code: 'METHOD_NOT_ALLOWED',
+    matches: (err, ctx, msg, status) =>
+      status === '405' || ctx.status === 405,
+    title: 'Method not allowed (405)',
+    meaning: 'The server understands the URL but does not accept POST requests on it. Usually means the URL is wrong — you may have entered a docs page, a homepage, or a GET-only endpoint instead of the chat completions URL.',
+    actions: [
+      { label: 'Read API endpoint guide', kind: 'link', href: 'api-details.html' }
+    ]
+  },
+  {
+    code: 'PROVIDER_DOWN',
+    matches: (err, ctx, msg, status) => {
+      const s = parseInt(status, 10);
+      return (s >= 500 && s < 600) || (ctx.status >= 500 && ctx.status < 600) ||
+             msg.includes('service unavailable') || msg.includes('bad gateway');
+    },
+    title: 'Provider server error',
+    meaning: 'The provider returned a 5xx error — this is on their side, not yours. Their API is having issues. WaxFrame skipped this AI for the round. Check the provider status page if it persists.',
+    actions: [
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'EMPTY_RESPONSE',
+    matches: (err, ctx, msg) => msg === 'empty response' || msg.includes('empty response'),
+    title: 'Provider returned an empty response',
+    meaning: 'The provider returned success (200 OK) but the response body had no text content. This usually means a content filter blocked the output, or the model output was truncated. Try a different Builder, or shorten the document.',
+    actions: [
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'NETWORK_ERROR',
+    matches: (err, ctx, msg, status, isCustom) =>
+      !status && (msg.includes('failed to fetch') || msg.includes('network') || msg.includes('networkerror')),
+    title: 'Network error',
+    meaning: 'WaxFrame could not reach the API. Common causes: no internet, DNS issue, VPN interfering, or the API hostname is unreachable from this network. If you are on an air-gapped or restricted network, you will need a model server (Alfredo, Ollama, Open WebUI) instead of the public providers.',
+    actions: [
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'NO_MODELS',
+    matches: (err, ctx, msg) => msg.includes('no models returned') || msg.includes('no chat-compatible models'),
+    title: 'Server returned no usable models',
+    meaning: 'The Models Endpoint responded but reported zero models — or only specialty models (embeddings, audio, image generation) that cannot do chat. For Ollama: pull a chat model first (ollama pull llama3.2). For Open WebUI: enable at least one chat model in admin settings.',
+    actions: []
+  },
+  {
+    code: 'BUILDER_NO_CONFLICTS_BLOCK',
+    matches: (err, ctx) => ctx.kind === 'builder_missing_conflicts',
+    title: 'Builder did not return the required formatting',
+    meaning: 'The Builder produced output but did not include the %%CONFLICTS_START%% block WaxFrame needs to read the result. Some AIs ignore strict formatting instructions. Try retrying the round (often works the second time), or switch to a different Builder via Change Builder.',
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'BUILDER_BLOAT',
+    matches: (err, ctx) => ctx.kind === 'builder_bloat',
+    title: 'Builder output exceeded the length limit',
+    meaning: 'The Builder produced a document longer than the length cap you set on the Project screen. Your document was not changed and the round was not saved. You can retry (the next attempt may comply), switch to a different Builder, or raise the length cap on the Project screen.',
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'BUILDER_DELIMITERS',
+    matches: (err, ctx) => ctx.kind === 'builder_delimiters',
+    title: 'Builder formatting was malformed',
+    meaning: 'The Builder included the formatting block markers but they did not parse cleanly. The AI may have escaped or modified the markers. Retry the round or switch to a different Builder.',
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    code: 'LICENSE_VERIFY_FAILED',
+    matches: (err, ctx) => ctx.kind === 'license_verify_failed',
+    title: 'Could not verify license',
+    meaning: 'WaxFrame could not reach Gumroad to verify your license key. If you are on a restricted network, you need to be online once to activate. Already-activated keys continue to work offline.',
+    actions: []
+  },
+  {
+    code: 'LICENSE_INVALID',
+    matches: (err, ctx) => ctx.kind === 'license_invalid',
+    title: 'License key not valid',
+    meaning: 'Gumroad reported this key is not valid. Common causes: typo, key was for a different product, or the key was disabled. Copy the key directly from your Gumroad receipt to avoid hidden whitespace.',
+    actions: []
+  }
+];
+
+const WF_GENERIC_ENTRY = {
+  code: 'UNKNOWN_ERROR',
+  title: 'Something went wrong',
+  meaning: 'WaxFrame ran into an error it does not have a specific explanation for. The technical details below may help diagnose. Copy them and share with support if needed.',
+  actions: [
+    { label: 'Retry round', kind: 'retry' }
+  ]
+};
+
+// ── Render a Troubleshooting Card ──
+// Uses the troubleshootingCard modal in index.html.
+function renderTroubleshootingCard(entry, ctx) {
+  const modal = document.getElementById('troubleshootingCard');
+  if (!modal) return;
+  const titleEl  = document.getElementById('tcTitle');
+  const meaningEl= document.getElementById('tcMeaning');
+  const actionsEl= document.getElementById('tcActions');
+  const detailsEl= document.getElementById('tcDetails');
+
+  if (titleEl)   titleEl.textContent   = entry.title || 'Something went wrong';
+  if (meaningEl) meaningEl.textContent = entry.meaning || '';
+
+  // Actions
+  if (actionsEl) {
+    actionsEl.innerHTML = '';
+    (entry.actions || []).forEach(a => {
+      const btn = document.createElement('button');
+      btn.className = 'tc-action-btn';
+      btn.textContent = a.label;
+      if (a.kind === 'link' && a.href) {
+        btn.onclick = () => { window.open(a.href, '_blank'); };
+      } else if (a.kind === 'console-link') {
+        const url = ctx?.aiConsoleUrl || null;
+        if (!url) { btn.style.display = 'none'; }
+        else      { btn.onclick = () => window.open(url, '_blank'); }
+      } else if (a.kind === 'retry') {
+        btn.onclick = () => { closeTroubleshootingCard(); if (typeof startRound === 'function') startRound(); };
+      } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
+        btn.onclick = () => { closeTroubleshootingCard(); window[a.handler](); };
+      } else {
+        btn.onclick = closeTroubleshootingCard;
+      }
+      actionsEl.appendChild(btn);
+    });
+  }
+
+  // Technical details (collapsed by default)
+  if (detailsEl) {
+    const details = {
+      code:        entry.code,
+      ai:          ctx.aiName || null,
+      provider:    ctx.provider || null,
+      status:      ctx.status || null,
+      message:     ctx.message || null,
+      raw:         ctx.raw || null,
+      version:     (typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown'),
+      build:       (typeof BUILD !== 'undefined' ? BUILD : 'unknown'),
+      ts:          new Date().toISOString(),
+      deepDiveOn:  WF_DEBUG.deepDiveOn,
+      ringBufferLen: WF_DEBUG.ringBuffer.length
+    };
+    detailsEl.textContent = JSON.stringify(details, null, 2);
+  }
+
+  // Reset expand state
+  const wrap = document.getElementById('tcDetailsWrap');
+  if (wrap) wrap.classList.remove('expanded');
+
+  modal.classList.add('active');
+}
+
+function closeTroubleshootingCard() {
+  const modal = document.getElementById('troubleshootingCard');
+  if (modal) modal.classList.remove('active');
+}
+
+function toggleTcDetails() {
+  const wrap = document.getElementById('tcDetailsWrap');
+  if (wrap) wrap.classList.toggle('expanded');
+}
+
+function tcCopyDetails() {
+  const detailsEl = document.getElementById('tcDetails');
+  const titleEl   = document.getElementById('tcTitle');
+  const meaningEl = document.getElementById('tcMeaning');
+  if (!detailsEl) return;
+  const payload =
+    'WaxFrame Troubleshooting Report\n' +
+    '================================\n' +
+    'Title:   ' + (titleEl?.textContent || '') + '\n' +
+    'Meaning: ' + (meaningEl?.textContent || '') + '\n\n' +
+    'Technical details:\n' + detailsEl.textContent;
+  if (typeof copyToClipboard === 'function') {
+    copyToClipboard(payload, 'Troubleshooting report');
+  } else {
+    navigator.clipboard?.writeText(payload).catch(() => {});
+  }
+}
+
+// Apply persisted toggles to dev-toolbar buttons once DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  const t = document.getElementById('wfTroubleshootingToggle');
+  if (t) t.classList.toggle('active', WF_DEBUG.troubleshootingOn);
+  const d = document.getElementById('wfDeepDiveToggle');
+  if (d) d.classList.toggle('active', WF_DEBUG.deepDiveOn);
+});
 
 // ── PHASES ──
 const PHASES = [
@@ -536,7 +888,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260429-033';         // build stamp — update each session
+const BUILD       = '20260430-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1060,6 +1412,28 @@ function closeChangeBuilder() {
 }
 
 function showRoundErrorModal(reason, details) {
+  // ── v3.28.0: route through Troubleshooting Card when Troubleshooting Mode is on ──
+  if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.troubleshootingOn) {
+    const ctxKindMap = {
+      bloat:      'builder_bloat',
+      conflicts:  'builder_missing_conflicts',
+      delimiters: 'builder_delimiters'
+    };
+    const kind = ctxKindMap[reason]; // 'api' falls through — no kind, generic match
+    if (kind) {
+      const ctx = {
+        kind,
+        message: details || '',
+        raw:     details || null
+      };
+      const entry = WF_DEBUG.classify(new Error(reason), ctx);
+      WF_DEBUG.showCard(entry, ctx);
+      return; // suppress legacy modal
+    }
+    // For 'api' / unknown reason, fall through to legacy modal —
+    // callAPI already showed a Card for the underlying provider error.
+  }
+
   const modal   = document.getElementById('roundErrorModal');
   const msgEl   = document.getElementById('roundErrorMsg');
   const detEl   = document.getElementById('roundErrorDetails');
@@ -8631,6 +9005,7 @@ async function callAPI(ai, prompt) {
 
   const keyHint = cfg._key.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
   const t0 = Date.now();
+  const isCustomEndpoint = !!cfg._isCustom || !!cfg._modelsEndpoint;
 
   let response;
   try {
@@ -8644,11 +9019,23 @@ async function callAPI(ai, prompt) {
     const isCors = fetchErr.message.toLowerCase().includes('network') ||
                    fetchErr.message.toLowerCase().includes('fetch') ||
                    fetchErr.message.toLowerCase().includes('cors');
+    const ctx = {
+      aiName:        ai.name,
+      provider:      ai.provider,
+      aiConsoleUrl:  ai.apiConsole || null,
+      isCustomEndpoint,
+      message:       fetchErr.message,
+      raw:           null
+    };
     if (isCors) {
       consoleLog(`❌ ${ai.name} — CORS blocked. Browser cannot call this API directly. A proxy is required.`, 'error');
+      const entry = WF_DEBUG.classify(new Error('CORS_BLOCKED'), ctx);
+      WF_DEBUG.showCard(entry, ctx);
       throw new Error('CORS_BLOCKED: Browser cannot reach ' + ai.name + ' API directly. Proxy required.');
     }
     consoleLog(`❌ ${ai.name} — Network error: ${fetchErr.message}`, 'error');
+    const entry = WF_DEBUG.classify(fetchErr, ctx);
+    WF_DEBUG.showCard(entry, ctx);
     throw fetchErr;
   }
 
@@ -8663,20 +9050,59 @@ async function callAPI(ai, prompt) {
       rawJson:    JSON.stringify(err, null, 2),
       consoleUrl: ai.apiConsole || null
     };
+    const ctx = {
+      aiName:       ai.name,
+      provider:     ai.provider,
+      aiConsoleUrl: ai.apiConsole || null,
+      isCustomEndpoint,
+      status:       response.status,
+      message:      msg,
+      raw:          rawData.rawJson
+    };
     if (response.status === 429 || msg.toLowerCase().includes('rate limit') ||
         msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('too many')) {
       consoleLog(`⏳ ${ai.name} — Rate limited / quota exceeded: ${msg}`, 'warn', rawData);
+      const entry = WF_DEBUG.classify(new Error('RATE_LIMITED:' + msg), ctx);
+      WF_DEBUG.showCard(entry, ctx);
       throw new Error('RATE_LIMITED:' + msg);
     }
     consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error', rawData);
+    const entry = WF_DEBUG.classify(new Error(msg), ctx);
+    WF_DEBUG.showCard(entry, ctx);
     throw new Error(msg);
   }
 
   const data = await response.json();
   const text = cfg.extractFn(data);
-  if (!text) throw new Error('Empty response');
+  if (!text) {
+    const ctx = {
+      aiName:       ai.name,
+      provider:     ai.provider,
+      aiConsoleUrl: ai.apiConsole || null,
+      isCustomEndpoint,
+      status:       response.status,
+      message:      'Empty response',
+      raw:          JSON.stringify(data, null, 2)
+    };
+    const entry = WF_DEBUG.classify(new Error('Empty response'), ctx);
+    WF_DEBUG.showCard(entry, ctx);
+    throw new Error('Empty response');
+  }
   const words = text.trim().split(/\s+/).length;
   consoleLog(`✅ ${ai.name} — responded in ${elapsed}s (~${words} words)`, 'success');
+
+  // Deep Dive capture (only writes when Deep Dive is on)
+  WF_DEBUG.captureRound({
+    aiName:    ai.name,
+    provider:  ai.provider,
+    model:     cfg.model,
+    elapsed:   parseFloat(elapsed),
+    chars:     text.length,
+    words,
+    status:    response.status,
+    finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null
+  });
+
   return text;
 }
 

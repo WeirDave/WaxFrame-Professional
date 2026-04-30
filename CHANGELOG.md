@@ -2,6 +2,46 @@
 
 ---
 
+## v3.28.0 — Troubleshooting Mode + Deep Dive foundation
+**Build:** `20260430-001` · **Released:** April 30, 2026
+
+### What's new
+
+Two-layer Debug system replacing the previous catch-all "check your API key" error message with plain-English Troubleshooting Cards on the surface and full Deep Dive capture underneath for advanced diagnosis.
+
+**Layer 1 — Troubleshooting Mode (ON by default)**
+
+When something breaks, users now see a Troubleshooting Card explaining what happened, what it means, and what to do. The card includes context-aware action buttons (open provider console, retry round, change Builder, read CORS guide) and a collapsed "Show technical details" expand for those who want to see under the hood. A Copy Report button packages the full diagnosis with version stamp for sharing.
+
+**Layer 2 — Deep Dive Mode (OFF by default, dev toolbar toggle)**
+
+When enabled, captures full technical detail on every round into a 10-round ring buffer — provider, model, elapsed time, character/word counts, HTTP status, finish reason. Every round writes a `🔬` line to the Live Console. Designed for diagnosing intermittent issues against custom endpoints (Open WebUI, Ollama, internal gateways).
+
+**Card catalog ships with 14 known failure modes**
+
+CORS blocked, rate limited, auth failed (401/403), endpoint not found (404), method not allowed (405), provider 5xx, empty response, network error, no models returned, Builder missing CONFLICTS block, Builder bloat, Builder delimiter parse failure, license verification failed, license invalid. Generic fallback for unknown errors still surfaces a useful copy-able report.
+
+### Architecture
+
+- New `WF_DEBUG` namespace at top of `app.js` — toggles, ring buffer, classifier, capture
+- New `WF_ERROR_CATALOG` array — single source of truth for known failure modes
+- New `classify(err, ctx)` function replacing the previous duplicate HTTP-status classification logic in `callAPI`
+- `callAPI` rewired to surface a Troubleshooting Card on every fetch error, every HTTP non-200, and every empty response — without removing the existing console error lines
+- `showRoundErrorModal('bloat'|'conflicts'|'delimiters')` now routes through Troubleshooting Cards when Troubleshooting Mode is on, falls back to legacy modal when off
+
+### UI
+
+- New `troubleshootingCard` modal in `index.html` styled to match the WaxFrame aesthetic
+- Two new dev-toolbar toggles: `🩺 Troubleshooting` (gold-accent active state) and `🔬 Deep Dive` (teal-accent active state)
+- New CSS for the Card surface, expand/collapse, and toggle states
+
+### Notes
+
+- Card system is scoped to `callAPI` and Builder formatting failures in this release. Test All Keys, Custom AI test, Import from Model Server, file ingestion, and license verification surface the legacy errors for now — those will migrate to Cards in v3.28.x as the catalog grows.
+- All four canonical version-stamp locations bumped to v3.28.0 / `20260430-001`. All six pages cache-busted.
+
+---
+
 ## v3.27.13 Pro — Build `20260429-033`
 **Released:** April 29, 2026
 
