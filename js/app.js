@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-002
+//  Build: 20260430-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -32,20 +32,17 @@
 // ============================================================
 const WF_DEBUG = {
   // ── State ──
-  troubleshootingOn: (localStorage.getItem('waxframe_troubleshooting') ?? '1') === '1',
+  // v3.28.2: Troubleshooting Cards are always-on now. The "toggle" was a
+  // mistake — better error messages are strictly better than worse ones,
+  // there's no scenario a user wants the old terse-red-line behavior.
+  // Deep Dive remains a real toggle since capture has a memory cost and
+  // is genuinely a power-user feature.
   deepDiveOn:        localStorage.getItem('waxframe_deepdive') === '1',
   ringBuffer:        [],   // last N round captures when Deep Dive is on
   RING_MAX:          10,
   lastFailure:       null, // lightweight context from most recent failure
 
   // ── Toggles ──
-  setTroubleshooting(on) {
-    this.troubleshootingOn = !!on;
-    localStorage.setItem('waxframe_troubleshooting', on ? '1' : '0');
-    const btn = document.getElementById('wfTroubleshootingToggle');
-    if (btn) btn.classList.toggle('active', !!on);
-    if (typeof toast === 'function') toast(on ? '🩺 Troubleshooting Mode ON' : '🩺 Troubleshooting Mode OFF');
-  },
   setDeepDive(on) {
     this.deepDiveOn = !!on;
     localStorage.setItem('waxframe_deepdive', on ? '1' : '0');
@@ -101,12 +98,135 @@ const WF_DEBUG = {
   },
 
   // ── Show a Troubleshooting Card ──
+  // v3.28.2: always shows (no more troubleshootingOn gate). Better error
+  // messages are strictly better than worse ones; there is no scenario a
+  // user wants the old terse-red-line behavior, so no toggle is needed.
   showCard(entry, ctx = {}) {
-    if (!this.troubleshootingOn) return;
     this.captureFailure({ code: entry.code, ...ctx });
     if (typeof renderTroubleshootingCard === 'function') {
       renderTroubleshootingCard(entry, ctx);
     }
+  },
+
+  // ── Deep Dive Viewer (v3.28.2) ──
+  // Opens a modal showing the ring buffer as a clean table.
+  // No more typing WF_DEBUG.ringBuffer in DevTools.
+  openViewer() {
+    const modal = document.getElementById('deepDiveViewer');
+    if (!modal) return;
+    this._renderViewer();
+    modal.classList.add('active');
+  },
+  closeViewer() {
+    const modal = document.getElementById('deepDiveViewer');
+    if (modal) modal.classList.remove('active');
+  },
+  _renderViewer() {
+    const tbody  = document.getElementById('ddvTableBody');
+    const status = document.getElementById('ddvStatus');
+    const count  = document.getElementById('ddvCount');
+    if (!tbody || !status) return;
+
+    if (count) count.textContent = this.ringBuffer.length;
+
+    if (!this.deepDiveOn) {
+      status.textContent = 'Deep Dive is OFF — turn it on in the Dev Toolbar to start capturing rounds.';
+      status.className = 'ddv-status ddv-status-off';
+    } else if (this.ringBuffer.length === 0) {
+      status.textContent = 'Deep Dive is ON — no rounds captured yet. Run a round and come back.';
+      status.className = 'ddv-status ddv-status-empty';
+    } else {
+      status.textContent = `Deep Dive is ON — showing last ${this.ringBuffer.length} round(s) captured (max ${this.RING_MAX}).`;
+      status.className = 'ddv-status ddv-status-on';
+    }
+
+    if (this.ringBuffer.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="8" class="ddv-empty">No captures yet.</td></tr>';
+      return;
+    }
+
+    // Newest first
+    const rows = [...this.ringBuffer].reverse().map(c => {
+      const time = c.capturedAt ? new Date(c.capturedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '—';
+      const esc = s => String(s ?? '—').replace(/[<>&]/g, ch => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[ch]));
+      return `<tr>
+        <td>${esc(time)}</td>
+        <td>${esc(c.aiName)}</td>
+        <td>${esc(c.provider)}</td>
+        <td class="ddv-mono">${esc(c.model)}</td>
+        <td class="ddv-num">${c.elapsed != null ? esc(c.elapsed) + 's' : '—'}</td>
+        <td class="ddv-num">${c.chars != null ? esc(c.chars.toLocaleString()) : '—'}</td>
+        <td class="ddv-num">${c.words != null ? esc(c.words.toLocaleString()) : '—'}</td>
+        <td class="ddv-mono">${esc(c.finishReason)}</td>
+      </tr>`;
+    }).join('');
+    tbody.innerHTML = rows;
+  },
+  copyViewer() {
+    if (this.ringBuffer.length === 0) {
+      if (typeof toast === 'function') toast('Nothing to copy — buffer is empty');
+      return;
+    }
+    const payload =
+      'WaxFrame Deep Dive Capture\n' +
+      '==========================\n' +
+      `Version: ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown'} · Build ${typeof BUILD !== 'undefined' ? BUILD : 'unknown'}\n` +
+      `Captured: ${this.ringBuffer.length} round(s)\n\n` +
+      JSON.stringify(this.ringBuffer, null, 2);
+    if (typeof copyToClipboard === 'function') {
+      copyToClipboard(payload, 'Capture buffer');
+    } else {
+      navigator.clipboard?.writeText(payload).catch(() => {});
+    }
+  },
+  clearViewer() {
+    if (this.ringBuffer.length === 0) {
+      if (typeof toast === 'function') toast('Buffer is already empty');
+      return;
+    }
+    this.ringBuffer = [];
+    this._renderViewer();
+    if (typeof toast === 'function') toast('🔬 Capture buffer cleared');
+  },
+
+  // ── Dev test triggers (v3.28.2) ──
+  // testCard cycles through every catalog entry on each click so all
+  // 14 card designs can be eyeballed without forcing real errors.
+  // testViewer seeds the ring buffer with realistic fake captures
+  // and opens the viewer — purely for theme/layout review.
+  _testCardIdx: 0,
+  testCard() {
+    const entry = WF_ERROR_CATALOG[this._testCardIdx % WF_ERROR_CATALOG.length];
+    this._testCardIdx++;
+    const ctx = {
+      aiName:       'ChatGPT',
+      provider:     'chatgpt',
+      aiConsoleUrl: 'https://platform.openai.com/api-keys',
+      isCustomEndpoint: false,
+      status:       entry.code === 'AUTH_FAILED' ? 401 :
+                    entry.code === 'RATE_LIMITED' ? 429 :
+                    entry.code === 'ENDPOINT_NOT_FOUND' ? 404 :
+                    entry.code === 'METHOD_NOT_ALLOWED' ? 405 :
+                    entry.code === 'PROVIDER_DOWN' ? 503 :
+                    entry.code === 'MODEL_NEEDS_DIFFERENT_ENDPOINT' ? 404 : null,
+      message:      `Sample ${entry.code} message for preview`,
+      raw:          JSON.stringify({ error: { code: entry.code, message: 'Sample preview payload — not a real error' } }, null, 2)
+    };
+    this.showCard(entry, ctx);
+    if (typeof toast === 'function') toast(`Card ${this._testCardIdx} of ${WF_ERROR_CATALOG.length}: ${entry.code}`);
+  },
+  testViewer() {
+    const fake = [
+      { aiName: 'Claude',     provider: 'claude',     model: 'claude-opus-4-7',         elapsed: 38.5, chars: 5821, words: 1024, status: 200, finishReason: 'end_turn' },
+      { aiName: 'ChatGPT',    provider: 'chatgpt',    model: 'gpt-5.5',                 elapsed: 21.3, chars: 4612, words:  823, status: 200, finishReason: 'stop' },
+      { aiName: 'Gemini',     provider: 'gemini',     model: 'gemini-3.1-pro',          elapsed: 37.3, chars: 4108, words:  717, status: 200, finishReason: 'STOP' },
+      { aiName: 'Grok',       provider: 'grok',       model: 'grok-4.20-reasoning',     elapsed: 49.5, chars: 3094, words:  544, status: 200, finishReason: 'stop' },
+      { aiName: 'DeepSeek',   provider: 'deepseek',   model: 'deepseek-v4',             elapsed:  0.8, chars: 4922, words:  848, status: 200, finishReason: 'stop' },
+      { aiName: 'Perplexity', provider: 'perplexity', model: 'sonar-pro',               elapsed:  7.1, chars: 1873, words:  313, status: 200, finishReason: 'stop' }
+    ];
+    this.ringBuffer = fake.map(f => ({ ...f, capturedAt: new Date().toISOString() }));
+    this.openViewer();
+    if (typeof toast === 'function') toast(`🔬 Seeded ${fake.length} fake captures — preview only`);
   }
 };
 
@@ -376,10 +496,8 @@ function tcCopyDetails() {
   }
 }
 
-// Apply persisted toggles to dev-toolbar buttons once DOM is ready
+// Apply persisted Deep Dive toggle to dev-toolbar button once DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  const t = document.getElementById('wfTroubleshootingToggle');
-  if (t) t.classList.toggle('active', WF_DEBUG.troubleshootingOn);
   const d = document.getElementById('wfDeepDiveToggle');
   if (d) d.classList.toggle('active', WF_DEBUG.deepDiveOn);
 });
@@ -916,7 +1034,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-002';         // build stamp — update each session
+const BUILD       = '20260430-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1440,36 +1558,31 @@ function closeChangeBuilder() {
 }
 
 function showRoundErrorModal(reason, details) {
-  // ── v3.28.1: route through Troubleshooting Card when Troubleshooting Mode is on ──
-  if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.troubleshootingOn) {
-    const ctxKindMap = {
-      bloat:      'builder_bloat',
-      conflicts:  'builder_missing_conflicts',
-      delimiters: 'builder_delimiters'
+  // ── v3.28.2: Cards are always the surface for known reasons.
+  // Legacy modal only fires for an unrecognized reason as a safety net.
+  const ctxKindMap = {
+    bloat:      'builder_bloat',
+    conflicts:  'builder_missing_conflicts',
+    delimiters: 'builder_delimiters'
+  };
+  const kind = ctxKindMap[reason];
+  if (kind) {
+    const ctx = {
+      kind,
+      message: details || '',
+      raw:     details || null
     };
-    const kind = ctxKindMap[reason];
-    if (kind) {
-      const ctx = {
-        kind,
-        message: details || '',
-        raw:     details || null
-      };
-      const entry = WF_DEBUG.classify(new Error(reason), ctx);
-      WF_DEBUG.showCard(entry, ctx);
-      return; // suppress legacy modal — Card is the surface
-    }
-    // For 'api' (Builder API failure): callAPI ALREADY fired a Card with
-    // the actual classified error and root-cause technical details. Showing
-    // the legacy generic "check your API key" modal on top of that produced
-    // a confusing double-surface where the modal contradicted the Card.
-    // v3.28.1: drop the legacy modal in this case too — the Card already
-    // told the user what to do. Round flow continues to mark the round
-    // failed and not save it; only the redundant modal goes away.
-    if (reason === 'api') {
-      return;
-    }
-    // Other unknown reason — fall through to legacy modal as a safety net.
+    const entry = WF_DEBUG.classify(new Error(reason), ctx);
+    WF_DEBUG.showCard(entry, ctx);
+    return;
   }
+  // Builder API failure: callAPI ALREADY fired a Card with the actual
+  // classified error and root-cause technical details. The legacy
+  // generic modal would just contradict it. Suppress.
+  if (reason === 'api') {
+    return;
+  }
+  // Truly unknown reason — fall through to legacy modal as a safety net.
 
   const modal   = document.getElementById('roundErrorModal');
   const msgEl   = document.getElementById('roundErrorMsg');

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-002
+     Build: 20260430-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-002">
+  <meta name="waxframe-build" content="20260430-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.28.1">
+  <link rel="stylesheet" href="style.css?v=3.28.2">
 </head>
 <body>
 
@@ -1109,6 +1109,46 @@
   </div>
 </div>
 
+<!-- DEEP DIVE VIEWER (v3.28.2) — clean UI for the WF_DEBUG.ringBuffer
+     so users don't have to type WF_DEBUG.ringBuffer in DevTools.
+     Opens via the 📋 View Captures button on the Dev Toolbar. -->
+<div class="finish-modal-overlay ddv-overlay" id="deepDiveViewer" onclick="if(event.target===this)WF_DEBUG.closeViewer()">
+  <div class="finish-modal ddv-modal">
+    <h2 class="finish-modal-title ddv-title-row">
+      <span class="ddv-icon">🔬</span> Deep Dive Capture Viewer
+      <span class="ddv-count-badge"><span id="ddvCount">0</span> rounds</span>
+    </h2>
+    <div class="ddv-body">
+      <p class="ddv-status" id="ddvStatus">Deep Dive is OFF — turn it on in the Dev Toolbar to start capturing rounds.</p>
+      <div class="ddv-table-wrap">
+        <table class="ddv-table">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>AI</th>
+              <th>Provider</th>
+              <th>Model</th>
+              <th>Elapsed</th>
+              <th>Chars</th>
+              <th>Words</th>
+              <th>Finish</th>
+            </tr>
+          </thead>
+          <tbody id="ddvTableBody">
+            <tr><td colspan="8" class="ddv-empty">No captures yet.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="ddv-actions">
+        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
+        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
+        <button class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
+      </div>
+    </div>
+    <button class="finish-modal-cancel" onclick="WF_DEBUG.closeViewer()">← Close</button>
+  </div>
+</div>
+
 <!-- DISCARD CONFIRMATION MODAL — replaces the native confirm() that was used
      in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
      looked jarring against the WaxFrame aesthetic. Opened by openDiscardConfirm()
@@ -1699,9 +1739,11 @@
   <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
   <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
   <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
+  <button onclick="WF_DEBUG.testCard()" title="Cycle through all Troubleshooting Card catalog entries — preview every card design">▶ Test Card</button>
+  <button onclick="WF_DEBUG.testViewer()" title="Seed fake captures into the ring buffer and open the Deep Dive Viewer for theme/layout testing">▶ Test Viewer</button>
   <span class="dev-toolbar-sep">|</span>
-  <button id="wfTroubleshootingToggle" onclick="WF_DEBUG.setTroubleshooting(!WF_DEBUG.troubleshootingOn)" title="Plain-English error help when something breaks">🩺 Troubleshooting</button>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
+  <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
 </div>
 
 <div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
@@ -1759,8 +1801,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.28.1"></script>
-<script src="js/app.js?v=3.28.1"></script>
+<script src="js/version.js?v=3.28.2"></script>
+<script src="js/app.js?v=3.28.2"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
