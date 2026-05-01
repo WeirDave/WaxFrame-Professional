@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-014
+     Build: 20260430-017
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-014">
+  <meta name="waxframe-build" content="20260430-017">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.29.9">
+  <link rel="stylesheet" href="style.css?v=3.29.11">
 </head>
 <body>
 
@@ -808,6 +808,20 @@
         </div>
       </div>
     </div>
+    <div class="custom-ai-form-row custom-ai-icon-row">
+      <div class="custom-ai-field-wrap">
+        <label>Icon <span class="field-optional">(optional)</span></label>
+        <div class="custom-ai-icon-uploader" id="customAIIconWrap">
+          <button type="button" class="btn btn-sm" id="customAIIconUploadBtn">📷 Upload Icon</button>
+          <div class="custom-ai-icon-preview-box">
+            <img id="customAIIconPreview" alt="" style="display:none;">
+            <button type="button" class="custom-ai-icon-clear-btn" id="customAIIconClearBtn" title="Remove icon" aria-label="Remove icon">×</button>
+          </div>
+          <span class="custom-ai-icon-help">PNG/JPEG/WebP, 256×256 recommended · auto-resized · stored locally</span>
+          <input type="file" id="customAIIconFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
+        </div>
+      </div>
+    </div>
     <div class="custom-ai-form-footer">
       <button class="btn" onclick="showAddCustomAI()">Cancel</button>
       <button class="btn btn-accent btn-sm" id="customAIAddBtn" onclick="addCustomAI()">Add to Hive</button>
@@ -900,6 +914,18 @@
         <div class="import-server-fetch-row">
           <button class="btn btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
           <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
+        </div>
+        <div class="custom-ai-field-wrap">
+          <label>Icon <span class="field-optional">(optional · applied to all imported models)</span></label>
+          <div class="custom-ai-icon-uploader" id="importServerIconWrap">
+            <button type="button" class="btn btn-sm" id="importServerIconUploadBtn">📷 Upload Icon</button>
+            <div class="custom-ai-icon-preview-box">
+              <img id="importServerIconPreview" alt="" style="display:none;">
+              <button type="button" class="custom-ai-icon-clear-btn" id="importServerIconClearBtn" title="Remove icon" aria-label="Remove icon">×</button>
+            </div>
+            <span class="custom-ai-icon-help">PNG/JPEG/WebP, 256×256 recommended · auto-resized · stored locally</span>
+            <input type="file" id="importServerIconFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
+          </div>
         </div>
         <div class="import-server-actions-row">
           <button class="btn btn-sm import-server-raw-toggle" id="importServerRawToggle" onclick="toggleImportServerRawPane()">📋 View response details</button>
@@ -1831,8 +1857,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.29.9"></script>
-<script src="js/app.js?v=3.29.9"></script>
+<script src="js/version.js?v=3.29.11"></script>
+<script src="js/app.js?v=3.29.11"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
