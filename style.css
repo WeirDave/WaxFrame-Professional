@@ -8309,21 +8309,54 @@ kbd {
   gap: 6px;
   padding: 10px 12px;
 }
-.ref-card-ta {
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  color: var(--text);
+/* v3.29.1 — paste-mode wrapper: flex row with line-numbers gutter on the
+   left and the textarea filling the rest. The wrapper itself carries the
+   border so the gutter and textarea look like one unified panel. */
+.ref-card-paste-wrap {
+  display: flex;
+  align-items: stretch;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.ref-card-paste-wrap:focus-within {
+  border-color: var(--accent);
+}
+.ref-card-line-numbers {
+  flex: 0 0 44px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-dim);
+  text-align: right;
+  padding: 10px 8px 10px 6px;
+  background: var(--surface2);
+  border-right: 1px solid var(--border);
+  user-select: none;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.ref-card-line-numbers div {
+  height: 1.5em;
+  line-height: 1.5em;
+}
+.ref-card-ta {
+  flex: 1;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   padding: 10px 12px;
   resize: vertical;
-  min-height: 120px;
+  min-height: 220px;
   line-height: 1.5;
+  outline: none;
 }
 .ref-card-ta:focus {
   outline: none;
-  border-color: var(--accent);
 }
 .ref-card-upload-status {
   background: var(--surface2);
@@ -8347,6 +8380,8 @@ kbd {
 }
 .ref-card-counters .ref-card-count-chars,
 .ref-card-counters .ref-card-count-words,
+.ref-card-counters .ref-card-count-lines,
+.ref-card-counters .ref-card-count-paragraphs,
 .ref-card-counters .ref-card-count-tokens {
   color: var(--accent);
   font-weight: 600;
