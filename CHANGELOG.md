@@ -2,6 +2,14 @@
 
 ---
 
+## v3.29.3
+**Build:** `20260430-008` · **Released:** April 30, 2026
+
+- Fixed: when the Builder was also a no-changes reviewer in the same round, its bee card lost the gold star after building. Cause: the Builder transition through `'sending'` strips `is-clean`, and the post-build `'done'` state never restored it. Now the Builder finish path checks `reviewerResponses` and, if the Builder said "no changes needed" as a reviewer, sets `'done-clean'` with summary `"No changes proposed · Built doc ✓"`.
+- `setBeeStatus` `done-clean` now uses the passed `summary` arg if provided (was hardcoded to `"No changes needed"`).
+
+---
+
 ## v3.29.2
 **Build:** `20260430-007` · **Released:** April 30, 2026
 
