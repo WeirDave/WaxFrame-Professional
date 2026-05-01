@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-010
+//  Build: 20260430-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-010';         // build stamp — update each session
+const BUILD       = '20260430-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4123,8 +4123,14 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
   if (!cacheId || !models?.length || !askingModel) return null;
 
   const cached = getCachedRecommendation(cacheId);
-  if (cached && models.includes(cached.model)) {
-    return { model: cached.model, why: cached.why, cached: true };
+  // v3.29.6 — cached path now returns labels too. If labels are missing or
+  // empty (old cache from before v3.27.0, or before the custom-flow started
+  // surfacing them in v3.29.5), fall through to a fresh call so the next
+  // result populates labels. Once cached with labels, future calls hit the
+  // cache cleanly and the dropdown gets ✨/⚡/💰 annotations instantly.
+  const cachedHasLabels = cached?.labels && Object.keys(cached.labels).length > 0;
+  if (cached && models.includes(cached.model) && cachedHasLabels) {
+    return { model: cached.model, why: cached.why, labels: cached.labels, cached: true };
   }
 
   const promptTemplate = getRecommendationPrompt();
@@ -4450,6 +4456,12 @@ async function migrateRecommendOnStartup() {
 // v3.26.1: more visible loading state (dropdown disabled + "Asking…" text),
 // clearer error messages, brief success highlight on the dropdown.
 async function recommendCustomAIModel() {
+  // v3.29.6 — diagnostic log: confirms the click handler is being reached.
+  // If you click Recommend a Model and DON'T see this in F12 → Console,
+  // the click is being intercepted before it reaches JS (likely a browser
+  // extension or DOM overlay). This log will be removed once the silent-
+  // click bug is root-caused.
+  console.warn('[recommend-custom-ai] handler called');
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
   const keyInput  = document.getElementById('customAIKey');
