@@ -2733,6 +2733,79 @@ html, body {
   color: var(--accent);
 }
 
+/* v3.29.11 — Shared icon uploader widget, used in both the Add a Custom
+   Worker Bee modal and the Import from Model Server modal. Layout:
+
+     [📷 Upload Icon]  [preview 56×56 with × clear btn]  help text
+
+   Empty state: only the upload button + help text are visible. Once an
+   icon is loaded, the preview box appears, the clear × becomes visible,
+   and the upload button text flips to "🔄 Replace Icon" (handled in JS).
+   Help text and × clear button are hidden when no icon is loaded — the
+   `.has-icon` class on the wrap gates them in. */
+.custom-ai-icon-uploader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.custom-ai-icon-preview-box {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  background: var(--surface2);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+.custom-ai-icon-uploader.has-icon .custom-ai-icon-preview-box {
+  display: flex;
+  border-style: solid;
+  border-color: var(--border);
+}
+.custom-ai-icon-preview-box img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.custom-ai-icon-clear-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+.custom-ai-icon-uploader.has-icon .custom-ai-icon-clear-btn {
+  display: flex;
+}
+.custom-ai-icon-clear-btn:hover {
+  background: var(--red);
+  color: #fff;
+  border-color: var(--red);
+}
+.custom-ai-icon-help {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
 .custom-ai-model-input-wrap {
   display: flex;
   gap: 6px;
