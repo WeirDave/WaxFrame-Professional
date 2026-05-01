@@ -2759,14 +2759,9 @@ html, body {
 }
 .custom-ai-model-aids.is-visible { display: flex; }
 
-.custom-ai-recommend-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.custom-ai-recommend-btn:disabled { opacity: 0.6; cursor: wait; }
+/* v3.29.9 — .custom-ai-recommend-btn rules removed. Manual Recommend a Model
+   button no longer exists; the recommendation runs automatically after a
+   successful Fetch Models. */
 
 .custom-ai-choose-model-link {
   display: inline-flex;
