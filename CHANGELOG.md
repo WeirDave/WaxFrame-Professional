@@ -1,6 +1,21 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.30.0
+**Build:** `20260501-001` · **Released:** May 1, 2026
+
+- **New: Bulk-remove imported model groups.** A new "📡 Imported Groups" panel renders above the bee list whenever any custom AIs originated from the Import from Model Server flow. Each group is grouped by `_modelsEndpoint` (the original Models URL), shows the host + count, and has one "🗑 Remove all N" button that wipes every bee imported from that server in a single confirmation. Previously, removing a 40-model import meant 40 individual clicks.
+- **New: Per-row icon column in the Import Server checklist.** Each model row now has a clickable thumbnail that auto-detects the right icon by smart-matching the model id against the existing `wfIconUpload._CATALOG` (gpt-* → ChatGPT, claude-* → Claude, llama-* → Meta, etc.). Click the thumbnail to override per-row via the new icon picker. Falls back to `icon-generic.png` for unknown models. The single group-icon field stays as a fallback, but per-row choices win.
+- **New: Reusable Icon Picker modal.** Two tabs — Bundled icons (provider icons + tools/servers + WaxFrame mascots, ~22 entries) and Upload custom (file → resize to 256×256 → base64 inline). Air-gap-safe: uploaded icons are stored as data URLs on the bee, no external CDN. Wired into the Import Server flow for v3.30.0; designed to be reusable from any future caller via `openIconPicker({ currentIcon, onSelect })`.
+- **New: Reset-to-original model button.** When an AI's model differs from what was originally picked at add/import time (typically because Recommend All was run), a "↺ Reset to {model}" button appears next to the model selector. Defaults snapshot their `_originalModel` at module-eval time; customs snapshot at add time. Pre-v3.30.0 customs are grandfathered via a one-shot migration that captures the current model as the baseline and surfaces a toast advising the user to re-pick if Recommend was run before this version.
+- **Changed: Import Server checklist defaults to nothing selected.** Most model server lists contain dozens of models that aren't useful for document review; defaulting all checkboxes to checked led to noisy hives. The "Add 0 to Hive" button now starts at 0 and updates as the user picks. A new hint above the list explains the empty-by-default state and points to the per-row icon override.
+- **Fixed: Air-gap violation in default AI icons.** DeepSeek, Gemini, and Grok defaults were wired to `https://www.google.com/s2/favicons?domain=...&sz=64` — a live external CDN call on every page load. All three now point to local `images/icon-*.png` files. Same fix applied to the `addCustomAI` icon fallback (was favicon URL → now `icon-generic.png`) and to the builder belt's empty-state fallback list. Two inert references remain in app.js: a code comment and a runtime guard that filters legacy favicon URLs out of stored hive data — both must stay for backward compatibility with bees added before v3.29.10.
+- New `wfIconUpload.matchCatalog(text)` public method exposed on the IIFE so the per-row icon column can run catalog matching without going through the full preview-DOM machinery.
+- New `_importRowIcons` state array on the Import Server modal, populated at render time and cleared on close.
+- New module-level `GENERIC_ICON_PATH` constant — single source of truth for the "no specific provider" fallback.
+
+---
+
 
 ## v3.29.13
 **Build:** `20260430-020` · **Released:** April 30, 2026

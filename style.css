@@ -9492,3 +9492,320 @@ kbd {
 /* ── KYH inline tip inside a card ────────────────────────────── */
 /* The italic note at the bottom of each AI personality card. */
 /* (.kyh-tip removed in v3.23.0 — unified to .wf-tip primitive) */
+
+/* =========================================================
+ * v3.30.0 — Icon picker, per-row icons, imported groups,
+ *           reset-model button, select-none hint
+ * ========================================================= */
+
+/* ── Import Server: Select-None default hint ── */
+.import-server-checklist-hint {
+  padding: 8px 12px;
+  margin: 0 0 8px 0;
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  border-left: 3px solid var(--accent, #f4b400);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2, rgba(255,255,255,0.7));
+}
+
+/* ── Import Server: Per-row icon button ── */
+.import-server-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 2px;
+  margin: 0 8px;
+  background: var(--surface-2, rgba(255,255,255,0.06));
+  border: 1px solid var(--border-1, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  flex-shrink: 0;
+}
+.import-server-icon-btn:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--surface-3, rgba(255,255,255,0.1));
+}
+.import-server-icon-btn:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.import-server-icon-thumb {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Reset-to-original model button ── */
+.ai-reset-model-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  background: transparent;
+  color: var(--accent, #f4b400);
+  border: 1px solid var(--accent, #f4b400);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  max-width: 280px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ai-reset-model-btn:hover {
+  background: var(--accent, #f4b400);
+  color: var(--bg-1, #1a1a1a);
+}
+.ai-reset-model-btn:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+
+/* ── Imported Groups bulk-remove panel ── */
+.imported-groups-panel {
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  background: var(--surface-2, rgba(255,255,255,0.05));
+  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
+  border-radius: 8px;
+}
+.imported-groups-header {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-2, rgba(255,255,255,0.06));
+}
+.imported-groups-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-1, rgba(255,255,255,0.92));
+}
+.imported-groups-sub {
+  font-size: 12px;
+  color: var(--text-2, rgba(255,255,255,0.6));
+}
+.imported-group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 4px;
+  border-radius: 6px;
+  transition: background 0.15s ease;
+}
+.imported-group-row + .imported-group-row {
+  border-top: 1px solid var(--border-2, rgba(255,255,255,0.05));
+}
+.imported-group-row:hover {
+  background: var(--surface-3, rgba(255,255,255,0.04));
+}
+.imported-group-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+.imported-group-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+.imported-group-textwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.imported-group-host {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-1, rgba(255,255,255,0.92));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imported-group-meta {
+  font-size: 11px;
+  color: var(--text-2, rgba(255,255,255,0.55));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.imported-group-url {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 10px;
+  opacity: 0.85;
+}
+.imported-group-remove-btn {
+  flex-shrink: 0;
+  font-size: 12px;
+  padding: 6px 12px;
+}
+
+/* ── Icon Picker Modal ── */
+.icon-picker-modal {
+  max-width: 720px;
+  width: 92vw;
+}
+
+.icon-picker-tabs {
+  display: flex;
+  gap: 0;
+  margin: 0 0 12px 0;
+  border-bottom: 1px solid var(--border-1, rgba(255,255,255,0.12));
+}
+.icon-picker-tab {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-2, rgba(255,255,255,0.6));
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.icon-picker-tab:hover {
+  color: var(--text-1, rgba(255,255,255,0.9));
+}
+.icon-picker-tab.is-active {
+  color: var(--accent, #f4b400);
+  border-bottom-color: var(--accent, #f4b400);
+}
+.icon-picker-tab:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: -2px;
+}
+
+.icon-picker-body {
+  min-height: 360px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.icon-picker-pane {
+  display: none;
+}
+.icon-picker-pane.is-active {
+  display: block;
+}
+
+/* ── Bundled icons tab ── */
+.icon-picker-bundled-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.icon-picker-section-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-2, rgba(255,255,255,0.55));
+  margin: 4px 0 6px 0;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border-2, rgba(255,255,255,0.08));
+}
+.icon-picker-section-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+  gap: 8px;
+}
+.icon-picker-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 10px 6px;
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
+}
+.icon-picker-tile:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--surface-3, rgba(255,255,255,0.08));
+  transform: translateY(-1px);
+}
+.icon-picker-tile.is-selected {
+  border-color: var(--accent, #f4b400);
+  background: var(--surface-3, rgba(255,255,255,0.1));
+  box-shadow: inset 0 0 0 1px var(--accent, #f4b400);
+}
+.icon-picker-tile:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.icon-picker-tile-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  display: block;
+  flex-shrink: 0;
+}
+.icon-picker-tile-name {
+  font-size: 11px;
+  text-align: center;
+  color: var(--text-1, rgba(255,255,255,0.85));
+  line-height: 1.2;
+  word-break: break-word;
+}
+
+/* ── Upload custom tab ── */
+.icon-picker-upload-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+}
+.icon-picker-upload-help {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-2, rgba(255,255,255,0.65));
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  padding: 10px 12px;
+  border-left: 3px solid var(--accent, #f4b400);
+  border-radius: 4px;
+}
+.icon-picker-upload-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+#iconPickerUploadFile {
+  font-size: 13px;
+  color: var(--text-1, rgba(255,255,255,0.85));
+  flex: 1;
+  min-width: 200px;
+}
+.icon-picker-upload-preview {
+  width: 96px;
+  height: 96px;
+  object-fit: contain;
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-1, rgba(255,255,255,0.12));
+  border-radius: 6px;
+  padding: 6px;
+  display: none;
+}
+.icon-picker-upload-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 8px;
+  border-top: 1px solid var(--border-2, rgba(255,255,255,0.06));
+}

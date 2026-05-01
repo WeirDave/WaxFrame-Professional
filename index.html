@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-020
+     Build: 20260501-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-020">
+  <meta name="waxframe-build" content="20260501-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.29.13">
+  <link rel="stylesheet" href="style.css?v=3.30.0">
 </head>
 <body>
 
@@ -999,6 +999,9 @@
               <button class="btn btn-xs" onclick="importServerSelectNone()">None</button>
             </div>
           </div>
+          <div class="import-server-checklist-hint">
+            Nothing is selected by default — most server lists contain models that aren't useful for document review. Pick the ones you want, then click the icon thumbnail on each row to customize it (auto-detected from the model name otherwise).
+          </div>
           <div class="import-server-checklist-items" id="importServerChecklistItems"></div>
         </div>
 
@@ -1010,6 +1013,50 @@
       <span></span>
       <button class="btn" onclick="closeImportServerModal()">Cancel</button>
       <button class="btn btn-accent btn-sm" id="importServerAddBtn" onclick="addImportServerModels()" disabled>Add 0 to Hive</button>
+    </div>
+  </div>
+</div>
+
+<!-- v3.30.0 — Reusable Icon Picker Modal. Opened via openIconPicker(opts) — see app.js. Two tabs (Bundled / Upload custom). Bundled grid is rendered into iconPickerBundledGrid at open time so the same modal serves any caller. Upload tab resizes to 256x256 and stores base64 inline so air-gapped deployments stay self-contained. -->
+<div class="custom-ai-modal-overlay" id="iconPickerModal" onclick="if(event.target===this)closeIconPicker()">
+  <div class="custom-ai-modal icon-picker-modal">
+    <div class="custom-ai-modal-hdr">
+      <div class="custom-ai-modal-brand">
+        <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
+        <div>
+          <div class="custom-ai-modal-title">Choose an Icon</div>
+          <div class="custom-ai-modal-sub">Pick a bundled icon or upload your own — your choice is saved with this AI.</div>
+        </div>
+      </div>
+      <button class="custom-ai-close" onclick="closeIconPicker()" title="Close">×</button>
+    </div>
+
+    <div class="icon-picker-tabs">
+      <button type="button" class="icon-picker-tab is-active" id="iconPickerTab-bundled" onclick="_iconPickerSwitchTab('bundled')">Bundled icons</button>
+      <button type="button" class="icon-picker-tab" id="iconPickerTab-upload" onclick="_iconPickerSwitchTab('upload')">Upload custom</button>
+    </div>
+
+    <div class="icon-picker-body">
+      <!-- Bundled icons tab -->
+      <div class="icon-picker-pane is-active" id="iconPickerPane-bundled">
+        <div class="icon-picker-bundled-grid" id="iconPickerBundledGrid">
+          <!-- Populated by openIconPicker() -->
+        </div>
+      </div>
+
+      <!-- Upload custom tab -->
+      <div class="icon-picker-pane" id="iconPickerPane-upload">
+        <div class="icon-picker-upload-wrap" id="iconPickerUploadWrap">
+          <p class="icon-picker-upload-help">Pick any image file (PNG, JPG, SVG, WEBP). It'll be resized to 256×256 max and stored inline with the AI — no external URL, safe for air-gapped networks.</p>
+          <div class="icon-picker-upload-row">
+            <input type="file" id="iconPickerUploadFile" accept="image/*" onchange="_iconPickerHandleUpload(this)">
+            <img id="iconPickerUploadPreview" class="icon-picker-upload-preview" alt="">
+          </div>
+          <div class="icon-picker-upload-footer">
+            <button type="button" class="btn btn-accent" id="iconPickerUploadConfirm" onclick="_iconPickerConfirmUpload()" disabled>Use this icon</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1855,8 +1902,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.29.13"></script>
-<script src="js/app.js?v=3.29.13"></script>
+<script src="js/version.js?v=3.30.0"></script>
+<script src="js/app.js?v=3.30.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
