@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-011
+//  Build: 20260430-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-011';         // build stamp — update each session
+const BUILD       = '20260430-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3909,7 +3909,6 @@ function showAddCustomAI() {
   if (quickAdd)   quickAdd.value  = '';
   if (keyLink)    keyLink.style.display = 'none';
   resetModelField();
-  resetCustomAITest();
   populateQuickAddOptions();
   updateChooseModelLink();
   modal.classList.add('active');
@@ -4456,12 +4455,6 @@ async function migrateRecommendOnStartup() {
 // v3.26.1: more visible loading state (dropdown disabled + "Asking…" text),
 // clearer error messages, brief success highlight on the dropdown.
 async function recommendCustomAIModel() {
-  // v3.29.6 — diagnostic log: confirms the click handler is being reached.
-  // If you click Recommend a Model and DON'T see this in F12 → Console,
-  // the click is being intercepted before it reaches JS (likely a browser
-  // extension or DOM overlay). This log will be removed once the silent-
-  // click bug is root-caused.
-  console.warn('[recommend-custom-ai] handler called');
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
   const keyInput  = document.getElementById('customAIKey');
@@ -4521,7 +4514,6 @@ async function recommendCustomAIModel() {
     // shared recommendModel() returns labels for all three picks; previously
     // the custom flow discarded labels and only used result.model.
     if (result.labels) annotateCustomAIDropdown(result.labels, result.model);
-    resetCustomAITest();
     const cachedTag = result.cached ? ' (cached)' : '';
     toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 7000);
   } else {
@@ -4604,7 +4596,6 @@ function updateChooseModelLink() { updateModelAids(); }
 function updateRecommendBtn()    { updateModelAids(); }
 
 function applyQuickAdd(value) {
-  resetCustomAITest();
   resetModelField();
 
   const keyLink = document.getElementById('customAIKeyLink');
@@ -4788,7 +4779,6 @@ async function fetchCustomAIModels() {
     selectEl.style.display = '';
     fetchBtn.textContent = '↺ Refresh';
     fetchBtn.disabled = false;
-    resetCustomAITest();
     updateRecommendBtn();
 
     // Compose the toast — most informative first
@@ -4809,120 +4799,6 @@ async function fetchCustomAIModels() {
   }
 }
 
-function resetCustomAITest() {
-  const statusEl = document.getElementById('customAITestStatus');
-  const addBtn   = document.getElementById('customAIAddBtn');
-  const testBtn  = document.getElementById('customAITestBtn');
-  const rawPanel = document.getElementById('customAIRawPanel');
-  if (statusEl) { statusEl.textContent = ''; statusEl.className = 'custom-ai-test-status'; }
-  if (addBtn)   addBtn.style.display = 'none';
-  if (testBtn)  { testBtn.style.display = ''; testBtn.disabled = false; testBtn.textContent = 'Test Connection'; }
-  if (rawPanel) rawPanel.style.display = 'none';
-}
-
-async function testCustomAIConnection() {
-  const url    = document.getElementById('customAIUrl').value.trim();
-  const format = document.getElementById('customAIFormat').value;
-  const key    = document.getElementById('customAIKey').value.trim();
-  const modelSelect = document.getElementById('customAIModelSelect');
-  const model  = (modelSelect && modelSelect.style.display !== 'none' ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
-
-  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
-
-  const statusEl    = document.getElementById('customAITestStatus');
-  const addBtn      = document.getElementById('customAIAddBtn');
-  const testBtn     = document.getElementById('customAITestBtn');
-  const rawPanel    = document.getElementById('customAIRawPanel');
-  const rawEndpoint = document.getElementById('customAIRawEndpoint');
-  const rawSent     = document.getElementById('customAIRawSent');
-  const rawStatus   = document.getElementById('customAIRawStatus');
-  const rawReceived = document.getElementById('customAIRawReceived');
-
-  testBtn.disabled = true;
-  testBtn.textContent = '…';
-  if (statusEl) { statusEl.textContent = 'Testing…'; statusEl.className = 'custom-ai-test-status testing'; }
-  if (addBtn)   addBtn.style.display = 'none';
-
-  const baseConfigs = {
-    openai: {
-      // v3.27.5: omit Authorization when key is empty (see addImportServerModels for full rationale)
-      headersFn: k => {
-        const h = { 'Content-Type': 'application/json' };
-        if (k) h['Authorization'] = `Bearer ${k}`;
-        return h;
-      },
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] })
-    },
-    anthropic: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'x-api-key': k, 'anthropic-version': '2023-06-01' }),
-      bodyFn: (m, prompt) => JSON.stringify({ model: m, max_tokens: 64, messages: [{ role: 'user', content: prompt }] })
-    },
-    google: {
-      headersFn: k => ({ 'Content-Type': 'application/json', 'x-goog-api-key': k }),
-      bodyFn: (m, prompt) => JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    }
-  };
-
-  const cfg      = baseConfigs[format] || baseConfigs.openai;
-  const baseUrl  = url.replace(/\/$/, '');
-  const endpoint = baseUrl;
-  const body     = cfg.bodyFn(model, 'Reply with exactly one word: CONNECTED');
-
-  const showRaw = (statusCode, statusText, elapsed, receivedObj) => {
-    if (!rawPanel) return;
-    if (rawEndpoint) rawEndpoint.textContent = endpoint;
-    if (rawSent)     rawSent.textContent = JSON.stringify(JSON.parse(body), null, 2);
-    if (rawStatus)   rawStatus.textContent = `${statusCode} ${statusText}  (${elapsed}ms)`;
-    if (rawReceived) rawReceived.textContent = (receivedObj !== null && typeof receivedObj === 'object') ? JSON.stringify(receivedObj, null, 2) : String(receivedObj);
-    rawPanel.style.display = '';
-  };
-
-  const setFail = (msg, statusCode, statusText, elapsed, receivedObj) => {
-    if (statusEl) { statusEl.textContent = `❌ ${msg}`; statusEl.className = 'custom-ai-test-status fail'; }
-    testBtn.disabled = false;
-    testBtn.textContent = 'Test Again';
-    if (statusCode !== undefined) showRaw(statusCode, statusText, elapsed, receivedObj);
-  };
-
-  const t0 = Date.now();
-  try {
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: cfg.headersFn(key),
-      body
-    });
-    const elapsed = Date.now() - t0;
-    const data = await response.json().catch(() => null);
-
-    if (!response.ok) {
-      // v3.29.0 — route through unified classifier instead of inline hints.
-      // entry.title is more descriptive than the old generic " — check your
-      // API key" fragment, and now matches what the round-flow Cards say.
-      const apiMsg = data?.error?.message || `HTTP ${response.status}`;
-      const entry  = WF_DEBUG.classify(new Error(apiMsg), {
-        status: response.status,
-        message: apiMsg,
-        isCustomEndpoint: true
-      });
-      const failMsg = `${entry.title}${apiMsg && apiMsg !== entry.title ? ' — ' + apiMsg : ''}`;
-      setFail(failMsg, response.status, response.statusText, elapsed, data);
-      return;
-    }
-
-    showRaw(response.status, response.statusText, elapsed, data);
-    if (statusEl) { statusEl.textContent = 'Connected successfully'; statusEl.className = 'custom-ai-test-status pass'; }
-    testBtn.style.display = 'none';
-    if (addBtn) addBtn.style.display = '';
-
-  } catch(e) {
-    const elapsed = Date.now() - t0;
-    // v3.29.0 — let the classifier decide CORS_BLOCKED vs NETWORK_ERROR
-    // vs other client-side fail using its existing matchers.
-    const entry = WF_DEBUG.classify(e, { isCustomEndpoint: true });
-    const failMsg = `${entry.title}${e.message && !entry.title.includes(e.message) ? ' — ' + e.message : ''}`;
-    setFail(failMsg, '—', e.message, elapsed, e.message);
-  }
-}
 
 function addCustomAI() {
   const url    = document.getElementById('customAIUrl').value.trim();
@@ -5014,7 +4890,6 @@ function addCustomAI() {
   const kl = document.getElementById('customAIKeyLink');
   if (kl) kl.style.display = 'none';
   resetModelField();
-  resetCustomAITest();
 
   renderAISetupGrid();
   saveHive();
