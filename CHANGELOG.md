@@ -1,8 +1,8 @@
 # WaxFrame Professional — Changelog
 
 ---
-## v3.30.0
-**Build:** `20260501-002` · **Released:** May 1, 2026
+## v3.30.1
+**Build:** `20260501-003` · **Released:** May 1, 2026
 
 - **New: Multi-select bulk-remove on the Worker Bee screen.** A toggle button "☑ Multi-select to remove" appears above the bee list whenever you have at least one custom AI. Click it to enter multi-select mode: every custom row's 🗑 button swaps for a checkbox, and a toolbar gives you All / None / "Remove N selected" / Cancel. Default AIs keep their Hide button while multi-select is on — Remove and Hide are different operations and merging them in one bulk action would be semantically confusing. One confirmation up front, then the whole subset is wiped (API configs, recommend caches, model caches all cleaned up). Complements the per-server Imported Groups panel (which handles "everything from this server"); this one handles arbitrary subsets.
 - **New: Bulk-remove imported model groups.** A new "📡 Imported Groups" panel renders above the bee list whenever any custom AIs originated from the Import from Model Server flow. Each group is grouped by `_modelsEndpoint` (the original Models URL), shows the host + count, and has one "🗑 Remove all N" button that wipes every bee imported from that server in a single confirmation. Previously, removing a 40-model import meant 40 individual clicks.
