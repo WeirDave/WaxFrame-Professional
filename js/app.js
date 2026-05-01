@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-014
+//  Build: 20260430-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-014';         // build stamp — update each session
+const BUILD       = '20260430-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3913,6 +3913,21 @@ function showAddCustomAI() {
   resetModelField();
   populateQuickAddOptions();
   updateChooseModelLink();
+  // v3.29.11 — wire the icon uploader and clear any previous icon. attach()
+  // is idempotent — re-binding event handlers each open is fine and avoids
+  // a separate "is initialized?" flag.
+  wfIconUpload.attach({
+    fileInputId:   'customAIIconFileInput',
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap',
+    clearBtnId:    'customAIIconClearBtn',
+    uploadBtnId:   'customAIIconUploadBtn'
+  });
+  wfIconUpload.clear({
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap',
+    uploadBtnId:   'customAIIconUploadBtn'
+  });
   modal.classList.add('active');
   document.getElementById('customAIQuickAdd')?.focus();
 }
@@ -4868,7 +4883,12 @@ function addCustomAI() {
 
   const id     = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
   const origin = (() => { try { return new URL(url).origin; } catch(e) { return url; } })();
-  const icon   = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  // v3.29.11 — prefer user-uploaded icon (256×256 PNG data URL from the
+  // shared uploader) over the favicon proxy default. resolveAiIcon already
+  // gives data URLs priority over the favicon proxy via its guard at line
+  // 8472, so a custom icon Just Works in the renderer.
+  const userIcon = wfIconUpload.read({ previewId: 'customAIIconPreview' });
+  const icon   = userIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
   const ai     = { id, name, url, icon, provider: id };
 
   // Build API config based on selected format
@@ -5006,9 +5026,13 @@ function stopImportTimestampTicker() {
 const IMPORT_SERVER_LS_KEY = 'waxframe_import_server_defaults';
 const IS_LOCAL_RUNTIME = (typeof location !== 'undefined' && location.protocol === 'file:');
 
-function saveImportServerDefaults(chatUrl, modelsUrl, apiKey) {
+function saveImportServerDefaults(chatUrl, modelsUrl, apiKey, icon) {
   try {
-    const payload = JSON.stringify({ chatUrl, modelsUrl, apiKey });
+    // v3.29.11 — `icon` is an optional 256×256 PNG data URL from the
+    // shared uploader. Stored alongside the URLs so re-opens of the
+    // import-server modal restore the icon, and the "Forget saved
+    // server" path also wipes it.
+    const payload = JSON.stringify({ chatUrl, modelsUrl, apiKey, icon: icon || null });
     localStorage.setItem(IMPORT_SERVER_LS_KEY, payload);
     // Immediate read-back verification — catches silent quota / permission issues
     // that don't throw but still fail to persist the value.
@@ -5144,6 +5168,31 @@ function showImportServerModal() {
       const innerModal = getImportServerInnerModal();
       if (innerModal) innerModal.classList.add('has-saved-key');
     }
+  }
+
+  // v3.29.11 — wire icon uploader. If the saved server config had an icon,
+  // restore it; otherwise start empty. The uploader's onChange callback
+  // doesn't need to fire here — we read() it on submit to grab the
+  // current data URL.
+  wfIconUpload.attach({
+    fileInputId:   'importServerIconFileInput',
+    previewId:     'importServerIconPreview',
+    previewWrapId: 'importServerIconWrap',
+    clearBtnId:    'importServerIconClearBtn',
+    uploadBtnId:   'importServerIconUploadBtn'
+  });
+  if (saved?.icon) {
+    wfIconUpload.set({
+      previewId:     'importServerIconPreview',
+      previewWrapId: 'importServerIconWrap',
+      uploadBtnId:   'importServerIconUploadBtn'
+    }, saved.icon);
+  } else {
+    wfIconUpload.clear({
+      previewId:     'importServerIconPreview',
+      previewWrapId: 'importServerIconWrap',
+      uploadBtnId:   'importServerIconUploadBtn'
+    });
   }
 
   // Reveal modal only after state is settled
@@ -5333,7 +5382,8 @@ async function fetchImportServerModels() {
     // proven themselves and are worth remembering whether or not the user
     // ultimately adds any models from this server. (Add to Hive also saves,
     // as a belt-and-suspenders redundancy.)
-    saveImportServerDefaults(chatUrl, modelsUrl, key);
+    saveImportServerDefaults(chatUrl, modelsUrl, key,
+      wfIconUpload.read({ previewId: 'importServerIconPreview' }));
     // Mark the inner modal so the 🔑 saved flags light up on the three fields
     const innerModalForSave = getImportServerInnerModal();
     if (innerModalForSave) innerModalForSave.classList.add('has-saved-key');
@@ -5488,7 +5538,12 @@ function addImportServerModels() {
 
   const ts     = Date.now();
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
-  const icon   = `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  // v3.29.11 — single uploaded icon applies to every model imported from
+  // this server. Read once outside the loop. Falls back to favicon proxy
+  // if the user didn't upload one (resolveAiIcon will then downgrade to
+  // the colored-letter avatar via its favicon-domain guard).
+  const userIcon = wfIconUpload.read({ previewId: 'importServerIconPreview' });
+  const icon   = userIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
 
   // v3.27.4: build the full server model-id list ONCE, outside the loop.
   // _importServerModels was populated by fetchImportServerModels and is the
@@ -5560,7 +5615,8 @@ function addImportServerModels() {
   });
 
   // Save last-used server for next open
-  saveImportServerDefaults(chatUrl, modelsUrl, key);
+  saveImportServerDefaults(chatUrl, modelsUrl, key,
+    wfIconUpload.read({ previewId: 'importServerIconPreview' }));
 
   closeImportServerModal();
   renderAISetupGrid();
@@ -8301,6 +8357,144 @@ function renderBeeStatusGrid() {
   renderBeeDotStrip();
 }
 
+// v3.29.11 — Shared icon-upload module.
+//
+// Handles the user-supplied custom AI icon flow for both the Add a Custom
+// Worker Bee modal AND the Import from Model Server modal. Goals:
+//   1. Don't make the user think about file size or dimensions. Whatever
+//      they upload, we resize to 256×256 PNG via <canvas> and store as a
+//      base64 data URL. A user-uploaded 5MB monstrosity becomes a ~30 KB
+//      icon transparently.
+//   2. Stay in localStorage. 256×256 PNG ≈ 30–60 KB; 100+ icons fit
+//      comfortably in localStorage's 5 MB origin budget.
+//   3. Render with zero changes to resolveAiIcon. Data URLs already pass
+//      its `!ai.icon.includes('google.com/s2/favicons')` guard, so the
+//      existing custom-icon code path renders them directly.
+//
+// Public API:
+//   wfIconUpload.attach(opts)
+//     opts.fileInputId   — id of the <input type="file">
+//     opts.previewId     — id of the <img> preview element
+//     opts.previewWrapId — id of the wrapper that toggles 'has-icon' class
+//     opts.clearBtnId    — id of the × clear button
+//     opts.uploadBtnId   — id of the visible "Upload Icon" button (we
+//                          forward clicks to the hidden file input AND
+//                          flip its label between Upload/Replace)
+//     opts.onChange(dataURL | null) — fires when user picks or clears
+//   wfIconUpload.read(opts) — returns the current data URL or null
+//   wfIconUpload.set(opts, dataURL) — pre-populate (for Edit flows)
+//   wfIconUpload.clear(opts) — reset to empty state
+const wfIconUpload = (() => {
+  const TARGET_SIZE = 256;             // output dimension (square)
+  const HARD_INPUT_CAP = 8 * 1024 * 1024; // refuse files > 8 MB even pre-resize
+  const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+
+  function _setPreview(opts, dataURL) {
+    const previewEl = document.getElementById(opts.previewId);
+    const wrapEl    = document.getElementById(opts.previewWrapId);
+    const uploadBtn = document.getElementById(opts.uploadBtnId);
+    if (previewEl) {
+      if (dataURL) {
+        previewEl.src = dataURL;
+        previewEl.style.display = '';
+      } else {
+        previewEl.removeAttribute('src');
+        previewEl.style.display = 'none';
+      }
+    }
+    if (wrapEl) wrapEl.classList.toggle('has-icon', !!dataURL);
+    if (uploadBtn) uploadBtn.textContent = dataURL ? '🔄 Replace Icon' : '📷 Upload Icon';
+  }
+
+  // Resize whatever the user gave us to 256×256 PNG via canvas, return data URL
+  function _resizeToDataURL(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = () => reject(new Error('Could not read file'));
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('Could not decode image'));
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = TARGET_SIZE;
+          canvas.height = TARGET_SIZE;
+          const ctx = canvas.getContext('2d');
+          // Draw centered with letterbox so non-square sources don't get stretched.
+          // Most provider logos are square, but better safe.
+          const ratio = Math.min(TARGET_SIZE / img.width, TARGET_SIZE / img.height);
+          const w = img.width * ratio;
+          const h = img.height * ratio;
+          const x = (TARGET_SIZE - w) / 2;
+          const y = (TARGET_SIZE - h) / 2;
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = 'high';
+          ctx.drawImage(img, x, y, w, h);
+          resolve(canvas.toDataURL('image/png'));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  function attach(opts) {
+    const fileInput = document.getElementById(opts.fileInputId);
+    const uploadBtn = document.getElementById(opts.uploadBtnId);
+    const clearBtn  = document.getElementById(opts.clearBtnId);
+    if (!fileInput || !uploadBtn) return;
+
+    // Visible button forwards click to the hidden file input
+    uploadBtn.onclick = (e) => { e.preventDefault(); fileInput.click(); };
+
+    fileInput.onchange = async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      if (!ACCEPTED.includes(file.type)) {
+        toast(`⚠️ Unsupported image format (${file.type || 'unknown'}). Use PNG, JPEG, WebP, or GIF.`, 6000);
+        fileInput.value = '';
+        return;
+      }
+      if (file.size > HARD_INPUT_CAP) {
+        toast(`⚠️ Image is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Keep it under 8 MB before upload.`, 7000);
+        fileInput.value = '';
+        return;
+      }
+      try {
+        const dataURL = await _resizeToDataURL(file);
+        _setPreview(opts, dataURL);
+        if (typeof opts.onChange === 'function') opts.onChange(dataURL);
+      } catch (err) {
+        console.warn('[wfIconUpload] resize failed:', err);
+        toast(`⚠️ Could not process this image: ${err.message}`, 6000);
+      }
+      fileInput.value = ''; // allow re-picking the same file
+    };
+
+    if (clearBtn) {
+      clearBtn.onclick = (e) => {
+        e.preventDefault();
+        _setPreview(opts, null);
+        if (typeof opts.onChange === 'function') opts.onChange(null);
+      };
+    }
+  }
+
+  function read(opts) {
+    const previewEl = document.getElementById(opts.previewId);
+    return previewEl?.src && previewEl.src.startsWith('data:image/') ? previewEl.src : null;
+  }
+
+  function set(opts, dataURL) {
+    _setPreview(opts, dataURL || null);
+  }
+
+  function clear(opts) {
+    _setPreview(opts, null);
+  }
+
+  return { attach, read, set, clear };
+})();
+
 // Resolve the best icon for an AI — local image if name matches a known provider,
 // colored initial avatar as fallback when the real icon would be a broken globe.
 function resolveAiIcon(ai, cssClass, size) {
@@ -8309,16 +8503,31 @@ function resolveAiIcon(ai, cssClass, size) {
   const model = (ai.id || '').toLowerCase();
   const combined = name + ' ' + model;
 
+  // v3.29.10 — switched all icons from the Google favicon proxy to local
+  // PNGs in images/. The favicon proxy returned tiny blurry images that
+  // looked like fuzzy white blobs on the dark theme (Mistral was the
+  // worst offender — looked like a moon).
+  // v3.29.11 — added LM Studio, Open WebUI, and Together AI matchers.
+  // The PNGs already exist in images/ — just weren't recognized by the
+  // catalog. Order matters here: more-specific keys must precede generic
+  // ones so 'lmstudio' isn't shadowed by 'studio' (not currently a problem
+  // but worth keeping in mind for future additions).
   const known = [
-    { keys: ['claude', 'anthropic'],           src: 'images/icon-claude.png' },
+    { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
     { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
-    { keys: ['gemini', 'google'],               src: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64' },
-    { keys: ['grok', 'x.ai', 'xai'],           src: 'https://www.google.com/s2/favicons?domain=grok.com&sz=64' },
-    { keys: ['deepseek'],                       src: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
+    { keys: ['gemini', 'google'],               src: 'images/icon-gemini.png' },
+    { keys: ['grok', 'x.ai', 'xai'],            src: 'images/icon-grok.png' },
+    { keys: ['deepseek'],                       src: 'images/icon-deepseek.png' },
     { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
-    { keys: ['mistral'],                        src: 'https://www.google.com/s2/favicons?domain=mistral.ai&sz=64' },
-    { keys: ['llama', 'meta'],                  src: 'https://www.google.com/s2/favicons?domain=meta.ai&sz=64' },
-    { keys: ['cohere', 'command'],              src: 'https://www.google.com/s2/favicons?domain=cohere.com&sz=64' },
+    { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
+    { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
+    { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
+    { keys: ['lm studio', 'lmstudio', 'lm-studio'], src: 'images/icon-lmstudio.png' },
+    { keys: ['open webui', 'openwebui', 'open-webui'], src: 'images/icon-openwebui.png' },
+    { keys: ['together'],                       src: 'images/icon-together.png' },
+    // v3.29.12 — Alfredo, the internal AI gateway (Open WebUI-based) used
+    // at the user's organization.
+    { keys: ['alfredo'],                        src: 'images/icon-alfredo.png' },
   ];
 
   for (const entry of known) {

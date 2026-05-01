@@ -2,6 +2,26 @@
 
 ---
 
+## v3.29.11
+**Build:** `20260430-017` · **Released:** April 30, 2026
+
+- Icon catalog extended: LM Studio, Open WebUI, Together AI, and Alfredo (the user's internal AI gateway) now match to local PNGs (`images/icon-lmstudio.png`, `images/icon-openwebui.png`, `images/icon-together.png`, `images/icon-alfredo.png`).
+- Mistral matcher widened to also catch `mixtral`, `codestral`, and `ministral` model strings — previously Mistral's smaller and code-tuned models would fall through to the colored-initial avatar.
+- **New: Custom icon upload.** Both the Add a Custom Worker Bee modal and the Import from Model Server modal now have an Icon (optional) field with a 📷 Upload Icon button. Whatever the user uploads (PNG/JPEG/WebP/GIF up to 8 MB) gets resized to 256×256 PNG via canvas and stored as a base64 data URL. A 5 MB monstrosity becomes a ~30 KB icon transparently — no user-visible size limit, no manual optimization required. Custom AI flow stores the icon on the AI itself; Import-from-Server flow applies a single uploaded icon to every model imported from that server, and the icon is persisted to the saved-server localStorage payload so re-opens of the modal restore it.
+- New shared `wfIconUpload` module exposes `attach()` / `read()` / `set()` / `clear()` so the same widget plugs into both modals (and any future modals) without code duplication.
+- New CSS: `.custom-ai-icon-uploader`, `.custom-ai-icon-preview-box`, `.custom-ai-icon-clear-btn`, `.custom-ai-icon-help`. Empty state shows just the upload button + help text; loaded state reveals the 56×56 preview with × clear button and flips the upload-button label to "🔄 Replace Icon".
+- 13 of 13 known providers now have local PNG icons in the `images/` folder. The new icons need to be committed alongside this release for the live deployment to pick them up.
+
+---
+
+## v3.29.10
+**Build:** `20260430-015` · **Released:** April 30, 2026
+
+- AI provider icons no longer routed through the Google favicon proxy. Six icons (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity) now serve from local `images/icon-*.png` files that already shipped on the live site — they were just not wired into the catalog. The favicon proxy returned tiny blurry images that looked like fuzzy white blobs on the dark theme; the worst offender (Mistral) looked like a moon.
+- Mistral, Llama, and Cohere are wired to local paths but the PNGs need to be added to `images/`. Until they're added, those three fall through to the existing `onerror` → colored-initial avatar (M / L / C). When the PNGs land, no code change needed — they auto-activate on next page load.
+
+---
+
 ## v3.29.9
 **Build:** `20260430-014` · **Released:** April 30, 2026
 
