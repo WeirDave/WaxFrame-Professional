@@ -2701,30 +2701,10 @@ html, body {
 }
 .custom-ai-choose-model-link:hover { text-decoration: underline; }
 
-/* v3.26.0 — basic / advanced badges that label the recommend vs browse flow.
-   `basic` = the AI does the work for you (autofill).
-   `advanced` = you research and decide (link to provider docs). */
-.custom-ai-flow-badge {
-  display: inline-block;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  padding: 2px 6px;
-  border-radius: 999px;
-  white-space: nowrap;
-  line-height: 1.4;
-}
-.custom-ai-flow-badge--basic {
-  background: rgba(46, 204, 113, 0.18);
-  color: #1e8449;
-}
-.custom-ai-flow-badge--advanced {
-  background: rgba(155, 89, 182, 0.18);
-  color: #7d3c98;
-}
-[data-theme="dark"] .custom-ai-flow-badge--basic    { color: #58d68d; }
-[data-theme="dark"] .custom-ai-flow-badge--advanced { color: #c39bd3; }
+/* v3.29.5 — basic / advanced flow badges removed. The Recommend button
+   and Browse-models link now stand on their own; users learned the
+   distinction from the labels themselves, and the badges added visual
+   noise without earning their pixels. */
 
 /* v3.26.1 / v3.26.3 — per-row 🤖 Recommend button on default-AI rows.
    v3.26.3 moved this from the key row down to the model selector row so
