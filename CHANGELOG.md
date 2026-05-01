@@ -2,6 +2,16 @@
 
 ---
 
+## v3.29.8
+**Build:** `20260430-013` · **Released:** April 30, 2026
+
+- Auto-recommend after Fetch Models. Once the model list comes back successfully, the recommend call fires automatically in the background. User sees: `✅ N loaded` → `🤖 Asking provider for recommendation…` → `✨ <model> (Best Overall) — <reason>`. The dropdown is annotated with `✨` / `⚡` / `💰` tags by the time the user goes to pick. Recommend a Model button stays as a manual re-poll affordance.
+- Humanized fetch-error toasts. `HTTP 401` and friends now route through `WF_DEBUG.classify` with `kind: 'models_endpoint'` ctx, surfacing the catalog meaning ("API key was rejected. Double-check the key…", "URL doesn't have a models endpoint at this address. Check the URL is correct.", etc.) instead of a raw HTTP code.
+- New ⓘ info button on the Add Custom Worker Bee modal header. Opens a help modal explaining each field (URL, API Format, API Key, Model) plus guidance on what to do when a provider isn't in Quick Add.
+- Per-provider docs link in Quick Add. After picking a preset (Mistral, Together, Cohere, Ollama, LM Studio), a `📖 <Provider> docs →` link appears alongside the existing `Get your API key →` link. Both are populated from each preset's `chooseModelLink` and `keyLink` config — no new data to maintain.
+
+---
+
 ## v3.29.7
 **Build:** `20260430-012` · **Released:** April 30, 2026
 

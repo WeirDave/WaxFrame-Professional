@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-012
+//  Build: 20260430-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-012';         // build stamp — update each session
+const BUILD       = '20260430-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3901,6 +3901,7 @@ function showAddCustomAI() {
   const modelInput = document.getElementById('customAIModel');
   const quickAdd   = document.getElementById('customAIQuickAdd');
   const keyLink    = document.getElementById('customAIKeyLink');
+  const helpLink   = document.getElementById('customAIProviderHelpLink');
   if (urlInput)   urlInput.value  = '';
   if (nameInput)  { nameInput.value = ''; nameInput.placeholder = 'e.g. Work AI'; nameInput.dataset.userTyped = 'false'; }
   if (keyInput)   keyInput.value  = '';
@@ -3908,11 +3909,26 @@ function showAddCustomAI() {
   if (modelInput) modelInput.value = '';
   if (quickAdd)   quickAdd.value  = '';
   if (keyLink)    keyLink.style.display = 'none';
+  if (helpLink)   helpLink.style.display = 'none';
   resetModelField();
   populateQuickAddOptions();
   updateChooseModelLink();
   modal.classList.add('active');
   document.getElementById('customAIQuickAdd')?.focus();
+}
+
+// v3.29.8 — info modal handlers. Opens a help screen explaining each
+// field on the Add a Custom Worker Bee form. Most users adding their
+// own custom AI don't know what URL or API Format to use unless they
+// pick from Quick Add, and even then "what does API Format mean" is
+// not obvious. The info modal answers those questions inline.
+function showCustomAIInfoModal() {
+  const modal = document.getElementById('customAIInfoModal');
+  if (modal) modal.classList.add('active');
+}
+function hideCustomAIInfoModal() {
+  const modal = document.getElementById('customAIInfoModal');
+  if (modal) modal.classList.remove('active');
 }
 
 // ── Custom AI Quick Add provider presets ──
@@ -4454,7 +4470,13 @@ async function migrateRecommendOnStartup() {
 // dropdown with the recommendation, surfaces WHY in a toast.
 // v3.26.1: more visible loading state (dropdown disabled + "Asking…" text),
 // clearer error messages, brief success highlight on the dropdown.
-async function recommendCustomAIModel() {
+async function recommendCustomAIModel(opts) {
+  // v3.29.8 — `opts.auto` is set when this is called automatically after
+  // a successful Fetch Models. The auto path shows a quieter "Asking
+  // provider for recommendation…" toast (instead of the louder
+  // "🤖 Asking <model>…") so the user understands why there's a 1–3 sec
+  // pause without it feeling redundant after the "✅ N loaded" toast.
+  const isAuto = !!(opts && opts.auto);
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
   const keyInput  = document.getElementById('customAIKey');
@@ -4492,7 +4514,10 @@ async function recommendCustomAIModel() {
   recBtn.innerHTML = 'Asking…';
   selectEl.disabled = true;
 
-  toast(`🤖 Asking ${askingModel} for a recommendation…`, 3000);
+  toast(isAuto
+    ? `🤖 Asking provider for recommendation…`
+    : `🤖 Asking ${askingModel} for a recommendation…`,
+    3000);
 
   const result = await recommendModel({
     cacheId: url.replace(/\/+$/, ''),
@@ -4599,12 +4624,14 @@ function applyQuickAdd(value) {
   resetModelField();
 
   const keyLink = document.getElementById('customAIKeyLink');
+  const helpLink = document.getElementById('customAIProviderHelpLink');
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
   const nameInput = document.getElementById('customAIName');
 
   if (!value) {
-    if (keyLink) keyLink.style.display = 'none';
+    if (keyLink)  keyLink.style.display = 'none';
+    if (helpLink) helpLink.style.display = 'none';
     updateChooseModelLink();
     return;
   }
@@ -4623,6 +4650,20 @@ function applyQuickAdd(value) {
       keyLink.style.display = '';
     } else {
       keyLink.style.display = 'none';
+    }
+  }
+
+  // v3.29.8 — provider docs help link. Shows the chooseModelLink (model
+  // catalog / docs) for the selected preset. Hides if the preset doesn't
+  // have one (none currently lack it, but defensive in case future
+  // presets are added without docs).
+  if (helpLink) {
+    if (preset.chooseModelLink) {
+      helpLink.href = preset.chooseModelLink;
+      helpLink.textContent = `📖 ${preset.name} docs →`;
+      helpLink.style.display = '';
+    } else {
+      helpLink.style.display = 'none';
     }
   }
 
@@ -4792,10 +4833,41 @@ async function fetchCustomAIModels() {
       toast(parts.join(' · '), filteredOutCount > 0 || presetMatch ? 5000 : 3000);
     }
 
+    // v3.29.8 — auto-recommend after a successful fetch. Fetch already
+    // proved the URL works and the API key is valid (we got a model list
+    // back), so the only thing left is to ask the provider which model
+    // is the best/fastest/cheapest pick for document refinement. Skip if
+    // there are no available (non-already-in-hive) models since there's
+    // nothing to recommend, and skip on Anthropic/Google because their
+    // flows don't go through the OpenAI-compatible recommend path. The
+    // recommend call is fire-and-forget; if it fails we just leave the
+    // dropdown un-annotated and the user can still pick manually or hit
+    // the Recommend a Model button to retry.
+    if (availCount > 0 && format === 'openai') {
+      // Don't await — let the toast above show first, then quietly run
+      // the recommend in the background. recommendCustomAIModel handles
+      // its own loading state on the button and posts a toast on result.
+      recommendCustomAIModel({ auto: true });
+    }
+
   } catch(e) {
     fetchBtn.textContent = 'Fetch Models';
     fetchBtn.disabled = false;
-    toast(`⚠️ Could not fetch models: ${e.message} — type model name manually`);
+    // v3.29.8 — humanize the error toast. Previously we just showed the
+    // raw `e.message` which surfaced "HTTP 401" or "NetworkError when
+    // attempting to fetch" — useless to a non-developer. Route through
+    // the classifier the import-server-modal uses, with the appropriate
+    // ctx so MODELS_ENDPOINT_AUTH / PATH_NOT_FOUND / SERVER_ERROR /
+    // NO_MODELS catalog entries can match. The classifier returns a
+    // catalog entry with `meaning` written for humans.
+    const httpMatch = String(e.message || '').match(/HTTP (\d+)/);
+    const ctx = httpMatch
+      ? { kind: 'models_endpoint', status: parseInt(httpMatch[1], 10) }
+      : (e.message === 'No models returned' || e.message?.startsWith('No chat-compatible'))
+        ? { kind: 'models_endpoint', status: 'no_models' }
+        : { kind: 'models_endpoint' };
+    const entry = WF_DEBUG.classify(e, ctx);
+    toast(`⚠️ ${entry.title} — ${entry.meaning}`, 8000);
   }
 }
 
