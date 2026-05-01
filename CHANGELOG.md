@@ -2,6 +2,35 @@
 
 ---
 
+## v3.28.3 — Console error inspection coverage + dev toolbar cleanup
+**Build:** `20260430-004` · **Released:** April 30, 2026
+
+### Console error inspection — wired up for storage and extraction failures
+
+The clickable `→` arrow on console error lines (introduced earlier) was only firing for HTTP API errors. Three more error paths now pass `rawData` through `consoleLog` so the inspection arrow appears for them too:
+
+- `IndexedDB session save failed` — surfaces the IDB error stack
+- `localStorage QuotaExceededError` — surfaces a contextual recovery message (export transcript, clear storage, reload)
+- `localStorage save failed (other)` — surfaces the lsErr stack
+- `PDF re-extraction failed` — surfaces the extraction error stack
+
+Net coverage: console error inspection went from 2 call sites to 5. Click any `❌` line with an arrow to inspect the underlying stack/response inline without opening DevTools.
+
+### Removed redundant Test Viewer button
+
+The `▶ Test Viewer` dev toolbar button is gone. It opened the same modal as `📋 View Captures` so they appeared identical even though one seeded fake data first.
+
+The seed-fake-data action is preserved as a `🌱 Seed sample` button **inside** the Deep Dive Viewer modal, alongside Copy/Clear/Refresh. Single entry point now (`📋 View Captures`), with theme-testing one click away from inside the modal.
+
+### Notes
+
+- `WF_DEBUG.testViewer()` method retained — bound to the in-modal button instead of a dev toolbar button
+- All four canonical version stamps bumped, all six pages cache-busted to `3.28.3`
+- No data changes, no storage changes
+- Bigger hardening work (HTTP classification unification across 4 sites, broader silent-catch audit) parked for v3.29.0 when it can get focused review
+
+---
+
 ## v3.28.2 — Deep Dive Viewer + Card theming + Troubleshooting toggle removed
 **Build:** `20260430-003` · **Released:** April 30, 2026
 
