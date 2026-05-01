@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-012
+     Build: 20260430-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-012">
+  <meta name="waxframe-build" content="20260430-013">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.29.7">
+  <link rel="stylesheet" href="style.css?v=3.29.8">
 </head>
 <body>
 
@@ -748,6 +748,7 @@
         <div class="custom-ai-modal-title">Add a Custom Worker Bee</div>
         <div class="custom-ai-modal-sub">Connect any OpenAI-compatible, Anthropic, or Google endpoint</div>
       </div>
+      <button type="button" class="custom-ai-info-btn" onclick="showCustomAIInfoModal()" title="What goes in each field?" aria-label="What goes in each field?">ⓘ</button>
     </div>
     <div class="custom-ai-form-row custom-ai-quickadd-row">
       <div class="custom-ai-field-wrap">
@@ -764,6 +765,7 @@
       <div class="custom-ai-field-wrap custom-ai-field-wrap--keylinkwrap">
         <label>&nbsp;</label>
         <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
+        <a id="customAIProviderHelpLink" class="custom-ai-key-link custom-ai-provider-help-link" href="#" target="_blank" style="display:none;">📖 Provider docs →</a>
       </div>
     </div>
     <div class="custom-ai-form-row">
@@ -810,6 +812,43 @@
     <div class="custom-ai-form-footer">
       <button class="btn" onclick="showAddCustomAI()">Cancel</button>
       <button class="btn btn-accent btn-sm" id="customAIAddBtn" onclick="addCustomAI()">Add to Hive</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Custom AI Field Help Modal ── -->
+<div class="custom-ai-modal-overlay" id="customAIInfoModal" onclick="if(event.target===this)hideCustomAIInfoModal()">
+  <div class="custom-ai-modal custom-ai-info-modal">
+    <div class="custom-ai-modal-hdr">
+      <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
+      <div>
+        <div class="custom-ai-modal-title">What goes in each field?</div>
+        <div class="custom-ai-modal-sub">Quick reference for filling out the Add a Custom Worker Bee form</div>
+      </div>
+    </div>
+    <div class="custom-ai-info-body">
+      <div class="custom-ai-info-tip">
+        <strong>If you're not sure where to start:</strong> pick your provider from the <em>Quick Add</em> dropdown. It pre-fills the URL and API Format for you and shows a link to where you get an API key. Quick Add covers the most common providers; for anything else, fill in the fields manually.
+      </div>
+      <h4 class="custom-ai-info-h">URL</h4>
+      <p>The full address of the provider's chat-completions endpoint. Most OpenAI-compatible providers end with <code>/v1/chat/completions</code>. Examples:</p>
+      <ul>
+        <li><code>https://api.mistral.ai/v1/chat/completions</code></li>
+        <li><code>https://api.together.xyz/v1/chat/completions</code></li>
+        <li><code>http://localhost:11434/v1/chat/completions</code> (Ollama running locally)</li>
+      </ul>
+      <p>Anthropic and Google use different URL shapes — Quick Add handles those automatically.</p>
+      <h4 class="custom-ai-info-h">API Format</h4>
+      <p>How the provider expects requests. Most providers (Mistral, DeepSeek, Together, Cohere, Ollama, LM Studio, etc.) speak <strong>OpenAI compatible</strong>. Anthropic and Google have their own formats — pick those only if you're connecting directly to them.</p>
+      <h4 class="custom-ai-info-h">API Key</h4>
+      <p>The secret token the provider gave you when you signed up. Usually starts with a prefix like <code>sk-</code>. Local providers (Ollama, LM Studio) don't need a key — leave blank. Your key is stored in your browser only and never sent anywhere except the provider's own endpoint.</p>
+      <h4 class="custom-ai-info-h">Model</h4>
+      <p>The specific model on that provider's API. Click <strong>Fetch Models</strong> after entering the URL and key — WaxFrame will pull the live list and ask the provider which model is best for document refinement, fastest, and cheapest. You can pick any model from the list.</p>
+      <h4 class="custom-ai-info-h">My provider isn't in Quick Add</h4>
+      <p>Most providers WaxFrame doesn't list still work — they just need to be filled in manually. If the provider's docs say "OpenAI-compatible," set API Format to OpenAI compatible and use whatever URL their docs give you. If it's not OpenAI compatible, you'll need a provider that is, or wait for WaxFrame to add native support.</p>
+    </div>
+    <div class="custom-ai-form-footer">
+      <button class="btn btn-accent btn-sm" onclick="hideCustomAIInfoModal()">Got it</button>
     </div>
   </div>
 </div>
@@ -1793,8 +1832,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.29.7"></script>
-<script src="js/app.js?v=3.29.7"></script>
+<script src="js/version.js?v=3.29.8"></script>
+<script src="js/app.js?v=3.29.8"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
