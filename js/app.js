@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-019
+//  Build: 20260430-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-019';         // build stamp — update each session
+const BUILD       = '20260430-020';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4921,12 +4921,19 @@ function addCustomAI() {
 
   const id     = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
   const origin = (() => { try { return new URL(url).origin; } catch(e) { return url; } })();
-  // v3.29.11 — prefer user-uploaded icon (256×256 PNG data URL from the
-  // shared uploader) over the favicon proxy default. resolveAiIcon already
-  // gives data URLs priority over the favicon proxy via its guard at line
-  // 8472, so a custom icon Just Works in the renderer.
-  const userIcon = wfIconUpload.read({ previewId: 'customAIIconPreview' });
-  const icon   = userIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  // v3.29.13 — read whatever icon the preview is currently showing. This
+  // is the source of truth: if preview shows the user's upload (data URL),
+  // we persist that; if it shows a catalog match (e.g. images/icon-mistral.png),
+  // we persist that path; if neither, we fall through to the favicon proxy
+  // (which resolveAiIcon will downgrade to the colored letter avatar).
+  // Earlier code only handled the user-upload case via read(), which is why
+  // catalog-matched previews showed Mistral in the modal but persisted as
+  // the favicon-proxy URL after Add to Hive.
+  const previewIcon = wfIconUpload.readAny({
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap'
+  });
+  const icon   = previewIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
   const ai     = { id, name, url, icon, provider: id };
 
   // Build API config based on selected format
@@ -5576,12 +5583,14 @@ function addImportServerModels() {
 
   const ts     = Date.now();
   const origin = (() => { try { return new URL(chatUrl).origin; } catch(e) { return chatUrl; } })();
-  // v3.29.11 — single uploaded icon applies to every model imported from
-  // this server. Read once outside the loop. Falls back to favicon proxy
-  // if the user didn't upload one (resolveAiIcon will then downgrade to
-  // the colored-letter avatar via its favicon-domain guard).
-  const userIcon = wfIconUpload.read({ previewId: 'importServerIconPreview' });
-  const icon   = userIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  // v3.29.13 — read whatever icon the preview is currently showing (user
+  // upload data URL OR catalog match path), persist that. See addCustomAI
+  // for the full rationale on why readAny replaces the prior read().
+  const previewIcon = wfIconUpload.readAny({
+    previewId:     'importServerIconPreview',
+    previewWrapId: 'importServerIconWrap'
+  });
+  const icon   = previewIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
 
   // v3.27.4: build the full server model-id list ONCE, outside the loop.
   // _importServerModels was populated by fetchImportServerModels and is the
@@ -8553,6 +8562,21 @@ const wfIconUpload = (() => {
     return previewEl?.src && previewEl.src.startsWith('data:image/') ? previewEl.src : null;
   }
 
+  // v3.29.13 — return whatever icon is currently being shown in the preview
+  // box, regardless of kind (user upload data URL, catalog match path, or
+  // generic fallback). Used by add-to-hive flows so the icon that gets
+  // persisted is the one the user just SAW in the preview — fixes the bug
+  // where users would see "Mistral icon" in preview, hit Add, and end up
+  // with the favicon proxy URL stored on the AI because read() only
+  // returned data URLs. Returns null if the preview is showing nothing.
+  function readAny(opts) {
+    const previewEl = document.getElementById(opts.previewId);
+    const wrapEl    = document.getElementById(opts.previewWrapId);
+    if (!previewEl || !wrapEl) return null;
+    if (!wrapEl.classList.contains('has-icon')) return null;
+    return previewEl.src || null;
+  }
+
   function set(opts, dataURL) {
     _setPreview(opts, dataURL || null, dataURL ? 'user' : null);
   }
@@ -8622,7 +8646,7 @@ const wfIconUpload = (() => {
     _setPreview(opts, GENERIC_ICON, 'generic');
   }
 
-  return { attach, read, set, clear, previewCatalogMatch };
+  return { attach, read, readAny, set, clear, previewCatalogMatch };
 })();
 
 // Resolve the best icon for an AI — local image if name matches a known provider,

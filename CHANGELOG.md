@@ -2,6 +2,15 @@
 
 ---
 
+## v3.29.13
+**Build:** `20260430-020` · **Released:** April 30, 2026
+
+- Fixed: catalog-matched icons in the Add Custom Worker Bee preview were not being persisted to the AI on save. Pick Mistral from Quick Add → preview shows the Mistral icon → click Add to Hive → the AI ended up with the favicon-proxy URL stored on `ai.icon` because the persistence code only handled user-uploaded data URLs. The renderer for the AI Setup grid uses `ai.icon` directly (not `resolveAiIcon`), so a stale stored value beats the catalog. Same root cause as the earlier Mistral-globe bug.
+- New `wfIconUpload.readAny()` returns whatever the preview is showing — user upload data URL OR catalog match path OR generic fallback path. The preview is now the source of truth for what gets stored.
+- `addCustomAI` and `addImportServerModels` now use `readAny()` instead of `read()`. The two `saveImportServerDefaults` call sites continue to use `read()` (data URL only) because the saved-server payload should only persist actual user uploads — catalog matches re-resolve automatically on next modal open.
+
+---
+
 ## v3.29.12
 **Build:** `20260430-019` · **Released:** April 30, 2026
 
