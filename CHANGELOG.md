@@ -2,6 +2,14 @@
 
 ---
 
+## v3.29.4
+**Build:** `20260430-009` · **Released:** April 30, 2026
+
+- Updated the Presentation Outline playbook in `document-playbooks.html` with verbatim Project-screen values, Reference Material payload, and convergence numbers from the v3.0 measured run (8 rounds, 31 minutes, 12 slides, 749–763 word range across all rounds). Replaces the prior v2.0 placeholder data.
+- Convergence summary updated to reflect that Scope and Tone specificity (not Length Constraint as previously assumed) are the levers that distinguish converging vs non-converging runs on slide-deck outlines.
+
+---
+
 ## v3.29.3
 **Build:** `20260430-008` · **Released:** April 30, 2026
 
