@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-006
+//  Build: 20260430-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -440,6 +440,19 @@ const WF_ERROR_CATALOG = [
     title:   'No models in response',
     meaning: 'The request succeeded but the response did not contain a recognizable list of models. Make sure the URL points to the models-list endpoint (e.g. /api/models for Open WebUI), not the chat endpoint.',
     actions: []
+  },
+  // v3.29.2 — manually fired by file import handlers when one or more
+  // parse-time warnings were collected during PDF/DOCX/PPTX/XLSX
+  // extraction. Never auto-classified. Title supports {filename}, meaning
+  // supports {warnings} placeholder which gets rendered as a bulleted list.
+  {
+    code: 'IMPORT_WARNINGS',
+    matches: () => false,
+    title:   'Imported with warnings: {filename}',
+    meaning: 'The main document text imported normally, but some parts of the file could not be fully parsed:\n\n{warnings}\n\nIf any of those parts contained content you need, re-uploading or saving the file in a different format may help.',
+    actions: [
+      { label: 'OK',  kind: 'dismiss' }
+    ]
   }
 ];
 
@@ -466,10 +479,18 @@ function renderTroubleshootingCard(entry, ctx) {
   // {elapsed}, {avg}. Catalog entries opt in by including the placeholders
   // in their title/meaning strings; entries without placeholders pass through
   // unchanged (replace is a no-op when no match).
+  // v3.29.2 — added {filename} and {warnings} for the IMPORT_WARNINGS card.
+  // {warnings} expects ctx.warnings as an array of strings; renders as a
+  // bulleted list so multi-line meaning content stays readable.
+  const fmtWarnings = (arr) => Array.isArray(arr) && arr.length
+    ? arr.map(w => '• ' + w).join('\n')
+    : '';
   const subst = (s) => String(s || '')
-    .replace(/\{ai\}/g,      ctx.aiName  ?? 'AI')
-    .replace(/\{elapsed\}/g, ctx.elapsed ?? '?')
-    .replace(/\{avg\}/g,     ctx.avg     ?? '?');
+    .replace(/\{ai\}/g,       ctx.aiName   ?? 'AI')
+    .replace(/\{elapsed\}/g,  ctx.elapsed  ?? '?')
+    .replace(/\{avg\}/g,      ctx.avg      ?? '?')
+    .replace(/\{filename\}/g, ctx.filename ?? 'this file')
+    .replace(/\{warnings\}/g, fmtWarnings(ctx.warnings));
 
   if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
   if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';
@@ -891,10 +912,23 @@ async function fetchModelsForProvider(provider) {
     }
 
     if (models.length > 0) {
-      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models })); } catch(e) {}
+      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models })); }
+      catch(e) { console.warn(`[models-cache:${provider}] write failed:`, e); }
       return models;
     }
-  } catch(e) {}
+  } catch(e) {
+    // v3.29.2 — was silent; now logs so the user-visible "stale fallback
+    // models" symptom is diagnosable. Network errors, auth failures, and
+    // malformed JSON all land here and previously vanished.
+    console.warn(`[fetchModelsForProvider:${provider}] failed:`, e);
+    if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.captureFailure) {
+      WF_DEBUG.captureFailure({
+        code: 'MODELS_FETCH_FAILED',
+        provider,
+        message: e?.message || String(e)
+      });
+    }
+  }
 
   return null;
 }
@@ -1101,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-006';         // build stamp — update each session
+const BUILD       = '20260430-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1188,7 +1222,11 @@ async function checkStorageQuota() {
         }
       }
     }
-  } catch(e) {}
+  } catch(e) {
+    // v3.29.2 — was silent. Best-effort; logging so a quiet failure here
+    // (browser API quirk) is at least diagnosable.
+    console.warn('[checkStorageQuota] failed:', e);
+  }
 }
 
 
@@ -1731,7 +1769,7 @@ function saveLicense(key) {
     existing.valid = true;
     existing.key   = key;
     localStorage.setItem(LS_LICENSE, JSON.stringify(existing));
-  } catch(e) {}
+  } catch(e) { console.warn('[saveLicense] write failed:', e); }
 }
 
 function getLicenseKey() {
@@ -1750,7 +1788,7 @@ function clearLicense() {
     delete data.valid;
     delete data.key;
     localStorage.setItem(LS_LICENSE, JSON.stringify(data));
-  } catch(e) {}
+  } catch(e) { console.warn('[clearLicense] write failed:', e); }
 }
 
 
@@ -2511,7 +2549,7 @@ function saveHive() {
     customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)),
     customAIConfigs
   };
-  try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) {}
+  try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) { console.warn('[saveHive] write failed:', e); }
   updateSetupRequirements();
 }
 
@@ -2630,7 +2668,7 @@ function saveProject() {
     pastedDocument: document.getElementById('pasteText')?.value || '',
     referenceDocs: snapshotReferenceDocs(),
   };
-  try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) {}
+  try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) { console.warn('[saveProject] write failed:', e); }
   updateLaunchRequirements();
   updateMaskPreview();
 }
@@ -3721,7 +3759,7 @@ async function removeAI(id) {
     }
   }
   // Also clear the recommend cache so a re-add starts fresh
-  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) {}
+  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) { console.warn(`[recommend-default-cleanup:${ai.provider}] remove failed:`, e); }
   saveHive();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} removed`);
@@ -4076,7 +4114,7 @@ function setCachedRecommendation(cacheId, model, why, labels) {
   const key = `waxframe_recommend_${cacheId}`;
   try {
     localStorage.setItem(key, JSON.stringify({ ts: Date.now(), model, why, labels: labels || {} }));
-  } catch(e) {}
+  } catch(e) { console.warn(`[recommend-cache:${cacheId}] write failed:`, e); }
 }
 
 // Core recommendation call. Returns { model, why, cached } or null on failure.
@@ -4299,7 +4337,7 @@ async function recheckModelForAI(id) {
       // Cache the model list so buildModelSelector renders the full dropdown
       try {
         localStorage.setItem(`waxframe_models_${id}`, JSON.stringify({ ts: Date.now(), models }));
-      } catch(e) {}
+      } catch(e) { console.warn(`[models-cache:${id}] write failed:`, e); }
       // Stable askingModel: prefer cfg.model if it's in the live list,
       // otherwise first in list. No MODEL_FALLBACKS for customs since we
       // don't curate stable models for arbitrary endpoints.
@@ -5642,7 +5680,7 @@ function handleFileSelect(e) {
 function clearUploadedFile() {
   docText = '';
   saveSession();
-  try { localStorage.removeItem('waxframe_v2_filename'); } catch(e) {}
+  try { localStorage.removeItem('waxframe_v2_filename'); } catch(e) { console.warn('[v2-filename:clear] remove failed:', e); }
   const status = document.getElementById('fileStatus');
   if (status) { status.style.display = 'none'; status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
@@ -5734,7 +5772,7 @@ async function processFile(file) {
     try {
       localStorage.setItem('waxframe_v2_filename', file.name);
       localStorage.setItem('waxframe_v2_source_type', doc.sourceType || file.name.split('.').pop().toLowerCase());
-    } catch(e) {}
+    } catch(e) { console.warn('[v2-filename:save] write failed:', e); }
 
     // Show status — green if clean, amber if warnings
     const warnings = doc.warnings || [];
@@ -5748,6 +5786,12 @@ async function processFile(file) {
           line.textContent = '↳ ' + w;
           status.appendChild(line);
         });
+      }
+      // v3.29.2 — also fire a Troubleshooting Card so the user can't miss
+      // it. Inline status auto-hides; Card stays until dismissed.
+      const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
+      if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
+        WF_DEBUG.showCard(entry, { filename: file.name, warnings });
       }
     } else {
       status.textContent = `✅ ${docText.length.toLocaleString()} characters extracted from ${file.name}`;
@@ -5821,6 +5865,14 @@ async function processRefFile(file) {
       status.textContent = msg;
       setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
       setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
+    }
+    // v3.29.2 — also fire a Troubleshooting Card so warnings can't be
+    // missed during reference-material import.
+    if (allWarnings.length > 0) {
+      const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
+      if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
+        WF_DEBUG.showCard(entry, { filename: file.name, warnings: allWarnings });
+      }
     }
   } catch (e) {
     console.error('Ref file extraction failed:', e);
@@ -5897,7 +5949,10 @@ async function extractPDF(file) {
       walk(outline, 0);
       if (lines.length) outlineText = `## Document Outline\n${lines.join('\n')}\n\n`;
     }
-  } catch(e) { /* no outline — fine */ }
+  } catch(e) {
+    console.warn("[pdf-import:outline] failed (could be missing or malformed):", e);
+    result.warnings.push("Document outline could not be parsed");
+  }
 
   // ── Per-page text + table + annotation extraction ──
   let bodyText = '';
@@ -5975,7 +6030,10 @@ async function extractPDF(file) {
           totalAnnotations++;
         }
       }
-    } catch(e) { /* annotations unavailable — fine */ }
+    } catch(e) {
+      console.warn("[pdf-import:annotations] failed (could be missing or malformed):", e);
+      result.warnings.push(`Annotations on page ${i} could not be parsed`);
+    }
 
     // Track low-density pages — candidate for OCR pass after main extraction.
     if (pageText.trim().length < 200) pageOcrCandidates.push(i);
@@ -5998,7 +6056,10 @@ async function extractPDF(file) {
       }
       if (filled.length) formText = `\n\n## Form Fields\n${filled.join('\n')}\n`;
     }
-  } catch(e) { /* no form fields — fine */ }
+  } catch(e) {
+    console.warn("[pdf-import:form-fields] failed (could be missing or malformed):", e);
+    result.warnings.push("Form fields could not be parsed");
+  }
 
   let assembledText = outlineText + bodyText + formText;
 
@@ -6064,7 +6125,7 @@ async function extractPDF(file) {
 
   const pageImages = await renderPDFToImages(pdf);
   window._lastPDFPages = pageImages;
-  try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) {}
+  try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) { console.warn('[v2-has-pdf-pages] write failed:', e); }
 
   const visionAI = getVisionCapableAI();
   if (!visionAI) {
@@ -6261,7 +6322,10 @@ async function extractDOCX(file) {
       }
       if (lines.length) commentsText = `\n\n## Comments\n${lines.join('\n')}\n`;
     }
-  } catch(e) { /* no comments — fine */ }
+  } catch(e) {
+    console.warn("[docx-import:comments] failed (could be missing or malformed):", e);
+    result.warnings.push("Document comments could not be parsed");
+  }
 
   // ── Footnotes ──
   let footnotesText = '';
@@ -6281,7 +6345,10 @@ async function extractDOCX(file) {
       }
       if (lines.length) footnotesText = `\n\n## Footnotes\n${lines.join('\n')}\n`;
     }
-  } catch(e) { /* no footnotes — fine */ }
+  } catch(e) {
+    console.warn("[docx-import:footnotes] failed (could be missing or malformed):", e);
+    result.warnings.push("Footnotes could not be parsed");
+  }
 
   // ── Endnotes ──
   let endnotesText = '';
@@ -6300,7 +6367,10 @@ async function extractDOCX(file) {
       }
       if (lines.length) endnotesText = `\n\n## Endnotes\n${lines.join('\n')}\n`;
     }
-  } catch(e) { /* no endnotes — fine */ }
+  } catch(e) {
+    console.warn("[docx-import:endnotes] failed (could be missing or malformed):", e);
+    result.warnings.push("Endnotes could not be parsed");
+  }
 
   // ── Headers / Footers ──
   // Aggregate unique header/footer text — boilerplate appears once not per-page.
@@ -6316,7 +6386,7 @@ async function extractDOCX(file) {
         seenHF.add(joined);
         hfLines.push(`- ${joined}`);
       }
-    } catch(e) { /* skip */ }
+    } catch(e) { console.warn("[docx-import:skip-item] parser threw:", e); }
   }
   let hfText = '';
   if (hfLines.length) hfText = `\n\n## Headers & Footers\n${hfLines.join('\n')}\n`;
@@ -6335,7 +6405,10 @@ async function extractDOCX(file) {
       }
       if (lines.length) txbxText = `\n\n## Text Boxes\n${lines.join('\n')}\n`;
     }
-  } catch(e) { /* no text boxes — fine */ }
+  } catch(e) {
+    console.warn("[docx-import:text-boxes] failed (could be missing or malformed):", e);
+    result.warnings.push("Text boxes could not be parsed");
+  }
 
   // ── Completeness check ──
   const fileSizeKB = file.size / 1024;
@@ -9724,7 +9797,7 @@ function updateConflictLedger(userDecisions) {
       });
     }
   });
-  try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(ledger)); } catch(e) {}
+  try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(ledger)); } catch(e) { console.warn('[conflict-ledger] write failed:', e); }
 }
 
 function getLedgerEntry(d) {
@@ -10250,7 +10323,7 @@ function applyDecisions() {
       const entry = window._conflictLedger.find(e => e.fingerprint === fp);
       if (entry) {
         entry.suppressed = true;
-        try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) {}
+        try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) { console.warn('[conflict-ledger:suppress] write failed:', e); }
 
         // If this conflict has been a repeat offender (3+), issue targeted per-AI warnings
         // to the AIs who kept suggesting the losing option
@@ -10272,7 +10345,7 @@ function applyDecisions() {
               }
             });
           });
-          try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) {}
+          try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) { console.warn('[ai-warnings] write failed:', e); }
         }
       }
     }
