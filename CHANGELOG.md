@@ -2,8 +2,8 @@
 
 ---
 
-## v3.29.11
-**Build:** `20260430-018` · **Released:** April 30, 2026
+## v3.29.12
+**Build:** `20260430-019` · **Released:** April 30, 2026
 
 - Icon catalog extended: LM Studio, Open WebUI, Together AI, and Alfredo (the user's internal AI gateway) now match to local PNGs.
 - Mistral matcher widened to also catch `mixtral`, `codestral`, and `ministral` model strings.
@@ -11,10 +11,10 @@
 - **New: Live icon preview** in the Add a Custom Worker Bee modal. Model row split into two columns: model inputs on the left, big 96×96 icon preview on the right. The preview shows the icon that will be used after Add to Hive given the current form state — pick Mistral from Quick Add and the Mistral icon shows immediately. Three icon kinds tracked:
   - **User upload** — solid border, × clear button visible, Replace Icon label
   - **Catalog match** — dashed border, no × (not the user's to clear), Upload Icon label
-  - **Generic fallback** — falls through to `images/icon-generic.png` when no catalog match. If that file doesn't exist, the preview gracefully clears to "No icon yet" placeholder text via the `<img>` onerror handler.
+  - **Generic fallback** — falls through to `images/icon-generic.png` (gold hex with brain inside) when no catalog match. If that file doesn't exist, the preview gracefully clears to "No icon yet" placeholder text via the `<img>` onerror handler.
 - Import-from-Server flow applies a single uploaded icon to every model imported from that server. Icon persists to the saved-server payload so re-opens of the modal restore it.
 - New shared `wfIconUpload` module — `attach() / read() / set() / clear() / previewCatalogMatch()`. Same widget plugs into both modals.
-- 13 of 13 known providers now have local PNG icons in `images/`. New PNGs need to be committed alongside this release for the live deployment to pick them up.
+- 13 of 13 known providers now have local PNG icons in `images/`, plus `icon-generic.png` for the universal fallback. New PNGs need to be committed alongside this release for the live deployment to pick them up.
 
 ---
 
