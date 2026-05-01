@@ -2,50 +2,30 @@
 
 ---
 
-## v3.29.1 — Reference Material paste improvements + HTTP classification site 3
+## v3.29.2
+**Build:** `20260430-007` · **Released:** April 30, 2026
+
+- PDF/DOCX parse-time warnings (outline, annotations, form fields, comments, footnotes, endnotes, text boxes) now fire a Troubleshooting Card after import in addition to the inline status line. The Card lists every warning so the user can't miss them — `console.warn` alone was useless to anyone without DevTools open.
+- New `IMPORT_WARNINGS` catalog entry. Title supports `{filename}`, meaning supports `{warnings}` (rendered as a bulleted list). `tc-meaning` CSS gained `white-space: pre-wrap` to preserve the list formatting.
+- Audited every `try/catch` in `app.js`. 24 silent catches that were hiding real failures now log to `console.warn` with a labeled prefix.
+- `fetchModelsForProvider` outer catch additionally calls `WF_DEBUG.captureFailure` so model-fetch failures land in Deep Dive.
+- localStorage write failures (license, models cache, recommend cache, hive, project, conflict ledger, AI warnings, file metadata, has-pdf-pages flag) now log instead of vanishing. UX unchanged.
+
+32 silent catches remain by design (audio fail-back, IDB cleanup during init, JSON.parse-of-cache with fallbacks, session-exists flag writes). Each reviewed individually.
+
+Closes Audit Finding 3.
+
+---
+
+## v3.29.1
 **Build:** `20260430-006` · **Released:** April 30, 2026
 
-### Reference Material paste box upgraded
+- Reference Material paste cards now have a line-number gutter that updates as you type. Logical lines.
+- Added Lines and Paragraphs to per-card counters.
+- Paste area `min-height` raised from 120px to 220px.
+- `fetchImportServerModels` routed through `WF_DEBUG.classify()`. Four new catalog entries gated on `ctx.kind === 'models_endpoint'`: `MODELS_ENDPOINT_AUTH` (401/403), `MODELS_ENDPOINT_PATH_NOT_FOUND` (404, with Open WebUI / Ollama / LM Studio path hints), `MODELS_ENDPOINT_SERVER_ERROR` (5xx), `MODELS_ENDPOINT_NO_MODELS` (empty model list). Catch block uses classified titles; import-server-specific hints preserved.
 
-The Reference Material paste textarea was a plain `<textarea>` with no line numbers, no paragraph count, and a small visible area. Three things changed:
-
-- **Line-number gutter** — every paste-mode card now has a left-side line-number gutter that updates as you type. Logical lines (split on `\n`), so each `\n`-delimited line gets one number even if it visually wraps. Matches what every code editor does in word-wrap mode.
-- **Lines and Paragraphs added to per-card counters** — alongside the existing Chars / Words / Tokens (est.). Paragraphs counts blocks separated by one or more blank lines. These two metrics live only at the per-card level since they don't sum meaningfully across multiple docs — which gives the per-card counter row unique information vs. the grand-totals header at the top of the section.
-- **Bigger paste area** — `min-height` on `.ref-card-ta` raised from 120px to 220px so a typical paste-and-glance fits without scrolling. Still resizable by dragging the corner.
-
-Visually the gutter and textarea now sit inside a single `.ref-card-paste-wrap` flex container that owns the border, so they read as one unified panel instead of two adjacent boxes. Focus ring on the wrapper.
-
-### HTTP classification unification — site 3 of 3 (Audit Finding 1 closed)
-
-`fetchImportServerModels` was the third and last duplicated HTTP-classification site. Inline switch on `resp.status` mapping to import-server-specific hints replaced with calls to `WF_DEBUG.classify()`, gated on `ctx.kind === 'models_endpoint'` so the new entries never fire from the round flow, Custom AI test, or Test All Keys.
-
-Four new catalog entries:
-
-- **`MODELS_ENDPOINT_AUTH`** — 401/403 from a models-list endpoint
-- **`MODELS_ENDPOINT_PATH_NOT_FOUND`** — 404 (carries the Open WebUI / Ollama / LM Studio path hints)
-- **`MODELS_ENDPOINT_SERVER_ERROR`** — 5xx
-- **`MODELS_ENDPOINT_NO_MODELS`** — 200 with empty/unrecognized model list (uses synthetic `'no_models'` status sentinel)
-
-Catch block (CORS / network / DNS) routes through the same classifier so the displayed title now reads "CORS blocked" or "Network error" instead of generic "Could not reach the server" — but the import-server-specific hints about file:// origins, VPN, and internal DNS are preserved as appended hints. Generic catalog entries don't know that context; the call site keeps it.
-
-**Audit Finding 1 is now closed.** All four originally-duplicated HTTP classification sites (`callAPI`, `testCustomAIConnection`, `runSingleKeyTest`, `fetchImportServerModels`) route through a single classifier.
-
-### Architecture
-
-- `computeRefStats` — extended with `lines` and `paragraphs` fields (additive — existing callers reading `chars`/`words`/`tokens` continue to work)
-- `refCardMarkup` — paste body wrapped in `.ref-card-paste-wrap` flex container; counters row gained two new spans
-- `updateReferenceDocText` — extended to update lines/paragraphs counters and call the new line-number updater
-- New function `updateRefLineNumbers(id)` — populates one card's gutter
-- `renderReferenceCards` — calls `updateRefLineNumbers` for every paste-mode card after rebuilding the DOM (covers initial mount, add, remove, reorder)
-- `WF_ERROR_CATALOG` — +4 entries gated on `ctx.kind === 'models_endpoint'`
-- `fetchImportServerModels` — three call sites (resp.ok, no-models, catch) replaced with classifier calls
-- CSS — new `.ref-card-paste-wrap`, `.ref-card-line-numbers` rules; existing `.ref-card-ta` updated for the new flex layout; new `.ref-card-count-lines`/`.ref-card-count-paragraphs` styled alongside existing accent counters
-
-### Notes
-
-- No data, storage, or backup format changes
-- All four canonical version stamps bumped, all six pages cache-busted to `3.29.1`
-- v3.29 hardening backlog now contains only Finding 3 (silent-catch audit) and the cosmetic items (`!important` cleanup, Notes button flip, Smart Templates)
+Closes Audit Finding 1: HTTP classification now unified across all four original call sites.
 
 ---
 
