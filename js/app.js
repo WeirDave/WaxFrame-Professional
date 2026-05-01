@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-003
+//  Build: 20260430-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1034,7 +1034,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-003';         // build stamp — update each session
+const BUILD       = '20260430-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2884,13 +2884,19 @@ function saveSession() {
       }
     } catch(e) {
       // IDB failed — fall back to localStorage.
-      consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error');
+      consoleLog(`❌ Session save failed (IndexedDB error: ${e.message}). Trying localStorage fallback…`, 'error', {
+        status:  'IDB_ERROR',
+        rawJson: e.stack || e.message || String(e)
+      });
       try {
         localStorage.setItem(LS_SESSION, JSON.stringify(session));
         try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(ee) {}
       } catch(lsErr) {
         if (lsErr.name === 'QuotaExceededError') {
-          consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error');
+          consoleLog(`❌ Storage full — session could not be saved. Export your session now to avoid losing work.`, 'error', {
+            status:  'QUOTA_EXCEEDED',
+            rawJson: `Browser storage quota exceeded.\n\nAction: click "Export Transcript Now" below, then clear browser storage for this site, then reload.\n\nOriginal error: ${lsErr.message}`
+          });
           const el = document.getElementById('liveConsole');
           if (el) {
             const existing = el.querySelector('.quota-warn-btn');
@@ -2903,7 +2909,10 @@ function saveSession() {
             }
           }
         } else {
-          consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error');
+          consoleLog(`❌ Session save failed: ${lsErr.message}`, 'error', {
+            status:  'STORAGE_FAIL',
+            rawJson: lsErr.stack || lsErr.message || String(lsErr)
+          });
         }
       }
     }
@@ -6891,7 +6900,10 @@ async function reExtractWithVision() {
     toast(`✅ Document re-extracted successfully via ${visionAI.cfg.label}`);
     if (banner) banner.style.display = 'none';
   } catch(e) {
-    consoleLog(`❌ Re-extraction failed: ${e.message}`, 'error');
+    consoleLog(`❌ Re-extraction failed: ${e.message}`, 'error', {
+      status:  'EXTRACT_FAIL',
+      rawJson: e.stack || e.message || String(e)
+    });
     toast(`❌ Re-extraction failed: ${e.message}`);
     if (btn) { btn.disabled = false; btn.textContent = '🔍 Re-extract with AI Vision'; }
   }

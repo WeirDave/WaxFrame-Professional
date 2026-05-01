@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-003
+     Build: 20260430-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-003">
+  <meta name="waxframe-build" content="20260430-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.28.2">
+  <link rel="stylesheet" href="style.css?v=3.28.3">
 </head>
 <body>
 
@@ -1140,6 +1140,7 @@
         </table>
       </div>
       <div class="ddv-actions">
+        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.testViewer()" title="Inject 6 fake captures so you can preview the populated viewer in both themes">🌱 Seed sample</button>
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
@@ -1740,7 +1741,6 @@
   <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
   <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
   <button onclick="WF_DEBUG.testCard()" title="Cycle through all Troubleshooting Card catalog entries — preview every card design">▶ Test Card</button>
-  <button onclick="WF_DEBUG.testViewer()" title="Seed fake captures into the ring buffer and open the Deep Dive Viewer for theme/layout testing">▶ Test Viewer</button>
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
   <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
@@ -1801,8 +1801,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.28.2"></script>
-<script src="js/app.js?v=3.28.2"></script>
+<script src="js/version.js?v=3.28.3"></script>
+<script src="js/app.js?v=3.28.3"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
