@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260501-004
+     Build: 20260501-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260501-004">
+  <meta name="waxframe-build" content="20260501-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.30.2">
+  <link rel="stylesheet" href="style.css?v=3.30.3">
 </head>
 <body>
 
@@ -1845,6 +1845,8 @@
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
   <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
+  <span class="dev-toolbar-sep">|</span>
+  <button onclick="window.open('cleanup.html','_blank')" title="Scan localStorage for orphaned waxframe_* keys (dust bunnies)">🧹 Cleanup</button>
 </div>
 
 <div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">
@@ -1902,8 +1904,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.30.2"></script>
-<script src="js/app.js?v=3.30.2"></script>
+<script src="js/version.js?v=3.30.3"></script>
+<script src="js/app.js?v=3.30.3"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
