@@ -9502,12 +9502,12 @@ kbd {
 .import-server-checklist-hint {
   padding: 8px 12px;
   margin: 0 0 8px 0;
-  background: var(--surface-2, rgba(255,255,255,0.04));
+  background: var(--surface2);
   border-left: 3px solid var(--accent, #f4b400);
   border-radius: 4px;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--text-2, rgba(255,255,255,0.7));
+  color: var(--text-dim);
 }
 
 /* ── Import Server: Per-row icon button ── */
@@ -9519,8 +9519,8 @@ kbd {
   height: 36px;
   padding: 2px;
   margin: 0 8px;
-  background: var(--surface-2, rgba(255,255,255,0.06));
-  border: 1px solid var(--border-1, rgba(255,255,255,0.12));
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -9528,7 +9528,7 @@ kbd {
 }
 .import-server-icon-btn:hover {
   border-color: var(--accent, #f4b400);
-  background: var(--surface-3, rgba(255,255,255,0.1));
+  background: var(--surface3);
 }
 .import-server-icon-btn:focus-visible {
   outline: 2px solid var(--accent, #f4b400);
@@ -9563,95 +9563,14 @@ kbd {
 }
 .ai-reset-model-btn:hover {
   background: var(--accent, #f4b400);
-  color: var(--bg-1, #1a1a1a);
+  color: var(--bg);
 }
 .ai-reset-model-btn:focus-visible {
   outline: 2px solid var(--accent, #f4b400);
   outline-offset: 2px;
 }
 
-/* ── Imported Groups bulk-remove panel ── */
-.imported-groups-panel {
-  margin-bottom: 16px;
-  padding: 12px 14px;
-  background: var(--surface-2, rgba(255,255,255,0.05));
-  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
-  border-radius: 8px;
-}
-.imported-groups-header {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-2, rgba(255,255,255,0.06));
-}
-.imported-groups-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-1, rgba(255,255,255,0.92));
-}
-.imported-groups-sub {
-  font-size: 12px;
-  color: var(--text-2, rgba(255,255,255,0.6));
-}
-.imported-group-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 8px 4px;
-  border-radius: 6px;
-  transition: background 0.15s ease;
-}
-.imported-group-row + .imported-group-row {
-  border-top: 1px solid var(--border-2, rgba(255,255,255,0.05));
-}
-.imported-group-row:hover {
-  background: var(--surface-3, rgba(255,255,255,0.04));
-}
-.imported-group-info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-  flex: 1;
-}
-.imported-group-icon {
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.imported-group-textwrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-.imported-group-host {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text-1, rgba(255,255,255,0.92));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.imported-group-meta {
-  font-size: 11px;
-  color: var(--text-2, rgba(255,255,255,0.55));
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.imported-group-url {
-  font-family: 'Courier New', Courier, monospace;
-  font-size: 10px;
-  opacity: 0.85;
-}
-.imported-group-remove-btn {
-  flex-shrink: 0;
-  font-size: 12px;
-  padding: 6px 12px;
-}
+/* ── Imported Groups panel rules removed in v3.30.3 ── */
 
 /* ── Icon Picker Modal ── */
 .icon-picker-modal {
@@ -9663,21 +9582,21 @@ kbd {
   display: flex;
   gap: 0;
   margin: 0 0 12px 0;
-  border-bottom: 1px solid var(--border-1, rgba(255,255,255,0.12));
+  border-bottom: 1px solid var(--border);
 }
 .icon-picker-tab {
   padding: 10px 18px;
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  color: var(--text-2, rgba(255,255,255,0.6));
+  color: var(--text-dim);
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: color 0.15s ease, border-color 0.15s ease;
 }
 .icon-picker-tab:hover {
-  color: var(--text-1, rgba(255,255,255,0.9));
+  color: var(--text);
 }
 .icon-picker-tab.is-active {
   color: var(--accent, #f4b400);
@@ -9712,10 +9631,10 @@ kbd {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: var(--text-2, rgba(255,255,255,0.55));
+  color: var(--text-dim);
   margin: 4px 0 6px 0;
   padding-bottom: 4px;
-  border-bottom: 1px solid var(--border-2, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--border2);
 }
 .icon-picker-section-grid {
   display: grid;
@@ -9729,20 +9648,20 @@ kbd {
   justify-content: flex-start;
   gap: 6px;
   padding: 10px 6px;
-  background: var(--surface-2, rgba(255,255,255,0.04));
-  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 6px;
   cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease, transform 0.1s ease;
 }
 .icon-picker-tile:hover {
   border-color: var(--accent, #f4b400);
-  background: var(--surface-3, rgba(255,255,255,0.08));
+  background: var(--surface3);
   transform: translateY(-1px);
 }
 .icon-picker-tile.is-selected {
   border-color: var(--accent, #f4b400);
-  background: var(--surface-3, rgba(255,255,255,0.1));
+  background: var(--surface3);
   box-shadow: inset 0 0 0 1px var(--accent, #f4b400);
 }
 .icon-picker-tile:focus-visible {
@@ -9759,7 +9678,7 @@ kbd {
 .icon-picker-tile-name {
   font-size: 11px;
   text-align: center;
-  color: var(--text-1, rgba(255,255,255,0.85));
+  color: var(--text);
   line-height: 1.2;
   word-break: break-word;
 }
@@ -9775,8 +9694,8 @@ kbd {
   margin: 0;
   font-size: 12px;
   line-height: 1.5;
-  color: var(--text-2, rgba(255,255,255,0.65));
-  background: var(--surface-2, rgba(255,255,255,0.04));
+  color: var(--text-dim);
+  background: var(--surface2);
   padding: 10px 12px;
   border-left: 3px solid var(--accent, #f4b400);
   border-radius: 4px;
@@ -9789,7 +9708,7 @@ kbd {
 }
 #iconPickerUploadFile {
   font-size: 13px;
-  color: var(--text-1, rgba(255,255,255,0.85));
+  color: var(--text);
   flex: 1;
   min-width: 200px;
 }
@@ -9797,8 +9716,8 @@ kbd {
   width: 96px;
   height: 96px;
   object-fit: contain;
-  background: var(--surface-2, rgba(255,255,255,0.04));
-  border: 1px solid var(--border-1, rgba(255,255,255,0.12));
+  background: var(--surface2);
+  border: 1px solid var(--border);
   border-radius: 6px;
   padding: 6px;
   display: none;
@@ -9807,7 +9726,7 @@ kbd {
   display: flex;
   justify-content: flex-end;
   padding-top: 8px;
-  border-top: 1px solid var(--border-2, rgba(255,255,255,0.06));
+  border-top: 1px solid var(--border2);
 }
 
 /* =========================================================
@@ -9821,20 +9740,20 @@ kbd {
   margin-bottom: 12px;
   padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
-  background: var(--surface-2, rgba(255,255,255,0.04));
+  border: 1px solid var(--border);
+  background: var(--surface2);
   flex-wrap: wrap;
 }
 
 .multi-select-toolbar--collapsed {
   /* Resting state — just the toggle button + a one-line hint */
-  background: var(--surface-2, rgba(255,255,255,0.03));
+  background: var(--surface2);
   border-style: dashed;
 }
 
 .multi-select-toolbar--active {
   /* Active state — accent border to make the destructive context obvious */
-  background: var(--surface-3, rgba(255,200,0,0.06));
+  background: var(--accent-dim);
   border-color: var(--accent, #f4b400);
   border-style: solid;
 }
@@ -9847,14 +9766,14 @@ kbd {
 
 .multi-select-hint {
   font-size: 12px;
-  color: var(--text-2, rgba(255,255,255,0.6));
+  color: var(--text-dim);
   flex: 1;
   min-width: 0;
 }
 
 .multi-select-status {
   font-size: 13px;
-  color: var(--text-1, rgba(255,255,255,0.92));
+  color: var(--text);
   flex: 1;
   min-width: 0;
 }
@@ -9899,3 +9818,297 @@ kbd {
   outline: 2px solid var(--accent, #f4b400);
   outline-offset: 2px;
 }
+
+/* =========================================================
+ * v3.30.3 — Cleanup tool (cleanup.html)
+ * ─────────────────────────────────────────────────────────
+ * Standalone localStorage scanner for orphaned waxframe_*
+ * keys. Air-gap safe — loads only style.css + version.js.
+ * Reuses .helper-body's body styling and adds a cleanup-*
+ * namespace for tool-specific layout.
+ * ========================================================= */
+
+.cleanup-body {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  color: var(--text);
+}
+
+.cleanup-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+}
+.cleanup-logo {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+}
+.cleanup-header-text {
+  flex: 1;
+  min-width: 0;
+}
+.cleanup-title {
+  margin: 0 0 4px;
+  font-size: var(--fs-xl);
+  color: var(--text);
+}
+.cleanup-tagline {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.cleanup-tagline .app-version-stamp {
+  font-family: var(--font-mono);
+  opacity: 0.7;
+  margin-left: 8px;
+}
+
+.cleanup-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.cleanup-summary {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.cleanup-stat {
+  flex: 1;
+  min-width: 140px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.cleanup-stat-num {
+  font-size: 22px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text);
+}
+.cleanup-stat-num.cleanup-stat-known   { color: var(--green); }
+.cleanup-stat-num.cleanup-stat-bunny   { color: var(--accent); }
+.cleanup-stat-num.cleanup-stat-unknown { color: var(--text-dim); }
+.cleanup-stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+}
+
+.cleanup-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.cleanup-btn {
+  padding: 8px 16px;
+  font-size: var(--fs-base);
+  font-family: var(--font);
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.cleanup-btn:hover {
+  background: var(--surface3);
+  border-color: var(--accent);
+}
+.cleanup-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.cleanup-btn-danger {
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red);
+  font-weight: 600;
+}
+.cleanup-btn-danger:hover:not(:disabled) {
+  background: var(--red);
+  color: #fff;
+}
+.cleanup-btn-link {
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.cleanup-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.cleanup-section-header {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 4px 12px;
+  align-items: start;
+  padding: 14px 18px;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.cleanup-section-title {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  font-size: var(--fs-lg);
+  color: var(--text);
+}
+.cleanup-section-count {
+  font-family: var(--font-mono);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  font-weight: 400;
+}
+.cleanup-section-sub {
+  grid-column: 1;
+  grid-row: 2;
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.cleanup-section-actions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  gap: 6px;
+  align-self: center;
+}
+.cleanup-btn-xs {
+  padding: 4px 10px;
+  font-size: 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+.cleanup-btn-xs:hover {
+  border-color: var(--accent);
+}
+
+.cleanup-list {
+  display: flex;
+  flex-direction: column;
+}
+.cleanup-list .cleanup-row + .cleanup-row {
+  border-top: 1px solid var(--border);
+}
+
+.cleanup-row {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 18px;
+  transition: background 0.1s;
+}
+.cleanup-row:hover {
+  background: var(--accent-dim);
+}
+.cleanup-row-check {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  justify-self: center;
+}
+.cleanup-row-marker {
+  color: var(--green);
+  font-size: 18px;
+  justify-self: center;
+  margin-top: 1px;
+}
+.cleanup-row-body {
+  min-width: 0;
+}
+.cleanup-row-line1 {
+  display: flex;
+  gap: 12px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+.cleanup-row-key {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-all;
+}
+.cleanup-row-size {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.cleanup-row-line2 {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.cleanup-row-line3 {
+  margin-top: 4px;
+  padding: 6px 10px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 60px;
+  overflow: hidden;
+}
+
+.cleanup-row-bunny .cleanup-row-key   { color: var(--accent); }
+.cleanup-row-unknown .cleanup-row-key { color: var(--text-dim); }
+.cleanup-list-readonly .cleanup-row { opacity: 0.85; }
+
+.cleanup-empty {
+  margin: 0;
+  padding: 24px 18px;
+  text-align: center;
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.cleanup-footer {
+  margin-top: 8px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.cleanup-footer p { margin: 0; }

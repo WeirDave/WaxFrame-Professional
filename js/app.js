@@ -1223,7 +1223,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260501-004';         // build stamp — update each session
+const BUILD       = '20260501-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3203,18 +3203,13 @@ function renderAISetupGrid() {
       </div>`
     : '';
 
-  // v3.30.2 — Imported Groups bulk-remove panel. Renders only when at least
-  // one imported (Model Server) group exists. Above the hidden-defaults
-  // banner so the destructive bulk action is visually separated from the
-  // routine restore action below it.
-  const importedGroupsHTML = buildImportedGroupsPanelHTML();
-
-  // v3.30.2 — Multi-select toolbar for arbitrary-subset bulk removal of
-  // custom AIs. Sits ABOVE the imported groups panel so the multi-select
-  // workflow (the lighter, more general one) is encountered first.
+  // v3.30.3 — Multi-select toolbar is now the single bulk-remove path for
+  // custom AIs. The earlier Imported Groups panel duplicated information
+  // already visible in the AI list below and was removed; multi-select +
+  // its "All" button cover every former Imported-Groups use case.
   const multiSelectHTML = buildMultiSelectToolbarHTML();
 
-  grid.innerHTML = multiSelectHTML + importedGroupsHTML + banner + aiList.map(ai => {
+  grid.innerHTML = multiSelectHTML + banner + aiList.map(ai => {
     const isActive = !!activeAIs.find(a => a.id === ai.id);
     const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
     const cfg = API_CONFIGS[ai.provider];
@@ -3874,11 +3869,10 @@ async function removeAI(id) {
   // keys (waxframe_recommend_custom-${id} and waxframe_models_${id}) in
   // localStorage that accumulated forever and were never reused — re-adding
   // a custom AI generates a fresh id with a new timestamp, so the old keys
-  // could never match again. The two new bulk-remove paths
-  // (removeImportedGroup, bulkRemoveSelectedAIs) already do this; this
-  // brings the single-AI path into symmetry. No-op gating on !isDefault
-  // for clarity — defaults never write these keys so removeItem would be
-  // harmless either way.
+  // could never match again. v3.30.3: bulkRemoveSelectedAIs is the only
+  // surviving bulk path and applies the same cleanup; this single-AI path
+  // mirrors it. No-op gating on !isDefault for clarity — defaults never
+  // write these keys so removeItem would be harmless either way.
   if (!isDefault) {
     try { localStorage.removeItem(`waxframe_recommend_custom-${id}`); } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_models_${id}`);            } catch(e) { /* ignore */ }
@@ -9030,10 +9024,11 @@ function openIconPickerForImportRow(rowIdx) {
 // ════════════════════════════════════════════════════════════════════
 // v3.30.2 — Multi-select bulk-remove for custom AIs
 // ────────────────────────────────────────────────────────────────────
-// Complements the per-server Imported Groups panel below. Imported Groups
-// answers "remove every model from server X"; multi-select answers "remove
-// any arbitrary subset of custom AIs". The two can coexist on the same
-// screen — they don't overlap.
+// Single bulk-remove path for custom AIs as of v3.30.3 (the earlier
+// per-server Imported Groups panel was redundant with this one and was
+// removed). Multi-select handles every former use case: "All" picks
+// every custom in the hive (covers the old "remove every model from
+// server X" path), and individual checkboxes pick any arbitrary subset.
 //
 // Defaults are intentionally NOT selectable in multi-select mode because
 // "Remove" and "Hide" are different operations — the existing Hide button
@@ -9088,8 +9083,7 @@ async function bulkRemoveSelectedAIs() {
     aiList    = aiList.filter(a => a.id !== id);
     activeAIs = activeAIs.filter(a => a.id !== id);
     if (builder === id) builder = null;
-    // Custom AIs: full delete (matches removeAI's custom branch and
-    // removeImportedGroup's per-bee cleanup pattern).
+    // Custom AIs: full delete — matches removeAI's custom branch.
     if (API_CONFIGS[id]) delete API_CONFIGS[id];
     try { localStorage.removeItem(`waxframe_recommend_default-${id}`); } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);  } catch(e) { /* ignore */ }
@@ -9137,98 +9131,15 @@ function buildMultiSelectToolbarHTML() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.30.2 — Imported Groups Panel (bulk delete)
+// v3.30.3 — Imported Groups Panel REMOVED
 // ────────────────────────────────────────────────────────────────────
-// Renders ABOVE the bee list in renderAISetupGrid. Groups all custom AIs
-// by their _modelsEndpoint (the original Models URL that imported them).
-// Each group shows a summary row with a "Remove all" button that wipes
-// every bee imported from that server in one shot. Hidden entirely when
-// no imported groups exist — keeps clutter off the screen for users who
-// only run the default AIs.
+// The Imported Groups panel (added v3.30.1) duplicated information
+// already visible in the AI list below and didn't scale beyond a
+// handful of imports. Multi-select toolbar (above) covers every former
+// use case: "All" selects every custom; checkboxes pick any subset;
+// removal cleans the same per-AI localStorage keys. removeImportedGroup
+// and buildImportedGroupsPanelHTML deleted with this release.
 // ════════════════════════════════════════════════════════════════════
-function buildImportedGroupsPanelHTML() {
-  // Build a map: _modelsEndpoint → { endpoint, chatUrl, bees: [...] }
-  const groups = new Map();
-  aiList.forEach(ai => {
-    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
-    if (!isCustom) return;
-    const cfg = API_CONFIGS[ai.provider];
-    const me  = cfg?._modelsEndpoint;
-    if (!me) return; // only group customs that came from the Import Server flow
-    if (!groups.has(me)) {
-      groups.set(me, { endpoint: me, chatUrl: cfg.endpoint || '', bees: [] });
-    }
-    groups.get(me).bees.push(ai);
-  });
-  if (!groups.size) return '';
-
-  const friendlyHost = (url) => {
-    try { return new URL(url).hostname; } catch(e) { return url; }
-  };
-
-  const rows = Array.from(groups.values()).map(g => {
-    const host  = friendlyHost(g.endpoint);
-    const count = g.bees.length;
-    const safe  = g.endpoint.replace(/'/g, "\\'");
-    return `
-    <div class="imported-group-row">
-      <div class="imported-group-info">
-        <span class="imported-group-icon">📡</span>
-        <div class="imported-group-textwrap">
-          <div class="imported-group-host">${esc(host)}</div>
-          <div class="imported-group-meta">${count} model${count !== 1 ? 's' : ''} imported · <span class="imported-group-url" title="${esc(g.endpoint)}">${esc(g.endpoint)}</span></div>
-        </div>
-      </div>
-      <button class="btn btn-danger imported-group-remove-btn" onclick="removeImportedGroup('${safe}')" title="Remove all ${count} models imported from ${esc(host)}">🗑 Remove all ${count}</button>
-    </div>`;
-  }).join('');
-
-  return `
-  <div class="imported-groups-panel" id="importedGroupsPanel">
-    <div class="imported-groups-header">
-      <span class="imported-groups-title">📡 Imported Groups</span>
-      <span class="imported-groups-sub">Bulk-remove models imported from a model server</span>
-    </div>
-    ${rows}
-  </div>`;
-}
-
-async function removeImportedGroup(modelsEndpoint) {
-  if (!modelsEndpoint) return;
-  const matches = aiList.filter(ai => {
-    const cfg = API_CONFIGS[ai.provider];
-    return cfg?._modelsEndpoint === modelsEndpoint;
-  });
-  if (!matches.length) {
-    toast('⚠️ No imported models matched that server');
-    return;
-  }
-  let host = modelsEndpoint;
-  try { host = new URL(modelsEndpoint).hostname; } catch(e) { /* keep raw */ }
-  const ok = await wfConfirm(
-    'Remove imported group',
-    `Remove all ${matches.length} model${matches.length !== 1 ? 's' : ''} imported from "${host}"? This deletes the bees, their API configs, and their cached recommendations. Other bees in your hive are not affected.`,
-    { okText: `Remove ${matches.length}`, destructive: true }
-  );
-  if (!ok) return;
-
-  matches.forEach(ai => {
-    const id = ai.id;
-    aiList    = aiList.filter(a => a.id !== id);
-    activeAIs = activeAIs.filter(a => a.id !== id);
-    if (builder === id) builder = null;
-    // Custom AIs: full delete (mirrors removeAI's custom branch). Defaults
-    // can't have _modelsEndpoint, so the isDefault check from removeAI is
-    // unnecessary here — every match is a custom by construction.
-    if (API_CONFIGS[id]) delete API_CONFIGS[id];
-    try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) { /* ignore */ }
-    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);            } catch(e) { /* ignore */ }
-    try { localStorage.removeItem(`waxframe_models_${id}`);                       } catch(e) { /* ignore */ }
-  });
-  saveHive();
-  renderAISetupGrid();
-  toast(`🗑 Removed ${matches.length} model${matches.length !== 1 ? 's' : ''} from ${host}`);
-}
 
 // Resolve the best icon for an AI — local image if name matches a known provider,
 // colored initial avatar as fallback when the real icon would be a broken globe.

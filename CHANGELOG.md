@@ -1,6 +1,15 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.30.3
+**Build:** `20260501-005` · **Released:** May 1, 2026
+
+- **Fixed: invisible Imported Groups + Multi-select panels on the Worker Bee screen.** The v3.30.0 CSS block (~36 declarations across `.imported-groups-*`, `.multi-select-*`, `.icon-picker-*`, `.import-server-*`, and `.ai-reset-model-btn`) was authored against a design-token convention that doesn't exist in WaxFrame: dashed names like `--text-1`, `--surface-2`, `--border-1`, `--bg-1`. Every undefined-var fell through to `rgba(255,255,255,…)` fallbacks — white on WaxFrame's white card surface, hence invisible host names, hint text, panel chrome, and section headers. The 📡 group icons survived only because emojis carry their own intrinsic color. Renamed every dashed token to WaxFrame's canonical names (`--text`, `--text-dim`, `--surface2`, `--surface3`, `--border`, `--border2`, `--bg`); preserved the multi-select-active amber tint via `--accent-dim` instead of the old hardcoded yellow rgba.
+- **Removed: Imported Groups panel (added v3.30.1).** The panel duplicated information already visible in the AI list below it and didn't scale beyond a handful of imports — at 40 imports a user would see one summary row labeled "40 models imported · [Remove all 40]" *plus* all 40 individual rows below with their own trash buttons. Multi-select toolbar covers every former Imported Groups use case: clicking "All" selects every custom in the hive (the old "remove every model from server X" path), and the per-row checkboxes pick any arbitrary subset. Deleted `buildImportedGroupsPanelHTML()` and `removeImportedGroup()` functions (~95 LoC), the call site in `renderAISetupGrid()`, and 12 dead CSS rules under `.imported-group*`. Two upstream comments referencing the deleted code were reconciled in the same release.
+- **New: cleanup.html — localStorage dust-bunny scanner.** Standalone air-gap-safe page (loads only `style.css` + `js/version.js`, no nav, no helpers, no network) that walks `localStorage`, ignores anything not prefixed `waxframe_`, and reconciles every `waxframe_*` key against the live `aiList` from `waxframe_v2_hive`. Three buckets: **Known** (live core keys + per-AI keys whose AI is still in the hive — read-only), **Bunnies** (per-AI keys whose owning AI is gone — pre-checked, safe to delete), and **Unknown** (waxframe_* keys not recognized by this version — unchecked, user opts in). Detects orphans across three patterns: `waxframe_recommend_default-${provider}`, `waxframe_recommend_custom-${id}`, and `waxframe_models_${id}`. Each row shows the key, byte size, why it landed in that bucket, and a content preview. IndexedDB is never touched. Reachable from the Dev Toolbar via the new 🧹 Cleanup button.
+- Code comment in `removeAI` updated to drop the dead reference to `removeImportedGroup`; `bulkRemoveSelectedAIs` is now the only sibling bulk-remove path.
+
+---
 ## v3.30.2
 **Build:** `20260501-004` · **Released:** May 1, 2026
 
