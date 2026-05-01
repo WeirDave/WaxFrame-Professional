@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-009
+//  Build: 20260430-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-009';         // build stamp — update each session
+const BUILD       = '20260430-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4484,7 +4484,7 @@ async function recommendCustomAIModel() {
   // Visible loading state — button + dropdown both indicate "working"
   recBtn.disabled = true;
   const origLabel = recBtn.innerHTML;
-  recBtn.innerHTML = '<span class="custom-ai-flow-badge custom-ai-flow-badge--basic">basic</span>Asking…';
+  recBtn.innerHTML = 'Asking…';
   selectEl.disabled = true;
 
   toast(`🤖 Asking ${askingModel} for a recommendation…`, 3000);
@@ -4504,12 +4504,45 @@ async function recommendCustomAIModel() {
 
   if (result?.model) {
     selectEl.value = result.model;
+    // v3.29.5 — annotate the dropdown options with Best Overall / Fastest /
+    // Budget tags so the custom-AI flow matches the built-in flow. The
+    // shared recommendModel() returns labels for all three picks; previously
+    // the custom flow discarded labels and only used result.model.
+    if (result.labels) annotateCustomAIDropdown(result.labels, result.model);
     resetCustomAITest();
     const cachedTag = result.cached ? ' (cached)' : '';
     toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 7000);
   } else {
     toast('⚠️ No clean recommendation — provider may not have followed the format. Pick manually or check console for details.', 6000);
   }
+}
+
+// v3.29.5 — Re-render customAIModelSelect <option> labels with tag info
+// returned from a successful recommendModel() call. Mirrors the formatting
+// in buildModelSelector() so the custom-AI flow shows the same ✨ Best /
+// ⚡ Fastest / 💰 Budget annotations as the built-in flow. Disabled
+// already-in-hive options are left untouched.
+function annotateCustomAIDropdown(labels, recommendedModel) {
+  const selectEl = document.getElementById('customAIModelSelect');
+  if (!selectEl || !labels) return;
+  const iconForTag = (tagStr) => {
+    if (!tagStr) return '';
+    const map = { 'Fastest': '⚡', 'Budget': '💰' };
+    return tagStr.split(' · ').map(t => map[t] || '').filter(Boolean).join(' ');
+  };
+  Array.from(selectEl.options).forEach(opt => {
+    if (opt.disabled) return; // already-in-hive entries — leave their "✓ … already in hive" suffix alone
+    const m = opt.value;
+    const lbl = labels[m];
+    if (!lbl) {
+      opt.textContent = m; // bare id for un-tagged models
+      return;
+    }
+    const icons = iconForTag(lbl.tag);
+    const iconPart = icons ? `${icons} ` : '';
+    const baseDisplay = `${iconPart}${m} — ${lbl.tag}`;
+    opt.textContent = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
+  });
 }
 
 // ── v3.25.7 / v3.26.1: Custom AI decision aids (Recommend + Browse models) ──

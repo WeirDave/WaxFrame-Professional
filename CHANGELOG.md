@@ -2,6 +2,16 @@
 
 ---
 
+## v3.29.5
+**Build:** `20260430-010` · **Released:** April 30, 2026
+
+- Fixed: custom worker bee recommendation flow now matches the built-in AI flow. After hitting **Recommend a Model**, the dropdown options are annotated with the same `✨ Best Overall` / `⚡ Fastest` / `💰 Budget` tags the built-in flow uses. Previously the custom flow only used the BEST pick from `recommendModel()` and discarded the labels for FASTEST and BUDGET.
+- Removed `basic` and `advanced` flow badges from the **Recommend a Model** button and the **↗ Browse models on website** link in the Add Custom Worker Bee modal — the labels stand on their own without the badges.
+- New `annotateCustomAIDropdown()` helper re-renders the model `<option>` elements after a successful recommendation. Mirrors the formatting in `buildModelSelector()`. Disabled "already in your hive" entries are left untouched.
+- Cleaned up orphaned CSS for `.custom-ai-flow-badge`, `.custom-ai-flow-badge--basic`, `.custom-ai-flow-badge--advanced` (no longer referenced anywhere).
+
+---
+
 ## v3.29.4
 **Build:** `20260430-009` · **Released:** April 30, 2026
 
