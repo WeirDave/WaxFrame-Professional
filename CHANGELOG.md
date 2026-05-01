@@ -2,6 +2,48 @@
 
 ---
 
+## v3.29.0 — Slow Responder Card + HTTP classification unification (2 of 3 sites)
+**Build:** `20260430-005` · **Released:** April 30, 2026
+
+### Slow Responder now fires a Troubleshooting Card
+
+The post-round timing analyzer already logged a `⚠️ X — responded in Ns (round avg: Ms) — consider toggling off` line when an AI exceeded both 2x the round average AND the average + 15 seconds. That console line scrolls away. v3.29.0 keeps the console line and adds a persistent Card on **first occurrence per AI per session**, with two actions:
+
+- **Toggle off this AI** — disables the AI for the remaining session via the same `toggleSessionBee` mechanism the user can hit on the bee cards. Toast confirms.
+- **Keep it on** — dismisses the card. AI keeps running. Subsequent slow rounds still log the console warning but no further Card for that AI this session.
+
+New `SLOW_RESPONDER` entry added to `WF_ERROR_CATALOG`. Title and meaning support `{ai}`, `{elapsed}`, and `{avg}` placeholders that the renderer substitutes from `ctx`.
+
+### Card renderer extended
+
+Two additions to `renderTroubleshootingCard` to support the Slow Responder use case (and future similar Cards):
+
+- **Placeholder substitution** in `entry.title` and `entry.meaning` for `{ai}`, `{elapsed}`, `{avg}` — Cards can now pull contextual values into their copy without each one needing a custom render path
+- **New action kinds** `disable-ai` (calls `toggleSessionBee(ctx.aiId, false)`) and `dismiss` (closes the card) added alongside existing `link`/`console-link`/`retry`/`open-modal`
+
+### HTTP classification unification — 2 of 3 sites
+
+Audit Finding 1 from the process-flow document: HTTP error classification was duplicated across four call sites with slightly different logic and message quality. v3.28.x already routed `callAPI` through `WF_DEBUG.classify()`. This release wires up two more:
+
+- **`testCustomAIConnection`** (Custom AI test modal) — replaced inline status-code → hint table with a `classify()` call. Message displayed in the test status pill is now the catalog entry title plus the API's own message, matching what round-flow Cards say. Same approach in the catch block for CORS/network failures.
+- **`runSingleKeyTest`** (Test All Keys per-AI worker) — replaced the simple "HTTP {status}" string with a classified version. Row tooltip and the detail pane status line now show a human-readable title (e.g., "Authentication failed (HTTP 401)" instead of just "HTTP 401").
+
+### What's parked for next
+
+- **`fetchImportServerModels`** — the third HTTP classification site. Has import-server-specific hints ("Open WebUI uses `/api/models`. Ollama uses `/api/tags`. LM Studio uses `/v1/models`.") that the generic catalog entries don't capture. Unifying this needs new catalog entries that carry import-server context, which is more involved than tonight's surgical scope. Queued.
+- Broader silent-catch audit (Finding 3, 64 sites)
+- `!important` cleanup pass
+
+### Architecture notes
+
+- 1 new catalog entry: `SLOW_RESPONDER`
+- 2 new action kinds: `disable-ai`, `dismiss`
+- Placeholder substitution in title/meaning is opt-in; entries without placeholders pass through unchanged
+- Slow Responder tracking lives in `window._slowResponderShownFor` (a Set) — session-scoped, cleared on page reload
+- 4 inline classification blocks deleted (testCustomAIConnection success path, testCustomAIConnection catch, runSingleKeyTest success path, runSingleKeyTest catch); 4 classifier calls added in their place. Net ~30 lines removed.
+
+---
+
 ## v3.28.3 — Console error inspection coverage + dev toolbar cleanup
 **Build:** `20260430-004` · **Released:** April 30, 2026
 
