@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-005
+//  Build: 20260430-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -408,6 +408,38 @@ const WF_ERROR_CATALOG = [
       { label: 'Toggle off this AI', kind: 'disable-ai' },
       { label: 'Keep it on',         kind: 'dismiss' }
     ]
+  },
+  // v3.29.1 — Import Server (model list) entries. All gate on
+  // ctx.kind === 'models_endpoint' so they never fire from the round flow,
+  // Custom AI test, or Test All Keys. Used by fetchImportServerModels to
+  // unify HTTP classification (Audit Finding 1, site 3 of 3).
+  {
+    code: 'MODELS_ENDPOINT_AUTH',
+    matches: (err, ctx) => ctx.kind === 'models_endpoint' && (ctx.status === 401 || ctx.status === 403),
+    title:   'Models endpoint authentication failed',
+    meaning: 'The server rejected the request to list models as unauthenticated or forbidden. Check the API Key field is correct and confirm with your IT team that your key has access to the models endpoint on this server.',
+    actions: []
+  },
+  {
+    code: 'MODELS_ENDPOINT_PATH_NOT_FOUND',
+    matches: (err, ctx) => ctx.kind === 'models_endpoint' && ctx.status === 404,
+    title:   'Models endpoint path not found',
+    meaning: 'The Models Endpoint URL returned 404 — the path is probably wrong for this server type. Open WebUI uses /api/models, Ollama uses /api/tags, LM Studio uses /v1/models. Confirm the URL matches your server.',
+    actions: []
+  },
+  {
+    code: 'MODELS_ENDPOINT_SERVER_ERROR',
+    matches: (err, ctx) => ctx.kind === 'models_endpoint' && ctx.status >= 500 && ctx.status < 600,
+    title:   'Server error from models endpoint',
+    meaning: 'The server returned a 5xx error. The platform itself is having trouble — try again in a moment, or check server status with whoever runs the server.',
+    actions: []
+  },
+  {
+    code: 'MODELS_ENDPOINT_NO_MODELS',
+    matches: (err, ctx) => ctx.kind === 'models_endpoint' && ctx.status === 'no_models',
+    title:   'No models in response',
+    meaning: 'The request succeeded but the response did not contain a recognizable list of models. Make sure the URL points to the models-list endpoint (e.g. /api/models for Open WebUI), not the chat endpoint.',
+    actions: []
   }
 ];
 
@@ -1069,7 +1101,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-005';         // build stamp — update each session
+const BUILD       = '20260430-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5237,21 +5269,18 @@ async function fetchImportServerModels() {
     if (!resp.ok) {
       if (status) { status.textContent = `❌ HTTP ${resp.status}`; status.className = 'custom-ai-test-status fail'; }
       fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
-      const hints = [];
-      if (resp.status === 401 || resp.status === 403) {
-        hints.push('The server rejected the request as unauthenticated or forbidden. Check the API Key field.');
-        hints.push('Confirm with your IT team that your key is valid and has access to the /models endpoint.');
-      } else if (resp.status === 404) {
-        hints.push('The Models Endpoint URL returned 404 — the path is probably wrong for this server type.');
-        hints.push('Open WebUI uses /api/models. Ollama uses /api/tags. LM Studio uses /v1/models.');
-      } else if (resp.status >= 500) {
-        hints.push('The server returned a 5xx error. The platform itself is having trouble — try again in a moment.');
-      } else {
-        hints.push('See the raw response panel for full details.');
-      }
+      // v3.29.1 — route through unified classifier (Audit Finding 1, site 3).
+      // ctx.kind = 'models_endpoint' gates the import-server-specific catalog
+      // entries so they don't fire from other contexts (round flow, custom AI
+      // test, test all keys). entry.meaning becomes the body; we still append
+      // a final hint referring to the raw panel for power users.
+      const entry = WF_DEBUG.classify(new Error(`HTTP ${resp.status}`), {
+        kind:   'models_endpoint',
+        status: resp.status
+      });
+      const hints = [entry.meaning, 'See the raw response panel for full details.'];
       showImportServerError(`HTTP ${resp.status} — ${resp.statusText || 'request failed'}`,
         `The server responded, but not with the model list WaxFrame expected.`, hints);
-      // Still populate raw panel for power users to inspect
       writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
       return;
     }
@@ -5269,11 +5298,17 @@ async function fetchImportServerModels() {
     if (!models.length) {
       if (status) { status.textContent = '❌ No models in response'; status.className = 'custom-ai-test-status fail'; }
       fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
-      showImportServerError('No models in response',
+      // v3.29.1 — also routed through classifier with a synthetic 'no_models'
+      // status sentinel so MODELS_ENDPOINT_NO_MODELS matches. Keeps the body
+      // consistent with the other import-server error paths.
+      const entry = WF_DEBUG.classify(new Error('no_models'), {
+        kind:   'models_endpoint',
+        status: 'no_models'
+      });
+      showImportServerError(entry.title,
         'The request succeeded, but the response did not contain a recognizable list of models.',
-        ['Check that the Models Endpoint URL is the one that returns the model list — not the chat endpoint.',
-         'Open the raw response panel in the modal to inspect the server reply (available after any successful fetch).']
-      );
+        [entry.meaning,
+         'Open the raw response panel in the modal to inspect the server reply.']);
       writeRaw(modelsUrl, `${resp.status} ${resp.statusText}`, data);
       return;
     }
@@ -5300,8 +5335,13 @@ async function fetchImportServerModels() {
   } catch(e) {
     if (status) { status.textContent = `❌ Network / CORS error`; status.className = 'custom-ai-test-status fail'; }
     fetchBtn.disabled = false; fetchBtn.textContent = 'Try Again';
-    showImportServerError('Could not reach the server',
-      'The browser could not complete the request. This usually means CORS, an unreachable host, or DNS failure.',
+    // v3.29.1 — let the classifier name the failure (CORS_BLOCKED vs
+    // NETWORK_ERROR vs UNKNOWN) — but preserve the import-server-specific
+    // hints about file:// origins, VPN, internal DNS that the generic
+    // catalog entries don't know about.
+    const entry = WF_DEBUG.classify(e, { kind: 'models_endpoint' });
+    showImportServerError(entry.title || 'Could not reach the server',
+      entry.meaning || 'The browser could not complete the request. This usually means CORS, an unreachable host, or DNS failure.',
       ['If running WaxFrame from a local file:// URL, your server must allow file:// origins or be served from a local web server.',
        'Verify the server hostname is reachable from this machine (VPN, internal DNS, etc.).',
        `Underlying error: ${esc(e.message || String(e))}`]
@@ -6996,6 +7036,12 @@ function renderReferenceCards() {
     }
     container.innerHTML = referenceDocs.map((doc, idx) => refCardMarkup(doc, idx)).join('');
   });
+  // v3.29.1 — populate line-number gutters for every paste-mode card.
+  // Re-runs on every renderReferenceCards call (initial mount, add, remove,
+  // reorder) since the DOM was just rebuilt and the gutters are empty.
+  referenceDocs.forEach(doc => {
+    if (doc.source === 'paste') updateRefLineNumbers(doc.id);
+  });
 }
 
 // Build a single card's markup. Source-mode determines whether the body shows
@@ -7021,7 +7067,10 @@ function refCardMarkup(doc, index) {
 
   const body = doc.source === 'upload'
     ? `<div class="ref-card-upload-status">📄 <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
-    : `<textarea class="ref-card-ta" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>`;
+    : `<div class="ref-card-paste-wrap">
+         <div class="ref-card-line-numbers" id="refLineNums-${idAttr}"></div>
+         <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>
+       </div>`;
 
   return `
 <div class="ref-card" data-ref-id="${idAttr}">
@@ -7042,22 +7091,32 @@ function refCardMarkup(doc, index) {
     <div class="ref-card-counters" id="refCardCounters-${idAttr}">
       <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span class="ref-card-count-chars">${stats.chars.toLocaleString()}</span></span>
       <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span class="ref-card-count-words">${stats.words.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Lines:</span> <span class="ref-card-count-lines">${stats.lines.toLocaleString()}</span></span>
+      <span class="ref-counter-item"><span class="ref-counter-sublabel">Paragraphs:</span> <span class="ref-card-count-paragraphs">${stats.paragraphs.toLocaleString()}</span></span>
       <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span class="ref-card-count-tokens">${stats.tokens.toLocaleString()}</span></span>
     </div>
   </div>
 </div>`;
 }
 
-// Per-doc stats helper — chars, words, estimated tokens. Used by card render
-// and by the grand-total computation. Token estimate uses chars/4 rule of
-// thumb (same as estimateTokens elsewhere) which is a rough but consistent
-// English-text approximation.
+// Per-doc stats helper — chars, words, lines, paragraphs, estimated tokens.
+// Used by card render and by the grand-total computation. Token estimate
+// uses chars/4 rule of thumb (same as estimateTokens elsewhere) which is a
+// rough but consistent English-text approximation.
+// v3.29.1 — added lines (logical, split on \n) and paragraphs (blocks
+// separated by one or more blank lines). These are per-card metrics; they
+// don't sum meaningfully across multiple docs so they stay off the grand
+// totals header — that's how the per-card counters earn their keep.
 function computeRefStats(text) {
   const t = text || '';
   const chars = t.length;
   const words = t.trim() ? t.trim().split(/\s+/).filter(Boolean).length : 0;
   const tokens = Math.round(chars / 4);
-  return { chars, words, tokens };
+  const lines = t === '' ? 0 : t.split('\n').length;
+  const paragraphs = t.trim()
+    ? t.trim().split(/\n\s*\n/).filter(p => p.trim()).length
+    : 0;
+  return { chars, words, tokens, lines, paragraphs };
 }
 
 // Add a new empty paste-mode reference document and focus its textarea so
@@ -7194,14 +7253,37 @@ function updateReferenceDocText(id, value) {
   if (c) {
     const charsEl  = c.querySelector('.ref-card-count-chars');
     const wordsEl  = c.querySelector('.ref-card-count-words');
+    const linesEl  = c.querySelector('.ref-card-count-lines');
+    const parasEl  = c.querySelector('.ref-card-count-paragraphs');
     const tokensEl = c.querySelector('.ref-card-count-tokens');
     if (charsEl)  charsEl.textContent  = stats.chars.toLocaleString();
     if (wordsEl)  wordsEl.textContent  = stats.words.toLocaleString();
+    if (linesEl)  linesEl.textContent  = stats.lines.toLocaleString();
+    if (parasEl)  parasEl.textContent  = stats.paragraphs.toLocaleString();
     if (tokensEl) tokensEl.textContent = stats.tokens.toLocaleString();
   }
+  // v3.29.1 — refresh the line-number gutter for paste-mode cards
+  updateRefLineNumbers(id);
   updateRefGrandTotals();
   // Save project (debounced through localStorage)
   saveProject();
+}
+
+// v3.29.1 — populate the line-number gutter for one paste-mode reference
+// card. Uses logical lines (split on \n), not visual wrapped lines —
+// reference material is typically structured (lists, paragraphs) where
+// logical line count matches what the user expects to see. Long lines
+// that wrap visually still get one line-number sitting at the top of the
+// wrapped block, which matches every code editor's word-wrap behavior.
+function updateRefLineNumbers(id) {
+  const ta = document.getElementById('refTa-' + id);
+  const ln = document.getElementById('refLineNums-' + id);
+  if (!ta || !ln) return;
+  const text = ta.value || '';
+  const count = text === '' ? 1 : text.split('\n').length;
+  let html = '';
+  for (let i = 1; i <= count; i++) html += `<div>${i}</div>`;
+  ln.innerHTML = html;
 }
 
 // Update the grand-total counter row(s) and the soft-warning banner.

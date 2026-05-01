@@ -2,6 +2,53 @@
 
 ---
 
+## v3.29.1 — Reference Material paste improvements + HTTP classification site 3
+**Build:** `20260430-006` · **Released:** April 30, 2026
+
+### Reference Material paste box upgraded
+
+The Reference Material paste textarea was a plain `<textarea>` with no line numbers, no paragraph count, and a small visible area. Three things changed:
+
+- **Line-number gutter** — every paste-mode card now has a left-side line-number gutter that updates as you type. Logical lines (split on `\n`), so each `\n`-delimited line gets one number even if it visually wraps. Matches what every code editor does in word-wrap mode.
+- **Lines and Paragraphs added to per-card counters** — alongside the existing Chars / Words / Tokens (est.). Paragraphs counts blocks separated by one or more blank lines. These two metrics live only at the per-card level since they don't sum meaningfully across multiple docs — which gives the per-card counter row unique information vs. the grand-totals header at the top of the section.
+- **Bigger paste area** — `min-height` on `.ref-card-ta` raised from 120px to 220px so a typical paste-and-glance fits without scrolling. Still resizable by dragging the corner.
+
+Visually the gutter and textarea now sit inside a single `.ref-card-paste-wrap` flex container that owns the border, so they read as one unified panel instead of two adjacent boxes. Focus ring on the wrapper.
+
+### HTTP classification unification — site 3 of 3 (Audit Finding 1 closed)
+
+`fetchImportServerModels` was the third and last duplicated HTTP-classification site. Inline switch on `resp.status` mapping to import-server-specific hints replaced with calls to `WF_DEBUG.classify()`, gated on `ctx.kind === 'models_endpoint'` so the new entries never fire from the round flow, Custom AI test, or Test All Keys.
+
+Four new catalog entries:
+
+- **`MODELS_ENDPOINT_AUTH`** — 401/403 from a models-list endpoint
+- **`MODELS_ENDPOINT_PATH_NOT_FOUND`** — 404 (carries the Open WebUI / Ollama / LM Studio path hints)
+- **`MODELS_ENDPOINT_SERVER_ERROR`** — 5xx
+- **`MODELS_ENDPOINT_NO_MODELS`** — 200 with empty/unrecognized model list (uses synthetic `'no_models'` status sentinel)
+
+Catch block (CORS / network / DNS) routes through the same classifier so the displayed title now reads "CORS blocked" or "Network error" instead of generic "Could not reach the server" — but the import-server-specific hints about file:// origins, VPN, and internal DNS are preserved as appended hints. Generic catalog entries don't know that context; the call site keeps it.
+
+**Audit Finding 1 is now closed.** All four originally-duplicated HTTP classification sites (`callAPI`, `testCustomAIConnection`, `runSingleKeyTest`, `fetchImportServerModels`) route through a single classifier.
+
+### Architecture
+
+- `computeRefStats` — extended with `lines` and `paragraphs` fields (additive — existing callers reading `chars`/`words`/`tokens` continue to work)
+- `refCardMarkup` — paste body wrapped in `.ref-card-paste-wrap` flex container; counters row gained two new spans
+- `updateReferenceDocText` — extended to update lines/paragraphs counters and call the new line-number updater
+- New function `updateRefLineNumbers(id)` — populates one card's gutter
+- `renderReferenceCards` — calls `updateRefLineNumbers` for every paste-mode card after rebuilding the DOM (covers initial mount, add, remove, reorder)
+- `WF_ERROR_CATALOG` — +4 entries gated on `ctx.kind === 'models_endpoint'`
+- `fetchImportServerModels` — three call sites (resp.ok, no-models, catch) replaced with classifier calls
+- CSS — new `.ref-card-paste-wrap`, `.ref-card-line-numbers` rules; existing `.ref-card-ta` updated for the new flex layout; new `.ref-card-count-lines`/`.ref-card-count-paragraphs` styled alongside existing accent counters
+
+### Notes
+
+- No data, storage, or backup format changes
+- All four canonical version stamps bumped, all six pages cache-busted to `3.29.1`
+- v3.29 hardening backlog now contains only Finding 3 (silent-catch audit) and the cosmetic items (`!important` cleanup, Notes button flip, Smart Templates)
+
+---
+
 ## v3.29.0 — Slow Responder Card + HTTP classification unification (2 of 3 sites)
 **Build:** `20260430-005` · **Released:** April 30, 2026
 
