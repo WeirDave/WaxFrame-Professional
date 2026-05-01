@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-020
+//  Build: 20260501-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -600,9 +600,9 @@ const PHASES = [
 const DEFAULT_AIS = [
   { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
   { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
-  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64', provider: 'deepseek', apiConsole: 'https://platform.deepseek.com/api_keys' },
-  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64', provider: 'gemini', apiConsole: 'https://aistudio.google.com/apikey' },
-  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'https://www.google.com/s2/favicons?domain=grok.com&sz=64', provider: 'grok', apiConsole: 'https://console.x.ai' },
+  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: 'https://platform.deepseek.com/api_keys' },
+  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: 'https://aistudio.google.com/apikey' },
+  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: 'https://console.x.ai' },
   { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: 'https://console.perplexity.ai' },
 ];
 
@@ -776,7 +776,18 @@ const API_CONFIGS = {
   }
 };
 
-// ── MODEL LABELS & STATIC FALLBACKS ──
+// v3.30.1 — Snapshot the as-shipped model id for each default provider so the
+// "↺ Reset" button can revert post-Recommend changes. Runs at module-eval time
+// before loadHive() can override cfg.model with persisted state, so this loop
+// always captures the literal value declared above. Custom AIs capture
+// _originalModel at add time (see addImportServerModels and addCustomAI);
+// pre-v3.30.1 customs are grandfathered in by ensureOriginalModelBaseline()
+// after loadHive() runs.
+Object.keys(API_CONFIGS).forEach(p => {
+  if (API_CONFIGS[p] && API_CONFIGS[p].model) {
+    API_CONFIGS[p]._originalModel = API_CONFIGS[p].model;
+  }
+});
 // Label lookup for known model IDs — shown in the model selector dropdown
 // Maintained here so adding a new model label never requires touching UI code
 // v3.26.4: MODEL_LABELS no longer carries "Recommended" tags — the live
@@ -1004,6 +1015,18 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const recheckBtn = showRecheck
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Recommend a Model</button>`
     : '';
+
+  // v3.30.1 — Reset-to-original button. Visible only when the live model
+  // diverges from the captured _originalModel baseline. Defaults snapshot at
+  // module-eval time; customs snapshot at add time; pre-v3.30.1 customs
+  // grandfathered via ensureOriginalModelBaseline() one-shot migration.
+  const cfg = API_CONFIGS[provider];
+  const orig = cfg?._originalModel;
+  const showReset = orig && currentModel && orig !== currentModel;
+  const resetBtn = showReset
+    ? `<button class="ai-reset-model-btn" id="resetmodelbtn-${aiId}" onclick="resetModelToOriginal('${aiId}')" title="Reset to your originally-picked model: ${esc(orig)}">↺ Reset to ${esc(orig)}</button>`
+    : '';
+
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
     <select class="model-select" id="modelsel-${aiId}"
@@ -1011,6 +1034,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
       ${options}
     </select>
     ${recheckBtn}
+    ${resetBtn}
     ${noteHtml}
   </div>`;
 }
@@ -1038,6 +1062,70 @@ function saveModelForAI(aiId, modelId) {
     noteEl.textContent = lblWhy ? (isRec ? `✨ ${lblWhy}` : lblWhy) : '';
   }
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
+}
+
+// v3.30.1 — Revert an AI's model selection back to whatever was captured as
+// _originalModel at AI creation/import time. Triggered by the ↺ Reset button
+// that buildModelSelector renders only when current ≠ original. Re-renders
+// the bee grid so the reset button disappears once we're back at baseline.
+// Intentionally a hard reset with no confirmation modal — the action is
+// trivial to undo (pick a different model again) and the dialog noise would
+// outweigh the safety benefit.
+function resetModelToOriginal(aiId) {
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg || !cfg._originalModel) {
+    toast('⚠️ No original model baseline captured for this AI');
+    return;
+  }
+  if (cfg.model === cfg._originalModel) {
+    toast(`✓ ${ai.name} is already at the original model`, 2000);
+    return;
+  }
+  const orig = cfg._originalModel;
+  cfg.model = orig;
+  if (ai.provider === 'gemini' && cfg.endpointFn) {
+    cfg.endpoint = cfg.endpointFn(orig);
+  }
+  saveSettings();
+  renderAISetupGrid();
+  toast(`↺ ${ai.name} reset to ${orig}`, 2500);
+}
+
+// v3.30.1 — One-shot migration that grandfathers in pre-v3.30.1 custom AIs
+// by snapshotting their CURRENT model as the _originalModel baseline. Defaults
+// already snapshot at module-eval time (see the loop right after API_CONFIGS).
+// This catches custom AIs that were imported/added under an earlier version
+// where _originalModel wasn't being captured at creation time.
+//
+// The honest UX caveat: if the user previously ran Recommend, "current" is the
+// recommended model — not their actual original pick. The toast tells them to
+// re-pick now to update the baseline. We keep a localStorage flag so the toast
+// shows once per upgrade, not on every load.
+function ensureOriginalModelBaseline() {
+  let migrated = 0;
+  aiList.forEach(ai => {
+    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
+    if (!isCustom) return;
+    const cfg = API_CONFIGS[ai.provider];
+    if (cfg && cfg.model && !cfg._originalModel) {
+      cfg._originalModel = cfg.model;
+      migrated++;
+    }
+  });
+  if (!migrated) return;
+  saveHive();
+  if (!localStorage.getItem('waxframe_v330_baseline_migrated')) {
+    try { localStorage.setItem('waxframe_v330_baseline_migrated', '1'); } catch(e) { /* quota — fine */ }
+    setTimeout(() => {
+      toast(
+        `💡 v3.30.1: Captured reset-to-original baselines for ${migrated} custom AI${migrated !== 1 ? 's' : ''}. ` +
+        `If you ran Recommend before this version, re-pick the model now to update the baseline.`,
+        9000
+      );
+    }, 1500);
+  }
 }
 
 // v3.26.5: snapshot the structural config of each default provider at module
@@ -1135,7 +1223,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-020';         // build stamp — update each session
+const BUILD       = '20260501-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3115,7 +3203,18 @@ function renderAISetupGrid() {
       </div>`
     : '';
 
-  grid.innerHTML = banner + aiList.map(ai => {
+  // v3.30.1 — Imported Groups bulk-remove panel. Renders only when at least
+  // one imported (Model Server) group exists. Above the hidden-defaults
+  // banner so the destructive bulk action is visually separated from the
+  // routine restore action below it.
+  const importedGroupsHTML = buildImportedGroupsPanelHTML();
+
+  // v3.30.1 — Multi-select toolbar for arbitrary-subset bulk removal of
+  // custom AIs. Sits ABOVE the imported groups panel so the multi-select
+  // workflow (the lighter, more general one) is encountered first.
+  const multiSelectHTML = buildMultiSelectToolbarHTML();
+
+  grid.innerHTML = multiSelectHTML + importedGroupsHTML + banner + aiList.map(ai => {
     const isActive = !!activeAIs.find(a => a.id === ai.id);
     const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
     const cfg = API_CONFIGS[ai.provider];
@@ -3124,10 +3223,20 @@ function renderAISetupGrid() {
     const consoleUrl = ai.apiConsole || '#';
     const showRecheck = hasKey;
     const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
-    // Defaults get a Hide button; custom AIs get the 🗑 remove button
-    const actionBtn = isCustom
-      ? `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`
-      : `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
+    // Defaults get a Hide button; custom AIs get the 🗑 remove button —
+    // unless multi-select mode is active, in which case customs swap to a
+    // checkbox. Defaults are intentionally NOT selectable in multi-select:
+    // "Remove" and "Hide" are different operations and merging them in one
+    // bulk action would be semantically confusing. Defaults keep their
+    // Hide button untouched while multi-select is on.
+    let actionBtn;
+    if (isCustom) {
+      actionBtn = _multiSelectMode
+        ? `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${_multiSelectIds.has(ai.id) ? 'checked' : ''} onchange="toggleMultiSelectId('${ai.id}', this.checked)" title="Select ${esc(ai.name)} for bulk removal">`
+        : `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`;
+    } else {
+      actionBtn = `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
+    }
     return `
     <div class="ai-setup-row" id="airow-${ai.id}">
       <div class="ai-setup-row-top">
@@ -4933,7 +5042,10 @@ function addCustomAI() {
     previewId:     'customAIIconPreview',
     previewWrapId: 'customAIIconWrap'
   });
-  const icon   = previewIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  // v3.30.1 — fallback dropped from external favicon URL to local generic
+  // icon. Air-gapped deployments now never reach for an external CDN even
+  // when a user adds a custom AI without picking an icon.
+  const icon   = previewIcon || GENERIC_ICON_PATH;
   const ai     = { id, name, url, icon, provider: id };
 
   // Build API config based on selected format
@@ -4966,6 +5078,10 @@ function addCustomAI() {
   API_CONFIGS[id] = {
     label: name,
     model,
+    // v3.30.1 — capture the originally-picked model so the "↺ Reset" button
+    // on the bee list can revert post-Recommend changes. Never overwritten
+    // by saveModelForAI or recheckModelForAI — only by resetModelToOriginal.
+    _originalModel: model,
     endpoint: url.replace(/\/$/, ''),
     note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
     // v3.27.1: store format so recheckModelForAI can rebuild the recommend
@@ -5031,6 +5147,19 @@ const IMPORT_SERVER_PRESETS = {
 
 let _importServerModels   = [];
 let _importServerPreset   = null;
+
+// v3.30.1 — Per-row icon overrides for the Import Server checklist. Indexed
+// by row number (matches `isc-${i}` checkbox ids). Populated in
+// renderImportServerChecklist() via _CATALOG smart-match against each model
+// id; user can override per row via openIconPickerForImportRow(). Cleared on
+// modal close. Read by addImportServerModels() so each new bee carries its
+// own assigned icon, not a single group-wide one.
+let _importRowIcons = [];
+
+// Generic fallback icon path. Kept in sync with the GENERIC_ICON inside
+// wfIconUpload — used by the Import Server icon column for rows where no
+// catalog match exists yet.
+const GENERIC_ICON_PATH = 'images/icon-generic.png';
 
 // Timestamp ticker state — hoisted up here so closeImportServerModal() can safely
 // call stopImportTimestampTicker() which reassigns _importFetchedAt = null.
@@ -5278,6 +5407,7 @@ function resetImportServer(full = false) {
   }
   if (addBtn)   { addBtn.disabled = true; addBtn.textContent = 'Add 0 to Hive'; }
   _importServerModels = [];
+  _importRowIcons = []; // v3.30.1 — clear per-row overrides on close
   setImportServerState('prefetch');
 }
 
@@ -5523,6 +5653,23 @@ function renderImportServerChecklist() {
   _importAvailableCount = allModels.length - inHiveCount;
   _importInHiveCount    = inHiveCount;
 
+  // v3.30.1 — Smart-match each row to a catalog icon based on the model id +
+  // name. Rows already in the hive get their existing AI's icon so the column
+  // visually matches the bee list. Rows with no match get the generic icon.
+  // User overrides via openIconPickerForImportRow() write back to this array
+  // and re-render only that row's <img> rather than the whole list.
+  _importRowIcons = allModels.map((model, idx) => {
+    const modelId   = typeof model === 'object' ? model.id   : model;
+    const modelName = typeof model === 'object' ? model.name : model;
+    if (existingForThisServer.has(modelId)) {
+      // Mirror the icon from the AI that's already in the hive
+      const existing = aiList.find(a => API_CONFIGS[a.provider]?.model === modelId);
+      if (existing?.icon) return existing.icon;
+    }
+    const matched = wfIconUpload.matchCatalog(`${modelName} ${modelId}`);
+    return matched || GENERIC_ICON_PATH;
+  });
+
   items.innerHTML = allModels.map((model, i) => {
     const modelId   = typeof model === 'object' ? model.id   : model;
     const modelName = typeof model === 'object' ? model.name : model;
@@ -5538,9 +5685,12 @@ function renderImportServerChecklist() {
     }
 
     return `
-    <div class="import-server-item">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" checked onchange="updateChecklistCount()">
+    <div class="import-server-item" id="isi-${i}">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
+      <button type="button" class="import-server-icon-btn" id="isicon-${i}" onclick="openIconPickerForImportRow(${i})" title="Choose icon for ${esc(modelName)}">
+        <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" onerror="this.style.opacity='0.3'">
+      </button>
       <div class="import-server-nickname-wrap">
         <label class="import-server-nickname-label" for="isn-${i}">Nickname:</label>
         <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${esc(modelName)}" data-default-value="${esc(modelName)}" oninput="onImportNicknameInput(this)">
@@ -5586,11 +5736,17 @@ function addImportServerModels() {
   // v3.29.13 — read whatever icon the preview is currently showing (user
   // upload data URL OR catalog match path), persist that. See addCustomAI
   // for the full rationale on why readAny replaces the prior read().
+  // v3.30.1 — this is now a GROUP FALLBACK only. Per-row icons (assigned
+  // by smart-match in renderImportServerChecklist or user-overridden via
+  // openIconPickerForImportRow) take precedence. groupFallbackIcon kicks in
+  // only if a row has no per-row entry, which shouldn't happen post-v3.30
+  // but is defensive against any future render path that bypasses the
+  // _importRowIcons populate step.
   const previewIcon = wfIconUpload.readAny({
     previewId:     'importServerIconPreview',
     previewWrapId: 'importServerIconWrap'
   });
-  const icon   = previewIcon || `https://www.google.com/s2/favicons?domain=${origin}&sz=64`;
+  const groupFallbackIcon = previewIcon || GENERIC_ICON_PATH;
 
   // v3.27.4: build the full server model-id list ONCE, outside the loop.
   // _importServerModels was populated by fetchImportServerModels and is the
@@ -5611,11 +5767,18 @@ function addImportServerModels() {
 
     const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + ts + '_' + idx;
 
-    const ai = { id, name, url: chatUrl, icon, provider: id };
+    // v3.30.1 — per-row icon takes precedence over the group fallback
+    const rowIcon = _importRowIcons[parseInt(i, 10)] || groupFallbackIcon;
+    const ai = { id, name, url: chatUrl, icon: rowIcon, provider: id };
 
     API_CONFIGS[id] = {
       label:     name,
       model:     modelId,
+      // v3.30.1 — capture the original model id so the "↺ Reset" button on
+      // the bee list can revert post-Recommend changes back to whatever the
+      // user picked at import time. Never modified by saveModelForAI or
+      // recheckModelForAI — only reset via resetModelToOriginal().
+      _originalModel: modelId,
       endpoint:  chatUrl,
       // v3.27.4: store the Models Endpoint URL so recheckModelForAI can
       // fetch the live model list later without trying to derive it from
@@ -8646,8 +8809,412 @@ const wfIconUpload = (() => {
     _setPreview(opts, GENERIC_ICON, 'generic');
   }
 
-  return { attach, read, readAny, set, clear, previewCatalogMatch };
+  // v3.30.1 — Public catalog matcher exposed for the Import Server checklist
+  // (per-row icon column) and any other caller that needs a "best icon for
+  // this string" lookup without the full preview-DOM machinery. Returns the
+  // catalog icon path or null. Same matching rules as previewCatalogMatch.
+  function matchCatalog(text) {
+    if (!text) return null;
+    const t = String(text).toLowerCase();
+    for (const entry of _CATALOG) {
+      if (entry.keys.some(k => t.includes(k))) return entry.src;
+    }
+    return null;
+  }
+
+  return { attach, read, readAny, set, clear, previewCatalogMatch, matchCatalog };
 })();
+
+// ════════════════════════════════════════════════════════════════════
+// v3.30.1 — Reusable Icon Picker
+// ────────────────────────────────────────────────────────────────────
+// Opens iconPickerModal (defined in index.html) with two tabs:
+//   • Bundled icons — provider icons (ChatGPT/Claude/Gemini/etc.) plus
+//     WaxFrame mascot icons (Worker Bee, API Bee, etc.). Click to select.
+//   • Upload custom — file input → resize to 256×256 → base64 inline. The
+//     base64 string is what gets persisted on the bee, keeping air-gapped
+//     deployments self-contained (no external icon URLs).
+//
+// Reusable from anywhere via openIconPicker({ currentIcon, onSelect }).
+// onSelect receives the chosen icon path or data URL. Cancellation just
+// closes the modal — no callback fired.
+// ════════════════════════════════════════════════════════════════════
+
+// Catalog of bundled icons shown in the picker's "Bundled" tab. Three
+// sections so the grid is browsable instead of a flat alphabetical wall:
+// Providers (chat AIs), Tools (model-server runtimes), Mascots (WaxFrame
+// art). Order within sections is alphabetical except Generic which leads
+// each row as the explicit "no specific provider" choice.
+const ICON_PICKER_BUNDLED = [
+  { section: 'Providers', items: [
+    { id: 'generic',    name: 'Generic',     src: 'images/icon-generic.png' },
+    { id: 'chatgpt',    name: 'ChatGPT',     src: 'images/icon-chatgpt.png' },
+    { id: 'claude',     name: 'Claude',      src: 'images/icon-claude.png' },
+    { id: 'cohere',     name: 'Cohere',      src: 'images/icon-cohere.png' },
+    { id: 'deepseek',   name: 'DeepSeek',    src: 'images/icon-deepseek.png' },
+    { id: 'gemini',     name: 'Gemini',      src: 'images/icon-gemini.png' },
+    { id: 'grok',       name: 'Grok',        src: 'images/icon-grok.png' },
+    { id: 'llama',      name: 'Llama',       src: 'images/icon-llama.png' },
+    { id: 'mistral',    name: 'Mistral',     src: 'images/icon-mistral.png' },
+    { id: 'perplexity', name: 'Perplexity',  src: 'images/icon-perplexity.png' },
+  ]},
+  { section: 'Tools & Servers', items: [
+    { id: 'alfredo',   name: 'Alfredo',     src: 'images/icon-alfredo.png' },
+    { id: 'lmstudio',  name: 'LM Studio',   src: 'images/icon-lmstudio.png' },
+    { id: 'openwebui', name: 'Open WebUI',  src: 'images/icon-openwebui.png' },
+    { id: 'together',  name: 'Together AI', src: 'images/icon-together.png' },
+  ]},
+  { section: 'WaxFrame Mascots', items: [
+    { id: 'worker-bee',   name: 'Worker Bee',   src: 'images/WaxFrame_Worker_Bee_v2.png' },
+    { id: 'api-bee',      name: 'API Bee',      src: 'images/WaxFrame_API_Bee_v1.png' },
+    { id: 'project-bee',  name: 'Project Bee',  src: 'images/WaxFrame_Project_Bee_v2.png' },
+    { id: 'reference-bee',name: 'Reference Bee',src: 'images/WaxFrame_Reference_Bee_v1.png' },
+    { id: 'history-bee',  name: 'History Bee',  src: 'images/WaxFrame_History_Bee_v1.png' },
+    { id: 'approved-bee', name: 'Approved Bee', src: 'images/WaxFrame_Approved_Bee_v1.png' },
+    { id: 'builder',      name: 'Builder',      src: 'images/WaxFrame_Builder_v3.png' },
+    { id: 'smoker',       name: 'Smoker',       src: 'images/WaxFrame_Smoker_v2.png' },
+    { id: 'waxmaker',     name: 'Waxmaker',     src: 'images/WaxFrame_Waxmaker_v1.png' },
+  ]},
+];
+
+// Caller's onSelect callback, stashed while the modal is open. Cleared on
+// close so a stale callback can never fire against a later picker session.
+let _iconPickerOnSelect = null;
+
+function openIconPicker(opts = {}) {
+  const modal = document.getElementById('iconPickerModal');
+  if (!modal) { console.warn('[openIconPicker] iconPickerModal not in DOM'); return; }
+  _iconPickerOnSelect = typeof opts.onSelect === 'function' ? opts.onSelect : null;
+
+  // Render bundled grid every open — cheap, guarantees fresh "selected"
+  // state if the caller passed a different currentIcon.
+  const grid = document.getElementById('iconPickerBundledGrid');
+  if (grid) {
+    grid.innerHTML = ICON_PICKER_BUNDLED.map(section => `
+      <div class="icon-picker-section-header">${esc(section.section)}</div>
+      <div class="icon-picker-section-grid">
+        ${section.items.map(it => `
+          <button type="button" class="icon-picker-tile${opts.currentIcon === it.src ? ' is-selected' : ''}"
+                  onclick="_iconPickerSelect('${esc(it.src)}')"
+                  title="${esc(it.name)}">
+            <img src="${it.src}" alt="${esc(it.name)}" class="icon-picker-tile-img"
+                 onerror="this.style.opacity='0.2'">
+            <span class="icon-picker-tile-name">${esc(it.name)}</span>
+          </button>
+        `).join('')}
+      </div>
+    `).join('');
+  }
+
+  // Reset upload tab to clean state
+  const upWrap = document.getElementById('iconPickerUploadWrap');
+  if (upWrap) upWrap.classList.remove('has-user-icon');
+  const upPreview = document.getElementById('iconPickerUploadPreview');
+  if (upPreview) { upPreview.src = ''; upPreview.style.display = 'none'; }
+  const upFile = document.getElementById('iconPickerUploadFile');
+  if (upFile) upFile.value = '';
+  const upConfirm = document.getElementById('iconPickerUploadConfirm');
+  if (upConfirm) upConfirm.disabled = true;
+
+  // Default tab: Bundled
+  _iconPickerSwitchTab('bundled');
+
+  modal.classList.add('active');
+}
+
+function closeIconPicker() {
+  const modal = document.getElementById('iconPickerModal');
+  if (modal) modal.classList.remove('active');
+  _iconPickerOnSelect = null;
+}
+
+function _iconPickerSwitchTab(which) {
+  ['bundled', 'upload'].forEach(t => {
+    const tab  = document.getElementById(`iconPickerTab-${t}`);
+    const pane = document.getElementById(`iconPickerPane-${t}`);
+    if (tab)  tab.classList.toggle('is-active',  t === which);
+    if (pane) pane.classList.toggle('is-active', t === which);
+  });
+}
+
+function _iconPickerSelect(src) {
+  if (_iconPickerOnSelect) {
+    try { _iconPickerOnSelect(src); } catch(e) { console.warn('[iconPicker] onSelect threw:', e); }
+  }
+  closeIconPicker();
+}
+
+// Upload tab — file input → resize to 256×256 max → base64 → preview.
+// Confirm button fires onSelect with the data URL. Mirrors wfIconUpload's
+// resize logic so behavior is consistent with the Add Custom AI flow.
+function _iconPickerHandleUpload(input) {
+  const file = input?.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('⚠️ Please pick an image file (PNG, JPG, SVG, WEBP)');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 256;
+      const scale = Math.min(1, MAX / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      let dataURL;
+      try {
+        dataURL = canvas.toDataURL(file.type === 'image/png' ? 'image/png' : 'image/jpeg', 0.9);
+      } catch(err) {
+        console.warn('[iconPicker] canvas export failed, using raw read:', err);
+        dataURL = e.target.result;
+      }
+      const preview = document.getElementById('iconPickerUploadPreview');
+      if (preview) { preview.src = dataURL; preview.style.display = 'block'; }
+      const wrap = document.getElementById('iconPickerUploadWrap');
+      if (wrap) wrap.classList.add('has-user-icon');
+      const confirmBtn = document.getElementById('iconPickerUploadConfirm');
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.dataset.dataUrl = dataURL;
+      }
+    };
+    img.onerror = () => toast('⚠️ Could not read that image');
+    img.src = e.target.result;
+  };
+  reader.onerror = () => toast('⚠️ File read failed');
+  reader.readAsDataURL(file);
+}
+
+function _iconPickerConfirmUpload() {
+  const btn = document.getElementById('iconPickerUploadConfirm');
+  const dataURL = btn?.dataset?.dataUrl;
+  if (!dataURL) { toast('⚠️ Pick an image first'); return; }
+  _iconPickerSelect(dataURL);
+}
+
+// Picker invocation for a specific Import Server checklist row. Updates
+// _importRowIcons[i] and re-renders only that row's <img> rather than the
+// whole list — keeps focus/scroll position intact during rapid icon edits.
+function openIconPickerForImportRow(rowIdx) {
+  const current = _importRowIcons[rowIdx] || GENERIC_ICON_PATH;
+  openIconPicker({
+    currentIcon: current,
+    onSelect: (src) => {
+      _importRowIcons[rowIdx] = src;
+      const imgEl = document.querySelector(`#isicon-${rowIdx} img`);
+      if (imgEl) { imgEl.src = src; imgEl.style.opacity = '1'; }
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// v3.30.1 — Multi-select bulk-remove for custom AIs
+// ────────────────────────────────────────────────────────────────────
+// Complements the per-server Imported Groups panel below. Imported Groups
+// answers "remove every model from server X"; multi-select answers "remove
+// any arbitrary subset of custom AIs". The two can coexist on the same
+// screen — they don't overlap.
+//
+// Defaults are intentionally NOT selectable in multi-select mode because
+// "Remove" and "Hide" are different operations — the existing Hide button
+// on default rows handles the equivalent destructive action for them.
+// ════════════════════════════════════════════════════════════════════
+let _multiSelectMode = false;
+const _multiSelectIds = new Set();
+
+function toggleMultiSelectMode() {
+  _multiSelectMode = !_multiSelectMode;
+  if (!_multiSelectMode) _multiSelectIds.clear();
+  renderAISetupGrid();
+}
+
+function toggleMultiSelectId(id, checked) {
+  if (checked) _multiSelectIds.add(id);
+  else _multiSelectIds.delete(id);
+  renderAISetupGrid();
+}
+
+function multiSelectAll() {
+  aiList.forEach(ai => {
+    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
+    if (isCustom) _multiSelectIds.add(ai.id);
+  });
+  renderAISetupGrid();
+}
+
+function multiSelectNone() {
+  _multiSelectIds.clear();
+  renderAISetupGrid();
+}
+
+async function bulkRemoveSelectedAIs() {
+  // Snapshot to a plain array so subsequent mutations don't surprise the loop
+  const ids = Array.from(_multiSelectIds);
+  // Defensive filter — UI only adds custom ids to the set, but defense in
+  // depth in case an outer caller ever poked at _multiSelectIds directly.
+  const customs = ids.filter(id => !DEFAULT_AIS.find(d => d.id === id) && aiList.find(a => a.id === id));
+  if (!customs.length) {
+    toast('Nothing selected — pick at least one custom AI');
+    return;
+  }
+  const ok = await wfConfirm(
+    'Remove selected AIs',
+    `Remove ${customs.length} custom AI${customs.length !== 1 ? 's' : ''}? This deletes their bees, API configs, and cached recommendations. Default AIs in your hive are not affected.`,
+    { okText: `Remove ${customs.length}`, destructive: true }
+  );
+  if (!ok) return;
+
+  customs.forEach(id => {
+    aiList    = aiList.filter(a => a.id !== id);
+    activeAIs = activeAIs.filter(a => a.id !== id);
+    if (builder === id) builder = null;
+    // Custom AIs: full delete (matches removeAI's custom branch and
+    // removeImportedGroup's per-bee cleanup pattern).
+    if (API_CONFIGS[id]) delete API_CONFIGS[id];
+    try { localStorage.removeItem(`waxframe_recommend_default-${id}`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);  } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_models_${id}`);             } catch(e) { /* ignore */ }
+  });
+
+  _multiSelectIds.clear();
+  _multiSelectMode = false;
+  saveHive();
+  renderAISetupGrid();
+  toast(`🗑 Removed ${customs.length} AI${customs.length !== 1 ? 's' : ''}`);
+}
+
+function buildMultiSelectToolbarHTML() {
+  // Hide entire toolbar when there are no custom AIs to act on — keeps the
+  // default-AI-only setup screen uncluttered.
+  const customCount = aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).length;
+  if (!customCount) return '';
+
+  if (!_multiSelectMode) {
+    return `
+    <div class="multi-select-toolbar multi-select-toolbar--collapsed">
+      <button class="btn multi-select-toggle-btn" onclick="toggleMultiSelectMode()" title="Pick multiple custom AIs to remove at once">
+        ☑ Multi-select to remove
+      </button>
+      <span class="multi-select-hint">Pick any subset of your ${customCount} custom AI${customCount !== 1 ? 's' : ''} to remove in one shot.</span>
+    </div>`;
+  }
+
+  const selCount = _multiSelectIds.size;
+  return `
+  <div class="multi-select-toolbar multi-select-toolbar--active">
+    <span class="multi-select-status">
+      <strong>Multi-select mode</strong> · ${selCount} of ${customCount} selected
+    </span>
+    <div class="multi-select-actions">
+      <button class="btn btn-xs" onclick="multiSelectAll()">All</button>
+      <button class="btn btn-xs" onclick="multiSelectNone()">None</button>
+      <button class="btn btn-danger multi-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} onclick="bulkRemoveSelectedAIs()">
+        🗑 Remove ${selCount} selected
+      </button>
+      <button class="btn multi-select-cancel-btn" onclick="toggleMultiSelectMode()">Cancel</button>
+    </div>
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════════════
+// v3.30.1 — Imported Groups Panel (bulk delete)
+// ────────────────────────────────────────────────────────────────────
+// Renders ABOVE the bee list in renderAISetupGrid. Groups all custom AIs
+// by their _modelsEndpoint (the original Models URL that imported them).
+// Each group shows a summary row with a "Remove all" button that wipes
+// every bee imported from that server in one shot. Hidden entirely when
+// no imported groups exist — keeps clutter off the screen for users who
+// only run the default AIs.
+// ════════════════════════════════════════════════════════════════════
+function buildImportedGroupsPanelHTML() {
+  // Build a map: _modelsEndpoint → { endpoint, chatUrl, bees: [...] }
+  const groups = new Map();
+  aiList.forEach(ai => {
+    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
+    if (!isCustom) return;
+    const cfg = API_CONFIGS[ai.provider];
+    const me  = cfg?._modelsEndpoint;
+    if (!me) return; // only group customs that came from the Import Server flow
+    if (!groups.has(me)) {
+      groups.set(me, { endpoint: me, chatUrl: cfg.endpoint || '', bees: [] });
+    }
+    groups.get(me).bees.push(ai);
+  });
+  if (!groups.size) return '';
+
+  const friendlyHost = (url) => {
+    try { return new URL(url).hostname; } catch(e) { return url; }
+  };
+
+  const rows = Array.from(groups.values()).map(g => {
+    const host  = friendlyHost(g.endpoint);
+    const count = g.bees.length;
+    const safe  = g.endpoint.replace(/'/g, "\\'");
+    return `
+    <div class="imported-group-row">
+      <div class="imported-group-info">
+        <span class="imported-group-icon">📡</span>
+        <div class="imported-group-textwrap">
+          <div class="imported-group-host">${esc(host)}</div>
+          <div class="imported-group-meta">${count} model${count !== 1 ? 's' : ''} imported · <span class="imported-group-url" title="${esc(g.endpoint)}">${esc(g.endpoint)}</span></div>
+        </div>
+      </div>
+      <button class="btn btn-danger imported-group-remove-btn" onclick="removeImportedGroup('${safe}')" title="Remove all ${count} models imported from ${esc(host)}">🗑 Remove all ${count}</button>
+    </div>`;
+  }).join('');
+
+  return `
+  <div class="imported-groups-panel" id="importedGroupsPanel">
+    <div class="imported-groups-header">
+      <span class="imported-groups-title">📡 Imported Groups</span>
+      <span class="imported-groups-sub">Bulk-remove models imported from a model server</span>
+    </div>
+    ${rows}
+  </div>`;
+}
+
+async function removeImportedGroup(modelsEndpoint) {
+  if (!modelsEndpoint) return;
+  const matches = aiList.filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return cfg?._modelsEndpoint === modelsEndpoint;
+  });
+  if (!matches.length) {
+    toast('⚠️ No imported models matched that server');
+    return;
+  }
+  let host = modelsEndpoint;
+  try { host = new URL(modelsEndpoint).hostname; } catch(e) { /* keep raw */ }
+  const ok = await wfConfirm(
+    'Remove imported group',
+    `Remove all ${matches.length} model${matches.length !== 1 ? 's' : ''} imported from "${host}"? This deletes the bees, their API configs, and their cached recommendations. Other bees in your hive are not affected.`,
+    { okText: `Remove ${matches.length}`, destructive: true }
+  );
+  if (!ok) return;
+
+  matches.forEach(ai => {
+    const id = ai.id;
+    aiList    = aiList.filter(a => a.id !== id);
+    activeAIs = activeAIs.filter(a => a.id !== id);
+    if (builder === id) builder = null;
+    // Custom AIs: full delete (mirrors removeAI's custom branch). Defaults
+    // can't have _modelsEndpoint, so the isDefault check from removeAI is
+    // unnecessary here — every match is a custom by construction.
+    if (API_CONFIGS[id]) delete API_CONFIGS[id];
+    try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);            } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_models_${id}`);                       } catch(e) { /* ignore */ }
+  });
+  saveHive();
+  renderAISetupGrid();
+  toast(`🗑 Removed ${matches.length} model${matches.length !== 1 ? 's' : ''} from ${host}`);
+}
 
 // Resolve the best icon for an AI — local image if name matches a known provider,
 // colored initial avatar as fallback when the real icon would be a broken globe.
@@ -10913,8 +11480,8 @@ function showBuilderOverlay() {
     const ais = reviewers.length > 0 ? reviewers : [
       { id: 'chatgpt', name: 'ChatGPT', icon: 'images/icon-chatgpt.png' },
       { id: 'claude',  name: 'Claude',  icon: 'images/icon-claude.png'  },
-      { id: 'gemini',  name: 'Gemini',  icon: 'https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64' },
-      { id: 'deepseek',name: 'DeepSeek',icon: 'https://www.google.com/s2/favicons?domain=deepseek.com&sz=64' },
+      { id: 'gemini',  name: 'Gemini',  icon: 'images/icon-gemini.png'  },
+      { id: 'deepseek',name: 'DeepSeek',icon: 'images/icon-deepseek.png'},
     ];
     const count = ais.length;
     // Cap visible blocks at 5 so they don't crowd at any viewport size.
@@ -11393,6 +11960,11 @@ function initTheme() {
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
+  // v3.30.1 — grandfather in any pre-v3.30 custom AIs that don't have
+  // _originalModel captured. Must run AFTER loadSettings so the loaded
+  // hive is in memory. Defaults snapshot at module-eval time, so this
+  // call only catches user-added customs.
+  ensureOriginalModelBaseline();
   initMuteBtn();
 
   // v3.26.1 — silently migrate any default AI with a saved key but no
