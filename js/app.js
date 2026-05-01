@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-007
+//  Build: 20260430-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-007';         // build stamp — update each session
+const BUILD       = '20260430-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -8470,7 +8470,7 @@ function setBeeStatus(id, state, summary) {
     if (live) live.textContent = 'Done ✓';
   } else if (state === 'done-clean') {
     add('is-done'); add('is-clean');
-    if (live) live.textContent = 'No changes needed';
+    if (live) live.textContent = summary || 'No changes needed';
   } else if (state === 'error') {
     add('is-error');
     if (live) live.textContent = 'Failed';
@@ -9276,7 +9276,16 @@ async function runRound() {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
           docText = newDoc;
-          setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
+          // v3.29.3 — if the Builder was also a no-changes reviewer this
+          // round, restore the gold-star (is-clean) state on its bee card.
+          // Without this, the Builder pass overwrites the reviewer's
+          // done-clean status with regular 'done' and the star vanishes.
+          const builderWasClean = reviewerResponses.some(r => r.id === builderAI.id && r.noChanges);
+          setBeeStatus(
+            builderAI.id,
+            builderWasClean ? 'done-clean' : 'done',
+            builderWasClean ? 'No changes proposed · Built doc ✓' : 'Document updated ✓'
+          );
           setStatus(`✅ Round ${round} complete — document updated`);
           consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
           const hasUserConflicts = window._lastConflicts?.userDecisions?.length > 0;
