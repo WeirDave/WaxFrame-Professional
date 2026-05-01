@@ -1,0 +1,361 @@
+<!-- ============================================================
+     WaxFrame — cleanup.html
+     Build: 20260501-005
+     Author: WeirDave (R David Paine III) | License: AGPL-3.0
+     GitHub: github.com/WeirDave/WaxFrame-Professional
+
+     Standalone localStorage cleanup tool. Air-gap safe: loads
+     only style.css and js/version.js. No nav, no helpers, no
+     network. Reachable from the Dev Toolbar (🧹 Cleanup).
+
+     Detection model:
+       - Reads waxframe_v2_hive to get the live aiList (sets of
+         live ids and live providers).
+       - Walks every localStorage key.
+       - Anything not starting with 'waxframe_' is ignored entirely.
+       - Three known per-AI patterns get reconciled against the
+         live hive:
+           waxframe_recommend_default-${provider}
+           waxframe_recommend_custom-${id}
+           waxframe_models_${id}   (where id === provider for defaults)
+       - Everything else is matched against a known core-key list.
+       - Anything else: UNKNOWN (preserved by default — user opts in).
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260501-005">
+  <title>WaxFrame — Cleanup</title>
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.30.3">
+</head>
+<body class="helper-body cleanup-body">
+
+<header class="cleanup-header">
+  <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="cleanup-logo">
+  <div class="cleanup-header-text">
+    <h1 class="cleanup-title">localStorage Cleanup</h1>
+    <p class="cleanup-tagline">Scan WaxFrame storage for orphaned keys (dust bunnies) and reclaim space. <span class="app-version-stamp"></span></p>
+  </div>
+</header>
+
+<main class="cleanup-main">
+
+  <section class="cleanup-summary" id="summary">
+    <div class="cleanup-stat">
+      <span class="cleanup-stat-num" id="statTotal">—</span>
+      <span class="cleanup-stat-label">total keys</span>
+    </div>
+    <div class="cleanup-stat">
+      <span class="cleanup-stat-num cleanup-stat-known" id="statKnown">—</span>
+      <span class="cleanup-stat-label">known (in use)</span>
+    </div>
+    <div class="cleanup-stat">
+      <span class="cleanup-stat-num cleanup-stat-bunny" id="statBunnies">—</span>
+      <span class="cleanup-stat-label">bunnies (orphans)</span>
+    </div>
+    <div class="cleanup-stat">
+      <span class="cleanup-stat-num cleanup-stat-unknown" id="statUnknown">—</span>
+      <span class="cleanup-stat-label">unknown</span>
+    </div>
+    <div class="cleanup-stat">
+      <span class="cleanup-stat-num" id="statSize">—</span>
+      <span class="cleanup-stat-label">total bytes</span>
+    </div>
+  </section>
+
+  <section class="cleanup-controls">
+    <button class="cleanup-btn" onclick="runScan()">↻ Re-scan</button>
+    <button class="cleanup-btn cleanup-btn-danger" id="deleteBtn" onclick="deleteSelected()" disabled>🗑 Delete <span id="deleteCount">0</span> selected</button>
+    <a class="cleanup-btn cleanup-btn-link" href="index.html">← Back to WaxFrame</a>
+  </section>
+
+  <!-- Bunnies: known-orphan keys, default-CHECKED — safe-to-delete -->
+  <section class="cleanup-section">
+    <header class="cleanup-section-header">
+      <h2 class="cleanup-section-title">🐰 Bunnies <span class="cleanup-section-count" id="bunnyCount">(0)</span></h2>
+      <p class="cleanup-section-sub">Orphaned keys for AIs no longer in your hive. Pre-checked because they're safe to delete.</p>
+      <div class="cleanup-section-actions">
+        <button class="cleanup-btn-xs" onclick="toggleAll('bunny', true)">All</button>
+        <button class="cleanup-btn-xs" onclick="toggleAll('bunny', false)">None</button>
+      </div>
+    </header>
+    <div class="cleanup-list" id="bunnyList"></div>
+    <p class="cleanup-empty" id="bunnyEmpty">No bunnies found — your storage is tidy.</p>
+  </section>
+
+  <!-- Unknown: not recognized as known or bunny — default UNCHECKED (cautious) -->
+  <section class="cleanup-section">
+    <header class="cleanup-section-header">
+      <h2 class="cleanup-section-title">❓ Unknown <span class="cleanup-section-count" id="unknownCount">(0)</span></h2>
+      <p class="cleanup-section-sub">waxframe_* keys not recognized by this version. Inspect before deleting — could be from a future or third-party extension.</p>
+      <div class="cleanup-section-actions">
+        <button class="cleanup-btn-xs" onclick="toggleAll('unknown', true)">All</button>
+        <button class="cleanup-btn-xs" onclick="toggleAll('unknown', false)">None</button>
+      </div>
+    </header>
+    <div class="cleanup-list" id="unknownList"></div>
+    <p class="cleanup-empty" id="unknownEmpty">No unknown keys.</p>
+  </section>
+
+  <!-- Known: live keys WaxFrame is actively using. Read-only. -->
+  <section class="cleanup-section">
+    <header class="cleanup-section-header">
+      <h2 class="cleanup-section-title">✅ Known <span class="cleanup-section-count" id="knownCount">(0)</span></h2>
+      <p class="cleanup-section-sub">Keys WaxFrame uses. Read-only — these are not selectable for deletion.</p>
+    </header>
+    <div class="cleanup-list cleanup-list-readonly" id="knownList"></div>
+    <p class="cleanup-empty" id="knownEmpty">No known WaxFrame keys found. (Have you opened WaxFrame yet?)</p>
+  </section>
+
+  <footer class="cleanup-footer">
+    <p>Notes: This tool only touches localStorage and only deletes keys you explicitly check. IndexedDB (your active document session) is never touched. Non-waxframe_* keys are ignored entirely.</p>
+  </footer>
+</main>
+
+<script src="js/version.js?v=3.30.3"></script>
+<script>
+  // ────────────────────────────────────────────────────────────────
+  // Known core key catalog. Anything matching this list is "known"
+  // regardless of whether the live hive references it. Update this
+  // list when WaxFrame adds new persistent keys.
+  // ────────────────────────────────────────────────────────────────
+  const KNOWN_CORE_KEYS = new Set([
+    'waxframe_v2_hive',
+    'waxframe_v2_session',
+    'waxframe_v2_session_exists',
+    'waxframe_v2_db',
+    'waxframe_v2_settings',
+    'waxframe_v2_filename',
+    'waxframe_v2_project',
+    'waxframe_v2_prompts',
+    'waxframe_v2_license',
+    'waxframe_v2_source_type',
+    'waxframe_v2_has_pdf_pages',
+    'waxframe_v2_theme',
+    'waxframe_app_version',
+    'waxframe_backup',
+    'waxframe_backup_ts',
+    'waxframe_backup_version',
+    'waxframe_ai_warnings',
+    'waxframe_conflict_ledger',
+    'waxframe_deepdive',
+    'waxframe_dev',
+    'waxframe_dev_toolbar_pos',
+    'waxframe_import_server_defaults',
+    'waxframe_muted',
+    'waxframe_resolved_decisions',
+    'waxframe_v330_baseline_migrated',
+  ]);
+
+  // Per-AI key patterns. Match → reconcile against live hive sets.
+  // recommend_default-${provider} → live if provider is in defaults
+  // recommend_custom-${id}        → live if id is in customs
+  // models_${id}                  → live if id is in any AI (default or custom)
+  const PAT_RECOMMEND_DEFAULT = /^waxframe_recommend_default-(.+)$/;
+  const PAT_RECOMMEND_CUSTOM  = /^waxframe_recommend_custom-(.+)$/;
+  const PAT_MODELS            = /^waxframe_models_(.+)$/;
+
+  // Render-time stamp version
+  document.querySelectorAll('.app-version-stamp').forEach(el => {
+    if (typeof APP_VERSION !== 'undefined') el.textContent = APP_VERSION;
+  });
+
+  // Selection state — Set of keys checked for deletion
+  const selected = new Set();
+
+  function bytesOf(value) {
+    // Approximate UTF-16 byte size as the browser stores it. Good enough
+    // for "is this a 4MB blob or 40 chars" comparisons.
+    return (value || '').length * 2;
+  }
+
+  function fmtBytes(n) {
+    if (n < 1024) return n + ' B';
+    if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+    return (n/(1024*1024)).toFixed(2) + ' MB';
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    }[c]));
+  }
+
+  function preview(value, limit) {
+    limit = limit || 90;
+    const s = String(value || '');
+    if (s.length <= limit) return s;
+    return s.slice(0, limit) + '…';
+  }
+
+  // Read live hive — returns { liveIds: Set, liveProviders: Set, hiveOk: bool }
+  function readLiveHive() {
+    const result = { liveIds: new Set(), liveProviders: new Set(), hiveOk: false };
+    try {
+      const raw = localStorage.getItem('waxframe_v2_hive');
+      if (!raw) return result;
+      const hive = JSON.parse(raw);
+      result.hiveOk = true;
+      const list = hive.aiList || [];
+      list.forEach(ai => {
+        if (ai && ai.id) result.liveIds.add(ai.id);
+        if (ai && ai.provider) result.liveProviders.add(ai.provider);
+      });
+    } catch (e) {
+      // Corrupt hive — treat as no live keys; user can still inspect
+    }
+    return result;
+  }
+
+  // Categorize a single key. Returns { category: 'known'|'bunny'|'unknown', reason: string }
+  function categorize(key, liveIds, liveProviders) {
+    if (KNOWN_CORE_KEYS.has(key)) {
+      return { category: 'known', reason: 'core key' };
+    }
+    let m;
+    if (m = key.match(PAT_RECOMMEND_DEFAULT)) {
+      const prov = m[1];
+      return liveProviders.has(prov)
+        ? { category: 'known', reason: `recommendation cache for default provider "${prov}"` }
+        : { category: 'bunny', reason: `recommendation cache for missing provider "${prov}"` };
+    }
+    if (m = key.match(PAT_RECOMMEND_CUSTOM)) {
+      const id = m[1];
+      return liveIds.has(id)
+        ? { category: 'known', reason: `recommendation cache for custom AI "${id}"` }
+        : { category: 'bunny', reason: `recommendation cache for missing custom AI "${id}"` };
+    }
+    if (m = key.match(PAT_MODELS)) {
+      const id = m[1];
+      // For defaults, id === provider, so check both sets
+      return (liveIds.has(id) || liveProviders.has(id))
+        ? { category: 'known', reason: `model list cache for "${id}"` }
+        : { category: 'bunny', reason: `model list cache for missing "${id}"` };
+    }
+    return { category: 'unknown', reason: 'unrecognized waxframe_* key' };
+  }
+
+  // Build a row HTML for one entry. category drives behavior.
+  function buildRow(entry) {
+    const checked = (entry.category === 'bunny') ? 'checked' : '';
+    const disabled = (entry.category === 'known') ? 'disabled' : '';
+    const checkbox = (entry.category === 'known')
+      ? '<span class="cleanup-row-marker">✓</span>'
+      : `<input type="checkbox" class="cleanup-row-check" id="chk-${entry.idx}" ${checked} ${disabled} onchange="onCheck('${escapeHtml(entry.key)}', this.checked)">`;
+    return `
+    <div class="cleanup-row cleanup-row-${entry.category}">
+      ${checkbox}
+      <div class="cleanup-row-body">
+        <div class="cleanup-row-line1">
+          <span class="cleanup-row-key">${escapeHtml(entry.key)}</span>
+          <span class="cleanup-row-size">${fmtBytes(entry.size)}</span>
+        </div>
+        <div class="cleanup-row-line2">${escapeHtml(entry.reason)}</div>
+        <div class="cleanup-row-line3">${escapeHtml(preview(entry.value))}</div>
+      </div>
+    </div>`;
+  }
+
+  function onCheck(key, isChecked) {
+    if (isChecked) selected.add(key);
+    else selected.delete(key);
+    updateDeleteBtn();
+  }
+
+  function updateDeleteBtn() {
+    const btn = document.getElementById('deleteBtn');
+    const count = selected.size;
+    document.getElementById('deleteCount').textContent = count;
+    btn.disabled = (count === 0);
+  }
+
+  function toggleAll(category, on) {
+    document.querySelectorAll(`.cleanup-row-${category} .cleanup-row-check`).forEach(cb => {
+      if (cb.disabled) return;
+      cb.checked = on;
+      const key = cb.closest('.cleanup-row').querySelector('.cleanup-row-key').textContent;
+      if (on) selected.add(key); else selected.delete(key);
+    });
+    updateDeleteBtn();
+  }
+
+  function deleteSelected() {
+    const keys = Array.from(selected);
+    if (!keys.length) return;
+    const ok = confirm(`Delete ${keys.length} key${keys.length !== 1 ? 's' : ''}?\n\nThis cannot be undone. Make sure you have a recent backup if these might matter.`);
+    if (!ok) return;
+    let removed = 0;
+    keys.forEach(k => {
+      try { localStorage.removeItem(k); removed++; } catch(e) {}
+    });
+    selected.clear();
+    alert(`Removed ${removed} key${removed !== 1 ? 's' : ''}.`);
+    runScan();
+  }
+
+  function runScan() {
+    const { liveIds, liveProviders, hiveOk } = readLiveHive();
+
+    const buckets = { known: [], bunny: [], unknown: [] };
+    let totalSize = 0;
+    let idx = 0;
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith('waxframe_')) continue;
+      const value = localStorage.getItem(key) || '';
+      const size = bytesOf(value);
+      totalSize += size;
+      const { category, reason } = categorize(key, liveIds, liveProviders);
+      buckets[category].push({ idx: idx++, key, value, size, category, reason });
+    }
+
+    // Sort each bucket by key for deterministic display
+    Object.values(buckets).forEach(arr => arr.sort((a,b) => a.key.localeCompare(b.key)));
+
+    // Render
+    const renderInto = (id, emptyId, arr) => {
+      const list = document.getElementById(id);
+      const empty = document.getElementById(emptyId);
+      if (!arr.length) {
+        list.innerHTML = '';
+        empty.style.display = '';
+      } else {
+        list.innerHTML = arr.map(buildRow).join('');
+        empty.style.display = 'none';
+      }
+    };
+    renderInto('knownList',   'knownEmpty',   buckets.known);
+    renderInto('bunnyList',   'bunnyEmpty',   buckets.bunny);
+    renderInto('unknownList', 'unknownEmpty', buckets.unknown);
+
+    // Stats
+    const total = buckets.known.length + buckets.bunny.length + buckets.unknown.length;
+    document.getElementById('statTotal').textContent    = total;
+    document.getElementById('statKnown').textContent    = buckets.known.length;
+    document.getElementById('statBunnies').textContent  = buckets.bunny.length;
+    document.getElementById('statUnknown').textContent  = buckets.unknown.length;
+    document.getElementById('statSize').textContent     = fmtBytes(totalSize);
+    document.getElementById('knownCount').textContent   = `(${buckets.known.length})`;
+    document.getElementById('bunnyCount').textContent   = `(${buckets.bunny.length})`;
+    document.getElementById('unknownCount').textContent = `(${buckets.unknown.length})`;
+
+    // Bunnies are pre-checked — seed the selection set
+    selected.clear();
+    buckets.bunny.forEach(b => selected.add(b.key));
+    updateDeleteBtn();
+
+    // Hive read failure warning — surface but don't block
+    if (!hiveOk) {
+      console.warn('Cleanup: could not read waxframe_v2_hive — every per-AI key will appear as a bunny.');
+    }
+  }
+
+  // Auto-scan on load
+  runScan();
+</script>
+</body>
+</html>
