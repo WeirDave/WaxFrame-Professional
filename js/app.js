@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260501-003
+//  Build: 20260501-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -776,12 +776,12 @@ const API_CONFIGS = {
   }
 };
 
-// v3.30.1 — Snapshot the as-shipped model id for each default provider so the
+// v3.30.2 — Snapshot the as-shipped model id for each default provider so the
 // "↺ Reset" button can revert post-Recommend changes. Runs at module-eval time
 // before loadHive() can override cfg.model with persisted state, so this loop
 // always captures the literal value declared above. Custom AIs capture
 // _originalModel at add time (see addImportServerModels and addCustomAI);
-// pre-v3.30.1 customs are grandfathered in by ensureOriginalModelBaseline()
+// pre-v3.30.2 customs are grandfathered in by ensureOriginalModelBaseline()
 // after loadHive() runs.
 Object.keys(API_CONFIGS).forEach(p => {
   if (API_CONFIGS[p] && API_CONFIGS[p].model) {
@@ -1016,9 +1016,9 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Recommend a Model</button>`
     : '';
 
-  // v3.30.1 — Reset-to-original button. Visible only when the live model
+  // v3.30.2 — Reset-to-original button. Visible only when the live model
   // diverges from the captured _originalModel baseline. Defaults snapshot at
-  // module-eval time; customs snapshot at add time; pre-v3.30.1 customs
+  // module-eval time; customs snapshot at add time; pre-v3.30.2 customs
   // grandfathered via ensureOriginalModelBaseline() one-shot migration.
   const cfg = API_CONFIGS[provider];
   const orig = cfg?._originalModel;
@@ -1064,7 +1064,7 @@ function saveModelForAI(aiId, modelId) {
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
-// v3.30.1 — Revert an AI's model selection back to whatever was captured as
+// v3.30.2 — Revert an AI's model selection back to whatever was captured as
 // _originalModel at AI creation/import time. Triggered by the ↺ Reset button
 // that buildModelSelector renders only when current ≠ original. Re-renders
 // the bee grid so the reset button disappears once we're back at baseline.
@@ -1093,7 +1093,7 @@ function resetModelToOriginal(aiId) {
   toast(`↺ ${ai.name} reset to ${orig}`, 2500);
 }
 
-// v3.30.1 — One-shot migration that grandfathers in pre-v3.30.1 custom AIs
+// v3.30.2 — One-shot migration that grandfathers in pre-v3.30.2 custom AIs
 // by snapshotting their CURRENT model as the _originalModel baseline. Defaults
 // already snapshot at module-eval time (see the loop right after API_CONFIGS).
 // This catches custom AIs that were imported/added under an earlier version
@@ -1120,7 +1120,7 @@ function ensureOriginalModelBaseline() {
     try { localStorage.setItem('waxframe_v330_baseline_migrated', '1'); } catch(e) { /* quota — fine */ }
     setTimeout(() => {
       toast(
-        `💡 v3.30.1: Captured reset-to-original baselines for ${migrated} custom AI${migrated !== 1 ? 's' : ''}. ` +
+        `💡 v3.30.2: Captured reset-to-original baselines for ${migrated} custom AI${migrated !== 1 ? 's' : ''}. ` +
         `If you ran Recommend before this version, re-pick the model now to update the baseline.`,
         9000
       );
@@ -1223,7 +1223,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260501-003';         // build stamp — update each session
+const BUILD       = '20260501-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3203,13 +3203,13 @@ function renderAISetupGrid() {
       </div>`
     : '';
 
-  // v3.30.1 — Imported Groups bulk-remove panel. Renders only when at least
+  // v3.30.2 — Imported Groups bulk-remove panel. Renders only when at least
   // one imported (Model Server) group exists. Above the hidden-defaults
   // banner so the destructive bulk action is visually separated from the
   // routine restore action below it.
   const importedGroupsHTML = buildImportedGroupsPanelHTML();
 
-  // v3.30.1 — Multi-select toolbar for arbitrary-subset bulk removal of
+  // v3.30.2 — Multi-select toolbar for arbitrary-subset bulk removal of
   // custom AIs. Sits ABOVE the imported groups panel so the multi-select
   // workflow (the lighter, more general one) is encountered first.
   const multiSelectHTML = buildMultiSelectToolbarHTML();
@@ -3869,6 +3869,20 @@ async function removeAI(id) {
   }
   // Also clear the recommend cache so a re-add starts fresh
   try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) { console.warn(`[recommend-default-cleanup:${ai.provider}] remove failed:`, e); }
+  // v3.30.2 — for CUSTOM AIs, also clean up the custom-specific recommend
+  // cache and models cache. Without these, removing a custom AI left orphan
+  // keys (waxframe_recommend_custom-${id} and waxframe_models_${id}) in
+  // localStorage that accumulated forever and were never reused — re-adding
+  // a custom AI generates a fresh id with a new timestamp, so the old keys
+  // could never match again. The two new bulk-remove paths
+  // (removeImportedGroup, bulkRemoveSelectedAIs) already do this; this
+  // brings the single-AI path into symmetry. No-op gating on !isDefault
+  // for clarity — defaults never write these keys so removeItem would be
+  // harmless either way.
+  if (!isDefault) {
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_models_${id}`);            } catch(e) { /* ignore */ }
+  }
   saveHive();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} removed`);
@@ -5042,7 +5056,7 @@ function addCustomAI() {
     previewId:     'customAIIconPreview',
     previewWrapId: 'customAIIconWrap'
   });
-  // v3.30.1 — fallback dropped from external favicon URL to local generic
+  // v3.30.2 — fallback dropped from external favicon URL to local generic
   // icon. Air-gapped deployments now never reach for an external CDN even
   // when a user adds a custom AI without picking an icon.
   const icon   = previewIcon || GENERIC_ICON_PATH;
@@ -5078,7 +5092,7 @@ function addCustomAI() {
   API_CONFIGS[id] = {
     label: name,
     model,
-    // v3.30.1 — capture the originally-picked model so the "↺ Reset" button
+    // v3.30.2 — capture the originally-picked model so the "↺ Reset" button
     // on the bee list can revert post-Recommend changes. Never overwritten
     // by saveModelForAI or recheckModelForAI — only by resetModelToOriginal.
     _originalModel: model,
@@ -5148,7 +5162,7 @@ const IMPORT_SERVER_PRESETS = {
 let _importServerModels   = [];
 let _importServerPreset   = null;
 
-// v3.30.1 — Per-row icon overrides for the Import Server checklist. Indexed
+// v3.30.2 — Per-row icon overrides for the Import Server checklist. Indexed
 // by row number (matches `isc-${i}` checkbox ids). Populated in
 // renderImportServerChecklist() via _CATALOG smart-match against each model
 // id; user can override per row via openIconPickerForImportRow(). Cleared on
@@ -5407,7 +5421,7 @@ function resetImportServer(full = false) {
   }
   if (addBtn)   { addBtn.disabled = true; addBtn.textContent = 'Add 0 to Hive'; }
   _importServerModels = [];
-  _importRowIcons = []; // v3.30.1 — clear per-row overrides on close
+  _importRowIcons = []; // v3.30.2 — clear per-row overrides on close
   setImportServerState('prefetch');
 }
 
@@ -5653,7 +5667,7 @@ function renderImportServerChecklist() {
   _importAvailableCount = allModels.length - inHiveCount;
   _importInHiveCount    = inHiveCount;
 
-  // v3.30.1 — Smart-match each row to a catalog icon based on the model id +
+  // v3.30.2 — Smart-match each row to a catalog icon based on the model id +
   // name. Rows already in the hive get their existing AI's icon so the column
   // visually matches the bee list. Rows with no match get the generic icon.
   // User overrides via openIconPickerForImportRow() write back to this array
@@ -5736,7 +5750,7 @@ function addImportServerModels() {
   // v3.29.13 — read whatever icon the preview is currently showing (user
   // upload data URL OR catalog match path), persist that. See addCustomAI
   // for the full rationale on why readAny replaces the prior read().
-  // v3.30.1 — this is now a GROUP FALLBACK only. Per-row icons (assigned
+  // v3.30.2 — this is now a GROUP FALLBACK only. Per-row icons (assigned
   // by smart-match in renderImportServerChecklist or user-overridden via
   // openIconPickerForImportRow) take precedence. groupFallbackIcon kicks in
   // only if a row has no per-row entry, which shouldn't happen post-v3.30
@@ -5767,14 +5781,14 @@ function addImportServerModels() {
 
     const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + ts + '_' + idx;
 
-    // v3.30.1 — per-row icon takes precedence over the group fallback
+    // v3.30.2 — per-row icon takes precedence over the group fallback
     const rowIcon = _importRowIcons[parseInt(i, 10)] || groupFallbackIcon;
     const ai = { id, name, url: chatUrl, icon: rowIcon, provider: id };
 
     API_CONFIGS[id] = {
       label:     name,
       model:     modelId,
-      // v3.30.1 — capture the original model id so the "↺ Reset" button on
+      // v3.30.2 — capture the original model id so the "↺ Reset" button on
       // the bee list can revert post-Recommend changes back to whatever the
       // user picked at import time. Never modified by saveModelForAI or
       // recheckModelForAI — only reset via resetModelToOriginal().
@@ -8809,7 +8823,7 @@ const wfIconUpload = (() => {
     _setPreview(opts, GENERIC_ICON, 'generic');
   }
 
-  // v3.30.1 — Public catalog matcher exposed for the Import Server checklist
+  // v3.30.2 — Public catalog matcher exposed for the Import Server checklist
   // (per-row icon column) and any other caller that needs a "best icon for
   // this string" lookup without the full preview-DOM machinery. Returns the
   // catalog icon path or null. Same matching rules as previewCatalogMatch.
@@ -8826,7 +8840,7 @@ const wfIconUpload = (() => {
 })();
 
 // ════════════════════════════════════════════════════════════════════
-// v3.30.1 — Reusable Icon Picker
+// v3.30.2 — Reusable Icon Picker
 // ────────────────────────────────────────────────────────────────────
 // Opens iconPickerModal (defined in index.html) with two tabs:
 //   • Bundled icons — provider icons (ChatGPT/Claude/Gemini/etc.) plus
@@ -9014,7 +9028,7 @@ function openIconPickerForImportRow(rowIdx) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.30.1 — Multi-select bulk-remove for custom AIs
+// v3.30.2 — Multi-select bulk-remove for custom AIs
 // ────────────────────────────────────────────────────────────────────
 // Complements the per-server Imported Groups panel below. Imported Groups
 // answers "remove every model from server X"; multi-select answers "remove
@@ -9123,7 +9137,7 @@ function buildMultiSelectToolbarHTML() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.30.1 — Imported Groups Panel (bulk delete)
+// v3.30.2 — Imported Groups Panel (bulk delete)
 // ────────────────────────────────────────────────────────────────────
 // Renders ABOVE the bee list in renderAISetupGrid. Groups all custom AIs
 // by their _modelsEndpoint (the original Models URL that imported them).
@@ -11960,7 +11974,7 @@ function initTheme() {
 document.addEventListener('DOMContentLoaded', async () => {
   initTheme();
   loadSettings(); // always load hive (AI keys) silently
-  // v3.30.1 — grandfather in any pre-v3.30 custom AIs that don't have
+  // v3.30.2 — grandfather in any pre-v3.30 custom AIs that don't have
   // _originalModel captured. Must run AFTER loadSettings so the loaded
   // hive is in memory. Defaults snapshot at module-eval time, so this
   // call only catches user-added customs.
