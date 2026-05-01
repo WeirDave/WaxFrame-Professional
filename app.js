@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260501-001
+//  Build: 20260501-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1223,7 +1223,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260501-001';         // build stamp — update each session
+const BUILD       = '20260501-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3209,7 +3209,12 @@ function renderAISetupGrid() {
   // routine restore action below it.
   const importedGroupsHTML = buildImportedGroupsPanelHTML();
 
-  grid.innerHTML = importedGroupsHTML + banner + aiList.map(ai => {
+  // v3.30.0 — Multi-select toolbar for arbitrary-subset bulk removal of
+  // custom AIs. Sits ABOVE the imported groups panel so the multi-select
+  // workflow (the lighter, more general one) is encountered first.
+  const multiSelectHTML = buildMultiSelectToolbarHTML();
+
+  grid.innerHTML = multiSelectHTML + importedGroupsHTML + banner + aiList.map(ai => {
     const isActive = !!activeAIs.find(a => a.id === ai.id);
     const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
     const cfg = API_CONFIGS[ai.provider];
@@ -3218,10 +3223,20 @@ function renderAISetupGrid() {
     const consoleUrl = ai.apiConsole || '#';
     const showRecheck = hasKey;
     const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
-    // Defaults get a Hide button; custom AIs get the 🗑 remove button
-    const actionBtn = isCustom
-      ? `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`
-      : `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
+    // Defaults get a Hide button; custom AIs get the 🗑 remove button —
+    // unless multi-select mode is active, in which case customs swap to a
+    // checkbox. Defaults are intentionally NOT selectable in multi-select:
+    // "Remove" and "Hide" are different operations and merging them in one
+    // bulk action would be semantically confusing. Defaults keep their
+    // Hide button untouched while multi-select is on.
+    let actionBtn;
+    if (isCustom) {
+      actionBtn = _multiSelectMode
+        ? `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${_multiSelectIds.has(ai.id) ? 'checked' : ''} onchange="toggleMultiSelectId('${ai.id}', this.checked)" title="Select ${esc(ai.name)} for bulk removal">`
+        : `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`;
+    } else {
+      actionBtn = `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
+    }
     return `
     <div class="ai-setup-row" id="airow-${ai.id}">
       <div class="ai-setup-row-top">
@@ -8996,6 +9011,115 @@ function openIconPickerForImportRow(rowIdx) {
       if (imgEl) { imgEl.src = src; imgEl.style.opacity = '1'; }
     }
   });
+}
+
+// ════════════════════════════════════════════════════════════════════
+// v3.30.0 — Multi-select bulk-remove for custom AIs
+// ────────────────────────────────────────────────────────────────────
+// Complements the per-server Imported Groups panel below. Imported Groups
+// answers "remove every model from server X"; multi-select answers "remove
+// any arbitrary subset of custom AIs". The two can coexist on the same
+// screen — they don't overlap.
+//
+// Defaults are intentionally NOT selectable in multi-select mode because
+// "Remove" and "Hide" are different operations — the existing Hide button
+// on default rows handles the equivalent destructive action for them.
+// ════════════════════════════════════════════════════════════════════
+let _multiSelectMode = false;
+const _multiSelectIds = new Set();
+
+function toggleMultiSelectMode() {
+  _multiSelectMode = !_multiSelectMode;
+  if (!_multiSelectMode) _multiSelectIds.clear();
+  renderAISetupGrid();
+}
+
+function toggleMultiSelectId(id, checked) {
+  if (checked) _multiSelectIds.add(id);
+  else _multiSelectIds.delete(id);
+  renderAISetupGrid();
+}
+
+function multiSelectAll() {
+  aiList.forEach(ai => {
+    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
+    if (isCustom) _multiSelectIds.add(ai.id);
+  });
+  renderAISetupGrid();
+}
+
+function multiSelectNone() {
+  _multiSelectIds.clear();
+  renderAISetupGrid();
+}
+
+async function bulkRemoveSelectedAIs() {
+  // Snapshot to a plain array so subsequent mutations don't surprise the loop
+  const ids = Array.from(_multiSelectIds);
+  // Defensive filter — UI only adds custom ids to the set, but defense in
+  // depth in case an outer caller ever poked at _multiSelectIds directly.
+  const customs = ids.filter(id => !DEFAULT_AIS.find(d => d.id === id) && aiList.find(a => a.id === id));
+  if (!customs.length) {
+    toast('Nothing selected — pick at least one custom AI');
+    return;
+  }
+  const ok = await wfConfirm(
+    'Remove selected AIs',
+    `Remove ${customs.length} custom AI${customs.length !== 1 ? 's' : ''}? This deletes their bees, API configs, and cached recommendations. Default AIs in your hive are not affected.`,
+    { okText: `Remove ${customs.length}`, destructive: true }
+  );
+  if (!ok) return;
+
+  customs.forEach(id => {
+    aiList    = aiList.filter(a => a.id !== id);
+    activeAIs = activeAIs.filter(a => a.id !== id);
+    if (builder === id) builder = null;
+    // Custom AIs: full delete (matches removeAI's custom branch and
+    // removeImportedGroup's per-bee cleanup pattern).
+    if (API_CONFIGS[id]) delete API_CONFIGS[id];
+    try { localStorage.removeItem(`waxframe_recommend_default-${id}`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);  } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_models_${id}`);             } catch(e) { /* ignore */ }
+  });
+
+  _multiSelectIds.clear();
+  _multiSelectMode = false;
+  saveHive();
+  renderAISetupGrid();
+  toast(`🗑 Removed ${customs.length} AI${customs.length !== 1 ? 's' : ''}`);
+}
+
+function buildMultiSelectToolbarHTML() {
+  // Hide entire toolbar when there are no custom AIs to act on — keeps the
+  // default-AI-only setup screen uncluttered.
+  const customCount = aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).length;
+  if (!customCount) return '';
+
+  if (!_multiSelectMode) {
+    return `
+    <div class="multi-select-toolbar multi-select-toolbar--collapsed">
+      <button class="btn multi-select-toggle-btn" onclick="toggleMultiSelectMode()" title="Pick multiple custom AIs to remove at once">
+        ☑ Multi-select to remove
+      </button>
+      <span class="multi-select-hint">Pick any subset of your ${customCount} custom AI${customCount !== 1 ? 's' : ''} to remove in one shot.</span>
+    </div>`;
+  }
+
+  const selCount = _multiSelectIds.size;
+  return `
+  <div class="multi-select-toolbar multi-select-toolbar--active">
+    <span class="multi-select-status">
+      <strong>Multi-select mode</strong> · ${selCount} of ${customCount} selected
+    </span>
+    <div class="multi-select-actions">
+      <button class="btn btn-xs" onclick="multiSelectAll()">All</button>
+      <button class="btn btn-xs" onclick="multiSelectNone()">None</button>
+      <button class="btn btn-danger multi-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} onclick="bulkRemoveSelectedAIs()">
+        🗑 Remove ${selCount} selected
+      </button>
+      <button class="btn multi-select-cancel-btn" onclick="toggleMultiSelectMode()">Cancel</button>
+    </div>
+  </div>`;
 }
 
 // ════════════════════════════════════════════════════════════════════

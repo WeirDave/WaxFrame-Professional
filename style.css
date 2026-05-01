@@ -9809,3 +9809,93 @@ kbd {
   padding-top: 8px;
   border-top: 1px solid var(--border-2, rgba(255,255,255,0.06));
 }
+
+/* =========================================================
+ * v3.30.0 — Multi-select bulk-remove toolbar (worker bee screen)
+ * ========================================================= */
+
+.multi-select-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border-1, rgba(255,255,255,0.1));
+  background: var(--surface-2, rgba(255,255,255,0.04));
+  flex-wrap: wrap;
+}
+
+.multi-select-toolbar--collapsed {
+  /* Resting state — just the toggle button + a one-line hint */
+  background: var(--surface-2, rgba(255,255,255,0.03));
+  border-style: dashed;
+}
+
+.multi-select-toolbar--active {
+  /* Active state — accent border to make the destructive context obvious */
+  background: var(--surface-3, rgba(255,200,0,0.06));
+  border-color: var(--accent, #f4b400);
+  border-style: solid;
+}
+
+.multi-select-toggle-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+
+.multi-select-hint {
+  font-size: 12px;
+  color: var(--text-2, rgba(255,255,255,0.6));
+  flex: 1;
+  min-width: 0;
+}
+
+.multi-select-status {
+  font-size: 13px;
+  color: var(--text-1, rgba(255,255,255,0.92));
+  flex: 1;
+  min-width: 0;
+}
+.multi-select-status strong {
+  color: var(--accent, #f4b400);
+}
+
+.multi-select-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.multi-select-remove-btn {
+  font-size: 13px;
+  padding: 6px 14px;
+  white-space: nowrap;
+}
+.multi-select-remove-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.multi-select-cancel-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+/* Per-row checkbox replaces the trash button on custom AIs while
+   multi-select mode is active. Sized to roughly match the trash button
+   footprint so the row layout doesn't shift on toggle. */
+.ai-select-check {
+  width: 18px;
+  height: 18px;
+  margin: 0 6px;
+  accent-color: var(--accent, #f4b400);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.ai-select-check:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
