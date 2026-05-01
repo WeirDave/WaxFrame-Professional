@@ -2,6 +2,19 @@
 
 ---
 
+## v3.29.7
+**Build:** `20260430-012` · **Released:** April 30, 2026
+
+- Removed the **Test Connection** button from the Add Custom Worker Bee modal. Fetch Models already proves the API key works and the endpoint is reachable — if either fails, no models come back. The separate test step was redundant.
+- **Add to Hive** is now always visible (was conditionally shown only after Test Connection succeeded). The previous-bug where users could fetch models successfully but had no Add to Hive button is fixed by this restructure.
+- Form footer is now just **Cancel + Add to Hive**, both always visible.
+- Removed `testCustomAIConnection`, `resetCustomAITest`, the diagnostic `customAIRawPanel`, the `customAITestStatus` span, and all 5 `oninput`/`onchange` calls that triggered `resetCustomAITest()`.
+- Reverted modal max-width from 900px back to 760px (no longer need the extra width for side-by-side diagnostic).
+- Reverted v3.29.6 grid layout for `.custom-ai-raw-panel` — the only remaining consumer is the import-server-modal which uses simple vertical stack. CSS for `.custom-ai-test-status` is preserved because the import-server-modal's `importServerFetchStatus` reuses it.
+- Removed the temporary `console.warn('[recommend-custom-ai] handler called')` diagnostic.
+
+---
+
 ## v3.29.6
 **Build:** `20260430-011` · **Released:** April 30, 2026
 
