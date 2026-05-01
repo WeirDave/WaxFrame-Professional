@@ -2,6 +2,16 @@
 
 ---
 
+## v3.29.9
+**Build:** `20260430-014` · **Released:** April 30, 2026
+
+- Removed the **Recommend a Model** button from the Add Custom Worker Bee modal. Auto-recommend (shipped in v3.29.8) already runs after a successful Fetch Models, so the manual button was redundant. Re-poll workflow lives on the main screen, not in the add-AI modal.
+- Renamed `recommendCustomAIModel()` to `_autoRecommendCustomAI()` and converted it to an internal helper — the only caller is the auto-trigger in `fetchCustomAIModels`. Dropped the `opts.auto` branching.
+- `updateModelAids()` no longer manages a recommend button; only handles the Browse-models-on-website link visibility now.
+- Removed `.custom-ai-recommend-btn` CSS rules.
+
+---
+
 ## v3.29.8
 **Build:** `20260430-013` · **Released:** April 30, 2026
 
