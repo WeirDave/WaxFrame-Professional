@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-004
+//  Build: 20260430-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -394,6 +394,20 @@ const WF_ERROR_CATALOG = [
     title: 'License key not valid',
     meaning: 'Gumroad reported this key is not valid. Common causes: typo, key was for a different product, or the key was disabled. Copy the key directly from your Gumroad receipt to avoid hidden whitespace.',
     actions: []
+  },
+  // v3.29.0 — manually fired by the post-round timing analyzer when an AI
+  // takes >2x the round average AND >avg+15s. Never auto-classified from an
+  // error (matches() returns false). Title/meaning support {ai}/{elapsed}/{avg}
+  // placeholders templated from ctx.
+  {
+    code: 'SLOW_RESPONDER',
+    matches: () => false,
+    title:   'Slow responder: {ai}',
+    meaning: '{ai} took {elapsed}s on this round vs the round average of {avg}s. It will still try on the next round, but if it stays this slow you can toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.',
+    actions: [
+      { label: 'Toggle off this AI', kind: 'disable-ai' },
+      { label: 'Keep it on',         kind: 'dismiss' }
+    ]
   }
 ];
 
@@ -416,8 +430,17 @@ function renderTroubleshootingCard(entry, ctx) {
   const actionsEl= document.getElementById('tcActions');
   const detailsEl= document.getElementById('tcDetails');
 
-  if (titleEl)   titleEl.textContent   = entry.title || 'Something went wrong';
-  if (meaningEl) meaningEl.textContent = entry.meaning || '';
+  // v3.29.0 — placeholder substitution for ctx-derived fields like {ai},
+  // {elapsed}, {avg}. Catalog entries opt in by including the placeholders
+  // in their title/meaning strings; entries without placeholders pass through
+  // unchanged (replace is a no-op when no match).
+  const subst = (s) => String(s || '')
+    .replace(/\{ai\}/g,      ctx.aiName  ?? 'AI')
+    .replace(/\{elapsed\}/g, ctx.elapsed ?? '?')
+    .replace(/\{avg\}/g,     ctx.avg     ?? '?');
+
+  if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
+  if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';
 
   // Actions
   if (actionsEl) {
@@ -436,6 +459,18 @@ function renderTroubleshootingCard(entry, ctx) {
         btn.onclick = () => { closeTroubleshootingCard(); if (typeof startRound === 'function') startRound(); };
       } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
         btn.onclick = () => { closeTroubleshootingCard(); window[a.handler](); };
+      } else if (a.kind === 'disable-ai') {
+        // v3.29.0 — toggle off the offending AI for the session via the same
+        // mechanism the user has on the bee cards. Requires ctx.aiId.
+        btn.onclick = () => {
+          closeTroubleshootingCard();
+          if (ctx.aiId && typeof toggleSessionBee === 'function') {
+            toggleSessionBee(ctx.aiId, false);
+            if (typeof toast === 'function') toast(`✓ ${ctx.aiName || 'AI'} toggled off for this session`);
+          }
+        };
+      } else if (a.kind === 'dismiss') {
+        btn.onclick = closeTroubleshootingCard;
       } else {
         btn.onclick = closeTroubleshootingCard;
       }
@@ -1034,7 +1069,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-004';         // build stamp — update each session
+const BUILD       = '20260430-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3421,7 +3456,16 @@ async function runSingleKeyTest(ai) {
     if (!response.ok) {
       let errMsg = `HTTP ${response.status}`;
       try { const j = JSON.parse(rawText); errMsg = j?.error?.message || errMsg; } catch { /* ignore */ }
-      if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = errMsg; }
+      // v3.29.0 — classify so the tooltip/detail message matches the rest
+      // of the app's error language. Old code just dumped the raw API
+      // message without context; classify adds a human-readable title.
+      const entry = WF_DEBUG.classify(new Error(errMsg), {
+        status: response.status,
+        message: errMsg
+      });
+      const tooltip = `${entry.title} — ${errMsg}`;
+      if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = tooltip; }
+      rec.status = `${entry.title} (HTTP ${response.status}) — ${ms}ms`;
       rec.ok = false;
     } else {
       let extracted = '';
@@ -3431,8 +3475,11 @@ async function runSingleKeyTest(ai) {
     }
   } catch(e) {
     const ms = Date.now() - t0;
-    if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = e.message; }
-    rec.status  = `Network Error — ${ms}ms`;
+    // v3.29.0 — client-side fail (CORS, network, etc.) routed through
+    // classifier for a precise diagnosis instead of just "Network Error".
+    const entry = WF_DEBUG.classify(e, {});
+    if (statusEl) { statusEl.textContent = `✕`; statusEl.className = 'tkp-status tkp-fail'; statusEl.title = `${entry.title} — ${e.message}`; }
+    rec.status  = `${entry.title} — ${ms}ms`;
     rec.rcvBody = e.message;
     rec.done    = true;
     rec.ok      = false;
@@ -4733,13 +4780,17 @@ async function testCustomAIConnection() {
     const data = await response.json().catch(() => null);
 
     if (!response.ok) {
-      const msg = data?.error?.message || `HTTP ${response.status}`;
-      const hint =
-        response.status === 401 || response.status === 403 ? ' — check your API key' :
-        response.status === 404 ? ' — endpoint not found, check URL and format' :
-        response.status === 429 ? ' — rate limited, key is valid but quota exceeded' :
-        response.status === 405 ? ' — method not allowed, check URL path' : '';
-      setFail(msg + hint, response.status, response.statusText, elapsed, data);
+      // v3.29.0 — route through unified classifier instead of inline hints.
+      // entry.title is more descriptive than the old generic " — check your
+      // API key" fragment, and now matches what the round-flow Cards say.
+      const apiMsg = data?.error?.message || `HTTP ${response.status}`;
+      const entry  = WF_DEBUG.classify(new Error(apiMsg), {
+        status: response.status,
+        message: apiMsg,
+        isCustomEndpoint: true
+      });
+      const failMsg = `${entry.title}${apiMsg && apiMsg !== entry.title ? ' — ' + apiMsg : ''}`;
+      setFail(failMsg, response.status, response.statusText, elapsed, data);
       return;
     }
 
@@ -4750,9 +4801,11 @@ async function testCustomAIConnection() {
 
   } catch(e) {
     const elapsed = Date.now() - t0;
-    const isCors = e.message.toLowerCase().includes('network') || e.message.toLowerCase().includes('fetch');
-    const msg = isCors ? 'Could not reach endpoint — CORS blocked or network error' : e.message;
-    setFail(msg, '—', e.message, elapsed, e.message);
+    // v3.29.0 — let the classifier decide CORS_BLOCKED vs NETWORK_ERROR
+    // vs other client-side fail using its existing matchers.
+    const entry = WF_DEBUG.classify(e, { isCustomEndpoint: true });
+    const failMsg = `${entry.title}${e.message && !entry.title.includes(e.message) ? ' — ' + e.message : ''}`;
+    setFail(failMsg, '—', e.message, elapsed, e.message);
   }
 }
 
@@ -8870,10 +8923,33 @@ async function runRound() {
   const _timingVals = Object.values(_timings).filter(t => t > 0);
   if (_timingVals.length > 1) {
     const _avg = _timingVals.reduce((a, b) => a + b, 0) / _timingVals.length;
+    // v3.29.0 — track which slow AIs have already gotten a Card this
+    // session, so we only nag once per AI per session. Console line
+    // still fires every round (current behavior preserved).
+    const _slowSet = window._slowResponderShownFor ||
+      (window._slowResponderShownFor = new Set());
     allReviewers.forEach(ai => {
       const _t = _timings[ai.id];
       if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
         consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
+        if (!_slowSet.has(ai.id)) {
+          _slowSet.add(ai.id);
+          const entry = WF_ERROR_CATALOG.find(e => e.code === 'SLOW_RESPONDER');
+          if (entry) {
+            WF_DEBUG.showCard(entry, {
+              aiName:   ai.name,
+              aiId:     ai.id,
+              provider: ai.provider,
+              elapsed:  _t.toFixed(0),
+              avg:      _avg.toFixed(0),
+              raw:      JSON.stringify({
+                ai: ai.name, elapsed_s: +_t.toFixed(1), round_avg_s: +_avg.toFixed(1),
+                threshold: 'elapsed > 2x avg AND elapsed > avg+15s',
+                round_responses: _timingVals.length
+              }, null, 2)
+            });
+          }
+        }
       }
     });
   }
