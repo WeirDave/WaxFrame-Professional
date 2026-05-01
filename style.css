@@ -2608,7 +2608,7 @@ html, body {
   box-shadow: var(--shadow-lg);
   padding: 28px 32px;
   width: 100%;
-  max-width: 760px;
+  max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
@@ -2750,6 +2750,22 @@ html, body {
 .custom-ai-test-status.pass    { color: var(--green); }
 .custom-ai-test-status.fail    { color: var(--red); }
 
+/* v3.29.6 — diagnostic panel uses CSS grid so Sent/Received share a row
+   side-by-side instead of stacking vertically (the modal is desktop-only
+   and there's more horizontal than vertical space to work with). Layout:
+
+     [ Endpoint           full-width            ]
+     [ Sent           |          Received       ]
+     [ Status              full-width            ]
+
+   The 4 .custom-ai-raw-row children are positioned by nth-child since the
+   HTML order is fixed (Endpoint, Sent, Status, Received). Falls back to a
+   single column at narrow widths so the import-server-modal which reuses
+   this base still works without horizontal scroll.
+
+   The grid rules are scoped with :not(.import-server-raw-panel) because the
+   import-server modal reuses .custom-ai-raw-panel with only 3 rows
+   (Endpoint, Status, Received) and the nth-child positioning would be wrong. */
 .custom-ai-raw-panel {
   margin-top: 12px;
   border: 1px solid var(--border2);
@@ -2758,11 +2774,50 @@ html, body {
   font-family: 'Courier New', monospace;
   font-size: 11px;
 }
+.custom-ai-raw-panel:not(.import-server-raw-panel) {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-areas:
+    "endpoint"
+    "sent"
+    "status"
+    "received";
+}
+@media (min-width: 720px) {
+  .custom-ai-raw-panel:not(.import-server-raw-panel) {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      "endpoint endpoint"
+      "sent     received"
+      "status   status";
+  }
+}
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(1) { grid-area: endpoint; }
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(2) { grid-area: sent; }
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(3) { grid-area: status; }
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(4) { grid-area: received; }
 .custom-ai-raw-row {
   display: flex;
+}
+/* Inter-cell borders for the custom-AI modal panel only. Import-server
+   panel keeps its original simple stacked-row borders below. */
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(1),
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(2),
+.custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(4) {
   border-bottom: 1px solid var(--border2);
 }
-.custom-ai-raw-row:last-child { border-bottom: none; }
+@media (min-width: 720px) {
+  .custom-ai-raw-panel:not(.import-server-raw-panel) > .custom-ai-raw-row:nth-child(2) {
+    border-right: 1px solid var(--border2);
+  }
+}
+/* Import-server-panel keeps the original vertical stack with simple borders */
+.import-server-raw-panel > .custom-ai-raw-row {
+  border-bottom: 1px solid var(--border2);
+}
+.import-server-raw-panel > .custom-ai-raw-row:last-child {
+  border-bottom: none;
+}
 .custom-ai-raw-label {
   flex-shrink: 0;
   width: 80px;

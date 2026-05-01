@@ -2,6 +2,16 @@
 
 ---
 
+## v3.29.6
+**Build:** `20260430-011` · **Released:** April 30, 2026
+
+- Custom AI modal now expands to 900px max-width (was 760px) when there's room.
+- Diagnostic panel that appears after Test Connection now uses CSS grid: Endpoint full-width on top, **Sent** and **Received** side-by-side in the middle, Status full-width at the bottom. Falls back to single-column stack at <720px viewport. Import-server modal panel is unchanged (scoped via `:not(.import-server-raw-panel)`).
+- Cached recommendation path now returns `labels` so the dropdown gets `✨` / `⚡` / `💰` annotations on the second and subsequent clicks. Cache entries that predate the labels feature are auto-bypassed and refreshed on next call.
+- Diagnostic `console.warn('[recommend-custom-ai] handler called')` added at the start of `recommendCustomAIModel()` — temporary, to confirm whether clicks are reaching the JS handler. Will be removed once the silent-click bug is root-caused.
+
+---
+
 ## v3.29.5
 **Build:** `20260430-010` · **Released:** April 30, 2026
 
