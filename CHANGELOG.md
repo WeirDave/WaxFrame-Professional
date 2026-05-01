@@ -1,6 +1,13 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.30.2
+**Build:** `20260501-004` · **Released:** May 1, 2026
+
+- **Fixed: localStorage leak in single-AI remove (removeAI).** When a user removed a single custom AI via the 🗑 trash button, only the `waxframe_recommend_default-${ai.provider}` key was being cleaned up. Two custom-specific keys — `waxframe_recommend_custom-${id}` and `waxframe_models_${id}` — were never deleted, leaving orphan entries in localStorage that accumulated forever. Re-adding a custom AI generates a new timestamped id, so the orphans could never be reused. Bee-heavy users could see dozens of stale `waxframe_recommend_custom-*` and `waxframe_models_*` keys in DevTools → Application → Local Storage referencing AIs no longer in `aiList`. The two v3.30.1 bulk-remove paths (removeImportedGroup, bulkRemoveSelectedAIs) already did this cleanup correctly; this release brings the single-AI path into symmetry.
+- Surfaced via the v3.30.1 post-release audit comparing cleanup logic across all three remove paths.
+
+---
 ## v3.30.1
 **Build:** `20260501-003` · **Released:** May 1, 2026
 
