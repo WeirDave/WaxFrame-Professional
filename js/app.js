@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-013
+//  Build: 20260430-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-013';         // build stamp — update each session
+const BUILD       = '20260430-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4465,32 +4465,25 @@ async function migrateRecommendOnStartup() {
   }
 }
 
-// Custom AI button handler — onclick of #customAIRecommendBtn.
-// Uses the currently fetched models in the dropdown to ask, autofills the
-// dropdown with the recommendation, surfaces WHY in a toast.
-// v3.26.1: more visible loading state (dropdown disabled + "Asking…" text),
-// clearer error messages, brief success highlight on the dropdown.
-async function recommendCustomAIModel(opts) {
-  // v3.29.8 — `opts.auto` is set when this is called automatically after
-  // a successful Fetch Models. The auto path shows a quieter "Asking
-  // provider for recommendation…" toast (instead of the louder
-  // "🤖 Asking <model>…") so the user understands why there's a 1–3 sec
-  // pause without it feeling redundant after the "✅ N loaded" toast.
-  const isAuto = !!(opts && opts.auto);
+// Internal helper called automatically after a successful Fetch Models.
+// Uses the currently fetched models in the dropdown to ask the provider
+// which model is the Best/Fastest/Budget pick for document refinement,
+// then annotates the dropdown options accordingly. Replaces the prior
+// button-driven `recommendCustomAIModel()` — re-poll lives on the main
+// screen, not in the Add a Custom Worker Bee modal.
+async function _autoRecommendCustomAI() {
   const urlInput  = document.getElementById('customAIUrl');
   const fmtSelect = document.getElementById('customAIFormat');
   const keyInput  = document.getElementById('customAIKey');
   const selectEl  = document.getElementById('customAIModelSelect');
-  const recBtn    = document.getElementById('customAIRecommendBtn');
 
-  if (!urlInput || !selectEl || !recBtn) return;
+  if (!urlInput || !selectEl) return;
 
   const url = urlInput.value.trim();
   const format = fmtSelect.value;
   const key = keyInput.value.trim();
 
   if (!url || selectEl.style.display === 'none' || !selectEl.options.length) {
-    toast('⚠️ Hit Fetch Models first');
     return;
   }
 
@@ -4499,25 +4492,16 @@ async function recommendCustomAIModel(opts) {
     .filter(o => !o.disabled && o.value)
     .map(o => o.value);
 
-  if (!models.length) {
-    toast('⚠️ No available models to recommend from');
-    return;
-  }
+  if (!models.length) return;
 
   const askingModel = selectEl.value && !selectEl.options[selectEl.selectedIndex]?.disabled
     ? selectEl.value
     : models[0];
 
-  // Visible loading state — button + dropdown both indicate "working"
-  recBtn.disabled = true;
-  const origLabel = recBtn.innerHTML;
-  recBtn.innerHTML = 'Asking…';
+  // Visible loading state — disable dropdown so user can't pick mid-flight
   selectEl.disabled = true;
 
-  toast(isAuto
-    ? `🤖 Asking provider for recommendation…`
-    : `🤖 Asking ${askingModel} for a recommendation…`,
-    3000);
+  toast(`🤖 Asking provider for recommendation…`, 3000);
 
   const result = await recommendModel({
     cacheId: url.replace(/\/+$/, ''),
@@ -4528,21 +4512,16 @@ async function recommendCustomAIModel(opts) {
     askingModel
   });
 
-  recBtn.disabled = false;
-  recBtn.innerHTML = origLabel;
   selectEl.disabled = false;
 
   if (result?.model) {
     selectEl.value = result.model;
-    // v3.29.5 — annotate the dropdown options with Best Overall / Fastest /
-    // Budget tags so the custom-AI flow matches the built-in flow. The
-    // shared recommendModel() returns labels for all three picks; previously
-    // the custom flow discarded labels and only used result.model.
     if (result.labels) annotateCustomAIDropdown(result.labels, result.model);
     const cachedTag = result.cached ? ' (cached)' : '';
     toast(`✨ ${result.model}${cachedTag}${result.why ? ' — ' + result.why : ''}`, 7000);
   } else {
-    toast('⚠️ No clean recommendation — provider may not have followed the format. Pick manually or check console for details.', 6000);
+    // Quiet failure — dropdown is still populated, user can pick manually.
+    toast('⚠️ Provider didn\'t return a clean recommendation — pick a model manually', 5000);
   }
 }
 
@@ -4582,18 +4561,15 @@ function annotateCustomAIDropdown(labels, recommendedModel) {
 // The aids row container is toggled when EITHER aid is showable, individual
 // aids are toggled by their own logic. v3.26.1 moved the aids out of the
 // model input wrap onto their own row to fix a flex-squashing bug.
+// v3.29.9 — Recommend a Model button removed; this function now only
+// manages the Browse-models-on-website link visibility.
 function updateModelAids() {
   const aidsRow  = document.getElementById('customAIModelAids');
-  const recBtn   = document.getElementById('customAIRecommendBtn');
   const link     = document.getElementById('customAIChooseModelLink');
   const selectEl = document.getElementById('customAIModelSelect');
-  if (!aidsRow || !recBtn || !link || !selectEl) return;
+  if (!aidsRow || !link || !selectEl) return;
 
   const hasFetched = selectEl.style.display !== 'none' && selectEl.options.length > 0;
-
-  // Recommend: shown when fetched, regardless of preset
-  if (hasFetched) recBtn.classList.add('is-visible');
-  else            recBtn.classList.remove('is-visible');
 
   // Browse models: shown when fetched AND we have a chooseModelLink
   const url = document.getElementById('customAIUrl')?.value || '';
@@ -4607,16 +4583,16 @@ function updateModelAids() {
     link.removeAttribute('href');
   }
 
-  // The aids row is visible if either child is visible
-  if (recBtn.classList.contains('is-visible') || link.classList.contains('is-visible')) {
+  // The aids row is visible if the link is visible
+  if (link.classList.contains('is-visible')) {
     aidsRow.classList.add('is-visible');
   } else {
     aidsRow.classList.remove('is-visible');
   }
 }
 
-// Back-compat shims: older code paths still call these names; redirect to the
-// unified updater so everything stays in sync.
+// Back-compat shims: older code paths still call these names; redirect to
+// the unified updater so everything stays in sync.
 function updateChooseModelLink() { updateModelAids(); }
 function updateRecommendBtn()    { updateModelAids(); }
 
@@ -4845,9 +4821,9 @@ async function fetchCustomAIModels() {
     // the Recommend a Model button to retry.
     if (availCount > 0 && format === 'openai') {
       // Don't await — let the toast above show first, then quietly run
-      // the recommend in the background. recommendCustomAIModel handles
-      // its own loading state on the button and posts a toast on result.
-      recommendCustomAIModel({ auto: true });
+      // the recommend in the background. _autoRecommendCustomAI handles
+      // its own loading state and posts a toast on result.
+      _autoRecommendCustomAI();
     }
 
   } catch(e) {
