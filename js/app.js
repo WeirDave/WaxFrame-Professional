@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260430-017
+//  Build: 20260430-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -1135,7 +1135,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260430-017';         // build stamp — update each session
+const BUILD       = '20260430-018';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3884,6 +3884,10 @@ function autoFillAIName(url) {
     nameInput.value = '';
     nameInput.placeholder = 'e.g. DeepSeek';
   }
+  // v3.29.11 — refresh icon preview after name auto-fill: if user types
+  // a URL like https://api.cohere.ai/... the auto-name "Cohere" matches
+  // the catalog and the icon preview lights up instantly.
+  if (typeof refreshCustomAIIconPreview === 'function') refreshCustomAIIconPreview();
 }
 
 function showAddCustomAI() {
@@ -3921,15 +3925,45 @@ function showAddCustomAI() {
     previewId:     'customAIIconPreview',
     previewWrapId: 'customAIIconWrap',
     clearBtnId:    'customAIIconClearBtn',
-    uploadBtnId:   'customAIIconUploadBtn'
+    uploadBtnId:   'customAIIconUploadBtn',
+    // v3.29.11 — when user clears their upload, fall back to catalog
+    // preview based on whatever provider the form currently describes.
+    onClearFallback: () => _customAIIconCtx()
   });
   wfIconUpload.clear({
     previewId:     'customAIIconPreview',
     previewWrapId: 'customAIIconWrap',
     uploadBtnId:   'customAIIconUploadBtn'
   });
+  // Initial catalog preview — modal opens empty, but if (for example)
+  // a Quick Add preset was pre-selected this would show it. Currently
+  // applyQuickAdd handles that via its own previewCatalogMatch call.
+  refreshCustomAIIconPreview();
   modal.classList.add('active');
   document.getElementById('customAIQuickAdd')?.focus();
+}
+
+// v3.29.11 — Helpers for the live catalog-icon preview. Centralized here
+// so every form-change handler (applyQuickAdd, autoFillAIName, fetchCustomAIModels)
+// uses the same ctx-building logic. The preview reads name + model from
+// the live form state and asks wfIconUpload to resolve a matching catalog
+// icon (or generic fallback).
+function _customAIIconCtx() {
+  return {
+    name:  document.getElementById('customAIName')?.value || '',
+    model: (() => {
+      const sel = document.getElementById('customAIModelSelect');
+      if (sel && sel.style.display !== 'none' && sel.value) return sel.value;
+      return document.getElementById('customAIModel')?.value || '';
+    })()
+  };
+}
+function refreshCustomAIIconPreview() {
+  wfIconUpload.previewCatalogMatch({
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap',
+    uploadBtnId:   'customAIIconUploadBtn'
+  }, _customAIIconCtx());
 }
 
 // v3.29.8 — info modal handlers. Opens a help screen explaining each
@@ -4659,6 +4693,10 @@ function applyQuickAdd(value) {
   }
 
   updateChooseModelLink();
+  // v3.29.11 — refresh the live icon preview now that name/model may have
+  // changed via the preset. Picking "Mistral" from Quick Add → Mistral
+  // icon shows in the preview box immediately.
+  refreshCustomAIIconPreview();
 }
 
 function resetModelField() {
@@ -8389,21 +8427,33 @@ const wfIconUpload = (() => {
   const HARD_INPUT_CAP = 8 * 1024 * 1024; // refuse files > 8 MB even pre-resize
   const ACCEPTED = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
 
-  function _setPreview(opts, dataURL) {
+  function _setPreview(opts, src, kind) {
+    // v3.29.11 — `kind` is 'user' (real upload, data URL), 'catalog'
+    // (auto-suggested from provider name match), 'generic' (the universal
+    // placeholder), or null (empty). The wrap gets:
+    //   - `has-icon` class for ANY non-null kind (controls preview-box
+    //     border, hides the empty-state text, switches Upload→Replace)
+    //   - `has-user-icon` class ONLY for kind='user' (controls × clear
+    //     button visibility, since users can only clear their own upload)
     const previewEl = document.getElementById(opts.previewId);
     const wrapEl    = document.getElementById(opts.previewWrapId);
     const uploadBtn = document.getElementById(opts.uploadBtnId);
     if (previewEl) {
-      if (dataURL) {
-        previewEl.src = dataURL;
+      if (src) {
+        previewEl.src = src;
         previewEl.style.display = '';
       } else {
         previewEl.removeAttribute('src');
         previewEl.style.display = 'none';
       }
     }
-    if (wrapEl) wrapEl.classList.toggle('has-icon', !!dataURL);
-    if (uploadBtn) uploadBtn.textContent = dataURL ? '🔄 Replace Icon' : '📷 Upload Icon';
+    if (wrapEl) {
+      wrapEl.classList.toggle('has-icon', !!src);
+      wrapEl.classList.toggle('has-user-icon', kind === 'user');
+    }
+    if (uploadBtn) {
+      uploadBtn.textContent = (kind === 'user') ? '🔄 Replace Icon' : '📷 Upload Icon';
+    }
   }
 
   // Resize whatever the user gave us to 256×256 PNG via canvas, return data URL
@@ -8441,10 +8491,20 @@ const wfIconUpload = (() => {
     const fileInput = document.getElementById(opts.fileInputId);
     const uploadBtn = document.getElementById(opts.uploadBtnId);
     const clearBtn  = document.getElementById(opts.clearBtnId);
+    const previewEl = document.getElementById(opts.previewId);
     if (!fileInput || !uploadBtn) return;
 
     // Visible button forwards click to the hidden file input
     uploadBtn.onclick = (e) => { e.preventDefault(); fileInput.click(); };
+
+    // v3.29.11 — if the preview img fails to load (e.g. icon-generic.png
+    // hasn't been added to images/ yet), gracefully clear back to empty
+    // state. Without this, a broken generic-fallback would render as a
+    // tiny broken-image icon inside the preview box.
+    if (previewEl && !previewEl._wfErrorBound) {
+      previewEl.onerror = () => { _setPreview(opts, null, null); };
+      previewEl._wfErrorBound = true;
+    }
 
     fileInput.onchange = async (e) => {
       const file = e.target.files?.[0];
@@ -8461,7 +8521,7 @@ const wfIconUpload = (() => {
       }
       try {
         const dataURL = await _resizeToDataURL(file);
-        _setPreview(opts, dataURL);
+        _setPreview(opts, dataURL, 'user');
         if (typeof opts.onChange === 'function') opts.onChange(dataURL);
       } catch (err) {
         console.warn('[wfIconUpload] resize failed:', err);
@@ -8473,8 +8533,17 @@ const wfIconUpload = (() => {
     if (clearBtn) {
       clearBtn.onclick = (e) => {
         e.preventDefault();
-        _setPreview(opts, null);
+        // v3.29.11 — clearing a user upload doesn't necessarily mean
+        // empty preview: if the form has a catalog match for the
+        // provider, fall back to that. opts.onClearFallback is a
+        // caller-supplied function returning ctx for the catalog
+        // re-resolve, or null if catalog logic shouldn't apply.
+        _setPreview(opts, null, null);
         if (typeof opts.onChange === 'function') opts.onChange(null);
+        if (typeof opts.onClearFallback === 'function') {
+          const ctx = opts.onClearFallback();
+          if (ctx) previewCatalogMatch(opts, ctx);
+        }
       };
     }
   }
@@ -8485,14 +8554,75 @@ const wfIconUpload = (() => {
   }
 
   function set(opts, dataURL) {
-    _setPreview(opts, dataURL || null);
+    _setPreview(opts, dataURL || null, dataURL ? 'user' : null);
   }
 
   function clear(opts) {
-    _setPreview(opts, null);
+    _setPreview(opts, null, null);
   }
 
-  return { attach, read, set, clear };
+  // v3.29.11 — Catalog of provider-name → icon path mappings. KEPT IN
+  // SYNC with the catalog inside resolveAiIcon() at the bottom of this
+  // file. If you add a new provider there, mirror it here so the live
+  // preview matches what will actually render after Add to Hive.
+  // (We deliberately duplicate rather than import to avoid the wfIconUpload
+  // IIFE racing the resolveAiIcon definition during module init.)
+  const _CATALOG = [
+    { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
+    { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
+    { keys: ['gemini', 'google'],               src: 'images/icon-gemini.png' },
+    { keys: ['grok', 'x.ai', 'xai'],            src: 'images/icon-grok.png' },
+    { keys: ['deepseek'],                       src: 'images/icon-deepseek.png' },
+    { keys: ['perplexity'],                     src: 'images/icon-perplexity.png' },
+    { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
+    { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
+    { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
+    { keys: ['lm studio', 'lmstudio', 'lm-studio'], src: 'images/icon-lmstudio.png' },
+    { keys: ['open webui', 'openwebui', 'open-webui'], src: 'images/icon-openwebui.png' },
+    { keys: ['together'],                       src: 'images/icon-together.png' },
+    { keys: ['alfredo'],                        src: 'images/icon-alfredo.png' },
+  ];
+  const GENERIC_ICON = 'images/icon-generic.png';
+
+  // Show the icon that WILL be used after Add to Hive given the current
+  // form state. Called from form-change handlers (Quick Add pick, name
+  // input, etc.) and on modal open. Behavior:
+  //   1. If user already has a real upload (kind='user'), do not override.
+  //   2. Otherwise, run the matcher against ctx.name + ctx.model strings
+  //      from the form. If a catalog entry matches, show that local PNG
+  //      with kind='catalog' (dashed-border styling, no × clear button).
+  //   3. If no catalog match either, show the generic placeholder if it
+  //      loads — falls through to nothing (empty preview-box) if the
+  //      generic icon file doesn't exist yet.
+  function previewCatalogMatch(opts, ctx) {
+    const wrapEl = document.getElementById(opts.previewWrapId);
+    if (!wrapEl) return;
+    if (wrapEl.classList.contains('has-user-icon')) return; // user upload wins
+
+    const name  = (ctx?.name  || '').toLowerCase();
+    const model = (ctx?.model || '').toLowerCase();
+    const combined = name + ' ' + model;
+    if (!combined.trim()) {
+      // Nothing to match against — clear any prior catalog match
+      _setPreview(opts, null, null);
+      return;
+    }
+
+    for (const entry of _CATALOG) {
+      if (entry.keys.some(k => combined.includes(k))) {
+        _setPreview(opts, entry.src, 'catalog');
+        return;
+      }
+    }
+    // No catalog match — try the generic placeholder. The <img> onerror
+    // handler attached at attach() time falls back to empty if the file
+    // doesn't exist. Until icon-generic.png is shipped, this gracefully
+    // degrades to the empty preview state (which still shows "No icon
+    // yet" placeholder text).
+    _setPreview(opts, GENERIC_ICON, 'generic');
+  }
+
+  return { attach, read, set, clear, previewCatalogMatch };
 })();
 
 // Resolve the best icon for an AI — local image if name matches a known provider,

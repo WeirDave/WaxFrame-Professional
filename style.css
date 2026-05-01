@@ -2806,6 +2806,101 @@ html, body {
   font-style: italic;
 }
 
+/* v3.29.11 — Two-column model row layout for the Add a Custom Worker
+   Bee modal. Left column: the existing Model input + Fetch Models +
+   Browse-models link. Right column: big icon preview + upload button.
+   Uses a flex split so the right column stays a fixed comfortable
+   width while the left grows. The variant classes (--big, --iconcol)
+   only apply to this layout — the import-server modal still uses the
+   inline horizontal uploader (defined above).
+
+   Live preview behavior (driven from JS):
+   - The <img> is always present in DOM; src is set by JS.
+   - The .custom-ai-icon-preview-empty placeholder shows when nothing's
+     loaded (no upload, no catalog match). Suppressed when .has-icon
+     is on the wrap.
+   - The × clear button only matters for user uploads; it's hidden
+     when the preview is showing a catalog match (the user can't
+     "clear" something they didn't upload). Driven by .has-user-icon. */
+.custom-ai-model-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+}
+.custom-ai-field-wrap--model {
+  flex: 1;
+  min-width: 0;
+}
+.custom-ai-field-wrap--iconcol {
+  flex: 0 0 auto;
+  width: 140px;
+  display: flex;
+  flex-direction: column;
+}
+.custom-ai-icon-uploader--big {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.custom-ai-icon-preview-box--big {
+  width: 96px;
+  height: 96px;
+  border: 1px dashed var(--border2);
+  border-radius: 12px;
+  background: var(--surface2);
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: visible;
+}
+.custom-ai-icon-preview-box--big img {
+  max-width: 80px;
+  max-height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  display: none;
+}
+.custom-ai-icon-uploader--big.has-icon .custom-ai-icon-preview-box--big {
+  border-style: solid;
+  border-color: var(--border);
+  background: var(--surface);
+}
+.custom-ai-icon-uploader--big.has-icon .custom-ai-icon-preview-box--big img {
+  display: block;
+}
+.custom-ai-icon-preview-empty {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: center;
+  font-style: italic;
+  padding: 0 8px;
+  display: block;
+}
+.custom-ai-icon-uploader--big.has-icon .custom-ai-icon-preview-empty {
+  display: none;
+}
+/* Clear × button only visible when user uploaded a real icon — not
+   for catalog-matched previews, since those aren't "theirs to clear" */
+.custom-ai-icon-uploader--big .custom-ai-icon-clear-btn {
+  display: none;
+}
+.custom-ai-icon-uploader--big.has-user-icon .custom-ai-icon-clear-btn {
+  display: flex;
+}
+.custom-ai-icon-uploader--big .custom-ai-icon-help {
+  text-align: center;
+  font-size: 10px;
+}
+/* Subtle visual differentiator between user-uploaded and catalog-matched
+   previews — solid border for user upload, dashed (slightly muted) for
+   auto-suggested. Helps users understand what they're seeing. */
+.custom-ai-icon-uploader--big:not(.has-user-icon).has-icon .custom-ai-icon-preview-box--big {
+  border-style: dashed;
+  opacity: 0.92;
+}
+
 .custom-ai-model-input-wrap {
   display: flex;
   gap: 6px;

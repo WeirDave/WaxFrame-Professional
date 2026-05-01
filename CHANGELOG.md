@@ -3,14 +3,18 @@
 ---
 
 ## v3.29.11
-**Build:** `20260430-017` · **Released:** April 30, 2026
+**Build:** `20260430-018` · **Released:** April 30, 2026
 
-- Icon catalog extended: LM Studio, Open WebUI, Together AI, and Alfredo (the user's internal AI gateway) now match to local PNGs (`images/icon-lmstudio.png`, `images/icon-openwebui.png`, `images/icon-together.png`, `images/icon-alfredo.png`).
-- Mistral matcher widened to also catch `mixtral`, `codestral`, and `ministral` model strings — previously Mistral's smaller and code-tuned models would fall through to the colored-initial avatar.
-- **New: Custom icon upload.** Both the Add a Custom Worker Bee modal and the Import from Model Server modal now have an Icon (optional) field with a 📷 Upload Icon button. Whatever the user uploads (PNG/JPEG/WebP/GIF up to 8 MB) gets resized to 256×256 PNG via canvas and stored as a base64 data URL. A 5 MB monstrosity becomes a ~30 KB icon transparently — no user-visible size limit, no manual optimization required. Custom AI flow stores the icon on the AI itself; Import-from-Server flow applies a single uploaded icon to every model imported from that server, and the icon is persisted to the saved-server localStorage payload so re-opens of the modal restore it.
-- New shared `wfIconUpload` module exposes `attach()` / `read()` / `set()` / `clear()` so the same widget plugs into both modals (and any future modals) without code duplication.
-- New CSS: `.custom-ai-icon-uploader`, `.custom-ai-icon-preview-box`, `.custom-ai-icon-clear-btn`, `.custom-ai-icon-help`. Empty state shows just the upload button + help text; loaded state reveals the 56×56 preview with × clear button and flips the upload-button label to "🔄 Replace Icon".
-- 13 of 13 known providers now have local PNG icons in the `images/` folder. The new icons need to be committed alongside this release for the live deployment to pick them up.
+- Icon catalog extended: LM Studio, Open WebUI, Together AI, and Alfredo (the user's internal AI gateway) now match to local PNGs.
+- Mistral matcher widened to also catch `mixtral`, `codestral`, and `ministral` model strings.
+- **New: Custom icon upload.** Both the Add a Custom Worker Bee modal and the Import from Model Server modal now have an Icon (optional) field. Whatever the user uploads (PNG/JPEG/WebP/GIF up to 8 MB) gets resized to 256×256 PNG via canvas and stored as a base64 data URL — no manual optimization required.
+- **New: Live icon preview** in the Add a Custom Worker Bee modal. Model row split into two columns: model inputs on the left, big 96×96 icon preview on the right. The preview shows the icon that will be used after Add to Hive given the current form state — pick Mistral from Quick Add and the Mistral icon shows immediately. Three icon kinds tracked:
+  - **User upload** — solid border, × clear button visible, Replace Icon label
+  - **Catalog match** — dashed border, no × (not the user's to clear), Upload Icon label
+  - **Generic fallback** — falls through to `images/icon-generic.png` when no catalog match. If that file doesn't exist, the preview gracefully clears to "No icon yet" placeholder text via the `<img>` onerror handler.
+- Import-from-Server flow applies a single uploaded icon to every model imported from that server. Icon persists to the saved-server payload so re-opens of the modal restore it.
+- New shared `wfIconUpload` module — `attach() / read() / set() / clear() / previewCatalogMatch()`. Same widget plugs into both modals.
+- 13 of 13 known providers now have local PNG icons in `images/`. New PNGs need to be committed alongside this release for the live deployment to pick them up.
 
 ---
 

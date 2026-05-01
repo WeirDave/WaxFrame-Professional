@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260430-017
+     Build: 20260430-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260430-017">
+  <meta name="waxframe-build" content="20260430-018">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.29.11">
@@ -775,7 +775,7 @@
       </div>
       <div class="custom-ai-field-wrap">
         <label>Name <span class="field-optional">(auto-detected)</span></label>
-        <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'">
+        <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'; refreshCustomAIIconPreview && refreshCustomAIIconPreview();">
       </div>
     </div>
     <div class="custom-ai-form-row">
@@ -807,17 +807,15 @@
           <a id="customAIChooseModelLink" class="custom-ai-choose-model-link" href="#" target="_blank" rel="noopener noreferrer" title="Open this provider's model catalog in a new browser tab">↗ Browse models on website</a>
         </div>
       </div>
-    </div>
-    <div class="custom-ai-form-row custom-ai-icon-row">
-      <div class="custom-ai-field-wrap">
+      <div class="custom-ai-field-wrap custom-ai-field-wrap--iconcol">
         <label>Icon <span class="field-optional">(optional)</span></label>
-        <div class="custom-ai-icon-uploader" id="customAIIconWrap">
-          <button type="button" class="btn btn-sm" id="customAIIconUploadBtn">📷 Upload Icon</button>
-          <div class="custom-ai-icon-preview-box">
-            <img id="customAIIconPreview" alt="" style="display:none;">
-            <button type="button" class="custom-ai-icon-clear-btn" id="customAIIconClearBtn" title="Remove icon" aria-label="Remove icon">×</button>
+        <div class="custom-ai-icon-uploader custom-ai-icon-uploader--big" id="customAIIconWrap">
+          <div class="custom-ai-icon-preview-box custom-ai-icon-preview-box--big">
+            <img id="customAIIconPreview" alt="">
+            <button type="button" class="custom-ai-icon-clear-btn" id="customAIIconClearBtn" title="Remove uploaded icon" aria-label="Remove uploaded icon">×</button>
           </div>
-          <span class="custom-ai-icon-help">PNG/JPEG/WebP, 256×256 recommended · auto-resized · stored locally</span>
+          <button type="button" class="btn btn-sm custom-ai-icon-upload-btn" id="customAIIconUploadBtn">📷 Upload Icon</button>
+          <span class="custom-ai-icon-help">PNG/JPEG/WebP · 256×256 recommended · auto-resized</span>
           <input type="file" id="customAIIconFileInput" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;">
         </div>
       </div>
