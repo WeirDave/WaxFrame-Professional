@@ -10437,6 +10437,24 @@ kbd {
   color: var(--text);
   line-height: 1.5;
 }
+/* v3.32.3 — bulleted list of per-field placeholder hints inside the
+   banner. One <li> per affected form field. The field label is the
+   form's exact label text (e.g., "Tone & voice") so the user can
+   match it visually when scrolling the form below. */
+.template-hint-list {
+  margin: 0;
+  padding-left: 22px;
+  list-style: disc outside;
+}
+.template-hint-item {
+  margin: 4px 0;
+}
+.template-hint-item:first-child { margin-top: 0; }
+.template-hint-item:last-child  { margin-bottom: 0; }
+.template-hint-field {
+  font-weight: 600;
+  color: var(--accent, #f4b400);
+}
 .template-hint-banner-close {
   position: absolute;
   top: 8px;
