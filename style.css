@@ -10293,6 +10293,20 @@ kbd {
   max-width: 920px;
   text-align: left;
 }
+/* v3.32.4 — second-paragraph variant of the intro that calls out the
+   Quick Start onboarding template specifically. Slightly indented and
+   amber-accented so first-time users can't miss it; sits below the
+   generic intro paragraph in the gallery modal header. */
+.template-gallery-intro + .template-gallery-intro {
+  margin-top: 8px;
+}
+.template-gallery-intro--newuser {
+  color: var(--text);
+  padding: 8px 12px;
+  background: var(--accent-dim);
+  border-left: 3px solid var(--accent, #f4b400);
+  border-radius: var(--radius-sm);
+}
 .template-gallery-close {
   position: absolute;
   top: 14px;
@@ -10391,6 +10405,37 @@ kbd {
   font-size: 12px;
   color: var(--text-dim);
   line-height: 1.4;
+}
+
+/* v3.32.4 — Recommended card variant + badge.
+   The Quick Start template is the WaxFrame onboarding example and gets
+   visually distinct treatment so first-time users can't miss it: amber
+   border, subtle amber-dim background, and a small "Recommended for
+   first-time users" badge inside the name line. The hard-coded id check
+   in renderTemplateGalleryBody attaches .is-recommended to it. */
+.template-card.is-recommended {
+  border-color: var(--accent, #f4b400);
+  background: var(--accent-dim);
+  box-shadow: 0 0 16px rgba(245,166,35,0.12);
+}
+.template-card.is-recommended:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--accent-dim);
+  box-shadow: 0 0 24px rgba(245,166,35,0.20);
+}
+.template-card-badge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  background: var(--accent, #f4b400);
+  color: var(--bg);
+  border-radius: var(--radius-sm);
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
 /* =========================================================

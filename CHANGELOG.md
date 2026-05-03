@@ -1,6 +1,18 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.4
+**Build:** `20260503-019` · **Released:** May 3, 2026
+
+Onboarding nudge for first-time users — three small changes that make the Quick Start template impossible to miss.
+
+- **New paragraph on the Project page intro** between the existing "most important page" copy and the required-fields note: *"New to WaxFrame? Click 📋 Use Template above and pick ⭐ Quick Start — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and shows you how the whole hive works end-to-end. Once you've run through it once, come back and pick the template that matches your real document."*
+- **New paragraph in the gallery modal header**, amber-bordered with a soft accent-dim background and amber left-border accent: *"New to WaxFrame? Start with ⭐ Quick Start below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document."* Renders below the generic gallery intro.
+- **Quick Start card visually distinct.** The card now renders with `.is-recommended` styling: solid amber border (instead of `--border2`), `--accent-dim` background, and a subtle amber glow shadow that intensifies on hover. A small `⭐ RECOMMENDED FOR FIRST-TIME USERS` badge appears next to the card name in amber-on-bg pill format. Hard-coded to `t.id === 'quick-start'` — this is the WaxFrame onboarding template by design, not a generic "first card in any category" affordance.
+- **Quick Start description bumped** to mention convergence speed: *"Try the system end-to-end with a low-stakes example: the perfect chocolate chip cookie recipe. Converges in just a few rounds and shows you how the whole hive works — recommended for your first WaxFrame run."*
+- **All new CSS uses theme tokens** (`--accent`, `--accent-dim`, `--bg`, `--text`) so all the new visual treatments adapt to dark/light/auto modes without per-mode overrides.
+
+---
 ## v3.32.3
 **Build:** `20260503-018` · **Released:** May 3, 2026
 
