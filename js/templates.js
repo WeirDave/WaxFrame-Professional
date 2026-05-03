@@ -41,7 +41,7 @@ const WAXFRAME_TEMPLATES = [
     "name": "Quick Start",
     "icon": "⭐",
     "category": "Quick Start",
-    "description": "Try the system end-to-end with a low-stakes example: the perfect chocolate chip cookie recipe.",
+    "description": "Try the system end-to-end with a low-stakes example: the perfect chocolate chip cookie recipe. Converges in just a few rounds and shows you how the whole hive works — recommended for your first WaxFrame run.",
     "goalDocType": "Recipe",
     "goalAudience": "Myself and friends that enjoy chocolate chip cookies that are easy to make",
     "goalOutcome": "Create a recipe that is simple and easy but makes great cookies",
