@@ -8196,28 +8196,16 @@ kbd {
    the H1 title (where it was clipped behind the glass strip on the bee
    variant) to a row between the Project Goal sub paragraph and the
    goal-fields grid. Right-aligned so it doesn't fight the field layout. */
-/* v3.27.7: Clear Project button. v3.32.0 — wrapped together with the new
-   Use Template button inside .hp-section-header-actions; margin-left:auto
-   on the wrapper now positions both buttons. v3.32.1 build 012 — both
-   buttons just use the standard .btn .btn-sm precedent (matches the
-   Worker Bee toolbar buttons that sit on the same honeycomb background
-   in both modes). The Clear Project button keeps its muted color override
-   to remain subordinate to the Use Template action button. */
-.hp-section-header-actions {
+/* v3.32.1 — Project header button group positioning. The header is a
+   flex row containing [bee mascot, title block, button group]. This
+   single rule pushes the button group to the right edge. The buttons
+   themselves use the standard .btn class — same as the Working Document
+   header (Export/Copy/Clear), Conflicts header (Copy), and Live Console
+   header (Copy). No custom button classes, no overrides. */
+.hp-section-header-buttons {
   margin-left: auto;
   flex-shrink: 0;
   align-self: flex-start;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-.hp-section-clear-btn {
-  flex-shrink: 0;
-  font-size: var(--fs-sm);
-  padding: 6px 14px;
-  color: var(--text-dim);
-  border-color: var(--border2);
 }
 
 /* v3.27.7: removed .proj-goal-section-hdr, .proj-goal-section-title,
