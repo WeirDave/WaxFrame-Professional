@@ -1,10 +1,10 @@
 # WaxFrame Professional — Changelog
 
 ---
-## v3.32.1
+## v3.32.2
 **Build:** `20260503-017` · **Released:** May 3, 2026
 
-Patch release on top of v3.32.0 — template-gallery polish, the Template Hint banner, and a CSS reconciliation pass on the Project header buttons.
+Patch release on top of v3.32.0 — template-gallery polish, the Template Hint banner, and a CSS reconciliation pass on the Project header buttons. (v3.32.1 was an internal-only build that never deployed; its scope was rolled forward into v3.32.2.)
 
 **Template Hint banner**
 
