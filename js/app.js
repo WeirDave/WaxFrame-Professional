@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-018';         // build stamp — update each session
+const BUILD       = '20260503-019';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2958,14 +2958,27 @@ function renderTemplateGalleryBody() {
     <div class="template-gallery-section">
       <h3 class="template-gallery-section-title">${esc(cat)}</h3>
       <div class="template-gallery-grid">
-        ${buckets[cat].map(t => `
-          <button class="template-card" onclick="applyTemplate('${esc(t.id)}')" title="Apply the ${esc(t.name)} template">
+        ${buckets[cat].map(t => {
+          // v3.32.4 — Quick Start gets visually distinct treatment so
+          // first-time users can't miss it. The .is-recommended class
+          // adds an amber border + glow; the badge label is rendered as
+          // a separate badge element. Hard-coded to id === 'quick-start'
+          // — this is the WaxFrame onboarding template by design, not
+          // a generic "first card in any category" affordance.
+          const isRecommended = (t.id === 'quick-start');
+          const cardCls = isRecommended ? 'template-card is-recommended' : 'template-card';
+          const badge   = isRecommended
+            ? '<span class="template-card-badge">⭐ Recommended for first-time users</span>'
+            : '';
+          return `
+          <button class="${cardCls}" onclick="applyTemplate('${esc(t.id)}')" title="Apply the ${esc(t.name)} template">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
-              <div class="template-card-name">${esc(t.name)}</div>
+              <div class="template-card-name">${esc(t.name)}${badge}</div>
               <div class="template-card-desc">${esc(t.description || '')}</div>
             </div>
-          </button>`).join('')}
+          </button>`;
+        }).join('')}
       </div>
     </div>`).join('');
   body.innerHTML = sections || '<p class="template-gallery-empty">No templates found.</p>';
