@@ -1,6 +1,16 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.6
+**Build:** `20260503-021` · **Released:** May 3, 2026
+
+**Bug fix.** The Quick Start template had `"Leave blank"` as the literal value of two Project Goal fields (`Scope & constraints` and `Tone & voice`). When a new user applied the template and continued to the work screen, the AI hive received `"Leave blank"` as actual instruction text — meaning every reviewer would treat it as a real constraint or tonal direction, potentially writing "Leave blank" into the document or refusing to address those areas at all. Could have completely derailed first-time-user runs, which is the worst possible place for a bug like this.
+
+- **Fixed:** Quick Start `goalScope` and `goalTone` now ship as empty strings, the same as any other unspecified field. The hive prompt envelope correctly handles unspecified fields (rendering them as `[not specified]` to the AIs), so an empty field produces no instruction at all rather than a literal "Leave blank" instruction.
+- **Audited all 12 templates** with explicit search for instructional/metadata content masquerading as field values (`leave blank`, `optional`, `n/a`, `fill in`, `replace this`, `put your`, `tbd`, `todo`, etc.). All other 11 templates ship clean — `[bracketed]` placeholders in Cover Letter, Job Description, and others are intentional and surfaced to the user via the v3.32.3 hint banner.
+- **No code changes.** This is a content fix in `js/templates.js` only.
+
+---
 ## v3.32.5
 **Build:** `20260503-020` · **Released:** May 3, 2026
 
