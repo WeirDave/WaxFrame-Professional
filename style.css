@@ -8198,9 +8198,11 @@ kbd {
    goal-fields grid. Right-aligned so it doesn't fight the field layout. */
 /* v3.27.7: Clear Project button. v3.32.0 — wrapped together with the new
    Use Template button inside .hp-section-header-actions; margin-left:auto
-   on the wrapper now positions both buttons. The clear button itself
-   keeps its muted styling to remain subordinate to the action buttons
-   above it. */
+   on the wrapper now positions both buttons. v3.32.1 build 012 — both
+   buttons just use the standard .btn .btn-sm precedent (matches the
+   Worker Bee toolbar buttons that sit on the same honeycomb background
+   in both modes). The Clear Project button keeps its muted color override
+   to remain subordinate to the Use Template action button. */
 .hp-section-header-actions {
   margin-left: auto;
   flex-shrink: 0;
@@ -8209,18 +8211,6 @@ kbd {
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
-}
-.hp-section-template-btn {
-  font-size: var(--fs-sm);
-  padding: 6px 14px;
-  background: var(--surface2);
-  color: var(--accent, #f4b400);
-  border: 1px solid var(--accent, #f4b400);
-  font-weight: 600;
-}
-.hp-section-template-btn:hover {
-  background: var(--accent, #f4b400);
-  color: var(--bg);
 }
 .hp-section-clear-btn {
   flex-shrink: 0;

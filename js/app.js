@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-011';         // build stamp — update each session
+const BUILD       = '20260503-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2991,6 +2991,18 @@ async function applyTemplate(templateId) {
     toast('⚠️ Template not found');
     return;
   }
+  // v3.32.1 build 012 — close the gallery modal BEFORE the overwrite
+  // confirmation can fire. Two reasons: (1) modal-on-modal stacking is
+  // confusing — the user sees the gallery dim and a confirm pop on top
+  // and isn't sure which modal owns which button; (2) if the user
+  // cancels the overwrite, returning to the dimmed gallery is also
+  // disorienting. Cleaner flow: card click closes the gallery, then
+  // the confirm fires. Cancel = back to the Project screen; Apply
+  // proceeds. To pick a different template the user clicks Use Template
+  // again — one extra click is worth the clarity.
+  const galleryModal = document.getElementById('templateGalleryModal');
+  if (galleryModal) galleryModal.classList.remove('active');
+
   if (_projectGoalFieldsHaveContent()) {
     const ok = await wfConfirm(
       'Apply Template',
@@ -3017,9 +3029,8 @@ async function applyTemplate(templateId) {
   if (typeof saveProject === 'function')              saveProject();
   if (typeof updateGoalCounter === 'function')        updateGoalCounter();
   if (typeof updateProjectRequirements === 'function') updateProjectRequirements();
-  // Close the modal
-  const modal = document.getElementById('templateGalleryModal');
-  if (modal) modal.classList.remove('active');
+  // (Gallery modal already closed at the top of this function before the
+  // overwrite confirm could fire.)
 
   // v3.32.1 — Render the hint banner above Project Name when the template
   // has placeholders that need filling in. Templates without a hint
