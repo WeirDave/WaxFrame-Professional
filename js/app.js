@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-024';         // build stamp — update each session
+const BUILD       = '20260503-025';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -11957,7 +11957,14 @@ function exportDocument() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // v3.32.9 — Defer URL.revokeObjectURL by 30 seconds to avoid the same race
+  // condition fixed in backupSession() under v3.21.19/v3.21.21. Synchronous
+  // revoke after a.click() can yank the blob URL before the browser dispatcher
+  // has finished writing the file, producing a 0-byte file followed by a retry
+  // with " (1)" appended to the filename. 30 seconds is the same margin used
+  // by backupSession; document blobs are typically small but the math is
+  // identical and the memory cost of an unrevoked blob URL for 30s is trivial.
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 
   toast('💾 Document exported');
   window._finishExported = true;
@@ -12025,7 +12032,17 @@ function exportTranscript() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  // v3.32.9 — Defer URL.revokeObjectURL by 30 seconds to match the backup
+  // export fix from v3.21.19/v3.21.21. Transcripts hit this race the hardest
+  // — full multi-round transcripts with verbose reviewer responses (Perplexity
+  // can emit 3000+ word responses per round) easily exceed the threshold that
+  // surfaced the original backup race. Symptom is a 0-byte file followed by
+  // a retry with " (1)" appended to the filename. Synchronous revoke after
+  // a.click() yanks the blob URL before the browser dispatcher has finished
+  // writing the file. 30 seconds is the same margin used elsewhere; memory
+  // cost of an unrevoked blob URL for 30s is trivial compared to the size of
+  // the transcript itself.
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
 
   toast('💾 Full transcript exported');
   window._finishExported = true;
