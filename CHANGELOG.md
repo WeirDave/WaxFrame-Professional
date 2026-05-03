@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.8
+**Build:** `20260503-024` · **Released:** May 3, 2026
+
+PDF rendering fixes for the README and Getting Started docs that ship in the ZIP. The v3 PDFs (regenerated for v3.32.7) had three rendering issues caught during review — all fixed here. No code changes; the in-app behavior is identical to v3.32.7.
+
+- **Numbered list continuation across sections.** The README and Getting Started docs use numbered lists in multiple independent sections (Table of Contents, How It Works, procedure steps). The previous build used a single shared numbering reference, so each new section continued the prior counter (TOC ended at 12, then How It Works started at 13). Fixed by giving every independent numbered list its own dedicated reference (`n-toc`, `n-howitworks`, `n-gs-toc`, `n-gs-gemini`, `n-gs-setup`) so each list correctly restarts at 1.
+- **README "First time? Run Quick Start." callout rendering as bare text.** The callout on the Getting Started section of the README was being rendered without its amber border or tinted background. Rebuilt the callout to use the same `callout()` helper as the Overview callout on page 1; both now render identically.
+- **Empty pages eliminated.** README dropped from 11 pages to 10 (one blank eliminated). Getting Started dropped from 11 pages to 9 (two blanks eliminated). Caused by orphan `PageBreak` paragraphs landing after Tables; fixed by switching to `pageBreakBefore: true` on heading paragraphs and adding a `tableTrailer()` empty-paragraph after every Table to prevent Word from rendering the table's trailing margin as a phantom new page.
+- **Version stamps in code bumped** to v3.32.8 / build 20260503-024 across the standard 4-stamp checklist plus the 7-file cache-bust sweep.
+
+---
 ## v3.32.7
 **Build:** `20260503-023` · **Released:** May 3, 2026
 
