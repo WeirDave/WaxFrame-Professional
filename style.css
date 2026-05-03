@@ -10271,8 +10271,8 @@ kbd {
   box-sizing: border-box;
 }
 .template-gallery-bee {
-  width: 96px;
-  height: 96px;
+  width: 128px;
+  height: 128px;
   flex-shrink: 0;
   object-fit: contain;
 }

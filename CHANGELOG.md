@@ -1,6 +1,15 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.5
+**Build:** `20260503-020` · **Released:** May 3, 2026
+
+Two-item polish patch on top of v3.32.4 based on first-hands review of the Quick Start onboarding nudge.
+
+- **Badge text shortened.** `⭐ RECOMMENDED FOR FIRST-TIME USERS` (35 chars) overflowed the Quick Start card at the grid's `minmax(240px, 1fr)` minimum width, with the right edge of the badge hanging off the card. Replaced with `⭐ Start Here` (12 chars) — same intent, fits cleanly inside any grid card width without overhang. Direct, unambiguous, eye-catching at a glance.
+- **Project Bee on the gallery modal header** sized up 96px → 128px. The wider 1280px modal layout (introduced in v3.32.1) plus the second new-user intro paragraph (added in v3.32.4) created a tall left header column that the 96px bee wasn't fully filling. 128px properly occupies the column without overwhelming the title.
+
+---
 ## v3.32.4
 **Build:** `20260503-019` · **Released:** May 3, 2026
 
