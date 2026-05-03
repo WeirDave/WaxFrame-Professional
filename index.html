@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260502-008
+     Build: 20260503-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260502-008">
+  <meta name="waxframe-build" content="20260503-009">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.31.0">
+  <link rel="stylesheet" href="style.css?v=3.32.0">
 </head>
 <body>
 
@@ -194,7 +194,10 @@
             <p class="hp-section-sub"><strong>This is the most important page in the whole setup.</strong> This section defines what your project is all about. Every AI sees this information on every round — it's their entire understanding of what you're trying to build. The more specific you are the better your project will be (garbage in, garbage out). A few extra minutes here pays off in every round that follows.</p>
             <p class="hp-section-sub"><i>Fields marked <span class="req-star">*</span> are required to continue.</i></p>
           </div>
-          <button class="btn btn-sm hp-section-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
+          <div class="hp-section-header-actions">
+            <button class="btn btn-sm hp-section-template-btn" onclick="showTemplateGallery()" title="Pre-fill the Project fields from a template (Cover Letter, Resume, RFP, etc.)">📋 Use Template</button>
+            <button class="btn btn-sm hp-section-clear-btn" onclick="clearProject()" title="Clears this project — keeps your AI keys">🗑 Clear Project</button>
+          </div>
         </div>
         <div class="hp-section-body">
 
@@ -1350,6 +1353,24 @@
   </div>
 </div>
 
+<!-- v3.32.0 — Template Gallery Modal. Renders WAXFRAME_TEMPLATES from
+     templates.js, grouped by category. Click a card to apply the template
+     to the Project screen fields. If any Project fields already have content,
+     a wfConfirm overwrite warning fires before applying. -->
+<div class="finish-modal-overlay" id="templateGalleryModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal template-gallery-modal">
+    <div class="template-gallery-hdr">
+      <img src="images/WaxFrame_Project_Bee_v2.png" alt="" class="template-gallery-bee">
+      <div>
+        <h2 class="finish-modal-title">📋 Project Templates</h2>
+        <p class="template-gallery-intro">Templates fill in your Project fields with proven starting content for common document types. Pick one matching what you're writing, review the filled-in fields, and edit anything that doesn't fit your specific situation.</p>
+      </div>
+      <button class="template-gallery-close" onclick="document.getElementById('templateGalleryModal').classList.remove('active')" title="Close" aria-label="Close template gallery">✕</button>
+    </div>
+    <div class="template-gallery-body" id="templateGalleryBody"></div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -1896,8 +1917,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.31.0"></script>
-<script src="js/app.js?v=3.31.0"></script>
+<script src="js/version.js?v=3.32.0"></script>
+<script src="js/templates.js?v=3.32.0"></script>
+<script src="js/app.js?v=3.32.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
