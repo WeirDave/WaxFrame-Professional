@@ -1,6 +1,18 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.0
+**Build:** `20260503-009` · **Released:** May 3, 2026
+
+- **Document Templates on the Project screen.** New `📋 Use Template` button opens a gallery modal with 12 templates that pre-fill the Project Goal fields (Document type, Target audience, Desired outcome, Scope & constraints, Tone & voice, Additional instructions). Templates are sourced directly from the proven content in `document-playbooks.html`, so what users get matches the playbook page byte-for-byte.
+- **Twelve initial templates,** organized into 5 categories: **Quick Start** (Chocolate Chip Cookies — try the system end-to-end with a low-stakes example) · **Career & Hiring** (Cover Letter, Job Description, Résumé, Thank-You Letter) · **Business & Sales** (Business Proposal, Email & Outreach, Executive Summary, RFP Response) · **Content & Marketing** (Blog Post / Article, Presentation Outline) · **Personal & Everyday** (Recipe).
+- **Click-to-apply with overwrite protection.** Click a card → if all six Goal fields are empty, populates silently. If any field has content, a `wfConfirm` modal warns *"Apply this template? Your current entries in the Project Goal fields will be replaced."* — same UX pattern as the bulk-remove confirmation. Reference Material is never touched.
+- **New file: `js/templates.js`** holds the canonical `WAXFRAME_TEMPLATES` array. Each entry is a flat object with `id`, `name`, `icon`, `category`, `description`, and the six Goal field values. **Adding a template is a single-file edit** — paste a new object into the array, no other code changes needed. Loaded via `<script src="js/templates.js?v=3.32.0">` before app.js.
+- **New CSS** (`.template-gallery-modal`, `.template-card`, etc.) appended to `style.css`. Header buttons (`Use Template`, `Clear Project`) wrapped in a new `.hp-section-header-actions` flex container so they stack/wrap properly side-by-side. `.hp-section-template-btn` styled with the accent color to make the primary action visually distinct from the secondary `🗑 Clear Project`.
+- **Forward compatibility:** every template includes a `suggestedNotes` field (currently unused — empty for all 12 in v3.32) reserved for v3.33+ work where templates can pre-fill the work-screen Notes drawer with guidance specific to that document type.
+- **No layout changes elsewhere.** Worker Bees screen, Builder picker, Reference Material, work screen — all identical to v3.31.0. This release adds one button and one modal to the Project screen; nothing else is touched.
+
+---
 ## v3.31.0
 **Build:** `20260502-008` · **Released:** May 2, 2026
 
