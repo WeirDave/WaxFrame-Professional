@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260503-009
+     Build: 20260503-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260503-009">
+  <meta name="waxframe-build" content="20260503-010">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.0">
+  <link rel="stylesheet" href="style.css?v=3.32.1">
 </head>
 <body>
 
@@ -200,6 +200,18 @@
           </div>
         </div>
         <div class="hp-section-body">
+
+        <!-- v3.32.1 — Template hint banner. Renders only after a template
+             with a non-empty hint has been applied. JS-managed: applyTemplate()
+             populates and shows it; clearProject() and the dismiss button hide it. -->
+        <div class="template-hint-banner" id="templateHintBanner" style="display:none">
+          <div class="template-hint-banner-icon">📋</div>
+          <div class="template-hint-banner-body">
+            <div class="template-hint-banner-title" id="templateHintBannerTitle">Template Applied</div>
+            <div class="template-hint-banner-text" id="templateHintBannerText"></div>
+          </div>
+          <button class="template-hint-banner-close" onclick="dismissTemplateHintBanner()" title="Dismiss" aria-label="Dismiss template hint">✕</button>
+        </div>
 
         <div class="proj-meta-row">
           <div class="proj-field-wrap proj-field-wrap--name">
@@ -1917,9 +1929,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.32.0"></script>
-<script src="js/templates.js?v=3.32.0"></script>
-<script src="js/app.js?v=3.32.0"></script>
+<script src="js/version.js?v=3.32.1"></script>
+<script src="js/templates.js?v=3.32.1"></script>
+<script src="js/app.js?v=3.32.1"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

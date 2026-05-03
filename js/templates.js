@@ -26,6 +26,11 @@
 //    suggestedNotes  — pre-filled Notes drawer text on the
 //                      work screen (optional, not shipped in
 //                      v3.32 — kept here as data for v3.33+)
+//    hint            — short instruction line shown in the
+//                      amber "Template Applied" banner above
+//                      the Project fields, telling the user
+//                      which placeholders to replace and how.
+//                      Empty string = no banner shown.
 // ============================================================
 
 const WAXFRAME_TEMPLATES = [
@@ -41,7 +46,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Leave blank",
     "goalTone": "Leave blank",
     "goalNotes": "No extra ingredients like nuts",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": ""
   },
   {
     "id": "cover-letter",
@@ -55,7 +61,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Three paragraphs maximum. No generic openers like \"I am writing to express my interest.\" No filler phrases. No sign-offs like \"I look forward to hearing from you.\"",
     "goalTone": "[Professional / conversational / enthusiastic] — pick one that fits the company",
     "goalNotes": "Do not add claims about my experience that are not supported by what I provide. Do not fabricate anything.",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": "Replace [company name] and [job title] with your specifics. For tone, pick ONE adjective from the brackets and remove the rest."
   },
   {
     "id": "job-description",
@@ -69,7 +76,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "List responsibilities from most important to least. Flag any must-have requirement that could unnecessarily narrow the candidate pool. Include a brief company culture statement at the end. Salary range: [amount or write OMIT].",
     "goalTone": "[Professional / startup / enterprise] — match the culture of the company",
     "goalNotes": "Do not add requirements that are not on my original list. Do not soften or remove must-have qualifications without flagging it as a suggestion first.",
-    "suggestedNotes": "Role: Network Engineer, full-time, in-office 3 days per week, hybrid otherwise\nLocation: Tampa, FL\nSalary: $95k to $120k DOE + profit share\nWe are Altura Systems, 14 people, IT services for small healthcare and law firms across Florida.\nResponsibilities, in order of time spent:\n- Design and deploy small-to-mid office networks (40 to 200 users), mostly Cisco Meraki and UniFi\n- Troubleshoot client network issues — remote and on-site\n- Run site surveys and wireless heatmaps with Ekahau\n- Document everything in our internal wiki\n- Occasional after-hours cutovers, comp time given\nMust have:\n- 3+ years hands-on network engineering\n- Comfortable with Meraki or equivalent cloud-managed platform\n- Can read a switch config and know what's broken\n- Clean driving record (client site travel)\nPreferred:\n- CCNA or equivalent\n- Any wireless certs (CWNA, CWDP)\n- MSP background\nCulture: small team, we fix our own mistakes, no politics, no unnecessary meetings, you own your work end to end."
+    "suggestedNotes": "Role: Network Engineer, full-time, in-office 3 days per week, hybrid otherwise\nLocation: Tampa, FL\nSalary: $95k to $120k DOE + profit share\nWe are Altura Systems, 14 people, IT services for small healthcare and law firms across Florida.\nResponsibilities, in order of time spent:\n- Design and deploy small-to-mid office networks (40 to 200 users), mostly Cisco Meraki and UniFi\n- Troubleshoot client network issues — remote and on-site\n- Run site surveys and wireless heatmaps with Ekahau\n- Document everything in our internal wiki\n- Occasional after-hours cutovers, comp time given\nMust have:\n- 3+ years hands-on network engineering\n- Comfortable with Meraki or equivalent cloud-managed platform\n- Can read a switch config and know what's broken\n- Clean driving record (client site travel)\nPreferred:\n- CCNA or equivalent\n- Any wireless certs (CWNA, CWDP)\n- MSP background\nCulture: small team, we fix our own mistakes, no politics, no unnecessary meetings, you own your work end to end.",
+    "hint": "Replace [job title] and the tone choice. For salary, either fill in your actual figure or write OMIT to leave it out — don't leave the brackets."
   },
   {
     "id": "resume",
@@ -83,7 +91,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Do not fabricate experience. Do not remove job titles, companies, or dates. Strengthen what is already there — do not invent.",
     "goalTone": "Confident, professional, action-oriented — strong verbs, no passive voice, no \"responsible for\"",
     "goalNotes": "Do not remove or change any metrics, percentages, or dates — these are factual and verified by me.",
-    "suggestedNotes": "Dana Reyes\nTampa, FL · dana.reyes@example.com · 813-555-0114\n\nSummary\nWireless network engineer with 8 years of experience. CWNA, CWDP, CWAP. Aruba, Cisco Meraki, and Ruckus. Specializes in warehouse and industrial RF environments.\n\nExperience\n\nSenior Wireless Engineer, Vantage Logistics — Jan 2022 to Present\n- Responsible for wireless network across 12 warehouse sites and 3 corporate offices\n- Led migration from Cisco Meraki to Aruba ArubaOS 8\n- Did site surveys with Ekahau\n- Supported autonomous mobile robots operating on the floor\n\nWireless Engineer, Meridian IT Services — Jun 2018 to Dec 2021\n- MSP role supporting 30+ small and mid-size clients\n- Handled escalations for wireless issues\n- Designed networks for new client buildouts\n\nNetwork Technician, Gulfstream Communications — Aug 2016 to May 2018\n- Installed and configured wireless access points\n- Ran cable, tested drops, closed tickets\n\nCertifications\nCWNA, CWDP, CWAP, Aruba ACMA\n\nEducation\nBS Information Technology, University of South Florida — 2016"
+    "suggestedNotes": "Dana Reyes\nTampa, FL · dana.reyes@example.com · 813-555-0114\n\nSummary\nWireless network engineer with 8 years of experience. CWNA, CWDP, CWAP. Aruba, Cisco Meraki, and Ruckus. Specializes in warehouse and industrial RF environments.\n\nExperience\n\nSenior Wireless Engineer, Vantage Logistics — Jan 2022 to Present\n- Responsible for wireless network across 12 warehouse sites and 3 corporate offices\n- Led migration from Cisco Meraki to Aruba ArubaOS 8\n- Did site surveys with Ekahau\n- Supported autonomous mobile robots operating on the floor\n\nWireless Engineer, Meridian IT Services — Jun 2018 to Dec 2021\n- MSP role supporting 30+ small and mid-size clients\n- Handled escalations for wireless issues\n- Designed networks for new client buildouts\n\nNetwork Technician, Gulfstream Communications — Aug 2016 to May 2018\n- Installed and configured wireless access points\n- Ran cable, tested drops, closed tickets\n\nCertifications\nCWNA, CWDP, CWAP, Aruba ACMA\n\nEducation\nBS Information Technology, University of South Florida — 2016",
+    "hint": "Replace [job title] with the role you're applying for."
   },
   {
     "id": "thank-you",
@@ -97,7 +106,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "No generic openers like \"I hope this finds you well.\" No corporate sign-offs like \"Best regards.\" One specific moment or gesture must be named — no vague thank-yous.",
     "goalTone": "[Warm and personal / professional but sincere / heartfelt] — pick one",
     "goalNotes": "Reference the specific thing I am thanking them for. Do not add any details I have not provided. Do not fabricate anything.",
-    "suggestedNotes": "Marco Delgado, owner of Delgado Build, finished our kitchen and back porch remodel last Friday.\nThings to thank him for:\n- The big one: when the countertop supplier delivered the wrong slab on day 17 and the project was going to slip two weeks, Marco drove to Orlando on a Saturday, picked up the right slab himself, and installed it Sunday morning. We had our son's birthday party on the new porch the following Saturday as planned.\n- He showed up when he said he would, every day, for six weeks.\n- His crew cleaned up every night — my wife kept commenting on it.\n- He caught a framing issue the inspector missed and fixed it before closing the wall.\nWhat we want him to know:\n- We'll absolutely use him again.\n- Our neighbor Janet has already asked for his number.\n- He's welcome to drop by and show the kitchen to a future client if he ever needs to."
+    "suggestedNotes": "Marco Delgado, owner of Delgado Build, finished our kitchen and back porch remodel last Friday.\nThings to thank him for:\n- The big one: when the countertop supplier delivered the wrong slab on day 17 and the project was going to slip two weeks, Marco drove to Orlando on a Saturday, picked up the right slab himself, and installed it Sunday morning. We had our son's birthday party on the new porch the following Saturday as planned.\n- He showed up when he said he would, every day, for six weeks.\n- His crew cleaned up every night — my wife kept commenting on it.\n- He caught a framing issue the inspector missed and fixed it before closing the wall.\nWhat we want him to know:\n- We'll absolutely use him again.\n- Our neighbor Janet has already asked for his number.\n- He's welcome to drop by and show the kitchen to a future client if he ever needs to.",
+    "hint": "Pick ONE tone from the brackets and remove the rest."
   },
   {
     "id": "business-proposal",
@@ -111,7 +121,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.",
     "goalTone": "Confident, credible, professional — not salesy",
     "goalNotes": "Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use [PRICE] or [TIMELINE] as placeholders where I have left them blank.",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": "Replace [Client name or type] and [company name]. The [PRICE] and [TIMELINE] tags in Additional Instructions are intentional — keep them as-is so the AIs know to prompt you for those numbers, or replace them with your actual figures."
   },
   {
     "id": "email-campaign",
@@ -125,7 +136,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Lead with value to the recipient — not background on the sender. One clear ask only. No fluff, no jargon, no \"I hope this email finds you well.\" Include a subject line as the first line of the document.",
     "goalTone": "[Professional / direct / warm] — pick one. For cold outreach, direct tends to work better than warm.",
     "goalNotes": "Do not add background about me unless I specifically provide it. The email should be about what the reader gets, not who I am.",
-    "suggestedNotes": "Ferris's recent LinkedIn post (last week): he wrote that most SMB security incidents start with unmanaged wireless — not ransomware, not phishing. Direct quote: \"your MSP partner should be treating your Wi-Fi like a security surface, not a convenience.\"\n\nOur company: Altura Systems, a 14-person MSP in Tampa. We run wireless for about 40 SMB clients across healthcare and legal. We've seen the same pattern Ferris is describing — clients keep getting breached through guest SSIDs that were stood up in 2019 and forgotten.\n\nThe ask: 20-minute intro call to see if the pattern he's describing matches what we're seeing.\n\nSender:\n- Name: Dana Reyes\n- Role: Director of Wireless Services, Altura Systems"
+    "suggestedNotes": "Ferris's recent LinkedIn post (last week): he wrote that most SMB security incidents start with unmanaged wireless — not ransomware, not phishing. Direct quote: \"your MSP partner should be treating your Wi-Fi like a security surface, not a convenience.\"\n\nOur company: Altura Systems, a 14-person MSP in Tampa. We run wireless for about 40 SMB clients across healthcare and legal. We've seen the same pattern Ferris is describing — clients keep getting breached through guest SSIDs that were stood up in 2019 and forgotten.\n\nThe ask: 20-minute intro call to see if the pattern he's describing matches what we're seeing.\n\nSender:\n- Name: Dana Reyes\n- Role: Director of Wireless Services, Altura Systems",
+    "hint": "Pick ONE tone from the brackets and remove the rest."
   },
   {
     "id": "executive-summary",
@@ -139,7 +151,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Lead with the conclusion. Strip jargon. Do not expand — only tighten and clarify what is already here.",
     "goalTone": "Direct, authoritative, jargon-free — written for someone who has 90 seconds to read it",
     "goalNotes": "Do not add detail not present in the source material. Do not change any figures, recommendations, or conclusions.",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": ""
   },
   {
     "id": "rfp",
@@ -153,7 +166,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Formal, precise, no marketing language. Do not add capability claims not supported by the existing content. Address requirements in the order they appear in the RFP.",
     "goalTone": "Formal, authoritative, direct — this is a compliance document, not a sales pitch",
     "goalNotes": "Do not change any figures, dates, or technical specifications. Do not omit or skip any RFP requirement, even if the answer is brief.",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": "Replace [issuing organization] and [RFP name or number] with the actual RFP details."
   },
   {
     "id": "blog-post",
@@ -167,7 +181,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Must cover: [list 3–5 key points]. Do not add statistics or facts that are not already in the draft — flag anything uncertain instead of inventing it.",
     "goalTone": "Be specific: e.g. Direct, short sentences, slightly sarcastic, no jargon or Authoritative and data-driven, formal but approachable. Without this the AIs will default to a bland, generic style.",
     "goalNotes": "Do not change my unique angle or perspective. Strengthen the voice — do not sand it down into something that sounds like everyone else.",
-    "suggestedNotes": "Thesis: any single LLM, no matter how good, has blind spots. One model will confidently write fluff where another catches it. One model will tighten structure while another improves tone. Run the same document through 4 or 5 different models in sequence, each refining what the previous one did, and the output is better than any single model can produce on its own.\n\nConcrete example to reference (real, from last month):\n- Took a 900-word draft of a proposal\n- Ran it through Claude alone: got a polished version, maybe 15% better\n- Ran the same draft through Claude, then GPT-4, then Gemini, then back to Claude: got a version where the structural argument was noticeably stronger, the jargon was stripped, and two factual hedges had been flagged that the author hadn't noticed\n\nWhat the reader should try today: pick a document they care about, hand it to 3 different models in sequence with the same prompt, compare the result to running it through any one model once.\n\nCall to action at the end: link to a tool that automates this — multiple models, single document, convergence loop. (This is WaxFrame, but the post should not name it overtly — the link speaks for itself.)"
+    "suggestedNotes": "Thesis: any single LLM, no matter how good, has blind spots. One model will confidently write fluff where another catches it. One model will tighten structure while another improves tone. Run the same document through 4 or 5 different models in sequence, each refining what the previous one did, and the output is better than any single model can produce on its own.\n\nConcrete example to reference (real, from last month):\n- Took a 900-word draft of a proposal\n- Ran it through Claude alone: got a polished version, maybe 15% better\n- Ran the same draft through Claude, then GPT-4, then Gemini, then back to Claude: got a version where the structural argument was noticeably stronger, the jargon was stripped, and two factual hedges had been flagged that the author hadn't noticed\n\nWhat the reader should try today: pick a document they care about, hand it to 3 different models in sequence with the same prompt, compare the result to running it through any one model once.\n\nCall to action at the end: link to a tool that automates this — multiple models, single document, convergence loop. (This is WaxFrame, but the post should not name it overtly — the link speaks for itself.)",
+    "hint": "Replace [takes a specific action or understands a specific thing] with what you want readers to do or learn. Replace [list 3–5 key points] with your actual key points."
   },
   {
     "id": "presentation",
@@ -181,7 +196,8 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "[X]-minute talk. [Number] slides maximum. Bullet points only — no prose paragraphs. This is a speaker outline, not a script. WaxFrame outputs text — you will paste this into your presentation tool separately.",
     "goalTone": "[Informative / persuasive / conversational] — match the formality level of the audience",
     "goalNotes": "Do not write full sentences in the speaker bullets. Keep each bullet to one line. Do not add slides beyond the count I specify.",
-    "suggestedNotes": "Driving question: \"Should we pilot Wi-Fi 7 in FY27, or wait?\"\n\nRecommendation: pilot in FY27 at a single floor of HQ, budget $95k, defer enterprise-wide deployment to FY28 or FY29 depending on client device penetration.\n\nReasoning:\n- Wi-Fi 7 standard is ratified. Enterprise APs are shipping in volume from Cisco, Aruba, Juniper, Extreme.\n- Client device penetration is still low — under 12% of the user base has a Wi-Fi 7 capable endpoint as of Q1 2026. No reason to refresh the fleet now.\n- HQ 14th floor is being refreshed in FY27 anyway due to an expiring lease remodel. That gives a \"free\" pilot footprint.\n- Pilot goals: validate real-world throughput gains, test roaming behavior with mixed Wi-Fi 6E and Wi-Fi 7 clients, train the team on the new management platform.\n- If pilot is successful, shovel-ready plan for FY28 enterprise rollout. If not, $95k spent to learn instead of $2.1M to fail.\n\nContext the deck must establish:\n- Where we are today: Wi-Fi 6E, Aruba Central managed, last refreshed FY24\n- Where the industry is going: Wi-Fi 7 ratified, deployment guidance from Gartner suggests \"selective pilots in FY26/FY27, mainstream in FY28\"\n- Client device mix: 70% corporate-managed laptops, 25% BYOD phones, 5% IoT/sensors\n\nHard constraints:\n- FY27 budget cycle closes in July 2026. Decision must happen before then.\n- Any dollar figure in the deck is directional — detailed pricing comes from the RFP, not this deck."
+    "suggestedNotes": "Driving question: \"Should we pilot Wi-Fi 7 in FY27, or wait?\"\n\nRecommendation: pilot in FY27 at a single floor of HQ, budget $95k, defer enterprise-wide deployment to FY28 or FY29 depending on client device penetration.\n\nReasoning:\n- Wi-Fi 7 standard is ratified. Enterprise APs are shipping in volume from Cisco, Aruba, Juniper, Extreme.\n- Client device penetration is still low — under 12% of the user base has a Wi-Fi 7 capable endpoint as of Q1 2026. No reason to refresh the fleet now.\n- HQ 14th floor is being refreshed in FY27 anyway due to an expiring lease remodel. That gives a \"free\" pilot footprint.\n- Pilot goals: validate real-world throughput gains, test roaming behavior with mixed Wi-Fi 6E and Wi-Fi 7 clients, train the team on the new management platform.\n- If pilot is successful, shovel-ready plan for FY28 enterprise rollout. If not, $95k spent to learn instead of $2.1M to fail.\n\nContext the deck must establish:\n- Where we are today: Wi-Fi 6E, Aruba Central managed, last refreshed FY24\n- Where the industry is going: Wi-Fi 7 ratified, deployment guidance from Gartner suggests \"selective pilots in FY26/FY27, mainstream in FY28\"\n- Client device mix: 70% corporate-managed laptops, 25% BYOD phones, 5% IoT/sensors\n\nHard constraints:\n- FY27 budget cycle closes in July 2026. Decision must happen before then.\n- Any dollar figure in the deck is directional — detailed pricing comes from the RFP, not this deck.",
+    "hint": "Replace [X] with your topic, [Number] with how many slides you want, and pick ONE tone from the brackets."
   },
   {
     "id": "recipe",
@@ -195,6 +211,7 @@ const WAXFRAME_TEMPLATES = [
     "goalScope": "Do not change the core recipe — only clarify and improve what is there. Ingredient quantities and cooking times must stay as written. Include: ingredient list with quantities, numbered steps, and at least one tip on substitutions or storage.",
     "goalTone": "[Warm and conversational / precise and technical / beginner-friendly] — pick one",
     "goalNotes": "Do not substitute ingredients without flagging it as an optional variation. Do not add unverified cooking times or techniques — flag anything uncertain instead of inventing it.",
-    "suggestedNotes": ""
+    "suggestedNotes": "",
+    "hint": "Pick ONE tone from the brackets and remove the rest."
   }
 ];
