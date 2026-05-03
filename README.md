@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.21.11-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260425--008-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Version](https://img.shields.io/badge/Version-3.32.7-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260503--023-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -39,7 +39,7 @@ No install. No server. No account. No data leaves your machine. Just open it and
 Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round. Start with just Gemini (free tier) and one paid AI if you want to keep costs low.
 
 **2. Describe your project**
-Give it a name, version, and a detailed goal. The more specific your goal, the better your results from round one.
+Give it a name, version, and a detailed goal. Pick from a library of 12 templates if you want a strong starting point. The more specific your goal, the better your results from round one.
 
 **3. Start your document**
 Upload an existing file (Word, PDF, PowerPoint, plain text, or Markdown), paste text directly, or let the hive generate a first draft from your goal. If you upload or paste, WaxFrame drops you straight into refinement — no draft phase needed.
@@ -70,6 +70,20 @@ One button does everything. Each AI needs its own API key. WaxFrame sends every 
 
 ---
 
+## New to WaxFrame? Start with Quick Start
+
+The fastest way to understand how WaxFrame works is to run the **⭐ Quick Start template** — a low-stakes chocolate-chip-cookie example that converges in just a few rounds and shows you the entire flow end-to-end before you bring your real document.
+
+1. Set up at least two AI keys and pick a Builder
+2. On the Project screen, click **📋 Use Template**
+3. Click the **⭐ Quick Start** card (it's at the top, marked "Start Here")
+4. On the Starting Document screen, click **💡 Start from Scratch**
+5. Click Launch and run a few rounds
+
+You'll see how reviewers send suggestions, how the Builder applies them, what conflicts look like, and how the document evolves. Then come back, pick the template that matches your real document, and run it for real.
+
+---
+
 ## Setup — Configure Your Hive
 
 ![Setup Step 1 — Worker Bees and Builder](screenshots/screenshot_setup1_dark.png)
@@ -88,13 +102,33 @@ You can also add any custom AI with an OpenAI-compatible API endpoint.
 
 Give your project a name, version number, and a detailed goal. The goal tells every AI what the document is, what it's trying to achieve, and what direction to take. The first 300 characters are sent as active context every round — make them count.
 
+### 📋 Project Templates — pre-fill the Goal fields
+
+The **📋 Use Template** button at the top of the Project section opens a gallery of 12 templates organised into 5 categories. Click any card to populate all six Project Goal fields with proven starting content for that document type.
+
+| Category | Templates |
+|---|---|
+| **Quick Start** | ⭐ Quick Start (chocolate chip cookies — recommended for new users) |
+| **Career & Hiring** | Cover Letter · Job Description · Résumé · Thank-You Letter |
+| **Business & Sales** | Business Proposal · Email & Outreach · Executive Summary · RFP Response |
+| **Content & Marketing** | Blog Post / Article · Presentation Outline |
+| **Personal & Everyday** | Recipe |
+
+**How template apply works.** Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. Project name, version, length constraint, Reference Material, and Starting Document are never touched — only the six Goal fields.
+
+**Template Hint banner.** Most templates contain `[bracketed]` placeholders the user must fill in — for example `[company name]` or `[job title]`. After applying a template with placeholders, an amber-bordered banner appears above the Project Name with a per-field bulleted list telling you exactly which form field to look at and what to fix there. Templates that ship clean (Quick Start, Executive Summary) skip the banner entirely.
+
+> Templates are starting points — every field can still be edited after the template populates. Treat the populated content as a strong first draft, then tailor it to your specific situation.
+
+### Choose how to start your document
+
 Then choose how to start:
 
 | Option | When to use it |
 |---|---|
-| **Upload a file** | You have an existing document — Word, PDF, PowerPoint, plain text, or Markdown |
-| **Paste text** | You have content elsewhere and want to copy it in directly |
-| **Start from Scratch** | You have a goal but no document yet — the hive builds the first draft |
+| **📄 Upload File** | You have an existing document — Word, PDF, PowerPoint, plain text, or Markdown |
+| **📋 Paste Text** | You have content elsewhere and want to copy it in directly |
+| **💡 Start from Scratch** | You have a goal but no document yet — the hive builds the first draft |
 
 > **Heads up on PDFs:** PDF extraction works best with standard digitally-created documents. Heavily designed files, scanned documents, or image-based PDFs may extract poorly. If the text looks garbled, use the **Project** button in the topbar to go back and try Paste Text instead.
 
@@ -175,11 +209,13 @@ WaxFrame runs entirely in your browser — no install, no server, no account req
 2. Open `index.html` in your browser
 3. That's it — no build step, no dependencies
 
+For a step-by-step local setup walkthrough, see `WaxFrame-Getting-Started.pdf` included in the ZIP.
+
 ---
 
 ## User Guide
 
-For detailed usage instructions — writing effective goals, handling conflicts, course correcting mid-session, and knowing when you're done — see the **[Working with the Hive](https://weirdave.github.io/WaxFrame-Professional/working-with-the-hive.html)** guide.
+For detailed usage instructions — writing effective goals, applying templates, handling conflicts, course correcting mid-session, and knowing when you're done — see the **[User Manual](https://weirdave.github.io/WaxFrame-Professional/waxframe-user-manual.html)** and **[Document Playbooks](https://weirdave.github.io/WaxFrame-Professional/document-playbooks.html)**.
 
 ---
 

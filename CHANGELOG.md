@@ -1,6 +1,22 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.7
+**Build:** `20260503-023` · **Released:** May 3, 2026
+
+Onboarding copy clarification on the Starting Document screen, a styling-consistency pass on the new-user paragraphs across both Project and Starting Document screens, and a full documentation pass covering the User Manual, Document Playbooks, repo README, and the README/Getting Started PDFs that ship in the ZIP.
+
+- **Starting Document screen opening copy rewritten** to be button-explicit. The old paragraph (*"Choose how you want to start. Upload an existing file, paste text, or let the AIs create a first draft from scratch using your project goal."*) talked abstractly about "ways to start" and didn't tell the user that the three buttons immediately below the paragraph are the choice mechanism. New copy names each button by its visible label and describes what each one does, so a new user can scan the paragraph and immediately know which button to click.
+- **Quick Start callout added** as a second paragraph on the Starting Document screen, styled with the same amber-bordered new-user banner as the Project screen: *"Running Quick Start? Click 💡 Start from Scratch — there's no recipe to upload yet, the hive will create one from your project goal."* Solves the friction David hit running through the Quick Start flow as a new user where the upload tab was the default and the "Start from Scratch" button wasn't obvious.
+- **`hp-section-sub--newuser` class added** as a sibling to the existing `template-gallery-intro--newuser` class. Same visual treatment: amber-dim background, amber left-border, normal text color. Both classes now share the same selector block in `style.css` so future changes propagate consistently.
+- **Project screen "New to WaxFrame?" paragraph upgraded** to use the new `hp-section-sub--newuser` class, bringing it to visual parity with both the gallery modal new-user banner and the new Starting Document Quick Start callout. All three new-user touchpoints now look identical.
+- **`waxframe-user-manual.html`** — Step 3 (Define Your Project) gets a new `📋 Project Templates` content block immediately after "What you are looking at", documenting the 12 templates, the 5 categories, the apply behavior (which fields are replaced and which are preserved), and the Template Hint banner. The intro paragraph for Step 3 now points first-time users at Quick Start. Step 5 (Starting Document) gets a "Running Quick Start?" callout in its What you are looking at block. Zero new CSS classes — all content uses the existing `wh-block`, `wh-block-title`, `wh-table`, `wf-tip` vocabulary.
+- **`document-playbooks.html`** — top of page gets a "Tip" paragraph noting that every playbook is also available as a one-click template inside the app, with framing on when to use each (read this page for the reasoning behind a playbook; use the in-app templates when you want to apply one fast). Zero new CSS classes.
+- **`README.md`** in repo root — version badges bumped from v3.21.11/build-008 to v3.32.7/build-023, new "New to WaxFrame? Start with Quick Start" section added before Setup, new "📋 Project Templates — pre-fill the Goal fields" subsection added inside Setup — Your Project covering all 12 templates and the hint banner, How It Works step 2 updated to mention templates, Getting Started section adds a pointer to the included `WaxFrame-Getting-Started.pdf`, User Guide section now references both User Manual and Document Playbooks.
+- **`WaxFrame-README.docx`** — new Word document deliverable styled to match the existing PDF design language (hexagon logo cover, mascot bee, "Many minds. / One refined result." tagline, amber-bordered Overview callout, header/footer chrome, gray Tip boxes with amber left-border). Adds a "Project Templates" section between Two Modes and Supported AIs covering the 12 templates, apply behavior, and hint banner. Convert to PDF via Word/LibreOffice export.
+- **`WaxFrame-Getting-Started.docx`** — new Word document deliverable, same styling. Step 5 retitled "Start Your First Project — Use a Template" with explicit Quick Start recommendation as the first move for new users. Quick Start callout added to "Choose how to start your document" section. Convert to PDF via Word/LibreOffice export.
+
+---
 ## v3.32.6
 **Build:** `20260503-021` · **Released:** May 3, 2026
 

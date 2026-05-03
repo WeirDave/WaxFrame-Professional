@@ -10300,12 +10300,14 @@ kbd {
 .template-gallery-intro + .template-gallery-intro {
   margin-top: 8px;
 }
-.template-gallery-intro--newuser {
+.template-gallery-intro--newuser,
+.hp-section-sub--newuser {
   color: var(--text);
   padding: 8px 12px;
   background: var(--accent-dim);
   border-left: 3px solid var(--accent, #f4b400);
   border-radius: var(--radius-sm);
+  margin-top: 8px;
 }
 .template-gallery-close {
   position: absolute;
