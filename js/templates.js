@@ -45,8 +45,8 @@ const WAXFRAME_TEMPLATES = [
     "goalDocType": "Recipe",
     "goalAudience": "Myself and friends that enjoy chocolate chip cookies that are easy to make",
     "goalOutcome": "Create a recipe that is simple and easy but makes great cookies",
-    "goalScope": "Leave blank",
-    "goalTone": "Leave blank",
+    "goalScope": "",
+    "goalTone": "",
     "goalNotes": "No extra ingredients like nuts",
     "suggestedNotes": "",
     "hint": []
