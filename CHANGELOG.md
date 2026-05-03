@@ -1,6 +1,21 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.3
+**Build:** `20260503-018` · **Released:** May 3, 2026
+
+Single-feature follow-up to v3.32.2 — refines the Template Hint banner from a single sentence into a per-field bulleted list, so users know exactly which form field to scroll to and what to fix there.
+
+- **Hint schema in `js/templates.js` changed from string → array of `{field, text}` objects.** Each affected form field gets its own entry, and the banner renders a bulleted list with the form's exact field label (e.g., `Tone & voice:`) prefixed in amber. Empty array = no banner shown (Quick Start and Executive Summary unchanged).
+- **All 10 hints rewritten** as one bullet per affected field. Examples:
+   - **Cover Letter** — `Target audience:` Replace `[company name]` and `[job title]` · `Tone & voice:` Pick ONE adjective from the brackets and remove the rest
+   - **Job Description** — three bullets: Target audience (job title), Scope & constraints (salary OMIT), Tone & voice (pick ONE)
+   - **Business Proposal** — two bullets: Target audience (Client name + company name), Additional instructions (keep `[PRICE]` and `[TIMELINE]` as-is — intentional AI prompts)
+- **Banner CSS** — new `.template-hint-list`, `.template-hint-item`, `.template-hint-field` rules render the list properly inside the existing amber banner. Field labels render in amber-accent for visual matching against the form below.
+- **Header docstring updated** in `templates.js` to document the new array structure with format example.
+- **Toast unchanged** — still mentions "see the amber banner above for placeholders to fill in" when any hint exists.
+
+---
 ## v3.32.2
 **Build:** `20260503-017` · **Released:** May 3, 2026
 

@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-017';         // build stamp — update each session
+const BUILD       = '20260503-018';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3033,25 +3033,37 @@ async function applyTemplate(templateId) {
   // overwrite confirm could fire.)
 
   // v3.32.1 — Render the hint banner above Project Name when the template
-  // has placeholders that need filling in. Templates without a hint
+  // has placeholders that need filling in. Templates without hints
   // (Quick Start, Executive Summary) silently skip the banner — nothing
   // to fix on those, no banner needed.
-  const hint = (tpl.hint || '').trim();
+  // v3.32.3 — hint is now an array of {field, text} entries, one per
+  // affected form field. Banner renders a bulleted list so the user
+  // knows exactly which form field to scroll to and what to fix there.
+  const hint = Array.isArray(tpl.hint) ? tpl.hint : [];
   const banner = document.getElementById('templateHintBanner');
   if (banner) {
-    if (hint) {
+    if (hint.length > 0) {
       const titleEl = document.getElementById('templateHintBannerTitle');
       const textEl  = document.getElementById('templateHintBannerText');
       if (titleEl) titleEl.textContent = `${tpl.icon || '📋'} ${tpl.name} template applied — placeholders to fill in`;
-      if (textEl)  textEl.textContent  = hint;
+      if (textEl) {
+        // Render each entry as a list item: "Field: text". esc() escapes
+        // any user-facing HTML in field/text strings even though template
+        // content is hand-written and trusted — defense-in-depth in case
+        // a future template contains unintended HTML special chars.
+        const items = hint.map(h =>
+          `<li class="template-hint-item"><span class="template-hint-field">${esc(h.field || '')}:</span> ${esc(h.text || '')}</li>`
+        ).join('');
+        textEl.innerHTML = `<ul class="template-hint-list">${items}</ul>`;
+      }
       banner.style.display = '';
     } else {
       banner.style.display = 'none';
     }
   }
 
-  const toastTail = hint ? ' — see the amber banner above for placeholders to fill in' : '';
-  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied${toastTail}`, hint ? 5500 : 4000);
+  const toastTail = (hint.length > 0) ? ' — see the amber banner above for placeholders to fill in' : '';
+  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied${toastTail}`, hint.length > 0 ? 5500 : 4000);
 }
 
 // v3.32.1 — Dismiss handler for the template hint banner. Hides the
