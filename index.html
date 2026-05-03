@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260501-005
+     Build: 20260502-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260501-005">
+  <meta name="waxframe-build" content="20260502-008">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.30.3">
+  <link rel="stylesheet" href="style.css?v=3.31.0">
 </head>
 <body>
 
@@ -89,16 +89,8 @@
           </div>
         </div>
         <div class="hp-section-body">
-          <div class="bee-controls-row-setup">
-            <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
-            <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
-            <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
-            <button class="btn btn-lg" onclick="hideAllDefaultAIs()">Hide All Defaults</button>
-            <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>
-            <button class="btn btn-lg" onclick="resetBeesToDefaults()">Reset to Defaults</button>
-            <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
-            <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed/imported AI to recommend its best model — runs sequentially">Recommend Models for All</button>
-          </div>
+          <div class="hive-mode-toggle-wrap" id="hiveModeToggleWrap"></div>
+          <div class="bee-controls-row-setup" id="beeControlsRow"></div>
           <div class="hive-count-chip" id="hiveCountChip"></div>
           <div class="ai-setup-grid" id="aiSetupGrid"></div>
         </div>
@@ -1904,8 +1896,8 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.30.3"></script>
-<script src="js/app.js?v=3.30.3"></script>
+<script src="js/version.js?v=3.31.0"></script>
+<script src="js/app.js?v=3.31.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

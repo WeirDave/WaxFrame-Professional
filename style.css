@@ -669,20 +669,15 @@ html, body {
   background: var(--surface);
   transition: all 0.12s;
 }
-.ai-setup-row:hover {
-  border-color: var(--accent);
-  background: var(--accent-dim);
-}
-.ai-setup-row.checked {
-  border-color: rgba(0,179,0,0.4);
-  background: rgba(0,179,0,0.06);
-}
-.ai-setup-row-top {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
+/* v3.31.0 — legacy .ai-setup-row:hover and .ai-setup-row.checked rules
+   removed. Hover and active state are now handled by mode-aware
+   selectors (.is-collapsed:hover, .is-expanded) further down in this
+   stylesheet under the v3.31.0 — Worker Bee inventory screen redesign
+   block. The .checked variant was tied to the legacy active-AI checkbox
+   that lived on this screen pre-v3.31; that selection has moved to the
+   work screen and (in v3.32) to a dedicated active-group screen. */
+/* .ai-setup-row-top removed in v3.31.0 — replaced by .ai-setup-row-summary
+   when the row template moved to a collapsed-by-default model. */
 .ai-setup-icon {
   width: 24px;
   height: 24px;
@@ -729,23 +724,9 @@ html, body {
   opacity: 0.35;
   cursor: not-allowed;
 }
-.ai-info-btn {
-  background: transparent;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-  width: 22px;
-  height: 22px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.12s;
-  text-decoration: none;
-  flex-shrink: 0;
-}
-.ai-info-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* .ai-info-btn rules removed in v3.31.0 — the small ↗ circle button
+   on every AI row was replaced by the .ai-getkey-link inside the
+   expanded panel (only renders when the AI has no key yet). */
 
 /* ── Builder Pick ── */
 .builder-pick-grid {
@@ -3631,42 +3612,15 @@ html, body {
      plus the gap take ~110px on the left. */
   padding-left: 110px;
 }
-.ai-remove-btn {
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--muted);
-  font-size: 13px;
-  padding: 5px 7px;
-  transition: all 0.12s;
-  flex-shrink: 0;
-}
-.ai-remove-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-dim); }
+/* .ai-remove-btn rules removed in v3.30.4 — the trash button it
+   styled was replaced by a persistent checkbox (.ai-select-check)
+   plus the bulk-select toolbar above the list. */
 
-.ai-hide-btn {
-  background: transparent;
-  border: 1px solid var(--border2);
-  border-radius: var(--radius-sm);
-  color: var(--muted);
-  font-size: 13px;
-  padding: 5px 9px;
-  transition: all 0.12s;
-  flex-shrink: 0;
-}
-.ai-hide-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+/* .ai-hide-btn rules removed in v3.31.0 — defaults are no longer
+   hidable; they're always present in the inventory. */
 
-.ai-hidden-banner {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: var(--accent-dim);
-  border: 1px solid rgba(245,158,11,0.3);
-  border-radius: var(--radius-md);
-  padding: 10px 14px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  color: var(--text-dim);
-}
+/* .ai-hidden-banner removed in v3.31.0 — no hidden-defaults state
+   exists anymore so the banner has nothing to display. */
 
 /* ── Hive count chip (Worker Bees setup screen) ── */
 /* This is a passive status display, NOT a button. Styled as a plain info
@@ -3695,11 +3649,8 @@ html, body {
   color: var(--text-faint);
   margin: 0 2px;
 }
-.ai-hidden-restore-btn {
-  margin-left: auto;
-  font-size: 12px;
-  padding: 4px 12px;
-}
+/* .ai-hidden-restore-btn removed in v3.31.0 — paired with the
+   removed .ai-hidden-banner; nothing to restore. */
 
 /* ── KBD TAG ── */
 kbd {
@@ -9541,34 +9492,9 @@ kbd {
   display: block;
 }
 
-/* ── Reset-to-original model button ── */
-.ai-reset-model-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-left: 8px;
-  padding: 4px 10px;
-  font-size: 12px;
-  font-weight: 500;
-  background: transparent;
-  color: var(--accent, #f4b400);
-  border: 1px solid var(--accent, #f4b400);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-  white-space: nowrap;
-  max-width: 280px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.ai-reset-model-btn:hover {
-  background: var(--accent, #f4b400);
-  color: var(--bg);
-}
-.ai-reset-model-btn:focus-visible {
-  outline: 2px solid var(--accent, #f4b400);
-  outline-offset: 2px;
-}
+/* ── Reset-to-original model button rules removed in v3.31.0
+       (the .ai-reset-model-btn class and its UI button were deleted
+       when Best/Fast/Budget buttons replaced the reset path) ── */
 
 /* ── Imported Groups panel rules removed in v3.30.3 ── */
 
@@ -9730,10 +9656,16 @@ kbd {
 }
 
 /* =========================================================
- * v3.30.0 — Multi-select bulk-remove toolbar (worker bee screen)
+ * v3.30.4 — Bulk-select toolbar (worker bee screen)
+ * ─────────────────────────────────────────────────────────
+ * Replaces the v3.30.0 mode-toggle multi-select toolbar.
+ * Persistent checkbox model — toolbar always visible when
+ * any custom AI exists; counter and Remove button are live.
+ * Selection state is first-class (positions for future
+ * Profiles work — Phase 2).
  * ========================================================= */
 
-.multi-select-toolbar {
+.bulk-select-toolbar {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -9745,67 +9677,43 @@ kbd {
   flex-wrap: wrap;
 }
 
-.multi-select-toolbar--collapsed {
-  /* Resting state — just the toggle button + a one-line hint */
-  background: var(--surface2);
-  border-style: dashed;
+/* Empty placeholder when there are no customs — keeps the
+   layout stable so adding the first custom doesn't cause a
+   visible jump above the AI list. */
+.bulk-select-toolbar--empty {
+  display: none;
 }
 
-.multi-select-toolbar--active {
-  /* Active state — accent border to make the destructive context obvious */
-  background: var(--accent-dim);
-  border-color: var(--accent, #f4b400);
-  border-style: solid;
-}
-
-.multi-select-toggle-btn {
-  font-size: 13px;
-  padding: 6px 14px;
-  white-space: nowrap;
-}
-
-.multi-select-hint {
-  font-size: 12px;
-  color: var(--text-dim);
-  flex: 1;
-  min-width: 0;
-}
-
-.multi-select-status {
+.bulk-select-status {
   font-size: 13px;
   color: var(--text);
   flex: 1;
   min-width: 0;
 }
-.multi-select-status strong {
+.bulk-select-status strong {
   color: var(--accent, #f4b400);
 }
 
-.multi-select-actions {
+.bulk-select-actions {
   display: flex;
   align-items: center;
   gap: 6px;
   flex-wrap: wrap;
 }
 
-.multi-select-remove-btn {
+.bulk-select-remove-btn {
   font-size: 13px;
   padding: 6px 14px;
   white-space: nowrap;
 }
-.multi-select-remove-btn:disabled {
+.bulk-select-remove-btn:disabled {
   opacity: 0.45;
   cursor: not-allowed;
 }
 
-.multi-select-cancel-btn {
-  font-size: 12px;
-  padding: 5px 10px;
-}
-
-/* Per-row checkbox replaces the trash button on custom AIs while
-   multi-select mode is active. Sized to roughly match the trash button
-   footprint so the row layout doesn't shift on toggle. */
+/* Per-row checkbox sits where the trash button used to live.
+   Sized to match the prior trash footprint so existing row
+   alignment is preserved end-to-end. */
 .ai-select-check {
   width: 18px;
   height: 18px;
@@ -10112,3 +10020,211 @@ kbd {
   line-height: 1.5;
 }
 .cleanup-footer p { margin: 0; }
+
+/* =========================================================
+ * v3.31.0 — Worker Bee inventory screen redesign
+ * ─────────────────────────────────────────────────────────
+ * Two-mode setup (Internet vs Server), collapsed-by-default
+ * rows, in-row Best/Fast/Budget category buttons. The screen
+ * is now an inventory: "what AIs do I have, is each set up?"
+ * Active-group selection moves to a dedicated screen in v3.32.
+ * ========================================================= */
+
+/* ── Mode toggle (segmented control) ── */
+.hive-mode-toggle-wrap {
+  margin: 0 0 12px;
+}
+.hive-mode-toggle {
+  display: inline-flex;
+  gap: 0;
+  padding: 4px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+.hive-mode-btn {
+  padding: 8px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--font);
+  background: transparent;
+  color: var(--text-dim);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.hive-mode-btn:hover:not(.is-active) {
+  color: var(--text);
+  background: var(--surface3);
+}
+.hive-mode-btn.is-active {
+  background: var(--accent, #f4b400);
+  color: var(--bg);
+  font-weight: 600;
+  cursor: default;
+}
+
+/* ── Toolbar layout for v3.31 (lighter, with expand-all controls
+       on the right side) ── */
+.bee-controls-spacer {
+  flex: 1;
+  min-width: 8px;
+}
+.bee-controls-expand-btn {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+/* ── Collapsed-by-default row ── */
+/* Override the v3.30.x flex-column layout — the row is now a stack
+   of [summary | optional expanded panel] instead of [top | key | model]. */
+.ai-setup-row {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+.ai-setup-row.is-collapsed:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.ai-setup-row.is-expanded {
+  border-color: var(--accent);
+  border-style: solid;
+  background: var(--surface);
+}
+/* Greyed-out state for no-key rows. Applies on the summary line only;
+   when the row is expanded, the expanded panel uses normal text color
+   so the user can read the key field, model dropdown, etc. */
+.ai-setup-row.no-key.is-collapsed .ai-setup-name {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.ai-setup-row.no-key.is-collapsed .ai-setup-icon {
+  opacity: 0.55;
+}
+.ai-setup-row.no-key.is-collapsed:hover .ai-setup-name {
+  color: var(--text);
+}
+.ai-setup-row.no-key.is-collapsed:hover .ai-setup-icon {
+  opacity: 1;
+}
+
+/* Summary line — clickable to expand/collapse. Whole row is the
+   click target except the action button (custom checkbox). */
+.ai-setup-row-summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  min-width: 0;
+  cursor: pointer;
+  user-select: none;
+}
+.ai-setup-row-summary:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: -2px;
+}
+.ai-setup-chevron {
+  width: 14px;
+  font-size: 11px;
+  color: var(--text-dim);
+  flex-shrink: 0;
+  transition: color 0.12s;
+}
+.ai-setup-row.is-expanded .ai-setup-chevron {
+  color: var(--accent, #f4b400);
+}
+.ai-setup-summary-spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Expanded panel — appears below summary when row is open */
+.ai-setup-expanded {
+  padding: 4px 14px 12px;
+  border-top: 1px dashed var(--border2);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* "Don't have a key? Get one from <provider>" link inside expanded
+   panel. v3.31.0 — replaces the small ↗ icon next to the AI name
+   that was visible on every row in v3.30.x. Only renders when
+   hasKey === false AND the AI has a known apiConsole URL. */
+.ai-getkey-link-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: var(--accent-dim);
+  border: 1px dashed var(--accent, #f4b400);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.ai-getkey-prompt {
+  color: var(--text-dim);
+}
+.ai-getkey-link {
+  color: var(--accent, #f4b400);
+  text-decoration: none;
+  font-weight: 600;
+}
+.ai-getkey-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Best / Fast / Budget category buttons ── */
+.ai-bfb-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-left: 110px;            /* aligns under the model dropdown */
+  flex-wrap: wrap;
+}
+.ai-bfb-label {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.ai-bfb-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font);
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+}
+.ai-bfb-btn:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--accent-dim);
+}
+.ai-bfb-btn.is-active {
+  border-color: var(--accent, #f4b400);
+  background: var(--accent, #f4b400);
+  color: var(--bg);
+  font-weight: 600;
+  cursor: default;
+}
+.ai-bfb-btn:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+
+/* Mobile / small-screen handling — the WaxFrame app is desktop-first
+   with a 1024px min-width overlay, but ensure the row still degrades
+   gracefully if a user shrinks the window. */
+@media (max-width: 720px) {
+  .ai-bfb-wrap {
+    padding-left: 0;
+  }
+}

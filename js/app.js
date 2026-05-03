@@ -1016,25 +1016,22 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Recommend a Model</button>`
     : '';
 
-  // v3.30.2 — Reset-to-original button. Visible only when the live model
-  // diverges from the captured _originalModel baseline. Defaults snapshot at
-  // module-eval time; customs snapshot at add time; pre-v3.30.2 customs
-  // grandfathered via ensureOriginalModelBaseline() one-shot migration.
-  const cfg = API_CONFIGS[provider];
-  const orig = cfg?._originalModel;
-  const showReset = orig && currentModel && orig !== currentModel;
-  const resetBtn = showReset
-    ? `<button class="ai-reset-model-btn" id="resetmodelbtn-${aiId}" onclick="resetModelToOriginal('${aiId}')" title="Reset to your originally-picked model: ${esc(orig)}">↺ Reset to ${esc(orig)}</button>`
-    : '';
+  // v3.30.2 reset-to-original button removed in v3.31.0. The Best/Fast/Budget
+  // buttons in the expanded panel (buildBestFastBudgetButtonsHTML) now
+  // serve the "snap back to a sensible model" use case — and they snap to
+  // a useful target (the recommendation) instead of the arbitrary
+  // module-load snapshot. _originalModel field is still captured at AI
+  // add time but currently unused; kept as forward-compatibility scaffold
+  // in case a future "audit trail" feature wants it.
 
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
     <select class="model-select" id="modelsel-${aiId}"
-      onchange="saveModelForAI('${aiId}', this.value)">
+      onchange="saveModelForAI('${aiId}', this.value)"
+      onclick="event.stopPropagation();">
       ${options}
     </select>
     ${recheckBtn}
-    ${resetBtn}
     ${noteHtml}
   </div>`;
 }
@@ -1071,27 +1068,15 @@ function saveModelForAI(aiId, modelId) {
 // Intentionally a hard reset with no confirmation modal — the action is
 // trivial to undo (pick a different model again) and the dialog noise would
 // outweigh the safety benefit.
-function resetModelToOriginal(aiId) {
-  const ai = aiList.find(a => a.id === aiId);
-  if (!ai) return;
-  const cfg = API_CONFIGS[ai.provider];
-  if (!cfg || !cfg._originalModel) {
-    toast('⚠️ No original model baseline captured for this AI');
-    return;
-  }
-  if (cfg.model === cfg._originalModel) {
-    toast(`✓ ${ai.name} is already at the original model`, 2000);
-    return;
-  }
-  const orig = cfg._originalModel;
-  cfg.model = orig;
-  if (ai.provider === 'gemini' && cfg.endpointFn) {
-    cfg.endpoint = cfg.endpointFn(orig);
-  }
-  saveSettings();
-  renderAISetupGrid();
-  toast(`↺ ${ai.name} reset to ${orig}`, 2500);
-}
+// resetModelToOriginal() removed in v3.31.0 — its UI button (the
+// "↺ Reset to {original}" button on the model selector row) was deleted
+// along with this function. The Best/Fast/Budget buttons in the expanded
+// panel (buildBestFastBudgetButtonsHTML) cover the "snap back to a
+// sensible model" use case and snap to a useful target (the cached
+// recommendation) instead of the arbitrary module-load snapshot.
+// _originalModel field is still captured at AI add time but is no
+// longer surfaced in any UI; kept as forward-compatibility scaffold
+// for any future audit-trail feature.
 
 // v3.30.2 — One-shot migration that grandfathers in pre-v3.30.2 custom AIs
 // by snapshotting their CURRENT model as the _originalModel baseline. Defaults
@@ -1129,12 +1114,13 @@ function ensureOriginalModelBaseline() {
 }
 
 // v3.26.5: snapshot the structural config of each default provider at module
-// load time. Used by resetBeesToDefaults / restoreHiddenDefaults / saveKeyForAI
-// to RECREATE the API_CONFIGS entry for a default provider that was previously
-// fully removed. Without this snapshot, removeAI's `delete API_CONFIGS[id]`
-// permanently destroyed the endpoint/headersFn/bodyFn until page reload, and
-// any subsequent restore left aiList with a default entry pointing at an
-// undefined config — saveKeyForAI silently no-op'd because `if (cfg)` failed.
+// load time. Currently the only live consumer is saveKeyForAI's self-heal
+// path (which restores a missing API_CONFIGS entry for a default provider).
+// Earlier versions also fed resetBeesToDefaults / restoreHiddenDefaults
+// (both removed in v3.31.0) and the recovery from the legacy removeAI
+// function (removed in v3.30.4). The snapshot is still kept because the
+// self-heal path remains relevant for users upgrading from pre-v3.26.5
+// hives where structural configs may have been destroyed.
 //
 // We deep-clone so any future mutations to API_CONFIGS at runtime (model
 // swaps, recommend updates, etc.) don't pollute the canonical defaults.
@@ -1156,7 +1142,16 @@ const DEFAULT_API_CONFIGS = (() => {
 let aiList           = JSON.parse(JSON.stringify(DEFAULT_AIS)); // full list, active = checked ones
 let activeAIs        = [];   // AIs selected in setup
 let builder          = null; // id of builder AI
-let hiddenDefaultIds = [];   // default AIs hidden from setup (persisted)
+// v3.31.0 — hive mode dictates which buttons appear in the Worker Bee
+// toolbar and which AIs are visible. 'internet' = direct-API providers,
+// 'server' = AIs imported from a model server (Alfredo, OpenWebUI,
+// LM Studio, etc.). Auto-detected on first load (any custom AI with
+// _modelsEndpoint → server, otherwise internet) then sticky until the
+// user explicitly flips. Persisted on the hive object.
+let _hiveMode = 'internet';
+// hiddenDefaultIds removed in v3.31.0 — defaults are always visible now.
+// Legacy hiddenDefaultIds in saved hives is migrated to empty on first
+// v3.31 load (see loadSettings).
 let round     = 1;
 let phase     = 'draft';
 let history   = [];
@@ -1223,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260501-005';         // build stamp — update each session
+const BUILD       = '20260502-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2630,7 +2625,7 @@ function saveHive() {
   const hive = {
     activeAIIds:     activeAIs.map(a => a.id),
     knownDefaultIds: DEFAULT_AIS.map(d => d.id),
-    hiddenDefaultIds,
+    hiveMode:        _hiveMode,
     builder,
     keys,
     models,
@@ -2933,9 +2928,14 @@ function loadSettings() {
     const h = JSON.parse(hiveData);
 
     aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
-    hiddenDefaultIds = h.hiddenDefaultIds || [];
-    // Remove hidden defaults from aiList
-    aiList = aiList.filter(a => !hiddenDefaultIds.includes(a.id));
+    // v3.31.0 — hiddenDefaultIds removed. Migrate any existing hidden
+    // defaults back into the visible aiList (one-time, silent). Legacy
+    // hives with hiddenDefaultIds now load with the full default set.
+    // No banner, no toast — by v3.31 the concept of "hidden defaults"
+    // simply doesn't exist anymore; pre-v3.31 users just see all 6
+    // defaults the next time they open the Worker Bees screen.
+    // (No-op today since aiList is already the full DEFAULT_AIS clone;
+    // kept for clarity / documentation of the migration intent.)
     if (h.customAIs) {
       h.customAIs.forEach(ai => {
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
@@ -2980,6 +2980,20 @@ function loadSettings() {
       activeAIs = [...aiList];
     }
     builder = h.builder || null;
+
+    // v3.31.0 — Hive mode load + first-run auto-detect.
+    // If the hive was saved by v3.31+, h.hiveMode is set and we honor it.
+    // Pre-v3.31 hives don't have it; auto-detect: any custom AI with
+    // _modelsEndpoint → server, otherwise internet. Then writes back so
+    // subsequent loads skip detection.
+    if (h.hiveMode === 'internet' || h.hiveMode === 'server') {
+      _hiveMode = h.hiveMode;
+    } else {
+      const hasServerImport = Object.values(API_CONFIGS).some(c => c && c._modelsEndpoint);
+      _hiveMode = hasServerImport ? 'server' : 'internet';
+      // Persist immediately so the next load doesn't re-detect.
+      try { saveHive(); } catch(e) { /* deferred until later save */ }
+    }
 
     // ── Load project (name/version/goal/docTab) ──
     if (projRaw) {
@@ -3188,78 +3202,290 @@ async function loadSession() {
 
 
 // ── SCREEN 2: API SETUP ──
+// v3.31.0 — Worker Bees screen is now an inventory screen only:
+// "what AIs do I have available, and is each one set up?"
+// Mode toggle at top splits Internet vs Server. Mode-specific toolbar.
+// All rows collapsed by default; click to expand. Greyed name = no key.
+// Custom rows have a delete-checkbox (bulk-remove path); defaults have
+// no action button on the summary line (defaults can't be removed,
+// only their key cleared inside the expanded panel).
 function renderAISetupGrid() {
   const grid = document.getElementById('aiSetupGrid');
   if (!grid) return;
 
-  // Don't auto-fill activeAIs here — let toggleAllBees/init handle that
+  // Render the mode toggle and mode-aware toolbar into their containers.
+  // These are top-of-screen siblings of #aiSetupGrid — kept in sync with
+  // the AI list render so a mode flip rebuilds everything.
+  renderHiveModeToggle();
+  renderWorkerBeeToolbar();
 
-  // Hidden defaults banner
-  const hiddenCount = hiddenDefaultIds.length;
-  const banner = hiddenCount > 0
-    ? `<div class="ai-hidden-banner">
-        👁 ${hiddenCount} default AI${hiddenCount > 1 ? 's are' : ' is'} hidden from this list.
-        <button class="btn ai-hidden-restore-btn" onclick="restoreHiddenDefaults()">↺ Restore Hidden</button>
-      </div>`
-    : '';
+  // v3.30.4 — Persistent checkbox bulk-select toolbar. Always rendered
+  // when any custom AI exists (regardless of mode). v3.31 keeps this on
+  // the inventory screen as the only path to bulk-remove customs;
+  // active-group selection moves to a dedicated screen in v3.32.
+  const bulkSelectHTML = buildBulkSelectToolbarHTML();
 
-  // v3.30.3 — Multi-select toolbar is now the single bulk-remove path for
-  // custom AIs. The earlier Imported Groups panel duplicated information
-  // already visible in the AI list below and was removed; multi-select +
-  // its "All" button cover every former Imported-Groups use case.
-  const multiSelectHTML = buildMultiSelectToolbarHTML();
-
-  grid.innerHTML = multiSelectHTML + banner + aiList.map(ai => {
-    const isActive = !!activeAIs.find(a => a.id === ai.id);
-    const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
+  // Mode filter — Internet shows defaults + direct-API customs;
+  // Server shows server-imported customs only. Direct-API customs
+  // (no _modelsEndpoint) and defaults are hidden in Server mode;
+  // server-imported customs are hidden in Internet mode.
+  const visible = aiList.filter(ai => {
+    const isDefault = !!DEFAULT_AIS.find(d => d.id === ai.id);
     const cfg = API_CONFIGS[ai.provider];
-    const key = cfg?._key || '';
-    const hasKey = !!key;
-    const consoleUrl = ai.apiConsole || '#';
-    const showRecheck = hasKey;
-    const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
-    // Defaults get a Hide button; custom AIs get the 🗑 remove button —
-    // unless multi-select mode is active, in which case customs swap to a
-    // checkbox. Defaults are intentionally NOT selectable in multi-select:
-    // "Remove" and "Hide" are different operations and merging them in one
-    // bulk action would be semantically confusing. Defaults keep their
-    // Hide button untouched while multi-select is on.
-    let actionBtn;
-    if (isCustom) {
-      actionBtn = _multiSelectMode
-        ? `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${_multiSelectIds.has(ai.id) ? 'checked' : ''} onchange="toggleMultiSelectId('${ai.id}', this.checked)" title="Select ${esc(ai.name)} for bulk removal">`
-        : `<button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>`;
-    } else {
-      actionBtn = `<button class="ai-hide-btn" onclick="hideDefaultAI('${ai.id}')" title="Hide ${ai.name} from this list">Hide</button>`;
+    const isServerImport = !!cfg?._modelsEndpoint;
+    if (_hiveMode === 'server') {
+      return isServerImport;
     }
-    return `
-    <div class="ai-setup-row" id="airow-${ai.id}">
-      <div class="ai-setup-row-top">
-        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
-        <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
-        <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗️</a>
-        ${actionBtn}
-      </div>
-      <div class="ai-setup-key-wrap">
-        <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}"
-          title="${hasKey ? 'API key saved ✅' : 'No API key — free mode only'}">
-          ${hasKey ? '🔑' : '⬜'}
-        </div>
-        <input type="password" class="ai-setup-key" id="key-${ai.id}"
-          placeholder="Paste key — Enter to save…"
-          value="${esc(key)}"
-          ${!isActive ? 'disabled' : ''}
-          onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}">
-        <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁️</button>
-        ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
-        ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test this API key">Test</button>` : ''}
-      </div>
-      ${modelSelector}
-    </div>`;
-  }).join('');
+    return isDefault || !isServerImport;
+  });
+
+  grid.innerHTML = bulkSelectHTML + visible.map(ai => buildAISetupRowHTML(ai)).join('');
   renderBuilderPicker();
   renderHiveCountChip();
 }
+
+// v3.31.0 — Single-row template. Two visual states:
+//   collapsed (default): icon + name + (custom-only) checkbox
+//   expanded:           the above + key field, model selector, etc.
+// Greyed-name class fires when the AI has no saved key.
+function buildAISetupRowHTML(ai) {
+  const isActive  = !!activeAIs.find(a => a.id === ai.id);
+  const isCustom  = !DEFAULT_AIS.find(d => d.id === ai.id);
+  const cfg       = API_CONFIGS[ai.provider];
+  const key       = cfg?._key || '';
+  const hasKey    = !!key;
+  const isExpanded = _expandedAIIds.has(ai.id);
+
+  // Action area on summary line:
+  //   custom AI → bulk-remove checkbox
+  //   default AI → empty (defaults can't be removed; their key is cleared
+  //   inside the expanded panel)
+  let actionHTML;
+  if (isCustom) {
+    const checked = _selectedCustomIds.has(ai.id) ? 'checked' : '';
+    actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${esc(ai.name)} for bulk removal">`;
+  } else {
+    actionHTML = '';
+  }
+
+  // Expanded panel content — only built when expanded to avoid wasted DOM
+  // for large hives where most rows stay collapsed. Show-recheck logic:
+  // recommend infrastructure exists in both modes but the per-row
+  // "Recommend a Model" button is suppressed in Server mode (closed-network
+  // AIs guess based on naming heuristics rather than live web research,
+  // which is misleading).
+  let expandedHTML = '';
+  if (isExpanded) {
+    const showRecheck   = hasKey && _hiveMode !== 'server';
+    const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
+    const consoleUrl    = ai.apiConsole || '';
+    // v3.31.0 — "Get an API key" link moved inside expanded panel as
+    // labeled text. Only renders when the AI has no key yet AND a
+    // console URL is known. Server-imported AIs typically have no
+    // console URL — link suppressed.
+    const getKeyLink = (!hasKey && consoleUrl)
+      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">Don't have a key?</span> <a class="ai-getkey-link" href="${consoleUrl}" target="_blank" rel="noopener">Get one from ${esc(ai.name)} ↗</a></div>`
+      : '';
+    // Best/Fast/Budget category buttons — Internet mode only, only when
+    // a recommendation has been cached. Suppressed in Server mode.
+    const bfbButtons = (hasKey && _hiveMode === 'internet')
+      ? buildBestFastBudgetButtonsHTML(ai.id, ai.provider, cfg?.model || '')
+      : '';
+    expandedHTML = `
+      <div class="ai-setup-expanded">
+        ${getKeyLink}
+        <div class="ai-setup-key-wrap">
+          <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}"
+            title="${hasKey ? 'API key saved ✅' : 'No API key — paste one below to enable this AI'}">
+            ${hasKey ? '🔑' : '⬜'}
+          </div>
+          <input type="password" class="ai-setup-key" id="key-${ai.id}"
+            placeholder="Paste key — Enter to save…"
+            value="${esc(key)}"
+            ${!isActive ? 'disabled' : ''}
+            onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
+            onclick="event.stopPropagation();">
+          <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}'); event.stopPropagation();" title="Show/hide key">👁️</button>
+          ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}'); event.stopPropagation();" title="Remove saved API key">✕ Key</button>` : ''}
+          ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
+        </div>
+        ${modelSelector}
+        ${bfbButtons}
+      </div>`;
+  }
+
+  return `
+    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'}" id="airow-${ai.id}">
+      <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
+        <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
+        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
+        <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
+        <span class="ai-setup-summary-spacer"></span>
+        ${actionHTML}
+      </div>
+      ${expandedHTML}
+    </div>`;
+}
+
+// Per-session expand/collapse state — set of AI ids that are expanded.
+// Per-session only: clears on page reload by design (David's call —
+// power users don't need persisted expand state across reloads).
+const _expandedAIIds = new Set();
+
+function toggleAISetupRow(aiId) {
+  if (_expandedAIIds.has(aiId)) _expandedAIIds.delete(aiId);
+  else _expandedAIIds.add(aiId);
+  renderAISetupGrid();
+}
+
+function expandAllAISetupRows() {
+  aiList.forEach(ai => _expandedAIIds.add(ai.id));
+  renderAISetupGrid();
+}
+
+function collapseAllAISetupRows() {
+  if (!_expandedAIIds.size) return;
+  _expandedAIIds.clear();
+  renderAISetupGrid();
+}
+
+// ── Mode toggle UI ──
+function renderHiveModeToggle() {
+  const wrap = document.getElementById('hiveModeToggleWrap');
+  if (!wrap) return;
+  const isInternet = _hiveMode === 'internet';
+  wrap.innerHTML = `
+    <div class="hive-mode-toggle" role="radiogroup" aria-label="Hive mode">
+      <button class="hive-mode-btn ${isInternet ? 'is-active' : ''}"
+              onclick="setHiveMode('internet')"
+              role="radio"
+              aria-checked="${isInternet}"
+              title="Use direct-API providers (Anthropic, OpenAI, Google, etc.) — pay per use">
+        🌎 Internet Based AI (Default)
+      </button>
+      <button class="hive-mode-btn ${!isInternet ? 'is-active' : ''}"
+              onclick="setHiveMode('server')"
+              role="radio"
+              aria-checked="${!isInternet}"
+              title="Use AIs from a model server (Alfredo, OpenWebUI, LM Studio, etc.) — for air-gapped or self-hosted setups">
+        🖥 Server Based AI
+      </button>
+    </div>`;
+}
+
+async function setHiveMode(newMode) {
+  if (newMode !== 'internet' && newMode !== 'server') return;
+  if (newMode === _hiveMode) return;
+  // Confirmation modal — flipping mode hides the other side's AIs from
+  // the inventory view. They stay in aiList and stay keyed; the user
+  // just won't see them until they flip back.
+  const isToServer = (newMode === 'server');
+  const msg = isToServer
+    ? "Switch to Server mode? Your default AIs (Claude, GPT, Gemini, etc.) and any direct-API customs will be hidden from view but their saved API keys are kept. Switch back anytime."
+    : "Switch to Internet mode? Your imported server AIs will be hidden from view but not deleted. Switch back anytime.";
+  const ok = await wfConfirm(
+    isToServer ? 'Switch to Server mode' : 'Switch to Internet mode',
+    msg,
+    { okText: isToServer ? '🖥 Switch to Server' : '🌎 Switch to Internet' }
+  );
+  if (!ok) return;
+  _hiveMode = newMode;
+  _expandedAIIds.clear();        // collapse everything on mode flip — fresh start
+  _selectedCustomIds.clear();    // clear bulk-remove selection too
+  saveHive();
+  renderAISetupGrid();
+}
+
+// ── Mode-aware toolbar ──
+// Internet mode (5 buttons): API Key Guide, Add Custom AI, Test All Keys,
+//   Recommend Models for All, Open default AI websites
+// Server mode (3 buttons): Import from Model Server, Add Custom AI,
+//   Test All Keys
+// Both modes append the global Expand all / Collapse all controls so a
+// power user with a 40-bee hive can mass-toggle row state.
+function renderWorkerBeeToolbar() {
+  const row = document.getElementById('beeControlsRow');
+  if (!row) return;
+  const isInternet = (_hiveMode === 'internet');
+  let buttons = '';
+  if (isInternet) {
+    buttons = `
+      <a class="btn btn-lg" href="api-details.html" target="_blank"><img src="images/WaxFrame_TipButton_v1.png" alt="" class="tip-icon-img"> API Key Guide</a>
+      <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
+      <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
+      <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI to recommend its best model — runs sequentially">Recommend Models for All</button>
+      <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>`;
+  } else {
+    buttons = `
+      <button class="btn btn-lg" onclick="showImportServerModal()">📡 Import from Model Server</button>
+      <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
+      <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>`;
+  }
+  // Expand/collapse-all controls — small, sit at the right
+  const expandControls = `
+    <span class="bee-controls-spacer"></span>
+    <button class="btn btn-sm bee-controls-expand-btn" onclick="expandAllAISetupRows()" title="Expand every AI row">⊞ Expand all</button>
+    <button class="btn btn-sm bee-controls-expand-btn" onclick="collapseAllAISetupRows()" title="Collapse every AI row">⊟ Collapse all</button>`;
+  row.innerHTML = buttons + expandControls;
+}
+
+// ── Best / Fast / Budget category buttons ──
+// Internet mode only. Uses the existing recommend cache (no new fetches).
+// Reads the cached recommendation, walks labels to find which model is
+// tagged with each category, and renders a button per category. The
+// active button (matching the AI's currently-saved model) is highlighted.
+// Hidden entirely if no recommendation has been cached yet — the user
+// needs to run "Recommend a Model" first.
+function buildBestFastBudgetButtonsHTML(aiId, provider, currentModel) {
+  const cached = getCachedRecommendation(getCacheIdForAI(aiId));
+  if (!cached) return '';
+  const bestModel = cached.model || null;
+  const labels = cached.labels || {};
+  // Find the model id tagged with each category. Tags can be concatenated
+  // ("Best Overall · Fastest") so a single model can satisfy multiple
+  // categories — that's expected and fine.
+  let fastModel = null, budgetModel = null;
+  Object.keys(labels).forEach(modelId => {
+    const tag = labels[modelId]?.tag || '';
+    if (!fastModel   && tag.includes('Fastest')) fastModel   = modelId;
+    if (!budgetModel && tag.includes('Budget'))  budgetModel = modelId;
+  });
+  if (!bestModel && !fastModel && !budgetModel) return '';
+
+  const btn = (label, modelId, icon) => {
+    if (!modelId) return '';
+    const isActive = (modelId === currentModel);
+    return `<button class="ai-bfb-btn ${isActive ? 'is-active' : ''}"
+              onclick="applyCategoryRecommendation('${aiId}', '${esc(modelId)}'); event.stopPropagation();"
+              title="${esc(label)}: ${esc(modelId)}">
+              ${icon} ${label}
+            </button>`;
+  };
+  return `
+    <div class="ai-bfb-wrap">
+      <span class="ai-bfb-label">Quick switch:</span>
+      ${btn('Best',   bestModel,   '✨')}
+      ${btn('Fast',   fastModel,   '⚡')}
+      ${btn('Budget', budgetModel, '💰')}
+    </div>`;
+}
+
+// Click handler for B/F/B buttons. Pure cache application — no network
+// call. Updates the dropdown via saveModelForAI which already handles
+// Gemini endpoint sync and re-renders the model-select-note.
+function applyCategoryRecommendation(aiId, modelId) {
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg) return;
+  saveModelForAI(aiId, modelId);
+  // saveModelForAI updates the note element but doesn't re-render the
+  // row's BFB button-active state — re-render the whole row so the
+  // active highlight moves to the clicked button.
+  renderAISetupGrid();
+}
+
+
 
 // Hive count chip: shows total AIs in hive + count with saved keys. Purely
 // informational. Earlier iterations included an even-count "tie risk" warning,
@@ -3281,48 +3507,22 @@ function renderHiveCountChip() {
 }
 
 // toggleAllBees() removed — checkboxes replaced by per-session AI selection on work screen
-
-
-async function resetBeesToDefaults() {
-  if (!await wfConfirm(
-    'Reset to Defaults',
-    'Reset to the 6 default AIs? Your saved API keys will be kept. Custom AIs will be removed.'
-  )) return;
-  // Save existing keys before reset
-  const savedKeys = {};
-  Object.keys(API_CONFIGS).forEach(id => {
-    if (API_CONFIGS[id]._key) savedKeys[id] = API_CONFIGS[id]._key;
-  });
-  // Restore default list
-  aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
-  hiddenDefaultIds = [];
-  activeAIs = [...aiList];
-  builder = null;
-  // v3.26.5: restore any structural API_CONFIGS that were destroyed by a prior
-  // removeAI call. Without this, default AIs in aiList point at undefined
-  // configs and saveKeyForAI silently fails. Source: DEFAULT_API_CONFIGS
-  // snapshot taken at module load.
-  DEFAULT_AIS.forEach(d => {
-    if (!API_CONFIGS[d.provider] && DEFAULT_API_CONFIGS[d.provider]) {
-      API_CONFIGS[d.provider] = { ...DEFAULT_API_CONFIGS[d.provider] };
-    }
-  });
-  // Re-apply saved keys
-  Object.keys(savedKeys).forEach(id => {
-    if (API_CONFIGS[id]) API_CONFIGS[id]._key = savedKeys[id];
-  });
-  saveHive();
-  renderAISetupGrid();
-  toast('↺ Reset to 6 defaults — your API keys were kept');
-}
+// resetBeesToDefaults() removed in v3.31.0 — defaults are always present in
+// the inventory now (no Hide button to undo, no hidden-default state to
+// restore). Custom AIs are removed via the bulk-select toolbar. Per-AI
+// keys are cleared via the ✕ Key button inside the expanded panel. The
+// destructive "wipe everything back to a clean 6-default state" path is
+// no longer needed; the same outcome is reachable by selecting all
+// customs in the bulk-remove toolbar and clicking Remove.
 
 
 function saveKeyForAI(id, val, inputEl) {
   const ai = aiList.find(a => a.id === id);
   if (!ai) return;
   // v3.26.5: self-heal if API_CONFIGS[provider] is missing for a default AI.
-  // This shouldn't happen after the v3.26.5 removeAI fix, but defense-in-depth
-  // for any user already in a broken state from a prior version.
+  // This shouldn't happen on hives created post-v3.26.5, but defense-in-depth
+  // for any user already in a broken state from a prior version (the legacy
+  // removeAI function, deleted in v3.30.4, would destroy structural configs).
   if (!API_CONFIGS[ai.provider] && DEFAULT_API_CONFIGS[ai.provider]) {
     console.warn(`[saveKeyForAI] healing missing API_CONFIGS for ${ai.provider}`);
     API_CONFIGS[ai.provider] = { ...DEFAULT_API_CONFIGS[ai.provider] };
@@ -3351,48 +3551,24 @@ function saveKeyForAI(id, val, inputEl) {
   toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
 }
 
+// v3.31.0 — Partial re-render after a key save / clear. The original
+// implementation patched .ai-setup-key-wrap in place to avoid losing
+// focus on the key input, but in v3.31 the row may be either collapsed
+// or expanded, the row's CSS classes encode no-key state, and the row
+// summary needs its name color refreshed when key state flips. Cleanest
+// path: re-render the whole row via buildAISetupRowHTML, which respects
+// _expandedAIIds (so an open row stays open). The user is mid-flow on
+// this row — ensure it's expanded so they can see the result.
 function renderAIRow(id) {
   const ai = aiList.find(a => a.id === id);
   const rowEl = document.getElementById('airow-' + id);
   if (!ai || !rowEl) return;
-  const isActive = !!activeAIs.find(a => a.id === id);
-  const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
-  const cfg = API_CONFIGS[ai.provider];
-  const key = cfg?._key || '';
-  const hasKey = !!key;
-  const consoleUrl = ai.apiConsole || '#';
-
-  rowEl.className = 'ai-setup-row';
-  rowEl.querySelector('.ai-setup-key-wrap').innerHTML = `
-    <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}"
-      title="${hasKey ? 'API key saved ✅' : 'No API key — free mode only'}">
-      ${hasKey ? '🔑' : '⬜'}
-    </div>
-    <input type="password" class="ai-setup-key" id="key-${ai.id}"
-      placeholder="Paste key — Enter to save…"
-      value="${esc(key)}"
-      ${!isActive ? 'disabled' : ''}
-      onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}">
-    <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}')" title="Show/hide key">👁</button>
-    ${hasKey ? `<button class="ai-clear-key-btn" onclick="clearKeyForAI('${ai.id}')" title="Remove saved API key">✕ Key</button>` : ''}
-    ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}')" title="Test connection">Test</button>` : ''}
-    <a class="ai-info-btn" href="${consoleUrl}" target="_blank" title="Get API key for ${ai.name}">↗</a>
-    <button class="ai-remove-btn" onclick="removeAI('${ai.id}')" title="Remove ${ai.name} from hive">🗑</button>
-  `;
-  // Insert/update model selector after key-wrap (its own full-width row)
-  let modelSelWrap = rowEl.querySelector('.model-select-wrap');
-  if (hasKey) {
-    const showRecheck = true;
-    const modelSel = buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck);
-    if (modelSelWrap) {
-      modelSelWrap.outerHTML = modelSel;
-    } else {
-      rowEl.insertAdjacentHTML('beforeend', modelSel);
-    }
-  } else if (modelSelWrap) {
-    modelSelWrap.remove();
-  }
+  // Make sure the row stays open after the re-render — the user just
+  // interacted with its key field; collapsing it would be jarring.
+  _expandedAIIds.add(id);
+  rowEl.outerHTML = buildAISetupRowHTML(ai);
 }
+
 
 function renderBuilderPicker() {
   const grid = document.getElementById('builderPickGrid');
@@ -3840,100 +4016,22 @@ function applyNotesTemplate(template) {
   updateNotesBtnPriority();
 }
 
-async function removeAI(id) {
-  const ai = aiList.find(a => a.id === id);
-  if (!ai) return;
-  const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
-  const msg = isDefault
-    ? `Remove "${ai.name}" from your hive? You can restore defaults with ↺ Reset to Defaults.`
-    : `Remove "${ai.name}" from your hive?`;
-  if (!await wfConfirm('Remove AI', msg, { okText: 'Remove', destructive: true })) return;
-  aiList    = aiList.filter(a => a.id !== id);
-  activeAIs = activeAIs.filter(a => a.id !== id);
-  if (builder === id) builder = null;
-  // v3.26.5: only DELETE structural config for CUSTOM AIs (entirely user-defined).
-  // For DEFAULTS, keep the structural config and only clear the user's key —
-  // otherwise re-adding via Reset to Defaults leaves API_CONFIGS[provider]
-  // undefined and saveKeyForAI silently fails.
-  if (API_CONFIGS[id]) {
-    if (isDefault) {
-      delete API_CONFIGS[id]._key;
-    } else {
-      delete API_CONFIGS[id];
-    }
-  }
-  // Also clear the recommend cache so a re-add starts fresh
-  try { localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); } catch(e) { console.warn(`[recommend-default-cleanup:${ai.provider}] remove failed:`, e); }
-  // v3.30.2 — for CUSTOM AIs, also clean up the custom-specific recommend
-  // cache and models cache. Without these, removing a custom AI left orphan
-  // keys (waxframe_recommend_custom-${id} and waxframe_models_${id}) in
-  // localStorage that accumulated forever and were never reused — re-adding
-  // a custom AI generates a fresh id with a new timestamp, so the old keys
-  // could never match again. v3.30.3: bulkRemoveSelectedAIs is the only
-  // surviving bulk path and applies the same cleanup; this single-AI path
-  // mirrors it. No-op gating on !isDefault for clarity — defaults never
-  // write these keys so removeItem would be harmless either way.
-  if (!isDefault) {
-    try { localStorage.removeItem(`waxframe_recommend_custom-${id}`); } catch(e) { /* ignore */ }
-    try { localStorage.removeItem(`waxframe_models_${id}`);            } catch(e) { /* ignore */ }
-  }
-  saveHive();
-  renderAISetupGrid();
-  toast(`🗑 ${ai.name} removed`);
-}
+// removeAI() removed in v3.30.4 — its sole UI caller (the per-row trash
+// button on custom AIs) was deleted when persistent-checkbox bulk-remove
+// shipped. bulkRemoveSelectedAIs() inherits the per-AI cleanup pattern
+// (filter aiList/activeAIs, reset builder, drop API_CONFIGS, purge the
+// three localStorage keys: recommend_default-${provider},
+// recommend_custom-${id}, models_${id}). Defaults can no longer be
+// removed at all as of v3.31.0; per-AI keys are cleared via the ✕ Key
+// button inside the expanded panel.
 
-async function hideDefaultAI(id) {
-  const ai = DEFAULT_AIS.find(d => d.id === id);
-  if (!ai) return;
-  if (!await wfConfirm('Hide Default AI', `Hide "${ai.name}" from the setup list? It won't appear or run. You can restore it with ↺ Reset to Defaults.`)) return;
-  hiddenDefaultIds = [...new Set([...hiddenDefaultIds, id])];
-  aiList    = aiList.filter(a => a.id !== id);
-  activeAIs = activeAIs.filter(a => a.id !== id);
-  if (builder === id) builder = null;
-  saveHive();
-  renderAISetupGrid();
-  toast(`👁 ${ai.name} hidden — use ↺ Defaults to restore`);
-}
-
-async function hideAllDefaultAIs() {
-  const visible = DEFAULT_AIS.filter(d => !hiddenDefaultIds.includes(d.id) && aiList.find(a => a.id === d.id));
-  if (!visible.length) { toast('All default AIs are already hidden'); return; }
-  if (!await wfConfirm(
-    'Hide All Defaults',
-    `Hide all ${visible.length} default AIs? Only your custom AIs will remain. You can restore them anytime with Reset to Defaults.`
-  )) return;
-  visible.forEach(d => {
-    hiddenDefaultIds = [...new Set([...hiddenDefaultIds, d.id])];
-    aiList    = aiList.filter(a => a.id !== d.id);
-    activeAIs = activeAIs.filter(a => a.id !== d.id);
-    if (builder === d.id) builder = null;
-  });
-  saveHive();
-  renderAISetupGrid();
-  renderBuilderPicker();
-  toast('All default AIs hidden — use Reset to Defaults to restore');
-}
-
-function restoreHiddenDefaults() {
-  if (!hiddenDefaultIds.length) return;
-  hiddenDefaultIds = [];
-  // Re-add any hidden defaults that aren't already in aiList
-  DEFAULT_AIS.forEach(d => {
-    if (!aiList.find(a => a.id === d.id)) {
-      aiList.push(JSON.parse(JSON.stringify(d)));
-      activeAIs.push(aiList[aiList.length - 1]);
-    }
-    // v3.26.5: restore structural API_CONFIGS if it was previously destroyed
-    // by a removeAI call. Without this, the row renders but saveKeyForAI
-    // silently fails because cfg is undefined.
-    if (!API_CONFIGS[d.provider] && DEFAULT_API_CONFIGS[d.provider]) {
-      API_CONFIGS[d.provider] = { ...DEFAULT_API_CONFIGS[d.provider] };
-    }
-  });
-  saveHive();
-  renderAISetupGrid();
-  toast('↺ All default AIs restored');
-}
+// hideDefaultAI / hideAllDefaultAIs / restoreHiddenDefaults removed in
+// v3.31.0 — defaults are always present in the inventory now (David's
+// design call: "we don't need to hide anything just leave them they can
+// stay collapsed and grayed out"). The hiddenDefaultIds state is gone
+// from saveHive output and silently ignored on legacy load. If a user
+// upgrading from pre-v3.31 had hidden some defaults, their next load
+// shows the full default set again — by design, no migration prompt.
 
 // Open the API key / sign-up console for every default AI in new tabs.
 // (v3.21.25) Opens consoles for all six DEFAULT_AIS regardless of hidden status —
@@ -5086,9 +5184,11 @@ function addCustomAI() {
   API_CONFIGS[id] = {
     label: name,
     model,
-    // v3.30.2 — capture the originally-picked model so the "↺ Reset" button
-    // on the bee list can revert post-Recommend changes. Never overwritten
-    // by saveModelForAI or recheckModelForAI — only by resetModelToOriginal.
+    // v3.30.2 — capture the originally-picked model. The Reset button
+    // that consumed this field was removed in v3.31.0 (Best/Fast/Budget
+    // buttons replaced it); _originalModel is still captured at add
+    // time as forward-compatibility scaffold for any future audit-trail
+    // feature, but no current UI surfaces it.
     _originalModel: model,
     endpoint: url.replace(/\/$/, ''),
     note: `Format: ${formatLabels[format] || 'OpenAI compatible'} · Model: ${model}`,
@@ -5782,10 +5882,10 @@ function addImportServerModels() {
     API_CONFIGS[id] = {
       label:     name,
       model:     modelId,
-      // v3.30.2 — capture the original model id so the "↺ Reset" button on
-      // the bee list can revert post-Recommend changes back to whatever the
-      // user picked at import time. Never modified by saveModelForAI or
-      // recheckModelForAI — only reset via resetModelToOriginal().
+      // v3.30.2 — capture the original model id at import time. The
+      // Reset button that consumed this field was removed in v3.31.0
+      // (Best/Fast/Budget buttons replaced it); _originalModel is kept
+      // as forward-compatibility scaffold but no current UI surfaces it.
       _originalModel: modelId,
       endpoint:  chatUrl,
       // v3.27.4: store the Models Endpoint URL so recheckModelForAI can
@@ -9022,54 +9122,66 @@ function openIconPickerForImportRow(rowIdx) {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.30.2 — Multi-select bulk-remove for custom AIs
+// v3.30.4 — Persistent checkbox bulk-remove for custom AIs
 // ────────────────────────────────────────────────────────────────────
-// Single bulk-remove path for custom AIs as of v3.30.3 (the earlier
-// per-server Imported Groups panel was redundant with this one and was
-// removed). Multi-select handles every former use case: "All" picks
-// every custom in the hive (covers the old "remove every model from
-// server X" path), and individual checkboxes pick any arbitrary subset.
+// Custom AI rows show a checkbox at rest (where the trash button used
+// to be). The toolbar above the AI list shows live counters and a
+// destructive "Remove N" button that's disabled when nothing is ticked.
+// No mode to enter, no mode to cancel — selection state IS the UI.
 //
-// Defaults are intentionally NOT selectable in multi-select mode because
-// "Remove" and "Hide" are different operations — the existing Hide button
-// on default rows handles the equivalent destructive action for them.
+// This also positions the checkbox state for future Phase-2 work:
+// once selection is first-class, "Save current selection as a Profile"
+// becomes a small additive feature (Work Laptop / Home Desktop /
+// Document-X / etc.) that reuses the same _selectedCustomIds set.
+//
+// Defaults still get a Hide button. "Remove" and "Hide" remain
+// distinct operations and defaults are intentionally non-selectable
+// for bulk removal.
 // ════════════════════════════════════════════════════════════════════
-let _multiSelectMode = false;
-const _multiSelectIds = new Set();
+const _selectedCustomIds = new Set();
 
-function toggleMultiSelectMode() {
-  _multiSelectMode = !_multiSelectMode;
-  if (!_multiSelectMode) _multiSelectIds.clear();
-  renderAISetupGrid();
+function toggleCustomSelection(id, checked) {
+  if (checked) _selectedCustomIds.add(id);
+  else _selectedCustomIds.delete(id);
+  // Lightweight refresh — only the toolbar counter/button-state changes.
+  // Avoiding a full renderAISetupGrid keeps the row's checkbox from
+  // losing focus mid-click and prevents any input field below from
+  // flickering as the user ticks through several rows.
+  refreshBulkSelectToolbar();
 }
 
-function toggleMultiSelectId(id, checked) {
-  if (checked) _multiSelectIds.add(id);
-  else _multiSelectIds.delete(id);
-  renderAISetupGrid();
-}
-
-function multiSelectAll() {
+function selectAllCustoms() {
   aiList.forEach(ai => {
     const isCustom = !DEFAULT_AIS.find(d => d.id === ai.id);
-    if (isCustom) _multiSelectIds.add(ai.id);
+    if (isCustom) _selectedCustomIds.add(ai.id);
   });
+  // Full re-render here — every custom row's checkbox state needs to flip.
   renderAISetupGrid();
 }
 
-function multiSelectNone() {
-  _multiSelectIds.clear();
+function selectNoneCustoms() {
+  if (!_selectedCustomIds.size) return;
+  _selectedCustomIds.clear();
   renderAISetupGrid();
+}
+
+// Re-render only the bulk-select toolbar in place. Used by per-row
+// checkbox toggles so the user can rapidly tick through several AIs
+// without the whole grid re-rendering on each click.
+function refreshBulkSelectToolbar() {
+  const host = document.getElementById('bulkSelectToolbar');
+  if (!host) return;
+  host.outerHTML = buildBulkSelectToolbarHTML();
 }
 
 async function bulkRemoveSelectedAIs() {
   // Snapshot to a plain array so subsequent mutations don't surprise the loop
-  const ids = Array.from(_multiSelectIds);
+  const ids = Array.from(_selectedCustomIds);
   // Defensive filter — UI only adds custom ids to the set, but defense in
-  // depth in case an outer caller ever poked at _multiSelectIds directly.
+  // depth in case an outer caller ever poked at _selectedCustomIds directly.
   const customs = ids.filter(id => !DEFAULT_AIS.find(d => d.id === id) && aiList.find(a => a.id === id));
   if (!customs.length) {
-    toast('Nothing selected — pick at least one custom AI');
+    toast('Nothing selected — tick at least one custom AI');
     return;
   }
   const ok = await wfConfirm(
@@ -9083,49 +9195,50 @@ async function bulkRemoveSelectedAIs() {
     aiList    = aiList.filter(a => a.id !== id);
     activeAIs = activeAIs.filter(a => a.id !== id);
     if (builder === id) builder = null;
-    // Custom AIs: full delete — matches removeAI's custom branch.
+    // Custom AIs: full delete. Drops the AI from both lists, releases the
+    // builder slot if it was held, removes the API config, and purges the
+    // three per-AI localStorage keys (recommend cache, models cache).
     if (API_CONFIGS[id]) delete API_CONFIGS[id];
     try { localStorage.removeItem(`waxframe_recommend_default-${id}`); } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);  } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_models_${id}`);             } catch(e) { /* ignore */ }
   });
 
-  _multiSelectIds.clear();
-  _multiSelectMode = false;
+  _selectedCustomIds.clear();
   saveHive();
   renderAISetupGrid();
   toast(`🗑 Removed ${customs.length} AI${customs.length !== 1 ? 's' : ''}`);
 }
 
-function buildMultiSelectToolbarHTML() {
+function buildBulkSelectToolbarHTML() {
   // Hide entire toolbar when there are no custom AIs to act on — keeps the
   // default-AI-only setup screen uncluttered.
   const customCount = aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).length;
-  if (!customCount) return '';
+  if (!customCount) return '<div id="bulkSelectToolbar" class="bulk-select-toolbar bulk-select-toolbar--empty"></div>';
 
-  if (!_multiSelectMode) {
-    return `
-    <div class="multi-select-toolbar multi-select-toolbar--collapsed">
-      <button class="btn multi-select-toggle-btn" onclick="toggleMultiSelectMode()" title="Pick multiple custom AIs to remove at once">
-        ☑ Multi-select to remove
-      </button>
-      <span class="multi-select-hint">Pick any subset of your ${customCount} custom AI${customCount !== 1 ? 's' : ''} to remove in one shot.</span>
-    </div>`;
-  }
+  // Reconcile selected set against current customs — purges any stale ids
+  // that may have lingered from an earlier state (e.g. an AI was removed
+  // by another path while still ticked).
+  const customIds = new Set(
+    aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).map(a => a.id)
+  );
+  Array.from(_selectedCustomIds).forEach(id => {
+    if (!customIds.has(id)) _selectedCustomIds.delete(id);
+  });
 
-  const selCount = _multiSelectIds.size;
+  const selCount = _selectedCustomIds.size;
+  const allSelected = (selCount === customCount);
   return `
-  <div class="multi-select-toolbar multi-select-toolbar--active">
-    <span class="multi-select-status">
-      <strong>Multi-select mode</strong> · ${selCount} of ${customCount} selected
+  <div id="bulkSelectToolbar" class="bulk-select-toolbar">
+    <span class="bulk-select-status">
+      <strong>${selCount}</strong> of <strong>${customCount}</strong> custom AI${customCount !== 1 ? 's' : ''} selected
     </span>
-    <div class="multi-select-actions">
-      <button class="btn btn-xs" onclick="multiSelectAll()">All</button>
-      <button class="btn btn-xs" onclick="multiSelectNone()">None</button>
-      <button class="btn btn-danger multi-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} onclick="bulkRemoveSelectedAIs()">
-        🗑 Remove ${selCount} selected
+    <div class="bulk-select-actions">
+      <button class="btn btn-xs" ${allSelected ? 'disabled' : ''} onclick="selectAllCustoms()" title="Select every custom AI">All</button>
+      <button class="btn btn-xs" ${selCount === 0 ? 'disabled' : ''} onclick="selectNoneCustoms()" title="Clear selection">None</button>
+      <button class="btn btn-danger bulk-select-remove-btn" ${selCount === 0 ? 'disabled' : ''} onclick="bulkRemoveSelectedAIs()" title="${selCount === 0 ? 'Tick at least one custom AI to enable' : `Remove ${selCount} selected`}">
+        🗑 Remove ${selCount}
       </button>
-      <button class="btn multi-select-cancel-btn" onclick="toggleMultiSelectMode()">Cancel</button>
     </div>
   </div>`;
 }

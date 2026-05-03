@@ -1,6 +1,45 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.31.0
+**Build:** `20260502-008` · **Released:** May 2, 2026
+
+The Worker Bees screen has been reframed as a pure **inventory** screen — "what AIs do I have, and is each one set up?" Active-group selection (which AIs are turned on for this session) and future Hive Profiles work move to a dedicated screen in v3.32. This release also rolls forward the v3.30.4 work that was never deployed (persistent-checkbox bulk-remove + the `removeAI()` deletion).
+
+**Major changes:**
+
+- **Mode toggle at top of Worker Bees: Internet vs. Server.** Segmented control that splits the inventory into two universes. `🌎 Internet Based AI (Default)` shows the 6 default direct-API providers plus any direct-API customs. `🖥 Server Based AI` shows AIs imported from a model server (Alfredo, OpenWebUI, LM Studio, etc.). Mode is auto-detected on first load (any AI in `API_CONFIGS` with `_modelsEndpoint` → Server, otherwise Internet) and persisted on the hive object. Switching modes shows a confirmation modal that explains what's hidden — saved keys are kept across flips, AIs are not deleted, just visually filtered.
+- **Mode-aware toolbar.** Internet mode shows: API Key Guide · Add Custom AI · Test All Keys · Recommend Models for All · Open default AI websites (5 buttons). Server mode shows: 📡 Import from Model Server · Add Custom AI · Test All Keys (3 buttons). Both modes get an Expand all / Collapse all pair on the right side for power users with large hives.
+- **Collapsed-by-default rows.** Every AI row renders as a single-line summary at first: chevron + icon + name + (custom AIs only) bulk-remove checkbox. Click anywhere on the summary line to expand the row and reveal the key field, model selector, and recommendation buttons. Per-session expand state — clears on page reload by design. Defaults are always visible (no Hide button anymore — David's design call: "we don't need to hide anything just leave them they can stay collapsed and grayed out").
+- **Greyed-name affordance for no-key rows.** When a row has no saved API key, the AI name renders in muted text (and the icon dims slightly) on the collapsed summary. The greyness is the only "this isn't set up" signal; no badge, no label, no separate state column. Hover restores the full color so the user can read the name when targeting it.
+- **Best / Fast / Budget category buttons** (Internet mode only). Inside the expanded panel of any AI that has both a saved key and a cached recommendation, three small buttons appear: `✨ Best`, `⚡ Fast`, `💰 Budget`. Each button applies the corresponding cached recommendation to the model selector — pure cache application, no network call. The button matching the AI's currently-selected model is highlighted; if the user has manually picked a non-recommended model, no button is highlighted (signalling "off-recommendation"). All three are hidden in Server mode because closed-network model servers can't do live web research and their model recommendations are heuristic guesses based on naming patterns.
+- **"Don't have a key?" link relocated.** The small `↗` icon next to every AI's name (which was opening the provider's API console) was discoverable only by hovering and clicking a tiny mystery glyph. It's now a labeled link inside the expanded panel — "Don't have a key? **Get one from Anthropic ↗**" — and only renders when the AI has no saved key. Once the key is saved, the prompt disappears.
+
+**Removed:**
+
+- **`Hide All Defaults` toolbar button + `hideDefaultAI()` + `hideAllDefaultAIs()` + `restoreHiddenDefaults()`.** Defaults are always visible now. The `hiddenDefaultIds` state is gone from `saveHive()` output and silently ignored on legacy hive load (pre-v3.31 users who had defaults hidden see all 6 again on next open — no migration prompt, by design).
+- **`Reset to Defaults` toolbar button + `resetBeesToDefaults()` function.** The destructive "wipe everything back to a clean 6-default state" path is no longer needed; the same outcome is reachable by ticking all customs in the bulk-remove toolbar and clicking Remove.
+- **Per-AI `↺ Reset to {original}` button + `resetModelToOriginal()` function.** The button anchored to an arbitrary module-load snapshot rather than to a useful target. The Best/Fast/Budget buttons replace it with snap-to-recommendation behavior. The `_originalModel` field is still captured at AI add time as forward-compatibility scaffold but no current UI surfaces it.
+- **Static toolbar HTML in `index.html`.** The Worker Bees toolbar is now JS-managed via `renderWorkerBeeToolbar()` — necessary because button set varies by mode. Two new container divs (`#hiveModeToggleWrap`, `#beeControlsRow`) replaced the static button list.
+- **Rolled forward from v3.30.4 (never deployed):** persistent-checkbox bulk-remove on custom AIs, deletion of `removeAI()` function (~40 LoC), removal of the per-row trash button. `bulkRemoveSelectedAIs()` is the single AI-removal path. Five comment references to `removeAI` in upstream code were reworded to historical context.
+
+**Reconciled stragglers (CSS):**
+
+- `.ai-info-btn` (the small ↗ circle button) — replaced by `.ai-getkey-link` inside expanded panel
+- `.ai-hide-btn` — no live consumers after Hide button removal
+- `.ai-hidden-banner` + `.ai-hidden-restore-btn` — paired with the removed banner system
+- `.ai-setup-row-top` — replaced by `.ai-setup-row-summary` in the new row template
+- `.ai-reset-model-btn` — paired with the removed reset button
+- Legacy `.ai-setup-row:hover` and `.ai-setup-row.checked` — replaced by mode-aware `.is-collapsed:hover` / `.is-expanded` selectors that cooperate with v3.31's expand/collapse states
+- `.ai-remove-btn` — already removed in the v3.30.4 work that's now part of this release
+
+**Architectural notes for v3.32+:**
+
+The carry-forward rule for the future active-group / profile screen is straightforward: only AIs with `API_CONFIGS[provider]?._key` set will appear there. AIs without a key won't clutter the selection screen — keyed-or-not is the inventory-level discipline; active-or-not is the selection-level discipline. They're separate concerns on separate screens.
+
+Server-mode insight worth recording: **avoid obscurely-named custom models on a model server** — they're typically derivatives of OpenAI or Anthropic models and usually lower-quality than the named originals. Stick to the recognized brand-named models (Claude, GPT, Gemini, etc.) when they're available on the server.
+
+---
 ## v3.30.3
 **Build:** `20260501-005` · **Released:** May 1, 2026
 
