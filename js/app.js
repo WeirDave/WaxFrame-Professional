@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260502-008';         // build stamp — update each session
+const BUILD       = '20260503-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2896,6 +2896,130 @@ async function clearProject() {
   toast('🗑 Project cleared — AI keys and settings kept');
 }
 
+// ════════════════════════════════════════════════════════════════════
+// v3.32.0 — Document Templates
+// ────────────────────────────────────────────────────────────────────
+// Templates are pre-filled Project field payloads sourced from
+// document-playbooks.html and frozen into js/templates.js. They solve
+// the blank-page problem on the Project screen — a user picks a
+// template matching their document type, the Goal fields populate
+// with proven starting content, and the user reviews/edits before
+// continuing.
+//
+// All template content was developed and validated in the playbook
+// page; templates.js mirrors that content. To add a template, paste
+// a new object into WAXFRAME_TEMPLATES — no other code changes needed.
+//
+// Behavior on apply:
+//   1. If ALL six Project Goal fields are empty → silent populate.
+//   2. If ANY are non-empty → wfConfirm overwrite warning, then
+//      populate on confirm.
+//   3. Reference Material is NEVER touched — it has its own setup
+//      flow and is conceptually separate from the Project goal.
+// ════════════════════════════════════════════════════════════════════
+
+const _TEMPLATE_GOAL_FIELD_IDS = [
+  'goalDocType', 'goalAudience', 'goalOutcome',
+  'goalScope',   'goalTone',     'goalNotes'
+];
+
+// Open the gallery modal and render its content.
+function showTemplateGallery() {
+  const modal = document.getElementById('templateGalleryModal');
+  if (!modal) return;
+  renderTemplateGalleryBody();
+  modal.classList.add('active');
+}
+
+// Render the gallery into the modal body. Groups templates by category
+// and emits one card per template. Cards are clickable; click handlers
+// call applyTemplate() with the template id.
+function renderTemplateGalleryBody() {
+  const body = document.getElementById('templateGalleryBody');
+  if (!body) return;
+  if (typeof WAXFRAME_TEMPLATES === 'undefined' || !Array.isArray(WAXFRAME_TEMPLATES)) {
+    body.innerHTML = '<p class="template-gallery-empty">⚠️ Template data not loaded. Reload the page and try again.</p>';
+    return;
+  }
+  // Bucket templates by category, preserving original order within each bucket.
+  // Quick Start always renders first (one card, top of modal).
+  const order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday'];
+  const buckets = {};
+  WAXFRAME_TEMPLATES.forEach(t => {
+    const k = t.category || 'Other';
+    if (!buckets[k]) buckets[k] = [];
+    buckets[k].push(t);
+  });
+  const sections = order.filter(c => buckets[c] && buckets[c].length).map(cat => `
+    <div class="template-gallery-section">
+      <h3 class="template-gallery-section-title">${esc(cat)}</h3>
+      <div class="template-gallery-grid">
+        ${buckets[cat].map(t => `
+          <button class="template-card" onclick="applyTemplate('${esc(t.id)}')" title="Apply the ${esc(t.name)} template">
+            <span class="template-card-icon">${esc(t.icon || '📄')}</span>
+            <div class="template-card-text">
+              <div class="template-card-name">${esc(t.name)}</div>
+              <div class="template-card-desc">${esc(t.description || '')}</div>
+            </div>
+          </button>`).join('')}
+      </div>
+    </div>`).join('');
+  body.innerHTML = sections || '<p class="template-gallery-empty">No templates found.</p>';
+}
+
+// Check whether any of the six Goal fields currently has content.
+// Trims to ignore whitespace-only values.
+function _projectGoalFieldsHaveContent() {
+  return _TEMPLATE_GOAL_FIELD_IDS.some(id => {
+    const el = document.getElementById(id);
+    return el && el.value && el.value.trim().length > 0;
+  });
+}
+
+// Apply a template by id. Uses wfConfirm for the overwrite warning when
+// any Goal field already has content. Updates DOM values, fires the same
+// input handlers the user would trigger by typing (saveProject, counter,
+// requirements update), then closes the modal and toasts.
+async function applyTemplate(templateId) {
+  if (typeof WAXFRAME_TEMPLATES === 'undefined') return;
+  const tpl = WAXFRAME_TEMPLATES.find(t => t.id === templateId);
+  if (!tpl) {
+    toast('⚠️ Template not found');
+    return;
+  }
+  if (_projectGoalFieldsHaveContent()) {
+    const ok = await wfConfirm(
+      'Apply Template',
+      `Apply the "${tpl.name}" template? Your current entries in the Project Goal fields will be replaced. (Project name, version, length, and reference material are not affected.)`,
+      { okText: `Apply ${tpl.name}` }
+    );
+    if (!ok) return;
+  }
+  // Map template fields → DOM ids. Each entry: [domId, templateKey].
+  const map = [
+    ['goalDocType',  'goalDocType'],
+    ['goalAudience', 'goalAudience'],
+    ['goalOutcome',  'goalOutcome'],
+    ['goalScope',    'goalScope'],
+    ['goalTone',     'goalTone'],
+    ['goalNotes',    'goalNotes'],
+  ];
+  map.forEach(([domId, key]) => {
+    const el = document.getElementById(domId);
+    if (!el) return;
+    el.value = tpl[key] || '';
+  });
+  // Fire the same downstream updates the user's input would trigger.
+  if (typeof saveProject === 'function')              saveProject();
+  if (typeof updateGoalCounter === 'function')        updateGoalCounter();
+  if (typeof updateProjectRequirements === 'function') updateProjectRequirements();
+  // Close the modal
+  const modal = document.getElementById('templateGalleryModal');
+  if (modal) modal.classList.remove('active');
+  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied — review and edit the Project fields`, 4500);
+}
+
+
 function loadSettings() {
   try {
     // ── Try new split storage first ──
@@ -3417,7 +3541,7 @@ function renderWorkerBeeToolbar() {
       <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>`;
   } else {
     buttons = `
-      <button class="btn btn-lg" onclick="showImportServerModal()">📡 Import from Model Server</button>
+      <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
       <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
       <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>`;
   }

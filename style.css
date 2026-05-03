@@ -8196,14 +8196,34 @@ kbd {
    the H1 title (where it was clipped behind the glass strip on the bee
    variant) to a row between the Project Goal sub paragraph and the
    goal-fields grid. Right-aligned so it doesn't fight the field layout. */
-/* v3.27.7: Clear Project button relocated into .hp-section-header.
-   margin-left: auto pushes it to the right edge of the flex container.
-   align-self: flex-start aligns it to the top of the header band (flush
-   with the title row) rather than centering with the bee mascot below. */
-.hp-section-clear-btn {
+/* v3.27.7: Clear Project button. v3.32.0 — wrapped together with the new
+   Use Template button inside .hp-section-header-actions; margin-left:auto
+   on the wrapper now positions both buttons. The clear button itself
+   keeps its muted styling to remain subordinate to the action buttons
+   above it. */
+.hp-section-header-actions {
   margin-left: auto;
   flex-shrink: 0;
   align-self: flex-start;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.hp-section-template-btn {
+  font-size: var(--fs-sm);
+  padding: 6px 14px;
+  background: var(--surface2);
+  color: var(--accent, #f4b400);
+  border: 1px solid var(--accent, #f4b400);
+  font-weight: 600;
+}
+.hp-section-template-btn:hover {
+  background: var(--accent, #f4b400);
+  color: var(--bg);
+}
+.hp-section-clear-btn {
+  flex-shrink: 0;
   font-size: var(--fs-sm);
   padding: 6px 14px;
   color: var(--text-dim);
@@ -10227,4 +10247,145 @@ kbd {
   .ai-bfb-wrap {
     padding-left: 0;
   }
+}
+
+/* =========================================================
+ * v3.32.0 — Document Templates gallery modal
+ * ─────────────────────────────────────────────────────────
+ * Modal opens from the "📋 Use Template" button on the Project
+ * screen header. Renders WAXFRAME_TEMPLATES grouped by
+ * category. Cards are full clickable buttons that fire
+ * applyTemplate(id) on click.
+ * ========================================================= */
+
+.template-gallery-modal {
+  max-width: 880px;
+  width: 92vw;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.template-gallery-hdr {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface);
+  position: relative;
+}
+.template-gallery-bee {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.template-gallery-hdr h2 {
+  margin: 0 0 6px;
+}
+.template-gallery-intro {
+  margin: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  max-width: 680px;
+}
+.template-gallery-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 14px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.template-gallery-close:hover {
+  border-color: var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+}
+
+.template-gallery-body {
+  padding: 18px 26px 26px;
+  overflow-y: auto;
+  flex: 1;
+}
+.template-gallery-empty {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 32px;
+}
+
+.template-gallery-section + .template-gallery-section {
+  margin-top: 22px;
+}
+.template-gallery-section-title {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed var(--border);
+}
+
+.template-gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.template-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+  min-height: 84px;
+}
+.template-card:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--surface3);
+}
+.template-card:active {
+  transform: translateY(1px);
+}
+.template-card:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.template-card-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.template-card-text {
+  flex: 1;
+  min-width: 0;
+}
+.template-card-name {
+  font-size: var(--fs-base);
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.template-card-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  line-height: 1.4;
 }
