@@ -2273,11 +2273,13 @@ html, body {
 
 /* Dark-background headers — white text */
 [data-theme="light"] .left-panel-header .btn,
-[data-theme="light"] .honeycomb-header .btn {
+[data-theme="light"] .honeycomb-header .btn,
+[data-theme="light"] .hp-section-header .btn {
   color: #ffffff; border-color: rgba(255,255,255,0.5); background: transparent;
 }
 [data-theme="light"] .left-panel-header .btn:hover,
-[data-theme="light"] .honeycomb-header .btn:hover {
+[data-theme="light"] .honeycomb-header .btn:hover,
+[data-theme="light"] .hp-section-header .btn:hover {
   color: #0a0c12; border-color: var(--accent); background: var(--accent);
 }
 /* Light-background headers — dark text, amber fill hover */
@@ -2297,11 +2299,13 @@ html, body {
 
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .left-panel-header .btn,
-  [data-theme="auto"] .honeycomb-header .btn {
+  [data-theme="auto"] .honeycomb-header .btn,
+  [data-theme="auto"] .hp-section-header .btn {
     color: #ffffff; border-color: rgba(255,255,255,0.5); background: transparent;
   }
   [data-theme="auto"] .left-panel-header .btn:hover,
-  [data-theme="auto"] .honeycomb-header .btn:hover {
+  [data-theme="auto"] .honeycomb-header .btn:hover,
+  [data-theme="auto"] .hp-section-header .btn:hover {
     color: #0a0c12; border-color: var(--accent); background: var(--accent);
   }
   [data-theme="auto"] .work-topbar .btn,
