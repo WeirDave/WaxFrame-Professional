@@ -1218,7 +1218,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-009';         // build stamp — update each session
+const BUILD       = '20260503-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2829,6 +2829,10 @@ async function clearProject() {
   ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes'].forEach(id => {
     const el = document.getElementById(id); if (el) el.value = '';
   });
+  // v3.32.1 — Hide the template hint banner; the project being cleared
+  // means any previously-applied template's guidance is no longer relevant.
+  const _tplBanner = document.getElementById('templateHintBanner');
+  if (_tplBanner) _tplBanner.style.display = 'none';
   const llEl = document.getElementById('lengthLimit'); if (llEl) llEl.value = '';
   const luEl = document.getElementById('lengthUnit');  if (luEl) luEl.value = 'characters';
   updateGoalCounter();
@@ -3016,7 +3020,37 @@ async function applyTemplate(templateId) {
   // Close the modal
   const modal = document.getElementById('templateGalleryModal');
   if (modal) modal.classList.remove('active');
-  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied — review and edit the Project fields`, 4500);
+
+  // v3.32.1 — Render the hint banner above Project Name when the template
+  // has placeholders that need filling in. Templates without a hint
+  // (Quick Start, Executive Summary) silently skip the banner — nothing
+  // to fix on those, no banner needed.
+  const hint = (tpl.hint || '').trim();
+  const banner = document.getElementById('templateHintBanner');
+  if (banner) {
+    if (hint) {
+      const titleEl = document.getElementById('templateHintBannerTitle');
+      const textEl  = document.getElementById('templateHintBannerText');
+      if (titleEl) titleEl.textContent = `${tpl.icon || '📋'} ${tpl.name} template applied — placeholders to fill in`;
+      if (textEl)  textEl.textContent  = hint;
+      banner.style.display = '';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+
+  const toastTail = hint ? ' — see the amber banner above for placeholders to fill in' : '';
+  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied${toastTail}`, hint ? 5500 : 4000);
+}
+
+// v3.32.1 — Dismiss handler for the template hint banner. Hides the
+// banner without clearing its content; if applyTemplate runs again the
+// banner re-populates and re-shows. No localStorage state — banner
+// re-appears the next time a template is applied even if previously
+// dismissed (different application = different reminder).
+function dismissTemplateHintBanner() {
+  const banner = document.getElementById('templateHintBanner');
+  if (banner) banner.style.display = 'none';
 }
 
 

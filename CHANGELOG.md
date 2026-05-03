@@ -1,6 +1,23 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.1
+**Build:** `20260503-010` · **Released:** May 3, 2026
+
+Patch release on top of v3.32.0 — three template-gallery polish items based on first-hands testing.
+
+- **Template hint banner above Project Name.** Templates that contain `[bracketed]` placeholders the user must fill in (10 of the 12) now surface an amber-bordered banner above the Project Name field after the template applies. The banner shows the template's icon + name in the title line and a one-sentence hint below it explaining which placeholders need replacing and how. Banner uses theme tokens (`--accent`, `--accent-dim`, `--text`, `--bg`) so it adapts to dark/light/auto modes without per-mode overrides. Dismissable with `✕`; auto-clears on `clearProject()` or when a different template is applied.
+- **`hint` field added to template schema** in `js/templates.js`. Each template stores a single hand-written sentence describing what to fix. Empty-string hint = no banner shown (Quick Start and Executive Summary ship clean — no placeholders to fill in). Adding/editing hints is a single-file edit; no other code changes needed.
+- **All 10 hints written by hand**, not generated. Tailored per template:
+   - **Cover Letter / Job Description / Résumé / RFP Response / Blog Post / Presentation Outline** — explicit replacement instructions naming the brackets that need filling
+   - **Thank-You / Email & Outreach / Recipe** — short "pick ONE tone from the brackets" instruction
+   - **Business Proposal** — extra context explaining that the `[PRICE]` and `[TIMELINE]` tags in `goalNotes` are intentionally kept to prompt the AIs to ask for those numbers (different mental model than the other placeholders)
+- **Gallery modal width** bumped 880px → 1280px. On wide displays the cards lay out across more columns (3-5 instead of 2-3 typical), reducing vertical scrolling.
+- **Project Bee on the gallery modal header** sized up 56px → 96px so the bee earns its real estate alongside the explanatory paragraph.
+- **Toast updated** to mention the banner when a hint is present: *"✓ Cover Letter template applied — see the amber banner above for placeholders to fill in"* (5.5s duration, up from 4s, since the user has more to read).
+- **Forward compatibility:** `hint` field documented in `templates.js` header alongside the existing `suggestedNotes` field, with notes on its purpose and the empty-string convention.
+
+---
 ## v3.32.0
 **Build:** `20260503-009` · **Released:** May 3, 2026
 
