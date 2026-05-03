@@ -10264,7 +10264,21 @@ kbd {
   max-height: 88vh;
   display: flex;
   flex-direction: column;
+  /* v3.32.1 — override .finish-modal's padding/centering. The base modal
+     centers everything for the small confirm modals it was designed for,
+     but the gallery is left-aligned full-width content. We also force a
+     stronger surface background and border so the modal box is visually
+     distinct from the page (default --surface is too close to --bg in
+     dark mode for a large modal to feel "floating"). */
   padding: 0;
+  align-items: stretch;
+  text-align: left;
+  gap: 0;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
 }
 
 .template-gallery-hdr {
@@ -10272,9 +10286,11 @@ kbd {
   align-items: flex-start;
   gap: 16px;
   padding: 22px 26px 18px;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  background: transparent;
   position: relative;
+  width: 100%;
+  box-sizing: border-box;
 }
 .template-gallery-bee {
   width: 96px;
@@ -10282,15 +10298,22 @@ kbd {
   flex-shrink: 0;
   object-fit: contain;
 }
+.template-gallery-hdr > div:not(.template-gallery-close):not(.template-gallery-bee) {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
 .template-gallery-hdr h2 {
   margin: 0 0 6px;
+  text-align: left;
 }
 .template-gallery-intro {
   margin: 0;
   color: var(--text-dim);
   font-size: var(--fs-sm);
   line-height: 1.5;
-  max-width: 680px;
+  max-width: 920px;
+  text-align: left;
 }
 .template-gallery-close {
   position: absolute;
@@ -10330,12 +10353,12 @@ kbd {
 .template-gallery-section-title {
   font-size: var(--fs-base);
   font-weight: 600;
-  color: var(--text-dim);
+  color: var(--accent, #f4b400);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin: 0 0 10px;
   padding-bottom: 6px;
-  border-bottom: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border2);
 }
 
 .template-gallery-grid {
@@ -10349,8 +10372,10 @@ kbd {
   align-items: flex-start;
   gap: 12px;
   padding: 14px 16px;
-  background: var(--surface2);
-  border: 1px solid var(--border);
+  /* v3.32.1 — modal surface is --surface2, so cards use --surface3 for
+     contrast inside the modal (one step lighter than the modal body). */
+  background: var(--surface3);
+  border: 1px solid var(--border2);
   border-radius: var(--radius-md);
   cursor: pointer;
   text-align: left;
@@ -10360,7 +10385,7 @@ kbd {
 }
 .template-card:hover {
   border-color: var(--accent, #f4b400);
-  background: var(--surface3);
+  background: var(--accent-dim);
 }
 .template-card:active {
   transform: translateY(1px);
