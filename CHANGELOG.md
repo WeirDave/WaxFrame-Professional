@@ -2,20 +2,40 @@
 
 ---
 ## v3.32.1
-**Build:** `20260503-010` · **Released:** May 3, 2026
+**Build:** `20260503-017` · **Released:** May 3, 2026
 
-Patch release on top of v3.32.0 — three template-gallery polish items based on first-hands testing.
+Patch release on top of v3.32.0 — template-gallery polish, the Template Hint banner, and a CSS reconciliation pass on the Project header buttons.
 
-- **Template hint banner above Project Name.** Templates that contain `[bracketed]` placeholders the user must fill in (10 of the 12) now surface an amber-bordered banner above the Project Name field after the template applies. The banner shows the template's icon + name in the title line and a one-sentence hint below it explaining which placeholders need replacing and how. Banner uses theme tokens (`--accent`, `--accent-dim`, `--text`, `--bg`) so it adapts to dark/light/auto modes without per-mode overrides. Dismissable with `✕`; auto-clears on `clearProject()` or when a different template is applied.
+**Template Hint banner**
+
+- **Amber-bordered banner above Project Name.** Templates that contain `[bracketed]` placeholders the user must fill in (10 of the 12) now surface an amber-bordered banner above the Project Name field after the template applies. The banner shows the template's icon + name in the title line and a one-sentence hint below it explaining which placeholders need replacing and how. Banner uses theme tokens (`--accent`, `--accent-dim`, `--text`, `--bg`) so it adapts to dark/light/auto modes without per-mode overrides. Dismissable with `✕`; auto-clears on `clearProject()` or when a different template is applied.
 - **`hint` field added to template schema** in `js/templates.js`. Each template stores a single hand-written sentence describing what to fix. Empty-string hint = no banner shown (Quick Start and Executive Summary ship clean — no placeholders to fill in). Adding/editing hints is a single-file edit; no other code changes needed.
 - **All 10 hints written by hand**, not generated. Tailored per template:
    - **Cover Letter / Job Description / Résumé / RFP Response / Blog Post / Presentation Outline** — explicit replacement instructions naming the brackets that need filling
    - **Thank-You / Email & Outreach / Recipe** — short "pick ONE tone from the brackets" instruction
    - **Business Proposal** — extra context explaining that the `[PRICE]` and `[TIMELINE]` tags in `goalNotes` are intentionally kept to prompt the AIs to ask for those numbers (different mental model than the other placeholders)
-- **Gallery modal width** bumped 880px → 1280px. On wide displays the cards lay out across more columns (3-5 instead of 2-3 typical), reducing vertical scrolling.
-- **Project Bee on the gallery modal header** sized up 56px → 96px so the bee earns its real estate alongside the explanatory paragraph.
 - **Toast updated** to mention the banner when a hint is present: *"✓ Cover Letter template applied — see the amber banner above for placeholders to fill in"* (5.5s duration, up from 4s, since the user has more to read).
-- **Forward compatibility:** `hint` field documented in `templates.js` header alongside the existing `suggestedNotes` field, with notes on its purpose and the empty-string convention.
+
+**Gallery modal polish**
+
+- **Width bumped** 880px → 1280px. On wide displays the cards lay out across more columns (3-5 instead of 2-3 typical), reducing vertical scrolling.
+- **Project Bee on the gallery modal header** sized up 56px → 96px so the bee earns its real estate alongside the explanatory paragraph.
+- **Modal surface contrast** boosted — modal body now uses `--surface2`, cards use `--surface3`, headers use `--border2`. The wider modal needed stronger contrast against the page background for the floating-modal effect to read; the original `--surface` body was nearly invisible against `--bg` in dark mode.
+- **Modal stacking fix.** When applying a new template over already-populated Project fields, the gallery modal now closes before the overwrite-confirmation modal fires. Previously the gallery dimmed and a confirm popped on top, which was visually confusing — looked like clicking a card "did nothing." Now: click card → gallery closes → confirm fires cleanly. Cancel returns to the Project screen; user clicks Use Template again to pick a different template.
+
+**Project header button reconciliation**
+
+- **Eliminated all custom button CSS** for the Project section header. The `📋 Use Template` and `🗑 Clear Project` buttons now use the exact same pattern as the Working Document Export/Copy/Clear toolbar: `<div class="flex-row">` containing plain `<button class="btn">` elements. No size variant, no accent fill, no custom override class.
+- **Deleted classes** (and all their CSS rules): `.hp-section-template-btn`, `.hp-section-clear-btn`, `.hp-section-header-actions`. Only one new wrapper class survives — `.hp-section-header-buttons` — and it's a 4-line positioning rule that pushes the button group to the right edge of the section header (necessary because the Project section header has a bee mascot on the left, unlike the work-screen panel header which uses `justify-content: space-between` on its parent).
+- **`honeycomb-header` class added to all four `.hp-section-header` divs** (Worker Bees, Builder, Project, Reference). The Working Document panel header has both `.work-panel-header` and `.honeycomb-header` joined together; there's a higher-specificity light-mode rule that targets the joined classes and forces clean white button text. By giving the setup section headers the same `.honeycomb-header` class, they inherit the same battle-tested styling instead of getting half-overridden, washed-out cream text in light mode.
+
+**Global token tweak**
+
+- **`--border2` lightened** in dark mode from `#2e3348` to `#454a66` (~20% lighter). The previous value was too close to the surrounding dark backgrounds, making `.btn` borders barely visible. Light mode `--border2` (`#b8bdd8`) was already plenty visible and is unchanged. Affects every `.btn` in the app — Worker Bee toolbar, Working Document Export/Copy/Clear, Edit Hive, Change Builder, etc. — so all dashed/solid button borders gain a touch more presence.
+
+**Forward compatibility**
+
+- `hint` field documented in `templates.js` header alongside the existing `suggestedNotes` field, with notes on its purpose and the empty-string convention.
 
 ---
 ## v3.32.0
