@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260503-021
+     Build: 20260503-023
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260503-021">
+  <meta name="waxframe-build" content="20260503-023">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.6">
+  <link rel="stylesheet" href="style.css?v=3.32.7">
 </head>
 <body class="helper-body">
 
@@ -450,6 +450,28 @@
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
       <p>Setup 3 — <strong>Your Project</strong> — is a single scrollable screen. At the top is your project name and version, followed by the Project Goal section with six structured fields. Work through the fields top to bottom.</p>
+      <p>You can either fill in the goal fields manually, or click <strong>📋 Use Template</strong> in the section header to pre-fill them from a curated library of document types. <strong>If this is your first time running WaxFrame, start by clicking 📋 Use Template and picking ⭐ Quick Start</strong> — it is a low-stakes chocolate-chip-cookie example that converges in a few rounds and shows you how the whole hive works end-to-end before you bring your real document.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">📋 Project Templates — pre-fill the Goal fields</div>
+      <p>The <strong>📋 Use Template</strong> button at the top of the Project section opens a gallery of 12 templates organised into 5 categories. Click any card to populate all six Project Goal fields with proven starting content for that document type.</p>
+      <table class="wh-table">
+        <thead><tr><th>Category</th><th>Templates</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Quick Start</strong></td><td>⭐ Quick Start (chocolate chip cookies — recommended for new users)</td></tr>
+          <tr><td><strong>Career &amp; Hiring</strong></td><td>Cover Letter · Job Description · Résumé · Thank-You Letter</td></tr>
+          <tr><td><strong>Business &amp; Sales</strong></td><td>Business Proposal · Email &amp; Outreach · Executive Summary · RFP Response</td></tr>
+          <tr><td><strong>Content &amp; Marketing</strong></td><td>Blog Post / Article · Presentation Outline</td></tr>
+          <tr><td><strong>Personal &amp; Everyday</strong></td><td>Recipe</td></tr>
+        </tbody>
+      </table>
+      <p><strong>How template apply works.</strong> Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. <strong>Project name, version, length constraint, Reference Material, and Starting Document are never touched</strong> — only the six Goal fields.</p>
+      <p><strong>Template Hint banner.</strong> Most templates contain <code>[bracketed]</code> placeholders the user must fill in — for example <em>[company name]</em> or <em>[job title]</em>. After applying a template with placeholders, an amber-bordered banner appears above the Project Name with a per-field bulleted list telling you exactly which form field to look at and what to fix there. Templates that ship clean (Quick Start, Executive Summary) skip the banner entirely.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Templates are starting points — every field can still be edited after the template populates. Treat the populated content as a strong first draft, then tailor it to your specific situation. The full set of templates is also documented as standalone playbooks in the <a href="document-playbooks.html" target="_blank" class="link-accent">Document Playbooks ↗</a>.</p></div>
+      </div>
     </div>
 
     <div class="wh-block">
@@ -667,6 +689,7 @@
       <div class="wh-block-title">What you are looking at</div>
       <p>After continuing from the Your Project screen, you arrive at Setup 5: <strong>Starting Document</strong>. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.</p>
       <p><strong>Important:</strong> These three buttons — <strong>📄 Upload File</strong>, <strong>📋 Paste Text</strong>, and <strong>💡 Start from Scratch</strong> — are <em>mode selectors</em>, not action buttons. Clicking one selects that mode and changes what appears below the buttons. You then interact with the area below them to actually provide your content. A brief instruction line directly below the buttons updates to tell you exactly what to do next.</p>
+      <p><strong>Running Quick Start?</strong> Click <strong>💡 Start from Scratch</strong> — the chocolate-chip-cookie example has no recipe to upload, so the hive will create the first draft from your project goal. The continue requirement is satisfied immediately when you click that button; no further action needed on this screen.</p>
     </div>
 
     <div class="wh-block">
@@ -1556,7 +1579,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.32.6"></script>
+<script src="js/version.js?v=3.32.7"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
