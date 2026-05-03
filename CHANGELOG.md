@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.9
+**Build:** `20260503-025` · **Released:** May 3, 2026
+
+Bug fix release — eliminates the export race condition that produced 0-byte transcript and document files followed by retries appended with `(1)` to the filename.
+
+- **Root cause.** Both `exportDocument()` and `exportTranscript()` were calling `URL.revokeObjectURL(url)` synchronously immediately after `a.click()`. The browser's download dispatcher operates asynchronously — `a.click()` only initiates the download; actual file write happens after. Synchronous revoke yanked the blob URL out from under the in-flight download for larger blobs (the dispatcher had not finished reading), producing a 0-byte file followed by a retry with `(1)` appended to the filename. Same race that surfaced in `backupSession()` under v3.21.19 and was fixed in v3.21.21 by deferring the revoke — the fix was never propagated to the other two export paths.
+- **Why transcripts hit it hardest.** Full multi-round transcripts include verbose reviewer responses (Perplexity in particular emits 1,000–3,500 word responses per round, encoded as raw text with all 7 reviewer payloads × N rounds). A 6-round 7-AI session easily exceeds the threshold that originally surfaced the backup race in v3.21.19.
+- **Fix.** Both `exportDocument()` and `exportTranscript()` now use `setTimeout(() => URL.revokeObjectURL(url), 30000)` — the same 30-second deferred revoke pattern already in use by `backupSession()`. 30 seconds is generous margin for any realistic export; the memory cost of an unrevoked blob URL for 30 seconds is trivial compared to the size of the export blob itself.
+- **Audit confirms zero remaining synchronous revokes.** All three blob-download paths (`exportDocument`, `exportTranscript`, `backupSession`) now use the deferred-revoke pattern.
+
+---
 ## v3.32.8
 **Build:** `20260503-024` · **Released:** May 3, 2026
 
