@@ -1,0 +1,251 @@
+WAXFRAME — NEW TEST PROJECT IDEAS
+============================================================
+For pasting into WaxFrame to gather more convergence data
+across document types we don't have measured runs for yet.
+
+Edit any of the language below to sound like you before
+running. Verbatim values you paste into Project / Reference
+Material / Notes are what get captured for the playbook.
+
+
+============================================================
+PROJECT 1 — Blog Post on Multi-AI Document Refinement
+============================================================
+Target playbook entry: Blog Post / Article (we have a 16-round
+run on a different topic — this gives us a second data point
+on the same document type, your domain expertise behind it.)
+
+PROJECT-SCREEN VALUES
+---------------------
+Project Name:    Blog — Why I Stopped Trusting Single-Model AI for Network Docs
+Project Version: v1.0
+Document Type:   Blog Post
+
+Target Audience:
+  Senior network engineers and IT leads who already use
+  ChatGPT or Claude for technical documentation and have hit
+  the wall where the output is "fine but not right." Reading
+  on LinkedIn, Reddit r/networking, or a personal blog.
+
+Desired Outcome:
+  Reader finishes the post with a concrete reason to try
+  running the same document through multiple models in
+  sequence. They click through to the linked tool at the end.
+
+Scope:
+  Cover: the one-shot trap (single model leaves blind spots),
+  why different models catch different issues, a concrete
+  network-engineering example with real numbers, and what the
+  reader can try this week. Do not invent statistics. No
+  marketing fluff.
+
+Tone:
+  First-person, direct, slightly sarcastic. Written the way I
+  would say it to another network engineer over a beer, not
+  the way I would write a vendor whitepaper. Voice is someone
+  who's been burned by AI-generated config drift and finally
+  found a workflow that doesn't suck.
+
+Additional Instructions (Goal Notes):
+  No buzzwords. No "synergy" "leverage" "revolutionize" or
+  any LinkedIn-influencer language. If a paragraph reads like
+  a product brochure, cut it. Keep my voice — do not sand it
+  down into something that could have been written by anyone.
+
+Length Limit: 800 words
+Source:       From scratch
+Notes (per-round): leave blank, add only if voice drifts
+
+
+REFERENCE MATERIAL PAYLOAD (paste into Setup 4)
+-----------------------------------------------
+Thesis: any single LLM, no matter how good, has blind spots.
+Run the same document through 4 or 5 different models in
+sequence and the output is meaningfully better than any one
+model can produce on its own.
+
+Concrete example to reference:
+- Took an Aruba ArubaOS 8.x configuration document, ~900 words,
+  describing an ArubaOS firmware-upgrade procedure for a
+  multi-controller deployment
+- Ran it through Claude alone: got a tightened version,
+  maybe 15% better. Still missed two ordering issues that
+  would have caused a controller failover during the upgrade
+- Ran the same document through Claude → ChatGPT → Gemini →
+  back to Claude: got a version where both ordering issues
+  were caught, the prerequisites section was reorganized, and
+  one assumption about RADIUS server reachability was flagged
+  as needing verification before the change window
+
+What the reader should try today: pick a runbook or
+configuration document they care about, hand it to 3
+different models in sequence with the same prompt, compare
+the result against running it through any one model once.
+
+Call to action: link to a tool that automates this — multiple
+models, single document, convergence loop. (This is WaxFrame
+but the post should not name it overtly — let the link speak
+for itself.)
+
+
+============================================================
+PROJECT 2 — LinkedIn Post (short-form announcement)
+============================================================
+Target playbook entry: NEW playbook category we don't have yet.
+Short-form posts converge differently than long-form blog
+posts — fewer rounds, more brutal cutting.
+
+PROJECT-SCREEN VALUES
+---------------------
+Project Name:    LinkedIn Post — Hit 100 Wireless Site Surveys
+Project Version: v1.0
+Document Type:   LinkedIn Post
+
+Target Audience:
+  My LinkedIn network — mostly wireless engineers, IT
+  managers, and a handful of recruiters. They scroll fast.
+  If the first two lines don't land, they keep scrolling.
+
+Desired Outcome:
+  Reader stops scrolling, reads the whole post, and either
+  comments with their own war story or sends a connection
+  request. Post should feel earned, not braggy.
+
+Scope:
+  Maximum 200 words. Hook in the first line. One concrete
+  lesson from doing 100 surveys, not a generic "I learned
+  patience" platitude. End with a question that invites
+  comments. No hashtag spam — three relevant hashtags max.
+
+Tone:
+  Conversational, dry, no LinkedIn-influencer voice. Sounds
+  like a peer talking to peers, not a thought leader trying
+  to grow an audience.
+
+Additional Instructions (Goal Notes):
+  Do not start with "I'm proud to announce" or "thrilled" or
+  "humbled" — the LinkedIn opener virus. No emojis except
+  maybe one at the end. No call to "DM me to learn more."
+
+Length Limit: 200 words
+Source:       From scratch
+
+
+REFERENCE MATERIAL PAYLOAD (paste into Setup 4)
+-----------------------------------------------
+Milestone: I just finished my 100th wireless site survey.
+Mix is roughly 60% predictive (Ekahau, iBwave) and 40%
+on-site validation surveys.
+
+The lesson I want to land:
+The biggest mistake I made on my first 20 surveys was
+trusting the predictive model. The map says coverage is
+green at -65 dBm and you walk in and the actual signal is
+-78 dBm because the predictive model didn't know about the
+metal mezzanine, the racks of inventory, or the fact that
+the customer's "drywall" is actually CMU block painted to
+look like drywall.
+
+Predictive surveys are a starting point. They are not the
+answer. The answer comes from walking the floor with a
+laptop and a real survey adapter and finding out where the
+model lied to you.
+
+Question to end on: what's the worst predictive-vs-actual
+delta you've measured?
+
+Hashtag candidates: #WirelessNetworking #SiteSurvey #CWNP
+
+
+============================================================
+PROJECT 3 — LinkedIn Profile Section (About Me)
+============================================================
+Target playbook entry: NEW playbook category — profile-style
+content. Different from blog or LinkedIn post: it has to
+work as both a recruiter screen AND a peer impression. Two
+audiences, one block of text.
+
+PROJECT-SCREEN VALUES
+---------------------
+Project Name:    LinkedIn Profile — About Section
+Project Version: v1.0
+Document Type:   LinkedIn About Section
+
+Target Audience:
+  Two readers at the same time — (1) a recruiter scanning for
+  CWNA / CWAP / Aruba / Ekahau keywords in 30 seconds, and
+  (2) a peer wireless engineer who can smell a fluffy
+  About section from across the room. The section has to
+  work for both without choosing one.
+
+Desired Outcome:
+  Recruiter sees the credentials and platform experience and
+  flags it as a match. Peer reads it and thinks "this person
+  actually does the work, not just talks about it."
+
+Scope:
+  Maximum 2,000 characters (LinkedIn's hard cap). Lead with
+  what I actually do, not where I work. Include credentials
+  (CWNA, CWDP, CWAP) and platform experience (Aruba on-prem
+  ArubaOS 8.x, Ruckus, Cisco Meraki, Ekahau, iBwave) without
+  it reading like a resume bullet list. End with one line
+  that gives a peer something to connect on.
+
+Tone:
+  Professional but human. Not stiff. Not performative.
+  Sounds like a sentence I would actually say at a meetup,
+  not the sanitized corporate version of myself.
+
+Additional Instructions (Goal Notes):
+  No "passionate about." No "results-driven." No "proven
+  track record." If a sentence sounds like it could have
+  been written about anyone in my field, rewrite it until
+  it could only have been written about me.
+
+Length Limit: 2000 characters
+Source:       From scratch
+
+
+REFERENCE MATERIAL PAYLOAD (paste into Setup 4)
+-----------------------------------------------
+Role: Senior Wireless Network Engineer (contractor) at
+Anduril Industries.
+
+Credentials: CWNA, CWDP, CWAP. Working through CWNE.
+
+Primary platform: Aruba on-prem ArubaOS 8.x. Past platforms
+include Ruckus and Cisco Meraki. Tools: Ekahau and iBwave
+for predictive and validation surveys. Strong on enterprise,
+warehouse, and industrial RF environments.
+
+What I actually do day to day: design wireless networks for
+sites where the floor plan and the predictive model
+disagree, validate them on-site, and own the deployment
+through Day 2 operations. The work is half RF physics and
+half "the customer told me there's no metal in the ceiling
+and the ceiling is actually a metal grid."
+
+Identity stack at work: Okta, Kolide, Cloudflare. Not
+Active Directory.
+
+What I want a peer to know about me: I'd rather walk a site
+than guess at one. Predictive surveys are a starting point.
+The answer is always on the floor with a laptop.
+
+What I want a recruiter to know about me: I have shipped
+production wireless deployments at scale, on-prem, in
+industrial environments, with constraints (air-gapped
+networks, restricted CDN access, no AD). I know what I
+don't know.
+
+
+============================================================
+HOW TO USE THIS DOCUMENT
+============================================================
+1. Pick one project at a time.
+2. Edit the language to sound like you before pasting.
+3. Paste field-by-field into the Project screen.
+4. Paste the Reference Material payload into Setup 4.
+5. Run rounds until the system stops on its own.
+6. Note the final round count and time — that's the data
+   point we'll add to document-playbooks.html.

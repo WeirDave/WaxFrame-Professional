@@ -1,0 +1,214 @@
+WAXFRAME — RUNNING TODO LIST
+============================================================
+Keep this open in Notepad++ alongside the editor.
+Updated: May 4, 2026 · current build v3.32.14 / 20260504-005
+
+
+============================================================
+ACTIVE — STILL ON THE LIST
+============================================================
+
+[ ] Reference Material multi-paste UX consistency
+    - Single-paste cap behaves differently from multi-file
+      uploads — pick one model and unify
+
+[ ] Error detail modal — extend rawData wiring beyond the
+    current 5 of 17 error log paths to full coverage
+
+[ ] Slow Responder Card — review per-AI gating threshold
+    (current: 2x round average + 15s) after more real-world
+    data. The session-boundary leak fixed in v3.32.14 (the
+    _slowResponderShownFor Set now resets on clearProject),
+    so the per-AI gating itself is now reliable; only the
+    threshold value needs tuning.
+
+
+============================================================
+DOCUMENTATION & PLAYBOOK BACKLOG
+============================================================
+
+[ ] Run Project 1 — Blog Post on Multi-AI Document Refinement
+    - From WaxFrame_Playbook_Remaining.txt (test ideas doc)
+    - Capture round count, time, final word count
+    - Compare against existing 16-round blog post entry
+
+[ ] Run Project 2 — LinkedIn Post (short-form announcement)
+    - First short-form data point in the playbook
+    - Capture conversion behavior — short-form likely
+      converges differently than long-form
+
+[ ] Run Project 3 — LinkedIn Profile (About section)
+    - First profile-style data point in the playbook
+    - Two-audience writing is a different convergence pattern
+
+[ ] Add new playbook entries for whichever of the above
+    converge cleanly (LinkedIn post + profile likely become
+    new dp-playbook sections in document-playbooks.html)
+
+
+============================================================
+ON THE HORIZON — FUTURE ROADMAP
+============================================================
+
+[ ] Hive Profiles / saved AI configurations
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. One dropdown at the top of the
+    Worker Bee screen:
+       "Profile: [Work Laptop ▾] · Save current as new… · Manage…"
+
+    Server-aware behavior:
+    - If a profile references AIs from a server that isn't
+      reachable (work VPN dropped, home firewall, air-gap),
+      surface a warning instead of silently failing on
+      round-start
+    - "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    - Could auto-detect on profile load via a quick Models
+      endpoint ping
+
+    Export/import:
+    - Profiles export as JSON — share between laptop and
+      desktop
+    - API keys travel separately (or get redacted on export
+      and re-prompted on import) — security matters here
+    - Could ship as part of existing Backup format v3, or
+      as standalone .waxprofile files
+
+[ ] Sources / Servers view (companion to Hive Profiles)
+    Soft split, not hard.
+
+    - Worker Bee screen stays the unified view — it's where
+      you tick what to use
+    - A new "Sources" or "Servers" view (or modal) handles
+      server-level concerns: add/edit/remove a server, its
+      endpoint pair, its API key, test connectivity, see
+      which bees came from it
+    - Imported Groups becomes "Sources" — earns its keep
+      because it's no longer redundant with the bee list,
+      it's the parent of bees from that source
+
+    Export/import maps cleanly: export a Source (endpoint
+    + key, optional) plus the Profiles that reference it.
+    Import a Source on a new machine and the Profiles light
+    up. AIs without a Source are direct-API customs.
+
+[ ] MODEL_LABELS data-driven via IDB daily cache
+    With MODEL_FALLBACKS as the offline fallback. Backlog
+    item from prior planning.
+
+[ ] Model update detection + opt-in swap prompt
+    When a provider releases a new top-tier model, prompt
+    the user to swap rather than silently keep the old one.
+
+[ ] User-manual guidance on model diversity for
+    model-server deployments
+    The Recommend-a-Model convergence trap: minimum-two-
+    distinct-models rule. Document somewhere in the user
+    manual.
+
+[ ] Documentation: convergence principle callout
+    "Starting from scratch converges faster than refining
+    heavily misaligned documents." Placement TBD —
+    README, manual, or playbooks.
+
+
+============================================================
+RECENTLY CLOSED — SHIPPED v3.30.x / v3.31.x / v3.32.x
+============================================================
+
+[X] Star bug — KILLED v3.32.14
+    Per-reviewer satisfaction indicator (NO CHANGES NEEDED
+    pill + star) now sticky to data via _cleanThisRound
+    universal re-derive in setBeeStatus + rehydration in
+    both renderers + removal of convergence-path 'idle'
+    wipes. Long-running QoL bug closed at the mechanism
+    level.
+
+[X] Slow-responder Set leak — FIXED v3.32.14
+    window._slowResponderShownFor now resets on
+    clearProject alongside _aiWarnings. Was previously
+    persisting across sessions for the entire tab lifetime.
+
+[X] Document Templates — SHIPPED v3.32.0 (+ v3.32.2-v3.32.6
+    refinements)
+    12-template gallery on the Project page. Use Template
+    button, separate modal, click-to-apply with overwrite
+    protection. Templates: Quick Start (chocolate chip
+    cookies), Cover Letter, Job Description, Résumé,
+    Thank-You, Business Proposal, Email & Outreach,
+    Executive Summary, RFP Response, Blog Post, Presentation
+    Outline, Recipe. Plus v3.32.2 Hint Banner for
+    placeholder fields and v3.32.4 Quick Start onboarding
+    nudge for first-time users.
+
+[X] testAllKeys modal — REBUILT
+    Side-by-side request/response panes (tkpSentPane /
+    tkpRcvPane) showing endpoint + request body and status
+    + response body. Plus retest buttons and billing
+    console links. Was lost in a prior large-block
+    replacement, has been rebuilt at full fidelity.
+
+[X] Debug Mode — SUPERSEDED by Deep Dive
+    Original spec (waxframe_debug toggle, debugLog helper,
+    _lastDebugData, four-tab modal, "Show Raw Response",
+    Test Ping, .console-debug styling) was replaced by the
+    Deep Dive feature: WF_DEBUG.deepDiveOn, wfDeepDiveToggle,
+    ring buffer, captureRound, troubleshooting Card system
+    (WF_DEBUG.classify / showCard). Different architecture,
+    same goal.
+
+[X] !important CSS cleanup pass — v3.29.4
+    All remaining !important declarations are legitimate
+    (.is-hidden utility, prefers-reduced-motion overrides,
+    @media print stylesheet). State-override declarations
+    cleaned via compound selectors. Closed.
+
+[X] Smart template buttons in Notes panel — SHIPPED
+    Pre-fill common instructions via applyNotesTemplate.
+
+[X] CSS default button flip when Notes panel opens — SHIPPED
+    Send to Builder highlighted instead of Smoke the Hive
+    via updateNotesBtnPriority.
+
+
+============================================================
+DECISIONS LOGGED — NOT GETTING BUILT
+============================================================
+
+[—] Inline style="display:none" migration in index.html
+    Originally flagged as v3.32.15. Confirmed against the
+    April 27 prior analysis: 16 elements use the JS-toggle
+    pattern where app.js reads el.style.display directly
+    (5 read sites on customAIModelSelect alone). Migrating
+    to a class-based hide would require auditing and
+    rewriting every style.display read across the codebase
+    — non-surgical. The inline declarations are kept and
+    documented as the project's JS-toggle pattern, not as
+    rule violations. Leave alone unless ready to migrate
+    every read site.
+
+
+============================================================
+NOTES ON RELATED /docs/ FILES
+============================================================
+
+WaxFrame_Playbook_Round_Count_Tests.txt
+    The 11-document fixture set still has value as a fixed
+    test corpus for measuring convergence-speed deltas
+    across releases. Templates use placeholder brackets;
+    fixtures use concrete pasteable content. Different
+    purposes — keep both. No v2.0 needed; a one-line
+    header note acknowledging the new Templates feature
+    would be sufficient if updating.
+
+WaxFrame_Playbook_Remaining.txt
+    The test-project-ideas doc (Project 1: Blog Post,
+    Project 2: LinkedIn Post, Project 3: LinkedIn Profile).
+    Verified May 4 — field schema and content all current.
+    Save to /docs/ and run when bored.
+
+WaxFrame_Prompts_Reference_v3.txt
+    Last reviewed at v3 — check for drift if Builder /
+    reviewer prompt language has changed since. Probably
+    needs a pass at some point but not urgent.
