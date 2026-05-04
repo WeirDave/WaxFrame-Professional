@@ -1,6 +1,28 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.13
+**Build:** `20260504-004` · **Released:** May 4, 2026
+
+Fixes a longstanding silent failure where Claude was the only provider whose live model list never populated.
+
+- **`fetchModelsForProvider('claude')` now routes through the existing `waxframe-claude-proxy` Cloudflare Worker.** Anthropic does not send CORS headers on `api.anthropic.com/v1/models` (only on `/v1/messages` via the `anthropic-dangerous-direct-browser-access` mechanism), so the previous direct-fetch code path failed every single call with `Cross-Origin Request Blocked: CORS Missing Allow Origin`. WaxFrame correctly fell back to `MODEL_FALLBACKS.claude` per the existing fallback logic, but `waxframe_models_claude` was never populated and `recommendForDefault('claude')` always saw the hardcoded fallback list rather than the live Anthropic lineup. Symptom: when Anthropic released a new model (e.g. `claude-opus-4-7`), it never appeared in WaxFrame until the fallback list was manually updated, and the Builder recommendation prompt was given a list that itself looked stale relative to Claude's training, raising hallucination probability — the v3.32.10 first-run dump showed Claude responding with `claude-sonnet-4-5` (a deprecated snapshot the validation defense correctly rejected) when the fallback list contained `claude-opus-4-6` rather than the current top-tier model. Routing through the existing proxy restores symmetry with the other six providers (ChatGPT, Gemini, Grok, DeepSeek, Mistral, Perplexity all fetch live model lists directly because their endpoints respect CORS). The proxy was updated in lockstep with this release to accept `GET /v1/models` alongside the existing `POST /v1/messages` flow, with a path allowlist so the worker cannot be used as a generic open proxy.
+- **No fallback list change.** `MODEL_FALLBACKS.claude` is still `['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5']` and stays that way as defense-in-depth for offline / proxy-down scenarios. Bumping the fallback to current models would have been duct tape — the real fix is to make the live fetch actually work, which v3.32.13 does.
+- **Custom-AI Anthropic format (`format === 'anthropic'` in `fetchModelsFromEndpoint`) is unchanged.** That code path is for users manually adding Anthropic as a Custom AI rather than using the bundled provider, and its behavior depends on whatever endpoint they configured. Not in scope for this release.
+- **No state migration.** First Recommend Models click after deploy will populate `waxframe_models_claude` with the live list and from then on the cached-list code path takes over (7-day TTL, same as every other provider).
+- **Version stamps in code bumped** to v3.32.13 / build 20260504-004 across the canonical 4-stamp checklist plus the 6-file cache-bust sweep.
+
+### Cloudflare Worker companion change (deployed separately, not in this ZIP)
+
+The `waxframe-claude-proxy` worker source was updated alongside this release to:
+- Allow `GET` requests in addition to the existing `POST` (CORS preflight `Access-Control-Allow-Methods` updated to `GET, POST, OPTIONS`)
+- Read incoming `request.url` pathname and forward to the matching path on `api.anthropic.com` (path allowlist: `/v1/messages`, `/v1/models`)
+- Forward POST bodies for `/v1/messages` and skip body for `/v1/models` GETs
+- Backwards-compat: requests to the worker root (no path) still forward to `/v1/messages` so any code that hits the worker URL without a path keeps working
+
+Worker deployment is independent of WaxFrame — deploy the worker first, then push the WaxFrame change. Order matters because deploying WaxFrame first would briefly send `/v1/models` GETs to the old worker, which would respond with `Method not allowed`. Old `/v1/messages` calls are unaffected throughout.
+
+---
 ## v3.32.12
 **Build:** `20260504-003` · **Released:** May 4, 2026
 
