@@ -3612,6 +3612,17 @@ html, body {
      plus the gap take ~110px on the left. */
   padding-left: 110px;
 }
+/* v3.32.11 — each role's why-line renders on its own row inside the note
+   wrapper. The Reviewer (✨) and Builder (🔨) lines were previously joined
+   with ' · ' which produced awkward mid-sentence wrapping when both lines
+   landed on the same model. Block display + small top margin between
+   lines (except first) makes the two-line case scannable. */
+.model-select-note-line {
+  display: block;
+}
+.model-select-note-line + .model-select-note-line {
+  margin-top: 2px;
+}
 /* .ai-remove-btn rules removed in v3.30.4 — the trash button it
    styled was replaced by a persistent checkbox (.ai-select-check)
    plus the bulk-select toolbar above the list. */
