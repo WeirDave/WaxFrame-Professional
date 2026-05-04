@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260504-004';         // build stamp — update each session
+const BUILD       = '20260504-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2948,6 +2948,11 @@ async function clearProject() {
   window._conflictLedger = [];
   localStorage.removeItem('waxframe_conflict_ledger');
   window._aiWarnings = {};
+  // v3.32.14 — Reset session-scoped slow-responder tracker. Without this,
+  // an AI that triggered the SLOW_RESPONDER troubleshooting card once
+  // would never re-warn for the rest of the tab's lifetime, even across
+  // unrelated sessions. Mirrors the _aiWarnings reset on the line above.
+  window._slowResponderShownFor = new Set();
   localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
@@ -9023,6 +9028,20 @@ function renderBeeStatusGrid() {
       </div>
     </div>`;
   }).join('');
+  // v3.32.14 — Rehydrate satisfaction state after innerHTML rebuild.
+  // Without this, any caller (setBuilderFromModal, continueFromBuilder,
+  // initWorkScreen) silently strips is-clean from cards that the data
+  // layer (_cleanThisRound) still says are satisfied. Walks the Set and
+  // re-applies the rendered state via setBeeStatus, which on a non-
+  // 'sending'/'error' input promotes to 'done-clean' through the
+  // universal re-derive path.
+  if (window._cleanThisRound) {
+    window._cleanThisRound.forEach(aiId => {
+      // Pass 'done' rather than 'done-clean' to avoid re-adding the same
+      // id to the Set; the universal re-derive will promote it.
+      setBeeStatus(aiId, 'done', 'No changes needed ✓');
+    });
+  }
   renderBeeDotStrip();
 }
 
@@ -9694,6 +9713,15 @@ function renderBeeDotStrip() {
     const iconEl = resolveAiIcon(ai, 'bee-dot-img', 18);
     return `<div class="bee-dot ${stateClass}" id="bdot-${ai.id}" title="${ai.name}">${iconEl}</div>`;
   }).join('');
+  // v3.32.14 — Rehydrate satisfaction state after innerHTML rebuild. The
+  // dot strip can be rebuilt independently (toggleSessionBee onchange
+  // handler at the hex-cell calls renderBeeDotStrip directly) so it
+  // needs the same defense as renderBeeStatusGrid.
+  if (window._cleanThisRound) {
+    window._cleanThisRound.forEach(aiId => {
+      setBeeStatus(aiId, 'done', 'No changes needed ✓');
+    });
+  }
 }
 
 function openEditHive() {
@@ -9736,23 +9764,32 @@ function toggleSessionBee(id, on) {
   }
 }
 
-// v3.32.10 — Durable per-round satisfaction tracking. Replaces the v3.29.3
-// Builder-only recovery hack. The pattern: when a reviewer reports
-// "no changes needed", we record their AI id in window._cleanThisRound.
-// Then if ANY subsequent setBeeStatus call lands on that AI with state='done'
-// during the same round (Builder phase compile, late renders, race conditions
-// between near-simultaneous responses, anything), we automatically upgrade
-// to 'done-clean' and the gold star renders.
+// v3.32.14 — Durable per-round satisfaction tracking, hardened.
+// Builds on the v3.32.10 chokepoint with two changes that close the
+// remaining holes the original couldn't reach:
 //
-// The Set is reset at the start of each round when 'sending' is set on all
-// reviewers (see runRound init). 'sending' on any AI also wipes that AI's
-// entry, so toggling AIs mid-session doesn't leave stale satisfaction state.
+// 1) Universal re-derive (was: only `state === 'done'`). Any non-'sending'
+//    and non-'error' state now consults `_cleanThisRound` and re-applies
+//    `is-clean` if the AI was satisfied this round. Was previously
+//    possible for an 'idle' wipe (convergence path) or a stray 'done'
+//    summary mismatch to drop the star while the data still said
+//    satisfied. The Set is the source of truth; the DOM is rebuilt from
+//    it on every setBeeStatus call.
+// 2) Renderer rehydration (see renderBeeStatusGrid / renderBeeDotStrip
+//    below). When either innerHTML rebuild fires mid-session — Edit Hive
+//    toggle, Change Builder modal, settings return — they walk
+//    _cleanThisRound and re-apply `is-clean`+`is-done` to each card and
+//    dot. Without this, a rebuild silently desynced the DOM from the
+//    truth.
 //
-// This addresses the long-standing UI bug where DeepSeek (typically the
-// fastest reviewer at sub-second response) would lose its star intermittently
-// while slower reviewers in the same round retained theirs. The visual
-// indicator is critical for tracking convergence at-a-glance without
-// scanning console output.
+// Reset rules unchanged: cleared at runRound start (full Set wipe),
+// per-AI 'sending' state clears that one entry. 'error' and 'done-clean'
+// inputs do NOT touch the Set beyond their original contracts.
+//
+// Dead branches removed: 'thinking' and 'streaming' had handler code but
+// zero callers (greps clean across all of app.js). Trimmed to keep the
+// state machine honest. 'idle' is now an explicit branch instead of an
+// else-fallthrough so the state name appears in the function body.
 if (!window._cleanThisRound) window._cleanThisRound = new Set();
 
 function setBeeStatus(id, state, summary) {
@@ -9761,26 +9798,27 @@ function setBeeStatus(id, state, summary) {
   const live = document.getElementById('blive-' + id);
   if (!card && !dot) return;
 
-  // v3.32.10 — promote 'done' to 'done-clean' if this AI was satisfied
-  // earlier this round. Idempotent: any number of plain 'done' calls during
-  // the round preserve the star. Builder phase, transient re-renders, and
-  // race conditions are now all handled at this single chokepoint.
+  // ── Track satisfaction signal at the chokepoint ──
+  // 'done-clean' input registers this AI as satisfied for the round.
+  // 'sending' input clears this AI's entry (next round starting for it).
+  // No other state touches the Set — once satisfied, the star sticks
+  // until 'sending' or 'error' explicitly overrides.
+  if (state === 'done-clean') window._cleanThisRound.add(id);
+  if (state === 'sending')    window._cleanThisRound.delete(id);
+
+  // ── Universal re-derive ──
+  // For ANY state that isn't 'sending' or 'error', if this AI is
+  // currently in _cleanThisRound, render it as 'done-clean'. Catches:
+  //   • 'done' calls from the Builder phase or any late path
+  //   • 'idle' wipes (none in v3.32.14 codepaths but defensive)
+  //   • Any future state that arrives while satisfaction is live
   let effectiveState = state;
   let effectiveSummary = summary;
-  if (state === 'done' && window._cleanThisRound.has(id)) {
+  if (state !== 'sending' && state !== 'error' && window._cleanThisRound.has(id)) {
     effectiveState = 'done-clean';
-    if (!summary || summary === 'Done ✓' || summary === 'Document updated ✓') {
+    if (!summary || summary === 'Done ✓' || summary === 'Document updated ✓' || summary === '') {
       effectiveSummary = 'No changes needed ✓';
     }
-  }
-  // Track satisfaction signal at the chokepoint — any path that calls
-  // 'done-clean' for this AI registers them as satisfied for the round.
-  if (state === 'done-clean') {
-    window._cleanThisRound.add(id);
-  }
-  // 'sending' resets per-AI satisfaction — new round started for this AI.
-  if (state === 'sending') {
-    window._cleanThisRound.delete(id);
   }
 
   const allStates = ['is-working', 'is-sending', 'is-responding', 'is-done', 'is-error', 'is-clean'];
@@ -9792,12 +9830,6 @@ function setBeeStatus(id, state, summary) {
   if (effectiveState === 'sending') {
     add('is-sending');
     if (live) live.textContent = 'Sending…';
-  } else if (effectiveState === 'thinking') {
-    add('is-responding');
-    if (live) live.textContent = 'Reviewing…';
-  } else if (effectiveState === 'streaming') {
-    add('is-responding');
-    if (live) live.textContent = 'Responding…';
   } else if (effectiveState === 'done') {
     add('is-done');
     if (live) live.textContent = 'Done ✓';
@@ -9808,6 +9840,7 @@ function setBeeStatus(id, state, summary) {
     add('is-error');
     if (live) live.textContent = 'Failed';
   } else {
+    // 'idle' / pre-round / unknown — clean slate, no class added
     if (live) live.textContent = 'Idle';
   }
 }
@@ -10351,8 +10384,16 @@ async function runRound() {
   setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
 
-  // Reset all bee statuses
-  activeAIs.forEach(ai => setBeeStatus(ai.id, 'waiting', 'Ready'));
+  // ── Round reset ──
+  // v3.32.14 — Order matters: clear _cleanThisRound FIRST so the visual
+  // wipe below isn't undone by the universal re-derive in setBeeStatus.
+  // Without this ordering, every card that was satisfied in the prior
+  // round would keep its star through the new round's pre-flight reset.
+  if (window._cleanThisRound) window._cleanThisRound.clear();
+  // 'idle' is the canonical pre-round state. Was 'waiting' historically;
+  // both fell through the same else branch in setBeeStatus and behaved
+  // identically. Consolidated to 'idle' alongside the dead-branch trim.
+  activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
 
   const builderAI = activeAIs.find(ai => ai.id === builder);
   let builderHadError = false;
@@ -10366,10 +10407,9 @@ async function runRound() {
 
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
   setStatus(`⚡ Round ${round} — all ${allReviewers.length} AIs reviewing…`);
-  // v3.32.10 — clear per-round satisfaction tracker before each round so the
-  // star bug fix has a clean baseline. Subsequent setBeeStatus 'sending'
-  // calls also clear per-AI entries individually as defense-in-depth.
-  if (window._cleanThisRound) window._cleanThisRound.clear();
+  // _cleanThisRound was cleared above in the round-reset block (v3.32.14).
+  // Per-AI entries also clear individually on each 'sending' state below
+  // as defense-in-depth.
   allReviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Reviewing…'));
 
   // Phase 1: Everyone reviews — Builder gets reviewer prompt too
@@ -10481,7 +10521,13 @@ async function runRound() {
     renderConflicts();
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
-    activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''));
+    // v3.32.14 — Removed: activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''))
+    // The unanimous wipe stripped is-clean from every card right before the
+    // scene played, so when the user closed the scene every reviewer card
+    // showed "Idle" instead of "No changes needed ✓ ★". Convergence is the
+    // exact moment the satisfaction visual matters most — leave the per-AI
+    // state intact. _cleanThisRound is the source of truth and stays
+    // populated until the next round's 'sending' wave clears it.
     setStatus(`🏁 Unanimous — all AIs agree the document is ready`);
     const runBtnU = document.getElementById('runRoundBtn');
     runBtnU?.classList.remove('running');
@@ -10523,7 +10569,12 @@ async function runRound() {
     renderConflicts();
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
-    activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''));
+    // v3.32.14 — Removed: activeAIs.forEach(a => setBeeStatus(a.id, 'idle', ''))
+    // Same fix as the unanimous path — preserve each AI's done-clean / done
+    // / error state through the convergence scene so the user can see who
+    // was satisfied vs. holdout when the scene closes. Holdouts are also
+    // the most useful signal at this moment for deciding whether to apply
+    // their suggestions or finish.
     setStatus(`🏁 Hive converged — review holdout suggestions or finish the project`);
     const runBtn = document.getElementById('runRoundBtn');
     runBtn?.classList.remove('running');
