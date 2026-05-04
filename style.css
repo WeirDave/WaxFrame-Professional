@@ -2942,15 +2942,23 @@ html, body {
   flex-shrink: 0;
   font-size: 12px;
   padding: 4px 10px;
-  background: rgba(155, 89, 182, 0.14);
-  color: var(--accent);
-  border: 1px solid rgba(155, 89, 182, 0.28);
+  /* v3.32.12 — color-only normalization. Original styling was orange text
+     (var(--accent)) on a faint purple wash with a purple border, which
+     compressed visually into a muddy reddish color at distance and looked
+     out of place next to the neighboring blue Test button. Swapped to the
+     same blue scheme as .ai-test-btn so the Test + Recommend Models pair
+     reads as a coordinated row of utility actions. Layout preserved
+     exactly — display, padding, font-size, border-radius, gap, alignment
+     all unchanged from the original ruleset. */
+  background: transparent;
+  color: var(--blue);
+  border: 1px solid var(--blue);
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s ease;
 }
-.ai-recheck-btn:hover { background: rgba(155, 89, 182, 0.28); }
+.ai-recheck-btn:hover { background: var(--blue-dim); }
 .ai-recheck-btn:disabled { opacity: 0.6; cursor: wait; }
 
 .custom-ai-key-wrap {

@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.12
+**Build:** `20260504-003` · **Released:** May 4, 2026
+
+Two bugs caught on first v3.32.11 verification + the "Recommend Models" button color cleanup.
+
+- **Reviewer/Builder note lines now both render whenever cached, independent of selected model.** The v3.32.10 / v3.32.11 logic gated each role's note line on `currentModel === reviewerModel` (or `builderModel`). When the Reviewer and Builder picks were different models — Gemini's split (`gemini-3.1-pro-preview` Reviewer / `gemini-pro-latest` Builder), Grok, Mistral all hit this on the v3.32.11 first run — picking either pick caused the OTHER role's reasoning to be hidden entirely. Visible side effect: users thought Builder picks weren't being recommended at all because the dropdown markers were the only evidence and the note line stayed silent. Fixed by dropping the `currentModel === ...` gate in `buildModelSelector`. Both notes render whenever both role caches exist, regardless of what the user has selected. NONE handling preserved (only fires when no actual Builder pick exists). The notes describe what was RECOMMENDED for each role; they should always be visible when cached, not gated on selection state.
+- **`saveModelForAI` note re-render removed.** Now that notes are invariant to which model is selected, changing the dropdown has no effect on note content. Querying `.model-select-note` and rewriting its `innerHTML` on every selection change was wasted work and unnecessary DOM coupling. Kept the model-set toast and the model-update-on-cfg logic, dropped only the note re-render block. The note is set once by `buildModelSelector` at row render time and only refreshes when the entire row is re-rendered (e.g., after Recommend Models populates new caches).
+- **`.ai-recheck-btn` ("Recommend Models" button) color normalized to match `.ai-test-btn`.** The original styling — orange text (`var(--accent)`) on a faint purple wash with a purple border — compressed visually into a muddy reddish color at typical reading distance and looked out of place next to the neighboring blue Test button. Swapped to the same blue scheme as `.ai-test-btn`: transparent background, `var(--blue)` border, `var(--blue)` text, `var(--blue-dim)` on hover. The Test + Recommend Models pair now reads as a coordinated row of related utility actions. Layout preserved exactly — `display: inline-flex`, `gap: 4px`, `padding: 4px 10px`, `font-size: 12px`, `border-radius: 6px`, alignment all unchanged from the original ruleset. Only the three color properties (background, color, border) and the hover background changed.
+- **Version stamps in code bumped** to v3.32.12 / build 20260504-003 across the canonical 4-stamp checklist plus the 6-file cache-bust sweep.
+
+---
 ## v3.32.11
 **Build:** `20260504-002` · **Released:** May 4, 2026
 
