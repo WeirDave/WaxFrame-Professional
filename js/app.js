@@ -923,6 +923,10 @@ async function fetchModelsForProvider(provider) {
     }
 
     if (models.length > 0) {
+      // v3.32.11 — dedup before caching. Mistral's /v1/models endpoint is
+      // known to return duplicate ids; defensive against any provider that
+      // does the same. Set preserves insertion order so first occurrence wins.
+      models = [...new Set(models)];
       try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models })); }
       catch(e) { console.warn(`[models-cache:${provider}] write failed:`, e); }
       return models;
@@ -946,11 +950,21 @@ async function fetchModelsForProvider(provider) {
 
 function getModelsForProvider(provider) {
   const cacheKey = `waxframe_models_${provider}`;
+  // v3.32.11 — defensive dedup at read time. Some provider /v1/models
+  // endpoints (notably Mistral) return duplicate entries — same model id
+  // listed multiple times. Without dedup, buildModelSelector renders the
+  // same model multiple times in the dropdown AND assigns the ✨/🔨 markers
+  // to every match, so the same recommendation appears stamped on multiple
+  // rows. Dedup is provider-agnostic and idempotent — safe to run on every
+  // read regardless of cache state.
+  let models = [];
   try {
     const cached = JSON.parse(localStorage.getItem(cacheKey) || 'null');
-    if (cached?.models?.length > 0) return cached.models;
+    if (cached?.models?.length > 0) models = cached.models;
   } catch(e) {}
-  return MODEL_FALLBACKS[provider] || [];
+  if (!models.length) models = MODEL_FALLBACKS[provider] || [];
+  // Set preserves insertion order, so the first occurrence of each id wins.
+  return [...new Set(models)];
 }
 
 // v3.27.1: unified recommend-cache key resolver. Defaults use the provider
@@ -985,7 +999,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
 
-  // v3.32.10 — read TWO cached recommendations: Reviewer (✨) and Builder (🏗️).
+  // v3.32.10 — read TWO cached recommendations: Reviewer (✨) and Builder (🔨).
   // The dropdown surfaces both so users see the right pick for each role
   // their AI might be slotted into. Reasoning models flagged for the
   // Reviewer role show a small "Reasoning — slower/pricier" badge in the
@@ -1002,7 +1016,7 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const options = models.map(m => {
     const markers = [];
     if (m === reviewerModel) markers.push('✨'); // Reviewer pick
-    if (m === builderModel)  markers.push('🏗️'); // Builder pick
+    if (m === builderModel)  markers.push('🔨'); // Builder pick
     const markerPart = markers.length ? markers.join(' ') + ' ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
     const baseDisplay = `${markerPart}${m}${reasoningBadge}`;
@@ -1011,25 +1025,26 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   }).join('');
 
   // Note line: shows the WHY for the currently-selected model based on which
-  // role recommendation it matches. If selected model matches both role
-  // picks, show both reasons separated by ' · '. If it matches neither,
-  // show nothing.
-  let noteText = '';
+  // role recommendation it matches. Each role renders on its own line via
+  // .model-select-note-line { display: block; }. Model id is included in
+  // parens so users can confirm the cache matches what they're seeing.
+  // v3.32.11 — switched from inline ' · ' separator to per-line spans
+  // because long WHY text from BOTH roles concatenated mid-sentence
+  // produced awkward wrapping. Each role on its own line is cleaner.
   const noteParts = [];
   if (currentModel && currentModel === reviewerModel && reviewerWhy) {
-    noteParts.push(`✨ Reviewer: ${esc(reviewerWhy)}`);
+    noteParts.push(`<span class="model-select-note-line">✨ Reviewer (${esc(reviewerModel)}): ${esc(reviewerWhy)}</span>`);
   }
   if (currentModel && currentModel === builderModel && builderWhy) {
-    noteParts.push(`🏗️ Builder: ${esc(builderWhy)}`);
+    noteParts.push(`<span class="model-select-note-line">🔨 Builder (${esc(builderModel)}): ${esc(builderWhy)}</span>`);
   }
   // NONE handling — if user has no Builder recommendation cached because the
-  // AI flagged NONE, surface that as a note so they know why no 🏗️ marker
+  // AI flagged NONE, surface that as a note so they know why no 🔨 marker
   // appears in the dropdown. Only show when no other note applies.
   if (!noteParts.length && builderCache?.none && builderCache?.why) {
-    noteParts.push(`🏗️ Builder: ${esc(builderCache.why)}`);
+    noteParts.push(`<span class="model-select-note-line">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
-  noteText = noteParts.join(' · ');
-  const noteHtml = noteText ? `<span class="model-select-note">${noteText}</span>` : '';
+  const noteHtml = noteParts.length ? `<span class="model-select-note">${noteParts.join('')}</span>` : '';
 
   // v3.32.10 — recheck button label updated to reflect dual-role behavior.
   const recheckBtn = showRecheck
@@ -1061,18 +1076,21 @@ function saveModelForAI(aiId, modelId) {
   saveSettings();
   // v3.32.10 — note line now reads from BOTH role caches. Same logic as
   // buildModelSelector's note rendering, kept in sync.
+  // v3.32.11 — switched to per-line spans + model id in parens. Now uses
+  // innerHTML (was textContent) since each line is wrapped in a span; all
+  // dynamic content is esc()'d before insertion.
   const noteEl = document.querySelector(`#airow-${aiId} .model-select-note`);
   if (noteEl) {
     const reviewerCache = getReviewerRecommendation(aiId);
     const builderCache  = getBuilderRecommendation(aiId);
     const noteParts = [];
     if (modelId === reviewerCache?.model && reviewerCache?.why) {
-      noteParts.push(`✨ Reviewer: ${reviewerCache.why}`);
+      noteParts.push(`<span class="model-select-note-line">✨ Reviewer (${esc(reviewerCache.model)}): ${esc(reviewerCache.why)}</span>`);
     }
     if (modelId === builderCache?.model && builderCache?.why) {
-      noteParts.push(`🏗️ Builder: ${builderCache.why}`);
+      noteParts.push(`<span class="model-select-note-line">🔨 Builder (${esc(builderCache.model)}): ${esc(builderCache.why)}</span>`);
     }
-    noteEl.textContent = noteParts.join(' · ');
+    noteEl.innerHTML = noteParts.join('');
   }
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
@@ -1089,7 +1107,7 @@ function saveModelForAI(aiId, modelId) {
 // along with this function. In v3.31.0–v3.32.9 the Best/Fast/Budget
 // buttons in the expanded panel covered the "snap back to a sensible
 // model" use case. Those buttons are also removed in v3.32.10 — the
-// new dropdown surfaces ✨ Reviewer and 🏗️ Builder picks directly,
+// new dropdown surfaces ✨ Reviewer and 🔨 Builder picks directly,
 // so no separate quick-switch row is needed.
 // _originalModel field is still captured at AI add time but is no
 // longer surfaced in any UI; kept as forward-compatibility scaffold
@@ -1266,7 +1284,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260504-001';         // build stamp — update each session
+const BUILD       = '20260504-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3530,7 +3548,7 @@ function buildAISetupRowHTML(ai) {
       : '';
     // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
     // (snap to a recommendation pick) is now redundant with the dropdown's
-    // dual ✨ Reviewer / 🏗️ Builder markers — users see both picks
+    // dual ✨ Reviewer / 🔨 Builder markers — users see both picks
     // directly in the dropdown and select via the same control they'd use
     // for any manual choice.
     expandedHTML = `
@@ -3672,7 +3690,7 @@ function renderWorkerBeeToolbar() {
 // v3.32.10 — buildBestFastBudgetButtonsHTML and applyCategoryRecommendation
 // removed. The Best/Fast/Budget category model was retired in v3.32.10:
 // Recommend-a-Model now produces ONE Reviewer pick + ONE Builder pick per
-// AI, both surfaced directly in the model dropdown via ✨ and 🏗️ markers.
+// AI, both surfaced directly in the model dropdown via ✨ and 🔨 markers.
 // The expanded panel no longer needs a separate quick-switch button row.
 
 
@@ -3781,7 +3799,7 @@ function setBuilder(id) {
   builder = id;
   renderBuilderPicker();
   const ai = aiList.find(a => a.id === id);
-  toast(`🏗️ ${ai?.name} is now the Builder`);
+  toast(`🔨 ${ai?.name} is now the Builder`);
 }
 
 async function testApiKey(id) {
@@ -4857,7 +4875,7 @@ async function recommendForDefault(provider) {
   // the soft-preference prompt (allows reasoning models if genuinely best);
   // Builder pick uses the hard-guardrail prompt (rejects reasoning variants
   // due to envelope risk). Two API calls run concurrently so the dropdown
-  // can render both ✨ Reviewer and 🏗️ Builder markers.
+  // can render both ✨ Reviewer and 🔨 Builder markers.
   const baseArgs = { endpoint: cfg.endpoint, format, key: cfg._key, models, askingModel };
   const [reviewerResult, builderResult] = await Promise.all([
     recommendModel({ ...baseArgs, cacheId: `default-${provider}-reviewer`, role: 'reviewer' }),
@@ -5280,6 +5298,10 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
   }
   // Same structural-only filter the default 6 use
   models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
+  // v3.32.11 — dedup. Mistral's /v1/models endpoint returns duplicate ids
+  // (mistral-large-2512, mistral-large-latest, voxtral-mini-2507, etc. all
+  // appear twice). Set preserves insertion order so first occurrence wins.
+  models = [...new Set(models)];
   return models;
 }
 
@@ -5333,6 +5355,9 @@ async function fetchCustomAIModels() {
     // the toast so users know we did something on their behalf.
     const rawCount = models.length;
     models = models.filter(m => !NON_CHAT_RE.test(m));
+    // v3.32.11 — dedup. Mistral and some self-hosted servers return duplicate
+    // ids; Set preserves insertion order so first occurrence wins.
+    models = [...new Set(models)];
     const filteredOutCount = rawCount - models.length;
     if (!models.length) throw new Error('No chat-compatible models returned (all results were embeddings/audio/image)');
 
@@ -10114,7 +10139,7 @@ async function runBuilderOnly() {
   if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Building…';
   showBuilderOverlay();
   startRoundTimer(smokeBtn, 'Building…');
-  setStatus(`🏗️ Sending directly to ${builderAI.name}…`);
+  setStatus(`🔨 Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   consoleLog(`📝 Notes: ${notes}`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
@@ -10505,7 +10530,7 @@ async function runRound() {
   if (builderAI && successfulReviews.length > 0) {
     consoleLog(`🔨 ${builderAI.name} (Builder) — compiling document from ${successfulReviews.length} review${successfulReviews.length!==1?'s':''} (including its own)…`, 'info');
     setBeeStatus(builderAI.id, 'sending', 'Building…');
-    setStatus(`🏗️ ${builderAI.name} is building the updated document…`);
+    setStatus(`🔨 ${builderAI.name} is building the updated document…`);
     // Update label to BUILDING… without resetting the clock
     const _rtLabel = document.getElementById('roundTimerLabel');
     if (_rtLabel) _rtLabel.textContent = 'BUILDING…';
