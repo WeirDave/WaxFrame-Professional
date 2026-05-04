@@ -901,7 +901,19 @@ async function fetchModelsForProvider(provider) {
       models = (data?.data || []).map(m => m.id).filter(filter).sort();
 
     } else if (provider === 'claude') {
-      const resp = await fetch('https://api.anthropic.com/v1/models', {
+      // v3.32.13 — route through the same CF Worker proxy that handles
+      // /v1/messages calls. Anthropic does not send CORS headers on
+      // api.anthropic.com/v1/models, so direct browser fetches from the
+      // GitHub Pages origin always failed with "CORS Missing Allow Origin"
+      // and silently fell back to MODEL_FALLBACKS. Going through the proxy
+      // restores symmetry with every other provider — live model list now
+      // populates waxframe_models_claude on first successful fetch and
+      // recommendForDefault sees the actual current Anthropic lineup
+      // instead of a hardcoded fallback that may be one generation behind.
+      // The worker (waxframe-claude-proxy) was updated in lockstep with
+      // this release to accept GET /v1/models alongside the existing
+      // POST /v1/messages flow.
+      const resp = await fetch(`${cfg.endpoint}/v1/models`, {
         headers: { 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' }
       });
       if (!resp.ok) return null;
@@ -1282,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260504-003';         // build stamp — update each session
+const BUILD       = '20260504-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
