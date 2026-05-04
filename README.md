@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.32.8-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260503--024-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Version](https://img.shields.io/badge/Version-3.32.10-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260504--001-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -188,7 +188,6 @@ Two clocks sit above the Live Console:
 | DeepSeek | DeepSeek | `deepseek-chat` — very low cost per token, strong Builder |
 | Grok | xAI | `grok-4` — good context window |
 | Perplexity | Perplexity | `sonar-pro` — search-aware, works well as a reviewer |
-| Copilot | Microsoft | `gpt-4o` — OpenAI-compatible endpoint |
 | Custom | Any | Add any AI with an OpenAI-compatible API endpoint |
 
 Any AI can act as either a Worker Bee or Builder. Mix and match however you like. If a round fails with a missing output structure error, try switching to a different Builder — some AIs are less consistent at following strict formatting instructions on large or complex documents.
