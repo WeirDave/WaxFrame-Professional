@@ -962,67 +962,79 @@ function getCacheIdForAI(aiId) {
   return isDefault ? `default-${aiId}` : `custom-${aiId}`;
 }
 
+// v3.32.10 — helpers to fetch role-specific cached recommendations.
+// Returns the cached payload (with `model`, `why`, `labels`, optional `none`)
+// or null. Also handles legacy migration: if a pre-v3.32.10 single cache key
+// exists and the new role-specific keys do not, the legacy is treated as the
+// Reviewer cache (matches the historic implicit role) so users see something
+// useful while waiting for fresh recommendations to populate.
+function getReviewerRecommendation(aiId) {
+  const baseId = getCacheIdForAI(aiId);
+  const reviewerCache = getCachedRecommendation(`${baseId}-reviewer`);
+  if (reviewerCache) return reviewerCache;
+  // Legacy migration: pre-v3.32.10 cache stored a single recommendation
+  // under the unsuffixed key. Treat it as the Reviewer pick until refreshed.
+  const legacy = getCachedRecommendation(baseId);
+  return legacy || null;
+}
+function getBuilderRecommendation(aiId) {
+  return getCachedRecommendation(`${getCacheIdForAI(aiId)}-builder`);
+}
+
 function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   const models = getModelsForProvider(provider);
   if (!models.length) return '';
 
-  // v3.27.0: source of truth is the AI's own categorized recommendation cache.
-  // The AI returns 3 categorized picks (Best Overall + Fastest + Budget) and
-  // those become the dropdown tags. ✨ marks the BEST pick. All other models
-  // render as bare ids.
-  // v3.27.1: cache key now branches on default vs custom — defaults use
-  // `default-${provider}`, customs use `custom-${aiId}`. For defaults
-  // aiId === provider so both schemes resolve the same key.
-  const cached = getCachedRecommendation(getCacheIdForAI(aiId));
-  const recommendedModel = cached?.model || null;
-  const labels = cached?.labels || {};
+  // v3.32.10 — read TWO cached recommendations: Reviewer (✨) and Builder (🏗️).
+  // The dropdown surfaces both so users see the right pick for each role
+  // their AI might be slotted into. Reasoning models flagged for the
+  // Reviewer role show a small "Reasoning — slower/pricier" badge in the
+  // option text since the Reviewer prompt allows them when genuinely best.
+  const reviewerCache = getReviewerRecommendation(aiId);
+  const builderCache  = getBuilderRecommendation(aiId);
+  const reviewerModel = reviewerCache?.model || null;
+  const builderModel  = builderCache?.model  || null;
+  const reviewerWhy   = reviewerCache?.why   || '';
+  const builderWhy    = builderCache?.why    || '';
 
-  // Map a tag string (possibly concatenated like "Best Overall · Fastest") to
-  // icons. v3.27.1: dropped 🎯 icon for Best Overall — the ✨ marker on the
-  // recommended model row already conveys "this is the best pick", so a
-  // category icon would be redundant. Fastest and Budget keep their icons
-  // because they're meaningfully distinct categories the user might pick.
-  const iconForTag = (tagStr) => {
-    if (!tagStr) return '';
-    const map = { 'Fastest': '⚡', 'Budget': '💰' };
-    return tagStr.split(' · ').map(t => map[t] || '').filter(Boolean).join(' ');
-  };
+  const isReasoningLike = (m) => BUILDER_DISALLOWED_PATTERN.test(m);
 
   const options = models.map(m => {
-    const lbl = labels[m];
-    const icons = iconForTag(lbl?.tag);
-    const tagPart = lbl?.tag ? ` — ${lbl.tag}` : '';
-    const iconPart = icons ? `${icons} ` : '';
-    const baseDisplay = `${iconPart}${m}${tagPart}`;
-    const display = m === recommendedModel ? `✨ ${baseDisplay}` : baseDisplay;
+    const markers = [];
+    if (m === reviewerModel) markers.push('✨'); // Reviewer pick
+    if (m === builderModel)  markers.push('🏗️'); // Builder pick
+    const markerPart = markers.length ? markers.join(' ') + ' ' : '';
+    const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
+    const baseDisplay = `${markerPart}${m}${reasoningBadge}`;
     const selected = m === currentModel ? 'selected' : '';
-    return `<option value="${m}" ${selected}>${esc(display)}</option>`;
+    return `<option value="${m}" ${selected}>${esc(baseDisplay)}</option>`;
   }).join('');
 
-  // Note line shows the WHY for the currently-selected model from the labels
-  // map. If current is the BEST pick, prefix with ✨. If current has no
-  // AI-provided WHY (user picked an un-tagged model), show nothing.
+  // Note line: shows the WHY for the currently-selected model based on which
+  // role recommendation it matches. If selected model matches both role
+  // picks, show both reasons separated by ' · '. If it matches neither,
+  // show nothing.
   let noteText = '';
-  if (currentModel && labels[currentModel]?.why) {
-    const isRec = currentModel === recommendedModel;
-    noteText = isRec ? `✨ ${esc(labels[currentModel].why)}` : esc(labels[currentModel].why);
+  const noteParts = [];
+  if (currentModel && currentModel === reviewerModel && reviewerWhy) {
+    noteParts.push(`✨ Reviewer: ${esc(reviewerWhy)}`);
   }
+  if (currentModel && currentModel === builderModel && builderWhy) {
+    noteParts.push(`🏗️ Builder: ${esc(builderWhy)}`);
+  }
+  // NONE handling — if user has no Builder recommendation cached because the
+  // AI flagged NONE, surface that as a note so they know why no 🏗️ marker
+  // appears in the dropdown. Only show when no other note applies.
+  if (!noteParts.length && builderCache?.none && builderCache?.why) {
+    noteParts.push(`🏗️ Builder: ${esc(builderCache.why)}`);
+  }
+  noteText = noteParts.join(' · ');
   const noteHtml = noteText ? `<span class="model-select-note">${noteText}</span>` : '';
 
-  // v3.26.8: button text dropped emoji and renamed "Have AI Recommend" — clearer
-  // about what it does. Conceptually pairs with the dropdown (it changes which
-  // model is selected) rather than the Test button.
+  // v3.32.10 — recheck button label updated to reflect dual-role behavior.
   const recheckBtn = showRecheck
-    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API which of its models is best for WaxFrame review tasks">Recommend a Model</button>`
+    ? `<button class="ai-recheck-btn" id="recheckbtn-${aiId}" onclick="recheckModelForAI('${aiId}')" title="Ask the provider's own API to recommend its best Reviewer and Builder models for WaxFrame">Recommend Models</button>`
     : '';
-
-  // v3.30.2 reset-to-original button removed in v3.31.0. The Best/Fast/Budget
-  // buttons in the expanded panel (buildBestFastBudgetButtonsHTML) now
-  // serve the "snap back to a sensible model" use case — and they snap to
-  // a useful target (the recommendation) instead of the arbitrary
-  // module-load snapshot. _originalModel field is still captured at AI
-  // add time but currently unused; kept as forward-compatibility scaffold
-  // in case a future "audit trail" feature wants it.
 
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
@@ -1047,16 +1059,20 @@ function saveModelForAI(aiId, modelId) {
     cfg.endpoint = cfg.endpointFn(modelId);
   }
   saveSettings();
-  // v3.27.0: read the note from the AI's cached labels rather than the dead
-  // MODEL_LABELS table. If the user picks an un-tagged model, the note
-  // clears (correct — we have no AI-provided WHY for that model).
+  // v3.32.10 — note line now reads from BOTH role caches. Same logic as
+  // buildModelSelector's note rendering, kept in sync.
   const noteEl = document.querySelector(`#airow-${aiId} .model-select-note`);
   if (noteEl) {
-    const cached = getCachedRecommendation(getCacheIdForAI(aiId));
-    const labels = cached?.labels || {};
-    const isRec = modelId === cached?.model;
-    const lblWhy = labels[modelId]?.why || '';
-    noteEl.textContent = lblWhy ? (isRec ? `✨ ${lblWhy}` : lblWhy) : '';
+    const reviewerCache = getReviewerRecommendation(aiId);
+    const builderCache  = getBuilderRecommendation(aiId);
+    const noteParts = [];
+    if (modelId === reviewerCache?.model && reviewerCache?.why) {
+      noteParts.push(`✨ Reviewer: ${reviewerCache.why}`);
+    }
+    if (modelId === builderCache?.model && builderCache?.why) {
+      noteParts.push(`🏗️ Builder: ${builderCache.why}`);
+    }
+    noteEl.textContent = noteParts.join(' · ');
   }
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
@@ -1070,10 +1086,11 @@ function saveModelForAI(aiId, modelId) {
 // outweigh the safety benefit.
 // resetModelToOriginal() removed in v3.31.0 — its UI button (the
 // "↺ Reset to {original}" button on the model selector row) was deleted
-// along with this function. The Best/Fast/Budget buttons in the expanded
-// panel (buildBestFastBudgetButtonsHTML) cover the "snap back to a
-// sensible model" use case and snap to a useful target (the cached
-// recommendation) instead of the arbitrary module-load snapshot.
+// along with this function. In v3.31.0–v3.32.9 the Best/Fast/Budget
+// buttons in the expanded panel covered the "snap back to a sensible
+// model" use case. Those buttons are also removed in v3.32.10 — the
+// new dropdown surfaces ✨ Reviewer and 🏗️ Builder picks directly,
+// so no separate quick-switch row is needed.
 // _originalModel field is still captured at AI add time but is no
 // longer surfaced in any UI; kept as forward-compatibility scaffold
 // for any future audit-trail feature.
@@ -1113,10 +1130,41 @@ function ensureOriginalModelBaseline() {
   }
 }
 
-// v3.26.5: snapshot the structural config of each default provider at module
-// load time. Currently the only live consumer is saveKeyForAI's self-heal
-// path (which restores a missing API_CONFIGS entry for a default provider).
-// Earlier versions also fed resetBeesToDefaults / restoreHiddenDefaults
+// v3.32.10 — One-time migration: clear stale single-pick recommendation
+// caches from pre-v3.32.10 installs. The old format stored
+// {model, why, labels: {tag: 'Best Overall'|'Fastest'|'Budget', why}}
+// under a single per-provider/per-AI key. v3.32.10 splits into
+// role-suffixed -reviewer and -builder keys with a different label shape.
+// The legacy keys won't render usefully with the new buildModelSelector
+// (no role markers, missing why text), so we wipe them on first load to
+// force a clean re-recommend on next button click. Silent — no toast.
+// The migration flag prevents re-clearing on every page load.
+function migrateRecommendationCachesV33210() {
+  if (localStorage.getItem('waxframe_v33210_recommend_migrated')) return;
+  let cleared = 0;
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      // Match pre-v3.32.10 single-pick recommendation cache keys.
+      // The new role-suffixed keys end in -reviewer or -builder, so we
+      // explicitly skip those to avoid wiping fresh v3.32.10 data on a
+      // user who somehow runs the migration twice.
+      if (/^waxframe_recommend_(default|custom)-/.test(k)
+          && !/-(reviewer|builder)$/.test(k)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
+    localStorage.setItem('waxframe_v33210_recommend_migrated', '1');
+  } catch(e) { /* quota / privacy mode — accept and move on */ }
+  if (cleared > 0) {
+    console.info(`[migrate-v3.32.10] Cleared ${cleared} stale recommendation cache key(s) from pre-v3.32.10 format.`);
+  }
+}
+
+
 // (both removed in v3.31.0) and the recovery from the legacy removeAI
 // function (removed in v3.30.4). The snapshot is still kept because the
 // self-heal path remains relevant for users upgrading from pre-v3.26.5
@@ -1218,7 +1266,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260503-025';         // build stamp — update each session
+const BUILD       = '20260504-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3480,11 +3528,11 @@ function buildAISetupRowHTML(ai) {
     const getKeyLink = (!hasKey && consoleUrl)
       ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">Don't have a key?</span> <a class="ai-getkey-link" href="${consoleUrl}" target="_blank" rel="noopener">Get one from ${esc(ai.name)} ↗</a></div>`
       : '';
-    // Best/Fast/Budget category buttons — Internet mode only, only when
-    // a recommendation has been cached. Suppressed in Server mode.
-    const bfbButtons = (hasKey && _hiveMode === 'internet')
-      ? buildBestFastBudgetButtonsHTML(ai.id, ai.provider, cfg?.model || '')
-      : '';
+    // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
+    // (snap to a recommendation pick) is now redundant with the dropdown's
+    // dual ✨ Reviewer / 🏗️ Builder markers — users see both picks
+    // directly in the dropdown and select via the same control they'd use
+    // for any manual choice.
     expandedHTML = `
       <div class="ai-setup-expanded">
         ${getKeyLink}
@@ -3504,7 +3552,6 @@ function buildAISetupRowHTML(ai) {
           ${hasKey ? `<button class="ai-test-btn" id="testbtn-${ai.id}" onclick="testApiKey('${ai.id}'); event.stopPropagation();" title="Test this API key">Test</button>` : ''}
         </div>
         ${modelSelector}
-        ${bfbButtons}
       </div>`;
   }
 
@@ -3622,62 +3669,11 @@ function renderWorkerBeeToolbar() {
     <button class="btn btn-sm bee-controls-expand-btn" onclick="collapseAllAISetupRows()" title="Collapse every AI row">⊟ Collapse all</button>`;
   row.innerHTML = buttons + expandControls;
 }
-
-// ── Best / Fast / Budget category buttons ──
-// Internet mode only. Uses the existing recommend cache (no new fetches).
-// Reads the cached recommendation, walks labels to find which model is
-// tagged with each category, and renders a button per category. The
-// active button (matching the AI's currently-saved model) is highlighted.
-// Hidden entirely if no recommendation has been cached yet — the user
-// needs to run "Recommend a Model" first.
-function buildBestFastBudgetButtonsHTML(aiId, provider, currentModel) {
-  const cached = getCachedRecommendation(getCacheIdForAI(aiId));
-  if (!cached) return '';
-  const bestModel = cached.model || null;
-  const labels = cached.labels || {};
-  // Find the model id tagged with each category. Tags can be concatenated
-  // ("Best Overall · Fastest") so a single model can satisfy multiple
-  // categories — that's expected and fine.
-  let fastModel = null, budgetModel = null;
-  Object.keys(labels).forEach(modelId => {
-    const tag = labels[modelId]?.tag || '';
-    if (!fastModel   && tag.includes('Fastest')) fastModel   = modelId;
-    if (!budgetModel && tag.includes('Budget'))  budgetModel = modelId;
-  });
-  if (!bestModel && !fastModel && !budgetModel) return '';
-
-  const btn = (label, modelId, icon) => {
-    if (!modelId) return '';
-    const isActive = (modelId === currentModel);
-    return `<button class="ai-bfb-btn ${isActive ? 'is-active' : ''}"
-              onclick="applyCategoryRecommendation('${aiId}', '${esc(modelId)}'); event.stopPropagation();"
-              title="${esc(label)}: ${esc(modelId)}">
-              ${icon} ${label}
-            </button>`;
-  };
-  return `
-    <div class="ai-bfb-wrap">
-      <span class="ai-bfb-label">Quick switch:</span>
-      ${btn('Best',   bestModel,   '✨')}
-      ${btn('Fast',   fastModel,   '⚡')}
-      ${btn('Budget', budgetModel, '💰')}
-    </div>`;
-}
-
-// Click handler for B/F/B buttons. Pure cache application — no network
-// call. Updates the dropdown via saveModelForAI which already handles
-// Gemini endpoint sync and re-renders the model-select-note.
-function applyCategoryRecommendation(aiId, modelId) {
-  const ai = aiList.find(a => a.id === aiId);
-  if (!ai) return;
-  const cfg = API_CONFIGS[ai.provider];
-  if (!cfg) return;
-  saveModelForAI(aiId, modelId);
-  // saveModelForAI updates the note element but doesn't re-render the
-  // row's BFB button-active state — re-render the whole row so the
-  // active highlight moves to the clicked button.
-  renderAISetupGrid();
-}
+// v3.32.10 — buildBestFastBudgetButtonsHTML and applyCategoryRecommendation
+// removed. The Best/Fast/Budget category model was retired in v3.32.10:
+// Recommend-a-Model now produces ONE Reviewer pick + ONE Builder pick per
+// AI, both surfaced directly in the model dropdown via ✨ and 🏗️ markers.
+// The expanded panel no longer needs a separate quick-switch button row.
 
 
 
@@ -3938,28 +3934,39 @@ async function recommendModelsForAll() {
 
   if (!await wfConfirm(
     'Recommend Models for All',
-    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best model? This runs sequentially and may take 30s–2min depending on AI count and network.`
+    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best Reviewer and Builder models? Runs in parallel — typically 5–15s total.`
   )) return;
 
   const btn = document.getElementById('recommendAllBtn');
   const origLabel = btn ? btn.textContent : null;
-  if (btn) btn.disabled = true;
-
-  let done = 0;
-  for (const ai of eligible) {
-    if (btn) btn.textContent = `Asking ${++done}/${eligible.length}…`;
-    try {
-      await recheckModelForAI(ai.id);
-    } catch(e) {
-      // recheckModelForAI handles its own error toasts; we just log here so
-      // a thrown exception in one AI doesn't break the loop for the rest.
-      console.warn(`[recommend-all] ${ai.name} threw:`, e);
-    }
-    if (done < eligible.length) await new Promise(r => setTimeout(r, 400));
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = `Asking ${eligible.length} AI${eligible.length !== 1 ? 's' : ''} in parallel…`;
   }
 
+  // v3.32.10 — parallel execution. Previously sequential with 400ms inter-AI
+  // delay (30-60s typical for 6 AIs). Now fires Promise.all across all
+  // eligible AIs; each AI internally fires its Reviewer+Builder calls in
+  // parallel too. Total wall time bounded by slowest single response —
+  // typically 5-15s for 6 default AIs, even with 12 underlying API calls.
+  let succeeded = 0;
+  let failed = 0;
+  const results = await Promise.allSettled(eligible.map(ai => recheckModelForAI(ai.id)));
+  results.forEach((r, idx) => {
+    if (r.status === 'fulfilled') {
+      succeeded++;
+    } else {
+      failed++;
+      console.warn(`[recommend-all] ${eligible[idx].name} threw:`, r.reason);
+    }
+  });
+
   if (btn) { btn.disabled = false; btn.textContent = origLabel; }
-  toast(`✓ Recommend Models for All complete (${eligible.length} processed)`, 5000);
+  if (failed > 0) {
+    toast(`✓ Recommend complete: ${succeeded} succeeded, ${failed} failed (see console)`, 5000);
+  } else {
+    toast(`✓ Recommend Models for All complete (${succeeded} processed)`, 5000);
+  }
 }
 
 // Per-AI test logic — runs one key against its provider, updates the row icon
@@ -4504,31 +4511,111 @@ function populateQuickAddOptions() {
 // for Custom AI). User can manually swap model anytime via existing dropdown.
 const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
 
-const MODEL_RECOMMENDATION_PROMPT_DEFAULT =
-`You are helping a user pick from YOUR available models to use as a "Reviewer" in WaxFrame, a multi-AI document refinement tool. The Reviewer reads documents and provides specific, numbered edit suggestions across multiple rounds. It needs strong writing, structured reasoning, and a long context window — NOT a coding-only, embedding, or specialized variant.
+// v3.32.10 — Replaces the single MODEL_RECOMMENDATION_PROMPT_DEFAULT
+// (three-pick BEST/FASTEST/BUDGET) with two role-specific single-pick
+// prompts. See release notes for v3.32.10 for the full evidence trail
+// behind this change. Short version: empirical test data showed the old
+// FASTEST/BUDGET categories were producing unreliable picks (AIs can't
+// know their own current pricing or speed), and the assumed parser-break
+// from reasoning models doesn't actually happen in the Reviewer role.
+// The Builder role is structurally different — it owns the document
+// envelope — so it gets the stricter prompt.
+
+const MODEL_RECOMMENDATION_PROMPT_REVIEWER =
+`You are helping select one of YOUR available models for use as a Reviewer in WaxFrame, a multi-AI document refinement tool. Reviewers read documents and return numbered edit suggestions across multiple rounds. Reviewer output is consumed by another AI (the Builder), not directly parsed into a final envelope, so verbose preambles are tolerated but cost-inefficient.
 
 Available models on this endpoint:
 {MODEL_LIST}
 
-Recommend three options for the WaxFrame Reviewer task. Each MUST be an exact model id from the list above. The same id MAY appear in multiple slots if it is genuinely the best in more than one category (e.g. your fastest model might also be your cheapest).
+Pick exactly ONE model: the best model for high-quality document review.
+
+Selection rules:
+- The model MUST be an exact model id from the list above.
+- Must be a chat/text model suitable for document review, editing feedback, summarization, and instruction following.
+- Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
+- Standard non-reasoning chat models are PREFERRED when quality is comparable, because reasoning/thinking models are typically 5-10x slower and more expensive due to billable analysis output.
+- Reasoning, thinking, or chain-of-thought models are ALLOWED only if they are clearly stronger for document review than the available standard chat models.
+- If multiple models are roughly equivalent, prefer the most recently released.
 
 Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
 
-BEST: <best model for the Reviewer task>
-BEST_WHY: <one sentence, max 120 chars>
-FASTEST: <fastest model that can still produce a useful review>
-FASTEST_WHY: <one sentence, max 120 chars>
-BUDGET: <cheapest model that can still produce a useful review>
-BUDGET_WHY: <one sentence, max 120 chars>
+RECOMMENDED: <one exact model id from the list above>
+RECOMMENDED_WHY: <one sentence, max 120 chars>`;
 
-If multiple models are roughly equivalent in a category, prefer the most recently released.`;
+const MODEL_RECOMMENDATION_PROMPT_BUILDER =
+`You are helping select one of YOUR available models for use as the Builder in WaxFrame, a multi-AI document refinement tool. The Builder reads reviewer suggestions and rewrites the document, emitting a strict envelope that is parsed by code:
 
-function getRecommendationPrompt() {
+  %%DOCUMENT_START%%
+  ...rewritten document...
+  %%DOCUMENT_END%%
+  %%CONFLICTS_START%%
+  ...numbered conflict cards...
+  %%CONFLICTS_END%%
+
+Any visible thinking, chain-of-thought, reasoning trace, research step, preamble, or extra text before/around the envelope risks breaking the parser.
+
+Available models on this endpoint:
+{MODEL_LIST}
+
+Pick exactly ONE model: the best standard chat-completion model for Builder use.
+
+Selection rules:
+- The model MUST be an exact model id from the list above.
+- Must be a standard chat-completion model that follows strict output formatting reliably.
+- Do NOT recommend any model whose id, description, or known behavior suggests reasoning, thinking, deep-research, research, chain-of-thought, planner, agentic, reflective, or deliberative output.
+- Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
+- If the most capable model is a reasoning/thinking/research model, skip it and choose the best standard chat model instead.
+- If no safe standard chat-completion model exists, respond with NONE.
+- If multiple safe models are roughly equivalent, prefer the most recently released.
+
+Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
+
+RECOMMENDED: <one exact model id from the list above, or NONE>
+RECOMMENDED_WHY: <one sentence, max 120 chars>`;
+
+// v3.32.10 — Code-side substring filters as defense-in-depth.
+// The prompts above instruct the AI; these filters enforce in code so the
+// AI never sees disqualified models in {MODEL_LIST} in the first place.
+// neverAllowedPattern applies to BOTH roles (these models can't do
+// document review at all). builderDisallowedPattern applies ONLY to the
+// Builder role (reasoning models work fine as reviewers per empirical data,
+// but pose envelope risk as builders).
+const NEVER_ALLOWED_PATTERN =
+  /(embedding|embed|rerank|moderation|image|vision-only|audio|speech|transcrib|code-only|coder)/i;
+const BUILDER_DISALLOWED_PATTERN =
+  /(reasoning|thinking|deep[-_ ]?research|research|chain[-_ ]?of[-_ ]?thought|\bcot\b|\bo1\b|\bo3\b|\bo4\b|\br1\b|planner|agentic|reflect|deliberative)/i;
+
+function filterModelsForRole(models, role) {
+  if (!Array.isArray(models)) return [];
+  return models.filter(m => {
+    if (NEVER_ALLOWED_PATTERN.test(m)) return false;
+    if (role === 'builder' && BUILDER_DISALLOWED_PATTERN.test(m)) return false;
+    return true;
+  });
+}
+
+// Backwards-compat alias retained as the canonical lookup name expected
+// by getRecommendationPrompt(). Defaults to the Reviewer prompt because
+// historically that's been the implicit role of unspecified recommendations.
+const MODEL_RECOMMENDATION_PROMPT_DEFAULT = MODEL_RECOMMENDATION_PROMPT_REVIEWER;
+
+function getRecommendationPrompt(role) {
+  // v3.32.10 — role-aware prompt selection. Role is 'reviewer' or 'builder'.
+  // Custom prompts saved via Prompt Editor still override defaults.
+  // For backwards compatibility, omitted role falls through to Reviewer.
+  const r = role === 'builder' ? 'builder' : 'reviewer';
+  const defaultPrompt = r === 'builder'
+    ? MODEL_RECOMMENDATION_PROMPT_BUILDER
+    : MODEL_RECOMMENDATION_PROMPT_REVIEWER;
   try {
     const saved = JSON.parse(localStorage.getItem('waxframe_v2_prompts') || '{}');
-    return saved.recommend_model || MODEL_RECOMMENDATION_PROMPT_DEFAULT;
+    const customKey = r === 'builder' ? 'recommend_model_builder' : 'recommend_model_reviewer';
+    // Honor a custom prompt if saved under the role-specific key, OR the
+    // legacy key 'recommend_model' for migration grace (user customisations
+    // from before v3.32.10 still apply, defaulting to Reviewer interpretation).
+    return saved[customKey] || saved.recommend_model || defaultPrompt;
   } catch(e) {
-    return MODEL_RECOMMENDATION_PROMPT_DEFAULT;
+    return defaultPrompt;
   }
 }
 
@@ -4582,32 +4669,64 @@ function wfConfirmCancel() {
   if (_wfConfirmResolve) { _wfConfirmResolve(false); _wfConfirmResolve = null; }
 }
 
-function setCachedRecommendation(cacheId, model, why, labels) {
-  if (!cacheId || !model) return;
+function setCachedRecommendation(cacheId, model, why, labels, none) {
+  if (!cacheId) return;
+  // v3.32.10 — cache supports a NONE state (model=null) for the case where
+  // the AI explicitly declines to recommend (Builder role: only reasoning
+  // variants exist on this endpoint). We persist the `why` so the dropdown
+  // can show a meaningful fallback note.
+  if (!model && !none) return;
   const key = `waxframe_recommend_${cacheId}`;
   try {
-    localStorage.setItem(key, JSON.stringify({ ts: Date.now(), model, why, labels: labels || {} }));
+    const payload = none
+      ? { ts: Date.now(), model: null, why: why || '', labels: {}, none: true }
+      : { ts: Date.now(), model, why, labels: labels || {} };
+    localStorage.setItem(key, JSON.stringify(payload));
   } catch(e) { console.warn(`[recommend-cache:${cacheId}] write failed:`, e); }
 }
 
-// Core recommendation call. Returns { model, why, cached } or null on failure.
-// Caller filters models list to chat-compatible BEFORE passing in.
-async function recommendModel({ cacheId, endpoint, format, key, models, askingModel }) {
+// Core recommendation call. Returns { model, why, labels, cached, none } or null on failure.
+// v3.32.10 — accepts a role parameter ('reviewer' | 'builder'). Models list is
+// filtered before being sent to the AI based on role. Parser handles single-pick
+// RECOMMENDED + RECOMMENDED_WHY format with optional NONE fallback.
+async function recommendModel({ cacheId, endpoint, format, key, models, askingModel, role }) {
   if (!cacheId || !models?.length || !askingModel) return null;
+  const _role = role === 'builder' ? 'builder' : 'reviewer';
 
   const cached = getCachedRecommendation(cacheId);
-  // v3.29.6 — cached path now returns labels too. If labels are missing or
-  // empty (old cache from before v3.27.0, or before the custom-flow started
-  // surfacing them in v3.29.5), fall through to a fresh call so the next
-  // result populates labels. Once cached with labels, future calls hit the
-  // cache cleanly and the dropdown gets ✨/⚡/💰 annotations instantly.
+  // v3.32.10 — cached payload now optionally carries `none: true` when the
+  // AI explicitly flagged "no safe Builder pick available". We surface that
+  // back to callers so the dropdown can render a fallback note instead of
+  // silently dropping back to MODEL_FALLBACKS.
+  if (cached?.none) {
+    return { model: null, why: cached.why || '', labels: {}, cached: true, none: true };
+  }
   const cachedHasLabels = cached?.labels && Object.keys(cached.labels).length > 0;
   if (cached && models.includes(cached.model) && cachedHasLabels) {
     return { model: cached.model, why: cached.why, labels: cached.labels, cached: true };
   }
 
-  const promptTemplate = getRecommendationPrompt();
-  const prompt = promptTemplate.replace('{MODEL_LIST}', models.map(m => `- ${m}`).join('\n'));
+  // v3.32.10 — code-side filter happens BEFORE the AI sees the model list.
+  // For Reviewer role: drop only structurally-incompatible models
+  // (embeddings, audio-only, code-only, etc). For Builder role: also drop
+  // reasoning/thinking variants since they pose envelope risk.
+  const filteredModels = filterModelsForRole(models, _role);
+  if (!filteredModels.length) {
+    // Edge case: every model on the endpoint failed the filter. Cache as NONE
+    // so the dropdown can render a helpful fallback note instead of looping.
+    const reason = _role === 'builder'
+      ? 'No safe Builder pick — all models are reasoning/specialised variants.'
+      : 'No usable Reviewer pick — all models are specialised variants.';
+    setCachedRecommendation(cacheId, null, reason, {}, true);
+    return { model: null, why: reason, labels: {}, cached: false, none: true };
+  }
+  const droppedCount = models.length - filteredModels.length;
+  if (droppedCount > 0) {
+    console.info(`[recommend:${cacheId}] code-side filter dropped ${droppedCount} model(s) for role=${_role}.`);
+  }
+
+  const promptTemplate = getRecommendationPrompt(_role);
+  const prompt = promptTemplate.replace('{MODEL_LIST}', filteredModels.map(m => `- ${m}`).join('\n'));
 
   let url, headers, body;
 
@@ -4650,56 +4769,54 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
       return null;
     }
 
-    // v3.27.0: parse 3 categorized picks. BEST is the active recommendation
-    // (gets ✨ + auto-selected); FASTEST and BUDGET annotate the dropdown so
-    // power users can pick based on speed/cost tradeoffs. Tags carry their
-    // icon for the dropdown to render directly (🎯 BEST, ⚡ FASTEST, 💰 BUDGET).
-    const bestMatch    = text.match(/^BEST:\s*([^\n\r]+)/im);
-    const bestWhyM     = text.match(/^BEST_WHY:\s*([^\n\r]+)/im);
-    const fastestMatch = text.match(/^FASTEST:\s*([^\n\r]+)/im);
-    const fastestWhyM  = text.match(/^FASTEST_WHY:\s*([^\n\r]+)/im);
-    const budgetMatch  = text.match(/^BUDGET:\s*([^\n\r]+)/im);
-    const budgetWhyM   = text.match(/^BUDGET_WHY:\s*([^\n\r]+)/im);
+    // v3.32.10 — single-pick parser. Handles NONE fallback for Builder role
+    // when no safe model exists on this endpoint. Reviewer role does not
+    // emit NONE in normal usage (we filter only structurally-incompatible
+    // models there), but the parser tolerates it for symmetry.
+    const recMatch = text.match(/^RECOMMENDED:\s*([^\n\r]+)/im);
+    const whyMatch = text.match(/^RECOMMENDED_WHY:\s*([^\n\r]+)/im);
 
-    if (!bestMatch) {
-      console.warn('[recommend] no BEST line in provider response. Raw text:', text);
+    if (!recMatch) {
+      console.warn('[recommend] no RECOMMENDED line in provider response. Raw text:', text);
       return null;
     }
 
     const cleanId = s => s.trim().replace(/^[`'"*]|[`'"*]$/g, '');
-    const model = cleanId(bestMatch[1]);
-    const why = bestWhyM ? cleanId(bestWhyM[1]) : '';
+    const rawModel = cleanId(recMatch[1]);
+    const why = whyMatch ? cleanId(whyMatch[1]) : '';
 
-    if (!models.includes(model)) {
-      console.warn('[recommend] BEST model not in fetched list. Picked:', model, 'List:', models);
+    // NONE fallback path — AI explicitly declined to recommend.
+    if (/^NONE$/i.test(rawModel)) {
+      console.info(`[recommend:${cacheId}] AI returned NONE for role=${_role}: ${why}`);
+      setCachedRecommendation(cacheId, null, why, {}, true);
+      return { model: null, why, labels: {}, cached: false, none: true };
+    }
+
+    // v3.32.10 — defense-in-depth: even though we filtered the list before
+    // sending, double-check the AI's pick against the role's disallowed
+    // patterns. Catches hallucinated picks that weren't in the filtered list.
+    if (NEVER_ALLOWED_PATTERN.test(rawModel)) {
+      console.warn(`[recommend:${cacheId}] AI returned structurally-incompatible model "${rawModel}" — rejecting.`);
+      return null;
+    }
+    if (_role === 'builder' && BUILDER_DISALLOWED_PATTERN.test(rawModel)) {
+      console.warn(`[recommend:${cacheId}] AI returned reasoning/specialised model "${rawModel}" for Builder — rejecting.`);
       return null;
     }
 
-    // Build labels map. Each entry: { tag: 'Best Overall' | 'Fastest' | 'Budget' | concatenations, why }
-    // Concatenations use ' · ' separator when same id appears in multiple categories.
-    // The icon prefix is added by buildModelSelector when rendering, not here, so
-    // future label changes don't require parser updates.
-    const labels = {};
-    const addLabel = (matchObj, whyMatchObj, tag) => {
-      if (!matchObj) return;
-      const id = cleanId(matchObj[1]);
-      if (!models.includes(id)) {
-        console.warn(`[recommend] ${tag} pick "${id}" not in fetched list — skipping`);
-        return;
-      }
-      const w = whyMatchObj ? cleanId(whyMatchObj[1]) : '';
-      if (labels[id]) {
-        labels[id].tag = `${labels[id].tag} · ${tag}`;
-      } else {
-        labels[id] = { tag, why: w };
-      }
-    };
-    addLabel(bestMatch,    bestWhyM,    'Best Overall');
-    addLabel(fastestMatch, fastestWhyM, 'Fastest');
-    addLabel(budgetMatch,  budgetWhyM,  'Budget');
+    if (!filteredModels.includes(rawModel)) {
+      console.warn('[recommend] RECOMMENDED model not in fetched/filtered list. Picked:', rawModel, 'Filtered list:', filteredModels);
+      return null;
+    }
 
-    setCachedRecommendation(cacheId, model, why, labels);
-    return { model, why, labels, cached: false };
+    // Build single-entry labels map for dropdown rendering.
+    // Tag is role-derived ('Reviewer' or 'Builder') so the dropdown can
+    // distinguish the two recommendations when both apply to one model.
+    const tag = _role === 'builder' ? 'Builder' : 'Reviewer';
+    const labels = { [rawModel]: { tag, why } };
+
+    setCachedRecommendation(cacheId, rawModel, why, labels);
+    return { model: rawModel, why, labels, cached: false };
   } catch(e) {
     console.warn('[recommend] failed:', e);
     return null;
@@ -4726,14 +4843,6 @@ async function recommendForDefault(provider) {
   if (!cfg?._key) return null;
 
   // v3.26.4: pick a STABLE askingModel rather than just trusting cfg.model.
-  // The user might have manually picked something incompatible with regular
-  // chat completions (Gemini's Computer Use models reject standard calls,
-  // for example). Prefer in this order:
-  //   1. First MODEL_FALLBACKS entry that's actually in the candidate list
-  //      (these are curated as known-good chat models)
-  //   2. cfg.model if it's in the candidate list (fallback for providers
-  //      without MODEL_FALLBACKS coverage)
-  //   3. First model in the list (last resort)
   const fallbackList = MODEL_FALLBACKS[provider] || [];
   const stableFallback = fallbackList.find(m => models.includes(m));
   const askingModel = stableFallback
@@ -4744,14 +4853,21 @@ async function recommendForDefault(provider) {
   if (provider === 'claude') format = 'anthropic';
   else if (provider === 'gemini') format = 'google';
 
-  return await recommendModel({
-    cacheId: `default-${provider}`,
-    endpoint: cfg.endpoint,
-    format,
-    key: cfg._key,
-    models,
-    askingModel
-  });
+  // v3.32.10 — fire BOTH role recommendations in parallel. Reviewer pick uses
+  // the soft-preference prompt (allows reasoning models if genuinely best);
+  // Builder pick uses the hard-guardrail prompt (rejects reasoning variants
+  // due to envelope risk). Two API calls run concurrently so the dropdown
+  // can render both ✨ Reviewer and 🏗️ Builder markers.
+  const baseArgs = { endpoint: cfg.endpoint, format, key: cfg._key, models, askingModel };
+  const [reviewerResult, builderResult] = await Promise.all([
+    recommendModel({ ...baseArgs, cacheId: `default-${provider}-reviewer`, role: 'reviewer' }),
+    recommendModel({ ...baseArgs, cacheId: `default-${provider}-builder`,  role: 'builder'  })
+  ]);
+
+  // Return Reviewer-shape for backwards compat with callers that assume a
+  // single result. Builder result is cached separately and rendered by the
+  // dropdown via getCachedRecommendation('default-${provider}-builder').
+  return reviewerResult;
 }
 
 // v3.26.1 — manual recheck button handler for default-AI rows. Sits next to
@@ -4778,16 +4894,20 @@ async function recheckModelForAI(id) {
 
   const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
 
-  // v3.27.1: clear caches before fetching. For defaults this matches the
-  // previous behavior; for customs we clear the custom-{id} recommend cache
-  // and the waxframe_models_{id} cache so the call re-fetches a fresh
-  // candidate list from the endpoint.
+  // v3.32.10: clear caches before fetching. Now clears BOTH role caches per
+  // provider/AI since v3.32.10 stores Reviewer and Builder picks separately.
+  // The legacy single-cache key is also cleared for users migrating up from
+  // v3.32.9 or earlier.
   try {
     if (isDefault) {
-      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`);
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); // legacy
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-reviewer`);
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-builder`);
       localStorage.removeItem(`waxframe_models_${ai.provider}`);
     } else {
-      localStorage.removeItem(`waxframe_recommend_custom-${id}`);
+      localStorage.removeItem(`waxframe_recommend_custom-${id}`); // legacy
+      localStorage.removeItem(`waxframe_recommend_custom-${id}-reviewer`);
+      localStorage.removeItem(`waxframe_recommend_custom-${id}-builder`);
       localStorage.removeItem(`waxframe_models_${id}`);
     }
   } catch(e) {}
@@ -4821,14 +4941,16 @@ async function recheckModelForAI(id) {
       // otherwise first in list. No MODEL_FALLBACKS for customs since we
       // don't curate stable models for arbitrary endpoints.
       const askingModel = (cfg.model && models.includes(cfg.model)) ? cfg.model : models[0];
-      result = await recommendModel({
-        cacheId: `custom-${id}`,
-        endpoint: cfg.endpoint,
-        format,
-        key: cfg._key,
-        models,
-        askingModel
-      });
+      // v3.32.10 — fire both role-specific recommendations in parallel for
+      // custom AIs too. Custom cache keys: custom-{id}-reviewer and
+      // custom-{id}-builder. Reviewer result is returned for backwards
+      // compat with caller's expectation of a single result.
+      const baseArgs = { endpoint: cfg.endpoint, format, key: cfg._key, models, askingModel };
+      const [reviewerResult, builderResult] = await Promise.all([
+        recommendModel({ ...baseArgs, cacheId: `custom-${id}-reviewer`, role: 'reviewer' }),
+        recommendModel({ ...baseArgs, cacheId: `custom-${id}-builder`,  role: 'builder'  })
+      ]);
+      result = reviewerResult;
     }
   } catch(e) {
     console.warn('[recheck] custom AI fetch failed:', e);
@@ -9393,8 +9515,13 @@ async function bulkRemoveSelectedAIs() {
     // builder slot if it was held, removes the API config, and purges the
     // three per-AI localStorage keys (recommend cache, models cache).
     if (API_CONFIGS[id]) delete API_CONFIGS[id];
+    // v3.32.10 — clear legacy single-pick keys AND new role-specific keys.
     try { localStorage.removeItem(`waxframe_recommend_default-${id}`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_default-${id}-reviewer`); } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_default-${id}-builder`);  } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_recommend_custom-${id}`);  } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}-reviewer`);  } catch(e) { /* ignore */ }
+    try { localStorage.removeItem(`waxframe_recommend_custom-${id}-builder`);   } catch(e) { /* ignore */ }
     try { localStorage.removeItem(`waxframe_models_${id}`);             } catch(e) { /* ignore */ }
   });
 
@@ -9574,11 +9701,52 @@ function toggleSessionBee(id, on) {
   }
 }
 
+// v3.32.10 — Durable per-round satisfaction tracking. Replaces the v3.29.3
+// Builder-only recovery hack. The pattern: when a reviewer reports
+// "no changes needed", we record their AI id in window._cleanThisRound.
+// Then if ANY subsequent setBeeStatus call lands on that AI with state='done'
+// during the same round (Builder phase compile, late renders, race conditions
+// between near-simultaneous responses, anything), we automatically upgrade
+// to 'done-clean' and the gold star renders.
+//
+// The Set is reset at the start of each round when 'sending' is set on all
+// reviewers (see runRound init). 'sending' on any AI also wipes that AI's
+// entry, so toggling AIs mid-session doesn't leave stale satisfaction state.
+//
+// This addresses the long-standing UI bug where DeepSeek (typically the
+// fastest reviewer at sub-second response) would lose its star intermittently
+// while slower reviewers in the same round retained theirs. The visual
+// indicator is critical for tracking convergence at-a-glance without
+// scanning console output.
+if (!window._cleanThisRound) window._cleanThisRound = new Set();
+
 function setBeeStatus(id, state, summary) {
   const card = document.getElementById('bcard-' + id);
   const dot  = document.getElementById('bdot-' + id);
   const live = document.getElementById('blive-' + id);
   if (!card && !dot) return;
+
+  // v3.32.10 — promote 'done' to 'done-clean' if this AI was satisfied
+  // earlier this round. Idempotent: any number of plain 'done' calls during
+  // the round preserve the star. Builder phase, transient re-renders, and
+  // race conditions are now all handled at this single chokepoint.
+  let effectiveState = state;
+  let effectiveSummary = summary;
+  if (state === 'done' && window._cleanThisRound.has(id)) {
+    effectiveState = 'done-clean';
+    if (!summary || summary === 'Done ✓' || summary === 'Document updated ✓') {
+      effectiveSummary = 'No changes needed ✓';
+    }
+  }
+  // Track satisfaction signal at the chokepoint — any path that calls
+  // 'done-clean' for this AI registers them as satisfied for the round.
+  if (state === 'done-clean') {
+    window._cleanThisRound.add(id);
+  }
+  // 'sending' resets per-AI satisfaction — new round started for this AI.
+  if (state === 'sending') {
+    window._cleanThisRound.delete(id);
+  }
 
   const allStates = ['is-working', 'is-sending', 'is-responding', 'is-done', 'is-error', 'is-clean'];
   if (card) card.classList.remove(...allStates);
@@ -9586,22 +9754,22 @@ function setBeeStatus(id, state, summary) {
 
   const add = cls => { if (card) card.classList.add(cls); if (dot) dot.classList.add(cls); };
 
-  if (state === 'sending') {
+  if (effectiveState === 'sending') {
     add('is-sending');
     if (live) live.textContent = 'Sending…';
-  } else if (state === 'thinking') {
+  } else if (effectiveState === 'thinking') {
     add('is-responding');
     if (live) live.textContent = 'Reviewing…';
-  } else if (state === 'streaming') {
+  } else if (effectiveState === 'streaming') {
     add('is-responding');
     if (live) live.textContent = 'Responding…';
-  } else if (state === 'done') {
+  } else if (effectiveState === 'done') {
     add('is-done');
     if (live) live.textContent = 'Done ✓';
-  } else if (state === 'done-clean') {
+  } else if (effectiveState === 'done-clean') {
     add('is-done'); add('is-clean');
-    if (live) live.textContent = summary || 'No changes needed';
-  } else if (state === 'error') {
+    if (live) live.textContent = effectiveSummary || 'No changes needed';
+  } else if (effectiveState === 'error') {
     add('is-error');
     if (live) live.textContent = 'Failed';
   } else {
@@ -10163,6 +10331,10 @@ async function runRound() {
 
   consoleLog(`🐝 ${allReviewers.length} AIs reviewing simultaneously (including Builder)`, 'info');
   setStatus(`⚡ Round ${round} — all ${allReviewers.length} AIs reviewing…`);
+  // v3.32.10 — clear per-round satisfaction tracker before each round so the
+  // star bug fix has a clean baseline. Subsequent setBeeStatus 'sending'
+  // calls also clear per-AI entries individually as defense-in-depth.
+  if (window._cleanThisRound) window._cleanThisRound.clear();
   allReviewers.forEach(ai => setBeeStatus(ai.id, 'sending', 'Reviewing…'));
 
   // Phase 1: Everyone reviews — Builder gets reviewer prompt too
@@ -12214,6 +12386,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // hive is in memory. Defaults snapshot at module-eval time, so this
   // call only catches user-added customs.
   ensureOriginalModelBaseline();
+  // v3.32.10 — one-time clear of pre-v3.32.10 single-pick recommendation
+  // caches. New role-suffixed format is incompatible with old cache shape,
+  // so we wipe legacy keys to force a clean re-recommend. Silent — no toast.
+  migrateRecommendationCachesV33210();
   initMuteBtn();
 
   // v3.26.1 — silently migrate any default AI with a saved key but no
