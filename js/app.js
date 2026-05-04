@@ -1024,24 +1024,32 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     return `<option value="${m}" ${selected}>${esc(baseDisplay)}</option>`;
   }).join('');
 
-  // Note line: shows the WHY for the currently-selected model based on which
-  // role recommendation it matches. Each role renders on its own line via
-  // .model-select-note-line { display: block; }. Model id is included in
-  // parens so users can confirm the cache matches what they're seeing.
+  // Note line: shows the WHY for BOTH role recommendations whenever they're
+  // cached — independent of which model the user currently has selected.
+  // Each role renders on its own line via .model-select-note-line { display: block; }.
+  // Model id is included in parens so users can confirm cache integrity.
   // v3.32.11 — switched from inline ' · ' separator to per-line spans
   // because long WHY text from BOTH roles concatenated mid-sentence
   // produced awkward wrapping. Each role on its own line is cleaner.
+  // v3.32.12 — dropped the currentModel === reviewerModel/builderModel
+  // gate. The notes describe what was RECOMMENDED for each role; they
+  // should be visible whether the user has selected the recommended
+  // model or some other one. Previously, picking the Reviewer pick hid
+  // the Builder reasoning (and vice versa), which obscured the Builder
+  // recommendation entirely whenever the two roles diverged on lineup
+  // (Gemini, Grok, Mistral all hit this on the v3.32.11 first run).
   const noteParts = [];
-  if (currentModel && currentModel === reviewerModel && reviewerWhy) {
+  if (reviewerModel && reviewerWhy) {
     noteParts.push(`<span class="model-select-note-line">✨ Reviewer (${esc(reviewerModel)}): ${esc(reviewerWhy)}</span>`);
   }
-  if (currentModel && currentModel === builderModel && builderWhy) {
+  if (builderModel && builderWhy) {
     noteParts.push(`<span class="model-select-note-line">🔨 Builder (${esc(builderModel)}): ${esc(builderWhy)}</span>`);
   }
-  // NONE handling — if user has no Builder recommendation cached because the
-  // AI flagged NONE, surface that as a note so they know why no 🔨 marker
-  // appears in the dropdown. Only show when no other note applies.
-  if (!noteParts.length && builderCache?.none && builderCache?.why) {
+  // NONE handling — if the AI flagged NONE for Builder (no model on its
+  // lineup is suitable as a Builder), surface that so users know why no
+  // 🔨 marker appears in the dropdown. Only show when no actual Builder
+  // pick is cached.
+  if (!builderModel && builderCache?.none && builderCache?.why) {
     noteParts.push(`<span class="model-select-note-line">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
   const noteHtml = noteParts.length ? `<span class="model-select-note">${noteParts.join('')}</span>` : '';
@@ -1074,24 +1082,14 @@ function saveModelForAI(aiId, modelId) {
     cfg.endpoint = cfg.endpointFn(modelId);
   }
   saveSettings();
-  // v3.32.10 — note line now reads from BOTH role caches. Same logic as
-  // buildModelSelector's note rendering, kept in sync.
-  // v3.32.11 — switched to per-line spans + model id in parens. Now uses
-  // innerHTML (was textContent) since each line is wrapped in a span; all
-  // dynamic content is esc()'d before insertion.
-  const noteEl = document.querySelector(`#airow-${aiId} .model-select-note`);
-  if (noteEl) {
-    const reviewerCache = getReviewerRecommendation(aiId);
-    const builderCache  = getBuilderRecommendation(aiId);
-    const noteParts = [];
-    if (modelId === reviewerCache?.model && reviewerCache?.why) {
-      noteParts.push(`<span class="model-select-note-line">✨ Reviewer (${esc(reviewerCache.model)}): ${esc(reviewerCache.why)}</span>`);
-    }
-    if (modelId === builderCache?.model && builderCache?.why) {
-      noteParts.push(`<span class="model-select-note-line">🔨 Builder (${esc(builderCache.model)}): ${esc(builderCache.why)}</span>`);
-    }
-    noteEl.innerHTML = noteParts.join('');
-  }
+  // v3.32.12 — note re-render removed. As of v3.32.12, the role-recommendation
+  // notes are invariant to which model the user has selected — both ✨ Reviewer
+  // and 🔨 Builder lines render whenever the caches exist, full stop. Changing
+  // the dropdown selection therefore has no effect on the note content, so
+  // there's no reason to query the DOM and rewrite it on every change. The
+  // note is set once by buildModelSelector at row render time and only
+  // refreshes when the entire row is re-rendered (e.g., after Recommend Models
+  // populates new caches). Removed for cleanliness, no behavior loss.
   toast(`✓ ${ai.name} model set to ${modelId}`, 2000);
 }
 
@@ -1284,7 +1282,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260504-002';         // build stamp — update each session
+const BUILD       = '20260504-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
