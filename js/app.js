@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-008';         // build stamp — update each session
+const BUILD       = '20260506-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -9343,8 +9343,8 @@ function renderBeeStatusGrid() {
     // checkbox slot (BUILDER text pill on the Builder card, since the
     // builder is always-on and can't be toggled — same slot, different
     // affordance), provider icon, AI name. Row 2 carries status: live
-    // status text (left) and the satisfaction star inline at far right
-    // when the AI returned NO CHANGES NEEDED for this round.
+    // status text. Satisfaction star sits OUTSIDE both rows at card-
+    // level (see v3.32.23 below).
     //
     // v3.32.21 changes:
     //   • BUILDER role indicator on row 1 reverted to the prior text
@@ -9355,11 +9355,20 @@ function renderBeeStatusGrid() {
     //     dimensions naturally. The bee asset is preserved in
     //     /images/WaxFrame_Builder_v3.png for places with room (Setup 2
     //     picker, Change Builder modal title).
-    //   • Satisfaction star moved out of the centered .hex-cell::after
-    //     overlay and into a dedicated inline .hex-clean-star span on
-    //     row 2 with margin-left:auto pushing it to the far right of
-    //     the row. The overlay form covered the row content; inline at
-    //     row-end keeps the star visible without obscuring status text.
+    //
+    // v3.32.23 changes:
+    //   • Satisfaction star promoted from inline-on-row-2 to card-level
+    //     sibling of .hex-cell-body. Now sits at the right edge of the
+    //     card, vertically centered across both rows, sized large
+    //     enough to span the combined row heights as a visual anchor.
+    //     The .hex-cell-body's flex:1 + min-width:0 (already in place)
+    //     shrinks the body to leave room for the star; the existing
+    //     ellipsis rules on .hex-name and .hex-status truncate names
+    //     and status text correctly when the body shrinks. v3.32.21
+    //     placed the star inline on row 2 with margin-left:auto, which
+    //     undersized it (constrained to single-row height) and put it
+    //     in the same horizontal flow as status text instead of as a
+    //     dedicated card-level affordance.
     //
     // Underlying ai.name keeps its "[Base] " prefix; the card display
     // strips it via displayAiName() because every base model's prefix
@@ -9379,9 +9388,9 @@ function renderBeeStatusGrid() {
         </div>
         <div class="hex-row hex-row-status">
           <span class="hex-status" id="blive-${ai.id}">Idle</span>
-          <span class="hex-clean-star" aria-label="No changes needed">★</span>
         </div>
       </div>
+      <span class="hex-clean-star" aria-label="No changes needed">★</span>
     </div>`;
   }).join('');
   // v3.32.14 — Rehydrate satisfaction state after innerHTML rebuild.

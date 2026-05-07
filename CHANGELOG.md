@@ -1,6 +1,19 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.23
+**Build:** `20260506-009` · **Released:** May 6, 2026
+
+Architectural change to the satisfaction star. v3.32.21–22 placed the star inline on row 2 with `margin-left: auto`, which constrained it to single-row height and put it in the same horizontal flow as status text. v3.32.23 promotes the star to a card-level affordance: sibling of `.hex-cell-body`, vertically centered across both rows, sized large enough to span the combined row heights as a visual anchor.
+
+- **Star moved out of `.hex-row.hex-row-status` into `.hex-cell` directly.** The `<span class="hex-clean-star">★</span>` is now a sibling of `.hex-cell-body` in the card markup. Since `.hex-cell` is already `display: flex; flex-direction: row; align-items: stretch`, the star span naturally stretches to full card height; `display: flex; align-items: center; justify-content: center` on the span itself centers the glyph vertically within that stretched footprint.
+- **Star size bumped from 18px to 28px.** Roughly matches the combined height of the two rows (16+16+gap), so the star reads as a visual anchor at the card's right edge rather than a small inline accent. `line-height: 1` keeps the glyph's vertical footprint matched to its rendered size; no more glyph-baseline tightening needed since the star isn't competing with row text for height.
+- **`.hex-cell-body` shrinks via existing flex behavior to leave room.** No new rules required — `.hex-cell-body` already has `flex: 1; min-width: 0` so it gives up width to the star (`flex-shrink: 0` on `.hex-clean-star` keeps it at full size). The `.hex-name` (row 1) and `.hex-status` (row 2) already have `text-overflow: ellipsis` so long names and long status messages truncate cleanly when the body width contracts. Long names like `[Base] Claude-3-7-Sonnet` (already display-stripped to `Claude-3-7-Sonnet` via `displayAiName()`) ellipsis as expected when the star is present and don't when it isn't.
+- **`padding: 0 12px` on the star** gives the glyph breathing room from the card's right edge (matching the body's 8px right padding plus a touch more so the star doesn't crowd content).
+- **Light-theme color override unchanged** — still `#d97706` with full opacity for visibility on light backgrounds.
+- **Version stamps in code bumped** to v3.32.23 / build 20260506-009 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep. Each helper page's comment-header build stamp also synced from `20260506-008` to `20260506-009`.
+
+---
 ## v3.32.22
 **Build:** `20260506-008` · **Released:** May 6, 2026
 

@@ -1596,31 +1596,49 @@ html, body {
   letter-spacing: 0.05em;
   flex-shrink: 0;
 }
-/* v3.32.21 — Inline satisfaction star on row 2 of the bee card.
-   Replaces the v3.32.20-and-earlier .hex-cell.is-clean::after centered
-   overlay, which obscured the row content. Now sits at the far right
-   of row 2 (margin-left: auto pushes it past the .hex-status text)
-   and is hidden by default — the .hex-cell.is-clean rule below
-   reveals it. Keeps the same gold-amber color and serif star
-   character so the visual association is preserved.
-   v3.32.22 — Bumped 14px → 18px so the star reads as visually larger
-   than the BUILDER pill (8px) and status text (9px) on row 2. The
-   serif ★ glyph has built-in whitespace padding inside its em-box,
-   so its perceived visual mass is smaller than its declared font-
-   size; tightening line-height to 0.8 pulls the glyph baseline up
-   so it sits proportionate to the row's text height instead of
-   adding extra vertical space the row doesn't have. */
+/* v3.32.23 — Card-level satisfaction star, sibling of .hex-cell-body.
+   Sits at the right edge of the card, vertically centered across both
+   rows. Sized large enough to span the combined row heights as a
+   visual anchor — this is the at-a-glance "this AI is satisfied"
+   signal, so it gets the visual weight it deserves rather than being
+   tucked inline at the end of row 2. The .hex-cell-body has flex:1
+   and min-width:0 already, so its content (name on row 1, status on
+   row 2) shrinks via the existing ellipsis rules to leave room for
+   the star.
+
+   Pre-v3.32.23 history:
+   v3.32.20 and earlier: star was a centered .hex-cell::after overlay
+     covering the whole card content (obscured row text).
+   v3.32.21–22: star moved inline on row 2 with margin-left:auto —
+     better than the overlay but constrained to single-row height
+     and competed horizontally with status text.
+
+   Implementation notes:
+   • .hex-cell is already display:flex flex-direction:row align-items:stretch
+     so the star span stretches to full card height; align-items:center
+     on the span itself centers the glyph vertically within that
+     stretched footprint.
+   • flex-shrink:0 keeps the star at full size even when card content
+     is squeezed at narrow widths.
+   • padding: 0 12px gives the glyph breathing room from the card's
+     right edge (matching the body's 8px right padding plus a touch
+     more so the star doesn't crowd content).
+   • font-size 28px ≈ combined height of two rows (16+16+gap) for
+     visual mass that anchors the card. line-height:1 keeps the
+     glyph's vertical footprint matched to its rendered size. */
 .hex-clean-star {
   display: none;
-  font-size: 18px;
-  line-height: 0.8;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  line-height: 1;
   color: var(--accent);
   flex-shrink: 0;
-  margin-left: auto;
+  padding: 0 12px;
   user-select: none;
   pointer-events: none;
 }
-.hex-cell.is-clean .hex-clean-star { display: inline; }
+.hex-cell.is-clean .hex-clean-star { display: flex; }
 [data-theme="light"] .hex-cell.is-clean .hex-clean-star,
 [data-theme="auto"]  .hex-cell.is-clean .hex-clean-star { color: #d97706; opacity: 1; }
 
