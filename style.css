@@ -2720,10 +2720,12 @@ html, body {
      [📷 Upload Icon]  [preview 56×56 with × clear btn]  help text
 
    Empty state: only the upload button + help text are visible. Once an
-   icon is loaded, the preview box appears, the clear × becomes visible,
-   and the upload button text flips to "🔄 Replace Icon" (handled in JS).
-   Help text and × clear button are hidden when no icon is loaded — the
-   `.has-icon` class on the wrap gates them in. */
+   icon is loaded, the preview box appears and the clear × becomes
+   visible. v3.32.16: the upload button text is always "📷 Upload Icon"
+   regardless of state — the prior flip to "🔄 Replace Icon" was removed
+   because the button does the same thing in both states. Help text and
+   × clear button are hidden when no icon is loaded — the `.has-icon`
+   class on the wrap gates them in. */
 .custom-ai-icon-uploader {
   display: flex;
   align-items: center;
@@ -2942,6 +2944,26 @@ html, body {
 .custom-ai-icon-uploader--big:not(.has-user-icon).has-icon .custom-ai-icon-preview-box--big {
   border-style: dashed;
   opacity: 0.92;
+}
+
+/* v3.32.16 — Upload + Browse Icons buttons sit side-by-side under the
+   preview in the Custom AI modal. The 140px iconcol is narrow — buttons
+   stack with a small gap and use compact padding so both fit at standard
+   sizes. Browse Icons opens openIconPicker (full bundled catalog) for
+   when the user's model name doesn't trigger auto-detect and they don't
+   want to upload their own. */
+.custom-ai-icon-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  align-items: stretch;
+}
+.custom-ai-icon-actions .btn {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 11px;
+  white-space: nowrap;
 }
 
 .custom-ai-model-input-wrap {
