@@ -1431,15 +1431,46 @@ html, body {
   transition: background 0.2s;
 }
 
-/* Body — icon + name + status */
+/* Body — v3.32.20: was a single horizontal row cramming icon + name +
+   status (and previously a BUILDER tag); now a vertical stack of two
+   horizontal rows. Row 1 (.hex-row-identity) carries the checkbox,
+   provider icon, and AI name; row 2 (.hex-row-status) carries the
+   Builder Bee role indicator (only on the Builder card) and the live
+   status text. The split keeps the name from competing horizontally
+   with status pills + role badges, which is what caused the previous
+   layout's "[Base] Geh..." mid-name truncation when all elements were
+   on one line. Card outer height stays the same — the prior single-
+   row body had generous vertical padding (5px top + 5px bottom = 10px)
+   that's now absorbed into the second row. See comment at the top of
+   renderBeeStatusGrid() in app.js for the full punch-list-#8 rationale. */
 .hex-cell-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 4px 8px;
+  flex: 1;
+  min-width: 0;
+}
+.hex-row {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 6px;
-  padding: 5px 8px;
-  flex: 1;
   min-width: 0;
+}
+.hex-row-identity {
+  /* Row 1 — primary identification line. Inherits the row defaults;
+     only present here for selector target if future tweaks need to
+     differentiate row 1 from row 2 (e.g. different gap or padding). */
+}
+.hex-row-status {
+  /* Row 2 — secondary status line. Slight opacity dial-down vs row 1
+     so the eye lands on identity first, then status. Status colors
+     (.is-working, .is-done, etc.) override the dim color on the
+     status text itself, so opacity here only affects the row's
+     visual weight relative to row 1. */
+  opacity: 0.95;
 }
 
 /* hex-icon-wrap: no-op on big screen — icon sits directly in body */
@@ -1483,22 +1514,27 @@ html, body {
   cursor: pointer;
 }
 .hex-icon {
-  width: 20px;
-  height: 20px;
+  /* v3.32.20 — Was 20x20 in the single-row layout; now 16x16 to fit
+     the row-1 vertical space in the two-row card. Source PNGs are
+     256x256 and stay that size; CSS sizing is local to this context. */
+  width: 16px;
+  height: 16px;
   object-fit: contain;
   border-radius: 3px;
   flex-shrink: 0;
 }
 /* Icon initial avatar — shown when real icon fails or is missing */
 .hex-icon-avatar {
-  width: 20px;
-  height: 20px;
+  /* v3.32.20 — match the new .hex-icon size so avatar fallbacks stay
+     visually identical to the loaded-icon case. */
+  width: 16px;
+  height: 16px;
   border-radius: 4px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 800;
   color: #fff;
   line-height: 1;
@@ -1522,7 +1558,8 @@ html, body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
@@ -1531,14 +1568,17 @@ html, body {
 .hex-cell.is-responding .hex-status { color: var(--purple); }
 .hex-cell.is-done       .hex-status { color: #00b300; }
 .hex-cell.is-error      .hex-status { color: #f87171; }
-.hex-builder-tag {
-  font-size: 8px;
-  font-weight: 800;
-  color: #0a0c12;
-  background: var(--accent);
-  border-radius: 3px;
-  padding: 1px 4px;
-  letter-spacing: 0.05em;
+/* v3.32.20 — Builder Bee role indicator on row 2 of the Builder card.
+   Replaces the prior plaintext .hex-builder-tag pill ("BUILDER" in an
+   amber chip). Same PNG asset (WaxFrame_Builder_v3.png) used by the
+   Setup 2 picker's selected-badge, so the user's mental model of "this
+   bee = Builder role" is reinforced by visual consistency across
+   screens. Sized small (14px) to fit the status row alongside the
+   live status text without dominating it. */
+.hex-builder-bee {
+  width: 14px;
+  height: 14px;
+  object-fit: contain;
   flex-shrink: 0;
 }
 
