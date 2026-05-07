@@ -1,0 +1,248 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-07
+Current version:     v3.32.28 Pro / build 20260506-014
+Maintained by:       R David Paine III
+
+Single source of truth for everything queued across WaxFrame
+Pro and Free. Replaces scattered memory items, punch-list
+notes, and roadmap docs. Update by checking off items as
+they ship — do not delete completed items, move them to the
+"RECENTLY SHIPPED" section at the bottom.
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+════════════════════════════════════════════════════════════
+1. BUGS (fix before new features)
+════════════════════════════════════════════════════════════
+
+[ ] ★ Per-reviewer satisfaction indicator bug
+    NO CHANGES NEEDED pill + star renders inconsistently
+    on reviewer cards. Console correctly logs satisfaction
+    but card sometimes shows generic DONE with no star.
+    User uses this visual to track convergence at a glance.
+    Investigation needed: race condition / DOM update /
+    per-card re-render / DeepSeek sub-second timing.
+    DELIVERY: surgical fix in its own release.
+
+[ ] ☐ #7 rearmLengthGuard() saveSession() timing
+    saveSession() runs before consoleLog("re-armed") so
+    the persisted snapshot loses the re-arm message after
+    refresh. Cosmetic only — override flag round-trips
+    through IDB correctly (verified via backup inspection
+    2026-05-06).
+    FIX: one-line reorder — move saveSession() to last
+    statement in rearmLengthGuard(), after consoleLog()
+    and toast(). Bundle with next release.
+
+════════════════════════════════════════════════════════════
+2. ARCHITECTURE / DATA-MODEL CHANGES
+════════════════════════════════════════════════════════════
+
+[ ] ★ #8 Length mode overhaul                 → v3.33.0
+    Replace single lengthLimit field with explicit mode
+    picker on Setup 3:
+      • No limit    — silent, no gates
+      • Hard cap    — ceiling only, no floor, no
+                      undersized modal
+      • Target      — strict at N, both floor and ceiling
+                      at the target value, symmetric
+                      guards armed
+      • Range       — between min and max, both fields
+                      user-supplied
+    Builder prompt envelope must change per mode:
+      • Hard cap: "Stay at or below N. Shorter is fine."
+      • Target:   "Hit N exactly. Do not deliver less,
+                   do not deliver more."
+      • Range:    "Stay between min and max. Aim for the
+                   middle."
+    Migration: pre-v3.32.29 projects default to Hard cap
+    mode with their existing lengthLimit copied across.
+    Convergence-under and round-undersized intercepts
+    only fire in Target or Range modes. Kills the implicit
+    LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 — replaced by
+    explicit user-opted modes.
+    SCOPE: data-model change. Touches Setup 3 UI, prompt
+    envelope, all four length-guard intercepts, migration,
+    helper-page docs. Probably v3.33.0 since it's a
+    model change.
+
+[ ] #1 Fluid scaling architectural pass
+    Footer scaling at 1872×938 was the trigger. Symptom
+    of a deeper viewport-strategy problem: fixed px vs
+    clamp/fluid units, the min-width: 1024px floor, the
+    @media (min-width: 1601px) desktop-cascade pattern
+    that has produced bug after bug.
+    PRECONDITION: dedicated planning chat to produce
+    breakpoint inventory and smoke-test matrix BEFORE
+    any code changes. Per house rule, CSS deletion sweeps
+    require visual smoke testing on every screen before
+    main; split into smaller releases each verified
+    independently.
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+════════════════════════════════════════════════════════════
+3. FEATURES / TOOLING
+════════════════════════════════════════════════════════════
+
+[-] cleanup.html                                → v3.30.3
+    Standalone page (loads style.css + js/version.js
+    only, air-gap safe) scanning localStorage for
+    orphaned waxframe_* keys. Reads waxframe_v2_hive
+    for live aiList. Three per-AI orphan patterns:
+    recommend_default-${provider}, recommend_custom-
+    ${id}, models_${id}. Categorize as Known / Bunnies
+    (default-checked) / Unknown. Skip non-waxframe keys
+    + IDB. Link from DEV TOOLBAR.
+    STATUS: scoped, ready to build next session.
+
+[ ] MODEL_LABELS data-driven IDB cache
+    Daily refresh with manual refresh button and
+    MODEL_FALLBACKS as the offline fallback. Backlog
+    item #13 from prior planning, deferred.
+
+[ ] Model update detection + opt-in swap prompt
+    When a provider releases a new top-tier model,
+    prompt the user to swap rather than silently keep
+    the old one. Backlog item #10 from prior planning,
+    deferred.
+
+════════════════════════════════════════════════════════════
+4. DATA / TESTING (use WaxFrame_Playbook_Tests_To_Run.txt)
+════════════════════════════════════════════════════════════
+
+[ ] T1  Business Proposal      [REFINE]   estimate 4–6
+[ ] T2  Executive Summary      [REFINE]   estimate 3–5
+[ ] T3  RFP Response           [REFINE]   estimate 20–60+
+[ ] T4  Recipe                 [REFINE]   estimate 5–20+
+[ ] T5  LinkedIn Post          [SCRATCH]  NEW — first run
+[ ] T6  LinkedIn Profile       [SCRATCH]  NEW — first run
+
+[ ] After T1–T4 run: replace "estimated N–N rounds"
+    text in document-playbooks.html with measured values
+    in "(measured, not estimated)" format matching the
+    existing Cover Letter / JD / Résumé entries.
+
+[ ] After T5–T6 run (assuming clean convergence): add
+    new <div class="dp-playbook"> sections to
+    document-playbooks.html with full structure (purpose
+    tile, real-world example block, rounds badge).
+    Decide: under Content & Marketing, or new "Personal
+    & Profile" category?
+
+════════════════════════════════════════════════════════════
+5. DOCUMENTATION
+════════════════════════════════════════════════════════════
+
+[ ] Convergence-principle callout
+    "Starting from scratch converges faster than refining
+    a heavily misaligned draft" — backed by the cook's-
+    résumé-adapted-for-network-engineer example data
+    point. Placement TBD: README, user manual, or
+    playbooks. Open questions on placement priority and
+    tone — not yet answered.
+
+[ ] User-manual guidance on model diversity
+    For model-server deployments: the Recommend-a-Model
+    convergence trap. Minimum-two-distinct-models rule.
+    Document somewhere in the user manual.
+
+[ ] WaxFrame_Backlog_Master.txt (this file)
+    Keep this file updated. Treat it as the authoritative
+    backlog. Punch lists in chat sessions feed back into
+    this file before the chat ends.
+
+════════════════════════════════════════════════════════════
+6. CSS CLEANUP (parked work)
+════════════════════════════════════════════════════════════
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+════════════════════════════════════════════════════════════
+7. WAXFRAME FREE EDITION
+════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+
+════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first, last 10 items)
+════════════════════════════════════════════════════════════
+
+[x] v3.32.28 — #6b convergence-path length check
+    [x] Both unanimous and majority paths consult length
+        constraint before history.push, gated on override
+        flag. New helper getLengthStatus(). 'discard'
+        blocks celebration, user edits and re-runs.
+
+[x] v3.32.28 — #6c toolbar "Length guard: off" indicator
+    [x] Amber pill in .work-topbar-right, hidden by
+        default, shown when override is true. Click
+        re-arms via wfConfirm. Wired into clearProject,
+        both loadSession paths, initWorkScreen, and all
+        four 'continue_anyway' branches.
+
+[x] v3.32.28 — #6d symmetric undersized guard
+    [x] LENGTH_FLOOR_RATIO = 0.5. Both bloat-fail blocks
+        compute undersizedFail. Trajectory awareness
+        mirrored. Same override governs both directions.
+    NOTE: superseded by #8 length mode overhaul — the
+    implicit-floor design is being replaced by explicit
+    user-opted modes.
+
+[x] v3.32.27 — prior baseline (5/6/2026)
+
+════════════════════════════════════════════════════════════
+END OF FILE — keep updating
+════════════════════════════════════════════════════════════
