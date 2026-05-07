@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-009';         // build stamp — update each session
+const BUILD       = '20260506-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3480,7 +3480,16 @@ function saveSession() {
   // mid-project; cleared on clearProject() so a new project starts with
   // the guard active again.
   const lengthGuardOverride = !!window._lengthGuardOverride;
-  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride };
+  // v3.32.24 — Persist the per-round satisfaction set so the green-
+  // border + ★ state survives page reloads. The Set tracks which AIs
+  // returned NO CHANGES NEEDED for the current round; without
+  // persistence the Set rebuilds empty on reload and the rehydration
+  // path in renderBeeStatusGrid has nothing to walk, so previously-
+  // satisfied cards lose their star until the next round runs.
+  // Serialized as an array (Sets aren't JSON-friendly) and restored
+  // back into a Set on loadSession.
+  const cleanThisRound = Array.from(window._cleanThisRound || []);
+  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound };
 
   // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
@@ -3576,6 +3585,12 @@ async function loadSession() {
     // v3.32.18 — Restore length-guard override flag. Default false for
     // pre-v3.32.18 sessions where the field doesn't exist.
     window._lengthGuardOverride = !!s.lengthGuardOverride;
+    // v3.32.24 — Restore per-round satisfaction set. Defaults to empty
+    // for pre-v3.32.24 sessions where the field doesn't exist. The
+    // Set is reconstructed from the serialized array; the rehydration
+    // path in renderBeeStatusGrid (added v3.32.14) then walks it to
+    // re-apply is-clean state on each card after the DOM is built.
+    window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
@@ -3602,6 +3617,8 @@ async function loadSession() {
       if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
       // v3.32.18 — fallback path also restores the override flag.
       window._lengthGuardOverride = !!s.lengthGuardOverride;
+      // v3.32.24 — fallback path also restores the satisfaction set.
+      window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
       // Restore console HTML in the fallback path too (see main path)
       if (s.consoleHTML) {
