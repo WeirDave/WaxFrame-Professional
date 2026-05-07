@@ -1,6 +1,15 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.25
+**Build:** `20260506-011` · **Released:** May 6, 2026
+
+Single-line CSS tweak. The v3.32.23 satisfaction star had `padding: 0 12px` which produced 12px of margin from the star glyph to the card's right edge. The card's left side has 8px of body padding from the colored state strip to the first content (the 4px strip itself reads as state ornament rather than empty margin), so the right-side margin perceptually looked 4px bigger than the left.
+
+- **`.hex-clean-star { padding: 0 12px }` → `padding: 0 8px`.** Matches the `.hex-cell-body`'s 8px left padding so the visible margin from the star glyph to the card's right edge equals the visible margin from the colored state strip to the first body content. Both sides now read as 8px symmetric margins.
+- **Version stamps in code bumped** to v3.32.25 / build 20260506-011 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep. Each helper page's comment-header build stamp also synced from `20260506-010` to `20260506-011`.
+
+---
 ## v3.32.24
 **Build:** `20260506-010` · **Released:** May 6, 2026
 
