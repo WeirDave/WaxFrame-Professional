@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.27
+**Build:** `20260506-013` · **Released:** May 6, 2026
+
+Visual half of the build-phase satisfaction-star flicker. v3.32.26 fixed the data-side: removed the `if (state === 'sending') window._cleanThisRound.delete(id);` side-effect from `setBeeStatus`, so a satisfied builder stayed tracked as satisfied through the build phase. But the visual still flickered because the CSS class controlling the rendered star (`is-clean`) was getting wiped by the unconditional `card.classList.remove(...allStates)` at the top of every `setBeeStatus` call, and the universal re-derive that re-applies it only fires for non-`'sending'` states.
+
+- **`is-clean` class now persists during `'sending'` transitions when the AI is in `_cleanThisRound`.** New line in the `'sending'` branch: `if (window._cleanThisRound.has(id)) add('is-clean');`. This lets the green border + ★ visual coexist with the pulsing `is-sending` animation when the Builder transitions to `'Building…'` mid-round. CSS source order resolves the border-color conflict in favor of green (is-clean rule lives later in the stylesheet than is-sending), the pulsing animation from is-sending is on a different property so it still runs, the star comes from `.hex-cell.is-clean .hex-clean-star { display: flex }`, and the status text stays blue "BUILDING…" because `.hex-cell.is-sending .hex-status { color: var(--blue) }` has no is-clean override.
+- **What the satisfied builder card now shows during build phase:** green border, blue pulsing animation, star at far right, "BUILDING…" status text in blue. "This AI was satisfied this round" anchor persists through the build instead of flickering off and back on. Non-satisfied builders are unchanged — they don't enter the `_cleanThisRound.has(id)` branch, so they show the standard is-sending visual (blue border + animation, no star).
+- **No CSS changes needed.** The cascade was already correct for the case where both classes are present; it just needed the JS to actually set both classes simultaneously in this transition.
+- **Version stamps in code bumped** to v3.32.27 / build 20260506-013 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep. Each helper page's comment-header build stamp also synced from `20260506-012` to `20260506-013`.
+
+---
 ## v3.32.26
 **Build:** `20260506-012` · **Released:** May 6, 2026
 
