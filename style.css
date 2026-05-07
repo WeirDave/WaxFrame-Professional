@@ -926,6 +926,17 @@ html, body {
   gap: 10px;
   flex: 1;
   min-width: 0;
+  /* v3.32.21 — Cap the left zone so a long project name can't visually
+     extend into the absolute-positioned .work-topbar-center round badge
+     zone. Math: half-of-topbar minus half-of-badge-width minus a small
+     safety gap. The badge is "Round 4 — Refine" or similar at 17px mono
+     font with 56px horizontal padding ≈ 280px max width, so half is
+     ~140px; using 150px gives a 10px buffer. The existing
+     `.work-project-name { text-overflow: ellipsis }` rule then kicks in
+     correctly as the name competes for the constrained left-zone width.
+     At wider viewports this still leaves plenty of room for full names;
+     at laptop widths (~1422px) it cleanly truncates instead of overlapping. */
+  max-width: calc(50% - 150px);
 }
 .work-topbar-center {
   display: flex;
@@ -1568,19 +1579,43 @@ html, body {
 .hex-cell.is-responding .hex-status { color: var(--purple); }
 .hex-cell.is-done       .hex-status { color: #00b300; }
 .hex-cell.is-error      .hex-status { color: #f87171; }
-/* v3.32.20 — Builder Bee role indicator on row 2 of the Builder card.
-   Replaces the prior plaintext .hex-builder-tag pill ("BUILDER" in an
-   amber chip). Same PNG asset (WaxFrame_Builder_v3.png) used by the
-   Setup 2 picker's selected-badge, so the user's mental model of "this
-   bee = Builder role" is reinforced by visual consistency across
-   screens. Sized small (14px) to fit the status row alongside the
-   live status text without dominating it. */
-.hex-builder-bee {
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
+/* v3.32.21 — Restored from v3.32.19 era. Replaces the brief v3.32.20
+   .hex-builder-bee experiment that put the Builder Bee PNG in the
+   checkbox slot — at the slot's natural size (~13–14px) the bee
+   silhouette became unreadable mush. Plaintext "BUILDER" in an amber
+   chip reads at any size and matches the slot dimensions naturally.
+   The bee asset stays available in /images/WaxFrame_Builder_v3.png
+   for places with room (Setup 2 picker, Change Builder modal title). */
+.hex-builder-tag {
+  font-size: 8px;
+  font-weight: 800;
+  color: #0a0c12;
+  background: var(--accent);
+  border-radius: 3px;
+  padding: 1px 4px;
+  letter-spacing: 0.05em;
   flex-shrink: 0;
 }
+/* v3.32.21 — Inline satisfaction star on row 2 of the bee card.
+   Replaces the v3.32.20-and-earlier .hex-cell.is-clean::after centered
+   overlay, which obscured the row content. Now sits at the far right
+   of row 2 (margin-left: auto pushes it past the .hex-status text)
+   and is hidden by default — the .hex-cell.is-clean rule below
+   reveals it. Keeps the same gold-amber color and serif star
+   character so the visual association is preserved. */
+.hex-clean-star {
+  display: none;
+  font-size: 14px;
+  line-height: 1;
+  color: var(--accent);
+  flex-shrink: 0;
+  margin-left: auto;
+  user-select: none;
+  pointer-events: none;
+}
+.hex-cell.is-clean .hex-clean-star { display: inline; }
+[data-theme="light"] .hex-cell.is-clean .hex-clean-star,
+[data-theme="auto"]  .hex-cell.is-clean .hex-clean-star { color: #d97706; opacity: 1; }
 
 /* ── Edit Hive button — laptop-only (paired with the dot-strip view) ──
    At desktop (≥1601px) the full hex-grid AI cards are visible with their
@@ -6196,9 +6231,45 @@ kbd {
 .link-accent:hover  { color: var(--accent-hover); text-decoration: underline; }
 
 .bee-btn-img { width: 48px; height: 48px; object-fit: contain; vertical-align: middle; margin-right: 8px; }
+/* v3.32.21 — Inline Builder Bee accents in modal titles, button labels,
+   and the Change Builder modal's "Current" indicator. Replaces 👑
+   crown emoji uses in those contexts (titles + persistent buttons —
+   toast notifications keep the emoji per the project's transient-vs-
+   persistent affordance convention). Sized to feel like part of the
+   text baseline rather than dominating it. */
+.modal-title-bee {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 6px;
+  margin-top: -2px; /* nudge up so the bee sits centered on x-height */
+}
+.modal-btn-bee {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 4px;
+  margin-top: -1px;
+}
+.builder-pick-current-bee {
+  width: 12px;
+  height: 12px;
+  object-fit: contain;
+  vertical-align: middle;
+  margin-right: 3px;
+  margin-top: -1px;
+}
 .full-width         { width: 100%; }
 .change-builder-modal {
-  max-width: 560px;
+  /* v3.32.21 — Bumped from 560px so the .builder-pick-grid cards
+     (now correctly using the small flex-wrap variant instead of the
+     -large grid that was sized for the Setup 2 screen) have enough
+     room to feel substantial. At 560px, 7 AIs in a flex-wrap layout
+     squeezed cards down to ~100px wide each which felt cramped; at
+     760px they get ~140-160px each which reads cleanly. */
+  max-width: 760px;
   max-height: 85vh;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -7483,26 +7554,18 @@ kbd {
   cursor: default;
 }
 
-/* ── Bee card — no changes needed star ── */
+/* ── Bee card — no changes needed border ──
+   v3.32.21 — The satisfaction star itself is now an inline element
+   (.hex-clean-star) on row 2 of the card, with its visibility toggled
+   by .hex-cell.is-clean (rule lives near .hex-builder-tag). The prior
+   .hex-cell.is-clean::after centered overlay was retired here because
+   it covered the row content; this rule now only controls the green
+   border ring that signals satisfaction at-a-glance. */
 .hex-cell.is-clean .hex-status,
 .hex-cell.is-clean {
   border-color: #00b300;
   position: relative;
 }
-.hex-cell.is-clean::after {
-  content: '★';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 28px;
-  color: var(--accent);
-  opacity: 0.85;
-  pointer-events: none;
-  line-height: 1;
-}
-[data-theme="light"] .hex-cell.is-clean::after,
-[data-theme="auto"] .hex-cell.is-clean::after { color: #d97706; opacity: 1; }
 
 /* ── USER MANUAL PAGE (waxframe-user-manual.html) ── */
 

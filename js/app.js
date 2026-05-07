@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-006';         // build stamp — update each session
+const BUILD       = '20260506-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1828,7 +1828,7 @@ function openChangeBuilder() {
         onclick="setBuilderFromModal('${ai.id}')">
         ${iconEl}
         <span class="builder-pick-name">${ai.name}</span>
-        ${isSelected ? '<span class="builder-pick-current">👑 Current</span>' : ''}
+        ${isSelected ? '<span class="builder-pick-current"><img src="images/WaxFrame_Builder_v3.png" class="builder-pick-current-bee" alt="" onerror="this.style.display=\'none\'"> Current</span>' : ''}
       </div>`;
     }).join('');
   }
@@ -9340,16 +9340,27 @@ function renderBeeStatusGrid() {
     const isOn = isB || window.sessionAIs.has(ai.id);
     const iconEl = resolveAiIcon(ai, 'hex-icon');
     // v3.32.20 — Two-row card layout (#8). Row 1 carries identity:
-    // optional checkbox (non-builders only — builders are always-on),
-    // provider icon, AI name. Row 2 carries status: Builder Bee role
-    // indicator (when this card holds the Builder role) and the live
-    // status text. Splits the previous single-row cram of up to 6
-    // elements (checkbox + BUILDER tag + icon + name + status + ★)
-    // into a stack so name has full row-1 width and never collides
-    // with status-row content. The role indicator is the Builder Bee
-    // PNG (same asset as the Setup 2 picker's selected-badge), not
-    // the prior plaintext "BUILDER" tag — visual consistency with
-    // how the Builder identity is communicated elsewhere in the app.
+    // checkbox slot (BUILDER text pill on the Builder card, since the
+    // builder is always-on and can't be toggled — same slot, different
+    // affordance), provider icon, AI name. Row 2 carries status: live
+    // status text (left) and the satisfaction star inline at far right
+    // when the AI returned NO CHANGES NEEDED for this round.
+    //
+    // v3.32.21 changes:
+    //   • BUILDER role indicator on row 1 reverted to the prior text
+    //     pill (.hex-builder-tag) instead of the v3.32.20 Builder Bee
+    //     PNG. The bee asset at 13–14px in the checkbox-slot footprint
+    //     was visually unreadable — the silhouette became mush at that
+    //     size. Text "BUILDER" reads at any size and matches the slot
+    //     dimensions naturally. The bee asset is preserved in
+    //     /images/WaxFrame_Builder_v3.png for places with room (Setup 2
+    //     picker, Change Builder modal title).
+    //   • Satisfaction star moved out of the centered .hex-cell::after
+    //     overlay and into a dedicated inline .hex-clean-star span on
+    //     row 2 with margin-left:auto pushing it to the far right of
+    //     the row. The overlay form covered the row content; inline at
+    //     row-end keeps the star visible without obscuring status text.
+    //
     // Underlying ai.name keeps its "[Base] " prefix; the card display
     // strips it via displayAiName() because every base model's prefix
     // adds visual noise without differentiating information.
@@ -9358,7 +9369,7 @@ function renderBeeStatusGrid() {
       <div class="hex-cell-body">
         <div class="hex-row hex-row-identity">
           ${isB
-            ? ''
+            ? `<span class="hex-builder-tag">BUILDER</span>`
             : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
                 ${isOn ? 'checked' : ''}
                 onchange="toggleSessionBee('${ai.id}', this.checked)">`
@@ -9367,13 +9378,8 @@ function renderBeeStatusGrid() {
           <span class="hex-name" title="${esc(ai.name)}">${esc(displayAiName(ai.name))}</span>
         </div>
         <div class="hex-row hex-row-status">
-          ${isB
-            ? `<img class="hex-builder-bee" src="images/WaxFrame_Builder_v3.png"
-                   alt="Builder" title="Builder"
-                   onerror="this.style.display='none'">`
-            : ''
-          }
           <span class="hex-status" id="blive-${ai.id}">Idle</span>
+          <span class="hex-clean-star" aria-label="No changes needed">★</span>
         </div>
       </div>
     </div>`;
@@ -10195,7 +10201,16 @@ function setBeeStatus(id, state, summary) {
 
   if (effectiveState === 'sending') {
     add('is-sending');
-    if (live) live.textContent = 'Sending…';
+    // v3.32.21 — Was hardcoded to "Sending…" regardless of summary
+    // arg. Both call sites pass meaningful summaries: 'Building…' for
+    // the Builder during the build phase and 'Reviewing…' for
+    // reviewers during the smoke phase. The hardcoded override
+    // silently lost the distinction — Builder cards said "SENDING…"
+    // during build instead of "BUILDING…", reviewer cards said
+    // "SENDING…" during reviews instead of "REVIEWING…". Now the
+    // passed summary is honored; "Sending…" is only the fallback
+    // when no summary was provided.
+    if (live) live.textContent = effectiveSummary || 'Sending…';
   } else if (effectiveState === 'done') {
     add('is-done');
     if (live) live.textContent = 'Done ✓';
