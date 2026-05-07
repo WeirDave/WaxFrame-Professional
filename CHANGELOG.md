@@ -1,6 +1,16 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.22
+**Build:** `20260506-008` · **Released:** May 6, 2026
+
+Single-fix release. The v3.32.21 inline satisfaction star (`.hex-clean-star`) on row 2 of the bee card was sized at 14px, which numerically should have read as larger than the BUILDER pill (8px) and status text (9px) it sits next to — but the serif ★ glyph has built-in whitespace padding inside its em-box, so its perceived visual mass was smaller than its declared font-size. The star looked smaller than the surrounding text in real use even though the font-size value said otherwise.
+
+- **`.hex-clean-star` font-size bumped 14px → 18px** so the star reads as visually larger than the BUILDER pill and status text instead of appearing equal-or-smaller. The 4px bump compensates for the glyph's internal whitespace padding without overwhelming the row.
+- **`line-height` tightened from 1 to 0.8** to pull the glyph baseline up so it sits proportionate to the row's text height. Without this, bumping font-size alone would add extra vertical space to row 2 that the card's compact layout doesn't have. With `line-height: 0.8`, the star's perceived visual mass grows but its row footprint stays compact.
+- **Version stamps in code bumped** to v3.32.22 / build 20260506-008 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep. Each helper page's comment-header build stamp also synced from `20260506-007` to `20260506-008`.
+
+---
 ## v3.32.21
 **Build:** `20260506-007` · **Released:** May 6, 2026
 

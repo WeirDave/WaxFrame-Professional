@@ -1602,11 +1602,18 @@ html, body {
    of row 2 (margin-left: auto pushes it past the .hex-status text)
    and is hidden by default — the .hex-cell.is-clean rule below
    reveals it. Keeps the same gold-amber color and serif star
-   character so the visual association is preserved. */
+   character so the visual association is preserved.
+   v3.32.22 — Bumped 14px → 18px so the star reads as visually larger
+   than the BUILDER pill (8px) and status text (9px) on row 2. The
+   serif ★ glyph has built-in whitespace padding inside its em-box,
+   so its perceived visual mass is smaller than its declared font-
+   size; tightening line-height to 0.8 pulls the glyph baseline up
+   so it sits proportionate to the row's text height instead of
+   adding extra vertical space the row doesn't have. */
 .hex-clean-star {
   display: none;
-  font-size: 14px;
-  line-height: 1;
+  font-size: 18px;
+  line-height: 0.8;
   color: var(--accent);
   flex-shrink: 0;
   margin-left: auto;
