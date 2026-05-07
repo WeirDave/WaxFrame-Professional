@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-012';         // build stamp — update each session
+const BUILD       = '20260506-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -10279,6 +10279,27 @@ function setBeeStatus(id, state, summary) {
 
   if (effectiveState === 'sending') {
     add('is-sending');
+    // v3.32.27 — Preserve the is-clean visual class during 'sending'
+    // transitions when this AI was satisfied this round. v3.32.26
+    // fixed the data-side flicker (kept the AI in _cleanThisRound
+    // through the build phase by removing the delete-on-sending
+    // side-effect), but the VISUAL flicker remained because:
+    //   1. line 10275 wipes ALL state classes including is-clean
+    //   2. the universal re-derive at line 10267 explicitly skips
+    //      'sending' state, so is-clean isn't re-applied via the
+    //      done-clean promotion path
+    //   3. this branch only added is-sending
+    // Result: satisfied builder transitioning to 'Building…' lost
+    // its green border + star until the build completed and the
+    // builderWasClean re-promotion fired. Now is-clean coexists
+    // with is-sending while the build runs:
+    //   • Border: green (is-clean wins via CSS source order)
+    //   • Pulsing animation: yes (is-sending)
+    //   • Star: visible (.hex-cell.is-clean .hex-clean-star rule)
+    //   • Status text: "BUILDING…" in blue (is-sending text color)
+    // The "this AI was satisfied" anchor persists through the build
+    // while the activity is also clearly indicated.
+    if (window._cleanThisRound.has(id)) add('is-clean');
     // v3.32.21 — Was hardcoded to "Sending…" regardless of summary
     // arg. Both call sites pass meaningful summaries: 'Building…' for
     // the Builder during the build phase and 'Reviewing…' for
