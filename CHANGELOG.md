@@ -1,6 +1,20 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.19
+**Build:** `20260506-005` · **Released:** May 6, 2026
+
+Closes punch-list item #5 — the Change Builder modal CSS. The malformed-HTML half (double `class=` attribute) was fixed in v3.32.16; this release closes the remaining text-overflow issue where long AI names like `[Base] Claude-3-7-Sonnet` extended past their card boundaries and visually collided with neighboring cards in the grid.
+
+- **`.builder-pick-btn` gets `overflow: hidden`.** Defensive safety net so a long name can never visually escape its card, regardless of which render path produced the markup. Pairs with the wrap behavior on `.builder-pick-name` below — wrap is the primary mechanism, clip is the fallback for unbreakable tokens or extreme widths.
+- **`.builder-pick-name` gets proper text wrapping.** Adds `word-break: break-word` so hyphenated model names like `Claude-3-7-Sonnet` or `GPT-4o-Mini` break cleanly at hyphen boundaries; `overflow-wrap: anywhere` as a fallback for unbreakable tokens (extremely long single words with no break opportunities); `max-width: 100%` to keep names within the card's content box; `line-height: 1.25` for multi-line breathing room without making single-line names feel loose; `text-align: center` to match the column layout's centered alignment so wrapped names remain visually centered.
+- **`title="${esc(ai.name)}"` added to both Builder picker render paths.** `openChangeBuilder()` (Change Builder modal — small variant, 36px icon) and `renderBuilderPicker()` (Setup 2 grid — large variant, 56px icon). Provides a hover affordance so the user can see the full name even when the visible name is wrapped or clipped at the card edge. `esc()` keeps any quote characters in custom AI names from breaking the attribute.
+- **`aspect-ratio` constraint deliberately preserved.** Considered replacing it with `min-height` so cards could grow vertically when names wrap, but the proportional scaling David tuned in v3.27.7/v3.27.9/v3.27.10/v3.27.11 produces a deliberate visual rhythm — cards at ~470×235 (laptop) and ~540×270 (full desktop) with content centered in the available space. Replacing `aspect-ratio` with `min-height` would break that. The wrap + clip + title combination handles long names gracefully without changing the grid's visual proportions.
+- **Version stamps in code bumped** to v3.32.19 / build 20260506-005 across the canonical 4-stamp checklist (`version.js` `APP_VERSION`, `app.js` `BUILD`, `index.html` `<meta name="waxframe-build">`, `index.html` `app.js?v=` cache-bust) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`). Each helper page's comment-header build stamp also synced from `20260506-004` to `20260506-005`. The `style.css?v=` and `js/version.js?v=` cache-busts in `index.html` itself caught at the same time.
+
+**Punch list housekeeping (no code change):** Item **#3** (`WaxFrame_Playbook_Round_Count_Tests.txt` reportedly stale) closed as not-an-issue — the file isn't in the deployed repo. It was a local-only scratch file that was never deployed, so there's nothing in the published site or repo to clean up.
+
+---
 ## v3.32.18
 **Build:** `20260506-004` · **Released:** May 6, 2026
 
