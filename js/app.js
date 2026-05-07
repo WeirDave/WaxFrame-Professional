@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-002';         // build stamp — update each session
+const BUILD       = '20260506-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2896,8 +2896,108 @@ function updateLengthConstraintHint() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════════
+// v3.32.17 — Mid-round project-discard guard
+// ────────────────────────────────────────────────────────────────────
+// Problem: clearProject() and the Finish-modal "Start a new project"
+// flow could fire while a round was still in flight. The orphaned
+// round would resume after clearProject finished and call
+// history.push() + saveSession() against the now-empty new project,
+// recreating phantom round-1 entries and corrupting IDB.
+//
+// Solution: two layers.
+//
+// 1) Entry-point confirm. Every user-initiated path that ends in
+//    clearProject() first calls confirmInterruptIfRunning(). If a
+//    round is in flight (runRoundBtn has the .running class), we
+//    show a wfConfirm modal: "Round in progress — discard the round
+//    and continue?" If the user cancels, the discard is aborted.
+//
+// 2) Generation-token abandonment check. clearProject increments
+//    window._projectGen. runRound and runBuilderOnly capture the gen
+//    at their start, then re-check it before each history.push /
+//    saveSession write block. If the gen has changed mid-round, the
+//    round is "abandoned" — _abandonInFlightRoundUI() resets the run
+//    button + smoker overlay + builder overlay to a clean state, and
+//    the round bails without writing.
+//
+// The two layers are complementary: layer 1 keeps the user in
+// control and gives them a chance to abort, while layer 2 is the
+// safety net that prevents corruption even if the user confirmed
+// the discard.
+// ════════════════════════════════════════════════════════════════════
+
+// True if the run button is currently in its "running" state (set by
+// runRound and runBuilderOnly while a round is in flight, cleared on
+// completion or error). We rely on this DOM signal rather than a
+// separate flag because the .running class is the existing source of
+// truth for double-click prevention (line ~10462 / ~10261).
+function isRoundInFlight() {
+  const btn = document.getElementById('runRoundBtn');
+  return !!(btn && btn.classList.contains('running'));
+}
+
+// Surfaces a wfConfirm asking the user whether to discard an in-flight
+// round before proceeding with a destructive action. Returns true if
+// no round is in flight OR the user confirms; false if the user cancels.
+//
+// Callers should treat a false return as "abort the destructive action"
+// and bail without doing anything else. Modal copy is intentionally
+// blunt about the in-flight round being discarded so users can't be
+// surprised by half-applied results bleeding into the new project.
+async function confirmInterruptIfRunning() {
+  if (!isRoundInFlight()) return true;
+  return await wfConfirm(
+    '🐝 Round in progress',
+    'A round is currently running. Continuing will discard the in-flight round — any responses received so far will not be saved. Continue anyway?',
+    { okText: 'Discard round and continue', destructive: true }
+  );
+}
+
+// Wrapper for the "🗑 Clear Project" button on the Project screen.
+// Replaces the previous direct `onclick="clearProject()"` so the
+// in-flight check fires before clearProject runs. The Finish-modal
+// path (finishAndNew) checks separately at its top — see that
+// function for the rationale on why the check lives there rather
+// than only inside clearProject.
+async function requestClearProject() {
+  if (!await confirmInterruptIfRunning()) return;
+  await clearProject();
+}
+
+// Resets the run button + overlays to a clean state when an in-flight
+// round is being abandoned mid-await. Called from runRound /
+// runBuilderOnly when their generation-token check detects that
+// clearProject ran while they were paused at an async boundary.
+//
+// Mirrors the cleanup that happens at the end of a normal round —
+// remove the .running class so the user isn't stuck looking at a
+// "Smoking…" button after they discarded the project, hide the
+// overlays, restore the button label and timer.
+function _abandonInFlightRoundUI() {
+  const btn = document.getElementById('runRoundBtn');
+  if (btn) {
+    btn.classList.remove('running');
+    btn.disabled = false;
+    const lbl = btn.querySelector('.shake-wide-label');
+    if (lbl) lbl.textContent = 'Smoke the Hive';
+  }
+  if (typeof stopRoundTimer === 'function') stopRoundTimer();
+  if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
+  if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+}
+
 // clearProject — wipe project data only, keep hive intact
 async function clearProject() {
+  // v3.32.17 — Bump the project-generation token so any in-flight round
+  // that was mid-await when the user discarded the project will detect
+  // the mismatch at its next write checkpoint and bail before writing
+  // phantom history into the new (now-empty) session. Without this
+  // token, an orphaned round's history.push + saveSession would land
+  // AFTER clearProject finished wiping IDB, recreating bogus state in
+  // the new project. See _abandonInFlightRoundUI() and the gen-checks
+  // in runRound / runBuilderOnly.
+  window._projectGen = (window._projectGen || 0) + 1;
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
@@ -8686,6 +8786,17 @@ function hideFinishModal() {
 }
 
 async function finishAndNew() {
+  // v3.32.17 — In-flight check FIRST, before any other logic. If a
+  // round is running, prompt the user to discard it; cancel aborts the
+  // entire flow and the Finish modal stays open. This prevents the
+  // round from continuing to write into a session that's about to be
+  // cleared. The unexported-content check below remains the second
+  // gate. Worst case both fire (round in flight AND unexported work) —
+  // user sees two modals back-to-back, but each is asking a distinct
+  // question and the order is correct (in-flight first, since that's
+  // the more time-sensitive concern).
+  if (!await confirmInterruptIfRunning()) return;
+
   const liveDoc = document.getElementById('workDocument')?.value?.trim() || '';
   const hasContent = liveDoc.length > 0 || history.length > 0;
   if (!window._finishExported && hasContent) {
@@ -10295,6 +10406,13 @@ async function runBuilderOnly() {
   consoleLog(`📝 Notes: ${notes}`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
 
+  // v3.32.17 — Capture the project generation token for the abandonment
+  // check below. If the user fires clearProject() while this round is
+  // mid-await, _projectGen will be incremented and our captured value
+  // will fall behind — every write checkpoint compares the two and
+  // bails cleanly if they don't match.
+  const _runGen = window._projectGen || 0;
+
   // Build prompt — no reviewer responses, just the doc + notes → Builder instructions
   const builderPrompt = buildPromptForAI(builderAI, []);
   // Swap in builder instructions directly (no reviewer suggestions to compile)
@@ -10399,6 +10517,14 @@ async function runBuilderOnly() {
   }
 
   if (!builderHadError) {
+    // v3.32.17 — Abandonment check: bail BEFORE writing if the user
+    // discarded the project mid-await. Without this, history.push +
+    // saveSession would write a phantom entry into the new project's
+    // session right after clearProject finished wiping IDB.
+    if (_runGen !== (window._projectGen || 0)) {
+      _abandonInFlightRoundUI();
+      return;
+    }
     history.push({
       round, phase,
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
@@ -10426,6 +10552,13 @@ async function runBuilderOnly() {
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
   } else {
+    // v3.32.17 — Abandonment check (failed-round path). Same rationale
+    // as the success path above — don't write phantom failed-round
+    // history into a freshly-cleared project.
+    if (_runGen !== (window._projectGen || 0)) {
+      _abandonInFlightRoundUI();
+      return;
+    }
     // Save failed round to history for accurate records and export transcript
     history.push({
       round, phase,
@@ -10491,6 +10624,13 @@ async function runRound() {
   projectClockStart(); // start/resume project clock on every round
   setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+
+  // v3.32.17 — Capture the project generation token for the abandonment
+  // checks at every history.push / saveSession write block below. If
+  // the user discards the project mid-round (clearProject → bumps
+  // _projectGen), each write site sees the mismatch and bails before
+  // corrupting the new project's session.
+  const _runGen = window._projectGen || 0;
 
   // ── Round reset ──
   // v3.32.14 — Order matters: clear _cleanThisRound FIRST so the visual
@@ -10608,6 +10748,12 @@ async function runRound() {
     consoleLog(`🏁 All AIs agree — no further changes needed.`, 'success');
     toast(`🏁 All ${noChangesCount} AIs agree the document is done!`, 5000);
 
+    // v3.32.17 — Abandonment check (unanimous-convergence path).
+    if (_runGen !== (window._projectGen || 0)) {
+      _abandonInFlightRoundUI();
+      return;
+    }
+
     history.push({
       round, phase,
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
@@ -10655,6 +10801,12 @@ async function runRound() {
   if (hasMajorityConvergence && holdouts.length > 0) {
     consoleLog(`🏁 Majority convergence — ${noChangesCount} of ${successfulReviews.length} AIs satisfied. Skipping Builder.`, 'success');
     toast(`🏁 ${noChangesCount} of ${successfulReviews.length} AIs are done — review the holdout suggestions below`, 5000);
+
+    // v3.32.17 — Abandonment check (majority-convergence path).
+    if (_runGen !== (window._projectGen || 0)) {
+      _abandonInFlightRoundUI();
+      return;
+    }
 
     history.push({
       round, phase,
@@ -10808,6 +10960,11 @@ async function runRound() {
   }
 
   if (!builderHadError) {
+  // v3.32.17 — Abandonment check (normal continue path).
+  if (_runGen !== (window._projectGen || 0)) {
+    _abandonInFlightRoundUI();
+    return;
+  }
   // Save to history — full document + all responses + conflicts + notes
   history.push({
     round, phase,
@@ -10872,6 +11029,11 @@ async function runRound() {
     btn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
   }
   if (builderHadError) {
+    // v3.32.17 — Abandonment check (failed-round path in runRound).
+    if (_runGen !== (window._projectGen || 0)) {
+      _abandonInFlightRoundUI();
+      return;
+    }
     // Save failed round to history for accurate records and export transcript
     history.push({
       round, phase,
