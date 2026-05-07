@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-003';         // build stamp — update each session
+const BUILD       = '20260506-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2998,6 +2998,13 @@ async function clearProject() {
   // the new project. See _abandonInFlightRoundUI() and the gen-checks
   // in runRound / runBuilderOnly.
   window._projectGen = (window._projectGen || 0) + 1;
+  // v3.32.18 — Reset the length-guard override flag. The flag is per-
+  // project-session: if the user disabled the guard for one project,
+  // a fresh project should start with the guard active again. The IDB
+  // wipe below also clears the persisted flag, but resetting the
+  // window global explicitly ensures the next round (in a new project)
+  // sees the right value before saveSession has had a chance to run.
+  window._lengthGuardOverride = false;
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
@@ -3455,7 +3462,13 @@ function saveSession() {
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
   const notesEl = document.getElementById('workNotes');
   const notes = notesEl ? notesEl.value : '';
-  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds };
+  // v3.32.18 — Persist the length-guard override flag alongside the rest
+  // of the session payload. Set when the user picks "Continue anyway"
+  // from the length-guard modal; persisted so it survives reloads
+  // mid-project; cleared on clearProject() so a new project starts with
+  // the guard active again.
+  const lengthGuardOverride = !!window._lengthGuardOverride;
+  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride };
 
   // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
@@ -3548,6 +3561,9 @@ async function loadSession() {
     history = s.history || [];
     docText = s.docText || '';
     if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
+    // v3.32.18 — Restore length-guard override flag. Default false for
+    // pre-v3.32.18 sessions where the field doesn't exist.
+    window._lengthGuardOverride = !!s.lengthGuardOverride;
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
@@ -3572,6 +3588,8 @@ async function loadSession() {
       history = s.history || [];
       docText = s.docText || '';
       if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
+      // v3.32.18 — fallback path also restores the override flag.
+      window._lengthGuardOverride = !!s.lengthGuardOverride;
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
       // Restore console HTML in the fallback path too (see main path)
       if (s.consoleHTML) {
@@ -4849,6 +4867,98 @@ function wfConfirmCancel() {
   const modal = document.getElementById('wfConfirmModal');
   if (modal) modal.classList.remove('active');
   if (_wfConfirmResolve) { _wfConfirmResolve(false); _wfConfirmResolve = null; }
+}
+
+// ════════════════════════════════════════════════════════════════════
+// v3.32.18 — Length Guard Modal
+// ────────────────────────────────────────────────────────────────────
+// Shown when a round's Builder output triggers the length gate AND the
+// project's length-guard override is not yet set. Three actions:
+//
+//   • Discard         — reject the round, save as failed (existing
+//                       BUILDER_BLOAT behavior). Default conservative
+//                       choice. No state change.
+//   • Keep            — accept this round's output as the new CURRENT
+//                       document, but keep the guard active for future
+//                       rounds. One-time override.
+//   • Continue Anyway — accept AND set window._lengthGuardOverride =
+//                       true, persisted in IDB session. Future rounds
+//                       skip the gate entirely until clearProject().
+//
+// The trajectory rows displayed give the user enough info to choose
+// between the three without needing to scroll the document — prior
+// length, this round's length, target limit, direction (↓ improving,
+// ↑ worsening, unchanged), and absolute distance from target.
+//
+// Caller awaits the returned Promise. Resolves to one of:
+//   'discard' | 'keep' | 'continue_anyway'
+//
+// The trajectory check in runRound/runBuilderOnly ensures the modal
+// only fires when (a) the length constraint is set on the project AND
+// (b) the round's output failed even after trajectory awareness was
+// considered (i.e., the doc didn't move toward the target). Unconstrained
+// 1.5×-prior-words sanity-check fails take the existing BUILDER_BLOAT
+// failed-round path — there's no target to "Continue Anyway" against
+// in the unconstrained case.
+// ════════════════════════════════════════════════════════════════════
+
+let _lengthGuardResolve = null;
+
+function lengthGuardPrompt({ actual, prevActual, limitNum, unitName, limitName, builderName }) {
+  return new Promise(resolve => {
+    _lengthGuardResolve = resolve;
+    const modal       = document.getElementById('lengthGuardModal');
+    const summaryEl   = document.getElementById('lengthGuardSummary');
+    const priorEl     = document.getElementById('lengthGuardPrior');
+    const actualEl    = document.getElementById('lengthGuardActual');
+    const limitEl     = document.getElementById('lengthGuardLimit');
+    const deltaEl     = document.getElementById('lengthGuardDelta');
+    const deltaRow    = deltaEl ? deltaEl.closest('.length-guard-row') : null;
+    const distanceEl  = document.getElementById('lengthGuardDistance');
+    if (!modal) {
+      // Modal not in DOM (shouldn't happen, but defensive). Default to
+      // the existing failed-round behavior so corruption can't sneak in.
+      resolve('discard');
+      return;
+    }
+    if (summaryEl) {
+      summaryEl.textContent = `${builderName || 'Builder'} produced a document that exceeds your length target. Choose how to handle this round.`;
+    }
+    const fmt = n => (typeof n === 'number') ? n.toLocaleString() : String(n);
+    if (priorEl)  priorEl.textContent  = `${fmt(prevActual)} ${unitName}`;
+    if (actualEl) actualEl.textContent = `${fmt(actual)} ${unitName}`;
+    if (limitEl)  limitEl.textContent  = limitName || `${fmt(limitNum)} ${unitName}`;
+    if (deltaRow) deltaRow.classList.remove('is-improving', 'is-worsening', 'is-stalled');
+    if (deltaEl) {
+      const delta = actual - prevActual;
+      if (delta < 0) {
+        deltaEl.textContent = `↓ ${fmt(Math.abs(delta))} ${unitName}`;
+        if (deltaRow) deltaRow.classList.add('is-improving');
+      } else if (delta > 0) {
+        deltaEl.textContent = `↑ ${fmt(delta)} ${unitName}`;
+        if (deltaRow) deltaRow.classList.add('is-worsening');
+      } else {
+        deltaEl.textContent = 'unchanged';
+        if (deltaRow) deltaRow.classList.add('is-stalled');
+      }
+    }
+    if (distanceEl) {
+      const overBy = actual - limitNum;
+      distanceEl.textContent = overBy > 0
+        ? `${fmt(overBy)} ${unitName} over`
+        : `within target`;
+    }
+    modal.classList.add('active');
+  });
+}
+
+function _lengthGuardChoose(value) {
+  const modal = document.getElementById('lengthGuardModal');
+  if (modal) modal.classList.remove('active');
+  if (_lengthGuardResolve) {
+    _lengthGuardResolve(value);
+    _lengthGuardResolve = null;
+  }
 }
 
 function setCachedRecommendation(cacheId, model, why, labels, none) {
@@ -10463,26 +10573,81 @@ async function runBuilderOnly() {
       const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
       const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
       const _lcGate   = getLengthConstraint();
-      let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
+      let bloatFail, actual, prevActual, limitNum, unitName, limitName, bloatPct, gateConstrained;
       if (_lcGate) {
         // User specified a length constraint — honor it in its native unit.
         // Pages uses the word estimate (not directly measurable from raw text).
-        actual    = countInUnit(newDoc, _lcGate.unit);
-        limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-        unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
-        limitName = _lcGate.unit === 'pages'
+        gateConstrained = true;
+        actual     = countInUnit(newDoc,  _lcGate.unit);
+        prevActual = countInUnit(docText, _lcGate.unit);
+        limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+        unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
+        limitName  = _lcGate.unit === 'pages'
           ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
           : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
-        bloatFail = actual > limitNum;
-        bloatPct  = Math.round((actual / limitNum) * 100);
+        // v3.32.18 — Trajectory awareness. If the prior document was
+        // already over the limit (e.g. user pasted a 2400-word starting
+        // doc with limit 800), accept any round that moved it DOWN
+        // toward the limit, even if still over. Without this, every
+        // round in the convergence-down sequence is rejected because
+        // it still exceeds the absolute ceiling — the user gets stuck
+        // in a discard loop with no way to make progress.
+        if (prevActual > limitNum) {
+          bloatFail = (actual >= prevActual);
+        } else {
+          // Prior was within target — strict ceiling applies.
+          bloatFail = (actual > limitNum);
+        }
+        bloatPct = Math.round((actual / limitNum) * 100);
       } else {
-        // No constraint — fall back to 1.5× prior-word sanity check
+        // No constraint — fall back to 1.5× prior-word sanity check.
+        // Trajectory awareness doesn't apply (no target to move toward),
+        // so this branch is unchanged from pre-v3.32.18.
+        gateConstrained = false;
         actual    = newWords;
+        prevActual = prevWords;
         unitName  = 'words';
         bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
         limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+        limitNum  = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
         bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
       }
+
+      // v3.32.18 — Length-guard override: if the user previously chose
+      // "Continue anyway" earlier in this project session, the override
+      // flag (persisted in IDB session) skips the gate entirely. Cleared
+      // by clearProject() so a fresh project starts with the guard armed.
+      if (bloatFail && window._lengthGuardOverride) {
+        consoleLog(`📏 Length guard skipped — override active for this project`, 'info');
+        bloatFail = false;
+      }
+
+      // v3.32.18 — Per-round modal interrupt. When trajectory-aware
+      // bloat triggers AND the user has a length constraint set
+      // (gateConstrained), prompt with three options instead of silently
+      // saving as failed. Unconstrained 1.5× sanity-check fails take
+      // the existing failed-round path — there's no target to "Continue
+      // Anyway" against in the unconstrained case.
+      let _userKept = false;
+      if (bloatFail && gateConstrained) {
+        const choice = await lengthGuardPrompt({
+          actual, prevActual, limitNum, unitName, limitName,
+          builderName: builderAI.name
+        });
+        if (choice === 'keep') {
+          _userKept = true;
+          bloatFail = false;
+          consoleLog(`📏 User kept the round despite length overrun (${actual} ${unitName} vs ${limitName})`, 'warn');
+        } else if (choice === 'continue_anyway') {
+          _userKept = true;
+          bloatFail = false;
+          window._lengthGuardOverride = true;
+          consoleLog(`📏 Length guard disabled for this project — future rounds will not check length`, 'warn');
+          toast('📏 Length guard disabled for this project', 4500);
+        }
+        // 'discard' falls through with bloatFail still true — existing path
+      }
+
       if (bloatFail) {
         builderHadError = true;
         _failedRoundReason = 'bloat';
@@ -10496,7 +10661,8 @@ async function runBuilderOnly() {
         docText = newDoc;
         setBeeStatus(builderAI.id, 'done', 'Document updated ✓');
         setStatus(`✅ Round ${round} complete — Builder applied your instructions`);
-        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
+        const _overrideNote = _userKept ? ' · length-guard override' : '';
+        consoleLog(`✅ Round ${round} complete — Builder only (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})${_overrideNote}`, 'success');
         playRosieSound();
       }
     } else if (!builderHadError) {
@@ -10896,23 +11062,71 @@ async function runRound() {
         const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
         const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
         const _lcGate   = getLengthConstraint();
-        let bloatFail, actual, limitNum, unitName, limitName, bloatPct;
+        let bloatFail, actual, prevActual, limitNum, unitName, limitName, bloatPct, gateConstrained;
         if (_lcGate) {
-          actual    = countInUnit(newDoc, _lcGate.unit);
-          limitNum  = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-          unitName  = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
-          limitName = _lcGate.unit === 'pages'
+          gateConstrained = true;
+          actual     = countInUnit(newDoc,  _lcGate.unit);
+          prevActual = countInUnit(docText, _lcGate.unit);
+          limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+          unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
+          limitName  = _lcGate.unit === 'pages'
             ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
             : `${_lcGate.limit} ${unitLabel(_lcGate.unit, _lcGate.limit)}`;
-          bloatFail = actual > limitNum;
-          bloatPct  = Math.round((actual / limitNum) * 100);
+          // v3.32.18 — Trajectory awareness. If the prior document was
+          // already over the limit, accept any round that moved size
+          // DOWN toward the target. Without this, every round in the
+          // convergence-down sequence gets rejected because each is
+          // still over the absolute ceiling — user gets stuck. See the
+          // mirrored block in runBuilderOnly for the same comment.
+          if (prevActual > limitNum) {
+            bloatFail = (actual >= prevActual);
+          } else {
+            bloatFail = (actual > limitNum);
+          }
+          bloatPct = Math.round((actual / limitNum) * 100);
         } else {
-          actual    = newWords;
-          unitName  = 'words';
-          bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
-          limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
-          bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
+          // No constraint — fall back to 1.5× prior-word sanity check.
+          // Trajectory awareness doesn't apply (no target to move toward).
+          gateConstrained = false;
+          actual     = newWords;
+          prevActual = prevWords;
+          unitName   = 'words';
+          bloatFail  = prevWords > 0 && newWords > prevWords * 1.5;
+          limitName  = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+          limitNum   = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
+          bloatPct   = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
         }
+
+        // v3.32.18 — Length-guard override: if the user previously chose
+        // "Continue anyway" earlier in this project session, skip the
+        // gate entirely. Cleared by clearProject().
+        if (bloatFail && window._lengthGuardOverride) {
+          consoleLog(`📏 Length guard skipped — override active for this project`, 'info');
+          bloatFail = false;
+        }
+
+        // v3.32.18 — Per-round modal. Only fires for constrained-bloat
+        // cases (user set a length target). Unconstrained 1.5× failures
+        // take the existing failed-round path.
+        let _userKept = false;
+        if (bloatFail && gateConstrained) {
+          const choice = await lengthGuardPrompt({
+            actual, prevActual, limitNum, unitName, limitName,
+            builderName: builderAI.name
+          });
+          if (choice === 'keep') {
+            _userKept = true;
+            bloatFail = false;
+            consoleLog(`📏 User kept the round despite length overrun (${actual} ${unitName} vs ${limitName})`, 'warn');
+          } else if (choice === 'continue_anyway') {
+            _userKept = true;
+            bloatFail = false;
+            window._lengthGuardOverride = true;
+            consoleLog(`📏 Length guard disabled for this project — future rounds will not check length`, 'warn');
+            toast('📏 Length guard disabled for this project', 4500);
+          }
+        }
+
         if (bloatFail) {
           builderHadError = true;
           _failedRoundReason = 'bloat';
@@ -10935,7 +11149,8 @@ async function runRound() {
             builderWasClean ? 'No changes proposed · Built doc ✓' : 'Document updated ✓'
           );
           setStatus(`✅ Round ${round} complete — document updated`);
-          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})`, 'success');
+          const _overrideNote = _userKept ? ' · length-guard override' : '';
+          consoleLog(`✅ Round ${round} complete — document updated (${newWords} words${prevWords > 0 ? `, ${Math.round((newWords / prevWords) * 100)}% of prior` : ''})${_overrideNote}`, 'success');
           const hasUserConflicts = window._lastConflicts?.userDecisions?.length > 0;
           if (hasUserConflicts) { playRoundCompleteSound(); } else { playRosieSound(); }
         }
