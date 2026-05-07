@@ -1620,9 +1620,12 @@ html, body {
      stretched footprint.
    • flex-shrink:0 keeps the star at full size even when card content
      is squeezed at narrow widths.
-   • padding: 0 12px gives the glyph breathing room from the card's
-     right edge (matching the body's 8px right padding plus a touch
-     more so the star doesn't crowd content).
+   • padding: 0 8px (v3.32.25, was 12px) matches the .hex-cell-body's
+     8px left padding so the visible margin from the star glyph to
+     the card's right edge equals the visible margin from the colored
+     state strip to the first body content. The 4px strip itself reads
+     as state ornament rather than empty margin, so 12px on the right
+     looked perceptually larger than the left's 8px-of-actual-padding.
    • font-size 28px ≈ combined height of two rows (16+16+gap) for
      visual mass that anchors the card. line-height:1 keeps the
      glyph's vertical footprint matched to its rendered size. */
@@ -1634,7 +1637,7 @@ html, body {
   line-height: 1;
   color: var(--accent);
   flex-shrink: 0;
-  padding: 0 12px;
+  padding: 0 8px;
   user-select: none;
   pointer-events: none;
 }
