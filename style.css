@@ -5989,6 +5989,57 @@ kbd {
   color: var(--text);
 }
 
+/* v3.32.28 — Hide row helper for length-guard modal kinds that don't
+   apply to all rows. The convergence kinds hide the Prior-document
+   and Trajectory rows because there's no round-to-round comparison
+   to display — the gate is on the standalone document length. */
+.length-guard-row.is-hidden {
+  display: none;
+}
+
+/* v3.32.28 — #6c toolbar "Length guard: off" indicator.
+   Renders only when window._lengthGuardOverride is true (the
+   is-visible class is toggled by updateLengthGuardIndicator).
+   Pill matches the existing topbar pill aesthetic (.work-start-mode,
+   .work-project-version) but uses the amber palette to communicate
+   "guard disabled — be aware". Clickable: re-arms the guard for
+   the rest of the project. The hover state intensifies the amber
+   to signal the affordance. */
+.length-guard-indicator {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: var(--font-display);
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid rgba(245, 166, 35, 0.55);
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.14);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+  box-shadow: 0 0 8px rgba(245, 166, 35, 0.22);
+}
+.length-guard-indicator.is-visible {
+  display: inline-flex;
+}
+.length-guard-indicator:hover {
+  background: rgba(245, 166, 35, 0.26);
+  border-color: rgba(245, 166, 35, 0.85);
+  color: #ffc56b;
+  box-shadow: 0 0 12px rgba(245, 166, 35, 0.45);
+}
+.length-guard-indicator-icon {
+  font-size: 12px;
+  line-height: 1;
+}
+.length-guard-indicator-label {
+  letter-spacing: 0.2px;
+}
+
 /* ══════════════════════════════════════
    LICENSE BADGE + MODAL
 ══════════════════════════════════════ */

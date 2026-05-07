@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260506-013">
+  <meta name="waxframe-build" content="20260506-014">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.27">
+  <link rel="stylesheet" href="style.css?v=3.32.28">
 </head>
 <body>
 
@@ -527,6 +527,14 @@
         <span class="work-round-badge" id="workRoundBadge">Round 1 — Draft</span>
       </div>
       <div class="work-topbar-right">
+        <!-- v3.32.28 — #6c length-guard "off" indicator. Renders only
+             when window._lengthGuardOverride is true (toggled via the
+             is-visible class by updateLengthGuardIndicator). Click
+             re-arms the guard for the rest of the project session. -->
+        <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="rearmLengthGuard()" title="Length guard is off — click to re-arm">
+          <span class="length-guard-indicator-icon">📏</span>
+          <span class="length-guard-indicator-label">Length guard: off</span>
+        </button>
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
         <button class="btn" onclick="openReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
@@ -1200,10 +1208,14 @@
      round behavior), Keep (accept this round only), Continue Anyway (accept
      and disable the guard for the rest of this project session). Trajectory
      info (prior length, new length, delta, distance from target) is filled
-     in by lengthGuardPrompt() at open time. -->
+     in by lengthGuardPrompt() at open time.
+     v3.32.28 — Modal now drives four kinds of prompts (over / under /
+     convergence_over / convergence_under). Title, summary, button labels,
+     help copy, and which trajectory rows render are all swapped at open
+     time by lengthGuardPrompt() based on the `kind` argument. -->
 <div class="finish-modal-overlay" id="lengthGuardModal" onclick="event.stopPropagation()">
   <div class="finish-modal length-guard-modal">
-    <h2 class="finish-modal-title">📏 Round exceeds length limit</h2>
+    <h2 class="finish-modal-title" id="lengthGuardTitle">📏 Round exceeds length limit</h2>
     <p class="finish-modal-msg" id="lengthGuardSummary"></p>
     <div class="length-guard-trajectory">
       <div class="length-guard-row">
@@ -1228,11 +1240,11 @@
       </div>
     </div>
     <div class="length-guard-actions">
-      <button class="btn length-guard-discard" onclick="_lengthGuardChoose('discard')">Discard round</button>
-      <button class="btn length-guard-keep" onclick="_lengthGuardChoose('keep')">Keep this round</button>
-      <button class="btn length-guard-continue" onclick="_lengthGuardChoose('continue_anyway')">Continue anyway · disable guard</button>
+      <button class="btn length-guard-discard"  id="lengthGuardDiscardBtn"  onclick="_lengthGuardChoose('discard')">Discard round</button>
+      <button class="btn length-guard-keep"     id="lengthGuardKeepBtn"     onclick="_lengthGuardChoose('keep')">Keep this round</button>
+      <button class="btn length-guard-continue" id="lengthGuardContinueBtn" onclick="_lengthGuardChoose('continue_anyway')">Continue anyway · disable guard</button>
     </div>
-    <p class="length-guard-help">
+    <p class="length-guard-help" id="lengthGuardHelp">
       <strong>Discard</strong> rejects the round (default). <strong>Keep</strong> accepts this round's output as the new document, but the guard stays active for future rounds. <strong>Continue anyway</strong> accepts and disables the length guard for the rest of this project — useful when the guard's target doesn't match what the document actually needs to be.
     </p>
   </div>
@@ -2002,9 +2014,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.32.27"></script>
+<script src="js/version.js?v=3.32.28"></script>
 <script src="js/templates.js?v=3.32.13"></script>
-<script src="js/app.js?v=3.32.27"></script>
+<script src="js/app.js?v=3.32.28"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

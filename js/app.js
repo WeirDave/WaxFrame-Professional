@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-013';         // build stamp — update each session
+const BUILD       = '20260506-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2860,6 +2860,14 @@ const WORDS_PER_PAGE      = 500;
 const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
 const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 
+// v3.32.28 — Symmetric undersized guard (#6d). Floor is computed as a
+// fraction of the user's length target. 0.5 lands between "too aggressive"
+// (0.8 fails almost any conservative Builder output) and "too loose"
+// (0.25 lets near-empty docs converge as if done). The 1.5× bloat sanity
+// check on the unconstrained side has its 0.5× shrinkage mirror in the
+// undersized branch — both catch runaway scale-changes.
+const LENGTH_FLOOR_RATIO = 0.5;
+
 // ── Length-unit measurement helpers ──
 // Direct-count the output in the user's chosen unit. Pages can't be measured
 // from raw text, so it falls back to word count (and the gate compares against
@@ -2906,6 +2914,29 @@ function updateLengthConstraintHint() {
   } else {
     hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
   }
+}
+
+// v3.32.28 — #6b convergence-path length check helper.
+// Returns the doc's length status against the active constraint:
+//   { status: 'ok' | 'over' | 'under', actual, limitNum, floorNum, unitName, limitName }
+// Returns null when there is no active length constraint (no convergence
+// gate is meaningful without a target). The convergence pre-check uses
+// this to decide whether to surface the lengthGuardPrompt before pushing
+// to history and playing the celebration scene.
+function getLengthStatus(text) {
+  const c = getLengthConstraint();
+  if (!c) return null;
+  const actual    = countInUnit(text || '', c.unit);
+  const limitNum  = c.unit === 'pages' ? c.wordLimit : c.limit;
+  const unitName  = c.unit === 'pages' ? 'words' : unitLabel(c.unit, actual);
+  const limitName = c.unit === 'pages'
+    ? `${c.limit} page${c.limit !== 1 ? 's' : ''} (≈${c.wordLimit} words)`
+    : `${c.limit} ${unitLabel(c.unit, c.limit)}`;
+  const floorNum  = Math.round(limitNum * LENGTH_FLOOR_RATIO);
+  let status = 'ok';
+  if (actual > limitNum)      status = 'over';
+  else if (actual < floorNum) status = 'under';
+  return { status, actual, limitNum, floorNum, unitName, limitName };
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -3017,6 +3048,8 @@ async function clearProject() {
   // window global explicitly ensures the next round (in a new project)
   // sees the right value before saveSession has had a chance to run.
   window._lengthGuardOverride = false;
+  // v3.32.28 — #6c indicator follows the override flag's state.
+  updateLengthGuardIndicator?.();
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
@@ -3594,6 +3627,11 @@ async function loadSession() {
     // v3.32.18 — Restore length-guard override flag. Default false for
     // pre-v3.32.18 sessions where the field doesn't exist.
     window._lengthGuardOverride = !!s.lengthGuardOverride;
+    // v3.32.28 — #6c indicator state follows the restored flag. The
+    // indicator element may not yet be in DOM at first call (e.g.
+    // during pre-launch verify); the helper short-circuits cleanly
+    // and initWorkScreen re-runs it once the work screen mounts.
+    updateLengthGuardIndicator?.();
     // v3.32.24 — Restore per-round satisfaction set. Defaults to empty
     // for pre-v3.32.24 sessions where the field doesn't exist. The
     // Set is reconstructed from the serialized array; the rehydration
@@ -3633,6 +3671,8 @@ async function loadSession() {
       if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
       // v3.32.18 — fallback path also restores the override flag.
       window._lengthGuardOverride = !!s.lengthGuardOverride;
+      // v3.32.28 — #6c indicator state follows restored flag (fallback path).
+      updateLengthGuardIndicator?.();
       // v3.32.24 — fallback path also restores the satisfaction set.
       window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
       // v3.32.26 — fallback path also restores the session toggle set.
@@ -4927,44 +4967,51 @@ function wfConfirmCancel() {
 }
 
 // ════════════════════════════════════════════════════════════════════
-// v3.32.18 — Length Guard Modal
+// v3.32.18 — Length Guard Modal · v3.32.28 — multi-kind support
 // ────────────────────────────────────────────────────────────────────
-// Shown when a round's Builder output triggers the length gate AND the
-// project's length-guard override is not yet set. Three actions:
+// Shown when the document fails a length-related gate AND the project's
+// length-guard override is not yet set. Three actions in every kind:
 //
-//   • Discard         — reject the round, save as failed (existing
-//                       BUILDER_BLOAT behavior). Default conservative
-//                       choice. No state change.
-//   • Keep            — accept this round's output as the new CURRENT
-//                       document, but keep the guard active for future
-//                       rounds. One-time override.
+//   • Discard         — reject the action that triggered the prompt.
+//                       For round-bloat this means the bloat failed-round
+//                       path (existing behavior). For convergence kinds,
+//                       it means block the celebration and let the user
+//                       edit the document.
+//   • Keep            — accept this round / convergence event one-time,
+//                       guard stays armed for future events.
 //   • Continue Anyway — accept AND set window._lengthGuardOverride =
-//                       true, persisted in IDB session. Future rounds
+//                       true, persisted in IDB session. Future events
 //                       skip the gate entirely until clearProject().
 //
-// The trajectory rows displayed give the user enough info to choose
-// between the three without needing to scroll the document — prior
-// length, this round's length, target limit, direction (↓ improving,
-// ↑ worsening, unchanged), and absolute distance from target.
+// v3.32.28 adds a `kind` parameter that adapts copy and which trajectory
+// rows render. Recognized kinds:
+//
+//   'over'                 — round bloat (existing v3.32.18 behavior, default)
+//   'under'                — round undersized (#6d, symmetric to 'over')
+//   'convergence_over'     — #6b, hive converged but doc is over target
+//   'convergence_under'    — #6b, hive converged but doc is under floor
+//
+// For the convergence kinds, the prior-document and trajectory rows are
+// hidden because there is no Builder round to compare against — we are
+// gating the celebration on the current document's standalone length.
 //
 // Caller awaits the returned Promise. Resolves to one of:
 //   'discard' | 'keep' | 'continue_anyway'
 //
-// The trajectory check in runRound/runBuilderOnly ensures the modal
-// only fires when (a) the length constraint is set on the project AND
-// (b) the round's output failed even after trajectory awareness was
-// considered (i.e., the doc didn't move toward the target). Unconstrained
-// 1.5×-prior-words sanity-check fails take the existing BUILDER_BLOAT
-// failed-round path — there's no target to "Continue Anyway" against
-// in the unconstrained case.
+// Round-level gates (over/under) only fire when (a) a length constraint
+// is set AND (b) the round failed even after trajectory awareness was
+// considered. Unconstrained 1.5× / 0.5× sanity-check fails take the
+// existing BUILDER_BLOAT failed-round path — there is no target to
+// "Continue Anyway" against in the unconstrained case.
 // ════════════════════════════════════════════════════════════════════
 
 let _lengthGuardResolve = null;
 
-function lengthGuardPrompt({ actual, prevActual, limitNum, unitName, limitName, builderName }) {
+function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitName, limitName, builderName }) {
   return new Promise(resolve => {
     _lengthGuardResolve = resolve;
     const modal       = document.getElementById('lengthGuardModal');
+    const titleEl     = document.getElementById('lengthGuardTitle');
     const summaryEl   = document.getElementById('lengthGuardSummary');
     const priorEl     = document.getElementById('lengthGuardPrior');
     const actualEl    = document.getElementById('lengthGuardActual');
@@ -4972,39 +5019,99 @@ function lengthGuardPrompt({ actual, prevActual, limitNum, unitName, limitName, 
     const deltaEl     = document.getElementById('lengthGuardDelta');
     const deltaRow    = deltaEl ? deltaEl.closest('.length-guard-row') : null;
     const distanceEl  = document.getElementById('lengthGuardDistance');
+    const priorRow    = priorEl ? priorEl.closest('.length-guard-row') : null;
+    const helpEl      = document.getElementById('lengthGuardHelp');
+    const discardBtn  = document.getElementById('lengthGuardDiscardBtn');
+    const keepBtn     = document.getElementById('lengthGuardKeepBtn');
+    const continueBtn = document.getElementById('lengthGuardContinueBtn');
     if (!modal) {
       // Modal not in DOM (shouldn't happen, but defensive). Default to
       // the existing failed-round behavior so corruption can't sneak in.
       resolve('discard');
       return;
     }
-    if (summaryEl) {
-      summaryEl.textContent = `${builderName || 'Builder'} produced a document that exceeds your length target. Choose how to handle this round.`;
+    const isConvergence = kind === 'convergence_over' || kind === 'convergence_under';
+    const isUnder       = kind === 'under' || kind === 'convergence_under';
+    const fmt           = n => (typeof n === 'number') ? n.toLocaleString() : String(n);
+
+    // ── Title ──
+    if (titleEl) {
+      if (kind === 'convergence_over')       titleEl.textContent = '📏 Hive converged — document over length target';
+      else if (kind === 'convergence_under') titleEl.textContent = '📏 Hive converged — document under length floor';
+      else if (kind === 'under')             titleEl.textContent = '📏 Round below length floor';
+      else                                   titleEl.textContent = '📏 Round exceeds length limit';
     }
-    const fmt = n => (typeof n === 'number') ? n.toLocaleString() : String(n);
-    if (priorEl)  priorEl.textContent  = `${fmt(prevActual)} ${unitName}`;
+
+    // ── Summary line ──
+    if (summaryEl) {
+      if (kind === 'convergence_over') {
+        summaryEl.textContent = `All AIs agree the document is done, but it exceeds your length target. Choose how to handle this convergence.`;
+      } else if (kind === 'convergence_under') {
+        summaryEl.textContent = `All AIs agree the document is done, but it is under your length floor. Choose how to handle this convergence.`;
+      } else if (kind === 'under') {
+        summaryEl.textContent = `${builderName || 'Builder'} produced a document well below your length target. Choose how to handle this round.`;
+      } else {
+        summaryEl.textContent = `${builderName || 'Builder'} produced a document that exceeds your length target. Choose how to handle this round.`;
+      }
+    }
+
+    // ── Prior + Trajectory rows: hide for convergence kinds (no round-to-round comparison applies) ──
+    if (priorRow) priorRow.classList.toggle('is-hidden', isConvergence);
+    if (deltaRow) deltaRow.classList.toggle('is-hidden', isConvergence);
+
+    // ── Values ──
+    if (priorEl)  priorEl.textContent  = `${fmt(prevActual || 0)} ${unitName}`;
     if (actualEl) actualEl.textContent = `${fmt(actual)} ${unitName}`;
     if (limitEl)  limitEl.textContent  = limitName || `${fmt(limitNum)} ${unitName}`;
     if (deltaRow) deltaRow.classList.remove('is-improving', 'is-worsening', 'is-stalled');
-    if (deltaEl) {
+    if (deltaEl && !isConvergence) {
       const delta = actual - prevActual;
-      if (delta < 0) {
-        deltaEl.textContent = `↓ ${fmt(Math.abs(delta))} ${unitName}`;
+      // For 'under', shrinking is worsening and growing is improving — flip the sign semantics.
+      const movingTowardTarget = isUnder ? (delta > 0) : (delta < 0);
+      const movingAwayFromTarget = isUnder ? (delta < 0) : (delta > 0);
+      if (movingTowardTarget) {
+        deltaEl.textContent = `${isUnder ? '↑' : '↓'} ${fmt(Math.abs(delta))} ${unitName}`;
         if (deltaRow) deltaRow.classList.add('is-improving');
-      } else if (delta > 0) {
-        deltaEl.textContent = `↑ ${fmt(delta)} ${unitName}`;
+      } else if (movingAwayFromTarget) {
+        deltaEl.textContent = `${isUnder ? '↓' : '↑'} ${fmt(Math.abs(delta))} ${unitName}`;
         if (deltaRow) deltaRow.classList.add('is-worsening');
       } else {
         deltaEl.textContent = 'unchanged';
         if (deltaRow) deltaRow.classList.add('is-stalled');
       }
     }
+
+    // ── Distance row ──
     if (distanceEl) {
-      const overBy = actual - limitNum;
-      distanceEl.textContent = overBy > 0
-        ? `${fmt(overBy)} ${unitName} over`
-        : `within target`;
+      if (isUnder) {
+        const underBy = limitNum - actual;
+        distanceEl.textContent = underBy > 0
+          ? `${fmt(underBy)} ${unitName} under floor`
+          : `within target`;
+      } else {
+        const overBy = actual - limitNum;
+        distanceEl.textContent = overBy > 0
+          ? `${fmt(overBy)} ${unitName} over`
+          : `within target`;
+      }
     }
+
+    // ── Button labels: for convergence kinds, "Discard" reads as "block convergence" ──
+    if (discardBtn) discardBtn.textContent = isConvergence ? 'Block convergence' : 'Discard round';
+    if (keepBtn)    keepBtn.textContent    = isConvergence ? 'Accept this convergence' : 'Keep this round';
+    if (continueBtn) continueBtn.textContent = 'Continue anyway · disable guard';
+
+    // ── Help paragraph copy ──
+    if (helpEl) {
+      if (isConvergence) {
+        helpEl.innerHTML = '<strong>Block convergence</strong> rejects the celebration so you can edit the document and re-run (default). <strong>Accept</strong> proceeds with the convergence anyway, but the guard stays active if you keep iterating after. <strong>Continue anyway</strong> proceeds and disables the length guard for the rest of this project.';
+      } else if (isUnder) {
+        helpEl.innerHTML = '<strong>Discard</strong> rejects the round (default). <strong>Keep</strong> accepts this round\'s output as the new document, but the guard stays active for future rounds. <strong>Continue anyway</strong> accepts and disables the length guard for the rest of this project — useful when the floor doesn\'t match what the document actually needs to be.';
+      } else {
+        helpEl.innerHTML = '<strong>Discard</strong> rejects the round (default). <strong>Keep</strong> accepts this round\'s output as the new document, but the guard stays active for future rounds. <strong>Continue anyway</strong> accepts and disables the length guard for the rest of this project — useful when the guard\'s target doesn\'t match what the document actually needs to be.';
+      }
+    }
+
     modal.classList.add('active');
   });
 }
@@ -5016,6 +5123,37 @@ function _lengthGuardChoose(value) {
     _lengthGuardResolve(value);
     _lengthGuardResolve = null;
   }
+}
+
+// v3.32.28 — #6c toolbar "Length guard: off" indicator.
+// Renders only when window._lengthGuardOverride is true. Click re-arms
+// the guard for the rest of the project session. Called from:
+//   • initWorkScreen()           — work screen paint / reload
+//   • loadSession() (both paths) — after override flag restore
+//   • clearProject()             — explicit reset to false
+//   • lengthGuardPrompt callers  — when 'continue_anyway' flips override
+// Defensive: short-circuits if the indicator element is not yet in DOM
+// (e.g. called before the work screen has rendered).
+function updateLengthGuardIndicator() {
+  const el = document.getElementById('lengthGuardIndicator');
+  if (!el) return;
+  if (window._lengthGuardOverride) el.classList.add('is-visible');
+  else                              el.classList.remove('is-visible');
+}
+
+async function rearmLengthGuard() {
+  if (!window._lengthGuardOverride) return; // already armed — defensive
+  const ok = await wfConfirm(
+    '📏 Re-arm length guard?',
+    'The length guard will resume blocking rounds and convergence events that violate your length target. You can disable it again from the next length-guard prompt if you change your mind.',
+    { okText: 'Re-arm guard', cancelText: 'Cancel' }
+  );
+  if (!ok) return;
+  window._lengthGuardOverride = false;
+  saveSession();
+  updateLengthGuardIndicator();
+  consoleLog(`📏 Length guard re-armed for this project`, 'info');
+  toast('📏 Length guard re-armed', 3000);
 }
 
 function setCachedRecommendation(cacheId, model, why, labels, none) {
@@ -8715,6 +8853,11 @@ function initWorkScreen(isNewSession = false) {
   renderConflicts();
   updateRoundBadge();
   updateLicenseBadge();
+  // v3.32.28 — #6c. Run after the work topbar is in DOM. Catches reload
+  // path (loadSession set the flag, but the indicator element wasn't
+  // mounted yet so the helper short-circuited) and any navigation back
+  // to the work screen mid-project.
+  updateLengthGuardIndicator();
   setStatus('Standing by — Smoke the Hive to begin');
 
   // Keep line numbers filled on resize
@@ -10724,7 +10867,7 @@ async function runBuilderOnly() {
       const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
       const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
       const _lcGate   = getLengthConstraint();
-      let bloatFail, actual, prevActual, limitNum, unitName, limitName, bloatPct, gateConstrained;
+      let bloatFail, undersizedFail = false, actual, prevActual, limitNum, floorNum, unitName, limitName, bloatPct, gateConstrained;
       if (_lcGate) {
         // User specified a length constraint — honor it in its native unit.
         // Pages uses the word estimate (not directly measurable from raw text).
@@ -10732,6 +10875,7 @@ async function runBuilderOnly() {
         actual     = countInUnit(newDoc,  _lcGate.unit);
         prevActual = countInUnit(docText, _lcGate.unit);
         limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+        floorNum   = Math.round(limitNum * LENGTH_FLOOR_RATIO);
         unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
         limitName  = _lcGate.unit === 'pages'
           ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
@@ -10749,6 +10893,22 @@ async function runBuilderOnly() {
           // Prior was within target — strict ceiling applies.
           bloatFail = (actual > limitNum);
         }
+        // v3.32.28 — Symmetric undersized branch (#6d). Mirror of the
+        // bloat trajectory rule. If prior was already under the floor,
+        // accept any growth (new > prev) even if still below floor.
+        // Otherwise the user gets stuck on a starting doc that began
+        // below floor and the Builder is conservatively building up
+        // toward target. If prior was at-or-above floor but the round
+        // dropped below, that's a real undersized regression — fail.
+        // Mutually exclusive with bloatFail by construction (a doc
+        // cannot be both over ceiling and under floor simultaneously).
+        if (!bloatFail && actual < floorNum) {
+          if (prevActual < floorNum) {
+            undersizedFail = (actual <= prevActual);
+          } else {
+            undersizedFail = true;
+          }
+        }
         bloatPct = Math.round((actual / limitNum) * 100);
       } else {
         // No constraint — fall back to 1.5× prior-word sanity check.
@@ -10759,8 +10919,20 @@ async function runBuilderOnly() {
         prevActual = prevWords;
         unitName  = 'words';
         bloatFail = prevWords > 0 && newWords > prevWords * 1.5;
-        limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
-        limitNum  = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
+        // v3.32.28 — 0.5× prior-word shrinkage sanity (#6d). Catches
+        // a Builder that loses half the document. Mirror of the 1.5×
+        // bloat sanity check.
+        undersizedFail = !bloatFail && prevWords > 0 && newWords < prevWords * 0.5;
+        if (bloatFail) {
+          limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+          limitNum  = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
+        } else if (undersizedFail) {
+          limitName = `${Math.round(prevWords * 0.5)} words (0.5× prior)`;
+          limitNum  = Math.round(prevWords * 0.5);
+        } else {
+          limitName = '';
+          limitNum  = 0;
+        }
         bloatPct  = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
       }
 
@@ -10768,44 +10940,55 @@ async function runBuilderOnly() {
       // "Continue anyway" earlier in this project session, the override
       // flag (persisted in IDB session) skips the gate entirely. Cleared
       // by clearProject() so a fresh project starts with the guard armed.
-      if (bloatFail && window._lengthGuardOverride) {
+      // v3.32.28 — Same flag governs both directions (over/under).
+      if ((bloatFail || undersizedFail) && window._lengthGuardOverride) {
         consoleLog(`📏 Length guard skipped — override active for this project`, 'info');
         bloatFail = false;
+        undersizedFail = false;
       }
 
       // v3.32.18 — Per-round modal interrupt. When trajectory-aware
-      // bloat triggers AND the user has a length constraint set
-      // (gateConstrained), prompt with three options instead of silently
-      // saving as failed. Unconstrained 1.5× sanity-check fails take
-      // the existing failed-round path — there's no target to "Continue
-      // Anyway" against in the unconstrained case.
+      // bloat/undersized triggers AND the user has a length constraint
+      // set (gateConstrained), prompt with three options instead of
+      // silently saving as failed. Unconstrained sanity-check fails
+      // take the existing failed-round path — there's no target to
+      // "Continue Anyway" against in the unconstrained case.
       let _userKept = false;
-      if (bloatFail && gateConstrained) {
+      if ((bloatFail || undersizedFail) && gateConstrained) {
         const choice = await lengthGuardPrompt({
-          actual, prevActual, limitNum, unitName, limitName,
+          kind: bloatFail ? 'over' : 'under',
+          actual, prevActual,
+          limitNum: bloatFail ? limitNum : floorNum,
+          unitName,
+          limitName: bloatFail ? limitName : `${floorNum} ${unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${limitName})`,
           builderName: builderAI.name
         });
         if (choice === 'keep') {
           _userKept = true;
+          const wasUnder = undersizedFail;
           bloatFail = false;
-          consoleLog(`📏 User kept the round despite length overrun (${actual} ${unitName} vs ${limitName})`, 'warn');
+          undersizedFail = false;
+          consoleLog(`📏 User kept the round despite ${wasUnder ? 'undersized output' : 'length overrun'} (${actual} ${unitName} vs ${wasUnder ? floorNum + ' ' + unitName + ' floor' : limitName})`, 'warn');
         } else if (choice === 'continue_anyway') {
           _userKept = true;
           bloatFail = false;
+          undersizedFail = false;
           window._lengthGuardOverride = true;
+          updateLengthGuardIndicator();
           consoleLog(`📏 Length guard disabled for this project — future rounds will not check length`, 'warn');
           toast('📏 Length guard disabled for this project', 4500);
         }
-        // 'discard' falls through with bloatFail still true — existing path
+        // 'discard' falls through with the fail flag still true — existing path
       }
 
-      if (bloatFail) {
+      if (bloatFail || undersizedFail) {
         builderHadError = true;
-        _failedRoundReason = 'bloat';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-        setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
-        setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
-        consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+        _failedRoundReason = bloatFail ? 'bloat' : 'undersized';
+        const _failLimit = bloatFail ? limitName : `${floorNum} ${unitName} floor`;
+        _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${_failLimit ? ` · ${bloatFail ? 'limit' : 'floor'}: ${_failLimit}` : ''} (${bloatPct}%) · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+        setBeeStatus(builderAI.id, 'error', bloatFail ? `Length limit exceeded (${bloatPct}%)` : `Output below length floor (${bloatPct}%)`);
+        setStatus(bloatFail ? `⚠️ Builder output exceeds length limit — round rejected` : `⚠️ Builder output below length floor — round rejected`);
+        consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${_failLimit ? ` vs ${bloatFail ? 'limit' : 'floor'} ${_failLimit}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
       } else {
         const docTa = document.getElementById('workDocument');
         if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
@@ -11071,6 +11254,52 @@ async function runRound() {
       return;
     }
 
+    // v3.32.28 — #6b convergence-path length check. If the user has a
+    // length constraint set and the document is out of range (over
+    // ceiling or under floor), surface the length-guard prompt before
+    // the celebration. The override flag, when set, skips the check
+    // entirely (same semantics as the per-round bloat gate). 'discard'
+    // blocks the celebration so the user can edit and re-run; 'keep'
+    // proceeds with the guard still armed; 'continue_anyway' proceeds
+    // and disables the guard for the rest of the project. No 'discard'
+    // path here pushes to history — the round happened (API calls
+    // were made and visible in the live console), but project-state
+    // round count and phase are not advanced. The user edits the doc
+    // and runs again; the new round produces a new convergence event.
+    if (!window._lengthGuardOverride) {
+      const cstat = getLengthStatus(docText);
+      if (cstat && cstat.status !== 'ok') {
+        const choice = await lengthGuardPrompt({
+          kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
+          actual: cstat.actual,
+          prevActual: cstat.actual,
+          limitNum: cstat.status === 'over' ? cstat.limitNum : cstat.floorNum,
+          unitName: cstat.unitName,
+          limitName: cstat.status === 'over'
+            ? cstat.limitName
+            : `${cstat.floorNum} ${cstat.unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${cstat.limitName})`,
+          builderName: 'The Hive'
+        });
+        if (choice === 'discard') {
+          consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
+          toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
+          const runBtnB = document.getElementById('runRoundBtn');
+          runBtnB?.classList.remove('running');
+          if (runBtnB) runBtnB.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+          stopRoundTimer();
+          hideSmokerOverlay();
+          setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
+          return;
+        } else if (choice === 'continue_anyway') {
+          window._lengthGuardOverride = true;
+          updateLengthGuardIndicator();
+          consoleLog(`📏 Length guard disabled for this project — convergence accepted`, 'warn');
+          toast('📏 Length guard disabled — convergence accepted', 4500);
+        }
+        // 'keep' falls through to the celebration with the guard still armed
+      }
+    }
+
     history.push({
       round, phase,
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
@@ -11123,6 +11352,42 @@ async function runRound() {
     if (_runGen !== (window._projectGen || 0)) {
       _abandonInFlightRoundUI();
       return;
+    }
+
+    // v3.32.28 — #6b convergence-path length check (majority path).
+    // Same semantics as the unanimous path above. See that block for
+    // the full rationale.
+    if (!window._lengthGuardOverride) {
+      const cstat = getLengthStatus(docText);
+      if (cstat && cstat.status !== 'ok') {
+        const choice = await lengthGuardPrompt({
+          kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
+          actual: cstat.actual,
+          prevActual: cstat.actual,
+          limitNum: cstat.status === 'over' ? cstat.limitNum : cstat.floorNum,
+          unitName: cstat.unitName,
+          limitName: cstat.status === 'over'
+            ? cstat.limitName
+            : `${cstat.floorNum} ${cstat.unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${cstat.limitName})`,
+          builderName: 'The Hive'
+        });
+        if (choice === 'discard') {
+          consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
+          toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
+          const runBtnBM = document.getElementById('runRoundBtn');
+          runBtnBM?.classList.remove('running');
+          if (runBtnBM) runBtnBM.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
+          stopRoundTimer();
+          hideSmokerOverlay();
+          setStatus(`📏 Convergence blocked — document is ${cstat.status === 'over' ? 'over' : 'under'} length ${cstat.status === 'over' ? 'target' : 'floor'}`);
+          return;
+        } else if (choice === 'continue_anyway') {
+          window._lengthGuardOverride = true;
+          updateLengthGuardIndicator();
+          consoleLog(`📏 Length guard disabled for this project — convergence accepted`, 'warn');
+          toast('📏 Length guard disabled — convergence accepted', 4500);
+        }
+      }
     }
 
     history.push({
@@ -11213,12 +11478,13 @@ async function runRound() {
         const prevWords = docText ? docText.split(/\s+/).filter(Boolean).length : 0;
         const newWords  = newDoc.split(/\s+/).filter(Boolean).length;
         const _lcGate   = getLengthConstraint();
-        let bloatFail, actual, prevActual, limitNum, unitName, limitName, bloatPct, gateConstrained;
+        let bloatFail, undersizedFail = false, actual, prevActual, limitNum, floorNum, unitName, limitName, bloatPct, gateConstrained;
         if (_lcGate) {
           gateConstrained = true;
           actual     = countInUnit(newDoc,  _lcGate.unit);
           prevActual = countInUnit(docText, _lcGate.unit);
           limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
+          floorNum   = Math.round(limitNum * LENGTH_FLOOR_RATIO);
           unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
           limitName  = _lcGate.unit === 'pages'
             ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
@@ -11234,6 +11500,15 @@ async function runRound() {
           } else {
             bloatFail = (actual > limitNum);
           }
+          // v3.32.28 — Symmetric undersized branch (#6d). Mirror of the
+          // bloat trajectory rule. See runBuilderOnly for full comment.
+          if (!bloatFail && actual < floorNum) {
+            if (prevActual < floorNum) {
+              undersizedFail = (actual <= prevActual);
+            } else {
+              undersizedFail = true;
+            }
+          }
           bloatPct = Math.round((actual / limitNum) * 100);
         } else {
           // No constraint — fall back to 1.5× prior-word sanity check.
@@ -11243,48 +11518,70 @@ async function runRound() {
           prevActual = prevWords;
           unitName   = 'words';
           bloatFail  = prevWords > 0 && newWords > prevWords * 1.5;
-          limitName  = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
-          limitNum   = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
+          // v3.32.28 — 0.5× shrinkage sanity (#6d). Mirror of 1.5× bloat.
+          undersizedFail = !bloatFail && prevWords > 0 && newWords < prevWords * 0.5;
+          if (bloatFail) {
+            limitName = prevWords > 0 ? `${Math.round(prevWords * 1.5)} words (1.5× prior)` : '';
+            limitNum  = prevWords > 0 ? Math.round(prevWords * 1.5) : 0;
+          } else if (undersizedFail) {
+            limitName = `${Math.round(prevWords * 0.5)} words (0.5× prior)`;
+            limitNum  = Math.round(prevWords * 0.5);
+          } else {
+            limitName = '';
+            limitNum  = 0;
+          }
           bloatPct   = prevWords > 0 ? Math.round((newWords / prevWords) * 100) : 100;
         }
 
         // v3.32.18 — Length-guard override: if the user previously chose
         // "Continue anyway" earlier in this project session, skip the
         // gate entirely. Cleared by clearProject().
-        if (bloatFail && window._lengthGuardOverride) {
+        // v3.32.28 — Same flag governs both directions (over/under).
+        if ((bloatFail || undersizedFail) && window._lengthGuardOverride) {
           consoleLog(`📏 Length guard skipped — override active for this project`, 'info');
           bloatFail = false;
+          undersizedFail = false;
         }
 
-        // v3.32.18 — Per-round modal. Only fires for constrained-bloat
-        // cases (user set a length target). Unconstrained 1.5× failures
-        // take the existing failed-round path.
+        // v3.32.18 — Per-round modal. Only fires for constrained-bloat /
+        // constrained-undersized cases (user set a length target).
+        // Unconstrained sanity-check fails take the existing failed-
+        // round path.
         let _userKept = false;
-        if (bloatFail && gateConstrained) {
+        if ((bloatFail || undersizedFail) && gateConstrained) {
           const choice = await lengthGuardPrompt({
-            actual, prevActual, limitNum, unitName, limitName,
+            kind: bloatFail ? 'over' : 'under',
+            actual, prevActual,
+            limitNum: bloatFail ? limitNum : floorNum,
+            unitName,
+            limitName: bloatFail ? limitName : `${floorNum} ${unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${limitName})`,
             builderName: builderAI.name
           });
           if (choice === 'keep') {
             _userKept = true;
+            const wasUnder = undersizedFail;
             bloatFail = false;
-            consoleLog(`📏 User kept the round despite length overrun (${actual} ${unitName} vs ${limitName})`, 'warn');
+            undersizedFail = false;
+            consoleLog(`📏 User kept the round despite ${wasUnder ? 'undersized output' : 'length overrun'} (${actual} ${unitName} vs ${wasUnder ? floorNum + ' ' + unitName + ' floor' : limitName})`, 'warn');
           } else if (choice === 'continue_anyway') {
             _userKept = true;
             bloatFail = false;
+            undersizedFail = false;
             window._lengthGuardOverride = true;
+            updateLengthGuardIndicator();
             consoleLog(`📏 Length guard disabled for this project — future rounds will not check length`, 'warn');
             toast('📏 Length guard disabled for this project', 4500);
           }
         }
 
-        if (bloatFail) {
+        if (bloatFail || undersizedFail) {
           builderHadError = true;
-          _failedRoundReason = 'bloat';
-          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${limitName ? ` · limit: ${limitName}` : ''} (${bloatPct}%) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-          setBeeStatus(builderAI.id, 'error', `Length limit exceeded (${bloatPct}%)`);
-          setStatus(`⚠️ Builder output exceeds length limit — round rejected`);
-          consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${limitName ? ` vs limit ${limitName}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
+          _failedRoundReason = bloatFail ? 'bloat' : 'undersized';
+          const _failLimit = bloatFail ? limitName : `${floorNum} ${unitName} floor`;
+          _failedRoundDetails = `Builder: ${builderAI.name} · Output: ${actual} ${unitName}${_failLimit ? ` · ${bloatFail ? 'limit' : 'floor'}: ${_failLimit}` : ''} (${bloatPct}%) · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
+          setBeeStatus(builderAI.id, 'error', bloatFail ? `Length limit exceeded (${bloatPct}%)` : `Output below length floor (${bloatPct}%)`);
+          setStatus(bloatFail ? `⚠️ Builder output exceeds length limit — round rejected` : `⚠️ Builder output below length floor — round rejected`);
+          consoleLog(`⚠️ Length gate triggered — ${actual} ${unitName}${_failLimit ? ` vs ${bloatFail ? 'limit' : 'floor'} ${_failLimit}` : ''} (${bloatPct}%). Round not saved.`, 'warn');
         } else {
           const docTa = document.getElementById('workDocument');
           if (docTa) { docTa.value = newDoc; updateLineNumbers(); }
