@@ -5754,6 +5754,116 @@ kbd {
   color: #ffaaaa;
 }
 
+/* v3.32.18 — Length guard modal. Inherits .finish-modal sizing. The
+   trajectory rows are a small key/value table-style block that gives the
+   user enough context to decide between Discard / Keep / Continue Anyway
+   without going back to read the doc. Action buttons are stacked
+   vertically since the labels are too long for a single horizontal row
+   at 600px modal width — also makes the destructive option (Continue
+   Anyway · disable guard) read more clearly when isolated on its own row. */
+.length-guard-modal {
+  max-width: 540px;
+  text-align: left;
+}
+.length-guard-modal .finish-modal-title {
+  text-align: center;
+}
+.length-guard-modal .finish-modal-msg {
+  text-align: center;
+  margin-bottom: 14px;
+}
+.length-guard-trajectory {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+.length-guard-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  gap: 12px;
+}
+.length-guard-row-label {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+.length-guard-row-value {
+  color: var(--text);
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-align: right;
+}
+.length-guard-row-delta .length-guard-row-value {
+  /* Trajectory direction is communicated in the value text itself
+     (↓ N words / ↑ N words / unchanged) — color is set inline by JS
+     via classList so the row keeps a stable structure. */
+}
+.length-guard-row-delta.is-improving .length-guard-row-value { color: #4ade80; }
+.length-guard-row-delta.is-worsening .length-guard-row-value { color: #f87171; }
+.length-guard-row-delta.is-stalled   .length-guard-row-value { color: var(--text-dim); }
+.length-guard-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  margin-bottom: 14px;
+}
+.length-guard-actions .btn {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.length-guard-discard {
+  /* Default — same visual weight as the Cancel buttons in other modals.
+     "Discard" is the safe / conservative choice that matches existing
+     behavior, so it's intentionally not styled as destructive. */
+}
+.length-guard-keep {
+  background: rgba(245, 166, 35, 0.16);
+  border-color: rgba(245, 166, 35, 0.45);
+  color: #f5a623;
+}
+.length-guard-keep:hover {
+  background: rgba(245, 166, 35, 0.28);
+  border-color: rgba(245, 166, 35, 0.7);
+  color: #ffc56b;
+}
+.length-guard-continue {
+  /* Continue anyway is the most consequential option (disables the guard
+     for the rest of the session), so we surface it with the destructive-red
+     style used by wf-confirm-danger. Communicates "this changes more than
+     just this round." */
+  background: rgba(220, 70, 70, 0.18);
+  border-color: rgba(220, 70, 70, 0.5);
+  color: #ff8a8a;
+}
+.length-guard-continue:hover {
+  background: rgba(220, 70, 70, 0.32);
+  border-color: rgba(220, 70, 70, 0.8);
+  color: #ffaaaa;
+}
+.length-guard-help {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  text-align: left;
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+}
+.length-guard-help strong {
+  color: var(--text);
+}
+
 /* ══════════════════════════════════════
    LICENSE BADGE + MODAL
 ══════════════════════════════════════ */
