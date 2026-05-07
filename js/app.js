@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260504-005';         // build stamp — update each session
+const BUILD       = '20260506-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5715,6 +5715,43 @@ function forgetImportServerDefaults() {
   toast('🗑️ Forgot saved server');
 }
 
+// v3.32.15 — Server-icon preset picker. Each preset button in the Import
+// Server modal carries its icon path in data-icon. On click, we feed that
+// path through wfIconUpload.set() so the existing preview-box machinery
+// updates exactly as if the user had uploaded that icon. The preview path
+// is what addImportServerModels() reads at submit time via readAny(), so
+// no other plumbing needs to change. Visual selection state on the preset
+// row mirrors the choice for clarity (kept in sync with manual uploads via
+// onChange in the existing wfIconUpload.attach call).
+function selectImportServerIconPreset(btn) {
+  if (!btn) return;
+  const iconPath = btn.dataset.icon;
+  if (!iconPath) return;
+  const opts = {
+    fileInputId:   'importServerIconFileInput',
+    previewId:     'importServerIconPreview',
+    previewWrapId: 'importServerIconWrap',
+    clearBtnId:    'importServerIconClearBtn',
+    uploadBtnId:   'importServerIconUploadBtn'
+  };
+  wfIconUpload.set(opts, iconPath);
+  highlightImportServerIconPreset(iconPath);
+}
+
+// Visually mark which preset (if any) matches the current preview src.
+// Called both from selectImportServerIconPreset() and after manual
+// uploads/clears so the preset row stays consistent with the preview.
+function highlightImportServerIconPreset(iconPath) {
+  const presets = document.querySelectorAll('#importServerIconPresets .import-server-icon-preset');
+  presets.forEach(p => {
+    if (iconPath && p.dataset.icon === iconPath) {
+      p.classList.add('is-selected');
+    } else {
+      p.classList.remove('is-selected');
+    }
+  });
+}
+
 // The outer overlay has id="importServerModal" while the inner modal has class
 // ".import-server-modal" — state classes and has-saved-key live on the INNER modal
 // so the existing CSS selectors (e.g. .import-server-modal.import-server-state-ready)
@@ -5812,12 +5849,16 @@ function showImportServerModal() {
   // restore it; otherwise start empty. The uploader's onChange callback
   // doesn't need to fire here — we read() it on submit to grab the
   // current data URL.
+  // v3.32.15 — onChange now keeps the preset row's selection state in sync
+  // with whatever the preview currently shows (preset click, manual upload,
+  // or clear all funnel through here).
   wfIconUpload.attach({
     fileInputId:   'importServerIconFileInput',
     previewId:     'importServerIconPreview',
     previewWrapId: 'importServerIconWrap',
     clearBtnId:    'importServerIconClearBtn',
-    uploadBtnId:   'importServerIconUploadBtn'
+    uploadBtnId:   'importServerIconUploadBtn',
+    onChange:      (dataURL) => highlightImportServerIconPreset(dataURL)
   });
   if (saved?.icon) {
     wfIconUpload.set({
@@ -5825,12 +5866,14 @@ function showImportServerModal() {
       previewWrapId: 'importServerIconWrap',
       uploadBtnId:   'importServerIconUploadBtn'
     }, saved.icon);
+    highlightImportServerIconPreset(saved.icon);
   } else {
     wfIconUpload.clear({
       previewId:     'importServerIconPreview',
       previewWrapId: 'importServerIconWrap',
       uploadBtnId:   'importServerIconUploadBtn'
     });
+    highlightImportServerIconPreset(null);
   }
 
   // Reveal modal only after state is settled
@@ -9232,6 +9275,14 @@ const wfIconUpload = (() => {
   // preview matches what will actually render after Add to Hive.
   // (We deliberately duplicate rather than import to avoid the wfIconUpload
   // IIFE racing the resolveAiIcon definition during module init.)
+  // v3.32.15 — Removed server-runtime entries (Alfredo, LM Studio,
+  // Open WebUI, Together) from auto-detect. Those are runtimes that host
+  // OTHER models; auto-detecting them off a model name is a category error
+  // because the model name almost never contains the runtime name. They
+  // remain available as one-click presets in the Import Server modal and
+  // as choices in the Bundled tab of the manage-AI icon picker. Llama
+  // stays here because it IS a real model brand (Meta's series), even
+  // though the name overlaps with llama.cpp runtimes.
   const _CATALOG = [
     { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
     { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
@@ -9242,10 +9293,6 @@ const wfIconUpload = (() => {
     { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
-    { keys: ['lm studio', 'lmstudio', 'lm-studio'], src: 'images/icon-lmstudio.png' },
-    { keys: ['open webui', 'openwebui', 'open-webui'], src: 'images/icon-openwebui.png' },
-    { keys: ['together'],                       src: 'images/icon-together.png' },
-    { keys: ['alfredo'],                        src: 'images/icon-alfredo.png' },
   ];
   const GENERIC_ICON = 'images/icon-generic.png';
 
@@ -9642,10 +9689,13 @@ function resolveAiIcon(ai, cssClass, size) {
   // looked like fuzzy white blobs on the dark theme (Mistral was the
   // worst offender — looked like a moon).
   // v3.29.11 — added LM Studio, Open WebUI, and Together AI matchers.
-  // The PNGs already exist in images/ — just weren't recognized by the
-  // catalog. Order matters here: more-specific keys must precede generic
-  // ones so 'lmstudio' isn't shadowed by 'studio' (not currently a problem
-  // but worth keeping in mind for future additions).
+  // v3.32.15 — Removed server-runtime entries (Alfredo, LM Studio,
+  // Open WebUI, Together) from auto-detect. Those are runtimes that host
+  // other models, not model brands. Auto-detecting them off a model name
+  // is a category error — the model name almost never contains the
+  // runtime name. They're still available as one-click presets in the
+  // Import Server modal and as choices in the bundled icon picker. KEEP
+  // IN SYNC with wfIconUpload._CATALOG above.
   const known = [
     { keys: ['claude', 'anthropic'],            src: 'images/icon-claude.png' },
     { keys: ['chatgpt', 'openai', 'gpt'],       src: 'images/icon-chatgpt.png' },
@@ -9656,12 +9706,6 @@ function resolveAiIcon(ai, cssClass, size) {
     { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
-    { keys: ['lm studio', 'lmstudio', 'lm-studio'], src: 'images/icon-lmstudio.png' },
-    { keys: ['open webui', 'openwebui', 'open-webui'], src: 'images/icon-openwebui.png' },
-    { keys: ['together'],                       src: 'images/icon-together.png' },
-    // v3.29.12 — Alfredo, the internal AI gateway (Open WebUI-based) used
-    // at the user's organization.
-    { keys: ['alfredo'],                        src: 'images/icon-alfredo.png' },
   ];
 
   for (const entry of known) {
@@ -9683,15 +9727,23 @@ function makeAiAvatar(name, size, cssClass) {
   const el = document.createElement('span');
   el.className = (cssClass || 'hex-icon-avatar') + ' hex-icon-avatar';
   el.style.cssText = `width:${size}px;height:${size}px;background:${avatarColor(name)};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.55)}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;`;
-  el.textContent = (name || '?')[0];
+  el.textContent = firstAlnumChar(name);
   return el;
 }
 
 function makeAiAvatarHTML(name, size, cssClass) {
   const color = avatarColor(name);
-  const letter = (name || '?')[0].toUpperCase();
+  const letter = firstAlnumChar(name);
   const fs = Math.round(size * 0.55);
   return `<span class="${cssClass || 'hex-icon-avatar'} hex-icon-avatar" style="width:${size}px;height:${size}px;background:${color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;">${letter}</span>`;
+}
+
+// v3.32.15 — Avatar letter pickup. Skips non-alphanumeric leading characters
+// so names like "[Base] Claude-3-7-Sonnet" produce "B" instead of "[". Falls
+// back to "?" if there's no alphanumeric character at all.
+function firstAlnumChar(name) {
+  const match = (name || '').match(/[A-Za-z0-9]/);
+  return match ? match[0].toUpperCase() : '?';
 }
 
 function avatarColor(name) {

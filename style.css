@@ -2787,6 +2787,68 @@ html, body {
   font-style: italic;
 }
 
+/* ── v3.32.15 — Server-icon presets row in Import Server modal ──
+   Quick-pick buttons for known runtime icons (Alfredo, LM Studio,
+   Open WebUI, Together, Generic). Click sets the preview as if the
+   user had uploaded that icon. Selected state mirrors whatever the
+   preview is currently showing — driven from JS in
+   highlightImportServerIconPreset(). The blurb above sets context;
+   the row sits between the blurb and the existing upload control,
+   so the visual flow is: explain → pick a preset → or upload your
+   own → preview at right. */
+.import-server-icon-help-blurb {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin: 4px 0 8px;
+  line-height: 1.4;
+}
+.import-server-icon-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.import-server-icon-preset {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 10px 6px;
+  background: var(--surface2);
+  border: 1px dashed var(--border2);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, transform 0.08s;
+  min-width: 72px;
+}
+.import-server-icon-preset:hover {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.import-server-icon-preset:active {
+  transform: scale(0.97);
+}
+.import-server-icon-preset img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+.import-server-icon-preset span {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+}
+.import-server-icon-preset.is-selected {
+  border-style: solid;
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.import-server-icon-preset.is-selected span {
+  color: var(--accent);
+}
+
 /* v3.29.11 — Two-column model row layout for the Add a Custom Worker
    Bee modal. Left column: the existing Model input + Fetch Models +
    Browse-models link. Right column: big icon preview + upload button.

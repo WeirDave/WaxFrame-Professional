@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260504-005">
+  <meta name="waxframe-build" content="20260506-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.32.14">
@@ -923,9 +923,32 @@
           <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
         </div>
         <div class="custom-ai-field-wrap">
-          <label>Icon <span class="field-optional">(optional · applied to all imported models)</span></label>
+          <label>Default icon <span class="field-optional">(optional · applied to all imported models)</span></label>
+          <p class="import-server-icon-help-blurb">WaxFrame auto-detects common model brands (Claude, ChatGPT, Gemini, Grok, DeepSeek, Perplexity, Mistral, Cohere, Llama) from the model name. For anything else — including models routed through a server runtime like Alfredo, LM Studio, Open WebUI, or Together — pick a default icon below or upload your own. If you skip this, the generic icon is used.</p>
+          <div class="import-server-icon-presets" id="importServerIconPresets">
+            <button type="button" class="import-server-icon-preset" data-icon="images/icon-alfredo.png"   onclick="selectImportServerIconPreset(this)" title="Alfredo">
+              <img src="images/icon-alfredo.png"   alt="Alfredo"    onerror="this.style.opacity='0.3'">
+              <span>Alfredo</span>
+            </button>
+            <button type="button" class="import-server-icon-preset" data-icon="images/icon-lmstudio.png"  onclick="selectImportServerIconPreset(this)" title="LM Studio">
+              <img src="images/icon-lmstudio.png"  alt="LM Studio"  onerror="this.style.opacity='0.3'">
+              <span>LM Studio</span>
+            </button>
+            <button type="button" class="import-server-icon-preset" data-icon="images/icon-openwebui.png" onclick="selectImportServerIconPreset(this)" title="Open WebUI">
+              <img src="images/icon-openwebui.png" alt="Open WebUI" onerror="this.style.opacity='0.3'">
+              <span>Open WebUI</span>
+            </button>
+            <button type="button" class="import-server-icon-preset" data-icon="images/icon-together.png"  onclick="selectImportServerIconPreset(this)" title="Together AI">
+              <img src="images/icon-together.png"  alt="Together"   onerror="this.style.opacity='0.3'">
+              <span>Together</span>
+            </button>
+            <button type="button" class="import-server-icon-preset" data-icon="images/icon-generic.png"   onclick="selectImportServerIconPreset(this)" title="Generic">
+              <img src="images/icon-generic.png"   alt="Generic"    onerror="this.style.opacity='0.3'">
+              <span>Generic</span>
+            </button>
+          </div>
           <div class="custom-ai-icon-uploader" id="importServerIconWrap">
-            <button type="button" class="btn btn-sm" id="importServerIconUploadBtn">📷 Upload Icon</button>
+            <button type="button" class="btn btn-sm" id="importServerIconUploadBtn">📷 Upload your own</button>
             <div class="custom-ai-icon-preview-box">
               <img id="importServerIconPreview" alt="" style="display:none;">
               <button type="button" class="custom-ai-icon-clear-btn" id="importServerIconClearBtn" title="Remove icon" aria-label="Remove icon">×</button>
@@ -1934,7 +1957,7 @@
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
 <script src="js/version.js?v=3.32.14"></script>
 <script src="js/templates.js?v=3.32.13"></script>
-<script src="js/app.js?v=3.32.14"></script>
+<script src="js/app.js?v=3.32.15"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
