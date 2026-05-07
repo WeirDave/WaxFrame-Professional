@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-005';         // build stamp — update each session
+const BUILD       = '20260506-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1395,6 +1395,17 @@ const FREE_TRIAL_ROUNDS  = 3;
 // ── UTILS ──
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// v3.32.20 — Strip the "[Base] " prefix that's added at module-load to
+// default AI names. Used for display in the work-screen hive cards
+// where the prefix is visual noise — every base model has it, so it
+// isn't differentiating information at the card level. Underlying
+// `ai.name` stays unchanged so export, transcript, conflict
+// attribution, and the Change Builder modal (where Base vs Custom is
+// useful at-a-glance) all continue to see the prefixed form. Use the
+// plain `ai.name` everywhere except work-screen cards.
+function displayAiName(name) {
+  return (name || '').replace(/^\[Base\]\s+/, '');
 }
 function toast(msg, ms = 2800) {
   const t = document.getElementById('toast');
@@ -9328,18 +9339,42 @@ function renderBeeStatusGrid() {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     const iconEl = resolveAiIcon(ai, 'hex-icon');
+    // v3.32.20 — Two-row card layout (#8). Row 1 carries identity:
+    // optional checkbox (non-builders only — builders are always-on),
+    // provider icon, AI name. Row 2 carries status: Builder Bee role
+    // indicator (when this card holds the Builder role) and the live
+    // status text. Splits the previous single-row cram of up to 6
+    // elements (checkbox + BUILDER tag + icon + name + status + ★)
+    // into a stack so name has full row-1 width and never collides
+    // with status-row content. The role indicator is the Builder Bee
+    // PNG (same asset as the Setup 2 picker's selected-badge), not
+    // the prior plaintext "BUILDER" tag — visual consistency with
+    // how the Builder identity is communicated elsewhere in the app.
+    // Underlying ai.name keeps its "[Base] " prefix; the card display
+    // strips it via displayAiName() because every base model's prefix
+    // adds visual noise without differentiating information.
     return `
     <div class="hex-cell ${isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive'}" id="bcard-${ai.id}">
       <div class="hex-cell-body">
-        ${isB
-          ? `<span class="hex-builder-tag">BUILDER</span>`
-          : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
-              ${isOn ? 'checked' : ''}
-              onchange="toggleSessionBee('${ai.id}', this.checked)">`
-        }
-        ${iconEl}
-        <span class="hex-name">${ai.name}</span>
-        <span class="hex-status" id="blive-${ai.id}">Idle</span>
+        <div class="hex-row hex-row-identity">
+          ${isB
+            ? ''
+            : `<input type="checkbox" class="hex-toggle" id="btog-${ai.id}"
+                ${isOn ? 'checked' : ''}
+                onchange="toggleSessionBee('${ai.id}', this.checked)">`
+          }
+          ${iconEl}
+          <span class="hex-name" title="${esc(ai.name)}">${esc(displayAiName(ai.name))}</span>
+        </div>
+        <div class="hex-row hex-row-status">
+          ${isB
+            ? `<img class="hex-builder-bee" src="images/WaxFrame_Builder_v3.png"
+                   alt="Builder" title="Builder"
+                   onerror="this.style.display='none'">`
+            : ''
+          }
+          <span class="hex-status" id="blive-${ai.id}">Idle</span>
+        </div>
       </div>
     </div>`;
   }).join('');
