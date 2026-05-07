@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-001';         // build stamp — update each session
+const BUILD       = '20260506-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1802,11 +1802,19 @@ function openChangeBuilder() {
   if (grid) {
     grid.innerHTML = activeAIs.map(ai => {
       const isSelected = ai.id === builder;
-      return `<div class="builder-pick-btn btn ${isSelected ? 'selected' : ''}"
-        onclick="setBuilderFromModal('${ai.id}')"
-        class="builder-pick-card-inner">
-        <img src="${ai.icon}" class="builder-pick-icon"
-          onerror="this.style.display='none'">
+      // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
+      // which bypassed the brand-match catalog AND silently hid the icon
+      // when the PNG failed to load. Now routes through resolveAiIcon so
+      // the same three-tier chain applies: brand match → ai.icon → letter
+      // avatar (with v3.32.15's first-alphanumeric pickup). 36px matches
+      // the .builder-pick-icon CSS sizing in the small grid variant.
+      // Also fixes a pre-existing HTML bug: the prior template emitted
+      // two `class=` attributes on the same <div> (only the first was
+      // parsed, silently dropping `.builder-pick-card-inner`). Merged.
+      const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 36);
+      return `<div class="builder-pick-btn btn builder-pick-card-inner ${isSelected ? 'selected' : ''}"
+        onclick="setBuilderFromModal('${ai.id}')">
+        ${iconEl}
         <span class="builder-pick-name">${ai.name}</span>
         ${isSelected ? '<span class="builder-pick-current">👑 Current</span>' : ''}
       </div>`;
@@ -3592,7 +3600,7 @@ function buildAISetupRowHTML(ai) {
     <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
-        <img src="${ai.icon}" class="ai-setup-icon" onerror="this.style.display='none'">
+        ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
         <span class="ai-setup-summary-spacer"></span>
         ${actionHTML}
@@ -3800,14 +3808,23 @@ function renderBuilderPicker() {
   if (!builder || !activeAIs.find(a => a.id === builder)) {
     builder = activeAIs[0].id;
   }
-  grid.innerHTML = activeAIs.map(ai => `
+  // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
+  // which bypassed the brand-match catalog AND silently hid the icon when
+  // the PNG failed to load. Now routes through resolveAiIcon so the same
+  // three-tier chain applies: brand match → ai.icon → letter avatar (with
+  // v3.32.15's first-alphanumeric pickup). 56px matches the .builder-pick-icon
+  // sizing inside .builder-pick-grid-large (Setup 2 variant).
+  grid.innerHTML = activeAIs.map(ai => {
+    const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 56);
+    return `
     <button class="builder-pick-btn ${builder === ai.id ? 'selected' : ''}"
       onclick="setBuilder('${ai.id}'); return false;">
-      <img src="${ai.icon}" class="builder-pick-icon" onerror="this.style.display='none'">
+      ${iconEl}
       <span class="builder-pick-name">${ai.name}</span>
       ${builder === ai.id ? '<img src="images/WaxFrame_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
     </button>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function setBuilder(id) {
@@ -4413,6 +4430,38 @@ function refreshCustomAIIconPreview() {
     previewWrapId: 'customAIIconWrap',
     uploadBtnId:   'customAIIconUploadBtn'
   }, _customAIIconCtx());
+}
+
+// v3.32.16 — Browse Icons button on the Custom AI modal. Opens the
+// reusable openIconPicker (Bundled tab shows Providers + Tools & Servers
+// + Mascots; Upload tab is the same upload-and-resize flow as the
+// dedicated Upload button). On select, the chosen icon path (or upload
+// data URL) is fed into the Custom AI preview via wfIconUpload.set().
+// Covers the case David flagged: user adds a Custom AI whose model name
+// doesn't match any of the nine auto-detected brands AND they don't
+// have an upload of their own — Browse Icons gives them a one-click
+// path to any bundled icon (e.g. Mascot, Tools & Servers section)
+// without forcing them to source an image from elsewhere.
+function openCustomAIIconPicker() {
+  const opts = {
+    fileInputId:   'customAIIconFileInput',
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap',
+    clearBtnId:    'customAIIconClearBtn',
+    uploadBtnId:   'customAIIconUploadBtn'
+  };
+  // Read whatever the preview currently shows so the picker can
+  // highlight the matching tile (catalog match, prior pick, or upload).
+  const currentIcon = wfIconUpload.readAny({
+    previewId:     'customAIIconPreview',
+    previewWrapId: 'customAIIconWrap'
+  });
+  openIconPicker({
+    currentIcon: currentIcon || null,
+    onSelect: (src) => {
+      if (src) wfIconUpload.set(opts, src);
+    }
+  });
 }
 
 // v3.29.8 — info modal handlers. Opens a help screen explaining each
@@ -9109,8 +9158,8 @@ function renderBeeStatusGrid() {
 //     opts.previewWrapId — id of the wrapper that toggles 'has-icon' class
 //     opts.clearBtnId    — id of the × clear button
 //     opts.uploadBtnId   — id of the visible "Upload Icon" button (we
-//                          forward clicks to the hidden file input AND
-//                          flip its label between Upload/Replace)
+//                          forward clicks to the hidden file input;
+//                          label is always "Upload Icon" since v3.32.16)
 //     opts.onChange(dataURL | null) — fires when user picks or clears
 //   wfIconUpload.read(opts) — returns the current data URL or null
 //   wfIconUpload.set(opts, dataURL) — pre-populate (for Edit flows)
@@ -9145,7 +9194,14 @@ const wfIconUpload = (() => {
       wrapEl.classList.toggle('has-user-icon', kind === 'user');
     }
     if (uploadBtn) {
-      uploadBtn.textContent = (kind === 'user') ? '🔄 Replace Icon' : '📷 Upload Icon';
+      // v3.32.16 — always "Upload Icon" regardless of state. The previous
+      // toggle to "🔄 Replace Icon" when a user-uploaded icon was already
+      // present was dev-speak: the button does the same thing in both
+      // states (opens the file picker), so the label flip added no user
+      // value. It also produced an immediately-wrong label after preset
+      // clicks in the Import Server modal, since selecting a preset goes
+      // through wfIconUpload.set() which marks kind='user'.
+      uploadBtn.textContent = '📷 Upload Icon';
     }
   }
 
@@ -12040,7 +12096,7 @@ function showBuilderOverlay() {
       block.style.background = `linear-gradient(180deg, ${colors.bg}, rgba(0,0,0,0.2))`;
       block.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 14px rgba(0,0,0,0.4), 0 0 14px ${colors.glow}`;
       block.innerHTML = `
-        <img src="${ai.icon}" class="builder-block-icon" alt="${ai.name}" onerror="this.style.display='none'">
+        ${resolveAiIcon(ai, 'builder-block-icon', 22)}
         <span class="builder-block-name">${ai.name}</span>
       `;
       track.appendChild(block);
