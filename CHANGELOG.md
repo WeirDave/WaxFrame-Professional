@@ -1,6 +1,18 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.24
+**Build:** `20260506-010` · **Released:** May 6, 2026
+
+Bug fix: per-round satisfaction state now survives page reloads. The `window._cleanThisRound` Set tracks which AIs returned NO CHANGES NEEDED for the current round and drives the green-border + ★ rendering. v3.32.14 added a rehydration path in `renderBeeStatusGrid` that walks the Set and re-applies `is-clean` state on each card after `innerHTML` rebuild — but the Set itself was never persisted to IDB. On page reload the Set was reinitialized empty (line 10174's `if (!window._cleanThisRound) window._cleanThisRound = new Set();`), the rehydration walked an empty Set, and previously-satisfied cards lost their star until the next round produced new satisfaction signals. The fix mirrors what v3.32.18 did for `_lengthGuardOverride`.
+
+- **`saveSession()` now serializes `_cleanThisRound` to the IDB session payload** as `cleanThisRound: Array.from(window._cleanThisRound || [])`. Sets aren't JSON-friendly so the array form is what gets persisted.
+- **`loadSession()` now restores it on both paths** — primary IDB path and localStorage fallback path. Reconstructs the Set from the serialized array via `window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : [])`. Defaults to an empty Set for pre-v3.32.24 sessions where the field doesn't exist (`!Array.isArray` guard).
+- **`clearProject()` still clears the Set** at line 10884 — that path was already correct, no change needed. The IDB wipe also clears the persisted value.
+- **No data-model migration needed.** Pre-v3.32.24 sessions just hydrate to an empty Set; the next round's `setBeeStatus('done-clean', ...)` calls populate it normally and from that point forward it persists.
+- **Version stamps in code bumped** to v3.32.24 / build 20260506-010 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep. Each helper page's comment-header build stamp also synced from `20260506-009` to `20260506-010`.
+
+---
 ## v3.32.23
 **Build:** `20260506-009` · **Released:** May 6, 2026
 
