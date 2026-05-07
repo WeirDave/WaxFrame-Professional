@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-011';         // build stamp — update each session
+const BUILD       = '20260506-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3489,7 +3489,16 @@ function saveSession() {
   // Serialized as an array (Sets aren't JSON-friendly) and restored
   // back into a Set on loadSession.
   const cleanThisRound = Array.from(window._cleanThisRound || []);
-  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound };
+  // v3.32.26 — Persist the per-session AI toggle set. This is the
+  // user's "which AIs are turned on for this round" selection,
+  // distinct from `activeAIs` (which AIs are configured in the hive
+  // at all — that's persisted via saveHive). Without persistence
+  // the user's checkbox toggles on the work-screen hive cards reset
+  // to all-on every page reload because initWorkScreen unconditionally
+  // re-initialized the Set. Same array-then-Set serialization shape
+  // as cleanThisRound.
+  const sessionAIs = Array.from(window.sessionAIs || []);
+  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs };
 
   // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
@@ -3591,6 +3600,13 @@ async function loadSession() {
     // path in renderBeeStatusGrid (added v3.32.14) then walks it to
     // re-apply is-clean state on each card after the DOM is built.
     window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
+    // v3.32.26 — Restore per-session AI toggle set. Pre-v3.32.26
+    // sessions don't have this field; in that case leave window.sessionAIs
+    // undefined so initWorkScreen's reset path takes over and seeds it
+    // with all activeAIs (which is the historical default behavior).
+    if (Array.isArray(s.sessionAIs)) {
+      window.sessionAIs = new Set(s.sessionAIs);
+    }
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
@@ -3619,6 +3635,10 @@ async function loadSession() {
       window._lengthGuardOverride = !!s.lengthGuardOverride;
       // v3.32.24 — fallback path also restores the satisfaction set.
       window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
+      // v3.32.26 — fallback path also restores the session toggle set.
+      if (Array.isArray(s.sessionAIs)) {
+        window.sessionAIs = new Set(s.sessionAIs);
+      }
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
       // Restore console HTML in the fallback path too (see main path)
       if (s.consoleHTML) {
@@ -3977,6 +3997,13 @@ function renderBuilderPicker() {
 
 function setBuilder(id) {
   builder = id;
+  // v3.32.26 — Persist the change. saveHive() already includes the
+  // `builder` field in its localStorage payload (line 2725); the bug
+  // was that this setter never called it. setBuilderFromModal() also
+  // routes through here, so the Change Builder modal flow now
+  // persists too. loadHive() at boot restores `builder = h.builder`,
+  // so the round trip is complete.
+  saveHive();
   renderBuilderPicker();
   const ai = aiList.find(a => a.id === id);
   toast(`🔨 ${ai?.name} is now the Builder`);
@@ -8667,8 +8694,20 @@ function initWorkScreen(isNewSession = false) {
   // drawer expecting it to be empty as documented in every playbook. Removed
   // in v3.21.22.
 
-  // Reset per-session bee selection to all active AIs
-  window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  // Reset per-session bee selection to all active AIs.
+  // v3.32.26 — Was unconditional, which wiped the Set every time the
+  // work screen rendered including on page reload. Now gated: a true
+  // new session (clearProject path → initWorkScreen(true)) resets to
+  // all-on as before; a page reload (initWorkScreen() with default
+  // false, after loadSession populated window.sessionAIs from the IDB
+  // payload) preserves the restored Set. The `!window.sessionAIs`
+  // guard handles two edge cases: (a) brand-new install with no IDB
+  // session yet, and (b) pre-v3.32.26 sessions saved before sessionAIs
+  // joined the payload — both fall through to the "all activeAIs"
+  // historical default.
+  if (isNewSession || !window.sessionAIs) {
+    window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  }
 
   renderWorkPhaseBar();
   renderBeeStatusGrid();
@@ -10160,6 +10199,12 @@ function toggleSessionBee(id, on) {
     card.classList.toggle('is-active', on);
     card.classList.toggle('is-inactive', !on);
   }
+  // v3.32.26 — Persist the toggle. Without this, sessionAIs only saved
+  // when something else triggered saveSession (next round, doc change,
+  // notes edit, etc.); a quick toggle followed by a refresh would lose
+  // the change. Cheap call — saveSession is async and serialized
+  // through _saveSessionChain so back-to-back toggles can't race.
+  saveSession();
 }
 
 // v3.32.14 — Durable per-round satisfaction tracking, hardened.
@@ -10198,11 +10243,18 @@ function setBeeStatus(id, state, summary) {
 
   // ── Track satisfaction signal at the chokepoint ──
   // 'done-clean' input registers this AI as satisfied for the round.
-  // 'sending' input clears this AI's entry (next round starting for it).
-  // No other state touches the Set — once satisfied, the star sticks
-  // until 'sending' or 'error' explicitly overrides.
+  // Per-round wipe is handled explicitly by runRound() at smoke-phase
+  // start (`_cleanThisRound.clear()` in the round-reset block) — the
+  // state machine itself no longer touches the Set on transition,
+  // because the prior delete-on-sending side-effect (removed in
+  // v3.32.26) caused a visible star flicker on the Builder card every
+  // round: a satisfied reviewer that was also the Builder would
+  // transition to 'sending' for the build phase, lose its star, then
+  // get it re-promoted by runRound's builderWasClean path on build-
+  // success — visible "★ → gone → ★" cycle every round. The explicit
+  // round-start clear fully covers the smoke-phase reset semantic
+  // without needing the side-effect, so removing it is safe.
   if (state === 'done-clean') window._cleanThisRound.add(id);
-  if (state === 'sending')    window._cleanThisRound.delete(id);
 
   // ── Universal re-derive ──
   // For ANY state that isn't 'sending' or 'error', if this AI is
