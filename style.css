@@ -753,6 +753,14 @@ html, body {
   position: relative;
   min-width: 100px;
   cursor: pointer;
+  /* v3.32.19 — Defensive overflow clip so a long AI name (e.g. an
+     Alfredo-prefixed model like "[Base] Claude-3-7-Sonnet") can't
+     visually overflow the card and collide with neighboring cards
+     in the grid. The wrap behavior is provided by .builder-pick-name
+     below; this is the safety net for any edge case where wrap can't
+     fit the content (extreme widths, custom AIs with single super-
+     long unbreakable tokens, etc.). */
+  overflow: hidden;
 }
 .builder-pick-btn:hover {
   border-color: var(--accent);
@@ -774,6 +782,20 @@ html, body {
 .builder-pick-name {
   font-size: 13px;
   font-weight: 600;
+  /* v3.32.19 — Allow long AI names to wrap inside the card width.
+     `word-break: break-word` lets hyphenated model names like
+     "Claude-3-7-Sonnet" or "GPT-4o-Mini" break at hyphens cleanly;
+     `overflow-wrap: anywhere` is a fallback for unbreakable tokens
+     (extremely long single words). `max-width: 100%` keeps the name
+     within the card's content box. `line-height: 1.25` gives multi-
+     line names visual breathing room without making single-line
+     names feel loose. `text-align: center` matches the column
+     layout's centered alignment so wrapped names remain centered. */
+  max-width: 100%;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+  text-align: center;
 }
 .builder-selected-badge {
   position: absolute;

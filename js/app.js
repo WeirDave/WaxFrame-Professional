@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-004';         // build stamp — update each session
+const BUILD       = '20260506-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1813,6 +1813,7 @@ function openChangeBuilder() {
       // parsed, silently dropping `.builder-pick-card-inner`). Merged.
       const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 36);
       return `<div class="builder-pick-btn btn builder-pick-card-inner ${isSelected ? 'selected' : ''}"
+        title="${esc(ai.name)}"
         onclick="setBuilderFromModal('${ai.id}')">
         ${iconEl}
         <span class="builder-pick-name">${ai.name}</span>
@@ -3936,6 +3937,7 @@ function renderBuilderPicker() {
     const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 56);
     return `
     <button class="builder-pick-btn ${builder === ai.id ? 'selected' : ''}"
+      title="${esc(ai.name)}"
       onclick="setBuilder('${ai.id}'); return false;">
       ${iconEl}
       <span class="builder-pick-name">${ai.name}</span>
