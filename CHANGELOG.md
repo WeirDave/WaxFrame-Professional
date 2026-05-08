@@ -1,6 +1,24 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.9
+**Build:** `20260508-016` · **Released:** May 8, 2026
+
+R5b of the Fluid Scaling Architectural Pass — second migration release. Setup screens 3, 4, and 5 (Your Project, Reference Material, Starting Document) plus their feature-specific selectors (`.template-*` for project templates, `.length-*` for length constraints, `.goal-*` for project goal field, `.sheet-*` for XLSX sheet picker, `.launch-*` for launch readiness, `.file-*` for file status) now consume the `--fs-*` and `--space-*` token scales. **304 hardcoded pixel values converted to token references across 189 R5b-prefixed class roots.** Together with R5a, the entire 5-screen setup wizard is now token-driven.
+
+- **R5b scope locked.** All selector roots in the Project + Reference + Document setup surface: `.proj-*` (23 classes), `.project-*` (2), `.goal-*` (37), `.template-*` (25), `.length-*` (26), `.ref-*` (33), `.doc-*` (16), `.drop-*` (4), `.paste-*` (paste panel), `.file-*` (7), `.launch-*` (3), `.sheet-*` (13). Total 189 unique class roots covered.
+- **Tokenization breakdown.** 82 `font-size: Npx` declarations replaced with `var(--fs-*)` (1 of which snapped: 10→11). 222 `padding`/`margin`/`gap` `Npx` declarations replaced with `var(--space-*)` (11 of which snapped: 3→4 ×1, 5→4 ×4, 7→6 ×6). Total of 304 token swaps in this release.
+- **20 out-of-scale literals retained.** 3 standalone `font-size` values get inline `/* out-of-scale */` markers (26px, 36px, 40px — used for large display headers and template card titles). 17 spacing literals stay as bare `Npx` inside shorthands: 12 borders (2px ×12 — out of spacing-scale scope), 2 misc layout values (22px ×2), 3 isolated values (26px ×3 — fixed dimensions in length-constraint and ref-counter rows).
+- **Snap policy from R4 honored consistently.** Same 1px-max snap rules as R5a: spacing 3→4, 5→4, 7→6, 9→8, 11→12 (prefer lower neighbor); font 10→11, 19→20 (snap up to scale floor). All 12 snapped sites in R5b are 1px deltas — visually imperceptible.
+- **R5a + non-R5b rules byte-identical.** Verification pass confirmed: 1,997 rules in `style.css`, every rule whose first class does NOT match an R5b prefix has a byte-identical body to v3.34.8. R5a tokenizations from the previous release preserved exactly. Selectors all preserved. Brace balance preserved.
+- **Setup wizard now fully tokenized.** R5a covered Worker Bees + Builder + setup-flow modals (386 swaps). R5b covers Project + Reference + Document (304 swaps). Combined R5a+R5b: 690 token swaps across all 5 setup screens. Every padding, margin, gap, and font-size in the setup wizard now references the canonical scale (with documented exceptions for borders and out-of-scale literals).
+- **80ch column constraints unchanged.** All 16 `calc(80ch + ...)` and `calc(44px + 80ch + ...)` rules byte-identical — they live in work-screen rules (R6 territory). Document screen scales fluidly within its parent fs-body, no 80ch constraints in scope here.
+- **Smoke-test surface.** Your Project screen (goal field, template picker, length constraints, project clear), Reference Material screen (counter row, reference cards, clear-all), Starting Document screen (3 input modes: drop zone, paste panel, start-from-scratch; file status row; XLSX sheet picker modal; launch readiness panel). Tested at 1024 / 1440 / 1920 viewport widths. No visual regressions found.
+- **Combined scale-system status.** Total `var(--fs-*)` references in `style.css`: 187. Total `var(--space-*)` references: 504. Total out-of-scale comment markers: 8. Total 1px-snap markers: 13. Migration progress: 690 of ~1,368 estimated total sites = 50% done across R5a + R5b.
+- **Out of scope (still tracked):** R6 (work screen + work-screen modals, ~161 sites), R7 (5 helper pages, ~179 sites), R8 (global chrome — top bar, nav panel, license pill, toasts, dev toolbar, base buttons — ~157 sites). R-final reserved for selective `clamp()`-based fluid scaling using the now-mature token system.
+- **Version stamps in code bumped** to v3.34.9 / build 20260508-016 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.8
 **Build:** `20260508-015` · **Released:** May 8, 2026
 
