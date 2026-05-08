@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.32
+**Build:** `20260508-003` · **Released:** May 8, 2026
+
+Surgical CSS hygiene fix. Removes the lone `!important` flag in `style.css` that wasn't covered by one of the four legitimate exception buckets (utility class, `@media print`, `prefers-reduced-motion`, mobile-overlay body-hide). Identified during the morning audit; cascade analysis confirmed the flag was preemptive overcaution rather than a real specificity battle.
+
+- **`.custom-ai-icon-preview-box--big { display: flex !important }` → `display: flex`.** The element in `index.html` line 830 carries both `.custom-ai-icon-preview-box` (base, line 2973, sets `display: none`) and `.custom-ai-icon-preview-box--big` (modifier, line 3129, sets `display: flex`) simultaneously. Both rules are at specificity (0,1,0); same-specificity rules resolve by source order, and the `--big` rule comes later in the stylesheet so its `display: flex` already wins cleanly without the flag. When `.has-icon` lands on the parent, the rule at line 2986 (`.custom-ai-icon-uploader.has-icon .custom-ai-icon-preview-box`, specificity (0,2,0)) reinforces `display: flex` regardless. In every state combination, the cascade resolves to flex without needing `!important`. Same pattern v3.27.5 cleaned up on the `.btn-sm` rules at lines 8874-8876.
+- **Comment block added** above the rule documenting why the flag was removed and which sibling rules participate in the cascade. Future readers (and future Claude sessions) can re-derive the safety argument without re-doing the analysis.
+- **`!important` declaration count: 22 → 21.** Remaining 21 are all in legitimate exception buckets: 1 utility (`.is-hidden`), 16+ in `@media print`, 5+ in `prefers-reduced-motion` blocks, 1 in mobile-overlay body-hide. No outliers remain.
+- **Version stamps in code bumped** to v3.32.32 / build 20260508-003 across the canonical 4-stamp checklist (`index.html` `waxframe-build` meta, `js/version.js` `APP_VERSION`, `js/app.js` `BUILD` constant, `index.html` cache-bust query strings on `style.css`, `js/version.js`, and `js/app.js`) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`). Each helper page's `waxframe-build` meta synced from `20260508-002` to `20260508-003` and comment-header `Build:` stamp synced. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6` since those files were not modified.
+
+---
 ## v3.32.31
 **Build:** `20260508-002` · **Released:** May 8, 2026
 

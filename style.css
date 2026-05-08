@@ -3127,12 +3127,20 @@ html, body {
   gap: 8px;
 }
 .custom-ai-icon-preview-box--big {
+  /* v3.32.32 — dropped the `!important` on display: flex. The element
+     carries both .custom-ai-icon-preview-box (sets display: none) and
+     .custom-ai-icon-preview-box--big together; both rules are at
+     specificity (0,1,0), so source order wins, and the --big rule
+     comes later in the stylesheet so its display: flex wins cleanly.
+     When .has-icon lands on the parent, the (0,2,0) rule above
+     reinforces flex. The !important was preemptive overcaution —
+     same pattern v3.27.5 cleaned up on .btn-sm. */
   width: 96px;
   height: 96px;
   border: 1px dashed var(--border2);
   border-radius: 12px;
   background: var(--surface2);
-  display: flex !important;
+  display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
