@@ -1,6 +1,15 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.30
+**Build:** `20260508-001` · **Released:** May 8, 2026
+
+Single surgical addition to the navigation menu — no logic changes, no CSS changes, no behavior changes.
+
+- **`💻 Source on GitHub` link added to Advanced section.** New `<a class="nav-item">` directly under `✏️ Prompt Editor` in the Advanced nav block. Links out to `https://github.com/WeirDave/WaxFrame-Professional` with `target="_blank"` and `rel="noopener noreferrer"` for safe external navigation. Same `nav-item` class and `closeNavMenu()` onclick pattern as the existing Prompt Editor entry — visually identical, drops users straight to the public repo. Surfaces what was previously a buried About-modal reference into the same menu where users already navigate for documentation and tools, makes the AGPL-3.0 source-availability promise concrete and one click away, and gives users a fast path to the issue tracker for bug reports.
+- **Version stamps in code bumped** to v3.32.30 / build 20260508-001 across the canonical 4-stamp checklist (`index.html` `waxframe-build` meta, `js/version.js` `APP_VERSION`, `js/app.js` `BUILD` constant, `index.html` cache-bust query strings on `style.css`, `js/version.js`, and `js/app.js`) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`). Each helper page's `waxframe-build` meta synced from `20260507-001` to `20260508-001` and comment-header `Build:` stamp synced from `20260506-014` to `20260508-001`. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6` since those files were not modified.
+
+---
 ## v3.32.29
 **Build:** `20260507-001` · **Released:** May 7, 2026
 

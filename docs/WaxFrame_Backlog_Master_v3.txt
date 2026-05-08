@@ -1,0 +1,417 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG (v3)
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-07 (v3 merge — Doc 1 reconciliation)
+Current version:     v3.32.30 Pro / build 20260507-002
+Maintained by:       R David Paine III
+
+Single source of truth for everything queued across WaxFrame
+Pro and Free. Replaces scattered memory items, punch-list
+notes, and roadmap docs. Update by checking off items as
+they ship — do not delete completed items, move them to the
+"RECENTLY SHIPPED" section at the bottom.
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+CHANGES IN v3 (from v2, 2026-05-07):
+  • T7 Blog Post added to Section 4 (forward test slot)
+  • BONUS DATA POINT expanded with 16-round historical
+    entry as third reference row
+  • Hive Profiles: .waxprofile standalone file format
+    option restored, unreachable-server warning template
+    restored with Alfredo endpoint example
+  • Sources view: "AIs without a Source are direct-API
+    customs" design note restored
+  • T5/T6 hypothesis framing restored (short-form
+    convergence, two-audience writing patterns)
+  • Session rule added: master backlog is the contract —
+    if it's not in here, it's not real
+
+════════════════════════════════════════════════════════════
+1. BUGS (fix before new features)
+════════════════════════════════════════════════════════════
+
+[-] ★ Per-reviewer satisfaction indicator bug
+    NO CHANGES NEEDED pill + star renders inconsistently
+    on reviewer cards. Console correctly logs satisfaction
+    but card sometimes shows generic DONE with no star.
+    User uses this visual to track convergence at a glance.
+    STATUS: Diagnostic instrumentation shipped in v3.32.29
+    and hoisted to the dev toolbar (⭐ Sat Debug button) in
+    v3.32.30. NEXT: capture [wfSat] console output the next
+    time the bug reproduces at work. Real fix follows in
+    v3.32.31 once captured data identifies whether it's a
+    data-layer race (Set wrong) or render-layer race (DOM
+    stale despite correct Set membership).
+
+════════════════════════════════════════════════════════════
+2. ARCHITECTURE / DATA-MODEL CHANGES
+════════════════════════════════════════════════════════════
+
+[ ] ★ #8 Length mode overhaul                 → v3.33.0
+    Replace single lengthLimit field with explicit mode
+    picker on Setup 3:
+      • No limit    — silent, no gates
+      • Hard cap    — ceiling only, no floor, no
+                      undersized modal
+      • Target      — strict at N, both floor and ceiling
+                      at the target value, symmetric
+                      guards armed
+      • Range       — between min and max, both fields
+                      user-supplied
+    Builder prompt envelope must change per mode:
+      • Hard cap: "Stay at or below N. Shorter is fine."
+      • Target:   "Hit N exactly. Do not deliver less,
+                   do not deliver more."
+      • Range:    "Stay between min and max. Aim for the
+                   middle."
+    Migration: pre-v3.32.29 projects default to Hard cap
+    mode with their existing lengthLimit copied across.
+    Convergence-under and round-undersized intercepts
+    only fire in Target or Range modes. Kills the implicit
+    LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 — replaced by
+    explicit user-opted modes.
+    SCOPE: data-model change. Touches Setup 3 UI, prompt
+    envelope, all four length-guard intercepts, migration,
+    helper-page docs. Probably v3.33.0 since it's a
+    model change.
+
+[ ] ★ Run mode toggle — Auto vs Interactive   → DESIGN FIRST
+    NEW from session 2026-05-07. Two modes:
+      • Auto        — runs continuously to convergence,
+                      no halt at user-decision blocks
+                      (unattended use case)
+      • Interactive — current behavior; halts at user
+                      decisions
+    Auto mode REQUIRES guardrails. The 37-round Blog v2.0
+    session would have run forever without one. Must define:
+      • Max-rounds ceiling (default value? user-overridable?)
+      • Stall detector ("3 consecutive rounds with no change
+        in satisfied-count → halt and ask")
+      • UI placement of the toggle (Setup 3? work toolbar?)
+      • Halt-and-resume modal copy
+    DELIVERY: design markdown spec first, then code in a
+    separate release. Don't squeeze in with other work —
+    architectural lever, deserves its own session.
+
+[ ] #1 Fluid scaling architectural pass
+    Footer scaling at 1872×938 was the trigger. Symptom
+    of a deeper viewport-strategy problem: fixed px vs
+    clamp/fluid units, the min-width: 1024px floor, the
+    @media (min-width: 1601px) desktop-cascade pattern
+    that has produced bug after bug.
+    PRECONDITION: dedicated planning chat to produce
+    breakpoint inventory and smoke-test matrix BEFORE
+    any code changes. Per house rule, CSS deletion sweeps
+    require visual smoke testing on every screen before
+    main; split into smaller releases each verified
+    independently.
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    UNREACHABLE-SERVER WARNING TEMPLATE:
+      "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    EXPORT FORMAT — TWO OPTIONS:
+      • Bundled inside Backup format v3 (existing pipe)
+      • Standalone .waxprofile files (purpose-built,
+        share single profile between machines without
+        full backup overhead)
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it. Import a Source on a new
+    machine and the Profiles light up.
+    DESIGN NOTE: AIs without a Source are direct-API
+    customs — the Sources view doesn't need to account
+    for every AI, only the ones that came from a server.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+════════════════════════════════════════════════════════════
+3. FEATURES / TOOLING
+════════════════════════════════════════════════════════════
+
+[-] cleanup.html                                → v3.30.3
+    Standalone page (loads style.css + js/version.js
+    only, air-gap safe) scanning localStorage for
+    orphaned waxframe_* keys. Reads waxframe_v2_hive
+    for live aiList. Three per-AI orphan patterns:
+    recommend_default-${provider}, recommend_custom-
+    ${id}, models_${id}. Categorize as Known / Bunnies
+    (default-checked) / Unknown. Skip non-waxframe keys
+    + IDB. Link from DEV TOOLBAR.
+    STATUS: scoped, ready to build next session.
+
+[ ] MODEL_LABELS data-driven IDB cache
+    Daily refresh with manual refresh button and
+    MODEL_FALLBACKS as the offline fallback. Backlog
+    item #13 from prior planning, deferred.
+
+[ ] Model update detection + opt-in swap prompt
+    When a provider releases a new top-tier model,
+    prompt the user to swap rather than silently keep
+    the old one. Backlog item #10 from prior planning,
+    deferred.
+
+════════════════════════════════════════════════════════════
+4. DATA / TESTING (use WaxFrame_Playbook_Tests_To_Run.txt)
+════════════════════════════════════════════════════════════
+
+[ ] T1  Business Proposal      [REFINE]   estimate 4–6
+[ ] T2  Executive Summary      [REFINE]   estimate 3–5
+[ ] T3  RFP Response           [REFINE]   estimate 20–60+
+[ ] T4  Recipe                 [REFINE]   estimate 5–20+
+[x] T5  LinkedIn Post          [SCRATCH]  measured: 5 rounds / 7 min
+        Builder: Claude 3.7 Sonnet · Stopped at 4/6 satisfied
+        Run on Alfredo (Anduril internal Open WebUI gateway)
+        with 6-AI hive: Cl37S, Cl46O, Gem25P, Gem25F, GPT4o,
+        GPT4om. Adapted from existing draft.
+        HYPOTHESIS CONFIRMED: short-form converged faster
+        than long-form prose — first short-form data point
+        in the playbook.
+[ ] T6  LinkedIn Profile       [SCRATCH]  NEW — first run
+        HYPOTHESIS: two-audience writing (recruiter + peer)
+        is a different convergence pattern than single-
+        audience prose. First profile-style data point in
+        the playbook.
+[ ] T7  Blog Post              [SCRATCH]  NEW — forward test
+        Compare against:
+          • v1.0 historical: 5 rounds / 7 min (specific
+            setup, Cl37S Builder)
+          • v2.0 historical: 37 rounds / 172 min, never
+            converged (generic setup, Gem25P Builder)
+          • Earlier 16-round historical entry (third
+            reference data point — context TBD)
+        T7 is the controlled rerun that validates the
+        project-setup-specificity hypothesis (Section 5).
+
+[ ] After T1–T4 run: replace "estimated N–N rounds"
+    text in document-playbooks.html with measured values
+    in "(measured, not estimated)" format matching the
+    existing Cover Letter / JD / Résumé entries.
+
+[ ] After T5–T7 run (assuming clean convergence): add
+    new <div class="dp-playbook"> sections to
+    document-playbooks.html with full structure (purpose
+    tile, real-world example block, rounds badge).
+    T5 LinkedIn Post is ready to add — pending T6 to
+    decide: under Content & Marketing, or new "Personal
+    & Profile" category?
+
+[ ] BONUS DATA POINT — Blog post convergence dataset
+    Same blog topic ("Why I Stopped Trusting Single-Model
+    AI for Network Docs") run multiple times with
+    different project setups, on the same Alfredo hive:
+      • v1.0 (May 6, WF v3.32.14): 5 rounds / 7 min,
+        4/6 satisfied, manual stop. Builder: Cl37S.
+        goalDocType: Social Media Post. lengthLimit:
+        800. goalNotes: 243 chars detailed anti-buzzword
+        constraint.
+      • v2.0 (May 7, WF v3.32.28): 37 rounds / 172 min,
+        never converged, manual bail. Builder: Gem25P.
+        goalDocType: Blog Post. lengthLimit: 1500.
+        goalNotes: 48 chars generic.
+      • 16-round historical entry: prior blog post run
+        referenced in earlier session notes. Setup
+        details, builder, and date NOT YET RECONSTRUCTED
+        — flagged for archive review. Sits between v1.0
+        (5 rounds, tight setup) and v2.0 (37 rounds,
+        loose setup) on the convergence spectrum.
+    NATURAL EXPERIMENT — feeds the project-setup
+    specificity callout in Section 5. Decide: do we
+    publish v1.0's clean output as the canonical blog
+    post for weirdave.github.io, or rerun v2.0 from
+    scratch with a tightened setup (= T7) to validate
+    the hypothesis?
+
+════════════════════════════════════════════════════════════
+5. DOCUMENTATION
+════════════════════════════════════════════════════════════
+
+[ ] ★ Project-setup specificity drives convergence
+    NEW from session 2026-05-07. Empirical finding:
+    convergence speed correlates with project-setup
+    specificity, not just document state. Same hive,
+    same topic, v1.0 (specific goalNotes 243 chars,
+    anchored persona, "Social Media Post" docType,
+    800-word limit, Cl37S builder) converged in 5 rounds.
+    v2.0 (generic goalNotes 48 chars, generic tone,
+    "Blog Post" docType, 1500-word limit, Gem25P builder)
+    ran 37 rounds without converging.
+    Multiple correlated variables but the goalNotes
+    shrinkage (243 → 48 chars) and docType flip
+    (Social → Blog) are the two biggest contributors.
+    LESSON FOR USERS: invest more time in setup
+    specificity — detailed goalNotes and accurate
+    docType pay off in fewer rounds.
+    Connects to existing convergence-principle callout
+    and model-diversity guidance below — they're all
+    facets of the same broader theme: explicit
+    constraints reduce convergence time.
+    PLACEMENT TBD: user manual? document-playbooks.html?
+    Both?
+
+[ ] Builder selection heuristic
+    NEW from session 2026-05-07. Companion finding to
+    the project-setup specificity item above. Empirical
+    pattern: same hive, Cl37S as Builder converged
+    cleanly on multiple docs (Blog v1.0, LinkedIn post),
+    Gem25P as Builder failed to converge on equivalent
+    prose. Likely cause: Gem25P's Builder output invites
+    more reviewer dissent (specifically from itself as
+    a reviewer of its own output, plus from Cl46O).
+    Worth documenting as a "Builder selection" guide
+    in the user manual once we have more data points
+    across doc types.
+
+[ ] Convergence-principle callout
+    "Starting from scratch converges faster than refining
+    a heavily misaligned draft" — backed by the cook's-
+    résumé-adapted-for-network-engineer example data
+    point. Now ALSO backed by the v1.0 vs v2.0 setup-
+    specificity finding above. Placement TBD: README,
+    user manual, or playbooks. Open questions on
+    placement priority and tone — not yet answered.
+
+[ ] User-manual guidance on model diversity
+    For model-server deployments: the Recommend-a-Model
+    convergence trap. Minimum-two-distinct-models rule.
+    Document somewhere in the user manual.
+
+[ ] WaxFrame_Backlog_Master.txt (this file)
+    Keep this file updated. Treat it as the
+    authoritative backlog. Punch lists in chat sessions
+    feed back into this file before the chat ends.
+    SESSION RULE (added 2026-05-07): when Claude pulls
+    items from memory or backlog into a conversation,
+    Claude cites the source explicitly ("from your
+    master backlog Section 1 BUGS") rather than treating
+    them as shared context. Master backlog file is the
+    contract — if something isn't in it, it's not real.
+
+════════════════════════════════════════════════════════════
+6. CSS CLEANUP (parked work)
+════════════════════════════════════════════════════════════
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+════════════════════════════════════════════════════════════
+7. WAXFRAME FREE EDITION
+════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+    NOTE: v3.32.29 dot-strip overhaul + v3.32.30 Sat
+    Debug toolbar wiring are both candidates for Free
+    parity. Sat Debug is dev-tooling so probably
+    Pro-only; dot-strip overhaul is end-user UX so
+    should land in Free.
+
+════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first, last 10 items)
+════════════════════════════════════════════════════════════
+
+[x] v3.32.30 — Sat Debug toggle moved to dev toolbar
+    [x] WF_DEBUG.satDebugOn field + setSatDebug() method,
+        mirroring the deepDiveOn / setDeepDive pattern.
+        localStorage key 'waxframe_satdebug' persists
+        across reloads. ⭐ Sat Debug button on dev
+        toolbar between 📋 View Captures and Cleanup
+        separator. window._wfSatDebug flag from v3.32.29
+        removed entirely; WF_DEBUG.satDebugOn is the
+        single source of truth. Diagnostic emit format
+        unchanged.
+
+[x] v3.32.29 — Length-guard fix · Sat diagnostic ·
+                Laptop dot-strip overhaul
+    [x] #7 rearmLengthGuard saveSession reorder. Moved
+        to last statement so persisted console snapshot
+        keeps the "re-armed" entry after refresh. Override
+        flag round-trips correctly either way; cosmetic
+        console-history fix.
+    [x] Satisfaction-indicator diagnostic instrumentation
+        in setBeeStatus. Initial v3.32.29 release gated
+        behind window._wfSatDebug (replaced in v3.32.30
+        with toolbar toggle). Emits one console.debug
+        '[wfSat]' line per call capturing input state,
+        _cleanThisRound membership before/after, classList
+        before/after, effective state, and final summary.
+    [x] Laptop dot-strip overhaul (≤1600px viewport):
+        ring width 2px → 5px; previously-missing
+        convergence signal added (transparent bg + green
+        ring + ★ overlay for satisfied reviewers; gold
+        fill stays for satisfied Builder); 3-line custom
+        hover/focus tooltip with live state updates
+        replacing native title; keyboard-accessible
+        (tabindex 0, focus-visible accent ring).
+
+[x] v3.32.28 — #6b convergence-path length check
+    [x] Both unanimous and majority paths consult length
+        constraint before history.push, gated on override
+        flag. New helper getLengthStatus(). 'discard'
+        blocks celebration, user edits and re-runs.
+
+[x] v3.32.28 — #6c toolbar "Length guard: off" indicator
+    [x] Amber pill in .work-topbar-right, hidden by
+        default, shown when override is true. Click
+        re-arms via wfConfirm. Wired into clearProject,
+        both loadSession paths, initWorkScreen, and all
+        four 'continue_anyway' branches.
+
+[x] v3.32.28 — #6d symmetric undersized guard
+    [x] LENGTH_FLOOR_RATIO = 0.5. Both bloat-fail blocks
+        compute undersizedFail. Trajectory awareness
+        mirrored. Same override governs both directions.
+    NOTE: superseded by #8 length mode overhaul — the
+    implicit-floor design is being replaced by explicit
+    user-opted modes.
+
+[x] v3.32.27 — prior baseline (5/6/2026)
+
+════════════════════════════════════════════════════════════
+END OF FILE — keep updating
+════════════════════════════════════════════════════════════
