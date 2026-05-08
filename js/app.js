@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-017';         // build stamp — update each session
+const BUILD       = '20260508-018';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -8438,6 +8438,45 @@ function renderReferenceCards() {
   });
 }
 
+// File-type → inline SVG icon for reference cards. Each upload type gets a
+// document-with-folded-corner shape (cream fill + amber border, matching
+// WaxFrame palette) with a colored type label inside (PDF / DOC / PPT / XLS /
+// TXT / MD). Pasted text gets a clipboard-style alternate. Unknown extensions
+// fall back to a plain document outline. All SVG inline — no external assets,
+// air-gap safe, scales crisp at any size, no font-rendering inconsistencies
+// across OSes that emoji-based icons would have.
+function getRefSourceIcon(doc) {
+  const docPath = '<path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FAEBC7" stroke="#C99A2B" stroke-width="1.4"/><path d="M20 2 V10 H28" fill="none" stroke="#C99A2B" stroke-width="1.4"/>';
+  const tx = (label, color, y) => `<text x="16" y="${y || 26}" text-anchor="middle" font-size="7" font-weight="800" fill="${color}" font-family="Arial,sans-serif">${label}</text>`;
+  const wrap = (inner) => `<svg viewBox="0 0 32 36" width="22" height="25" class="ref-card-source-icon" aria-hidden="true">${inner}</svg>`;
+
+  if (doc.source !== 'upload') {
+    // Pasted text — clipboard glyph (board with clip on top + ruled lines)
+    return wrap('<rect x="6" y="4" width="20" height="28" rx="2" fill="#FAEBC7" stroke="#C99A2B" stroke-width="1.4"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#C99A2B"/><line x1="10" y1="14" x2="22" y2="14" stroke="#888" stroke-width="1.2"/><line x1="10" y1="19" x2="22" y2="19" stroke="#888" stroke-width="1.2"/><line x1="10" y1="24" x2="18" y2="24" stroke="#888" stroke-width="1.2"/>');
+  }
+  const name = (doc.filename || doc.name || '').toLowerCase();
+  if (name.endsWith('.pdf'))                                                     return wrap(docPath + tx('PDF', '#C92B2B'));
+  if (name.endsWith('.docx') || name.endsWith('.doc'))                           return wrap(docPath + tx('DOC', '#1E5BB0'));
+  if (name.endsWith('.pptx') || name.endsWith('.ppt'))                           return wrap(docPath + tx('PPT', '#D2691E'));
+  if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xls')) return wrap(docPath + tx('XLS', '#1B7C3D'));
+  if (name.endsWith('.md'))                                                      return wrap(docPath + tx('MD',  '#0F766E', 27));
+  if (name.endsWith('.txt'))                                                     return wrap(docPath + tx('TXT', '#555555'));
+  return wrap(docPath); // unknown extension — plain document silhouette
+}
+
+// Tooltip label paired with the icon — surfaced via the source-badge title attr.
+function getRefSourceLabel(doc) {
+  if (doc.source !== 'upload') return 'Pasted text';
+  const name = (doc.filename || doc.name || '').toLowerCase();
+  if (name.endsWith('.pdf')) return 'PDF document';
+  if (name.endsWith('.docx') || name.endsWith('.doc')) return 'Word document';
+  if (name.endsWith('.pptx') || name.endsWith('.ppt')) return 'PowerPoint document';
+  if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xls')) return 'Excel spreadsheet';
+  if (name.endsWith('.md')) return 'Markdown file';
+  if (name.endsWith('.txt')) return 'Plain text file';
+  return 'Uploaded file';
+}
+
 // Build a single card's markup. Source-mode determines whether the body shows
 // a textarea (paste) or a read-only file-status row (upload). The name input
 // is always editable. Up/Down arrows hide on first/last to avoid no-op clicks.
@@ -8446,12 +8485,12 @@ function refCardMarkup(doc, index) {
   const isFirst = index === 0;
   const isLast  = index === total - 1;
   const stats = computeRefStats(doc.text);
-  const sourceIcon  = doc.source === 'upload' ? '📄' : '📋';
-  const sourceLabel = doc.source === 'upload' ? 'Uploaded file' : 'Pasted text';
+  const sourceIcon  = getRefSourceIcon(doc);
+  const sourceLabel = getRefSourceLabel(doc);
   const idAttr = esc(doc.id);
 
-  const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">↑</button>` : '';
-  const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">↓</button>` : '';
+  const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">▲</button>` : '';
+  const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">▼</button>` : '';
   // Position badge sits between the up/down arrows so the number changes
   // visibly right where the user clicks — no manual needed to explain that
   // first-listed material reads as most authoritative to the hive.
@@ -8460,7 +8499,7 @@ function refCardMarkup(doc, index) {
     : '';
 
   const body = doc.source === 'upload'
-    ? `<div class="ref-card-upload-status">📄 <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
+    ? `<div class="ref-card-upload-status">${sourceIcon} <strong>${esc(doc.filename || doc.name)}</strong> — ${stats.chars.toLocaleString()} chars · text is read-only · remove and re-upload to replace</div>`
     : `<div class="ref-card-paste-wrap">
          <div class="ref-card-line-numbers" id="refLineNums-${idAttr}"></div>
          <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>
