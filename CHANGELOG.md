@@ -1,6 +1,29 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.10
+**Build:** `20260508-017` · **Released:** May 8, 2026
+
+UX polish release sandwiched between R5b (token migration) and R6 (work screen migration). Three changes: Starting Document screen finally gets its own bee mascot, the Reference Material screen's "lots of grey" problem gets a Hive Tile redesign per the D1 mockup, and the duplicate `.ref-card-position` rule from earlier UI iterations is consolidated.
+
+- **Starting Document bee added.** Setup Step 5 was the only setup screen without a bee mascot — `.is-bare` modifier dating back to v3.22.7. With the new `WaxFrame_Starting_Bee_v1.png` (racing helmet + golden trail), the visual symmetry across all 5 setup screens is restored. Removed `is-bare` from the section header, added the bee `<img>` before the title block. New asset shipped in `images/`.
+- **Reference Material — D1 Hive Tile redesign.** Solves the "lots of grey once you load documents" complaint. Each loaded reference card now reads as a comb cell rather than a generic data row.
+  - **`.ref-card`** — border bumped from `1px solid var(--border)` to `2px solid var(--accent)`. The amber border gives loaded docs more visual weight than the action cards above (correct hierarchy — populated docs > "add another" affordances).
+  - **`.ref-card-hdr`** — `surface2` background dropped to transparent. Solid 1px grey bottom-border replaced with `1px dashed var(--accent-dim)` to softly separate header from body without a hard line.
+  - **`.ref-card-position`** — numbered badge converted from rounded-rect (`border-radius: var(--radius-sm)`) to **hex shape** via `clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)`. Filled accent gold with cream-colored numerals. Width 28px × height 32px for proper hex aspect ratio.
+  - **`.ref-card-upload-status`** — boxed treatment dropped (`background: transparent`, `border: none`, `padding: 0`). The "filename — N chars · text is read-only · ..." line becomes a quiet inline note instead of a banded grey row.
+  - **`.ref-card-counters`** — repositioned as inline pipe-separated dim metrics. Added `::after { content: '·' }` pseudo on `.ref-counter-item:not(:last-child)` for the visual separator. Counter values dimmed from `var(--accent)` to `var(--text-dim)` (so they don't compete with the TOTAL bar's accent gold). Sublabel uppercase + letter-spacing dropped — the per-card row is metadata, not a heading.
+- **`.ref-counter-row` — chrome stripped (TOTAL REFERENCE SIZE bar).** Direct fix for the "looks like an H1" feedback. Removed `background: var(--surface2)`, `border: 1px dashed var(--border2)`, `border-radius`. Replaced with a single `border-bottom: 1px solid var(--border2)` ground line that softly closes the header section above it. Padding adjusted from `var(--space-6) var(--space-10)` (boxed) to `var(--space-4) 0 var(--space-10)` (inline). Result: the bar reads as a status footer to the screen header, not a peer block competing with the section H1.
+- **`.ref-action-target` — accent dashed border.** Paste Text and Upload File cards now use `2px dashed var(--accent)` instead of `var(--border2)`. Brings the dashed-border affordance into the WaxFrame amber palette and visually distinguishes "interactive area" from neutral chrome. Hover/`drag-over` state still fills with `var(--accent-dim)` background — same hover effect as before but now the at-rest border already matches the theme.
+- **Duplicate `.ref-card-position` rule consolidated.** Two competing definitions existed in `style.css` (former lines 9036 and 9059) from earlier iteration cycles — the later one mostly won via source order, but the earlier one's `border: 1px solid var(--accent)` was leaking through since it wasn't redeclared. With the hex shape replacing both, the consolidation is automatic. Net: one rule where there used to be two.
+- **What did NOT change.** No JS edits — all changes are CSS-only plus the one HTML diff for the bee. The per-card counter HTML structure (emitted by app.js around L8485) is unchanged; the new pipe-separated visual is achieved purely via CSS pseudo-elements. No 80ch column constraints touched. No work-screen rules touched. No helper-page styling touched. R6 surface untouched.
+- **Smoke-test surface.** Reference Material screen with 0 docs (action cards only, TOTAL bar reads "0 docs"), 1 doc, 3 docs (matches your screenshot), 6+ docs (vertical stacking density check). Starting Document screen header at all 3 viewports (1024 / 1440 / 1920) — bee appears next to the title without breaking the existing layout. Builder screen + Project screen + Worker Bees screen visually identical to v3.34.9 (no regressions).
+- **Token migration unaffected.** R5a + R5b token swaps from v3.34.8 + v3.34.9 untouched. Total `var(--fs-*)` and `var(--space-*)` usages in `style.css` byte-identical to v3.34.9 except where rules I edited used those tokens (still consume tokens). Migration progress remains ~50%; R6 still next on the roadmap.
+- **Out of scope (still tracked):** R6 (work screen + work-screen modals, ~161 sites), R7 (5 helper pages, ~179 sites), R8 (global chrome, ~157 sites), R-final (selective `clamp()` fluid scaling).
+- **Version stamps in code bumped** to v3.34.10 / build 20260508-017 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+- **New asset shipped:** `images/WaxFrame_Starting_Bee_v1.png` (racing helmet, golden trail).
+
+---
 ## v3.34.9
 **Build:** `20260508-016` · **Released:** May 8, 2026
 
