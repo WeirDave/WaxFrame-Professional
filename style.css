@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-009
+   Build: 20260508-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9470,6 +9470,19 @@ kbd {
   width: 180px;
   height: auto;
   display: block;
+}
+/* Laptop tier — shrink mascot to recover vertical budget in the amber band.
+   v3.34.3: at 1366×768 with a 7-AI hive (3 rows of builder cards), the
+   180px mascot pushed the band to ~200px tall and the page overflowed by
+   ~40px. 110px keeps the mascot visually present (it's still a clearly-
+   recognizable bee character) but lets the band collapse to title+text
+   height (~140px) so 7-AI Setup 2 fits at 1366×768 without scroll.
+   Compaction principle compliance: the bee is decorative — title and
+   paragraph text carry all information. Mascot is an "ambient mascot"
+   per the canonical-tiers comment block, allowed to shrink at compaction
+   tiers. Used on Setup 1, 2, 3, 4 — single rule, four-screen win. */
+@media (max-width: 1600px) {
+  .hp-section-bee { width: 110px; }
 }
 
 .hp-section-title-block {

@@ -1,6 +1,19 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.3
+**Build:** `20260508-010` · **Released:** May 8, 2026
+
+Final fast-follow on the v3.34.x R1 series. Setup 2 with a 7-AI hive was overflowing at WF-Floor (1366×768) by ~40px even with all the compaction rules from v3.34.1/v3.34.2 firing correctly. Inspector confirmed compaction was working — icons at 32px, names at 13px, cards at 3.8:1. The remaining culprit was the amber section header's bee mascot at 180px wide × ~180px tall, which dominated the band's height and ate the vertical budget. Single-rule fix: shrink the mascot at Laptop tier.
+
+- **`.hp-section-bee` shrinks from 180px → 110px at Laptop tier.** New rule: `@media (max-width: 1600px) { .hp-section-bee { width: 110px; } }`. Mascot stays visually present (still recognizable bee character) but the amber band collapses to roughly title+paragraph height (~140px) instead of being mascot-dominated (~200px). At 1366×768 with a 7-AI hive, Setup 2 now fits without scroll.
+- **Compaction principle compliance verified.** `.hp-section-bee` is decorative — the section title and paragraph text carry all information. The canonical-tiers comment block (added in v3.34.0) explicitly permits `display: none` on "ambient mascots" at compaction tiers; shrinking is an even softer treatment. No information lost.
+- **Four-screen win from one rule.** `.hp-section-bee` is used on Setup 1 (Worker Bees), Setup 2 (Builder), Setup 3 (Project), and Setup 4 (Reference). All four get the smaller mascot at Laptop tier — gives every setup screen more vertical breathing room at 1366×768 and 1500×900, not just the one that triggered the fix.
+- **Audit confirmed zero blast radius on the work screen.** Before shipping: confirmed `.hp-section-bee` is referenced only in the four setup screens (lines 85, 139, 191, 350 in `index.html`); never appears in the work screen. Confirmed all 80ch column rules at lines 885, 886, 1939, 2133, 2141 are untouched. The Working Document column's hard-won 80-character constraint is unaffected.
+- **R1 phase complete.** v3.34.0 established the canonical viewport tier system + compaction principle and fixed the work-right-logo cascade. v3.34.1 fixed the Setup 2 builder card aspect ratio + migrated the compaction trigger to canonical 1600/900. v3.34.2 fixed a cascade-order bug in the builder-pick icon/name rules (same pattern as the work-right-logo bug). v3.34.3 closes the residual budget overflow at 1366×768 with 7-AI hives. Architecture foundation is in place; remainder of the fluid scaling pass (R2 dead-CSS sweep, R3 stale-comment audit, R4 spacing tokens, R5+ font-size token migration, R-final clamp() fluid scaling) proceeds from this baseline.
+- **Version stamps in code bumped** to v3.34.3 / build 20260508-010 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.2
 **Build:** `20260508-009` · **Released:** May 8, 2026
 
