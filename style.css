@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-013
+   Build: 20260508-014
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -87,6 +87,29 @@ input, textarea, select { font-family: inherit; }
   --fs-xl:   22px;   /* screen-level headings */
   --fs-2xl:  28px;   /* logo/brand name */
   --fs-mono: 13px;   /* all Courier New — textarea, code */
+  /* ── Spacing scale (px-named) ──
+     Tokens for padding / margin / gap. Number = pixel value, so migration
+     from hardcoded `padding: 12px` to `padding: var(--space-12)` is a
+     direct textual swap. Covers the most common values from v3.34.6
+     frequency analysis — top 5 (8/10/6/12/4) collectively >85% of all
+     spacing declarations. Odd values (3, 5, 7) intentionally NOT tokenized
+     — they're either fine-tuning that should snap to nearest even during
+     migration, or evaluated case-by-case. 1px / 2px values used for
+     borders and hairlines are out of scope for the spacing scale. */
+  --space-4:    4px;
+  --space-6:    6px;
+  --space-8:    8px;
+  --space-10:  10px;
+  --space-12:  12px;
+  --space-14:  14px;
+  --space-16:  16px;
+  --space-18:  18px;
+  --space-20:  20px;
+  --space-24:  24px;
+  --space-28:  28px;
+  --space-32:  32px;
+  --space-40:  40px;
+  --space-48:  48px;
 }
 
 /* ══════════════════════════════════════════════════════════════
