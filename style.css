@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-011
+   Build: 20260508-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1932,7 +1932,7 @@ html, body {
   font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   flex-shrink: 0;
-  margin: 8px 0;
+  margin: 0 0 8px;
   background: transparent;
   border-radius: 10px 10px 0 0;
 }
@@ -2188,7 +2188,7 @@ html, body {
   justify-content: flex-end;
   gap: 12px;
   padding: 12px 14px;
-  margin: 8px 8px 4px;
+  margin: 6px 8px 4px;
   flex-shrink: 0;
   background: rgba(0,0,0,0.55);
   backdrop-filter: blur(6px);
