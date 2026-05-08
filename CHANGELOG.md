@@ -1,6 +1,23 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.6
+**Build:** `20260508-013` · **Released:** May 8, 2026
+
+R3 of the Fluid Scaling Architectural Pass — stale-comment audit. Four CSS comments still claimed "1422px" (or "1422–1600px") as the laptop tier boundary or the minimum viewport width, but the floor was lowered to 1366×768 in v3.34.0. Plus a programmatic cascade-order audit (the @media-then-unscoped pattern surfaced in v3.34.2) confirmed zero remaining suspects. **Pure documentation cleanup, zero behavior change.**
+
+- **Four stale comments updated to reflect the v3.34.0 floor.**
+  - Line 951: `at laptop widths (~1422px) it cleanly truncates instead of overlapping.` → `(~1366px)`
+  - Line 3455: `/* ── 3-column body grid — designed for 1422px minimum viewport ── */` → `1366px`
+  - Line 3891: `LAPTOP TIER (1422–1600px): collapse cols 2+3 into a single` → `(1366–1600px)`
+  - Line 8767: `/* ── Laptop tier (1422–1600px): scale down from 1920 base ── */` → `(1366–1600px)`
+- **Historical version-log block at lines 2759–2767 intentionally preserved.** That block documents the evolution `v3.27.10 → v3.27.11 → v3.34.1` of the builder-pick compaction rule, where the 1421/1422 references describe the historical state at the time of each version. It's documentation of how the rule got to its current shape, not a stale claim about current state. Leaving as-is.
+- **Cascade-order audit run programmatically — zero suspects.** Audit script enumerated every selector that appears inside an `@media` block AND also appears as an unscoped rule declared *after* that @media block. Result: no instances. The pattern surfaced in v3.34.2 (where `.builder-pick-grid-large .builder-pick-icon` was being stomped by a later unscoped duplicate) was the only case, and v3.34.2 fixed it. Adding programmatic audit to the pre-release checklist going forward.
+- **80ch column constraints byte-identical to v3.34.5.** None of the four edits touched any line containing `80ch`. The Working Document column's 80-character constraint is unaffected.
+- **Out of scope (still tracked):** R4 spacing-token introduction (`--space-1`…`--space-N`), R5+ font-size token migration (440 sites), R-final selective `clamp()`-based fluid scaling.
+- **Version stamps in code bumped** to v3.34.6 / build 20260508-013 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.5
 **Build:** `20260508-012` · **Released:** May 8, 2026
 
