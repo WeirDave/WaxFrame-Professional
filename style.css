@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-007
+   Build: 20260508-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2739,7 +2739,14 @@ html, body {
      deliberate landscape shape that scales naturally — at laptop widths
      each card is ~470×235, at full desktop ~540×270, with content
      centered in the available space at every size. */
-  aspect-ratio: 2 / 1;
+  /* v3.34.1: aspect-ratio 2/1 → 2.6/1. At desktop-tier widths above
+     the laptop compaction trigger (1872×938 in particular), the prior
+     2:1 ratio made cards ~215px tall apiece, and two rows + bee mascot
+     + amber band + Continue button overflowed the viewport, forcing
+     scroll. 2.6:1 keeps cards feeling substantial while pulling height
+     down enough that the full Setup 2 page fits in 938+ tall viewports
+     without scroll. Cards remain landscape and visually grounded. */
+  aspect-ratio: 2.6 / 1;
 }
 /* v3.27.10: shrink Builder cards at laptop widths (≤1421px = the project's
    established laptop threshold) and when vertically compact (≤900px tall =
@@ -2748,8 +2755,12 @@ html, body {
    numbers eat too much vertical space, especially with devtools open.
    v3.27.11: pulled cards down significantly further — aspect 2.6→3.2,
    icon 42→32, padding 20/14/16→14/12/12, font 14→13. The v3.27.10 numbers
-   were still too tall at 1422×811. Target ~⅔ of v3.27.10 height. */
-@media (max-width: 1421px), (max-height: 900px) {
+   were still too tall at 1422×811. Target ~⅔ of v3.27.10 height.
+   v3.34.1: width trigger updated from non-canonical 1421px → canonical
+   Laptop boundary 1600px. Now fires across the full Laptop tier instead
+   of just the bottom 55px of it. Height trigger 900px unchanged (canonical
+   Short tier). Logic: compact whenever in Laptop tier OR Short tier. */
+@media (max-width: 1600px), (max-height: 900px) {
   .builder-pick-grid-large .builder-pick-btn {
     padding: 12px 12px 10px;
     gap: 6px;
