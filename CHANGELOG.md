@@ -1,6 +1,20 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.7
+**Build:** `20260508-014` · **Released:** May 8, 2026
+
+R4 of the Fluid Scaling Architectural Pass — spacing-token introduction. Adds 14 px-named spacing tokens to `:root` for use in future migrations. **Pure addition, zero consumers, zero rendering change.** This release defines the vocabulary for the R5+ token-migration pass; it doesn't yet migrate anything.
+
+- **Spacing scale added at `:root`** alongside the existing `--fs-*` font-size scale: `--space-4` (4px) through `--space-48` (48px), 14 tokens covering 4/6/8/10/12/14/16/18/20/24/28/32/40/48. Token name encodes the pixel value directly — `--space-12` = 12px — so migration of hardcoded values is a textual swap (`padding: 12px` → `padding: var(--space-12)`) with no translation table required.
+- **Scale sized from frequency analysis of the v3.34.6 codebase.** Top 5 spacing values used in `padding`/`margin`/`gap` declarations across `style.css`: 8px (93 uses), 10px (77), 6px (74), 12px (63), 4px (57) — collectively >85% of spacing declarations. Less common but real values (16, 14, 24, 20, 32, 18, 28, 40, 48) all included. Rare-but-real odd values (3px, 5px, 7px) intentionally NOT tokenized — during migration these should either snap to nearest even tokens (acceptable fine-tuning loss) or be evaluated case-by-case as intentional sub-pixel adjustments. 1px and 2px values used for borders/hairlines are out of spacing-scale scope (they'll get their own `--border-*` tokens if/when needed).
+- **Zero consumers in v3.34.7.** Adding tokens doesn't change any rendered output — the new variables sit in `:root` until a consumer references them. The R5+ migration releases will start consuming them screen by screen.
+- **Why this is its own release.** Defining the token vocabulary is a cohesive single-purpose change with zero risk: no consumers, no behavior change, no smoke-test surprises possible. Bundling it with the first migration release would conflate "scale design" with "consumer migration" in the changelog. R4 isolates the design decision.
+- **80ch column constraints unchanged.** This release adds new declarations to `:root` and changes nothing else. All `calc(80ch + ...)` rules unchanged.
+- **Out of scope (still tracked):** R5+ font-size token migration (440 hardcoded `font-size: Npx` sites to convert to `var(--fs-*)`), R5+ spacing-token migration (~600 hardcoded `padding/margin/gap: Npx` sites to convert to `var(--space-*)`), R-final selective `clamp()`-based fluid scaling.
+- **Version stamps in code bumped** to v3.34.7 / build 20260508-014 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.6
 **Build:** `20260508-013` · **Released:** May 8, 2026
 
