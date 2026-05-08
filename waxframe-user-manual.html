@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260508-004
+     Build: 20260508-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-004">
+  <meta name="waxframe-build" content="20260508-005">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.33">
+  <link rel="stylesheet" href="style.css?v=3.33.0">
 </head>
 <body class="helper-body">
 
@@ -486,14 +486,33 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Length Constraint</div>
-      <p>Below the goal fields is a section headed <strong>Length Constraint</strong>. This is where you set a maximum length for your document — not in the goal fields. Use it whenever your document must fit within a specific limit.</p>
-      <p>The section contains two inputs:</p>
-      <ul>
-        <li>A number field — enter your maximum here. e.g. <em>200</em></li>
-        <li>A unit dropdown — <strong>Characters</strong>, <strong>Words</strong>, <strong>Paragraphs</strong>, or <strong>Pages</strong></li>
-      </ul>
-      <p>When set, WaxFrame formats the constraint and includes it in every prompt sent to your AIs in a standardised way, instructing them to keep the document within the limit. Leave both fields blank if your document has no length requirement.</p>
-      <p><strong>Important:</strong> put your length limit here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you set it here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
+      <p>Below the goal fields is a section headed <strong>Length Constraint</strong>. This is where you tell WaxFrame what kind of length rule applies to your document — not in the goal fields. As of v3.33.0 there are four modes covering the common cases:</p>
+      <table class="wh-table">
+        <thead><tr><th>Mode</th><th>What it does</th><th>When to use it</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><strong>No limit</strong></td>
+            <td>No length gating. Reviewers and Builder receive no length instruction. No round-end or convergence-time guards fire.</td>
+            <td>Default for documents where length is irrelevant or you want the hive to choose what fits.</td>
+          </tr>
+          <tr>
+            <td><strong>Hard cap</strong></td>
+            <td>Ceiling only. The Builder is told "stay at or below the limit; shorter is fine." Round-end and convergence-time guards fire only when the document goes over.</td>
+            <td>Documents with a maximum but no minimum — a tweet under 280 characters, a cover letter under 500 words, a report under 10 pages.</td>
+          </tr>
+          <tr>
+            <td><strong>Target</strong></td>
+            <td>Aim to hit the target value exactly. Both ceiling and floor guards are armed against the same value. Round-end checks are trajectory-aware so you only get prompted on rounds that move <em>away</em> from the target — a Builder converging from 320 down to 305 toward a 300-word target won't nag you, but a Builder going 305 to 320 will.</td>
+            <td>Documents where you want the hive aiming at a specific length — a 500-word essay, a 10-line poem, a strict word-count submission.</td>
+          </tr>
+          <tr>
+            <td><strong>Range</strong></td>
+            <td>Stay between a minimum and a maximum that you supply. The Builder is told "aim for the middle of that range." Both guards armed against their respective bounds.</td>
+            <td>Documents with both a floor and a ceiling — "between 800 and 1200 words", "3 to 5 paragraphs", "2 to 4 pages".</td>
+          </tr>
+        </tbody>
+      </table>
+      <p><strong>Important:</strong> put your length rule here — not in the Scope &amp; constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you pick a mode here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p>The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.</p></div>
@@ -502,7 +521,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">How Length Constraint is measured</div>
-      <p>Behind the scenes, after the Builder returns each round, WaxFrame measures the output in the exact unit you chose and rejects the round if it exceeds your limit. The prior document is preserved when a round is rejected — you never lose work to a gate failure. Here is how each unit is counted:</p>
+      <p>Behind the scenes, after the Builder returns each round, WaxFrame measures the output in the exact unit you chose. If the result violates your active mode (over the cap, away from the target, outside the range), the gate prompts you with three options: <strong>Discard</strong> the round, <strong>Keep</strong> it anyway, or <strong>Continue anyway</strong> (which disables the guard for the rest of the project). The prior document is preserved on Discard — you never lose work to a gate failure. Here is how each unit is counted:</p>
       <table class="wh-table">
         <thead><tr><th>Unit</th><th>How it is counted</th><th>Notes</th></tr></thead>
         <tbody>
@@ -528,7 +547,11 @@
           </tr>
         </tbody>
       </table>
-      <p>If the Builder returns a document that exceeds your limit, WaxFrame rejects the round and leaves the prior document untouched. You will see a length-gate message in the console telling you the measured output in your chosen unit alongside the limit, so you can decide whether to raise the limit, tighten the goal, or rerun the round.</p>
+      <p>The convergence-time gate is symmetric: when the hive converges (unanimous or majority), WaxFrame checks the final document against your mode's bounds before celebrating. If the doc is over a cap, under a target, or outside a range, you get the same three-option prompt — Discard returns you to the work screen to edit and re-run, Keep accepts the convergence, Continue anyway accepts and silences the guard for the rest of the project session.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>If you projects from before v3.33.0 (the mode picker addition), the migration assumes <strong>Hard cap</strong> mode if you had a length set, or <strong>No limit</strong> if you didn't. Open the project on the Setup 3 screen, look at the active pill, and switch modes if you want different behavior.</p></div>
+      </div>
     </div>
 
     <div class="wh-block">
@@ -1703,7 +1726,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.32.33"></script>
+<script src="js/version.js?v=3.33.0"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
