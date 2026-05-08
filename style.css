@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-016
+   Build: 20260508-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -8928,11 +8928,9 @@ kbd {
   display: flex;
   align-items: center;
   gap: var(--space-14);
-  padding: var(--space-6) var(--space-10);
-  background: var(--surface2);
-  border: 1px dashed var(--border2);
-  border-radius: var(--radius-sm);
-  margin-bottom: var(--space-8);
+  padding: var(--space-4) 0 var(--space-10);
+  border-bottom: 1px solid var(--border2);
+  margin-bottom: var(--space-14);
   flex-wrap: wrap;
 }
 .ref-counter-label {
@@ -9017,40 +9015,21 @@ kbd {
 }
 .ref-card {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 2px solid var(--accent);
   border-radius: var(--radius);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .ref-card:focus-within {
-  border-color: var(--accent);
+  border-color: var(--accent-bright, var(--accent));
 }
 .ref-card-hdr {
   display: flex;
   align-items: center;
   gap: var(--space-8);
   padding: var(--space-8) var(--space-12);
-  background: var(--surface2);
-  border-bottom: 1px solid var(--border);
-}
-.ref-card-position {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 24px;
-  height: 22px;
-  padding: 0 var(--space-6);
-  font-size: var(--fs-12);
-  font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border: 1px solid var(--accent);
-  border-radius: var(--radius-sm);
-  flex-shrink: 0;
-  cursor: help;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  border-bottom: 1px dashed var(--accent-dim);
 }
 .ref-card-source-badge {
   font-size: var(--fs-16);
@@ -9061,15 +9040,14 @@ kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 22px;
-  height: 22px;
-  padding: 0 var(--space-6);
+  width: 28px;
+  height: 32px;
   margin: 0 2px;
   font-size: var(--fs-12);
   font-weight: 700;
-  color: var(--accent);
-  background: var(--accent-dim);
-  border-radius: var(--radius-sm);
+  color: var(--surface);
+  background: var(--accent);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   flex-shrink: 0;
   cursor: help;
   font-variant-numeric: tabular-nums;
@@ -9170,17 +9148,19 @@ kbd {
   outline: none;
 }
 .ref-card-upload-status {
-  background: var(--surface2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   color: var(--text-dim);
   font-size: var(--fs-12);
-  padding: var(--space-10) var(--space-12);
+  padding: 0;
   line-height: 1.5;
 }
 .ref-card-counters {
   display: flex;
-  gap: var(--space-16);
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
   font-family: var(--font-mono);
   font-size: var(--fs-11);
   color: var(--text-dim);
@@ -9188,14 +9168,30 @@ kbd {
 .ref-card-counters .ref-counter-item {
   background: transparent;
   padding: 0;
+  margin-right: var(--space-12);
+  position: relative;
+}
+.ref-card-counters .ref-counter-item:not(:last-child)::after {
+  content: '·';
+  position: absolute;
+  right: -8px;
+  top: 0;
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+.ref-card-counters .ref-counter-sublabel {
+  color: var(--text-dim);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
 }
 .ref-card-counters .ref-card-count-chars,
 .ref-card-counters .ref-card-count-words,
 .ref-card-counters .ref-card-count-lines,
 .ref-card-counters .ref-card-count-paragraphs,
 .ref-card-counters .ref-card-count-tokens {
-  color: var(--accent);
-  font-weight: 600;
+  color: var(--text-dim);
+  font-weight: 500;
 }
 /* ── Setup 4 action row (v3.25.2) ── */
 /* Two compact dashed-border panels side-by-side, mirroring Setup 5's .drop-zone */
@@ -9208,7 +9204,7 @@ kbd {
   margin: 14px 0;
 }
 .ref-action-target {
-  border: 2px dashed var(--border2);
+  border: 2px dashed var(--accent);
   border-radius: var(--radius-md);
   padding: var(--space-16) var(--space-18);
   text-align: center;
