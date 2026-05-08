@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-005">
+  <meta name="waxframe-build" content="20260508-006">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.33.0">
+  <link rel="stylesheet" href="style.css?v=3.33.1">
 </head>
 <body>
 
@@ -1810,11 +1810,16 @@
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">About Length Constraint</h2>
     <div class="goal-info-body">
-      <p>Tell WaxFrame how long the final document should be. We enforce the limit using the most accurate measurement available for each unit — but results can vary with formatting, so keep that in mind.</p>
-      <div class="goal-info-row"><span class="info-label">Characters</span><span class="goal-info-desc">Counted directly from the text. Matches how web forms, SMS counters, and social media count. Accurate for plain English. Emoji and complex scripts can count differently than what appears on screen.</span></div>
-      <div class="goal-info-row"><span class="info-label">Words</span><span class="goal-info-desc">Counted by whitespace separation. Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs. If you're hitting a hard ceiling elsewhere, trim a few words under your target as a buffer.</span></div>
-      <div class="goal-info-row"><span class="info-label">Paragraphs</span><span class="goal-info-desc">Counted as blocks of text separated by blank lines. This is how markdown, plain text, and Word documents denote paragraph breaks. Headings and bullet lists count as paragraphs too if they're separated by blank lines.</span></div>
-      <div class="goal-info-row"><span class="info-label">Pages</span><span class="goal-info-desc">Approximated using 500 words per single-spaced 12pt page. This is the one unit WaxFrame cannot measure directly — actual page count depends on your font, margins, and line spacing. For firm limits, aim slightly under the target.</span></div>
+      <p>Pick a mode that matches what your document needs. The Builder is told the rule for the mode you choose, and round-end and convergence-time guards fire accordingly.</p>
+      <div class="goal-info-row"><span class="info-label">No limit</span><span class="goal-info-desc">No length gating. The Builder gets no length instruction. Use when length is irrelevant or you want the hive to choose what fits.</span></div>
+      <div class="goal-info-row"><span class="info-label">Hard cap</span><span class="goal-info-desc">Ceiling only. The Builder is told "stay at or below the limit; shorter is fine." Round-end and convergence-time guards fire only when the document goes over. Use for tweets, cover letters, single-page summaries — anywhere there's a maximum but no minimum.</span></div>
+      <div class="goal-info-row"><span class="info-label">Target</span><span class="goal-info-desc">Aim to hit a specific value. Both ceiling and floor guards are armed against the same number. Round-end checks are trajectory-aware so you only get prompted on rounds that move <em>away</em> from the target. Use for strict word-count submissions, fixed-length essays, or any "exactly N" requirement.</span></div>
+      <div class="goal-info-row"><span class="info-label">Range</span><span class="goal-info-desc">Stay between a minimum and maximum that you supply. The Builder is told to aim for the middle of that range. Both guards armed against their respective bounds. Use for "between 800 and 1500 words", "3 to 5 paragraphs", or any document with both a floor and a ceiling.</span></div>
+      <p>Length is measured in your chosen unit — characters, words, paragraphs, or pages. Pages cannot be measured directly from text, so they're approximated using 500 words per single-spaced 12pt page; the other three are direct-counted.</p>
+      <div class="goal-info-row"><span class="info-label">Characters</span><span class="goal-info-desc">Counted directly. Matches how web forms, SMS counters, and social media count. Accurate for plain English. Emoji and complex scripts can count differently than what appears on screen.</span></div>
+      <div class="goal-info-row"><span class="info-label">Words</span><span class="goal-info-desc">Counted by whitespace separation. Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs.</span></div>
+      <div class="goal-info-row"><span class="info-label">Paragraphs</span><span class="goal-info-desc">Counted as blocks of text separated by blank lines. Headings and bullet lists count as paragraphs if they're separated by blank lines.</span></div>
+      <div class="goal-info-row"><span class="info-label">Pages</span><span class="goal-info-desc">Approximated using 500 words per single-spaced 12pt page. WaxFrame cannot measure pages directly — actual page count depends on font, margins, and line spacing. For firm limits, aim slightly under.</span></div>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoLengthModal').classList.remove('active')">Got it →</button>
@@ -2023,9 +2028,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.33.0"></script>
-<script src="js/templates.js?v=3.32.13"></script>
-<script src="js/app.js?v=3.33.0"></script>
+<script src="js/version.js?v=3.33.1"></script>
+<script src="js/templates.js?v=3.33.1"></script>
+<script src="js/app.js?v=3.33.1"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
