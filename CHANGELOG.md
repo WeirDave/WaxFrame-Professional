@@ -1,6 +1,18 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.2
+**Build:** `20260508-009` · **Released:** May 8, 2026
+
+Fast follow on v3.34.1. Smoke-test at WF-Laptop (1500×900) revealed the compaction wasn't actually firing — cards looked nearly identical to desktop tier despite the media query matching. Diagnosis: same cascade-order bug pattern as the work-right-logo fix from v3.34.0. Two unscoped `.builder-pick-grid-large .builder-pick-icon` and `.builder-pick-name` rules were declared *after* the `@media` compaction block, silently overriding the compaction's `width: 32px` and `font-size: 13px` values with the desktop-tier `56px` / `15px`. Aspect-ratio compaction was firing (since that property only existed in the @media); icon and name compaction were not.
+
+- **Cascade order fixed.** Moved `.builder-pick-grid-large .builder-pick-icon { width: 56px; height: 56px; }` and `.builder-pick-grid-large .builder-pick-name { font-size: 15px; }` to *before* the `@media (max-width: 1600px), (max-height: 900px)` block. The 56/15 values now act as desktop-tier base values; the @media's 32/13 values can finally override them inside the laptop/short tier as originally intended.
+- **No content changes — pure ordering fix.** Visible at all viewports inside Laptop or Short tier (1366×768, 1500×900, anywhere ≤1600 wide or ≤900 tall): cards now show 32px icons + 13px name + tight 12px padding + 3.8:1 aspect, all in concert. Previously only the aspect ratio compacted and the rest stayed desktop-sized, producing the broken-looking "compaction is half-firing" state.
+- **Same bug pattern as v3.34.0's work-right-logo fix** — unscoped CSS rules declared after a media query that intends to override them. Adding "audit for unscoped rules declared after @media blocks" to the R2/R3 sweep checklist; this pattern likely exists elsewhere in the codebase given how the file grew over time.
+- **Smoke-tested at all six R1 viewports.** WF-Floor (1366×768), WF-Laptop (1500×900), WF-Window-QHD (1872×938), WF-Desktop-FHD (1920×1080), WF-Desktop-QHD (2560×1440), WF-Ultrawide (3440×1440). Setup 2 fits without scroll at all six viewports with proper compaction inside Laptop and Short tiers. Cards above 1600 wide and 900 tall use desktop-tier 2.6:1 sizing as designed.
+- **Version stamps in code bumped** to v3.34.2 / build 20260508-009 across the canonical 4-stamp checklist (`index.html` `waxframe-build` meta, `js/version.js` `APP_VERSION`, `js/app.js` `BUILD` constant, `index.html` cache-bust query strings on `style.css`, `js/version.js`, `js/templates.js`, `js/app.js`) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages. Each helper page's `waxframe-build` meta and comment-header `Build:` stamp synced. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`. `style.css` comment-header `Build:` synced to `20260508-009`.
+
+---
 ## v3.34.1
 **Build:** `20260508-008` · **Released:** May 8, 2026
 

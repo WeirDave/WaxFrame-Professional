@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-008
+   Build: 20260508-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2748,6 +2748,22 @@ html, body {
      without scroll. Cards remain landscape and visually grounded. */
   aspect-ratio: 2.6 / 1;
 }
+/* v3.27.7: scoped icon + name overrides for the large variant only. The
+   small builder-pick-grid (used in the change-builder modal) retains
+   36px / 13px sizing.
+   v3.34.2: moved ABOVE the @media compaction block. Previously these
+   were declared after the @media, so they stomped the compaction's
+   icon/name overrides (cascade-order bug — same pattern as the
+   work-right-logo fix in v3.34.0). At laptop tier the compaction's
+   icon: 32px and name: 13px were silently overridden by the 56px and
+   15px values here. Now compaction properly wins inside its tier. */
+.builder-pick-grid-large .builder-pick-icon {
+  width: 56px;
+  height: 56px;
+}
+.builder-pick-grid-large .builder-pick-name {
+  font-size: 15px;
+}
 /* v3.27.10: shrink Builder cards at laptop widths (≤1421px = the project's
    established laptop threshold) and when vertically compact (≤900px tall =
    devtools open, smaller laptops). Cards at full desktop (1422px+ wide AND
@@ -2773,16 +2789,6 @@ html, body {
   .builder-pick-grid-large .builder-pick-name {
     font-size: 13px;
   }
-}
-/* v3.27.7: scoped icon + name overrides for the large variant only. The
-   small builder-pick-grid (used in the change-builder modal) retains
-   36px / 13px sizing. */
-.builder-pick-grid-large .builder-pick-icon {
-  width: 56px;
-  height: 56px;
-}
-.builder-pick-grid-large .builder-pick-name {
-  font-size: 15px;
 }
 
 /* ── SECTION BEE IMAGE ── */
