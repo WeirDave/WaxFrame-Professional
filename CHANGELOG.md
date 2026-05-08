@@ -1,6 +1,23 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.4
+**Build:** `20260508-011` · **Released:** May 8, 2026
+
+R2 of the Fluid Scaling Architectural Pass — sub-floor dead-CSS sweep. With the floor lowered to 1366×768 in v3.34.0, all CSS rules using `max-width` thresholds below 1366px are unreachable: the min-screen-overlay (z-index 99999, opaque background, fixed inset 0) covers the viewport before any of those rules can render. Five such rules removed plus an empty stub block. Pure cleanup, zero behavior change at any reachable viewport.
+
+- **Empty `@media (max-width: 900px)` block removed.** Located inside the SCREENS 2 & 3 SETUP LAYOUT section, the block contained only whitespace inside its braces — pure cruft from a prior cleanup. No declarations, no comments. Net: 7 lines deleted.
+- **Two sub-floor `.nav-panel` width rules removed.** `@media (max-width: 1200px) { .nav-panel { width: 360px; } }` and `@media (max-width: 1100px) { .nav-panel { width: min(420px, 90vw); } }`. Both unreachable below the new 1366px floor. The `.nav-panel` base width of 320px applies at all reachable viewports without modification.
+- **`@media (max-width: 800px)` block removed** (the `.two-col { grid-template-columns: 1fr; }` and `.page-header { padding: 14px 20px; }` overrides). Sub-floor, unreachable. Helper-page two-column layouts now use their base grid at all reachable viewports.
+- **`@media (max-width: 720px)` block removed** (the `.ai-bfb-wrap { padding-left: 0; }` override) along with its preceding stale comment block which referenced a "1024px min-width overlay" that never actually existed in the codebase. The `.ai-bfb-wrap` element keeps its base `padding-left: 110px` at all reachable viewports.
+- **`@media (max-width: 768px)` mobile-overlay activator preserved.** Despite being below the 1366px floor, this rule serves a distinct user-facing function: it activates the mobile-not-supported overlay (`.mobile-overlay { display: flex; }`) which has its own message and aggressively hides everything else (`body > *:not(.mobile-overlay) { display: none !important; }`). At ≤768px viewports the user sees the friendlier "designed for desktop and laptop computers" message; at 769–1365px the user sees the more technical "Minimum viewport is 1366 × 768 px" message from the min-screen-overlay. Both rules are live and serve different copy at different viewport bands. Decision to keep both deferred to future release if simplification is worth the behavior change.
+- **One opportunistic stale-comment fix.** The comment header above the min-screen-overlay's media query rule said `/* ── Minimum screen overlay (< 1422px wide or < 811px tall) ── */` — directly describing values that were superseded in v3.34.0 when the rule was updated to `(max-width: 1365px), (max-height: 767px)`. Updated the comment to match. Other stale 1422/1421/811/810 references in code comments deferred to R3 (stale-comment audit).
+- **Out of scope (deferred):** R3 stale-comment audit (multiple 1421/1422 references in builder-pick comments, 3-column body grid comment, laptop-tier scale-down comment), R3.5 cascade-order audit (the @media-then-unscoped pattern surfaced in v3.34.2), R4 spacing-token introduction, R5+ font-size token migration, R-final clamp() fluid scaling.
+- **Audit confirmed zero blast radius on the work screen.** Before deletion: confirmed each removed rule's selectors do not touch `.work-main`, `.doc-textarea`, `.work-doc-pre`, or any other doc-column element. All five 80ch column constraints (lines 879, 880, 1931, 2133, 2134, 2135 post-deletion; were 885, 886, 1939, 2133, 2141 pre-deletion — line shifts from upstream deletions, values byte-identical) verified intact. The Working Document column's 80-character constraint is untouched.
+- **Net file impact:** ~22 lines removed from `style.css`. No behavior change at any reachable viewport (1366×768 and above). The first eight viewports of the architecture (Floor / Laptop / Desktop / Short and any mid-band) all render identically to v3.34.3.
+- **Version stamps in code bumped** to v3.34.4 / build 20260508-011 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.3
 **Build:** `20260508-010` · **Released:** May 8, 2026
 

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-010
+   Build: 20260508-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -665,12 +665,6 @@ html, body {
   overflow: hidden;
 }
 
-@media (max-width: 900px) {
-  
-  
-  
-}
-
 /* ── AI Setup Grid ── */
 .ai-setup-grid {
   display: flex;
@@ -1194,8 +1188,6 @@ html, body {
   box-shadow: 4px 0 24px rgba(0,0,0,0.5);
   overflow: hidden;
 }
-@media (max-width: 1200px) { .nav-panel { width: 360px; } }
-@media (max-width: 1100px) { .nav-panel { width: min(420px, 90vw); } }
 .nav-panel.open {
   transform: translateX(0);
 }
@@ -6798,10 +6790,6 @@ kbd {
   border-radius: var(--radius-md); padding: 24px;
   display: flex; flex-direction: column; gap: 14px;
 }
-@media (max-width: 800px) {
-  .two-col { grid-template-columns: 1fr; padding: 12px; }
-  .page-header { padding: 14px 20px; }
-}
 
 /* ── Column bee (tokens/api left column) ── */
 .col-bee {
@@ -8712,7 +8700,7 @@ kbd {
 /* v3.27.7: removed .goal-counter-bar — element eliminated in the
    project-screen restructure. */
 
-/* ── Minimum screen overlay (< 1422px wide or < 811px tall) ── */
+/* ── Minimum screen overlay (< 1366px wide or < 768px tall) ── */
 .min-screen-overlay {
   display: none;
   position: fixed;
@@ -10845,15 +10833,6 @@ kbd {
 .ai-bfb-btn:focus-visible {
   outline: 2px solid var(--accent, #f4b400);
   outline-offset: 2px;
-}
-
-/* Mobile / small-screen handling — the WaxFrame app is desktop-first
-   with a 1024px min-width overlay, but ensure the row still degrades
-   gracefully if a user shrinks the window. */
-@media (max-width: 720px) {
-  .ai-bfb-wrap {
-    padding-left: 0;
-  }
 }
 
 /* =========================================================
