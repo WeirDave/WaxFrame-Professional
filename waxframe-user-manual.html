@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260508-003
+     Build: 20260508-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-003">
+  <meta name="waxframe-build" content="20260508-004">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.32">
+  <link rel="stylesheet" href="style.css?v=3.32.33">
 </head>
 <body class="helper-body">
 
@@ -1137,8 +1137,90 @@
       <div class="hp-section">
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
+            <h2 class="hp-section-title">Getting Good Results</h2>
+            <p class="hp-section-sub">Patterns observed in measured production runs — what makes a hive converge faster, and when to start over.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="wh-section" id="setup-specificity">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">🎯</div>
+      <div class="wh-section-title">Setup specificity matters</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The pattern</div>
+      <p>The goal fields on Setup 3 aren't optional decoration. Reviewers can only judge whether a document fits the goal if the goal is clearly stated, and the more specifically you state it, the faster the hive converges.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Three measured data points</div>
+      <ul>
+        <li><strong>Job Description (Altura test):</strong> specific company name, role, seniority, and reporting structure filled into the structured goal fields — <strong>20-22 rounds</strong> convergence on a complex multi-page document.</li>
+        <li><strong>Résumé (Dana Reyes test):</strong> specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — <strong>10-12 rounds</strong> convergence.</li>
+        <li><strong>LinkedIn Post (run on internal AI server at work):</strong> tone field filled with a specific voice description, length limit set to 300 words, audience and outcome each filled with a sentence of detail — <strong>5 rounds</strong> majority convergence, refining a 16,214-character source document down to ~200 words.</li>
+      </ul>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What this implies</div>
+      <p>A pattern in the runs above: the structured goal fields — audience, outcome, tone — had concrete content. The Notes/Instructions field varied in length across these runs and we don't yet have systematic data on how much that field specifically influences convergence. The minutes you spend on the structured goal fields appear to pay back as rounds you don't have to run.</p>
+      <p>If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="wh-section" id="scratch-vs-refine">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">📄</div>
+      <div class="wh-section-title">Starting from scratch vs refining a misaligned draft</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When refining costs more than starting over</div>
+      <p>When a starting document is misaligned with the goal you've defined, the hive can spend many rounds dragging it toward what was actually wanted. Sometimes the faster path is to discard the draft entirely and let the hive build from scratch using only the goal fields.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Measured data point</div>
+      <p>A Thank-You note converged in <strong>2 rounds</strong> when started from scratch (Start from Scratch button on Setup 5, empty starting document) versus <strong>13 rounds</strong> when refining a rough draft pulled from a pre-existing template. Same final document type, same hive, same goal fields. The only variable was whether the run started with a 0-character document or a misaligned draft. The misaligned draft cost roughly 6× more rounds.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">When to refine vs scratch</div>
+      <p>This isn't a universal rule. When your starting draft is already well-aligned with the goal — your existing résumé that just needs polish, an article draft you're happy with the bones of — refining is faster than starting over. The decision point: does the starting document already reflect the goal, or is it a different goal that needs reshaping? If the latter, scratch usually wins.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="wh-section" id="builder-selection">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">⚙️</div>
+      <div class="wh-section-title">Builder selection matters</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Why the Builder is the highest-leverage role</div>
+      <p>The Builder does heavier synthesis work than reviewers — it accepts, rejects, and integrates change proposals across the hive every round, and the reviewers then judge its output. The Builder is also usually a reviewer itself, which means its synthesis style is being judged against its own preferences as well as the other reviewers'.</p>
+      <p>A Builder mismatched to the document type tends to invite more reviewer dissent, which extends convergence. We don't yet have systematic measured data comparing specific Builders across document types — as more runs are measured, this section will be updated with concrete recommendations.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Diagnostic move when stuck</div>
+      <p>If you've run two or three rounds where reviewers keep flagging the same kinds of issues, and the Builder's output keeps drifting away from the goal in a consistent direction, try changing the Builder on the Worker Bees screen and re-run. The hive's convergence behavior often shifts immediately when the Builder is better matched.</p>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Getting Good Results -->
+      </div><!-- /hp-section Getting Good Results -->
+
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
             <h2 class="hp-section-title">Appendices</h2>
-            <p class="hp-section-sub">Advanced features — adding a custom AI, importing from a model server, and using WaxFrame at work behind a corporate gateway.</p>
+            <p class="hp-section-sub">Advanced features — adding a custom AI, importing from a model server, and using WaxFrame at work on an internal AI server.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -1292,6 +1374,48 @@
     <div class="wh-block">
       <div class="wh-block-title">Setting up an internal-only hive</div>
       <p>If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, hide them using the <strong>Hide All Defaults</strong> button in the toolbar on the Setup screen. This hides all six at once. You can hide them individually using the <strong>Hide</strong> button on each AI row instead. Hidden AIs retain their saved keys and can be restored at any time using <strong>Reset to Defaults</strong> or the <strong>↺ Restore Hidden</strong> button that appears in a banner at the top of the list.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What to expect from your AI server at work</div>
+      <p>Internal AI servers — Open WebUI, LM Studio, on-prem deployments serving multiple models — are common in defense, healthcare, financial, and other secure-network environments. They behave differently from the public-AI hives you'd run at home.</p>
+      <p>The substrate matters. A typical internal AI server hosts whatever models the deployment has been configured to serve. Those models can have knowledge cutoffs months apart, sometimes years apart. Two AIs in the same hive may have been trained against entirely different snapshots of reality.</p>
+      <p>What this means in practice:</p>
+      <ul>
+        <li>For a <strong>factually-anchored document</strong> (a technical paper, a current-events post, a vendor comparison), one AI may know information the others don't. The hive can't fact-check itself on knowledge it doesn't share.</li>
+        <li>For an <strong>opinion-or-style-driven document</strong> (a personal observation, an essay, a stylistic refinement), cutoff variance matters much less because the content doesn't depend on shared current knowledge.</li>
+        <li>Possible failure modes on factual content: <strong>non-convergence</strong> (one AI insists on a fact the others won't accept), or <strong>false convergence</strong> (every AI hallucinates plausible-sounding filler that drifts apart on subsequent rounds).</li>
+      </ul>
+      <p>The hive's output quality is bounded by the substrate it runs on. This is not a defect in WaxFrame — it's a property of the underlying models you're orchestrating.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Mitigating cutoff and substrate variance</div>
+      <p>When you need to run factually-anchored work on an internal AI server, three approaches help:</p>
+      <ol class="wh-steps">
+        <li class="wh-step"><span class="wh-step-num">1</span><span><strong>Inject a shared baseline via Setup 4 (Reference Material).</strong> Reference Material is shown to every AI every round as authoritative context. Cutoffs stop mattering for facts that live in the reference document — every AI works from the same source of truth. Use this for any current-events, technical, or fact-heavy run on an internal server.</span></li>
+        <li class="wh-step"><span class="wh-step-num">2</span><span><strong>Keep the hive small.</strong> Three or four AIs from the same model family (the most recent three of one vendor on the server) tends to give better consistency than mixing six AIs across vendors and ages. The variance you fight is roughly proportional to the spread.</span></li>
+        <li class="wh-step"><span class="wh-step-num">3</span><span><strong>Use a public-AI hive at home as a control before blaming WaxFrame.</strong> If a run won't converge on your work server and you're not sure why, run the same project setup at home on a public-AI hive (ChatGPT, Claude.ai, Gemini, all current). If it converges there but not at work, the substrate is the variable. If it fails to converge in both, the goal fields or starting document likely need work.</span></li>
+      </ol>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">A real-world example</div>
+      <p>A 6-AI hive on a corporate internal AI server, refining a 16,214-character research report into a 300-word LinkedIn post, converged via the engine's majority path (4 of 6 AIs satisfied) in 5 rounds and 7 minutes.</p>
+      <table class="wh-table">
+        <thead><tr><th>Setting</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Document type</strong></td><td>LinkedIn Post</td></tr>
+          <tr><td><strong>Target audience</strong></td><td>Fellow Wi-Fi nerds and friends from various life stages</td></tr>
+          <tr><td><strong>Tone</strong></td><td>A specific voice description (one full sentence)</td></tr>
+          <tr><td><strong>Length limit</strong></td><td>300 words</td></tr>
+          <tr><td><strong>Starting document</strong></td><td>16,214 characters (a research report on the topic)</td></tr>
+          <tr><td><strong>Hive</strong></td><td>6 AIs across three vendor families</td></tr>
+          <tr><td><strong>Builder</strong></td><td>One of the reviewers, doubling as Builder</td></tr>
+          <tr><td><strong>Result</strong></td><td>Engine-triggered majority convergence (4 of 6) at Round 5, 7 minutes total</td></tr>
+        </tbody>
+      </table>
+      <p>The run shows that internal AI servers can converge cleanly on heavy compression tasks (an 80× length reduction in this case) when the goal fields are filled specifically. This single run does not prove that goal-field specificity <em>caused</em> the convergence — only that the run had these properties and converged via the engine's normal majority path. As more runs are measured systematically, this guide will be updated with broader patterns.</p>
     </div>
 
     <div class="wh-block">
@@ -1579,7 +1703,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.32.32"></script>
+<script src="js/version.js?v=3.32.33"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-003';         // build stamp — update each session
+const BUILD       = '20260508-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -8780,6 +8780,9 @@ async function startSession() {
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'setup',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Original Document',
       referenceMaterialAtRound: snapshotReferenceDocs()
@@ -11186,6 +11189,9 @@ async function runBuilderOnly() {
       conflicts:      window._lastConflicts || null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'builder_only_complete',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Builder Only',
       referenceMaterialAtRound: snapshotReferenceDocs()
@@ -11221,6 +11227,9 @@ async function runBuilderOnly() {
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'builder_only_failed',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       label:          'Builder Only',
       failed:         true,
@@ -11461,6 +11470,9 @@ async function runRound() {
       conflicts:      { converged: true, holdouts: [] },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'unanimous_convergence',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
@@ -11551,6 +11563,9 @@ async function runRound() {
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'majority_convergence',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
@@ -11790,6 +11805,9 @@ async function runRound() {
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
+    timestampISO:   new Date().toISOString(),
+    outcome:        'continuing',
+    builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       referenceMaterialAtRound: snapshotReferenceDocs()
   });
@@ -11859,6 +11877,9 @@ async function runRound() {
       conflicts:      null,
       responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
+      timestampISO:   new Date().toISOString(),
+      outcome:        'round_failed',
+      builderId:      builder,
       resolvedDecisions: JSON.parse(JSON.stringify(window._resolvedDecisions || [])),
       failed:         true,
       failReason:     _failedRoundReason || 'unknown',
@@ -13316,6 +13337,7 @@ function exportDocument() {
 
 function exportTranscript() {
   const name    = document.getElementById('projectName')?.value.trim()    || 'AI-Hive';
+  const version = document.getElementById('projectVersion')?.value.trim() || '';
   const doc     = document.getElementById('workDocument')?.value.trim()   || '';
   const filename = buildExportName();
   const eq  = '═'.repeat(60);
@@ -13327,9 +13349,72 @@ function exportTranscript() {
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
 
-  let out = `${eq}\nWAXFRAME — SESSION TRANSCRIPT\nVersion: ${APP_VERSION}\nBuild: ${BUILD}\nProject: ${name}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
+  // ── HEADER ──
+  let out = `${eq}\nWAXFRAME — SESSION TRANSCRIPT\nVersion: ${APP_VERSION}\nBuild: ${BUILD}\nProject: ${name}${version ? ` (${version})` : ''}\nRounds completed: ${totalRounds}\nSession duration: ${timeStr}\nExported: ${new Date().toLocaleString()}\n${eq}\n\n`;
 
+  // ── PROJECT SETUP — read live values from Project screen fields ──
+  const projDocType  = document.getElementById('goalDocType')?.value.trim()  || '(blank)';
+  const projAudience = document.getElementById('goalAudience')?.value.trim() || '(blank)';
+  const projOutcome  = document.getElementById('goalOutcome')?.value.trim()  || '(blank)';
+  const projScope    = document.getElementById('goalScope')?.value.trim()    || '(blank)';
+  const projTone     = document.getElementById('goalTone')?.value.trim()     || '(blank)';
+  const projNotes    = document.getElementById('goalNotes')?.value.trim()    || '(blank)';
+  const lengthLimit  = document.getElementById('lengthLimit')?.value.trim()     || '';
+  const lengthUnit   = document.getElementById('lengthUnit')?.value             || 'words';
+  const lengthStr    = lengthLimit ? `${lengthLimit} ${lengthUnit}` : '(no limit)';
+  out += `PROJECT SETUP\n${sep}\n`;
+  out += `Document type:    ${projDocType}\n`;
+  out += `Target audience:  ${projAudience}\n`;
+  out += `Desired outcome:  ${projOutcome}\n`;
+  out += `Scope:            ${projScope}\n`;
+  out += `Tone & voice:     ${projTone}\n`;
+  out += `Notes:            ${projNotes}\n`;
+  out += `Length limit:     ${lengthStr}\n\n`;
+
+  // ── HIVE COMPOSITION ──
+  out += `HIVE COMPOSITION\n${sep}\n`;
+  const builderAI = (typeof builder !== 'undefined' && builder)
+    ? (activeAIs.find(a => a.id === builder) || { id: builder, name: builder, model: '?' })
+    : null;
+  if (builderAI) {
+    const builderModel = builderAI.model || (typeof MODEL_LABELS !== 'undefined' && MODEL_LABELS[builderAI.id]) || '';
+    out += `Builder: ${builderAI.name}${builderModel ? ` (model: ${builderModel})` : ''}\n`;
+  } else {
+    out += `Builder: (not set)\n`;
+  }
+  const reviewers = (activeAIs || []).filter(a => a.id !== builder);
+  out += `Reviewers (${reviewers.length} of ${(activeAIs || []).length} total):\n`;
+  reviewers.forEach(a => {
+    const m = a.model || '';
+    out += `  • ${a.name}${m ? ` (model: ${m})` : ''}\n`;
+  });
+  out += `\n`;
+
+  // ── REFERENCE MATERIAL — only if any docs are loaded ──
+  const refSnap = (typeof snapshotReferenceDocs === 'function') ? snapshotReferenceDocs() : [];
+  if (Array.isArray(refSnap) && refSnap.length > 0) {
+    out += `REFERENCE MATERIAL\n${sep}\n`;
+    const totalChars = refSnap.reduce((sum, r) => sum + (r.text?.length || 0), 0);
+    out += `${refSnap.length} reference document${refSnap.length !== 1 ? 's' : ''} totaling ${totalChars.toLocaleString()} characters\n\n`;
+    refSnap.forEach((r, i) => {
+      out += `[${i + 1}] ${r.name || `Reference ${i + 1}`} (${(r.text?.length || 0).toLocaleString()} chars)\n`;
+      if (r.text) {
+        out += `${sep}\n${r.text}\n${sep}\n\n`;
+      }
+    });
+  }
+
+  // ── ROUND-BY-ROUND PLAYBACK ──
   const failLabels = { bloat: 'Output too long — Builder expanded document beyond allowed limit', conflicts: 'Missing conflicts block — Builder response rejected', delimiters: 'Malformed output — Builder response could not be parsed', api: 'API error', unknown: 'Unknown error' };
+  const outcomeLabels = {
+    setup:                   '📋 Initial document captured — round 0',
+    continuing:              '↻ Round complete — hive will continue next round',
+    unanimous_convergence:   '🏁 Unanimous convergence — all AIs satisfied',
+    majority_convergence:    '🏁 Majority convergence — engine triggered, holdouts present',
+    builder_only_complete:   '⚙️ Builder-only round complete',
+    builder_only_failed:     '⚠️ Builder-only round failed',
+    round_failed:            '⚠️ Round failed — document not updated'
+  };
 
   if (history.length === 0) {
     out += `(No rounds recorded — document exported as-is)\n\n`;
@@ -13338,7 +13423,9 @@ function exportTranscript() {
       const phaseLabel = PHASES.find(p => p.id === h.phase)?.label || h.phase || '';
       if (h.failed) {
         const roundLabel = `Round ${h.round} — FAILED / NOT SAVED`;
-        out += `${eq}\n${roundLabel} — ${h.timestamp}\n${eq}\n\n`;
+        out += `${eq}\n${roundLabel} — ${h.timestamp}\n`;
+        if (h.outcome && outcomeLabels[h.outcome]) out += `OUTCOME: ${outcomeLabels[h.outcome]}\n`;
+        out += `${eq}\n\n`;
         out += `RESULT: Round rejected — document was not updated\n`;
         out += `REASON: ${failLabels[h.failReason] || h.failReason}\n`;
         if (h.failDetails) out += `DETAILS: ${h.failDetails}\n`;
@@ -13352,7 +13439,14 @@ function exportTranscript() {
         return;
       }
       const roundLabel = h.round === 0 ? 'Original Document' : (h.label || `Round ${h.round} · ${phaseLabel}`);
-      out += `${eq}\n${roundLabel} — ${h.timestamp}\n${eq}\n\n`;
+      out += `${eq}\n${roundLabel} — ${h.timestamp}\n`;
+      if (h.outcome && outcomeLabels[h.outcome] && h.round !== 0) out += `OUTCOME: ${outcomeLabels[h.outcome]}\n`;
+      // Per-round Builder identity (in case Builder was changed mid-session)
+      if (h.builderId && h.round !== 0) {
+        const rb = activeAIs.find(a => a.id === h.builderId);
+        if (rb) out += `BUILDER: ${rb.name}\n`;
+      }
+      out += `${eq}\n\n`;
       if (h.doc) out += `DOCUMENT:\n${sep}\n${h.doc}\n\n`;
       Object.keys(h.responses || {}).forEach(id => {
         if (h.responses[id]) {
@@ -13363,9 +13457,20 @@ function exportTranscript() {
     });
   }
 
+  // ── FINAL DOCUMENT + FOOTER ──
   if (doc) {
     out += `${eq}\nFINAL DOCUMENT\n${eq}\n\n${doc}\n\n`;
-    out += `${sep}\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional\n`;
+    // Determine final outcome from the last non-empty history entry's outcome field.
+    let finalOutcome = '';
+    for (let i = history.length - 1; i >= 0; i--) {
+      if (history[i].outcome && history[i].outcome !== 'setup') {
+        finalOutcome = outcomeLabels[history[i].outcome] || history[i].outcome;
+        break;
+      }
+    }
+    out += `${sep}\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\n`;
+    if (finalOutcome) out += `Final outcome: ${finalOutcome}\n`;
+    out += `weirdave.github.io/WaxFrame-Professional\n`;
   }
 
   const blob = new Blob([out], { type: 'text/plain' });
