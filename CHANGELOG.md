@@ -1,6 +1,15 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.32.31
+**Build:** `20260508-002` · **Released:** May 8, 2026
+
+Reverts the navigation menu addition shipped in v3.32.30. The Source on GitHub link was redundant — WaxFrame is hosted on GitHub Pages (`weirdave.github.io/WaxFrame-Professional/`), so any user running the app reached it through GitHub already. Linking back to the same source from the menu added no value and added cognitive load to the Advanced section.
+
+- **`💻 Source on GitHub` link removed from Advanced nav section.** The `<a class="nav-item">` added in v3.32.30 between `✏️ Prompt Editor` and `🛠 Dev Tools` is gone. Advanced section returns to its v3.32.29 shape — Prompt Editor + Dev Tools, nothing else. No dangling references in CSS or JS — the link was inert HTML with no event handlers, helper functions, or styling beyond inherited `.nav-item` rules.
+- **Version stamps in code bumped** to v3.32.31 / build 20260508-002 across the canonical 4-stamp checklist (`index.html` `waxframe-build` meta, `js/version.js` `APP_VERSION`, `js/app.js` `BUILD` constant, `index.html` cache-bust query strings on `style.css`, `js/version.js`, and `js/app.js`) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`). Each helper page's `waxframe-build` meta synced from `20260508-001` to `20260508-002` and comment-header `Build:` stamp synced. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6` since those files were not modified.
+
+---
 ## v3.32.30
 **Build:** `20260508-001` · **Released:** May 8, 2026
 
