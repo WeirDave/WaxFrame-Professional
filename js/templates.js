@@ -64,6 +64,9 @@ const WAXFRAME_TEMPLATES = [
     "goalTone": "[Professional / conversational / enthusiastic] — pick one that fits the company",
     "goalNotes": "Do not add claims about my experience that are not supported by what I provide. Do not fabricate anything.",
     "suggestedNotes": "",
+    "lengthMode": "hardcap",
+    "lengthLimit": "1",
+    "lengthUnit": "pages",
     "hint": [
       {
         "field": "Target audience",
@@ -116,6 +119,9 @@ const WAXFRAME_TEMPLATES = [
     "goalTone": "Confident, professional, action-oriented — strong verbs, no passive voice, no \"responsible for\"",
     "goalNotes": "Do not remove or change any metrics, percentages, or dates — these are factual and verified by me.",
     "suggestedNotes": "Dana Reyes\nTampa, FL · dana.reyes@example.com · 813-555-0114\n\nSummary\nWireless network engineer with 8 years of experience. CWNA, CWDP, CWAP. Aruba, Cisco Meraki, and Ruckus. Specializes in warehouse and industrial RF environments.\n\nExperience\n\nSenior Wireless Engineer, Vantage Logistics — Jan 2022 to Present\n- Responsible for wireless network across 12 warehouse sites and 3 corporate offices\n- Led migration from Cisco Meraki to Aruba ArubaOS 8\n- Did site surveys with Ekahau\n- Supported autonomous mobile robots operating on the floor\n\nWireless Engineer, Meridian IT Services — Jun 2018 to Dec 2021\n- MSP role supporting 30+ small and mid-size clients\n- Handled escalations for wireless issues\n- Designed networks for new client buildouts\n\nNetwork Technician, Gulfstream Communications — Aug 2016 to May 2018\n- Installed and configured wireless access points\n- Ran cable, tested drops, closed tickets\n\nCertifications\nCWNA, CWDP, CWAP, Aruba ACMA\n\nEducation\nBS Information Technology, University of South Florida — 2016",
+    "lengthMode": "hardcap",
+    "lengthLimit": "2",
+    "lengthUnit": "pages",
     "hint": [
       {
         "field": "Target audience",
@@ -136,6 +142,9 @@ const WAXFRAME_TEMPLATES = [
     "goalTone": "[Warm and personal / professional but sincere / heartfelt] — pick one",
     "goalNotes": "Reference the specific thing I am thanking them for. Do not add any details I have not provided. Do not fabricate anything.",
     "suggestedNotes": "Marco Delgado, owner of Delgado Build, finished our kitchen and back porch remodel last Friday.\nThings to thank him for:\n- The big one: when the countertop supplier delivered the wrong slab on day 17 and the project was going to slip two weeks, Marco drove to Orlando on a Saturday, picked up the right slab himself, and installed it Sunday morning. We had our son's birthday party on the new porch the following Saturday as planned.\n- He showed up when he said he would, every day, for six weeks.\n- His crew cleaned up every night — my wife kept commenting on it.\n- He caught a framing issue the inspector missed and fixed it before closing the wall.\nWhat we want him to know:\n- We'll absolutely use him again.\n- Our neighbor Janet has already asked for his number.\n- He's welcome to drop by and show the kitchen to a future client if he ever needs to.",
+    "lengthMode": "hardcap",
+    "lengthLimit": "1",
+    "lengthUnit": "pages",
     "hint": [
       {
         "field": "Tone & voice",
@@ -200,6 +209,9 @@ const WAXFRAME_TEMPLATES = [
     "goalTone": "Direct, authoritative, jargon-free — written for someone who has 90 seconds to read it",
     "goalNotes": "Do not add detail not present in the source material. Do not change any figures, recommendations, or conclusions.",
     "suggestedNotes": "",
+    "lengthMode": "hardcap",
+    "lengthLimit": "1",
+    "lengthUnit": "pages",
     "hint": []
   },
   {
@@ -235,6 +247,10 @@ const WAXFRAME_TEMPLATES = [
     "goalTone": "Be specific: e.g. Direct, short sentences, slightly sarcastic, no jargon or Authoritative and data-driven, formal but approachable. Without this the AIs will default to a bland, generic style.",
     "goalNotes": "Do not change my unique angle or perspective. Strengthen the voice — do not sand it down into something that sounds like everyone else.",
     "suggestedNotes": "Thesis: any single LLM, no matter how good, has blind spots. One model will confidently write fluff where another catches it. One model will tighten structure while another improves tone. Run the same document through 4 or 5 different models in sequence, each refining what the previous one did, and the output is better than any single model can produce on its own.\n\nConcrete example to reference (real, from last month):\n- Took a 900-word draft of a proposal\n- Ran it through Claude alone: got a polished version, maybe 15% better\n- Ran the same draft through Claude, then GPT-4, then Gemini, then back to Claude: got a version where the structural argument was noticeably stronger, the jargon was stripped, and two factual hedges had been flagged that the author hadn't noticed\n\nWhat the reader should try today: pick a document they care about, hand it to 3 different models in sequence with the same prompt, compare the result to running it through any one model once.\n\nCall to action at the end: link to a tool that automates this — multiple models, single document, convergence loop. (This is WaxFrame, but the post should not name it overtly — the link speaks for itself.)",
+    "lengthMode": "range",
+    "lengthMin": "800",
+    "lengthLimit": "1500",
+    "lengthUnit": "words",
     "hint": [
       {
         "field": "Desired outcome",

@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-005';         // build stamp — update each session
+const BUILD       = '20260508-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3357,7 +3357,7 @@ async function applyTemplate(templateId) {
   if (_projectGoalFieldsHaveContent()) {
     const ok = await wfConfirm(
       'Apply Template',
-      `Apply the "${tpl.name}" template? Your current entries in the Project Goal fields will be replaced. (Project name, version, length, and reference material are not affected.)`,
+      `Apply the "${tpl.name}" template? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters). Project name, version, and reference material are not affected.`,
       { okText: `Apply ${tpl.name}` }
     );
     if (!ok) return;
@@ -3376,6 +3376,19 @@ async function applyTemplate(templateId) {
     if (!el) return;
     el.value = tpl[key] || '';
   });
+  // v3.33.1 — Length Constraint pre-fill from template. Templates that
+  // specify lengthMode get all four length fields written and the mode
+  // applied. Templates without lengthMode leave the user's existing
+  // length config untouched (matches pre-v3.33.1 behavior).
+  if (tpl.lengthMode && ['none','hardcap','target','range'].includes(tpl.lengthMode)) {
+    const llEl = document.getElementById('lengthLimit');
+    const lmEl = document.getElementById('lengthMin');
+    const luEl = document.getElementById('lengthUnit');
+    if (llEl) llEl.value = tpl.lengthLimit || '';
+    if (lmEl) lmEl.value = tpl.lengthMin   || '';
+    if (luEl && tpl.lengthUnit) luEl.value = tpl.lengthUnit;
+    if (typeof setLengthMode === 'function') setLengthMode(tpl.lengthMode);
+  }
   // Fire the same downstream updates the user's input would trigger.
   if (typeof saveProject === 'function')              saveProject();
   if (typeof updateGoalCounter === 'function')        updateGoalCounter();

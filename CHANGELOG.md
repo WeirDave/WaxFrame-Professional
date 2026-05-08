@@ -1,6 +1,25 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.33.1
+**Build:** `20260508-006` · **Released:** May 8, 2026
+
+Fast follow on v3.33.0. Two content gaps closed: the `infoLengthModal` (popup behind the ⓘ button next to the "Length Constraint" heading on Setup 3) was still describing the old single-field model after v3.33.0 shipped, and the project templates didn't yet use any of the new mode plumbing despite being the natural place to surface opinionated length defaults.
+
+- **`infoLengthModal` rewritten for the four-mode model.** Replaces the old "Tell WaxFrame how long the final document should be" framing with a mode-by-mode breakdown — No limit / Hard cap / Target / Range — each with what it does and when to use it. The unit-by-unit measurement table follows the mode rows, since units are the same across all modes. User-manual deep-link at the bottom unchanged.
+- **Length recommendations added to opinionated templates.** The `WAXFRAME_TEMPLATES` schema gains four optional fields per template: `lengthMode`, `lengthLimit`, `lengthMin`, `lengthUnit`. When present, `applyTemplate()` writes them to the DOM and calls `setLengthMode()` so the pill state, mode description, min-field visibility, and the field values all update in one pass. When absent, applyTemplate leaves the user's existing length config untouched (matches pre-v3.33.1 behavior). Templates updated:
+  - **Cover Letter** → Hard cap, 1 page
+  - **Résumé** → Hard cap, 2 pages
+  - **Thank-You Letter** → Hard cap, 1 page
+  - **Executive Summary** → Hard cap, 1 page
+  - **Blog Post / Article** → Range, 800 to 1500 words
+  - All other templates (Quick Start, Job Description, Business Proposal, Email/Outreach, RFP Response, Presentation Outline, Recipe) intentionally left without length fields — applyTemplate preserves whatever the user has set.
+- **applyTemplate confirmation copy updated.** Old text claimed "Project name, version, length, and reference material are not affected." That's no longer accurate now that templates can set length. New copy: "Some templates also pre-fill a recommended Length Constraint (e.g. 'Hard cap 1 page' for cover letters). Project name, version, and reference material are not affected."
+- **`templates.js` cache-bust bumped** from `?v=3.32.13` to `?v=3.33.1` so users get the new template fields on the next reload. The cache-bust on `templates.js` had been pinned through several releases since the file's last edit; v3.33.1 is the first release to actually modify it.
+- **Phase 2 follow-up suggestion (not in this release):** add a LinkedIn Post template (Hard cap 3000 characters, per platform spec) and a Tweet template (Hard cap 280 characters). Both are common-enough document types that users shouldn't have to guess the spec. Goal-field content authoring needed before they ship.
+- **Version stamps in code bumped** to v3.33.1 / build 20260508-006 across the canonical 4-stamp checklist plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages. `js/templates.js?v=` cache-bust also updated. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.33.0
 **Build:** `20260508-005` · **Released:** May 8, 2026
 
