@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-004';         // build stamp — update each session
+const BUILD       = '20260508-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -2841,7 +2841,9 @@ function saveProject() {
     goalTone:       document.getElementById('goalTone')?.value       || '',
     goalNotes:      document.getElementById('goalNotes')?.value      || '',
     exportMask:     document.getElementById('exportMask')?.value     || '',
+    lengthMode:     getLengthMode(),
     lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
+    lengthMin:      document.getElementById('lengthMin')?.value      || '',
     lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
     docTab,
     pastedDocument: document.getElementById('pasteText')?.value || '',
@@ -2860,13 +2862,39 @@ const WORDS_PER_PAGE      = 500;
 const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
 const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 
-// v3.32.28 — Symmetric undersized guard (#6d). Floor is computed as a
-// fraction of the user's length target. 0.5 lands between "too aggressive"
-// (0.8 fails almost any conservative Builder output) and "too loose"
-// (0.25 lets near-empty docs converge as if done). The 1.5× bloat sanity
-// check on the unconstrained side has its 0.5× shrinkage mirror in the
-// undersized branch — both catch runaway scale-changes.
-const LENGTH_FLOOR_RATIO = 0.5;
+// v3.33.0 — Length mode overhaul (#8). Replaced the implicit
+// LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 with explicit user-opted
+// modes: 'none' | 'hardcap' | 'target' | 'range'. Convergence-under
+// and round-undersized intercepts only fire in 'target' and 'range'
+// modes — 'hardcap' has ceiling-only semantics, 'none' has no gates.
+//
+// Storage:
+//   • lengthMode  — 'none' | 'hardcap' | 'target' | 'range'
+//   • lengthLimit — single value for hardcap/target; the MAX in range
+//   • lengthMin   — only used by range mode (the MIN of the range)
+//   • lengthUnit  — same as before (characters/words/paragraphs/pages)
+//
+// Migration: pre-v3.33.0 projects have no lengthMode field. On load,
+// if lengthLimit is set and lengthMode is missing, coerce to 'hardcap'
+// — preserves prior ceiling-only behavior. Empty lengthLimit → 'none'.
+
+// v3.33.0 — Mode-aware floor label for length-guard prompt UI. Same logic
+// regardless of which intercept is firing (round-end or convergence-time).
+function lengthFloorLabel(floorNum, unitName, mode) {
+  if (mode === 'target')      return `${floorNum} ${unitName} (target)`;
+  if (mode === 'range')       return `${floorNum} ${unitName} (range minimum)`;
+  return `${floorNum} ${unitName}`;
+}
+
+function getLengthMode() {
+  // Read the active mode from the pills, with sensible fallback.
+  const activePill = document.querySelector('.length-mode-pill.is-active');
+  if (activePill) return activePill.dataset.lengthMode || 'none';
+  // Pre-DOM fallback (e.g. saveProject called before pills render):
+  // infer from current field state.
+  const lim = parseInt(document.getElementById('lengthLimit')?.value || '0', 10);
+  return (lim > 0) ? 'hardcap' : 'none';
+}
 
 // ── Length-unit measurement helpers ──
 // Direct-count the output in the user's chosen unit. Pages can't be measured
@@ -2889,17 +2917,35 @@ function unitLabel(unit, count) {
 }
 
 function getLengthConstraint() {
+  const mode  = getLengthMode();
+  if (mode === 'none') return null;
   const limit = parseInt(document.getElementById('lengthLimit')?.value || '0', 10);
+  const minV  = parseInt(document.getElementById('lengthMin')?.value   || '0', 10);
   const unit  = document.getElementById('lengthUnit')?.value || 'characters';
-  if (!limit || limit <= 0) return null;
-  // wordLimit is a fallback estimate used by the gate ONLY for pages (not directly countable)
-  // and by the hint display for pages/paragraphs/characters. Characters and words are direct-counted.
+  if (mode === 'range') {
+    if (!limit || limit <= 0 || !minV || minV <= 0) return null;
+    if (minV >= limit) return null; // misconfigured — treat as no constraint
+  } else {
+    if (!limit || limit <= 0) return null;
+  }
+  // wordLimit: a word-count estimate of the upper number (limit) used by the
+  // pages-mode gate (pages aren't directly countable) and for hint display
+  // on fuzzy units. Direct-counted units (chars, words, paragraphs) only use
+  // limit; wordLimit is informational.
   let wordLimit;
   if (unit === 'words')           wordLimit = limit;
   else if (unit === 'paragraphs') wordLimit = limit * WORDS_PER_PARAGRAPH;
   else if (unit === 'pages')      wordLimit = limit * WORDS_PER_PAGE;
-  else                            wordLimit = Math.round(limit / CHARS_PER_WORD); // characters
-  return { limit, unit, wordLimit };
+  else                            wordLimit = Math.round(limit / CHARS_PER_WORD);
+  // wordMin: same conversion for the lower number (range mode only).
+  let wordMin;
+  if (mode === 'range') {
+    if (unit === 'words')           wordMin = minV;
+    else if (unit === 'paragraphs') wordMin = minV * WORDS_PER_PARAGRAPH;
+    else if (unit === 'pages')      wordMin = minV * WORDS_PER_PAGE;
+    else                            wordMin = Math.round(minV / CHARS_PER_WORD);
+  }
+  return { mode, limit, min: (mode === 'range' ? minV : null), unit, wordLimit, wordMin: wordMin || null };
 }
 
 function updateLengthConstraintHint() {
@@ -2907,22 +2953,22 @@ function updateLengthConstraintHint() {
   if (!hintEl) return;
   const c = getLengthConstraint();
   if (!c) { hintEl.textContent = ''; return; }
-  // Show word estimate for the fuzzy-ish units (pages, paragraphs) and for characters
-  // (because 500 chars ≈ 91 words is a useful sanity check). Words is self-explanatory.
   if (c.unit === 'words') {
     hintEl.textContent = '';
+  } else if (c.mode === 'range' && c.wordMin) {
+    hintEl.textContent = `≈ ${c.wordMin.toLocaleString()}–${c.wordLimit.toLocaleString()} words`;
   } else {
     hintEl.textContent = `≈ ${c.wordLimit.toLocaleString()} words`;
   }
 }
 
-// v3.32.28 — #6b convergence-path length check helper.
+// v3.32.28 / v3.33.0 — Convergence-path length check helper.
 // Returns the doc's length status against the active constraint:
-//   { status: 'ok' | 'over' | 'under', actual, limitNum, floorNum, unitName, limitName }
-// Returns null when there is no active length constraint (no convergence
-// gate is meaningful without a target). The convergence pre-check uses
-// this to decide whether to surface the lengthGuardPrompt before pushing
-// to history and playing the celebration scene.
+//   { status: 'ok' | 'over' | 'under', actual, limitNum, floorNum, unitName, limitName, mode }
+// 'under' is only ever returned in target or range mode (no floor exists in
+// hardcap or none). The convergence pre-check uses this to decide whether to
+// surface the lengthGuardPrompt before pushing to history and playing the
+// celebration scene.
 function getLengthStatus(text) {
   const c = getLengthConstraint();
   if (!c) return null;
@@ -2932,11 +2978,60 @@ function getLengthStatus(text) {
   const limitName = c.unit === 'pages'
     ? `${c.limit} page${c.limit !== 1 ? 's' : ''} (≈${c.wordLimit} words)`
     : `${c.limit} ${unitLabel(c.unit, c.limit)}`;
-  const floorNum  = Math.round(limitNum * LENGTH_FLOOR_RATIO);
+  // Floor depends on mode:
+  //   • hardcap / none — no floor (status never 'under')
+  //   • target          — floor = limit (Builder told to hit N exactly; trajectory-aware
+  //                       at the round level, exact-match at convergence)
+  //   • range           — floor = min
+  let floorNum = 0;
+  if (c.mode === 'target') {
+    floorNum = limitNum;
+  } else if (c.mode === 'range' && c.min) {
+    floorNum = c.unit === 'pages' ? (c.wordMin || c.min) : c.min;
+  }
   let status = 'ok';
-  if (actual > limitNum)      status = 'over';
-  else if (actual < floorNum) status = 'under';
-  return { status, actual, limitNum, floorNum, unitName, limitName };
+  if (actual > limitNum)                       status = 'over';
+  else if (floorNum > 0 && actual < floorNum)  status = 'under';
+  return { status, actual, limitNum, floorNum, unitName, limitName, mode: c.mode };
+}
+
+// v3.33.0 — Mode picker click handler. Updates active pill, toggles the min
+// field visibility for range mode, syncs the description line under the
+// pills, persists via saveProject, and refreshes the hint.
+function setLengthMode(mode) {
+  const validModes = ['none', 'hardcap', 'target', 'range'];
+  if (!validModes.includes(mode)) mode = 'none';
+  document.querySelectorAll('.length-mode-pill').forEach(p => {
+    const isActive = p.dataset.lengthMode === mode;
+    p.classList.toggle('is-active', isActive);
+    p.setAttribute('aria-selected', isActive ? 'true' : 'false');
+  });
+  // Show/hide range-specific UI (min field + separator)
+  const minEl = document.getElementById('lengthMin');
+  const sepEl = document.getElementById('lengthRangeSep');
+  if (minEl) minEl.style.display = (mode === 'range') ? '' : 'none';
+  if (sepEl) sepEl.style.display = (mode === 'range') ? '' : 'none';
+  // Update placeholder on the main field for clarity
+  const llEl = document.getElementById('lengthLimit');
+  if (llEl) {
+    if (mode === 'range')        llEl.placeholder = 'max';
+    else if (mode === 'target')  llEl.placeholder = 'e.g. 300';
+    else if (mode === 'hardcap') llEl.placeholder = 'e.g. 200';
+    else                         llEl.placeholder = '';
+    llEl.disabled = (mode === 'none');
+  }
+  if (minEl) minEl.disabled = (mode !== 'range');
+  // Update mode description
+  const descEl = document.getElementById('lengthModeDesc');
+  if (descEl) {
+    if (mode === 'none')         descEl.textContent = 'No length gating. Reviewers and Builder receive no length instruction.';
+    else if (mode === 'hardcap') descEl.textContent = 'Stay at or below the limit. Shorter is fine. Round-end and convergence-time guards fire only when the document goes over.';
+    else if (mode === 'target')  descEl.textContent = 'Aim to hit the target value. Both ceiling and floor guards are armed; round-end checks are trajectory-aware so you only get prompted on rounds that move away from the target.';
+    else if (mode === 'range')   descEl.textContent = 'Stay between the minimum and maximum. Both guards armed against their respective bounds.';
+  }
+  saveProject();
+  updateLengthConstraintHint();
+  updateProjectRequirements?.();
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -3070,7 +3165,9 @@ async function clearProject() {
   const _tplBanner = document.getElementById('templateHintBanner');
   if (_tplBanner) _tplBanner.style.display = 'none';
   const llEl = document.getElementById('lengthLimit'); if (llEl) llEl.value = '';
+  const lmEl = document.getElementById('lengthMin');   if (lmEl) lmEl.value = '';
   const luEl = document.getElementById('lengthUnit');  if (luEl) luEl.value = 'characters';
+  setLengthMode('none');
   updateGoalCounter();
   updateLengthConstraintHint();
   updateMaskPreview();
@@ -3449,8 +3546,18 @@ function loadSettings() {
       }
       if (p.exportMask)     { const el = document.getElementById('exportMask');     if (el) { el.value = p.exportMask; updateMaskPreview(); } }
       if (p.lengthLimit)    { const el = document.getElementById('lengthLimit');    if (el) el.value = p.lengthLimit; }
+      if (p.lengthMin)      { const el = document.getElementById('lengthMin');      if (el) el.value = p.lengthMin; }
       if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
-      if (p.lengthLimit || p.lengthUnit) updateLengthConstraintHint();
+      // v3.33.0 migration: pre-v3.33.0 projects have no lengthMode field. If a
+      // length limit is set without a mode, coerce to 'hardcap' (preserves prior
+      // ceiling-only behavior). Empty limit → 'none'. New projects use the
+      // explicit value.
+      let _restoreMode = p.lengthMode;
+      if (!_restoreMode || !['none','hardcap','target','range'].includes(_restoreMode)) {
+        _restoreMode = (p.lengthLimit && parseInt(p.lengthLimit, 10) > 0) ? 'hardcap' : 'none';
+      }
+      setLengthMode(_restoreMode);
+      if (p.lengthLimit || p.lengthMin || p.lengthUnit) updateLengthConstraintHint();
       if (p.docTab) docTab = p.docTab;
       // ── PASTED STARTING DOCUMENT restore (v3.21.14) ──
       // Mirror of reference material restore: paste textarea content was DOM-only
@@ -10838,16 +10945,23 @@ function buildPromptForAI(ai, reviewerResponses) {
   }
 
   // Inject length constraint if set
+  // v3.33.0 — Mode-aware language. Hard cap = ceiling only, Target = exact,
+  // Range = bounded. Per-mode strings match the user-facing description so
+  // the Builder gets the same instruction the user expects.
   const _lc = getLengthConstraint();
   if (_lc) {
-    if (_lc.unit === 'pages') {
-      prompt += `LENGTH CONSTRAINT: Target ${_lc.limit} page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words). Pages depend on font and layout, so treat this as a word-count target. The final document must not exceed this length.\n\n`;
-    } else if (_lc.unit === 'paragraphs') {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} paragraph${_lc.limit !== 1 ? 's' : ''}, separated by blank lines. This is a hard limit.\n\n`;
-    } else if (_lc.unit === 'words') {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} words. This is a hard limit.\n\n`;
-    } else {
-      prompt += `LENGTH CONSTRAINT: The final document must contain no more than ${_lc.limit} characters, including spaces. This is a hard limit.\n\n`;
+    let unitWord;
+    if (_lc.unit === 'pages')        unitWord = `page${_lc.limit !== 1 ? 's' : ''} (approximately ${_lc.wordLimit} words; pages depend on font and layout, so treat this as a word-count target)`;
+    else if (_lc.unit === 'paragraphs') unitWord = `paragraph${_lc.limit !== 1 ? 's' : ''}, separated by blank lines`;
+    else if (_lc.unit === 'words')   unitWord = 'words';
+    else                             unitWord = 'characters, including spaces';
+
+    if (_lc.mode === 'hardcap') {
+      prompt += `LENGTH CONSTRAINT (hard cap): The final document must contain no more than ${_lc.limit} ${unitWord}. Stay at or below this limit. Shorter is fine.\n\n`;
+    } else if (_lc.mode === 'target') {
+      prompt += `LENGTH CONSTRAINT (target): Hit ${_lc.limit} ${unitWord} exactly. Do not deliver less, do not deliver more.\n\n`;
+    } else if (_lc.mode === 'range') {
+      prompt += `LENGTH CONSTRAINT (range): The final document must contain between ${_lc.min} and ${_lc.limit} ${unitWord}. Aim for the middle of that range.\n\n`;
     }
   }
 
@@ -11030,7 +11144,16 @@ async function runBuilderOnly() {
         actual     = countInUnit(newDoc,  _lcGate.unit);
         prevActual = countInUnit(docText, _lcGate.unit);
         limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-        floorNum   = Math.round(limitNum * LENGTH_FLOOR_RATIO);
+        // v3.33.0 — Floor is mode-driven. Hardcap has no floor (undersized
+        // branch never fires). Target floor = limit (Builder told to hit N
+        // exactly; trajectory-aware logic still applies). Range floor = min.
+        if (_lcGate.mode === 'target') {
+          floorNum = limitNum;
+        } else if (_lcGate.mode === 'range' && _lcGate.min) {
+          floorNum = _lcGate.unit === 'pages' ? (_lcGate.wordMin || _lcGate.min) : _lcGate.min;
+        } else {
+          floorNum = 0; // hardcap — no floor
+        }
         unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
         limitName  = _lcGate.unit === 'pages'
           ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
@@ -11048,16 +11171,13 @@ async function runBuilderOnly() {
           // Prior was within target — strict ceiling applies.
           bloatFail = (actual > limitNum);
         }
-        // v3.32.28 — Symmetric undersized branch (#6d). Mirror of the
-        // bloat trajectory rule. If prior was already under the floor,
-        // accept any growth (new > prev) even if still below floor.
-        // Otherwise the user gets stuck on a starting doc that began
-        // below floor and the Builder is conservatively building up
-        // toward target. If prior was at-or-above floor but the round
-        // dropped below, that's a real undersized regression — fail.
-        // Mutually exclusive with bloatFail by construction (a doc
-        // cannot be both over ceiling and under floor simultaneously).
-        if (!bloatFail && actual < floorNum) {
+        // v3.32.28 / v3.33.0 — Symmetric undersized branch. Only fires when
+        // a floor exists (target or range mode). Mirror of the bloat
+        // trajectory rule: if prior was already under the floor, accept any
+        // growth even if still below; if prior was at-or-above floor but the
+        // round dropped below, that's a real undersized regression — fail.
+        // Mutually exclusive with bloatFail by construction.
+        if (floorNum > 0 && !bloatFail && actual < floorNum) {
           if (prevActual < floorNum) {
             undersizedFail = (actual <= prevActual);
           } else {
@@ -11110,12 +11230,22 @@ async function runBuilderOnly() {
       // "Continue Anyway" against in the unconstrained case.
       let _userKept = false;
       if ((bloatFail || undersizedFail) && gateConstrained) {
+        // v3.33.0 — Floor label depends on mode. Target floor IS the limit
+        // ("hit N exactly"). Range floor is the user-supplied min.
+        let floorLabel;
+        if (_lcGate.mode === 'target') {
+          floorLabel = `${floorNum} ${unitName} (target)`;
+        } else if (_lcGate.mode === 'range') {
+          floorLabel = `${floorNum} ${unitName} (range minimum)`;
+        } else {
+          floorLabel = `${floorNum} ${unitName}`;
+        }
         const choice = await lengthGuardPrompt({
           kind: bloatFail ? 'over' : 'under',
           actual, prevActual,
           limitNum: bloatFail ? limitNum : floorNum,
           unitName,
-          limitName: bloatFail ? limitName : `${floorNum} ${unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${limitName})`,
+          limitName: bloatFail ? limitName : floorLabel,
           builderName: builderAI.name
         });
         if (choice === 'keep') {
@@ -11438,7 +11568,7 @@ async function runRound() {
           unitName: cstat.unitName,
           limitName: cstat.status === 'over'
             ? cstat.limitName
-            : `${cstat.floorNum} ${cstat.unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${cstat.limitName})`,
+            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode),
           builderName: 'The Hive'
         });
         if (choice === 'discard') {
@@ -11532,7 +11662,7 @@ async function runRound() {
           unitName: cstat.unitName,
           limitName: cstat.status === 'over'
             ? cstat.limitName
-            : `${cstat.floorNum} ${cstat.unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${cstat.limitName})`,
+            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode),
           builderName: 'The Hive'
         });
         if (choice === 'discard') {
@@ -11651,7 +11781,14 @@ async function runRound() {
           actual     = countInUnit(newDoc,  _lcGate.unit);
           prevActual = countInUnit(docText, _lcGate.unit);
           limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
-          floorNum   = Math.round(limitNum * LENGTH_FLOOR_RATIO);
+          // v3.33.0 — Mode-driven floor (matches the runRound site above).
+          if (_lcGate.mode === 'target') {
+            floorNum = limitNum;
+          } else if (_lcGate.mode === 'range' && _lcGate.min) {
+            floorNum = _lcGate.unit === 'pages' ? (_lcGate.wordMin || _lcGate.min) : _lcGate.min;
+          } else {
+            floorNum = 0; // hardcap — no floor
+          }
           unitName   = _lcGate.unit === 'pages' ? 'words' : unitLabel(_lcGate.unit, actual);
           limitName  = _lcGate.unit === 'pages'
             ? `${_lcGate.limit} page${_lcGate.limit !== 1 ? 's' : ''} (≈${_lcGate.wordLimit} words)`
@@ -11667,9 +11804,9 @@ async function runRound() {
           } else {
             bloatFail = (actual > limitNum);
           }
-          // v3.32.28 — Symmetric undersized branch (#6d). Mirror of the
-          // bloat trajectory rule. See runBuilderOnly for full comment.
-          if (!bloatFail && actual < floorNum) {
+          // v3.32.28 / v3.33.0 — Symmetric undersized branch. Only fires when
+          // a floor exists (target or range mode). See runRound for full comment.
+          if (floorNum > 0 && !bloatFail && actual < floorNum) {
             if (prevActual < floorNum) {
               undersizedFail = (actual <= prevActual);
             } else {
@@ -11721,7 +11858,7 @@ async function runRound() {
             actual, prevActual,
             limitNum: bloatFail ? limitNum : floorNum,
             unitName,
-            limitName: bloatFail ? limitName : `${floorNum} ${unitName} (${Math.round(LENGTH_FLOOR_RATIO * 100)}% of ${limitName})`,
+            limitName: bloatFail ? limitName : lengthFloorLabel(floorNum, unitName, _lcGate.mode),
             builderName: builderAI.name
           });
           if (choice === 'keep') {

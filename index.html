@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-004">
+  <meta name="waxframe-build" content="20260508-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.33">
+  <link rel="stylesheet" href="style.css?v=3.33.0">
 </head>
 <body>
 
@@ -270,8 +270,17 @@
             <h3 class="proj-goal-heading">Length Constraint <button class="goal-info-btn" onclick="document.getElementById('infoLengthModal').classList.add('active')" title="About length measurement"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></h3>
             <span class="length-constraint-hint" id="lengthConstraintHint"></span>
           </div>
-          <p class="length-constraint-desc">Set a maximum length if your document needs to fit within a specific limit. Leave blank for unconstrained.</p>
-          <div class="length-constraint-fields">
+          <p class="length-constraint-desc">Pick a mode that matches what your document needs. The Builder is told the rule for the mode you choose, and round-end and convergence-time guards fire accordingly.</p>
+          <div class="length-mode-pills" id="lengthModePills" role="tablist" aria-label="Length constraint mode">
+            <button type="button" class="length-mode-pill is-active" data-length-mode="none"    onclick="setLengthMode('none')"    role="tab" aria-selected="true">No limit</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="hardcap" onclick="setLengthMode('hardcap')" role="tab" aria-selected="false">Hard cap</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="target"  onclick="setLengthMode('target')"  role="tab" aria-selected="false">Target</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="range"   onclick="setLengthMode('range')"   role="tab" aria-selected="false">Range</button>
+          </div>
+          <p class="length-mode-desc" id="lengthModeDesc"></p>
+          <div class="length-constraint-fields" id="lengthConstraintFields">
+            <input type="number" id="lengthMin" min="1" placeholder="min" class="length-limit-input length-limit-input--min" oninput="saveProject();updateLengthConstraintHint()" style="display:none;">
+            <span class="length-range-sep" id="lengthRangeSep" style="display:none;">to</span>
             <input type="number" id="lengthLimit" min="1" placeholder="e.g. 200" class="length-limit-input" oninput="saveProject();updateLengthConstraintHint()">
             <select id="lengthUnit" class="length-unit-select" onchange="saveProject();updateLengthConstraintHint()">
               <option value="characters">Characters</option>
@@ -2014,9 +2023,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.32.33"></script>
+<script src="js/version.js?v=3.33.0"></script>
 <script src="js/templates.js?v=3.32.13"></script>
-<script src="js/app.js?v=3.32.33"></script>
+<script src="js/app.js?v=3.33.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

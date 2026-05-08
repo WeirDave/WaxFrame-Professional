@@ -4162,6 +4162,54 @@ kbd {
   gap: 8px;
   align-items: center;
 }
+
+/* v3.33.0 — Length mode picker (4 pills above the input row) */
+.length-mode-pills {
+  display: flex;
+  gap: 6px;
+  margin: 0 0 8px;
+  flex-wrap: wrap;
+}
+.length-mode-pill {
+  padding: 6px 14px;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: var(--font-display);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.length-mode-pill:hover {
+  background: var(--surface3);
+  color: var(--text);
+}
+.length-mode-pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0c12;
+}
+[data-theme="light"] .length-mode-pill.is-active {
+  color: #ffffff;
+}
+.length-mode-desc {
+  font-size: 12px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+.length-range-sep {
+  color: var(--text-dim);
+  font-size: 13px;
+  font-family: var(--font-mono);
+  padding: 0 2px;
+}
+.length-limit-input--min {
+  width: 90px;
+}
+
 .length-limit-input {
   width: 110px;
   padding: 7px 10px;
