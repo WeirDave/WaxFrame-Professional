@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-012
+   Build: 20260508-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -948,7 +948,7 @@ html, body {
      `.work-project-name { text-overflow: ellipsis }` rule then kicks in
      correctly as the name competes for the constrained left-zone width.
      At wider viewports this still leaves plenty of room for full names;
-     at laptop widths (~1422px) it cleanly truncates instead of overlapping. */
+     at laptop widths (~1366px) it cleanly truncates instead of overlapping. */
   max-width: calc(50% - 150px);
 }
 .work-topbar-center {
@@ -3452,7 +3452,7 @@ html, body {
   flex-direction: column;
 }
 
-/* ── 3-column body grid — designed for 1422px minimum viewport ── */
+/* ── 3-column body grid — designed for 1366px minimum viewport ── */
 .import-server-body {
   flex: 1 1 0;
   min-height: 0;
@@ -3888,7 +3888,7 @@ html, body {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LAPTOP TIER (1422–1600px): collapse cols 2+3 into a single
+   LAPTOP TIER (1366–1600px): collapse cols 2+3 into a single
    right region whose content swaps based on modal state. Keeps
    col 1 (inputs) stable; lets the model list / help / error /
    raw-response each own the full right region when active.
@@ -8764,7 +8764,7 @@ kbd {
   .goal-field-textarea { min-height: 56px; rows: 2; }
 }
 
-/* ── Laptop tier (1422–1600px): scale down from 1920 base ── */
+/* ── Laptop tier (1366–1600px): scale down from 1920 base ── */
 @media (max-width: 1600px) {
   .setup-intro-bee { width: 140px; height: 140px; }
   .setup-single-card { padding: 20px 24px 28px; }
