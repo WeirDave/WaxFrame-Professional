@@ -1,6 +1,19 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.5
+**Build:** `20260508-012` · **Released:** May 8, 2026
+
+Work-screen header alignment fix. The Working Document column header sat ~8px lower than the THE HIVE header (left column) and the WaxFrame logo block (right column) — visible gap at all viewports. Root cause: inconsistent `margin-top` recipes across the three column-top elements, with the center column compounding margins (panel wrapper had its own 8px on top of the header's 6px). Fixed by establishing one canonical recipe across all three columns.
+
+- **Canonical rule established for all three work-screen column tops.** All three panels use `margin-top: 0`. All three header/top elements use `margin-top: 6px`. Result: every column header sits at exactly 6px from the work-main grid top, perfectly aligned. Two declarations changed to enforce the rule.
+- **`.work-doc-panel` margin: `8px 0` → `0 0 8px`.** Zeroed the wrapper's top margin (was the only column-panel with a non-zero top margin); preserved the 8px bottom margin which separates the panel from layout below it. Center column header now sits at 0 (panel) + 6 (header) = 6px from grid top, matching the others.
+- **`.work-right-logo` margin: `8px 8px 4px` → `6px 8px 4px`.** Synced the right column's top edge from 8px down to 6px to match the canonical 6px header rule. Below the threshold of perception in isolation, but matters when sitting next to columns that are at 6px.
+- **What did NOT change.** No 80ch column constraints touched (all 16 `calc(80ch + ...)` and `calc(44px + 80ch + ...)` rules verified byte-identical, line-shifted only by the v3.34.4 sub-floor sweep). No `.work-doc-editor`, `.work-doc-scroll`, `.work-doc-inner`, or `.work-doc-ta` rules touched. No widths, paddings, or grid-template properties touched. Two `margin` declarations, full stop. The Working Document column's hard-won 80-character constraint is unaffected.
+- **Visible at all reachable viewports.** Desktop, Laptop, Short, and floor — every smoke-test viewport now shows the three column headers in clean horizontal alignment. The 8px center-column gap that prompted the diagnosis is gone.
+- **Version stamps in code bumped** to v3.34.5 / build 20260508-012 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.4
 **Build:** `20260508-011` · **Released:** May 8, 2026
 
