@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260508-003
+     Build: 20260508-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-003">
+  <meta name="waxframe-build" content="20260508-004">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.32.32">
+  <link rel="stylesheet" href="style.css?v=3.32.33">
 </head>
 <body class="helper-body">
 
@@ -107,6 +107,9 @@
             <span class="doc-sidebar-quickstart-sub">First time? Start here.</span>
           </span>
         </a>
+
+        <div class="doc-sidebar-category">⚠️ Read first</div>
+        <a href="#cat-at-work"         class="doc-sidebar-link">🔒 Running at work</a>
 
         <div class="doc-sidebar-category">Career &amp; Hiring</div>
         <a href="#cover-letter"        class="doc-sidebar-link">✉️ Cover Letter</a>
@@ -214,6 +217,35 @@
 
         </div><!-- /hp-section-body Quick Start -->
       </div><!-- /hp-section Quick Start -->
+
+    <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: RUNNING AT WORK / INTERNAL AI SERVER -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-at-work">🔒 Running at work or on an internal AI server</h2>
+            <p class="hp-section-sub">Caveats for using these playbooks on a corporate or internal AI gateway — the substrate matters.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="wh-section" id="at-work-caveats">
+    <div class="wh-block">
+      <p>The round counts shown in the playbooks below were measured on <strong>public-AI hives</strong> — ChatGPT, Claude, Gemini, and similar consumer-facing models with internet access. If you're running WaxFrame on the AI platform your IT team set up at work (Open WebUI, LM Studio, on-prem deployments), expect different round counts and convergence patterns.</p>
+      <p>The substrate matters. An internal AI server hosts whatever models your IT team has provisioned, and those models can have knowledge cutoffs months or years apart. On factually-anchored documents this can extend convergence or cause non-convergence. On opinion-or-style-driven documents — which most of the playbooks below are — the substrate matters much less.</p>
+      <p>Two quick mitigations:</p>
+      <ul>
+        <li><strong>For factual content:</strong> use Setup 4 (Reference Material) to inject a shared baseline so all AIs work from the same source of truth.</li>
+        <li><strong>For testing a new prompt:</strong> run the same project setup on a public-AI hive at home as a control before assuming WaxFrame is the problem.</li>
+      </ul>
+      <p>Full guidance on running WaxFrame in enterprise environments is in the user manual: <a href="waxframe-user-manual.html#appendix-c" target="_blank" class="link-accent">Appendix C — Using WaxFrame at Work ↗</a>.</p>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Running at Work -->
+      </div><!-- /hp-section Running at Work -->
 
     <!-- ═══════════════════════════════════════════════ -->
     <!-- CATEGORY: CAREER & HIRING -->
@@ -1392,7 +1424,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.32.32"></script>
+<script src="js/version.js?v=3.32.33"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
