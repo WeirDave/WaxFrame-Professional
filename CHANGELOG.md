@@ -1,6 +1,18 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.1
+**Build:** `20260508-008` · **Released:** May 8, 2026
+
+Fast follow on v3.34.0. Surgical fix for a pre-existing bug surfaced during R1's smoke-test: the Setup 2 (Builder picker) page was overflowing vertically and forcing scroll at viewports above 900px tall but below the prior compaction threshold (e.g. 1872×938, 1920×1080 with browser windowed). Two-line CSS edit; no architectural changes; first opportunistic application of the canonical-tier rule from R1.
+
+- **`.builder-pick-grid-large .builder-pick-btn` aspect-ratio: 2/1 → 2.6/1.** At desktop-tier widths above the laptop compaction trigger, the prior 2:1 ratio made cards ~215px tall apiece, and two rows + bee mascot + amber band + Continue button overflowed the viewport. 2.6:1 keeps cards substantial and landscape-shaped while pulling height down enough that the full Setup 2 page fits in 938+ tall viewports without scroll. At 1872×938 cards are now ~165px tall instead of ~215px, saving ~100px of total grid height.
+- **Builder-card compaction trigger updated from non-canonical 1421/900 to canonical 1600/900.** Old rule: `@media (max-width: 1421px), (max-height: 900px)`. New rule: `@media (max-width: 1600px), (max-height: 900px)`. The 1421px width threshold pre-dated the canonical viewport tier system from v3.34.0 — it referenced the project's previous floor and didn't align with any tier boundary. New rule fires across the full Laptop tier (≤1600 wide) instead of just the bottom 55px of it. Means viewports like 1500×900 also get the more-aggressive 3.8:1 compaction now (previously they were just outside the trigger and using the un-compacted 2:1). Height trigger 900px unchanged — already canonical Short tier. First opportunistic application of the canonical breakpoint rule from R1: any pre-v3.34.0 media query using non-canonical breakpoints (1421, 1500, 1700, 1100, 1200, 800, 720) gets migrated to canonical tiers when its surrounding code is touched.
+- **Smoke-tested at all six R1 viewports.** WF-Floor (1366×768), WF-Laptop (1500×900), WF-Window-QHD (1872×938), WF-Desktop-FHD (1920×1080), WF-Desktop-QHD (2560×1440), WF-Ultrawide (3440×1440). Setup 2 fits without scroll at all six. Math: at 1872 wide with setup-card max-width 1390 and 3-column grid, each card is ~440 wide; at 2.6:1 aspect that's ~169 tall; two rows + 14px gap = ~352. Available vertical space at 938 viewport (after header/intro/buttons) is ~620. Comfortable margin.
+- **Out of scope (still tracked for later releases of the pass):** sub-floor dead-CSS sweep (R2), spacing-token introduction (R4), font-size token migration (R5+), `clamp()`-based fluid scaling (R-final).
+- **Version stamps in code bumped** to v3.34.1 / build 20260508-008 across the canonical 4-stamp checklist (`index.html` `waxframe-build` meta, `js/version.js` `APP_VERSION`, `js/app.js` `BUILD` constant, `index.html` cache-bust query strings on `style.css`, `js/version.js`, `js/templates.js`, `js/app.js`) plus the full 6-file cache-bust sweep covering `index.html` and the 5 helper pages. Each helper page's `waxframe-build` meta and comment-header `Build:` stamp synced. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.0
 **Build:** `20260508-007` · **Released:** May 8, 2026
 
