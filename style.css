@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-017
+   Build: 20260508-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9014,27 +9014,35 @@ kbd {
   text-align: center;
 }
 .ref-card {
-  background: var(--surface);
-  border: 2px solid var(--accent);
-  border-radius: var(--radius);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 .ref-card:focus-within {
-  border-color: var(--accent-bright, var(--accent));
+  border-color: var(--accent);
 }
 .ref-card-hdr {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  padding: var(--space-8) var(--space-12);
-  border-bottom: 1px dashed var(--accent-dim);
+  padding: var(--space-10) var(--space-14);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 .ref-card-source-badge {
-  font-size: var(--fs-16);
   flex-shrink: 0;
   cursor: help;
+  display: inline-flex;
+  align-items: center;
+}
+.ref-card-source-icon {
+  vertical-align: -5px;
+  display: inline-block;
 }
 .ref-card-position {
   display: inline-flex;
@@ -9049,7 +9057,7 @@ kbd {
   background: var(--accent);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
   flex-shrink: 0;
-  cursor: help;
+  cursor: default;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
@@ -9058,7 +9066,7 @@ kbd {
   font-family: var(--font);
   font-size: var(--fs-14);
   font-weight: 600;
-  color: var(--text);
+  color: #ffffff;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-sm);
@@ -9066,28 +9074,42 @@ kbd {
   min-width: 0;
 }
 .ref-card-name:hover {
-  border-color: var(--border2);
+  border-color: rgba(255,255,255,0.25);
 }
 .ref-card-name:focus {
   outline: none;
   border-color: var(--accent);
   background: var(--surface);
+  color: var(--text);
 }
 .ref-card-actions {
   display: flex;
   gap: var(--space-4);
   flex-shrink: 0;
 }
+.ref-card-hdr .ref-card-arrow,
+.ref-card-hdr .ref-card-remove {
+  background: transparent;
+  color: #ffffff;
+  border-color: rgba(255,255,255,0.25);
+}
+.ref-card-hdr .ref-card-arrow:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.5);
+}
 .ref-card-arrow {
   min-width: 28px;
   padding: var(--space-4) var(--space-8);
-  font-family: var(--font-mono);
+  font-family: var(--font);
+  font-size: var(--fs-14);
+  font-weight: 700;
+  line-height: 1;
 }
 .ref-card-remove {
   min-width: 28px;
   padding: var(--space-4) var(--space-8);
 }
-.ref-card-remove:hover {
+.ref-card-hdr .ref-card-remove:hover {
   background: var(--red-dim);
   border-color: var(--red);
   color: var(--red);
@@ -9096,7 +9118,8 @@ kbd {
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
-  padding: var(--space-10) var(--space-12);
+  padding: var(--space-12) var(--space-14);
+  background: var(--surface);
 }
 /* v3.29.1 — paste-mode wrapper: flex row with line-numbers gutter on the
    left and the textarea filling the rest. The wrapper itself carries the
@@ -9204,7 +9227,7 @@ kbd {
   margin: 14px 0;
 }
 .ref-action-target {
-  border: 2px dashed var(--accent);
+  border: 2px dashed var(--border2);
   border-radius: var(--radius-md);
   padding: var(--space-16) var(--space-18);
   text-align: center;
