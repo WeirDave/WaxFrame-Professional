@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260429-022
+   Build: 20260508-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -88,6 +88,25 @@ input, textarea, select { font-family: inherit; }
   --fs-2xl:  28px;   /* logo/brand name */
   --fs-mono: 13px;   /* all Courier New — textarea, code */
 }
+
+/* ══════════════════════════════════════════════════════════════
+   CANONICAL VIEWPORT TIERS — DO NOT INVENT NEW BREAKPOINTS
+   ══════════════════════════════════════════════════════════════
+   Floor:    <1366 wide OR <768 tall  → min-screen-overlay shown
+   Laptop:   1366–1600 wide           → @media (max-width: 1600px)
+   Desktop:  1601+ wide               → base rules (no media query)
+   Short:    ≤900 tall                → @media (max-height: 900px)
+
+   Compaction principle: at Laptop / Short tiers, type shrinks and
+   padding tightens — but information is never removed. The only
+   acceptable display:none at a compaction tier is for purely
+   decorative elements (hero illustrations, ambient mascots).
+   Never display:none on text content, status, or metadata.
+
+   Layout swaps (e.g. hex-grid → bee-dot-strip at laptop) are
+   permitted when the alternate UI presents the same information
+   via interaction (hover/click tooltip).
+   ══════════════════════════════════════════════════════════════ */
 
 /* Light theme */
 [data-theme="light"] {
@@ -2228,31 +2247,25 @@ html, body {
 /* Ultra-wide (4K / 5K / curved widescreen) — let gaps soak up extra space naturally,
    panels already capped at 640px so nothing stretches beyond that. No overrides needed. */
 
-/* Laptop — panels compress, logo shrinks, gaps collapse */
-@media (max-width: 1700px) {
-  .work-right-logo-img { width: 100px; height: 100px; }
-  .work-right-logo-name { font-size: 22px; }
-  .work-right-logo-tag { font-size: 11px; }
-  .work-right-logo-version { font-size: 9px; letter-spacing: 0.1em; margin-top: 3px; }
-}
-@media (max-width: 1500px) {
-  .work-right-logo-img { width: 72px; height: 72px; }
-  .work-right-logo-name { font-size: 18px; }
-  .work-right-logo-tag { font-size: 10px; letter-spacing: 0.06em; }
-  .work-right-logo-version { font-size: 9px; letter-spacing: 0.06em; margin-top: 2px; }
-  .work-right-logo { padding: 8px 10px; margin: 6px 6px 3px; }
-  .left-panel-header { padding: 6px 10px; margin: 5px 6px 2px; }
-}
+/* Laptop tier (1366–1600) — single canonical block.
+   v3.34.0: replaced the prior 1700/1500/1600 cascade. The 1500 block
+   was fully overridden by 1600 (cascade-order bug). The 1700 block
+   created a hard step at the desktop boundary. Now: Desktop uses
+   base rules; Laptop uses this single canonical block. Tag and
+   version REMAIN VISIBLE per the compaction principle — only their
+   font-size shrinks. */
 @media (max-width: 1600px) {
-  /* At laptop (1470px) — panels compress, setup page 2 optimized */
+  /* work-right-logo — compact but information-preserving */
+  .work-right-logo-img { width: 56px; height: 56px; }
+  .work-right-logo-name { font-size: 15px; }
+  .work-right-logo-tag { font-size: 9px; letter-spacing: 0.05em; }
+  .work-right-logo-version { font-size: 8px; letter-spacing: 0.05em; margin-top: 2px; }
+  .work-right-logo { padding: 6px 8px; gap: 8px; margin: 5px 5px 3px; }
+
+  /* Work-main panels compress */
   .work-main {
     grid-template-columns: minmax(300px, 380px) 0 auto 0 minmax(300px, 380px);
   }
-  .work-right-logo-img { width: 56px; height: 56px; }
-  .work-right-logo-name { font-size: 15px; }
-  .work-right-logo-tag { display: none; }
-  .work-right-logo-version { display: none; }
-  .work-right-logo { padding: 6px 8px; gap: 8px; margin: 5px 5px 3px; }
   .dcw-digits { font-size: 16px; }
   .dcw-label-top { font-size: 9px; }
   .dcw-label-bot { font-size: 9px; }
@@ -8694,7 +8707,7 @@ kbd {
   text-align: center;
   padding: 32px;
 }
-@media (max-width: 1421px), (max-height: 810px) {
+@media (max-width: 1365px), (max-height: 767px) {
   .min-screen-overlay { display: flex; }
 }
 .min-screen-card {
