@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260506-014';         // build stamp — update each session
+const BUILD       = '20260507-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5150,10 +5150,16 @@ async function rearmLengthGuard() {
   );
   if (!ok) return;
   window._lengthGuardOverride = false;
-  saveSession();
   updateLengthGuardIndicator();
   consoleLog(`📏 Length guard re-armed for this project`, 'info');
   toast('📏 Length guard re-armed', 3000);
+  // v3.32.29 — #7 fix. saveSession() moved to last statement so the
+  // persisted console snapshot includes the "re-armed" line. Prior
+  // ordering wrote the snapshot BEFORE consoleLog/toast fired, which
+  // meant the persisted console (consoleHTML in IDB session) lost the
+  // re-arm entry after refresh. Override flag round-trips correctly
+  // either way — this is a cosmetic console-history fix only.
+  saveSession();
 }
 
 function setCachedRecommendation(cacheId, model, why, labels, none) {
@@ -10282,6 +10288,93 @@ function avatarColor(name) {
   return palette[Math.abs(hash) % palette.length];
 }
 
+// ── v3.32.29 — Bee-dot tooltip (laptop viewport ≤1600px) ──
+// Custom 3-line tooltip that appears on hover/focus over a .bee-dot:
+//   • AI name (bold)
+//   • Role: Builder | Reviewer
+//   • Current state (mirrors the big-card .hex-status text — pulled from
+//     blive-${id} which is the same element setBeeStatus writes to)
+// The tooltip element is a singleton appended to <body> on first show.
+// State line updates live: setBeeStatus calls refreshBeeTooltip(id) at
+// the end of each call when window._wfHoveredBeeId === id, so a hover
+// that started during 'Reviewing…' will tick over to 'No changes needed
+// ✓' (or whatever) the moment the state changes — no need to mouseleave/
+// re-enter. Native browser `title` attribute was removed to avoid the
+// double-tooltip artifact on slow hover.
+function ensureBeeTooltipEl() {
+  let tt = document.getElementById('beeDotTooltip');
+  if (tt) return tt;
+  tt = document.createElement('div');
+  tt.id = 'beeDotTooltip';
+  tt.className = 'bee-dot-tooltip';
+  tt.setAttribute('role', 'tooltip');
+  tt.innerHTML =
+    '<div class="bdt-name"></div>' +
+    '<div class="bdt-role"></div>' +
+    '<div class="bdt-state"></div>';
+  document.body.appendChild(tt);
+  return tt;
+}
+
+function getBeeStateText(aiId) {
+  // Pull the live status text from the (hidden-at-laptop) hex-card's
+  // status element — single source of truth for what the AI is doing
+  // right now. Cards are hidden via `.hex-grid { display: none }` at
+  // ≤1600px but the elements still exist in DOM, so getElementById
+  // works fine.
+  const live = document.getElementById('blive-' + aiId);
+  if (live && live.textContent && live.textContent.trim()) return live.textContent.trim();
+  return 'Idle';
+}
+
+function showBeeTooltip(aiId, dotEl) {
+  if (!aiId || !dotEl) return;
+  const ai = activeAIs.find(a => a.id === aiId);
+  if (!ai) return;
+  const tt = ensureBeeTooltipEl();
+  tt.querySelector('.bdt-name').textContent  = ai.name;
+  tt.querySelector('.bdt-role').textContent  = aiId === builder ? 'Builder' : 'Reviewer';
+  tt.querySelector('.bdt-state').textContent = getBeeStateText(aiId);
+  // Position above the dot, centered. Show first so we can read offsetWidth.
+  tt.classList.add('is-visible');
+  const r  = dotEl.getBoundingClientRect();
+  const tw = tt.offsetWidth;
+  const th = tt.offsetHeight;
+  let left = r.left + r.width / 2 - tw / 2;
+  let top  = r.top - th - 8;
+  // Clamp to viewport so the tooltip never falls off the left/right edge.
+  const pad = 8;
+  if (left < pad) left = pad;
+  if (left + tw > window.innerWidth - pad) left = window.innerWidth - tw - pad;
+  // If above-the-dot would clip the top, flip below the dot.
+  if (top < pad) {
+    top = r.bottom + 8;
+    tt.classList.add('is-below');
+  } else {
+    tt.classList.remove('is-below');
+  }
+  tt.style.left = left + 'px';
+  tt.style.top  = top  + 'px';
+  window._wfHoveredBeeId = aiId;
+}
+
+function hideBeeTooltip() {
+  const tt = document.getElementById('beeDotTooltip');
+  if (tt) tt.classList.remove('is-visible');
+  window._wfHoveredBeeId = null;
+}
+
+function refreshBeeTooltip(aiId) {
+  const tt = document.getElementById('beeDotTooltip');
+  if (!tt || !tt.classList.contains('is-visible')) return;
+  if (window._wfHoveredBeeId !== aiId) return;
+  const ai = activeAIs.find(a => a.id === aiId);
+  if (!ai) return;
+  tt.querySelector('.bdt-name').textContent  = ai.name;
+  tt.querySelector('.bdt-role').textContent  = aiId === builder ? 'Builder' : 'Reviewer';
+  tt.querySelector('.bdt-state').textContent = getBeeStateText(aiId);
+}
+
 function renderBeeDotStrip() {
   const strip = document.getElementById('beeDotStrip');
   if (!strip) return;
@@ -10291,7 +10384,17 @@ function renderBeeDotStrip() {
     const isOn = isB || window.sessionAIs.has(ai.id);
     const stateClass = isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive';
     const iconEl = resolveAiIcon(ai, 'bee-dot-img', 18);
-    return `<div class="bee-dot ${stateClass}" id="bdot-${ai.id}" title="${ai.name}">${iconEl}</div>`;
+    // v3.32.29 — Custom hover tooltip replaces native `title` attribute.
+    // Three lines: AI name, role (Builder/Reviewer), live state. The state
+    // line updates as the round progresses (see refreshBeeTooltip call in
+    // setBeeStatus). Native title removed to prevent the double-tooltip
+    // (browser-default + custom) artifact on slow hover.
+    return `<div class="bee-dot ${stateClass}" id="bdot-${ai.id}" data-ai-id="${ai.id}"
+      onmouseenter="showBeeTooltip('${ai.id}', this)"
+      onmouseleave="hideBeeTooltip()"
+      onfocus="showBeeTooltip('${ai.id}', this)"
+      onblur="hideBeeTooltip()"
+      tabindex="0"><span class="bee-dot-star" aria-hidden="true">★</span>${iconEl}</div>`;
   }).join('');
   // v3.32.14 — Rehydrate satisfaction state after innerHTML rebuild. The
   // dot strip can be rebuilt independently (toggleSessionBee onchange
@@ -10384,6 +10487,29 @@ function setBeeStatus(id, state, summary) {
   const live = document.getElementById('blive-' + id);
   if (!card && !dot) return;
 
+  // v3.32.29 — Diagnostic instrumentation for the persistent satisfaction-
+  // indicator inconsistency bug (★ pill rendering inconsistently on cards
+  // even though the console correctly logs "no changes needed"). Static
+  // analysis didn't pin the race; this gated logger captures every
+  // setBeeStatus call with the data needed to identify the actual cause:
+  // input state, set membership at call time, classList before AND after,
+  // effective state after re-derive, and timestamp.
+  //
+  // OFF by default (zero perf cost). To enable at work:
+  //   window._wfSatDebug = true
+  // Output is one console.debug line per call. Filter the console with
+  // [wfSat] to isolate. Captures from the first reproduction tell us
+  // whether the bug is at the data layer (set wrong) or render layer
+  // (DOM stale despite correct set).
+  const _dbg = window._wfSatDebug ? {
+    t: Date.now(),
+    inState: state,
+    inSummary: summary,
+    setHasBefore: !!(window._cleanThisRound && window._cleanThisRound.has(id)),
+    cardClassesBefore: card ? Array.from(card.classList) : null,
+    dotClassesBefore: dot ? Array.from(dot.classList) : null,
+  } : null;
+
   // ── Track satisfaction signal at the chokepoint ──
   // 'done-clean' input registers this AI as satisfied for the round.
   // Per-round wipe is handled explicitly by runRound() at smoke-phase
@@ -10465,6 +10591,32 @@ function setBeeStatus(id, state, summary) {
   } else {
     // 'idle' / pre-round / unknown — clean slate, no class added
     if (live) live.textContent = 'Idle';
+  }
+
+  // v3.32.29 — Diagnostic emit (gated). One line per setBeeStatus call.
+  // Captures the full before/after picture so the actual race (if any)
+  // can be identified from the captured console output.
+  if (_dbg) {
+    console.debug('[wfSat]', id, {
+      inState:    _dbg.inState,
+      effState:   effectiveState,
+      setHadBefore: _dbg.setHasBefore,
+      setHasNow:  !!(window._cleanThisRound && window._cleanThisRound.has(id)),
+      cardBefore: _dbg.cardClassesBefore,
+      cardAfter:  card ? Array.from(card.classList) : null,
+      dotBefore:  _dbg.dotClassesBefore,
+      dotAfter:   dot ? Array.from(dot.classList) : null,
+      summary:    effectiveSummary,
+    });
+  }
+
+  // v3.32.29 — Live update of the bee-dot tooltip if the user is currently
+  // hovering this AI's dot. Without this, hovering a dot during a round
+  // would show stale state text (the state at hover-start, frozen until
+  // mouseleave/re-enter). Cheap call: only fires the DOM read+write when
+  // the hovered ID matches.
+  if (window._wfHoveredBeeId === id) {
+    refreshBeeTooltip(id);
   }
 }
 

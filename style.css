@@ -1742,21 +1742,36 @@ html, body {
   [data-theme="light"] .bee-dot-strip,
   .bee-dot-strip-light { background: rgba(0,0,0,0.12); }
 
-  /* Dot — one per AI, icon in a glowing circle */
+  /* v3.32.29 — Laptop dot overhaul.
+     • Ring width bumped from 2px → 5px (bold). Inner space drops from
+       30px to 24px; the 18px icon still has 3px breathing room each
+       side.
+     • Convergence signal added (was missing): when .is-clean is on a
+       reviewer dot, the surface fill goes transparent and a small ★
+       overlays in the top-right corner. Builder keeps its gold fill
+       even when satisfied (identity layer never disappears) — only the
+       reviewers go transparent. The star appears via .bee-dot-star
+       child element rather than ::after so the icon's z-index stays
+       clean and the star can fade-in via opacity transition (display
+       isn't transitionable; opacity is).
+     • Custom tooltip on hover/focus replaces the prior native title
+       attribute. See .bee-dot-tooltip rules below. */
   .bee-dot {
     position: relative;
     width: 34px;
     height: 34px;
     border-radius: 50%;
-    border: 2px solid var(--border2);
+    border: 5px solid var(--border2);
     background: var(--surface2);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: default;
-    transition: border-color 0.2s, box-shadow 0.2s;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
     flex-shrink: 0;
+    outline: none;
   }
+  .bee-dot:focus-visible { box-shadow: 0 0 0 2px var(--accent); }
   .bee-dot img { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; display: block; }
   .bee-dot .bee-dot-avatar {
     width: 18px;
@@ -1770,6 +1785,31 @@ html, body {
     color: #fff;
     text-transform: uppercase;
   }
+
+  /* Satisfaction star — always present in DOM, opacity-toggled via
+     .is-clean. Sits in the top-right corner overlapping the ring so it
+     reads as an "additive" satisfaction marker rather than a fill
+     change. pointer-events:none so it can't intercept hover from the
+     dot itself. */
+  .bee-dot-star {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 14px;
+    height: 14px;
+    line-height: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: #d97706;
+    background: var(--surface);
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(217,119,6,0.45);
+    opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none;
+    user-select: none;
+  }
+  .bee-dot.is-clean .bee-dot-star { opacity: 1; }
 
   /* State colours for dots */
   .bee-dot.is-builder  {
@@ -1785,10 +1825,83 @@ html, body {
   .bee-dot.is-done     { border-color: #00b300; box-shadow: 0 0 6px rgba(0,179,0,0.5); }
   .bee-dot.is-error    { border-color: #f87171; }
 
+  /* v3.32.29 — Convergence-signal layer. Source order matters: this
+     block is placed AFTER all role/state rules so its border-color
+     and box-shadow win for satisfied dots. The :not(.is-builder)
+     guard preserves the Builder's gold fill even when satisfied —
+     only standard reviewers go transparent. */
+  .bee-dot.is-clean {
+    border-color: #00b300;
+    box-shadow: 0 0 10px rgba(0,179,0,0.65);
+  }
+  .bee-dot.is-clean:not(.is-builder) {
+    background: transparent;
+  }
+
   @keyframes dotPulse {
     from { box-shadow: 0 0 3px rgba(96,165,250,0.3); }
     to   { box-shadow: 0 0 10px rgba(96,165,250,0.85); }
   }
+
+  /* Respect reduced-motion: kill pulses, keep static color cues. */
+  @media (prefers-reduced-motion: reduce) {
+    .bee-dot.is-sending,
+    .bee-dot.is-working,
+    .bee-dot.is-responding { animation: none; }
+    .bee-dot-star { transition: none; }
+  }
+}
+
+/* v3.32.29 — Bee-dot custom tooltip. Lives in <body>, positioned via JS
+   (showBeeTooltip/refreshBeeTooltip in app.js). The 3-line content is
+   AI name (bold), role (Builder/Reviewer), and live state — the state
+   line updates as the round progresses without requiring mouseleave/
+   re-enter. Defined OUTSIDE the laptop @media because the tooltip
+   element is appended to body and positioned in viewport coords; no
+   need to media-gate it (the dot strip itself is the only place that
+   shows it). */
+.bee-dot-tooltip {
+  position: fixed;
+  display: none;
+  z-index: 9999;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  padding: 7px 10px;
+  min-width: 140px;
+  max-width: 260px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  font-family: var(--font);
+  pointer-events: none;
+  user-select: none;
+}
+.bee-dot-tooltip.is-visible { display: block; }
+.bee-dot-tooltip .bdt-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bee-dot-tooltip .bdt-role {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 3px;
+}
+.bee-dot-tooltip .bdt-state {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ══ CENTER PANEL — floats as card over honeycomb ══ */
