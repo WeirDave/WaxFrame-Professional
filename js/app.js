@@ -1309,7 +1309,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-028';         // build stamp — update each session
+const BUILD       = '20260508-029';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -11153,28 +11153,15 @@ function setBeeStatus(id, state, summary) {
   const live = document.getElementById('blive-' + id);
   if (!card && !dot) return;
 
-  // v3.32.29 — Diagnostic instrumentation for the persistent satisfaction-
-  // indicator inconsistency bug (★ pill rendering inconsistently on cards
-  // even though the console correctly logs "no changes needed"). Static
-  // analysis didn't pin the race; this gated logger captures every
-  // setBeeStatus call with the data needed to identify the actual cause:
-  // input state, set membership at call time, classList before AND after,
-  // effective state after re-derive, and timestamp.
-  //
-  // OFF by default (zero perf cost). To enable at work:
-  //   window._wfSatDebug = true
-  // Output is one console.debug line per call. Filter the console with
-  // [wfSat] to isolate. Captures from the first reproduction tell us
-  // whether the bug is at the data layer (set wrong) or render layer
-  // (DOM stale despite correct set).
-  const _dbg = window._wfSatDebug ? {
-    t: Date.now(),
-    inState: state,
-    inSummary: summary,
-    setHasBefore: !!(window._cleanThisRound && window._cleanThisRound.has(id)),
-    cardClassesBefore: card ? Array.from(card.classList) : null,
-    dotClassesBefore: dot ? Array.from(dot.classList) : null,
-  } : null;
+  // v3.35.3 — Removed the gated [wfSat] diagnostic added in v3.32.29
+  // for the persistent satisfaction-indicator inconsistency bug. The
+  // instrumentation never produced a captured trace, the satisfaction-
+  // indicator bug is now parked, and the dead instrumentation was a
+  // ~120-line block of overhead with no consumer. The architectural
+  // pieces it was probing (the _cleanThisRound Set chokepoint at line
+  // 11168 below, the universal re-derive at line ~11178, and the
+  // renderer rehydration in renderBeeStatusGrid) all stay in place
+  // unchanged — only the logger was removed.
 
   // ── Track satisfaction signal at the chokepoint ──
   // 'done-clean' input registers this AI as satisfied for the round.
@@ -11259,24 +11246,7 @@ function setBeeStatus(id, state, summary) {
     if (live) live.textContent = 'Idle';
   }
 
-  // v3.32.29 — Diagnostic emit (gated). One line per setBeeStatus call.
-  // Captures the full before/after picture so the actual race (if any)
-  // can be identified from the captured console output.
-  if (_dbg) {
-    console.debug('[wfSat]', id, {
-      inState:    _dbg.inState,
-      effState:   effectiveState,
-      setHadBefore: _dbg.setHasBefore,
-      setHasNow:  !!(window._cleanThisRound && window._cleanThisRound.has(id)),
-      cardBefore: _dbg.cardClassesBefore,
-      cardAfter:  card ? Array.from(card.classList) : null,
-      dotBefore:  _dbg.dotClassesBefore,
-      dotAfter:   dot ? Array.from(dot.classList) : null,
-      summary:    effectiveSummary,
-    });
-  }
-
-  // v3.32.29 — Live update of the bee-dot tooltip if the user is currently
+  // v3.35.3 — Live update of the bee-dot tooltip if the user is currently
   // hovering this AI's dot. Without this, hovering a dot during a round
   // would show stale state text (the state at hover-start, frozen until
   // mouseleave/re-enter). Cheap call: only fires the DOM read+write when
