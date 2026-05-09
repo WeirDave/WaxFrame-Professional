@@ -1,6 +1,20 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.17
+**Build:** `20260508-024` · **Released:** May 8, 2026
+
+Footer credit-line cleanup. The "Built with 🐝 by WeirDave and Claude" credit at the bottom of the About modal (and its 5 helper-page equivalents) was wrapped in a `goal-info-tip` paragraph with the `WaxFrame_TipButton_v1.png` lightbulb mascot prepended — a copy-paste residue from when the credit was placed inside what was structurally a tip block. The lightbulb suggested "tip" in a context that wasn't a tip, and the bee emoji didn't communicate any clear meaning even with WaxFrame's hive theme.
+
+- **Six identical credit-line edits** — `index.html` and the 5 helper pages. Replaced `<p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Built with 🐝 by WeirDave and Claude.</p>` with `<p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>`. Two changes per line: lightbulb img tag removed, `🐝` → `❤️`.
+- **`goal-info-tip` class retained.** Provides italic, top-border-separator styling that's still appropriate for a footer credit even without the tip framing. No CSS changes needed — the class continues to do its layout job.
+- **`WaxFrame_TipButton_v1.png` asset preserved.** Still used legitimately as a tip icon in many places (`wf-tip-icon` and `helper-tip-icon-img` wrappers in actual tip blocks across the help pages and main app). Only the 6 mis-applied credit-line uses removed.
+- **`tip-icon-img` CSS class preserved.** Still used by other legitimate tip-icon callsites in `index.html` (gold-tip-card, goal-info-tip blocks that ARE tips). Only the 6 credit-line image elements removed.
+- **What did NOT change.** No CSS touched. No app.js logic touched. R5a / R5b / R6 / R7 / R8 token migrations preserved exactly. v3.34.15 dark-mode contrast fixes preserved exactly. No 80ch column constraints touched. No icon family touched. Helper pages got version-stamp + cache-bust bumps only beyond the single credit-line replacement.
+- **Smoke-test surface.** Open the About modal (footer cog → About) — verify credit reads "Built with ❤️ by WeirDave and Claude." with no leading lightbulb. Open each helper page (User Manual, Document Playbooks, What Are Tokens, API Details, Prompt Editor) — verify same credit at the bottom of each. Verify all OTHER tip blocks across the app still show the lightbulb mascot correctly (regression check — confirm the asset removal was scoped to the 6 credit lines only).
+- **Version stamps in code bumped** to v3.34.17 / build 20260508-024 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.16
 **Build:** `20260508-023` · **Released:** May 8, 2026
 
