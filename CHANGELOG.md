@@ -1,6 +1,30 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.13
+**Build:** `20260508-020` · **Released:** May 8, 2026
+
+R6 of the Fluid Scaling Architectural Pass — work screen + work-screen modals migrated to the token system. **237 hardcoded pixel values converted to `var(--fs-*)` and `var(--space-*)` token references across 405 R6-eligible rules.** Plus the Round History nav menu icon (`📖`, currently shared with User Manual) replaced with a Material-style history clock SVG in WaxFrame amber — Phase 3 of the icon migration started early at David's request to bundle with this release.
+
+- **Round History clock icon** — `📖 Round History` in the nav menu replaced with an inline SVG: counter-clockwise arrow above a clock face with hands at 8 o'clock, all in `#f5a623` accent. The `📖` glyph stays in use for User Manual (the prior ambiguity is resolved). Class `.wf-icon-history` added to the `.wf-icon` family in `style.css` immediately after the v3.34.12 setup-screen icon section, with a `Phase 3 — Nav menu icons` section header. Sized at 16×16 with `vertical-align: -3px` for inline alignment with the `.nav-item-label` span. New `.nav-item-label { display: inline-block; }` rule added as a stub hook for future button-state styling. Round History modal title (currently shows `WaxFrame_History_Bee_v1.png` mascot) untouched — only the menu trigger swapped.
+- **R6 selector roots covered.** All work-screen and work-screen-modal selector prefixes: `.work-*` (68 candidates — the largest family), `.console-*`, `.live-console`, `.reextract-*`, `.length-guard*`, `.reviewer-*`, `.builder-console`, `.conflict-*`, `.decision-*`, `.ddv-*`, `.notes-*`, `.ref-drawer-*`, `.finish-*`, `.hist-*` (37 candidates — second largest, Round History modal), `.modal-*` (35 candidates — modal primitives), `.toast-*`, `.tip-*`, `.info-modal*`, `.goal-info*`, `.unlock-modal*`, `.unlock-scene*`. 1583 rules elsewhere in `style.css` untouched (R7/R8 surfaces).
+- **Snap policy unchanged from R5a/R5b.** Spacing: 3→4, 5→4, 7→6, 9→8, 11→12. Font-size: 10→11, 19→20. Values ≥2px from any scale entry retained as literal with `/* out-of-scale */` comment. 18 spacing snaps + 2 font-size snaps applied (smaller snap counts than R5a/R5b — work-screen surface is closer to scale already).
+- **Migration breakdown.**
+  - 58 `font-size: Npx` direct swaps to `var(--fs-N)`
+  - 2 `font-size: Npx` snap-to-scale conversions (10→11, 19→20)
+  - 4 font-size literals retained out-of-scale
+  - 159 spacing direct swaps to `var(--space-N)`
+  - 18 spacing snap-to-scale conversions
+  - 38 spacing literals retained out-of-scale (mostly border widths and 1-2px adjustments that don't belong in the spacing scale)
+  - **Total active migrations: 237** (60 fs + 177 spacing)
+- **Hard exclusions for the 80ch danger zone.** Migration script explicitly skips any rule whose selector contains `80ch`, `doc-area`, `doc-textarea`, `doc-pre`, `work-main`, or `work-doc-col`. The two `.work-main` grid declarations (which carry the `grid-template-columns: minmax(320px, 640px) minmax(0, 0.5fr) auto minmax(0, 0.5fr) minmax(320px, 640px)` rule that defines the 80ch column constraint) were inspected post-migration to verify they pass through byte-identical. **The Working Document column's 80-character (80ch) width is preserved exactly.**
+- **Token system progress.** Pre-migration `style.css` had 216 `--fs-*` and 366 `--space-*` token usages. Post-migration: 276 `--fs-*` (+60) and 490 `--space-*` (+124). Combined R5a + R5b + R6 progress: ~927 of ~1368 candidate sites migrated, roughly 68% complete. Remaining: R7 (5 helper pages, ~179 sites) + R8 (global chrome — top bar, nav panel, license pill, toasts, dev toolbar, ~157 sites) + R-final (selective `clamp()` fluid scaling pass). On track for full token coverage in two more migration releases.
+- **What did NOT change.** No 80ch column constraints touched (verified post-migration). No setup screens touched (R5a/R5b stable). No icon family touched (v3.34.11/12 stable). No app.js logic touched. No HTML structure touched except the single Round History menu line. No prompts or templates touched. CHANGELOG entries and release-notes preserved.
+- **Smoke-test surface.** Work screen at all viewports — verify column widths unchanged (the 80ch invariant), reviewer panels render at correct size, builder console intact, conflict/decision blocks render correctly. Open Round History modal, verify it renders correctly (37 candidates touched in this modal alone). Open Notes drawer (19 candidates). Open Reference Material drawer. Open Finish modal (27 candidates). Trigger a length-guard warning (4 candidates). Trigger a re-extract banner (8 candidates). Toast notifications. All modals — verify backdrop, padding, font sizes look identical to v3.34.12.
+- **Out of scope (still tracked).** R7: 5 helper pages (~179 sites — User Manual, Document Playbooks, What Are Tokens, API Details, Prompt Editor). R8: global chrome (~157 sites — top bar, nav panel, license pill, toasts, dev toolbar). R-final: selective `clamp()` fluid scaling using the now-mature token system. Phases 2/4/5/6 of icon migration: Document Playbooks page sidebar (Phase 2), action verbs (Phase 4), status icons (Phase 5), toolbar chrome (Phase 6).
+- **Version stamps in code bumped** to v3.34.13 / build 20260508-020 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.12
 **Build:** `20260508-019` · **Released:** May 8, 2026
 
