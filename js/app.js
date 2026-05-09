@@ -240,7 +240,7 @@ const WF_ERROR_CATALOG = [
     matches: (err, ctx, msg, status, isCustom) =>
       msg.includes('cors_blocked') ||
       (isCustom && (msg.includes('failed to fetch') || msg.includes('network')) && !status),
-    title: 'Browser blocked the response (CORS)',
+    title: '{ai} — Browser blocked the response (CORS)',
     meaning: 'Your custom endpoint did not whitelist this WaxFrame origin. The request reached the server, but the browser refused to read the response as a security measure. Most common with self-hosted endpoints (Open WebUI, Ollama, internal gateways).',
     actions: [
       { label: 'Read CORS troubleshooting', kind: 'link', href: 'api-details.html' },
@@ -259,7 +259,7 @@ const WF_ERROR_CATALOG = [
       msg.includes('not supported in the v1/chat/completions') ||
       msg.includes('use v1/completions') ||
       msg.includes('use v1/responses'),
-    title: 'This model needs a different endpoint',
+    title: '{ai} — This model needs a different endpoint',
     meaning: 'The provider rejected this model on the chat-completions endpoint because it requires a different API (e.g. OpenAI\'s pro and reasoning models like gpt-5.5-pro use /v1/responses, not /v1/chat/completions). Pick a different model — the ones WaxFrame can call directly are listed in the dropdown.',
     actions: [
       { label: 'Pick a different model', kind: 'link', href: '#' },
@@ -272,8 +272,8 @@ const WF_ERROR_CATALOG = [
       status === '429' || ctx.status === 429 ||
       msg.includes('rate_limited') || msg.includes('rate limit') ||
       msg.includes('too many') || msg.includes('quota'),
-    title: 'Rate limited by the provider',
-    meaning: 'The provider says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped this AI for the round and continued with the others. The next round usually works after 30–60 seconds. Click Open provider console to check your usage dashboard or upgrade your plan; click Disable this AI for the session if the limit looks exhausted and you would rather keep going without this AI. The console-link button auto-hides for custom AIs that did not have an API console URL configured at Add Custom AI time.',
+    title: '{ai} — Rate limited by the provider',
+    meaning: '{ai} says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped {ai} for the round and continued with the others. The next round usually works after 30–60 seconds. Click Open provider console to check your usage dashboard or upgrade your plan; click Disable this AI for the session if the limit looks exhausted and you would rather keep going without {ai}. The console-link button auto-hides for custom AIs that did not have an API console URL configured at Add Custom AI time.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Retry round', kind: 'retry' },
@@ -310,8 +310,8 @@ const WF_ERROR_CATALOG = [
         msg.includes('upgrade or purchase credits');
       return matchesStatus && matchesBody;
     },
-    title: 'Account is out of credits',
-    meaning: 'The provider rejected the request because your account balance is too low or billing has failed. WaxFrame skipped this AI for the round and continued with the others. Click the button below to open the provider console — most providers put their billing/credit-add page one click away from the API console.',
+    title: '{ai} — Account is out of credits',
+    meaning: '{ai} rejected the request because your account balance with this provider is too low or billing has failed. WaxFrame skipped {ai} for the round and continued with the others. Click the button below to open the {ai} provider console — most providers put their billing/credit-add page one click away from the API console.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Retry round', kind: 'retry' },
@@ -324,8 +324,8 @@ const WF_ERROR_CATALOG = [
       status === '401' || status === '403' || ctx.status === 401 || ctx.status === 403 ||
       msg.includes('unauthorized') || msg.includes('forbidden') ||
       msg.includes('invalid api key') || msg.includes('incorrect api key'),
-    title: 'API key was rejected',
-    meaning: 'The provider rejected the API key. Common causes: the key was deleted or rotated in the provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Re-test the key on Worker Bees → Test All Keys.',
+    title: '{ai} — API key was rejected',
+    meaning: '{ai} rejected the API key. Common causes: the key was deleted or rotated in the {ai} provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Re-test the key on Worker Bees → Test All Keys.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
       { label: 'Retry round', kind: 'retry' }
@@ -336,7 +336,7 @@ const WF_ERROR_CATALOG = [
     matches: (err, ctx, msg, status) =>
       status === '404' || ctx.status === 404 ||
       msg.includes('endpoint not found'),
-    title: 'Endpoint URL not found (404)',
+    title: '{ai} — Endpoint URL not found (404)',
     meaning: 'The server responded with 404 — the path you entered does not exist on this server. For chat: typically ends in /v1/chat/completions or /api/chat/completions. For models: typically /v1/models, /api/models, or /api/tags (Ollama).',
     actions: [
       { label: 'Read API endpoint guide', kind: 'link', href: 'api-details.html' }
@@ -346,7 +346,7 @@ const WF_ERROR_CATALOG = [
     code: 'METHOD_NOT_ALLOWED',
     matches: (err, ctx, msg, status) =>
       status === '405' || ctx.status === 405,
-    title: 'Method not allowed (405)',
+    title: '{ai} — Method not allowed (405)',
     meaning: 'The server understands the URL but does not accept POST requests on it. Usually means the URL is wrong — you may have entered a docs page, a homepage, or a GET-only endpoint instead of the chat completions URL.',
     actions: [
       { label: 'Read API endpoint guide', kind: 'link', href: 'api-details.html' }
@@ -359,8 +359,8 @@ const WF_ERROR_CATALOG = [
       return (s >= 500 && s < 600) || (ctx.status >= 500 && ctx.status < 600) ||
              msg.includes('service unavailable') || msg.includes('bad gateway');
     },
-    title: 'Provider server error',
-    meaning: 'The provider returned a 5xx error — this is on their side, not yours. Their API is having issues. WaxFrame skipped this AI for the round. Check the provider status page if it persists.',
+    title: '{ai} — Provider server error',
+    meaning: '{ai} returned a 5xx error — this is on their side, not yours. Their API is having issues. WaxFrame skipped {ai} for the round. Check the provider status page if it persists.',
     actions: [
       { label: 'Retry round', kind: 'retry' }
     ]
@@ -368,8 +368,8 @@ const WF_ERROR_CATALOG = [
   {
     code: 'EMPTY_RESPONSE',
     matches: (err, ctx, msg) => msg === 'empty response' || msg.includes('empty response'),
-    title: 'Provider returned an empty response',
-    meaning: 'The provider returned success (200 OK) but the response body had no text content. This usually means a content filter blocked the output, or the model output was truncated. Try a different Builder, or shorten the document.',
+    title: '{ai} — Provider returned an empty response',
+    meaning: '{ai} returned success (200 OK) but the response body had no text content. This usually means a content filter blocked the output, or the model output was truncated. Try a different Builder, or shorten the document.',
     actions: [
       { label: 'Retry round', kind: 'retry' }
     ]
@@ -378,7 +378,7 @@ const WF_ERROR_CATALOG = [
     code: 'NETWORK_ERROR',
     matches: (err, ctx, msg, status, isCustom) =>
       !status && (msg.includes('failed to fetch') || msg.includes('network') || msg.includes('networkerror')),
-    title: 'Network error',
+    title: '{ai} — Network error',
     meaning: 'WaxFrame could not reach the API. Common causes: no internet, DNS issue, VPN interfering, or the API hostname is unreachable from this network. If you are on an air-gapped or restricted network, you will need a model server (Alfredo, Ollama, Open WebUI) instead of the public providers.',
     actions: [
       { label: 'Retry round', kind: 'retry' }
@@ -1349,7 +1349,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-008';         // build stamp — update each session
+const BUILD       = '20260509-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session

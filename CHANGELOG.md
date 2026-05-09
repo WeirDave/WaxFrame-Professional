@@ -1,6 +1,40 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.6
+**Build:** `20260509-009` · **Released:** May 9, 2026
+
+**Single-bug UX fix.** Surfaced via live v3.36.5 testing: when Mistral hit a 429, the `RATE_LIMITED` card title read *"Rate limited by the provider"* — *which* provider? The user had to expand the technical-details fold to find `"ai": "Mistral"` in the JSON. The same gap existed across the whole error catalog: 10 AI-related cards all hardcoded "the provider" / "this AI" / "API key" without the AI name. The customer-facing UI was hiding the most important piece of information — which AI is failing — behind a developer-only panel.
+
+The placeholder substitution machinery (`{ai}` → `ctx.aiName`) has existed since v3.29.0 (used by the slow-responder card). The catalog just wasn't using it.
+
+### Edits — 10 catalog titles + 6 meanings now use `{ai}` placeholder
+
+Titles updated to lead with `{ai} — `:
+
+- CORS · MODEL_NEEDS_DIFFERENT_ENDPOINT · RATE_LIMITED · CREDIT_LOW · AUTH_FAILED · ENDPOINT_NOT_FOUND · METHOD_NOT_ALLOWED · PROVIDER_DOWN · EMPTY_RESPONSE · NETWORK_ERROR
+
+Meanings updated where "the provider" / "this AI" was the user-facing ambiguity (RATE_LIMITED, CREDIT_LOW, AUTH_FAILED, PROVIDER_DOWN, EMPTY_RESPONSE) — replaced with `{ai}` substitution.
+
+The renderer at `app.js:528` substitutes `{ai}` with `ctx.aiName ?? 'AI'`. Worst case (`ctx.aiName` null) renders as "AI — Rate limited by the provider" which is still strictly better than the prior "Rate limited by the provider." For every catalog entry updated, the call site in `callAPI` always has `ai.name` populated, so in practice the user always sees the real AI name.
+
+### Cards NOT touched
+
+`Builder did not return the required formatting`, `Builder output exceeded the length limit`, `Builder formatting was malformed`, `Server returned no usable models`, license-related cards, and the generic `Something went wrong` fallback already use role-specific or domain-specific phrasing where adding `{ai}` would be redundant or wrong (license verification has no AI context, model-server import fires before any AI is selected).
+
+### What did NOT change
+
+No prompts touched. No reviewer instructions touched. No validator logic touched. No length-guard logic touched. No Auto Mode logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.5 functionality preserved exactly. The auto-promote-CURRENT logic from v3.36.5, the validator shape fix from v3.36.2, the round-failure logging from v3.36.4, and the rate-limit card three-button layout from v3.36.3 all remain in place.
+
+### Smoke-test surface
+
+Trigger any AI-related error — the easiest paths are: 429 rate limit on Mistral free tier (force concurrent reviewer + Builder requests), invalid API key on any provider (rotate the key in the provider console without updating WaxFrame), or 5xx on a temporarily-down provider. **Verify:** the card title leads with the AI name (e.g. *"Mistral — Rate limited by the provider"* rather than *"Rate limited by the provider"*). For the meaning text on rate-limit / credit-low / auth-failed cards, verify the AI name appears inline rather than the generic "the provider" / "this AI" wording.
+
+### Version stamps in code bumped
+
+To v3.36.6 / build `20260509-009` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.5
 **Build:** `20260509-008` · **Released:** May 9, 2026
 
