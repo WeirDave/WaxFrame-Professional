@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-025
+   Build: 20260508-026
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -6226,6 +6226,146 @@ kbd {
 .length-guard-row.is-hidden {
   display: none;
 }
+
+/* ─────────────────────────────────────────────────────────────────
+   v3.35.0 — AUTO MODE
+   Toggle pill in work-topbar-right + halt modal.
+   ─────────────────────────────────────────────────────────────────
+   Toggle pill mirrors the .theme-opt aesthetic (rounded, compact,
+   topbar-friendly) and shifts color palette by state:
+     • Interactive (default) — neutral border, dim text
+     • Auto: ON              — accent border + accent fill, animated
+                                pulse on the icon to communicate "live"
+   Detail span ("N left") only renders in Auto state.
+   Halt modal piggybacks on the existing .finish-modal-overlay base
+   so we inherit fade-in, backdrop, centering, and breakpoint behavior.
+   Three buttons stack vertically; resume button takes the accent.
+*/
+.auto-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: var(--fs-11);
+  font-weight: 600;
+  padding: var(--space-4) var(--space-12);
+  transition: all 0.12s;
+  white-space: nowrap;
+  margin-right: var(--space-4);
+}
+.auto-mode-toggle:hover:not(.is-auto) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.auto-mode-toggle .auto-mode-icon {
+  display: inline-block;
+  font-size: var(--fs-13);
+  line-height: 1;
+}
+.auto-mode-toggle .auto-mode-label {
+  letter-spacing: 0.01em;
+}
+.auto-mode-toggle .auto-mode-detail {
+  font-size: var(--fs-11);
+  font-weight: 600;
+  opacity: 0.85;
+  padding-left: var(--space-4);
+  border-left: 1px solid currentColor;
+  margin-left: var(--space-4);
+}
+.auto-mode-toggle.is-auto {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
+}
+.auto-mode-toggle.is-auto:hover {
+  background: var(--accent);
+  color: var(--bg);
+}
+.auto-mode-toggle.is-auto .auto-mode-icon {
+  animation: autoModePulse 1.6s ease-in-out infinite;
+}
+@keyframes autoModePulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.55; transform: scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .auto-mode-toggle.is-auto .auto-mode-icon { animation: none; }
+}
+
+/* Halt modal — three vertical action buttons.
+   Inherits .finish-modal-overlay fade-in + .finish-modal centering. */
+.auto-halt-modal {
+  max-width: 480px;
+  text-align: center;
+}
+.auto-halt-modal .auto-halt-icon {
+  font-size: var(--fs-24);
+  margin-bottom: var(--space-8);
+}
+.auto-halt-modal .auto-halt-reason {
+  margin: var(--space-12) 0 var(--space-20);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.auto-halt-modal .auto-halt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-10);
+  margin-top: var(--space-16);
+}
+.auto-halt-btn {
+  appearance: none;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  padding: var(--space-12) var(--space-16);
+  transition: all 0.12s;
+}
+.auto-halt-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.auto-halt-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.auto-halt-btn.auto-halt-resume {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.auto-halt-btn.auto-halt-resume:hover:not(:disabled) {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  color: var(--bg);
+}
+.auto-halt-btn.auto-halt-resume:disabled:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.auto-halt-btn.auto-halt-stop {
+  color: var(--red);
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+.auto-halt-btn.auto-halt-stop:hover:not(:disabled) {
+  background: var(--red);
+  border-color: var(--red);
+  color: var(--bg);
+}
+/* End v3.35.0 — Auto Mode ───────────────────────────────────────── */
 
 /* v3.32.28 — #6c toolbar "Length guard: off" indicator.
    Renders only when window._lengthGuardOverride is true (the

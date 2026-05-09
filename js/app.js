@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-025';         // build stamp — update each session
+const BUILD       = '20260508-026';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3123,6 +3123,363 @@ function _abandonInFlightRoundUI() {
   if (typeof stopRoundTimer === 'function') stopRoundTimer();
   if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
   if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+  // v3.35.0 — Round abandonment also disengages Auto. The user discarded
+  // the project or it failed in a way that requires intervention; chaining
+  // another round automatically would either write phantom history into
+  // a freshly-cleared session or paper over an actionable failure.
+  if (window._autoMode) {
+    window._autoMode = false;
+    window._autoCeilingTarget = null;
+    window._autoSatisfiedHist = [];
+    window._autoFailureStreak = 0;
+    if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────
+// AUTO MODE — v3.35.0
+// ────────────────────────────────────────────────────────────────────
+// Auto chains rounds without waiting for the user. Toggle pill lives
+// in the work-screen topbar. Engages and disengages anytime, mid-run
+// included. A round in flight when Auto flips OFF still completes —
+// the chain check at end-of-round just sees the flag is off and stops.
+//
+// Guardrails (v1):
+//   • Max-rounds ceiling     — default 30, set when Auto engages,
+//                              extended +ceiling on Resume
+//   • Satisfied-count stall  — 3 rounds with identical {satisfied/total}
+//   • USER DECISION resolver — auto-pick option with strict majority
+//                              of attributed AIs; halt on tie
+//   • AI-failure streak      — 2+ rounds in a row with builder error
+//   • Convergence            — unanimous halts (project done);
+//                              majority halts (review holdouts)
+//
+// On any halt → modal with [Resume Auto] [Switch to Interactive]
+// [Stop here]. Resume bumps ceiling, clears the stall window and
+// failure streak, and fires the next round.
+// ────────────────────────────────────────────────────────────────────
+const AUTO_MAX_ROUNDS_DEFAULT  = 30;
+const AUTO_STALL_WINDOW        = 3;
+const AUTO_FAILURE_STREAK_LIMIT = 2;
+const AUTO_LS_KEY              = 'waxframe_auto_mode';
+
+window._autoMode          = false;   // toggle state
+window._autoCeilingTarget = null;    // halt-at round number
+window._autoSatisfiedHist = [];      // sliding window of "S/T" strings
+window._autoFailureStreak = 0;       // consecutive builder failures
+window._autoChainPending  = false;   // debounce — round just kicked off
+
+// Persist + restore last-used toggle state. Called on session boot
+// (DOMContentLoaded → restoreAutoModePreference) and on every flip.
+function saveAutoModePreference() {
+  try { localStorage.setItem(AUTO_LS_KEY, window._autoMode ? '1' : '0'); }
+  catch (e) { console.warn('[auto] save pref failed:', e); }
+}
+function restoreAutoModePreference() {
+  try {
+    const v = localStorage.getItem(AUTO_LS_KEY);
+    window._autoMode = (v === '1');
+  } catch (e) {
+    window._autoMode = false;
+  }
+  // Ceiling target is computed lazily on engage, not stored — a project
+  // that loaded with Auto pre-toggled ON gets its ceiling set to round +
+  // AUTO_MAX_ROUNDS_DEFAULT the first time updateAutoToggleUI runs.
+  if (window._autoMode && window._autoCeilingTarget === null) {
+    window._autoCeilingTarget = (typeof round === 'number' ? round : 1) + AUTO_MAX_ROUNDS_DEFAULT;
+  }
+  if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
+}
+
+// User clicked the toggle pill in the topbar.
+function toggleAutoMode() {
+  const next = !window._autoMode;
+  window._autoMode = next;
+
+  if (next) {
+    // Engaging — set ceiling, reset counters
+    const r = (typeof round === 'number') ? round : 1;
+    window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
+    window._autoSatisfiedHist = [];
+    window._autoFailureStreak = 0;
+    if (typeof consoleLog === 'function') {
+      consoleLog(`🤖 Auto mode ON — ceiling set to round ${window._autoCeilingTarget} (current round ${r})`, 'info');
+    }
+    if (typeof toast === 'function') toast('🤖 Auto mode ON');
+
+    // If a round is currently running, the chain check at completion
+    // will see the flag and fire the next round automatically. If no
+    // round is running and we're on the work screen, fire one now.
+    const smokeBtn = document.getElementById('runRoundBtn');
+    const onWorkScreen = document.getElementById('screen-work')?.classList.contains('active');
+    const roundInFlight = smokeBtn?.classList.contains('running');
+    if (onWorkScreen && !roundInFlight) {
+      // Defer one tick so the toggle UI updates first, then fire.
+      setTimeout(() => {
+        // Re-check in case the user flipped back off in that tick.
+        if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active') &&
+            !document.getElementById('runRoundBtn')?.classList.contains('running')) {
+          if (typeof runRound === 'function') runRound();
+        }
+      }, 60);
+    }
+  } else {
+    // Disengaging — leave any in-flight round to finish, just don't chain
+    if (typeof consoleLog === 'function') consoleLog('🤖 Auto mode OFF — switched to Interactive', 'info');
+    if (typeof toast === 'function') toast('🤖 Auto mode OFF — Interactive');
+    window._autoCeilingTarget = null;
+    window._autoSatisfiedHist = [];
+    window._autoFailureStreak = 0;
+  }
+
+  saveAutoModePreference();
+  updateAutoToggleUI();
+}
+
+// Refresh the toggle pill's visible state. Called after any mode change
+// or at end of round (so the round counter on the pill keeps current).
+function updateAutoToggleUI() {
+  const btn = document.getElementById('autoModeToggle');
+  if (!btn) return;
+  const labelEl = btn.querySelector('.auto-mode-label');
+  const detailEl = btn.querySelector('.auto-mode-detail');
+  if (window._autoMode) {
+    btn.classList.add('is-auto');
+    if (labelEl) labelEl.textContent = 'Auto: ON';
+    if (detailEl) {
+      const r = (typeof round === 'number') ? round : 1;
+      const ceiling = window._autoCeilingTarget || (r + AUTO_MAX_ROUNDS_DEFAULT);
+      const left = Math.max(0, ceiling - r + 1);
+      detailEl.textContent = `${left} left`;
+      detailEl.style.display = '';
+    }
+    btn.title = 'Auto mode is ON — chains rounds until a guardrail trips. Click to switch to Interactive.';
+  } else {
+    btn.classList.remove('is-auto');
+    if (labelEl) labelEl.textContent = 'Interactive';
+    if (detailEl) { detailEl.textContent = ''; detailEl.style.display = 'none'; }
+    btn.title = 'Auto mode is OFF — click to chain rounds automatically.';
+  }
+}
+
+// ── USER DECISION majority resolver ───────────────────────────────
+// For each decision in conflicts.userDecisions, tally how many AIs
+// support each option. Strict majority of attributed AIs wins. Tie
+// (or no clear winner) → return null so caller can halt.
+//
+// Returns a _decisionChoices-shaped object: { [decisionIdx]: { type, idx } }
+// suitable for assignment to window._decisionChoices before calling
+// applyDecisions(). Or null if any decision is unresolvable.
+function _autoResolveUserDecisions(userDecisions) {
+  if (!Array.isArray(userDecisions) || userDecisions.length === 0) return null;
+  const choices = {};
+  for (let i = 0; i < userDecisions.length; i++) {
+    const d = userDecisions[i];
+    if (!d || !Array.isArray(d.options) || d.options.length < 2) return null;
+    // Count attributed AIs per option
+    const counts = d.options.map(o => {
+      if (!o.ais) return 0;
+      const names = o.ais.split(',').map(n => n.trim()).filter(Boolean);
+      return names.length;
+    });
+    let bestIdx = -1;
+    let bestCount = 0;
+    let tied = false;
+    for (let j = 0; j < counts.length; j++) {
+      if (counts[j] > bestCount) {
+        bestCount = counts[j];
+        bestIdx = j;
+        tied = false;
+      } else if (counts[j] === bestCount && bestCount > 0) {
+        tied = true;
+      }
+    }
+    if (bestIdx === -1 || bestCount === 0 || tied) return null; // halt
+    choices[i] = { type: 'option', idx: bestIdx };
+  }
+  return choices;
+}
+
+// ── The chain decision ────────────────────────────────────────────
+// Called at every natural round-end point with a context object:
+//   { outcome, satisfied, total, builderError, errorReason, conflicts }
+// Decides: chain another round, halt with modal, or do nothing
+// (Auto is off / wrong screen / etc.).
+function _autoMaybeChainNextRound(ctx) {
+  if (!window._autoMode) return;
+  // Wrong screen — halt silently. User navigated away mid-flight; if they
+  // want to resume they'll come back and Auto's still toggled on.
+  const onWorkScreen = document.getElementById('screen-work')?.classList.contains('active');
+  if (!onWorkScreen) return;
+
+  ctx = ctx || {};
+
+  // 1) Convergence — done
+  if (ctx.outcome === 'unanimous') {
+    _autoHalt('converged', 'The hive reached unanimous convergence — document complete.');
+    return;
+  }
+  if (ctx.outcome === 'majority') {
+    _autoHalt('majority', 'The hive reached majority convergence — review holdout suggestions or finish.');
+    return;
+  }
+
+  // 2) Builder errors — track failure streak, halt at limit
+  if (ctx.outcome === 'failed' || ctx.builderError) {
+    window._autoFailureStreak = (window._autoFailureStreak || 0) + 1;
+    if (window._autoFailureStreak >= AUTO_FAILURE_STREAK_LIMIT) {
+      const reasonLabel = ctx.errorReason
+        ? `Builder failed ${window._autoFailureStreak} rounds in a row (last reason: ${ctx.errorReason}).`
+        : `Builder failed ${window._autoFailureStreak} rounds in a row.`;
+      _autoHalt('failure-streak', reasonLabel);
+      return;
+    }
+    // Single failure — don't chain further this turn; user can hit Smoke
+    // manually or wait. We don't auto-retry on single failure to avoid
+    // burning credits on a transient API issue. Update UI and exit.
+    updateAutoToggleUI();
+    return;
+  }
+
+  // From here: round succeeded. Reset the failure streak.
+  window._autoFailureStreak = 0;
+
+  // 3) Ceiling check — at-or-past the cap
+  if (typeof round === 'number' && window._autoCeilingTarget !== null && round >= window._autoCeilingTarget) {
+    _autoHalt('ceiling', `Reached the round ceiling (${window._autoCeilingTarget - 1} rounds completed since Auto engaged).`);
+    return;
+  }
+
+  // 4) Satisfied-count stall — track only when reviewers ran (skip
+  //    builder-only rounds where ctx.outcome === 'builder-only'; those
+  //    have no reviewer signal to evaluate).
+  if (ctx.outcome === 'success' && typeof ctx.satisfied === 'number' && typeof ctx.total === 'number' && ctx.total > 0) {
+    const key = `${ctx.satisfied}/${ctx.total}`;
+    window._autoSatisfiedHist.push(key);
+    if (window._autoSatisfiedHist.length > AUTO_STALL_WINDOW) {
+      window._autoSatisfiedHist.shift();
+    }
+    if (window._autoSatisfiedHist.length >= AUTO_STALL_WINDOW) {
+      const allSame = window._autoSatisfiedHist.every(k => k === key);
+      if (allSame) {
+        _autoHalt('stall', `Satisfied count stuck at ${key} for ${AUTO_STALL_WINDOW} rounds — convergence has stalled.`);
+        return;
+      }
+    }
+  }
+
+  // 5) USER DECISIONs in this round's conflicts → try majority auto-pick
+  const ud = ctx.conflicts?.userDecisions;
+  if (Array.isArray(ud) && ud.length > 0) {
+    const resolved = _autoResolveUserDecisions(ud);
+    if (!resolved) {
+      _autoHalt('decision-tie', `A USER DECISION block has no clear majority. Pick options manually, then Resume Auto.`);
+      return;
+    }
+    // Apply the auto-picks via the existing applyDecisions() path,
+    // which sends to runBuilderOnly and chains naturally on completion.
+    if (typeof consoleLog === 'function') {
+      consoleLog(`🤖 Auto-resolving ${ud.length} USER DECISION block${ud.length !== 1 ? 's' : ''} by attribution majority`, 'info');
+    }
+    window._decisionChoices = resolved;
+    // Fire deferred so the round-complete UI/state finishes settling first.
+    setTimeout(() => {
+      if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active')) {
+        if (typeof applyDecisions === 'function') applyDecisions();
+      }
+    }, 80);
+    updateAutoToggleUI();
+    return;
+  }
+
+  // 6) Clean round, no halt conditions → fire next round
+  updateAutoToggleUI();
+  setTimeout(() => {
+    if (!window._autoMode) return;
+    if (!document.getElementById('screen-work')?.classList.contains('active')) return;
+    if (document.getElementById('runRoundBtn')?.classList.contains('running')) return;
+    if (typeof runRound === 'function') runRound();
+  }, 120);
+}
+
+// ── Halt modal ────────────────────────────────────────────────────
+// Three actions: Resume / Switch to Interactive / Stop here.
+// Resume extends ceiling by AUTO_MAX_ROUNDS_DEFAULT and clears the
+// stall window + failure streak before chaining.
+function _autoHalt(reasonCode, reasonText) {
+  if (typeof consoleLog === 'function') consoleLog(`🤖 Auto paused — ${reasonCode}: ${reasonText}`, 'warn');
+  // Stash the reason so handlers know whether Resume makes sense.
+  window._autoLastHalt = { code: reasonCode, text: reasonText, at: Date.now() };
+  const modal = document.getElementById('autoHaltModal');
+  const reasonEl = document.getElementById('autoHaltReason');
+  const resumeBtn = document.getElementById('autoHaltResumeBtn');
+  if (reasonEl) reasonEl.textContent = reasonText || 'Auto stopped.';
+  // Resume is meaningless after unanimous convergence (project is done)
+  // — disable the button. The user is meant to Finish, not push more rounds.
+  if (resumeBtn) {
+    if (reasonCode === 'converged') {
+      resumeBtn.disabled = true;
+      resumeBtn.title = 'The document already reached unanimous convergence — there is nothing left to chain.';
+    } else {
+      resumeBtn.disabled = false;
+      resumeBtn.title = '';
+    }
+  }
+  if (modal) modal.classList.add('active');
+  updateAutoToggleUI();
+  if (typeof playRoundCompleteSound === 'function') {
+    try { playRoundCompleteSound(); } catch (e) {}
+  }
+}
+
+function autoHaltResume() {
+  const modal = document.getElementById('autoHaltModal');
+  if (modal) modal.classList.remove('active');
+  if (!window._autoMode) {
+    // User toggled off while modal was open — respect that.
+    return;
+  }
+  // Reset stall + failure tracking, extend ceiling.
+  window._autoSatisfiedHist = [];
+  window._autoFailureStreak = 0;
+  const r = (typeof round === 'number') ? round : 1;
+  window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
+  if (typeof consoleLog === 'function') {
+    consoleLog(`🤖 Auto resumed — ceiling extended to round ${window._autoCeilingTarget}`, 'info');
+  }
+  if (typeof toast === 'function') toast('🤖 Auto resumed');
+  updateAutoToggleUI();
+  // Fire the next round.
+  setTimeout(() => {
+    if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active') &&
+        !document.getElementById('runRoundBtn')?.classList.contains('running')) {
+      if (typeof runRound === 'function') runRound();
+    }
+  }, 80);
+}
+
+function autoHaltSwitchInteractive() {
+  const modal = document.getElementById('autoHaltModal');
+  if (modal) modal.classList.remove('active');
+  // Flip the toggle off via the same path that handles persistence + UI.
+  if (window._autoMode) {
+    window._autoMode = true; // ensure toggleAutoMode flips to false cleanly
+    toggleAutoMode();
+  } else {
+    updateAutoToggleUI();
+  }
+}
+
+function autoHaltStop() {
+  const modal = document.getElementById('autoHaltModal');
+  if (modal) modal.classList.remove('active');
+  // Leave Auto toggled on, but don't chain. User can Resume manually
+  // by flipping the toggle off and back on, or by clicking Smoke.
+  // Reset stall + failure so a manual chain doesn't immediately re-trip.
+  window._autoSatisfiedHist = [];
+  window._autoFailureStreak = 0;
+  updateAutoToggleUI();
+  if (typeof toast === 'function') toast('⏹ Auto stopped — toggle off or click Smoke to continue');
 }
 
 // clearProject — wipe project data only, keep hive intact
@@ -9749,6 +10106,10 @@ function updateRoundBadge() {
   if (!el) return;
   const phaseLabel = phase === 'draft' ? 'Draft' : 'Refine';
   el.textContent = `Round ${round} — ${phaseLabel}`;
+  // v3.35.0 — refresh Auto-toggle counter ("N left") whenever the round
+  // ticks. updateRoundBadge already runs at every round boundary, so
+  // this is the cheapest hook for the persistent counter display.
+  if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
 }
 
 function renderBeeStatusGrid() {
@@ -11444,6 +11805,11 @@ async function runBuilderOnly() {
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
+    // v3.35.0 — Auto Mode: builder-only success. No reviewers ran this
+    // round, so satisfied/total are zero and the stall window does not
+    // advance for this entry. Pass outcome 'builder-only' so the chain
+    // logic skips stall tracking but still ticks ceiling + chains.
+    _autoMaybeChainNextRound({ outcome: 'builder-only' });
   } else {
     // v3.32.17 — Abandonment check (failed-round path). Same rationale
     // as the success path above — don't write phantom failed-round
@@ -11475,6 +11841,9 @@ async function runBuilderOnly() {
     renderRoundHistory();
     saveSession();
     showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
+    // v3.35.0 — Auto Mode: builder-only failure. Counts toward the
+    // failure-streak guardrail like a regular failed round.
+    _autoMaybeChainNextRound({ outcome: 'failed', builderError: true, errorReason: _failedRoundReason || 'unknown' });
   }
 
   btn.disabled = false;
@@ -11543,6 +11912,12 @@ async function runRound() {
   let builderHadError = false;
   let _failedRoundReason = '';
   let _failedRoundDetails = '';
+  // v3.35.0 — Auto Mode capture. The bottom of runRound nulls
+  // window._lastConflicts before the post-round chain check runs, so
+  // we snapshot conflicts here for the USER DECISION majority resolver.
+  // (noChangesCount and successfulReviews are function-scope locals
+  // declared further down — readable directly at the chain hook.)
+  let _autoCapturedConflicts = null;
   // ALL AIs including Builder review the document simultaneously
   const allReviewers = activeAIs.filter(ai =>
     ai.id === builder || (window.sessionAIs && window.sessionAIs.has(ai.id))
@@ -11737,6 +12112,8 @@ async function runRound() {
     // 🎉 Unanimous — full scene: black → fog + whirr → image + fanfare + fireworks.
     // Escape or click skips. User decides when to finish via the Finish button.
     playUnanimousScene();
+    // v3.35.0 — Auto Mode halt: project complete, Resume disabled.
+    _autoMaybeChainNextRound({ outcome: 'unanimous', satisfied: noChangesCount, total: successfulReviews.length });
     return;
   } else if (noChangesCount > 0) {
     consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
@@ -11829,6 +12206,8 @@ async function runRound() {
     // 🎉 Hive Approved — majority convergence earns the fanfare
     playFlyingCarSound();
     showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
+    // v3.35.0 — Auto Mode halt: holdouts to review.
+    _autoMaybeChainNextRound({ outcome: 'majority', satisfied: noChangesCount, total: successfulReviews.length });
     return;
   }
 
@@ -11858,6 +12237,10 @@ async function runRound() {
         conflicts.userDecisions = validateUserDecisions(conflicts.userDecisions, newDoc || '', successfulReviews);
       }
       window._lastConflicts = conflicts || null;
+      // v3.35.0 — Auto Mode capture. Conflicts get nulled later in this
+      // function before the chain-check fires; snapshot now so the
+      // USER DECISION majority resolver has something to work with.
+      _autoCapturedConflicts = conflicts || null;
       const cleanResponse = builderResponse.replace(/`\[/g, '[').replace(/\]`/g, ']');
       const hasConflictBlock = cleanResponse.includes('%%CONFLICTS_START%%');
 
@@ -12131,8 +12514,18 @@ async function runRound() {
     renderRoundHistory();
     saveSession();
     showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
+    // v3.35.0 — Auto Mode: builder errored. Tracks the failure-streak
+    // counter; chains halt at AUTO_FAILURE_STREAK_LIMIT consecutive.
+    _autoMaybeChainNextRound({ outcome: 'failed', builderError: true, errorReason: _failedRoundReason || 'unknown' });
   } else {
     toast(`✅ Round ${round - 1} complete!`);
+    // v3.35.0 — Auto Mode: clean round, evaluate guardrails and chain.
+    _autoMaybeChainNextRound({
+      outcome:    'success',
+      satisfied:  (typeof noChangesCount === 'number' ? noChangesCount : 0),
+      total:      (typeof successfulReviews !== 'undefined' && successfulReviews ? successfulReviews.length : 0),
+      conflicts:  _autoCapturedConflicts
+    });
   }
 }
 
@@ -13909,6 +14302,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   // so we wipe legacy keys to force a clean re-recommend. Silent — no toast.
   migrateRecommendationCachesV33210();
   initMuteBtn();
+
+  // v3.35.0 — restore Auto-mode toggle state from last session.
+  // Runs after loadSettings (which doesn't touch Auto), before any
+  // round can fire. The actual ceiling is computed lazily from the
+  // current `round` value, which is loaded later in loadSession().
+  // updateAutoToggleUI re-runs after loadSession to refresh the counter.
+  restoreAutoModePreference();
 
   // v3.26.1 — silently migrate any default AI with a saved key but no
   // cached recommendation to a live-recommend model. Runs once per session.
