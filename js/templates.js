@@ -161,14 +161,22 @@ const WAXFRAME_TEMPLATES = [
     "goalDocType": "Business proposal",
     "goalAudience": "[Client name or type] — be specific: e.g. IT Director at a mid-size manufacturing firm, or Procurement committee at [company name]",
     "goalOutcome": "Reader approves the proposal or schedules a follow-up meeting. They clearly understand what we are offering, what it costs, and what happens next.",
-    "goalScope": "Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.",
+    "goalScope": "Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.\n\nIdentity & offering — fill these in (the hive needs to know who you are and what you sell):\n- Who you are: [your company name + what kind of business — e.g. Eye Productions, a full-service wireless engineering firm]\n- Services or products you offer: [be specific — e.g. predictive surveys, active and passive surveys, validation surveys, troubleshooting, turnkey deployment]\n- What you do NOT offer: [e.g. Do not invent services I don't offer. Do not embellish credentials.]\n- Pricing structure: [e.g. $100/hour with 4-hour minimum, or fixed-fee per project, or tiered packages]",
     "goalTone": "Confident, credible, professional — not salesy",
     "goalNotes": "Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use [PRICE] or [TIMELINE] as placeholders where I have left them blank.",
     "suggestedNotes": "",
+    "lengthMode": "range",
+    "lengthLimit": "2",
+    "lengthMin": "1",
+    "lengthUnit": "pages",
     "hint": [
       {
         "field": "Target audience",
         "text": "Replace [Client name or type] and [company name] with your specifics"
+      },
+      {
+        "field": "Scope & constraints",
+        "text": "Fill in the [bracketed] identity/offering/pricing scaffold below the section list — the hive uses this as source-of-truth for what you actually do and charge"
       },
       {
         "field": "Additional instructions",

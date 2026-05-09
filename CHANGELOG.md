@@ -1,6 +1,110 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.13
+**Build:** `20260509-016` · **Released:** May 9, 2026
+
+**Three things in one release:** backup-filename naming aligned with document/transcript/deep-dive, Business Proposal template expanded to scaffold company-identity-and-pricing content, Business Proposal playbook updated with measured data from a real-world test run.
+
+### Edit 1 — `backupSession` filename construction (`app.js:~14574`)
+
+**Before** (v3.21.4 era through v3.36.12):
+
+```
+{safeName.substring(0,40)}-{safeVer.substring(0,10)}-WaxFrame-Backup-{stamp}.json
+```
+
+Project name truncated to 40 chars and version to 10 chars produced filenames like `BP-Wireless-Survey-Service-for-Brightwat-v1-0-WaxFrame-Backup-20260509-1440.json` — note the mid-word "Brightwat" cutoff. Different baseName shape than the other three artifacts. No round count.
+
+**After** (v3.36.13):
+
+```
+{baseName}-r{N}-{stamp}-Backup.json
+```
+
+Same baseName format as document/transcript/deep-dive (no truncation), same `r{N}` round-count + `YYYYMMDD-HHmm` local-time stamp pattern as transcript/deep-dive (so multiple backups from the same project at different rounds don't collide), `-Backup` as suffix (matches `-Transcript` and `-DeepDive` placement), `WaxFrame-` prefix dropped since the `_waxframe_backup: true` field inside the JSON plus the `-Backup.json` suffix is enough to self-identify.
+
+Same Brightwater example under the new pattern: `BP-Wireless-Survey-Service-for-Brightwater-Canoe-and-Kayak-v1-0-r3-20260509-1440-Backup.json`. Full project name preserved, round count visible at a glance, consistent with the other three artifact patterns.
+
+`backupSession` reads `projectName` / `projectVersion` from the parsed in-memory `LS_PROJECT` JSON rather than calling `buildExportName()`, because backup can be triggered from any screen via the nav menu (including pre-Round-1 from Setup 3 or the welcome screen) and `buildExportName()` depends on `workProjectName` / `workProjectVersion` DOM elements that only exist on the work screen. Reading from `LS_PROJECT` is screen-independent. The formatting regex mirrors `buildExportName`'s exactly.
+
+### Edit 2 — Business Proposal template scope expansion (`templates.js`)
+
+The existing template's `goalScope` field only addressed structure — required sections, "do not add claims" — but left identity, offering, and pricing for the user to figure out. A non-expert user picking the Business Proposal template would type their target audience and outcome correctly, then either skip Scope entirely or write something generic, and the hive would respond with placeholder language ("our team," "competitive pricing," "industry-leading service") because nothing concrete anchored it.
+
+Surfaced empirically by a measured test run on a real wireless-engineering consultancy where the user (not a business-proposal writer) picked the template, accepted the defaults, and had to manually append the company name, services list, "what I don't do" guardrail, and pricing structure into Scope to get a usable proposal. That manual addition is now part of the template scaffold.
+
+**`goalScope` expanded from:**
+
+> Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.
+
+**To:**
+
+> Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.
+>
+> Identity & offering — fill these in (the hive needs to know who you are and what you sell):
+> - Who you are: [your company name + what kind of business — e.g. Eye Productions, a full-service wireless engineering firm]
+> - Services or products you offer: [be specific — e.g. predictive surveys, active and passive surveys, validation surveys, troubleshooting, turnkey deployment]
+> - What you do NOT offer: [e.g. Do not invent services I don't offer. Do not embellish credentials.]
+> - Pricing structure: [e.g. $100/hour with 4-hour minimum, or fixed-fee per project, or tiered packages]
+
+**Length defaults added** to match what the test run used — `lengthMode: range`, `lengthLimit: 2`, `lengthMin: 1`, `lengthUnit: pages` (1–2 pages range, the canonical short-form proposal length). Previously the template set no length defaults, so picking it left Setup 3's Length Constraint field empty. New picker users get sensible defaults that they can override.
+
+**Hint array extended** with a new entry pointing at the Scope &amp; constraints field, instructing users to fill in the [bracketed] identity/offering/pricing scaffold.
+
+### Edit 3 — Business Proposal playbook entry (`document-playbooks.html`)
+
+Updated to reflect the new template, with a real-world example block from the measured test run.
+
+**Step 3 table** updated to show the new identity/offering/pricing scaffold inline with bullet-point rendering (single-line per scaffold variable, matching the actual textarea content the template now drops in).
+
+**Length Constraint row** updated to reflect the new range-mode 1–2 pages template default (was generic "Enter a page count if trimming is required" guidance).
+
+**Starting from scratch note** rewritten — previously instructed users to open the Notes drawer pre-Round-1 and paste their core offer, pricing, and pain-point context. That work is now done by the Scope &amp; constraints scaffold, so the from-scratch flow simplifies to "click Start from Scratch and run." Same outcome the JD playbook documents for upfront-notes injection (v3.21.11), achieved here through Scope rather than Notes.
+
+**Real-world example block** added (`.dp-real-example` amber-accent panel, matching JD/Résumé/Marco/LinkedIn). Uses the literal Project-screen values from the measured test run on a fictional recreational-business client. Demonstrates the identity scaffold in action — the Scope field carries the full company-and-offering payload, and the hive shapes a complete proposal around it without a starting draft. Includes a "Why the identity scaffold matters" continuation block explaining the gap that motivated this release's template improvement.
+
+**Convergence row** replaces the prior "estimated 4–6 rounds" placeholder with measured data: ≈8 minutes wall-clock across 3 rounds, final output 1175 words / 8369 characters. Footnotes the v3.36.12 600-words-per-page math correction — the 1175-word output sits at the upper end of the 1–2 page range under the corrected math.
+
+**Tip block** rewritten to highlight the most important sentence in the test run's Scope payload: <em>"Do not make up stuff I don't do."</em> — explicit anti-invention guardrails keep proposals honest. AIs default to filling gaps with plausible-sounding boilerplate; stating what you don't offer alongside what you do prevents that.
+
+### Naming consistency matrix
+
+| Artifact | Filename pattern |
+|---|---|
+| Document export | `{baseName}.txt` |
+| Transcript | `{baseName}-r{N}-{stamp}-Transcript.txt` |
+| Deep Dive capture | `{baseName}-r{N}-{stamp}-DeepDive.json` |
+| Backup | `{baseName}-r{N}-{stamp}-Backup.json` *(new this release)* |
+
+All four use the same baseName format. Document is intentionally unstamped (it's the final deliverable, overwrite-by-default). The other three are progress/forensic artifacts where `r{N}` and `{stamp}` differentiation matters.
+
+### What did NOT change
+
+The backup file's internal JSON schema is untouched — `_waxframe_backup`, `_waxframe_backup_version`, `_waxframe_app_version`, `_waxframe_backup_ts`, `LS_HIVE`, `LS_PROJECT`, `LS_SESSION`, `IDB_SESSION` all preserved exactly. Existing pre-v3.36.13 backups continue to import correctly. The 30-second deferred `URL.revokeObjectURL` empty-file race fix from v3.21.19/v3.21.21 is preserved. No reviewer prompts. No builder prompts. No validator logic. No Auto Mode chain logic. No CSS. No 80ch column. v3.36.7–v3.36.12 functionality all preserved. The other 13 templates (Cover Letter, Résumé, Job Description, Email & Outreach, Blog Post, LinkedIn Post, Presentation Outline, Press Release, RFP Response, Thank-You, Recipe, Contractor / Vendor Letter — and the existing 14th, all preserved) are untouched.
+
+### Smoke-test surface
+
+**Backup naming:**
+1. Open a project with a long name (40+ characters). Click Backup. Verify the downloaded filename contains the **full** project name without mid-word truncation.
+2. After running 3 rounds, click Backup again. Verify the filename contains `r3` and the current local-time `YYYYMMDD-HHmm` stamp.
+3. Trigger a backup from a non-work screen (Setup 3, welcome). Verify the filename still picks up the project name from `LS_PROJECT` rather than falling back to "document" or "session."
+4. Import an older `…-WaxFrame-Backup-…json` file — verify it still loads and restores correctly. Schema is unchanged; only the filename pattern of new exports is different.
+
+**Business Proposal template:**
+5. Open Setup 3, click the Templates pill, pick **Business Proposal** from Business &amp; Sales. Verify the Scope &amp; constraints field auto-populates with the full identity/offering/pricing scaffold (sections list + Identity bullet list with [bracketed] placeholders).
+6. Verify the Length Constraint area auto-fills with **range mode, 1–2 pages**.
+7. Click the hint indicator (if visible) — verify the Scope &amp; constraints hint reads about filling in the [bracketed] identity/offering/pricing scaffold.
+
+**Business Proposal playbook:**
+8. Open Document Playbooks (📚) from the helper menu. Scroll to Business &amp; Sales. Verify the Business Proposal entry's Step 3 table shows the Identity &amp; offering bullet list under Scope &amp; constraints.
+9. Verify the real-world example block shows the Brightwater Canoe and Kayak run values, the convergence row leads with "≈8 minutes wall-clock across 3 rounds," and the tip block highlights "Do not make up stuff I don't do."
+
+### Version stamps in code bumped
+
+To v3.36.13 / build `20260509-016` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/templates.js` cache-bust bumped from `?v=3.36.11` to `?v=3.36.13` (templates.js content changed this release). `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.12
 **Build:** `20260509-015` · **Released:** May 9, 2026
 
