@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-012';         // build stamp — update each session
+const BUILD       = '20260509-013';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12919,11 +12919,15 @@ async function callAPI(ai, prompt) {
   // the provider's response. This is the difference between "we
   // know something failed" and "we know exactly what was sent and
   // what came back" when David inspects a backup. Token usage
-  // shape varies by provider — OpenAI uses prompt_tokens/
-  // completion_tokens/total_tokens, Anthropic uses input_tokens/
-  // output_tokens (no total), so we coalesce with || fallbacks.
-  // Anthropic backups will show totalTokens === undefined, which
-  // is correct — the consumer can sum prompt+completion if needed.
+  // shape varies by provider:
+  //   OpenAI:    data.usage.{prompt_tokens, completion_tokens, total_tokens}
+  //   Anthropic: data.usage.{input_tokens, output_tokens}            (no total)
+  //   Gemini:    data.usageMetadata.{promptTokenCount, candidatesTokenCount, totalTokenCount}   (v3.36.10)
+  // We coalesce all three with || fallbacks. Anthropic backups still
+  // show totalTokens === undefined (no total returned); Gemini backups
+  // populate all three fields starting v3.36.10 — surfaced empirically
+  // when the Bay Area Invoice run came back with totals showing
+  // ChatGPT+Claude only because Gemini's usage was being missed.
   WF_DEBUG.captureRound({
     aiName:    ai.name,
     provider:  ai.provider,
@@ -12935,9 +12939,9 @@ async function callAPI(ai, prompt) {
     finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null,
     promptPreview:    typeof prompt === 'string' ? prompt.slice(0, 500) : '',
     promptChars:      typeof prompt === 'string' ? prompt.length : 0,
-    promptTokens:     data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || null,
-    completionTokens: data?.usage?.completion_tokens || data?.usage?.output_tokens || null,
-    totalTokens:      data?.usage?.total_tokens      || null,
+    promptTokens:     data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || data?.usageMetadata?.promptTokenCount     || null,
+    completionTokens: data?.usage?.completion_tokens || data?.usage?.output_tokens || data?.usageMetadata?.candidatesTokenCount || null,
+    totalTokens:      data?.usage?.total_tokens      || data?.usageMetadata?.totalTokenCount || null,
     responsePreview:  text.slice(0, 1000)
   });
 
