@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-015';         // build stamp — update each session
+const BUILD       = '20260509-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -14572,16 +14572,32 @@ async function backupSession() {
     IDB_SESSION:       sessionIDB,    // ← the actual round data
   };
   const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
-  const name     = proj.projectName || 'session';
-  const version  = proj.projectVersion || '';
-  const safeName = name.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 40);
-  const safeVer  = version.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').substring(0, 10);
-  // Local-time timestamp: YYYYMMDD-HHmm (matches the build-stamp format used elsewhere)
+  // v3.36.13 — Filename pattern aligned with document export, transcript, and
+  // deep-dive. Was: `{trunc40}-{trunc10}-WaxFrame-Backup-{stamp}` which
+  // truncated mid-word on long project names (e.g. "Brightwater" became
+  // "Brightwat") and used a different baseName shape than the other three
+  // artifacts. Now: `{baseName}-r{N}-{stamp}-Backup` — no truncation, same
+  // r-stamp pattern as transcript/deep-dive (so multiple backups from the
+  // same project at different rounds don't collide), and the "WaxFrame-"
+  // prefix is dropped since the `_waxframe_backup: true` field inside the
+  // JSON plus the `-Backup.json` suffix is enough to self-identify.
+  //
+  // We read projectName/projectVersion from the in-memory parsed LS_PROJECT
+  // (above) rather than calling buildExportName() because backupSession can
+  // be triggered from any screen via the nav menu, and buildExportName()
+  // depends on `workProjectName` / `workProjectVersion` DOM elements that
+  // only exist on the work screen. Reading from LS_PROJECT is screen-
+  // independent. The formatting regex mirrors buildExportName's exactly so
+  // the baseName matches what document/transcript/deep-dive produce.
+  const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9._-]/gi, '');
+  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
+  const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
+  // Local-time timestamp: YYYYMMDD-HHmm (matches transcript/deep-dive/build-stamp format)
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const baseName = safeVer ? `${safeName}-${safeVer}-WaxFrame-Backup` : `${safeName}-WaxFrame-Backup`;
-  const filename = `${baseName}-${stamp}`;
+  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Backup`;
   // Empty-file race fix history:
   // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
   //            via setTimeout(..., 1000) to give Chrome's download dispatcher

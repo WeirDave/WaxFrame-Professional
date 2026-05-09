@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260509-015
+     Build: 20260509-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-015">
+  <meta name="waxframe-build" content="20260509-016">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.12">
+  <link rel="stylesheet" href="style.css?v=3.36.13">
 </head>
 <body class="helper-body">
 
@@ -704,26 +704,46 @@ What we want him to know:
     <div class="dp-playbook-body">
 
       <div class="dp-section-hdr">Step 3 — Your Project screen</div>
-      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. The Scope &amp; constraints field is where you tell the hive who you are and what you sell — fill in the identity/offering/pricing scaffold below the section list.</p>
 
       <table class="dp-table">
         <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
         <tbody>
           <tr><td class="dp-table-field">Document type *</td><td>Business proposal</td></tr>
-          <tr><td class="dp-table-field">Target audience *</td><td>[Client name or type] — be specific: e.g. <em>IT Director at a mid-size manufacturing firm</em>, or <em>Procurement committee at [company name]</em></td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>[Client name or type] — be specific: e.g. <em>IT Director at a mid-size manufacturing firm</em>, <em>Procurement committee at [company name]</em>, <em>Owner Operator at [client business]</em></td></tr>
           <tr><td class="dp-table-field">Desired outcome *</td><td>Reader approves the proposal or schedules a follow-up meeting. They clearly understand what we are offering, what it costs, and what happens next.</td></tr>
-          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.<br><br><strong>Identity &amp; offering — fill these in:</strong><br>• Who you are: [your company name + what kind of business]<br>• Services or products you offer: [be specific]<br>• What you do NOT offer: [explicit guardrail — e.g. "Do not invent services I don't offer"]<br>• Pricing structure: [hourly rate + minimum, or fixed-fee, or tiered packages]</td></tr>
           <tr><td class="dp-table-field">Tone &amp; voice</td><td>Confident, credible, professional — not salesy</td></tr>
-          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use [PRICE] or [TIMELINE] as placeholders where I have left them blank.</td></tr>
-          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Enter a page count if trimming is required — e.g. <strong>5</strong> · <strong>Pages</strong>. Leave blank to stay close to current length.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use [PRICE] or [TIMELINE] as placeholders where you've left them blank.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td>Range mode, 1–2 pages (template default — 1 page = ~600 words, 2 pages = ~1200 words). Adjust if your proposal needs different length bounds.</td></tr>
         </tbody>
       </table>
 
       <div class="dp-scratch-note">
-        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+        <div class="dp-scratch-note-hdr">Starting from scratch? The identity scaffold in Scope &amp; constraints does the work the Notes drawer used to:</div>
         <table>
-          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a business proposal for [project or service] targeting [client]. Structure it with an executive summary, problem statement, proposed solution, and pricing or next steps section.</td></tr>
+          <tr><td class="dp-table-field">Setup 5 — Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty. The hive will build the proposal from your Project-screen Scope &amp; constraints field — that's where your company name, services, pricing, and "what I don't do" guardrails live now. No Notes-drawer setup needed before Round 1; the identity content is already in the prompt envelope via Scope.</td></tr>
         </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Wireless survey service for a small recreation business, 3 rounds, 3-AI budget hive</div>
+        <div class="dp-real-example-sub">A from-scratch business proposal for a fictional recreational-business client (Brightwater Canoe and Kayak) from a real wireless-engineering consultancy (Eye Productions). Demonstrates the identity scaffold in action — the Scope &amp; constraints field carries the full company-and-offering payload, and the hive shapes a complete proposal around it without a starting draft. Run with the same 3-AI budget hive used for the LinkedIn DFS post and Bay Area Contractor letter (paid Claude + paid ChatGPT + free Gemini-as-Builder). All Project-screen prompts below are the literal values used in the run.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>BP - Wireless Survey Service for Brightwater Canoe and Kayak</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Business proposal</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Brightwater Canoe and Kayak — Owner Operator</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Reader approves the proposal or schedules a follow-up meeting. They clearly understand what we are offering, what it costs, and what happens next.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Required sections: executive summary, problem statement, proposed solution, pricing or next steps. Do not add claims not supported by the existing content.<br><br>I am Eye Productions a full service Wireless Engineer. I can do surveys (predictive, active and passive, validation) and troubleshooting as well as turnkey operations and deployment my basic service rate is $100 an hour min 4 hours. Do not make up stuff I don't do</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Confident, credible, professional — not salesy</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not change any pricing figures, timelines, or deliverable commitments. These are factual. Use $100/Hour as placeholders where I have left them blank.</td></tr>
+          <tr><td class="dp-table-field">Length Limit</td><td>Range mode, 1–2 pages</td></tr>
+          <tr><td class="dp-table-field">Hive composition</td><td>Builder: Gemini (free tier). Reviewers: ChatGPT (paid), Claude (paid), Gemini-as-reviewer (free). All other AIs toggled off via the per-session bee toggles on the work screen.</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>From Scratch (no draft pasted) — the proposal was generated entirely from Setup 3 fields. Identity, services, and pricing all flowed in through Scope &amp; constraints; no Notes-drawer pre-injection needed.</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Why the identity scaffold matters:</strong></div>
+        <div class="dp-real-example-sub dp-real-example-sub--continuation">Earlier versions of this template's Scope field only addressed structure — required sections, "do not invent claims" — but left identity, offering, and pricing for the user to figure out. A non-expert user picking the Business Proposal template would type their target audience and outcome correctly, then either skip Scope entirely or write something generic. The hive would respond with placeholder language ("our team," "competitive pricing," "industry-leading service") because it had nothing concrete to anchor on. The improved Scope field prompts the user to provide the specifics that make a proposal real: <em>"I am Eye Productions a full service Wireless Engineer. My basic service rate is $100 an hour min 4 hours. Do not make up stuff I don't do."</em> That language flows directly into the Builder's prompt envelope and the resulting proposal cites those exact services, that exact rate, that exact minimum — no invented pricing, no padded credentials, no "passionate team of experts." Same result the JD playbook documents for upfront-notes injection (v3.21.11), achieved here through Scope rather than Notes.</div>
       </div>
 
       <div class="dp-field-divider"></div>
@@ -736,15 +756,15 @@ What we want him to know:
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste: your core offer, key benefits for the client, any pricing or scope details you want included, and the client's primary pain point or problem.
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. All your identity content is already in the Scope &amp; constraints field on Setup 3 — the hive will build the proposal directly from there.
         </div>
       </div>
 
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
-        <div class="dp-field-label">Rounds</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>4–6 rounds — proposals have many moving parts</div></div>
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈8 minutes wall-clock across 3 rounds (per the document footer's "Produced by WaxFrame in 3 rounds and 8 minutes" byline). Final output: 1175 words / 8369 characters — sits at the upper end of the 1–2 page range under v3.36.12's corrected 600-words-per-page math (2 pages ≈ 1200 words). SCRATCH-mode runs with a fully-populated identity scaffold converge faster than draft-refinement runs because there's no rough-prose to wrestle into shape — the hive builds clean from Round 1. Plan for 3–6 rounds depending on how complete your Scope &amp; constraints scaffold is and whether you have specific client objections to address.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -762,7 +782,7 @@ What we want him to know:
 
       <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
-          <div class="wf-tip-body"><p>Before Round 1, open Notes and write one sentence about the client's biggest pain point or objection. This shapes how the AIs frame every section of the proposal around what the client actually cares about.</p></div>
+          <div class="wf-tip-body"><p>The "Do not make up stuff I don't do" line in the Brightwater example is the most important sentence in that Scope field. AIs default to filling gaps with plausible-sounding boilerplate; an explicit anti-invention guardrail keeps the proposal honest. State exactly what you don't offer alongside what you do — <em>"I do not provide ongoing managed services. Do not invent ongoing service tiers."</em> — and the hive will respect those boundaries through every round.</p></div>
         </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
@@ -1606,7 +1626,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.12"></script>
+<script src="js/version.js?v=3.36.13"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
