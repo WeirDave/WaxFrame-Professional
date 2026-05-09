@@ -1,6 +1,34 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.3
+**Build:** `20260509-006` · **Released:** May 9, 2026
+
+**Single-bug UX fix.** Surfaced during live v3.36.2 testing: the `RATE_LIMITED` troubleshooting card had only a `Retry round` button, leaving the user no way to act on the diagnosis. The `meaning` text said "If it persists, your monthly quota may be exhausted" without giving the user any path to check or address that. By contrast, the `CREDIT_LOW` catalog entry already had a three-button pattern (`Open provider console` / `Retry round` / `Disable this AI for the session`) that gives the user three real choices. This release brings `RATE_LIMITED` into parity with `CREDIT_LOW`.
+
+### Edit at `app.js:~270`
+
+The `RATE_LIMITED` `actions` array now matches `CREDIT_LOW`:
+
+- **`Open provider console`** — `console-link` action that uses `ctx.aiConsoleUrl` (sourced from each AI's stored `apiConsole` field). Default AIs all have it pre-populated. Custom AIs use whatever URL the user entered at Add Custom AI time. The button auto-hides via `btn.style.display = 'none'` if `aiConsoleUrl` is null, so custom AIs without a configured console don't show a broken link.
+- **`Retry round`** — unchanged from prior, still the second action.
+- **`Disable this AI for the session`** — `disable-ai` action that toggles the AI off in `window.sessionAIs` for the rest of the session, preserved across rounds until project end (the same behavior as toggling the bee status dot off on the work screen).
+
+The `meaning` text is updated to mention all three buttons explicitly so the user knows what each does without having to hover. The exhaustion warning becomes actionable: open the console to check usage, disable the AI if exhausted, retry if it was a transient burst.
+
+### What did NOT change
+
+No prompts touched. No reviewer or Builder instructions touched. No validator logic touched. No length-guard logic touched. No Auto Mode logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.2 functionality preserved exactly. The `validateUserDecisions` shape fix from v3.36.2 remains in place.
+
+### Smoke-test surface
+
+Trigger a `429` from any provider — the easiest path is to fire repeated rounds quickly on a free-tier provider (Mistral free tier hits `1300 / Rate limit exceeded` after ~10 rapid requests). **Verify:** the troubleshooting card now shows three buttons. Click `Open provider console` and confirm it opens the right URL in a new tab (e.g. Mistral routes to `console.mistral.ai`, OpenAI to `platform.openai.com/api-keys`). Click `Disable this AI for the session` and confirm the bee status dot greys out on the work screen and the AI is skipped on the next round. For a custom AI added without an API console URL, verify the `Open provider console` button is hidden rather than broken.
+
+### Version stamps in code bumped
+
+To v3.36.3 / build `20260509-006` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.2
 **Build:** `20260509-005` · **Released:** May 9, 2026
 
