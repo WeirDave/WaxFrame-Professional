@@ -1,6 +1,42 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.8
+**Build:** `20260509-011` · **Released:** May 9, 2026
+
+**Single-edit QoL.** Transcript filenames now include the rounds-completed count and a local-time `YYYYMMDD-HHmm` stamp, matching the format used by backup files. Multiple transcripts from the same project no longer collide on disk; the round number in the filename also makes it obvious at a glance which snapshot is which.
+
+### Edit — `exportTranscript` filename
+
+`app.js:~14437`. The download attribute changes from:
+
+```
+${filename}-Transcript.txt
+```
+
+to:
+
+```
+${filename}-r${totalRoundsForName}-${stamp}-Transcript.txt
+```
+
+Example: `Chocolate-Chip-Cookie-Recipe-v11-0-r8-20260509-1841-Transcript.txt`
+
+The stamp uses local time (matches `backupSession`'s pattern at `app.js:~14470`) so the filename matches the wall-clock moment the user clicked Export. `totalRoundsForName` is `Math.max(0, round - 1)` — the same "rounds completed" value already shown in the transcript header, hardened against any corrupted-state case where `round < 1`.
+
+### What did NOT change
+
+`exportDocument` is intentionally untouched. The document export is the final deliverable; overwrite-by-default is the right semantics there. Transcripts are progress records — you may want round-5 and round-10 snapshots side-by-side. No other code paths touched: no reviewer prompts, no validator logic, no length-guard logic, no Auto Mode logic, no CSS, no 80ch column. v3.36.7 forensic-capture additions (RING_MAX 200, ringBuffer/lastFailure persistence, captureRound prompt/response/token capture) all remain in place.
+
+### Smoke-test surface
+
+After any session with at least 1 round completed, click "Export Transcript". Verify the downloaded filename contains `-r{N}-{YYYYMMDD-HHmm}-Transcript.txt` with N = rounds completed and the stamp matching local time. Click Export Transcript again immediately — the second filename should differ in the minute portion (or be identical only if clicked within the same minute, which the OS will resolve with " (1)" suffix as before, but at a much lower frequency than the old filename-collides-every-export behavior).
+
+### Version stamps in code bumped
+
+To v3.36.8 / build `20260509-011` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.7
 **Build:** `20260509-010` · **Released:** May 9, 2026
 
