@@ -1,6 +1,58 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.1
+**Build:** `20260509-004` · **Released:** May 9, 2026
+
+**Hotfix to v3.36.0.** Field-tested v3.36.0 immediately after release on a live Shrimp Scampi project (Mistral as Builder, 6 active reviewers). v3.36.0 Edit 1 — the MAJORITY RULES rewrite — is verified working: the Builder emitted two legitimate USER DECISION blocks on a refine round where pre-v3.36.0 would have silently issued BUILDER DECISIONs. v3.36.0 Edit 2 — the validator OR-fallback — is verified insufficient: both legitimate USER DECISIONs were suppressed by `validateUserDecisions` despite the OR-fallback. Two surgical follow-ups in this release.
+
+### Edit 1 — `validateUserDecisions()` substring check removed entirely
+
+The OR-fallback shipped in v3.36.0 (option text OR CURRENT text appears in AI's response) assumed reviewers quote either the full option or the full CURRENT verbatim. Field data shows they don't — they quote *fragments* in the diff-style format the reviewer prompt explicitly trains them to use:
+
+> `Line 30: Change 'If using zest, grate the lemon first' to 'Zest the lemon first'`
+
+The reviewer's response contains a fragment of CURRENT and a fragment of the proposed option, but neither full text. Both arms of the OR-fallback fail. The substring layer continued to kill 100% of legitimate USER DECISIONs in the Shrimp Scampi field test.
+
+At `app.js:~12950`, the substring check is removed entirely. The remaining defenses are sufficient and stay in place:
+
+- **Parser-level (`extractConflicts`):** CURRENT must be a live substring of the returned document — catches stale-CURRENT hallucination.
+- **Prompt-level (`BUILDER_INSTRUCTIONS.refine`):** ANTI-HALLUCINATION RULES block (THIS-ROUND ONLY, ATTRIBUTION INTEGRITY, CURRENT MUST BE LIVE, DO NOT BOTH APPLY AND FLAG) — catches most fabrication classes at source.
+- **Validator round-membership check:** AI must have been a reviewer in this round — catches fabricated attributions to AIs not in the hive.
+- **Validator noChanges short-circuit:** AI must NOT have said NO CHANGES NEEDED — catches false attribution to silent AIs.
+- **Validator ≥2-options floor:** at least 2 verifiable options must remain after stripping — catches partial-collapse cases.
+
+### Cost of removing substring (calibrated)
+
+If the Builder fabricates an attribution to an AI that *was* in the round and *didn't* say NO CHANGES NEEDED but didn't actually engage the relevant section, the option survives with that attribution. The option *text itself* is still real (came from somewhere — the Builder either lifted it from a real reviewer or hallucinated wholesale, the latter caught by the prompt-level ANTI-HALLUCINATION RULES). Worst case: a wrong AI's name appears alongside a real option. Cosmetic, not catastrophic. The user judges options on text merits, and the attribution count is advisory for tie-breaking — not the basis of decision.
+
+The cost in the prior direction — silent suppression of 100% of legitimate USER DECISIONs in a refine session — was demonstrated catastrophic in field testing. The trade is correct.
+
+### Edit 2 — Slow-responder card copy fix
+
+At `app.js:~444`. The previous copy contradicted the buttons:
+
+> `It will still try on the next round, but if it stays this slow you can toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.`
+
+The card has two buttons — `[Toggle off this AI]` and `[Keep it on]` — that *are* the decision, immediately. The copy narrated a future ("will still try... if it stays slow you can toggle off") in a tense that implied the toggle is a later action. Replaced with:
+
+> `Toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.`
+
+State the upside, mention the safety net, let the buttons handle the choice. Trims redundancy and removes the tense mismatch.
+
+### What did NOT change
+
+No prompts touched. No reviewer or Builder instructions touched. No length-guard logic touched. No Auto Mode logic touched (the `_autoResolveUserDecisions` resolver still works the same — it just has more decisions to evaluate now that the validator stops killing them). The v3.36.0 MAJORITY RULES rewrite remains intact and verified working. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.0 functionality preserved exactly.
+
+### Smoke-test surface
+
+Run any human-voiced refine session — the same Shrimp Scampi or invoice letter setup used to validate v3.36.0. **Verify:** USER DECISION blocks render as proper structured cards in the Conflicts panel (clickable options, AI attribution lines), not as the `CONFLICTS DETECTED BUT COULD NOT BE PARSED` raw fallback. Open DevTools console; verify `Stripped fake attribution` warnings now fire only for AIs not in the round or who said NO CHANGES NEEDED — not for legitimate reviewers. Trigger the slow-responder card by running a slow provider (or temporarily set the `SLOW_THRESHOLD` constant lower for testing); verify the copy reads cleanly with the buttons.
+
+### Version stamps in code bumped
+
+To v3.36.1 / build `20260509-004` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.0
 **Build:** `20260509-003` · **Released:** May 9, 2026
 
