@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.35.6
+**Build:** `20260509-002` · **Released:** May 9, 2026
+
+**Single-bug hotfix.** `clearProject()` correctly wiped the persisted `sessionAIs` data from IndexedDB but didn't reset the in-memory `window.sessionAIs` Set. Result: AIs the user toggled off mid-round (slow responder, rate-limited, billing failure) stayed disabled when the user clicked Finish → Start a New Project. The Worker Bees grid and the work screen's bee status dots both showed previously-disabled AIs as still inactive, contradicting the user's expectation that "Start a New Project" resets all session state.
+
+- **`clearProject()` at `app.js:~3725`** — added explicit reset: `window.sessionAIs = new Set(activeAIs.map(a => a.id))`. Restores the full configured hive selection for the new project. Session disables are session-scoped per the design intent (the persisted IDB wipe was already correct); only the in-memory Set was missing the same treatment. Symmetric with the v3.35.2 wipes for `_autoMode`, `_autoCeilingTarget`, `_cleanThisRound`, and `_roundTimings` already in place at the same chokepoint.
+- **What did NOT change.** No prompts touched. No reviewer or Builder instructions touched. No length-guard logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. Auto Mode, backup time-machine, dark-mode label, Dev Toolbar scene-flyout, CREDIT_LOW catalog, Notes priority swap, Worker Bee link, and console error link click handler — all preserved exactly. v3.35.5 functionality preserved exactly.
+- **Smoke-test surface.** Run a project. Mid-round, toggle off any AI via the bee status dot strip on the work screen (e.g. disable DeepSeek and Mistral). Continue to convergence. Click Finish → Start a New Project. **Verify:** on the Worker Bees setup screen, all your previously-active AIs are checked again. On the work screen for the new project, all bee status dots show as active. Toggle one off, run a round, finish, start another new project — confirm reset is consistent across multiple cycles.
+- **Version stamps in code bumped** to v3.35.6 / build `20260509-002` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.35.5
 **Build:** `20260509-001` · **Released:** May 9, 2026
 

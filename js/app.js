@@ -1347,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-001';         // build stamp — update each session
+const BUILD       = '20260509-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3721,6 +3721,26 @@ async function clearProject() {
   window._roundTimings = {};
   if (Array.isArray(activeAIs)) {
     activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
+  }
+
+  // v3.35.6 — Reset session-disabled AI tracker. window.sessionAIs is
+  // a Set of AI IDs that are currently active for THIS session; AIs
+  // toggled off mid-round via toggleSessionBee (e.g. slow responder,
+  // rate-limited, billing failure) are removed from this Set, which
+  // is what causes them to be skipped in future rounds. The Set is
+  // persisted to IDB on each round and restored on session load — and
+  // clearProject correctly wipes IDB above. But the in-memory Set was
+  // NOT being reset here, so when the user clicked Finish → Start a
+  // New Project, the stale Set carried forward and the new project's
+  // work screen + Worker Bees grid showed previously-disabled AIs as
+  // still disabled. Resetting to a fresh Set containing every
+  // activeAI ID restores the user's full configured hive selection
+  // for the new project — which is the correct semantics: session
+  // disables are session-scoped, not project-scoped.
+  if (Array.isArray(activeAIs)) {
+    window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  } else {
+    window.sessionAIs = new Set();
   }
 
   // v3.35.2 — Refresh the Auto toggle pill so it visibly returns to
