@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-014';         // build stamp — update each session
+const BUILD       = '20260509-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3001,7 +3001,18 @@ function saveProject() {
 function saveSettings() { saveHive(); saveProject(); }
 
 // ── Length constraint helpers ──
-const WORDS_PER_PAGE      = 500;
+// v3.36.12 — WORDS_PER_PAGE bumped from 500 to 600. The original 500
+// was the conservative double-spaced-manuscript standard; real-world
+// single-spaced 12pt with 1" margins runs 500–600 words per page,
+// and business documents (proposals, reports, RFP responses) land
+// at the upper end of that range. The 500 conversion was tripping
+// the length guard on outputs that were correct for the genre —
+// e.g. a 1174-word "2-page business proposal" reading as 17% over
+// when it was actually 2.3 pages of legitimate proposal content.
+// 600 wpp aligns with industry-standard typewriter math (Word's
+// default page count, Gemini and ChatGPT's stated conversion) and
+// represents a single typed page at standard formatting.
+const WORDS_PER_PAGE      = 600;
 const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
 const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 
@@ -9796,11 +9807,11 @@ function updateLineNumbers() {
   if (stats && text.trim()) {
     const words = text.trim().split(/\s+/).filter(Boolean).length;
     const chars = text.length;
-    // Pages reuses WORDS_PER_PAGE (500, declared near the length-constraint
-    // logic) so this display stays in lockstep with whatever the length-gate
-    // converts pages→words to. Floor at <0.1 so very short docs don't show
-    // an unhelpful "0.0 pages". The ≈ prefix matches the length-hint
-    // convention for fuzzy unit conversions.
+    // Pages reuses WORDS_PER_PAGE (600 since v3.36.12, declared near the
+    // length-constraint logic) so this display stays in lockstep with
+    // whatever the length-gate converts pages→words to. Floor at <0.1 so
+    // very short docs don't show an unhelpful "0.0 pages". The ≈ prefix
+    // matches the length-hint convention for fuzzy unit conversions.
     const pages    = words / WORDS_PER_PAGE;
     const pagesStr = pages < 0.1 ? '<0.1' : pages.toFixed(1);
     stats.textContent = `${chars.toLocaleString()} chars · ${words.toLocaleString()} words · ${visualCount} lines · ≈${pagesStr} pages`;
