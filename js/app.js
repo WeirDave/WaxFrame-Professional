@@ -1354,7 +1354,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-010';         // build stamp — update each session
+const BUILD       = '20260509-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -14434,7 +14434,19 @@ function exportTranscript() {
   const blob = new Blob([out], { type: 'text/plain' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  a.href = url; a.download = `${filename}-Transcript.txt`;
+  // v3.36.8 — Append rounds-completed + local-time stamp to transcript
+  // filename so multiple transcripts from the same project don't collide
+  // and David can tell at a glance which round each snapshot captured.
+  // Mirrors the YYYYMMDD-HHmm local-time format used by backupSession
+  // (line ~14470). Documents (exportDocument) are intentionally NOT
+  // stamped — the document is the final deliverable and overwrite-by-
+  // default is correct there. Transcripts are progress records: you
+  // may want round-5 and round-10 snapshots side-by-side.
+  const totalRoundsForName = Math.max(0, round - 1);
+  const _td = new Date();
+  const _pad = n => String(n).padStart(2, '0');
+  const _stamp = `${_td.getFullYear()}${_pad(_td.getMonth()+1)}${_pad(_td.getDate())}-${_pad(_td.getHours())}${_pad(_td.getMinutes())}`;
+  a.href = url; a.download = `${filename}-r${totalRoundsForName}-${_stamp}-Transcript.txt`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
