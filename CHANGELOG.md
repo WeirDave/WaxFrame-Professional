@@ -1,6 +1,79 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.2
+**Build:** `20260509-005` · **Released:** May 9, 2026
+
+**The actual bug fix.** v3.36.0 and v3.36.1 each shipped real improvements but missed the root cause of why USER DECISIONs never surfaced. This release fixes the actual culprit: a shape mismatch in `validateUserDecisions()` that has been silently killing 100% of USER DECISIONs since v3.21.16 (April 26, 2026), regardless of every filter layer above or below it.
+
+### What was actually broken
+
+`validateUserDecisions(userDecisions, returnedDoc, reviews)` builds a name → response map for the round's reviewers, then looks up each option's attributed AI in that map. If the map lookup fails, the AI is stripped as "not in this round's reviewer set," the option drops, and the decision aggregates to "fewer than 2 verifiable options after attribution check."
+
+The validator's documentation comment claimed the input shape was `{ ai: { id, name }, response, success, noChanges }` — the Promise-return shape from the per-AI reviewerPromises in `runRound`. The validator's lookup read `r?.ai?.name`.
+
+The actual call site at `app.js:~12410` passes `successfulReviews`, which is filtered from `reviewerResponses`, which is populated at `app.js:~12113` with shape `{ id, name, response, noChanges }` — flat, no `ai` wrapper.
+
+`r?.ai?.name` on the flat shape returns `undefined`. The optional-chain bails. `displayName = ''`. Every iteration hits the `continue`. **`responseByName` ends up an empty Map. Every AI lookup returns undefined. Every attribution gets stripped. Every USER DECISION dies at "fewer than 2 verifiable options."**
+
+This has been the case for the entire two-week life of the validator. The substring check shipped in v3.21.16, the OR-fallback shipped in v3.36.0, and the substring removal shipped in v3.36.1 were all editing code that never executed in production — every option had already been stripped one branch earlier.
+
+### Forensic confirmation
+
+The pre-fix Cookie v9 backup (v3.32.9, 22 rounds) shows the Builder emitted 22 USER DECISION blocks across the session. Zero survived. Console suppression buckets: 9 stripped attributions, 5 dropped options, 5 aggregate "fewer than 2 verifiable options" — all of these are downstream consequences of `responseByName` being empty. The substring check (which we previously suspected) wasn't reached on any of them.
+
+The Shrimp Scampi backup taken today (v3.36.0 Mistral-as-Builder, round 3) shows the same pattern. Two USER DECISIONs emitted, two suppressed for "fewer than 2 verifiable options." Same root cause.
+
+### The fix — `app.js:~12932`
+
+```js
+// CURRENT (broken since v3.21.16):
+const displayName = r?.ai?.name || '';
+
+// FIXED (v3.36.2):
+const displayName = r?.name || r?.ai?.name || '';
+```
+
+The fallback to `r.ai?.name` is defensive — if any future caller passes the Promise-return shape, the validator will still work. The shape comment at `app.js:~12925` is updated to document the actual call shape and the historical mismatch.
+
+### What this restores
+
+For the first time since v3.21.16, `validateUserDecisions` actually validates:
+
+- **Round-membership check** correctly identifies AIs that are in the round (the lookup now hits)
+- **`noChanges` short-circuit** correctly catches AIs who said NO CHANGES NEEDED
+- **Attribution acceptance** now passes legitimate attributions through to the user
+- **`≥2 verifiable options` floor** still catches partial collapse cases
+
+The substring check stays removed (per v3.36.1 reasoning — reviewers quote fragments, full-text substring matching produces overwhelming false negatives). The remaining hallucination defenses are sufficient: prompt-level ANTI-HALLUCINATION RULES (THIS-ROUND ONLY, ATTRIBUTION INTEGRITY, CURRENT MUST BE LIVE, DO NOT BOTH APPLY AND FLAG), parser-level CURRENT-must-be-live, validator-level round membership and `noChanges`, and the ≥2 verifiable options floor.
+
+### What v3.36.0 and v3.36.1 actually did
+
+For the public record, since the prior two release notes claimed effects this release reveals were never delivered:
+
+- **v3.36.0 Edit 1 (MAJORITY RULES rewrite):** **real and verified working.** The Builder now emits USER DECISION blocks on the documented "two or more substantially different alternatives" rule. The Mistral-as-Builder rounds in today's Shrimp Scampi test confirmed this empirically (4 USER DECISIONs emitted across 2 rounds where pre-v3.36.0 would have emitted 0). Without v3.36.0 there would be nothing for v3.36.2 to validate.
+- **v3.36.0 Edit 2 (validator OR-fallback):** dead code path. Never reached in production. Still present after v3.36.1 removed it.
+- **v3.36.1 Edit 1 (validator substring removal):** dead code path. Never reached in production. The simplification stays — once v3.36.2 lands, the validator runs the simplified path correctly.
+- **v3.36.1 Edit 2 (slow-responder copy fix):** real and shipped, unaffected by this release.
+
+### What did NOT change
+
+No prompts touched. No reviewer or Builder instructions touched. No length-guard logic touched. No Auto Mode logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.1 functionality preserved exactly. The v3.36.0 MAJORITY RULES rewrite remains intact.
+
+### Smoke-test surface
+
+Run any human-voiced refine session — résumé, business proposal, blog post, contractor letter. **Verify:**
+
+- USER DECISION blocks render as proper structured cards in the Conflicts panel — clickable options, attribution lines per option — NOT as the `CONFLICTS DETECTED BUT COULD NOT BE PARSED` raw-text fallback
+- Open DevTools console; verify `Stripped fake attribution` warnings now fire only on real fabrications (AIs not in the round, or AIs who said NO CHANGES NEEDED) — not on every legitimate reviewer
+- Pick an option in a USER DECISION, click Apply Decisions, confirm the round chains correctly
+- Auto Mode: toggle on for one full project; verify `_autoResolveUserDecisions` strict-attribution-majority resolver now sees a populated decisions list and either auto-picks or halts on tie as designed
+
+### Version stamps in code bumped
+
+To v3.36.2 / build `20260509-005` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.1
 **Build:** `20260509-004` · **Released:** May 9, 2026
 
