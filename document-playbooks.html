@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260509-012
+     Build: 20260509-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-012">
+  <meta name="waxframe-build" content="20260509-013">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.9">
+  <link rel="stylesheet" href="style.css?v=3.36.10">
 </head>
 <body class="helper-body">
 
@@ -1342,6 +1342,93 @@ Hard constraints:
     </div>
   </div>
 
+  <div class="dp-playbook" id="contractor-letter">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">🧾</div>
+      <div>
+        <div class="dp-playbook-title">Contractor / Vendor Letter</div>
+        <div class="dp-playbook-desc">Refine a letter to a contractor, vendor, or service provider — invoice disputes, scope concerns, punch-list items, or anything where you need to be clear, professional, and firm without escalating.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>Letter to my [contractor / vendor / service provider] regarding [the first invoice / scope dispute / punch-list items]</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>The [contractor / vendor / project manager] who did the work — be specific about the relationship: <em>The general contractor we hired</em>, <em>The vendor that installed our HVAC</em></td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>A clear, professional record of my concerns and the items I need addressed before [I pay / we close out the project / we move forward]. The recipient understands what is wrong, what I expect, and what comes next.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Include all of the items I have listed including pricing but don't make anything else up and don't change my dollar figures — they are all actual. Keep my factual claims (dates, amounts, names) intact.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Professional and courteous but firm. Not adversarial, not apologetic.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Do not soften my concerns. Do not invent context, dates, or amounts I haven't provided. If a section is unclear, suggest a rewording rather than guessing what I meant.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Bay Area First Invoice Concerns, 12 rounds, 3-AI budget hive</div>
+        <div class="dp-real-example-sub">A homeowner-to-contractor letter raising concerns about a first invoice on a multi-room remodel: receipts for marked-up materials, a 75% cost overrun on a flat-rate quote, and a punch list of installation issues (missing shelves, leaky shut-off valves, misaligned shower head, unilateral shower-door selection). Run with a deliberately budget-tier hive: paid Claude + paid ChatGPT + free Gemini-as-Builder. Reached majority convergence at Round 12 (Claude holdout, ChatGPT and Gemini satisfied). All Project-screen prompts below are the literal values used in the run — no AI-generated phrasing. Document tightened from 735 words to 624 (-15%) over 11 substantive rounds, monotonic compression with no bouncing.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Bay Area First Invoice Concerns</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v3.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Letter to my contractor regarding the first invoice</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>The contractor that did the work</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>a better understanding of my concerns about the costs and the work performed and an explanation of items that need to be addressed before I pay him</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Include all of the items I have listed including pricing but don't make anything else up and don't change my dollar figures they are all actual</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Professional and courteous but firm</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>(blank — Notes left empty for this run)</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Leave blank</td></tr>
+          <tr><td class="dp-table-field">Hive composition</td><td>Builder: Gemini (free tier). Reviewers: ChatGPT (paid), Claude (paid), Gemini-as-reviewer (free). All other AIs toggled off via the per-session bee toggles on the work screen.</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Existing draft pasted in (refining, not from scratch)</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Why this configuration matters:</strong></div>
+        <div class="dp-real-example-sub dp-real-example-sub--continuation">A 3-AI hive with one paid OpenAI seat, one paid Anthropic seat, and a free Gemini tier is the realistic floor for a budget-conscious WaxFrame user. This run validates that the configuration produces real convergence on a personal letter in a reasonable time window — about 7 minutes of hive processing across 12 rounds, sub-$1 in API spend across ChatGPT and Claude (Gemini contributed at zero cost as both reviewer and Builder). Each AI brought a different strength to the work: ChatGPT consistently flagged concision opportunities (line-3 phrasing was its signature concern across multiple rounds), Claude focused on semantic precision and tense consistency (catching a transcription error and recovering from a tense regression it had introduced two rounds earlier), and Gemini stayed quiet most rounds but surfaced sharp catches when it spoke up — the difference between <em>"hand towel and a towel rack"</em> and <em>"hand towel <strong>holder</strong> and a towel rack"</em> was Gemini-only.</div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing letter using the Paste Text button. Don't worry about polish — even a rough first pass with bullet-point concerns and dollar figures works. The hive will shape it into a coherent letter while preserving your factual content.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste: who you're writing to, the project / job in question, the specific concerns (with any dates, amounts, and item names), and what you want to happen next.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈7 minutes of hive processing across 12 rounds (sum of per-round max-reviewer + Builder elapsed times — reviewers run in parallel within a round, so the round wall-time is bounded by the slowest reviewer plus the Builder, not the sum of all reviewer calls). Round 12 reached majority convergence (2 of 3 AIs satisfied) with a single holdout offering minor wording suggestions. Document compressed from 735 to 624 words (-15%). Most aggressive tightening happened in Rounds 6–7 (-60 words combined); late rounds 10–11 trimmed under 1% per round, signaling genuine end of useful iteration. Total wall-clock varies based on how much time you spend reviewing each round's output between Smoke clicks — the hive processing time is a floor, not a ceiling. Plan for 7–10 minutes of attentive engagement per multi-round refine session, more if you're reading every reviewer suggestion in detail.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — concision</span>
+            <span class="dp-tag dp-tag-blue">Claude — semantic precision</span>
+            <span class="dp-tag dp-tag-green">Gemini — sharp catches when active</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>State your factual constraints explicitly in <strong>Scope &amp; constraints</strong>: <em>"Don't change my dollar figures — they are all actual."</em> Without this, AIs will round, rephrase, or "improve" specific numbers and dates in ways that quietly invalidate your record. The literal language above kept all dollar amounts and the 75% overrun calculation intact across 12 rounds.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
         </div><!-- /hp-section-body Personal & Everyday -->
       </div><!-- /hp-section Personal & Everyday -->
 
@@ -1424,7 +1511,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.9"></script>
+<script src="js/version.js?v=3.36.10"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
