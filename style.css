@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-024
+   Build: 20260508-025
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -84,8 +84,8 @@ input, textarea, select { font-family: inherit; }
   --fs-base: 14px;   /* body text, nav items, form labels */
   --fs-md:   16px;   /* button text, card sub-copy */
   --fs-lg:   18px;   /* card titles */
-  --fs-xl:   22px;   /* screen-level headings */
-  --fs-2xl:  28px;   /* logo/brand name */
+  --fs-xl:   clamp(22px, calc(11.75px + 0.75vw), 26px);   /* screen-level headings — fluid 22→26 */
+  --fs-2xl:  clamp(28px, calc(17.75px + 0.75vw), 32px);   /* logo/brand name — fluid 28→32 */
   --fs-mono: 13px;   /* all Courier New — textarea, code */
   /* Numeric font-size tokens — px-named scale used by R5a/R5b/R6/R7
      migrations. Same naming convention as --space-N. Defined here in
@@ -99,10 +99,10 @@ input, textarea, select { font-family: inherit; }
   --fs-16:   16px;
   --fs-18:   18px;
   --fs-20:   20px;
-  --fs-22:   22px;
-  --fs-24:   24px;
-  --fs-28:   28px;
-  --fs-32:   32px;
+  --fs-22:   clamp(22px, calc(11.75px + 0.75vw), 26px);  /* fluid 22→26 (matches --fs-xl) */
+  --fs-24:   clamp(24px, calc(13.75px + 0.75vw), 28px);  /* fluid 24→28 */
+  --fs-28:   clamp(28px, calc(17.75px + 0.75vw), 32px);  /* fluid 28→32 (matches --fs-2xl) */
+  --fs-32:   clamp(32px, calc(21.75px + 0.75vw), 36px);  /* fluid 32→36 */
   /* ── Spacing scale (px-named) ──
      Tokens for padding / margin / gap. Number = pixel value, so migration
      from hardcoded `padding: 12px` to `padding: var(--space-12)` is a
