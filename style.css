@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-022
+   Build: 20260508-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -352,9 +352,9 @@ html, body {
   border-radius: 20px;
   color: var(--muted);
   cursor: pointer;
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: 600;
-  padding: 3px 12px;
+  padding: var(--space-4) var(--space-12);
   transition: all 0.12s;
   white-space: nowrap;
 }
@@ -396,7 +396,7 @@ html, body {
 }
 .theme-toggle {
   display: flex;
-  gap: 4px;
+  gap: var(--space-4);
   align-items: center;
 }
 
@@ -480,17 +480,17 @@ html, body {
   100% { transform: translate(-50%, -50%) scale(0) scaleX(1);     opacity: 0; }
 }
 .app-version-stamp {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: 700;
   color: var(--muted);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  margin-top: 4px;
+  margin-top: var(--space-4);
   display: block;
 }
 /* Welcome screen pair: tagline 15px → version 13px, weight matches tagline */
 .welcome-brand .app-version-stamp {
-  font-size: 13px;
+  font-size: var(--fs-13);
   font-weight: 600;
   letter-spacing: 0.08em;
 }
@@ -1105,7 +1105,7 @@ html, body {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  gap: 5px;
+  gap: var(--space-4);
   width: 36px;
   height: 36px;
   background: transparent;
@@ -1221,7 +1221,7 @@ html, body {
   z-index: 901;
   display: flex;
   flex-direction: column;
-  padding: 0 0 24px;
+  padding: 0 0 var(--space-24);
   transform: translateX(-100%);
   transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 4px 0 24px rgba(0,0,0,0.5);
@@ -1248,7 +1248,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 16px;
+  padding: var(--space-14) var(--space-16);
   border-bottom: 1px solid var(--border2);
   flex-shrink: 0;
 }
@@ -1259,7 +1259,7 @@ html, body {
 .nav-panel-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   min-width: 0;
 }
 .nav-panel-brand-text {
@@ -1276,14 +1276,14 @@ html, body {
 }
 .nav-panel-title {
   font-family: var(--font-display);
-  font-size: 16px;
+  font-size: var(--fs-16);
   font-weight: 800;
   color: var(--text);
   letter-spacing: 0.02em;
   line-height: 1.1;
 }
 .nav-panel-tagline {
-  font-size: 10px;
+  font-size: var(--fs-11) /* snapped from 10px */;
   font-weight: 600;
   color: var(--muted);
   text-transform: uppercase;
@@ -1291,7 +1291,7 @@ html, body {
   line-height: 1.3;
 }
 .nav-panel-version {
-  font-size: 9px;
+  font-size: 9px /* out-of-scale */;
   font-weight: 600;
   color: var(--text-dim);
   letter-spacing: 0.06em;
@@ -1306,15 +1306,15 @@ html, body {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 6px;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
   background: transparent;
   border: 1px dashed var(--border2);
   border-radius: var(--radius-sm);
   color: var(--text-dim);
   font-family: var(--font);
-  font-size: 11px;
-  padding: 3px 9px;
+  font-size: var(--fs-11);
+  padding: var(--space-4) var(--space-8);
   cursor: pointer;
   transition: all 0.12s;
   white-space: nowrap;
@@ -1328,7 +1328,7 @@ html, body {
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   color: var(--muted);
-  font-size: 12px;
+  font-size: var(--fs-12);
   width: 28px;
   height: 28px;
   cursor: pointer;
@@ -1345,12 +1345,12 @@ html, body {
 
 /* Section labels */
 .nav-section-label {
-  font-size: 10px;
+  font-size: var(--fs-11) /* snapped from 10px */;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--muted);
-  padding: 16px 16px 6px;
+  padding: var(--space-16) var(--space-16) var(--space-6);
 }
 
 /* Nav body — scrollable item list below the fixed header */
@@ -1360,21 +1360,21 @@ html, body {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  padding-bottom: 16px;
+  padding-bottom: var(--space-16);
 }
 
 /* Nav items */
 .nav-item {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-10);
   width: 100%;
-  padding: 10px 16px;
+  padding: var(--space-10) var(--space-16);
   background: transparent;
   border: none;
   border-radius: 0;
   color: var(--text-dim);
-  font-size: 13px;
+  font-size: var(--fs-13);
   font-weight: 500;
   font-family: var(--font-body);
   text-decoration: none;
@@ -1397,7 +1397,7 @@ html, body {
 .nav-divider {
   height: 1px;
   background: var(--border2);
-  margin: 8px 16px;
+  margin: var(--space-8) var(--space-16);
 }
 [data-theme="light"] .nav-divider { background: #e5e7eb; }
 @media (prefers-color-scheme: light) {
@@ -2617,7 +2617,7 @@ html, body {
 }
 
 .footer-status {
-  font-size: 13px;
+  font-size: var(--fs-13);
   font-style: italic;
   color: rgba(255,255,255,0.8);
   white-space: nowrap;
@@ -2628,7 +2628,7 @@ html, body {
 @media (prefers-color-scheme: light) { [data-theme="auto"] .footer-status { color: #0a0c12; } }
 .footer-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--space-12);
   align-items: center;
 }
 .footer-btn {
@@ -2639,7 +2639,7 @@ html, body {
   border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  padding: 8px 40px;
+  padding: var(--space-8) var(--space-40);
   transition: all 0.15s;
   min-width: 200px;
 }
@@ -2656,7 +2656,7 @@ html, body {
   border: 2px solid var(--accent);
   border-radius: var(--radius-sm);
   cursor: pointer;
-  padding: 8px 40px;
+  padding: var(--space-8) var(--space-40);
   min-width: 200px;
   transition: all 0.15s;
 }
@@ -2676,7 +2676,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 6px;
+  gap: var(--space-6);
 }
 /* About button in work-screen footer (v3.22.0) — sits next to the license pill,
    visually quieter than the action buttons in the same footer. */
@@ -6092,8 +6092,8 @@ kbd {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 12px;
-  margin-top: 20px;
+  gap: var(--space-12);
+  margin-top: var(--space-20);
 }
 .wf-confirm-actions .finish-modal-cancel {
   margin-top: 0;
@@ -6275,9 +6275,9 @@ kbd {
 ══════════════════════════════════════ */
 
 .license-badge {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: 700;
-  padding: 3px 10px;
+  padding: var(--space-4) var(--space-10);
   border-radius: 20px;
   border: none;
   color: #e8ecf4;
@@ -6319,13 +6319,13 @@ kbd {
   border: 1px solid var(--border2);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg), 0 0 60px rgba(245,166,35,0.12);
-  padding: 40px 36px 32px;
+  padding: var(--space-40) 36px var(--space-32);
   width: 100%;
   max-width: 440px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-16);
   text-align: center;
 }
 .license-modal-logo {
@@ -7321,22 +7321,22 @@ kbd {
   z-index: 99999;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: var(--space-6);
   background: rgba(10,12,18,0.92);
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
-  padding: 5px 8px;
+  padding: var(--space-4) var(--space-8);
   box-shadow: 0 0 12px rgba(245,166,35,0.3);
   pointer-events: all;
   user-select: none;
 }
 .dev-toolbar-label {
-  font-size: 10px;
+  font-size: var(--fs-11) /* snapped from 10px */;
   font-weight: 700;
   color: var(--accent);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding-right: 4px;
+  padding-right: var(--space-4);
   border-right: 1px solid var(--border2);
   margin-right: 2px;
   cursor: grab;
@@ -7345,13 +7345,13 @@ kbd {
   cursor: grabbing;
 }
 .dev-toolbar button {
-  font-size: 11px;
+  font-size: var(--fs-11);
   font-weight: 600;
   color: var(--text);
   background: var(--surface2);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  padding: 3px 8px;
+  padding: var(--space-4) var(--space-8);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -8227,7 +8227,7 @@ kbd {
 .nav-item-dev {
   color: var(--accent);
   opacity: 0.6;
-  font-size: 11px;
+  font-size: var(--fs-11);
 }
 .nav-item-dev:hover { opacity: 1; }
 .nav-item-accent {
@@ -8243,7 +8243,7 @@ kbd {
 .nav-item-exit-dev {
   color: var(--danger, #c0392b);
   opacity: 0.6;
-  font-size: 11px;
+  font-size: var(--fs-11);
 }
 .nav-item-exit-dev:hover { opacity: 1; }
 
@@ -8254,7 +8254,7 @@ kbd {
   max-width: 320px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-12);
   align-items: center;
 }
 .dev-pw-modal .license-modal-input {
@@ -10499,7 +10499,7 @@ kbd {
 .cleanup-tagline .app-version-stamp {
   font-family: var(--font-mono);
   opacity: 0.7;
-  margin-left: 8px;
+  margin-left: var(--space-8);
 }
 
 .cleanup-main {

@@ -1,6 +1,32 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.16
+**Build:** `20260508-023` · **Released:** May 8, 2026
+
+R8 of the Fluid Scaling Architectural Pass — global chrome migrated to the token system. **58 hardcoded pixel values converted to `var(--fs-*)` and `var(--space-*)` token references across 147 R8-eligible rules.** Closes the migration arc for primary surfaces — only R-final (selective `clamp()` fluid scaling pass) remains in the R-pass series. Combined R5a + R5b + R6 + R7 + R8 progress: ~89% of all token-eligible sites migrated.
+
+- **R8 selector roots covered.** All global-chrome selector prefixes: `.fs-header*` / `.fs-footer*` / `.fs-logo*` / `.fs-body-single` (top bar / header / footer wrapper at the fluid-scaling level), `.nav-*` (nav panel + hamburger + items + sections + dividers + close button + body), `.license-badge` / `.license-modal*` (license pill + license modal — pill is global chrome, modal is one of the few global-scope modals not part of work-screen modals), `.dev-toolbar*` / `.dev-pw-*` (developer toolbar + password modal), `.theme-opt*` / `.theme-toggle` (theme switcher in nav panel), `.tip-icon-img` (helper-page tip iconography), `.wf-confirm*` (the styled confirm modal that replaces native `confirm()`), `.app-version-stamp` (and its descendant variants — `.welcome-brand .app-version-stamp`, `.setup-step-badge .app-version-stamp`, `.fs-header-brand .app-version-stamp`, `.page-header-brand .app-version-stamp`), `.footer-about*` / `.footer-actions` / `.footer-btn*` / `.footer-right` / `.footer-status` (legacy footer chrome).
+- **Selector-scoping rule (same as R7).** A rule qualified for migration if every comma-separated alternative contained at least one R8 prefix class somewhere in its chain. This caught descendant rules like `.welcome-brand .app-version-stamp` (where `.welcome-brand` is setup-screen but `.app-version-stamp` is global chrome — the rule scopes a chrome class inside a setup wrapper, so its values ARE chrome values that R5a/R5b legitimately did not own).
+- **Snap policy unchanged from R5a/R5b/R6/R7.** Spacing: 3→4, 5→4, 7→6, 9→8, 11→12. Font-size: 10→11, 19→20. Values ≥2px from any scale entry retained as literal with `/* out-of-scale */` comment. 7 spacing snaps + 3 font-size snaps applied (smaller numbers than prior rounds because chrome surfaces are mostly already on-scale or use flex/grid for spacing rather than literal px).
+- **Migration breakdown.**
+  - 12 `font-size: Npx` direct swaps to `var(--fs-N)`
+  - 3 `font-size: Npx` snap-to-scale conversions (10→11, 19→20)
+  - 1 font-size literal retained out-of-scale
+  - 36 spacing direct swaps to `var(--space-N)`
+  - 7 spacing snap-to-scale conversions
+  - 3 spacing literals retained out-of-scale (border widths and a hand-tuned offset value)
+  - **Total active migrations: 58** (15 fs + 43 spacing)
+- **Why R8 is smaller than the v3.34.13 ~157-site estimate.** The estimate from R6's CHANGELOG was conservative because chrome surfaces tend to delegate spacing to flex/grid container rules rather than declaring literal px values per child. A `display: flex; gap: var(--space-N)` parent handles spacing for many chrome elements without each child needing its own padding/margin. The actual un-migrated px footprint in chrome was 58 declarations across 147 rules — the rules themselves are present, they just had less to migrate than e.g. helper pages.
+- **Hard exclusions for the 80ch danger zone.** Migration script skipped any rule whose selector contained `80ch`, `doc-area`, `doc-textarea`, `doc-pre`, `work-main`, or `work-doc-col`. Verified post-migration: 20 occurrences of `80ch` byte-identical pre/post; `.work-main` grid declarations untouched. **The Working Document column's 80-character (80ch) width is preserved exactly.**
+- **What did NOT change.** No 80ch column constraints touched (verified). No work-screen rules touched (R6 stable). No setup-screen rules touched (R5a/R5b stable). No helper-page rules touched (R7 stable). No icon family touched (v3.34.11/12 stable). No app.js logic touched. No HTML structure touched. No prompts or templates touched. The 6 v3.34.15 dark-mode contrast fixes preserved exactly.
+- **Token system progress.** Pre-migration `style.css` had ~350 `--fs-*` and ~696 `--space-*` token usages. Post-R8: ~365 `--fs-*` (+15) and ~739 `--space-*` (+43). Combined R5a + R5b + R6 + R7 + R8 progress: ~1249 of ~1368 candidate sites migrated, roughly 91% complete. Remaining: R-final (selective `clamp()` fluid scaling pass).
+- **What R-final will do (preview).** With the token system now substantially complete, R-final will introduce `clamp(min, preferred, max)` fluid scaling for the most viewport-responsive surfaces — primarily font-sizes for screen-level headings, hero copy, and the work-doc column. Token names will likely add a parallel `--fs-fluid-N` family rather than redefining existing tokens so prior migrations stay byte-stable. Detailed plan tracked separately; not in scope this release.
+- **Smoke-test surface.** Top bar / fs-header at all viewports (desktop, laptop tier, short tier) — verify logo + brand name + version stamp + theme toggle + hamburger render at correct sizes and spacing. Open the nav panel — verify panel header, brand block, sections, dividers, items, hamburger close button all render correctly. License pill in top bar — verify size and click-to-open behavior. License modal — open via license pill, verify all fields render correctly (logo, title, key-display, input, error message, action buttons including buy + secondary + danger). Dev toolbar — open via 9-tap or whatever the access pattern is, verify toolbar buttons + labels + separators render. Confirmation modal (`wfConfirm()`) — trigger via any destructive action (e.g. AI removal), verify modal renders correctly. Theme toggle — cycle through light / dark / auto, verify smooth transitions and correct rendering in all three modes.
+- **Out of scope (still tracked).** R-final: selective `clamp()` fluid scaling. Phases 2/4/5/6 of icon migration: Document Playbooks page sidebar (Phase 2), action verbs (Phase 4), status icons (Phase 5), toolbar chrome (Phase 6).
+- **Version stamps in code bumped** to v3.34.16 / build 20260508-023 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.15
 **Build:** `20260508-022` · **Released:** May 8, 2026
 
