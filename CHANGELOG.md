@@ -1,6 +1,54 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.4
+**Build:** `20260509-007` · **Released:** May 9, 2026
+
+**Single-bug diagnostic fix.** Surfaced via post-mortem of a v3.36.2 backup taken mid-session: round 6 had `outcome: round_failed` in IDB session history, but the live console showed zero events between the round 5 completion line and the round 6 failure timestamp. 16 seconds of round-failure activity — including whatever Builder error occurred — left no trace in the console transcript that the user (or post-hoc forensic analysis) could read.
+
+### What was missing
+
+`runRound`'s failure branch at `app.js:~12664` and `runBuilderOnly`'s failure branch at `app.js:~11978` both went straight from internal state mutations (`builderHadError = true; _failedRoundReason = '...'`) to `history.push(...)` and `showRoundErrorModal(...)` with no `consoleLog` between. The error modal surfaces the failure in a UI panel, but nothing lands in the live console — so when a user (or Claude in a post-mortem) reads the transcript later, they see the round counter advance with no diagnostic event.
+
+### Fix at both write sites
+
+A single `consoleLog` call added immediately after the abandonment check and before the `history.push`:
+
+```js
+consoleLog(`❌ Round ${round} failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreview ? ': ' + _failDetailsPreview : ''}`, 'error');
+```
+
+Mirrored in `runBuilderOnly` with the `(Builder Only)` qualifier so the two paths are distinguishable in the transcript. Details are truncated to 200 chars to keep the line readable; the full details still land in `history[].failDetails` for forensics.
+
+This means every round failure now produces:
+
+- A red `❌ Round N failed — <reason>: <details>` line in the live console
+- A `failed: true` history entry with full `failReason` and `failDetails` (unchanged)
+- A troubleshooting modal (unchanged)
+
+### What did NOT change
+
+No prompts touched. No reviewer or Builder instructions touched. No validator logic touched. No length-guard logic touched. No Auto Mode logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.3 functionality preserved exactly. The error-modal flow, history-write flow, and Auto Mode failure-streak counter all continue to fire as they did pre-v3.36.4.
+
+### Cumulative since v3.36.0 (this is the deploy that includes everything since)
+
+For users deploying v3.36.4 directly without intermediate v3.36.1–v3.36.3 deploys, the cumulative changes are:
+
+- **v3.36.0:** Builder prompt MAJORITY RULES rewrite — USER DECISION threshold dropped from "exact 3v3 split" to "two or more substantially different alternatives." Verified working against live data.
+- **v3.36.1:** Validator substring check removed (later proven to be dead code, but the simplification is sound). Slow-responder card copy fixed.
+- **v3.36.2:** Validator shape mismatch fixed (`r?.name || r?.ai?.name`) — root cause of why USER DECISIONs never surfaced for two weeks. The validator now actually validates for the first time since v3.21.16.
+- **v3.36.3:** RATE_LIMITED troubleshooting card now has three buttons (`Open provider console` / `Retry round` / `Disable this AI for the session`), matching the CREDIT_LOW pattern. The console-link button auto-hides for custom AIs that lack an `apiConsole` URL.
+- **v3.36.4:** Round-failure console logging — `runRound` and `runBuilderOnly` both surface failures in the live console.
+
+### Smoke-test surface
+
+Force a round failure — the easiest path is rate-limiting any provider (run rounds back-to-back on Mistral free tier until 429 fires through to Builder synthesis), or temporarily corrupt your Builder's API key to force `api` failure. **Verify:** the live console shows `❌ Round N failed — <reason>` in red. The history transcript export contains the line. The error modal still fires alongside. For a `runBuilderOnly` failure (apply-decisions path that fails on the synthesis step), the `(Builder Only)` qualifier appears in the message.
+
+### Version stamps in code bumped
+
+To v3.36.4 / build `20260509-007` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.3
 **Build:** `20260509-006` · **Released:** May 9, 2026
 

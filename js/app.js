@@ -1349,7 +1349,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-006';         // build stamp — update each session
+const BUILD       = '20260509-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -11979,6 +11979,14 @@ async function runBuilderOnly() {
       _abandonInFlightRoundUI();
       return;
     }
+    // v3.36.4 — Surface the failure in the live console BEFORE the
+    // history write and modal. Symmetric with the runRound failure path
+    // — Builder Only failures (e.g. rate limit hitting the synthesis
+    // step after applyDecisions) need the same diagnostic visibility.
+    const _failDetailsPreviewBO = _failedRoundDetails
+      ? (_failedRoundDetails.length > 200 ? _failedRoundDetails.slice(0, 200) + '…' : _failedRoundDetails)
+      : '';
+    consoleLog(`❌ Round ${round} (Builder Only) failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreviewBO ? ': ' + _failDetailsPreviewBO : ''}`, 'error');
     // Save failed round to history for accurate records and export transcript
     history.push({
       round, phase,
@@ -12667,6 +12675,17 @@ async function runRound() {
       _abandonInFlightRoundUI();
       return;
     }
+    // v3.36.4 — Surface the failure in the live console BEFORE the
+    // history write and modal. Prior code went straight from internal
+    // state mutations to showRoundErrorModal with no console line, so a
+    // round that failed silently (Builder API error, bloat-rejected,
+    // delimiters missing, etc.) showed the round counter advancing in
+    // the UI but no diagnostic event in the live console — making
+    // post-hoc forensics from console transcripts impossible.
+    const _failDetailsPreview = _failedRoundDetails
+      ? (_failedRoundDetails.length > 200 ? _failedRoundDetails.slice(0, 200) + '…' : _failedRoundDetails)
+      : '';
+    consoleLog(`❌ Round ${round} failed — ${_failedRoundReason || 'unknown'}${_failDetailsPreview ? ': ' + _failDetailsPreview : ''}`, 'error');
     // Save failed round to history for accurate records and export transcript
     history.push({
       round, phase,
