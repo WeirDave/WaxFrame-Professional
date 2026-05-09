@@ -1,6 +1,34 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.9
+**Build:** `20260509-012` · **Released:** May 9, 2026
+
+**Tier 1 forensic capture, part 2.** Adds a "💾 Save as File" button to the Deep Dive Capture Viewer modal so the ring buffer can be downloaded as a JSON file rather than only copied to the clipboard. With `RING_MAX` bumped to 200 in v3.36.7, full-session captures had outgrown the clipboard path; download is the right tool for archival or sharing larger captures. The existing "Copy as JSON" button stays put — it's still the right tool for quick-paste-into-chat diagnostics on small captures.
+
+### Two edits
+
+**Edit 1 — `WF_DEBUG.saveViewer()` (`app.js`, in the Deep Dive Viewer block).** New method, sibling of `copyViewer()`. Wraps `this.ringBuffer` in a metadata envelope (`_waxframe_deepdive: true`, app version, build, captured-at ISO timestamp, capture count, RING_MAX, and the buffer itself) so the saved file is pure parseable JSON, the same envelope shape backups use. No header preamble — external tooling can `JSON.parse` it without stripping anything. Filename follows the v3.36.8 transcript convention via `buildExportName()`: `${project}-${version}-r${N}-${stamp}-DeepDive.json`. Round count is `Math.max(0, round - 1)`; stamp is local-time `YYYYMMDD-HHmm`. Falls back to `WaxFrame` as the base name when no project context is set yet (pre-project bee testing case). 30-second deferred `URL.revokeObjectURL` matches the existing pattern from `backupSession` and `exportTranscript`.
+
+**Edit 2 — Viewer modal markup (`index.html:~1383`).** Adds a `💾 Save as File` button between the existing `📋 Copy as JSON` and `🗑 Clear buffer` buttons. Same `tc-action-btn` class as its siblings, no new CSS. Title attribute documents the use case: "Best for full-session captures or archival."
+
+### What did NOT change
+
+`copyViewer` is intact — clipboard payload format unchanged, so workflows that paste captures into chat continue to work exactly as before. No reviewer prompts, builder prompts, validator logic, length-guard logic, Auto Mode logic, or CSS were touched. The 80ch working-document column is untouched. v3.36.7 and v3.36.8 functionality (RING_MAX 200, persistence across reload, prompt/response/token capture, datetime-stamped transcripts) all remain in place.
+
+### Smoke-test surface
+
+Turn Deep Dive on (Dev Toolbar 🔬). Run a few rounds. Open the viewer (📋 View Captures). Verify five buttons in the action row: Seed sample / Copy as JSON / Save as File / Clear buffer / Refresh. Click Save as File — confirm a download starts with filename matching `${project}-${version}-r${N}-${stamp}-DeepDive.json`. Open the downloaded JSON in any viewer and confirm the envelope shape (`_waxframe_deepdive`, `_waxframe_app_version`, `_waxframe_build`, `_waxframe_captured_at`, `_waxframe_capture_count`, `_waxframe_ring_max`, `ringBuffer`). Click Save again immediately and confirm the second filename differs by at least the minute portion. Empty-buffer edge case: clear the buffer, click Save, confirm a "Nothing to save — buffer is empty" toast and no download.
+
+### Known refactor opportunity (not in this release)
+
+Three nearly-identical local-time stamp blocks now exist: `backupSession` (`app.js:~14470`), `exportTranscript` (`app.js:~14445`), and `saveViewer` (`app.js:~177`). Candidate for a `_localStamp()` helper in a future minor release; deliberately not done here per surgical-changes-only.
+
+### Version stamps in code bumped
+
+To v3.36.9 / build `20260509-012` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.8
 **Build:** `20260509-011` · **Released:** May 9, 2026
 
