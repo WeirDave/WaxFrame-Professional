@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-028">
+  <meta name="waxframe-build" content="20260508-029">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.35.2">
+  <link rel="stylesheet" href="style.css?v=3.35.3">
 </head>
 <body>
 
@@ -1996,13 +1996,25 @@
 </div>
 
 <!-- DEV TOOLBAR -->
+<!-- v3.35.3 — The 5 scene/animation playback buttons (Unlock Scene,
+     Fly-in, Majority, Unanimous, Test Card) collapsed into a single
+     "▶ Scenes ▾" hover flyout. Reduces toolbar width from 9 buttons
+     to 5, easier to scan visually when only Deep Dive / View Captures
+     / Cleanup are typically used. The 5 scene buttons inside the
+     flyout keep their original onclick handlers and title tooltips
+     unchanged — pure markup reshuffle, zero behavior change. -->
 <div class="dev-toolbar" id="devToolbar" style="display:none">
   <span class="dev-toolbar-label">⚙ DEV</span>
-  <button onclick="playUnlockScene()">▶ Unlock Scene</button>
-  <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
-  <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
-  <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
-  <button onclick="WF_DEBUG.testCard()" title="Cycle through all Troubleshooting Card catalog entries — preview every card design">▶ Test Card</button>
+  <div class="dev-flyout">
+    <button class="dev-flyout-trigger" type="button" title="Scene & animation previews — hover for menu">▶ Scenes</button>
+    <div class="dev-flyout-panel">
+      <button onclick="playUnlockScene()">▶ Unlock Scene</button>
+      <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
+      <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
+      <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
+      <button onclick="WF_DEBUG.testCard()" title="Cycle through all Troubleshooting Card catalog entries — preview every card design">▶ Test Card</button>
+    </div>
+  </div>
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
   <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
@@ -2065,9 +2077,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.35.2"></script>
+<script src="js/version.js?v=3.35.3"></script>
 <script src="js/templates.js?v=3.34.18"></script>
-<script src="js/app.js?v=3.35.2"></script>
+<script src="js/app.js?v=3.35.3"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
