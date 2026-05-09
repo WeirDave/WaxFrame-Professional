@@ -1347,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-004';         // build stamp — update each session
+const BUILD       = '20260509-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12922,7 +12922,14 @@ function extractConflicts(text) {
 //     choice — drop the whole decision.
 //
 // Logs every drop/strip to the console as 'warn' so the suppression is visible.
-// Reviews shape: [{ ai: { id, name }, response, success, noChanges }, ...]
+// v3.36.2 — Reviews shape fix. Real call site at runRound passes the
+// reviewerResponses array, whose objects have shape:
+//   { id, name, response, noChanges }
+// Prior code read r.ai.name (which assumed the Promise-return shape
+// { ai: { id, name }, response, success, noChanges } from the per-AI
+// reviewerPromises). Mismatch silently failed the populate loop and left
+// responseByName empty, killing 100% of USER DECISIONs at the
+// round-membership check below. Fix accepts both shapes for safety.
 function validateUserDecisions(userDecisions, returnedDoc, reviews) {
   if (!Array.isArray(userDecisions) || userDecisions.length === 0) return userDecisions || [];
   const docLower = (returnedDoc || '').toLowerCase();
@@ -12930,7 +12937,10 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
   // Build name → response map (lowercased keys for lookup, original-case names retained for re-display)
   const responseByName = new Map(); // lower-name → { lowerResponse, displayName, noChanges }
   for (const r of reviews || []) {
-    const displayName = r?.ai?.name || '';
+    // v3.36.2 — Tolerate both call shapes. Real shape from runRound is
+    // r.name; the old comment claimed r.ai.name (the Promise-return
+    // shape) which the validator never actually received.
+    const displayName = r?.name || r?.ai?.name || '';
     if (!displayName) continue;
     responseByName.set(displayName.toLowerCase(), {
       lowerResponse: (r.response || '').toLowerCase(),
