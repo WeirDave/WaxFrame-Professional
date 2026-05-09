@@ -1,6 +1,20 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.34.15
+**Build:** `20260508-022` · **Released:** May 8, 2026
+
+Dark-mode contrast fix for helper-page sub-text. Six rules using `var(--muted)` for color migrated to `var(--text-dim)` because the dark-theme `--muted` value (`#4a5270`) renders at near-zero luminance contrast against the dark honeycomb background — text becomes effectively invisible. David flagged the `(the next screen after Reference Material)` annotation under STEP 5 of the Document Playbooks page; the same problem affected 5 other helper-page surfaces using the same token.
+
+- **Six surgical color swaps** — all helper-only rules. `.dp-section-hdr-note` (the originally-flagged annotation), `.dp-rounds` (round-count badge below playbook headers), `.dp-table th` (Real Example table column headers), `.dp-s4-label` (Step-4 / playbook field labels), `.prompt-group-sub` (Prompt Editor group descriptions), `.prompt-block-desc` (Prompt Editor block descriptions). All swapped from `var(--muted)` → `var(--text-dim)`.
+- **Why `--text-dim` and not a token-level fix.** Dark theme `--muted: #4a5270`. Light theme `--muted: #555d80` (works fine in light mode — David confirmed light mode reads correctly). Auto-light variant uses `#7880a0`. The token has 44 usages across the app and 38 of them are working correctly — only the 6 helper-page surfaces against the dark honeycomb background are visibly broken. A token-level dark-mode bump would risk over-brightening 38 main-app surfaces that don't need it. Surgical 6-rule swap is the conservative choice.
+- **Visual hierarchy preserved.** `.dp-section-sub` already uses `--text-dim` for the same scale of secondary text under section headers, so the swapped rules are now consistent with the rest of the dp-* family rather than odd-one-out. Sub-notes are still slightly less prominent than primary text (`--text-dim` is `#9aa3b8`, primary `--text` is `#e8ecf4` in dark) but now actually readable.
+- **Light mode behavior.** In light mode, `--text-dim` is `#384060` and `--muted` was `#555d80` — both readable against the light background. The swap will make these 6 surfaces slightly darker (more prominent) in light mode. This is fine — they're sub-labels and headers that benefit from a touch more weight, and matches the rest of the dp-* family already using `--text-dim`.
+- **What did NOT change.** R5a / R5b / R6 / R7 token migrations preserved exactly. No font-size or spacing changes. No 80ch column constraints touched. No work-screen rules touched. No icon family touched. No app.js logic touched. No HTML structure touched — helper pages got version-stamp + cache-bust bumps only. Main-app rules using `--muted` (38 of them) untouched.
+- **Smoke-test surface.** Dark mode — Document Playbooks page, scroll through every playbook section. Confirm: STEP 5 annotation now reads cleanly, ROUNDS badge readable, Real Example table column headers visible, Quick Start / Career & Hiring / Business & Sales section labels readable. Prompt Editor — open the prompt editor, confirm group descriptions and block descriptions readable. Light mode — same surfaces, confirm slight darkening reads well and doesn't break visual hierarchy.
+- **Version stamps in code bumped** to v3.34.15 / build 20260508-022 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.14
 **Build:** `20260508-021` · **Released:** May 8, 2026
 
