@@ -1,6 +1,48 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.10
+**Build:** `20260509-013` · **Released:** May 9, 2026
+
+**Gemini token reporting fix + Bay Area Invoice Concerns playbook addition.** Two unrelated edits in one release: a hanging bug fix surfaced empirically by the v3.36.9 forensic captures, and a new measured real-world playbook example covering the budget-tier user persona.
+
+### Edit 1 — Gemini token shape coalescence (`app.js:~12869`)
+
+Bug fix surfaced when the v3.0 Bay Area Invoice run came back with `_waxframe_capture_count: 40` showing `promptTokens`, `completionTokens`, `totalTokens` populated for ChatGPT and Claude but `null` across the board for Gemini. Gemini's API does return token usage — just under a different shape than v3.36.7's `captureRound` was looking for. The capture was checking `data?.usage?.prompt_tokens` (OpenAI) and `data?.usage?.input_tokens` (Anthropic) but missing `data?.usageMetadata?.promptTokenCount` (Gemini).
+
+Fix is three coalesce-chain extensions in the existing `WF_DEBUG.captureRound({...})` block:
+
+```
+promptTokens:     ... || data?.usageMetadata?.promptTokenCount     || null
+completionTokens: ... || data?.usageMetadata?.candidatesTokenCount || null
+totalTokens:      data?.usage?.total_tokens || data?.usageMetadata?.totalTokenCount || null
+```
+
+No other code paths touched. Anthropic backups continue to show `totalTokens: null` (Anthropic doesn't return total — consumer can sum the parts). All other capture fields unchanged.
+
+### Edit 2 — Contractor / Vendor Letter playbook (`document-playbooks.html`)
+
+Added under Personal &amp; Everyday section, after Recipe. Real-world example block uses the actual project values from David's hand-authored Bay Area First Invoice Concerns v3.0 run — no AI-generated phrasing in the prompts. Run was deliberately constrained to a 3-AI budget hive (paid Claude + paid ChatGPT + free Gemini-as-Builder) to validate the persona David expects most WaxFrame users to land at: one paid OpenAI seat, one paid Anthropic seat, free Gemini.
+
+Measured convergence: 12 rounds with ≈7 minutes of hive processing time (sum of per-round max-reviewer + Builder elapsed — reviewers run parallel, round wall-time = max(reviewer) + Builder). Document tightened from 735 to 624 words (-15%), majority convergence at Round 12 with Claude as the lone holdout. Most aggressive compression in Rounds 6–7 (-60 words combined); late rounds 10–11 trimmed under 1% per round (genuine end of useful iteration). Sub-$1 in API spend across ChatGPT and Claude (Gemini at zero cost as both Builder and reviewer). Total wall-clock varies based on user review time between rounds — hive processing time is the floor, not the ceiling.
+
+The playbook also documents the per-AI editorial behavior observed empirically: ChatGPT for concision, Claude for semantic precision and tense recovery, Gemini for sharp catches when active (mostly NC, but found real semantic issues like "hand towel holder" vs "hand towel" that the others missed).
+
+### What did NOT change
+
+No reviewer prompts. No builder prompts. No validator logic. No length-guard logic. No Auto Mode logic. No CSS. No 80ch column. v3.36.7 forensic-capture envelope shape is identical (consumer code reading existing backups continues to work). v3.36.8 transcript-filename convention preserved. v3.36.9 Save-as-File button preserved.
+
+### Smoke-test surface
+
+**Gemini fix:** Turn Deep Dive on. Run a round with at least one Gemini-powered AI in the hive (reviewer or Builder). Open the Deep Dive Capture Viewer or Save as File. Verify Gemini entries now show populated `promptTokens`, `completionTokens`, and `totalTokens` (Gemini returns all three). For comparison: ChatGPT entries continue to show all three; Claude entries continue to show prompt+completion with `totalTokens: null`.
+
+**Playbook:** Open `document-playbooks.html` (📚 Document Playbooks from the helper menu). Scroll to Personal &amp; Everyday section. Verify "Contractor / Vendor Letter" playbook renders below "Recipe" with the 🧾 icon, real-world example block expanded, and convergence row showing 12 rounds / ~7 minutes hive processing.
+
+### Version stamps in code bumped
+
+To v3.36.10 / build `20260509-013` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.9
 **Build:** `20260509-012` · **Released:** May 9, 2026
 
