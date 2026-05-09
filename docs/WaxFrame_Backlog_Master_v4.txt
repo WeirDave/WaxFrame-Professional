@@ -1,0 +1,642 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG (v4)
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-09 (post v3.35.6 hotfix)
+Current version:     v3.35.6 Pro / build 20260509-002
+Maintained by:       R David Paine III
+
+Single source of truth for everything queued across WaxFrame
+Pro and Free. Replaces scattered memory items, punch-list
+notes, and roadmap docs. Update by checking off items as
+they ship — do not delete completed items, move them to the
+"RECENTLY SHIPPED" section at the bottom.
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+CHANGES IN v4 (from v3, 2026-05-09):
+  • NEW Section 0 PRIORITY 1 added — full functional audit
+    of all functions, Auto button relocation/restyle, plus
+    the v3.36.0 "auto really means auto" behavioral group
+    queued from session discussion
+  • Per-reviewer satisfaction indicator bug status updated:
+    diagnostic instrumentation REMOVED in v3.35.3 (no real-
+    world repro was ever captured). Bug is now PARKED.
+  • Run mode toggle Auto vs Interactive — SHIPPED v3.35.0
+    (moved to Recently Shipped). Hotfixes in v3.35.1.
+  • cleanup.html — SHIPPED v3.30.3, then RETIRED v3.35.3
+    (allow-list went stale, replaced by inline cleanup in
+    bulkRemoveSelectedAIs at AI-removal time)
+  • NEW item: playbook test master rewrite to human voice
+    (queued for tomorrow — deferred from this session)
+  • Recently Shipped expanded with the v3.35.x release run
+    (v3.35.0 through v3.35.6 — six releases in 24 hours)
+
+════════════════════════════════════════════════════════════
+0. PRIORITY 1 (do these next)
+════════════════════════════════════════════════════════════
+
+[ ] ★ P1.1  Full functional audit of all functions
+    Scope: enumerate every function definition in app.js,
+    classify by call-site count, flag dead code, flag
+    duplicated logic, flag undocumented side effects.
+    Output: an audit document listing each function with
+    disposition — keep / consolidate / delete / refactor /
+    document.
+
+    Why now: the v3.35.x series shipped 6 surgical releases
+    in 24 hours. Each one added new branches to existing
+    functions (especially clearProject, runRound, callAPI,
+    consoleLog, setBeeStatus). The codebase has earned a
+    sweep before any further behavioral additions in v3.36+.
+
+    Approach: probably a CSV or markdown table covering
+    function name, line, call-site count, last-touched
+    version, disposition. Audit pass first, surgical
+    consolidation as a follow-up release (or several).
+
+    NOT a v3.36.0 blocker — runs in parallel.
+
+[ ] ★ P1.2  Auto button relocation + restyle
+    Move the Auto toggle next to the Mute button on the
+    work-screen topbar. Restyle to match the Mute pattern:
+      • Label is just "Auto" (no "Auto: ON" or "Interactive"
+        wording)
+      • State indicated by color, not text:
+          - GREEN = Auto ON (chaining)
+          - RED   = Auto OFF (manual mode)
+      • Visual treatment matches Mute button so the two
+        feel like a paired set of session controls
+    The "X rounds left" detail counter that currently
+    renders to the right of "Auto: ON" — TBD whether it
+    survives the restyle. Possibly moved to a tooltip or
+    dropped entirely.
+
+    DEPENDS ON: nothing — can ship before v3.36.0 or
+    bundled with it as Phase 1.
+
+[ ] ★ P1.3  v3.36.0 — "Auto really means Auto" behavioral
+    group  (#5–#10 from session discussion 2026-05-09)
+
+    Real-world pain trail validating this work: 53-minute
+    Business Proposal session 2026-05-08 → 2026-05-09. 18
+    rounds. Two AIs manually disabled mid-session (DeepSeek
+    slow, Mistral 429). Claude credit-low fired on rounds
+    8/9/10 with no auto-recovery. Auto turned itself OFF
+    twice mid-session (12:05:14, 12:06:11) because errors
+    flipped the toggle when Auto should have soldiered on.
+
+    [ ] #5  Per-AI 5xx during Auto → auto-disable bee +
+            toast notification, suppress troubleshooting
+            card, continue round with surviving AIs
+    [ ] #6  Slow-responder during Auto → same auto-disable
+            pattern as #5. Threshold: more than 3x round
+            average for two consecutive rounds. Toast
+            tells the user which AI was disabled.
+    [ ] #7  Suppress showRoundErrorModal in Auto. Increment
+            _autoFailureStreak instead. At streak limit
+            (currently 2), trigger _autoHalt('failure-
+            streak') to surface the auto-halt modal. Reset
+            counter on any clean round so an early blip
+            doesn't halt 5 rounds later.
+    [ ] #8  lengthGuardPrompt mid-round in Auto returns
+            'keep' automatically + log delta to console.
+            No modal interruption.
+    [ ] #9  lengthGuardPrompt AT convergence in Auto →
+            trigger _autoHalt('length-at-convergence')
+            with copy explaining the convergence is a
+            length violation and asking the user to choose.
+    [ ] #10 Builder auto-disabled by #5/#6 → promote first
+            eligible reviewer alphabetically. If no
+            eligible AI remains, _autoHalt('no-builder-
+            available'). Open question whether alphabetical
+            is the right heuristic — alternative is
+            user-configurable preference order.
+
+    Phase 1 (the small, low-risk part):
+      • "Interactive" → "Auto OFF" label rationalization
+        across all UI surfaces (toggle pill, console, toast,
+        auto-halt modal button)
+      • DELETE "Stop here" button in auto-halt modal — it's
+        confusing relative to Resume + Switch
+      • DELETE autoHaltStop function in app.js
+      • If P1.2 (Auto button restyle) ships at the same
+        time, the label rationalization is partially moot
+        for the toggle itself but still needed for the
+        auto-halt modal copy
+
+    DESIGN-DISCUSSION ITEMS still open from session:
+      • Phase 2 silent auto-disable: should be a TOAST not
+        just console line — user away in another tab needs
+        to see WHY half their hive vanished
+      • Builder alphabetical promotion in #10 — opinionated.
+        Alternatives: user-configurable preference order,
+        or prompt user
+      • #7 streak counter — confirm reset on successful
+        round (otherwise early blip halts later)
+      • Mid-round vs at-convergence length-guard call site
+        discrimination (#8 vs #9) — need to inspect each
+        of the 4 lengthGuardPrompt call sites to know which
+        is which before coding
+
+    PROTOCOL: this is a multi-touchpoint behavioral
+    overhaul. Per memory entry #6, commit current state
+    via GitHub Desktop as checkpoint BEFORE any code
+    changes. Do not start unless the working tree is clean.
+
+[ ] ★ P1.4  Playbook test master — rewrite all pending
+    tests in David's voice
+
+    PROBLEM: T1–T7 in WaxFrame_Playbook_Test_Master.txt
+    are written in a polished, slightly verbose,
+    AI-comma-spliced style ("Reading on tablet between
+    meetings — needs to skim and still get the value prop
+    in 60 seconds"). The current text is fine but doesn't
+    sound like David, and he's noted the prompts can blow
+    up the runs with too much loaded into each setup field.
+
+    WHAT TO DO:
+      • Tone shift to David's voice — direct, peer-to-peer,
+        no marketing-style sentence construction
+      • Trim each test's setup fields. The current Target
+        Audience / Desired Outcome / Scope / Tone fields
+        are routinely 4–7 sentences. Aim for 1–3 short
+        sentences each that actually sound like notes
+        someone would write to themselves.
+      • Goal Notes field similarly — the current voice is
+        a polished editor's note. The real voice is
+        whatever's quickest to type while thinking
+        "what's the actual ask here."
+      • DO NOT touch the 8 Already Measured entries at the
+        top — those are historical reference data.
+      • DO NOT touch the Reference Material payloads
+        wholesale — those are technical content blobs
+        that may legitimately need the verbosity (e.g.
+        T6's identity-stack notes).
+      • DO touch: Project Name, Document Type, Target
+        Audience, Desired Outcome, Scope, Tone, Length
+        Limit/Unit, Goal Notes — all the Setup 3 fields
+        that get pasted into the live app.
+
+    APPROACH: Pull the file open, rewrite T1–T7 setup
+    sections, ship the updated file. Not a code change —
+    pure content rewrite. Probably 90 minutes of focused
+    editing. Defer to a fresh head.
+
+════════════════════════════════════════════════════════════
+1. BUGS (fix before new features)
+════════════════════════════════════════════════════════════
+
+[ ] ☐ Per-reviewer satisfaction indicator bug — PARKED
+    NO CHANGES NEEDED pill + star renders inconsistently
+    on reviewer cards. Console correctly logs satisfaction
+    but card sometimes shows generic DONE with no star.
+
+    STATUS HISTORY:
+      • v3.32.29: diagnostic instrumentation in setBeeStatus
+        gated on window._wfSatDebug
+      • v3.32.30: hoisted to dev toolbar (⭐ Sat Debug button)
+      • v3.35.3: REMOVED entirely (~120 lines of dead
+        instrumentation). No real-world reproduction was
+        ever logged with capture enabled across the
+        v3.32.29 → v3.35.2 window.
+
+    NOW: bug is parked. Architectural pieces it was
+    probing (window._cleanThisRound chokepoint, universal
+    re-derive, renderer rehydration) all preserved because
+    they're load-bearing for the working satisfaction
+    path. If the bug recurs and capture data becomes
+    available, a future release can re-add a focused
+    diagnostic targeted at the actual symptom.
+
+    NOT BLOCKING: convergence detection still works at the
+    aggregate level. Only the per-reviewer star indicator
+    is occasionally wrong. Cosmetic inconsistency.
+
+════════════════════════════════════════════════════════════
+2. ARCHITECTURE / DATA-MODEL CHANGES
+════════════════════════════════════════════════════════════
+
+[ ] ★ #8 Length mode overhaul                 → v3.33.0
+    Replace single lengthLimit field with explicit mode
+    picker on Setup 3:
+      • No limit    — silent, no gates
+      • Hard cap    — ceiling only, no floor, no
+                      undersized modal
+      • Target      — strict at N, both floor and ceiling
+                      at the target value, symmetric
+                      guards armed
+      • Range       — between min and max, both fields
+                      user-supplied
+    Builder prompt envelope must change per mode:
+      • Hard cap: "Stay at or below N. Shorter is fine."
+      • Target:   "Hit N exactly. Do not deliver less,
+                   do not deliver more."
+      • Range:    "Stay between min and max. Aim for the
+                   middle."
+    Migration: pre-v3.32.29 projects default to Hard cap
+    mode with their existing lengthLimit copied across.
+    Convergence-under and round-undersized intercepts
+    only fire in Target or Range modes. Kills the implicit
+    LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 — replaced by
+    explicit user-opted modes.
+    SCOPE: data-model change. Touches Setup 3 UI, prompt
+    envelope, all four length-guard intercepts, migration,
+    helper-page docs. Probably v3.33.0 since it's a
+    model change.
+
+[ ] #1 Fluid scaling architectural pass
+    Footer scaling at 1872×938 was the trigger. Symptom
+    of a deeper viewport-strategy problem: fixed px vs
+    clamp/fluid units, the min-width: 1024px floor, the
+    @media (min-width: 1601px) desktop-cascade pattern
+    that has produced bug after bug.
+    PRECONDITION: dedicated planning chat to produce
+    breakpoint inventory and smoke-test matrix BEFORE
+    any code changes. Per house rule, CSS deletion sweeps
+    require visual smoke testing on every screen before
+    main; split into smaller releases each verified
+    independently.
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    UNREACHABLE-SERVER WARNING TEMPLATE:
+      "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    EXPORT FORMAT — TWO OPTIONS:
+      • Bundled inside Backup format v3 (existing pipe)
+      • Standalone .waxprofile files (purpose-built,
+        share single profile between machines without
+        full backup overhead)
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it. Import a Source on a new
+    machine and the Profiles light up.
+    DESIGN NOTE: AIs without a Source are direct-API
+    customs — the Sources view doesn't need to account
+    for every AI, only the ones that came from a server.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+════════════════════════════════════════════════════════════
+3. FEATURES / TOOLING
+════════════════════════════════════════════════════════════
+
+[ ] MODEL_LABELS data-driven IDB cache
+    Daily refresh with manual refresh button and
+    MODEL_FALLBACKS as the offline fallback. Backlog
+    item #13 from prior planning, deferred.
+
+[ ] Model update detection + opt-in swap prompt
+    When a provider releases a new top-tier model,
+    prompt the user to swap rather than silently keep
+    the old one. Backlog item #10 from prior planning,
+    deferred.
+
+════════════════════════════════════════════════════════════
+4. DATA / TESTING (use WaxFrame_Playbook_Test_Master.txt)
+════════════════════════════════════════════════════════════
+
+NOTE: P1.4 above queues a rewrite of T1–T7 setup fields
+in David's voice before the next test run. Once that
+rewrite ships, the tests can be run as-written.
+
+[ ] T1  Business Proposal      [REFINE]   estimate 4–6
+[ ] T2  Executive Summary      [REFINE]   estimate 3–5
+[ ] T3  RFP Response           [REFINE]   estimate 20–60+
+[ ] T4  Recipe                 [REFINE]   estimate 5–20+
+[x] T5  LinkedIn Post          [SCRATCH]  measured: 5 rounds / 7 min
+        Builder: Claude 3.7 Sonnet · Stopped at 4/6 satisfied
+        Run on Alfredo (Anduril internal Open WebUI gateway)
+        with 6-AI hive: Cl37S, Cl46O, Gem25P, Gem25F, GPT4o,
+        GPT4om. Adapted from existing draft.
+        HYPOTHESIS CONFIRMED: short-form converged faster
+        than long-form prose — first short-form data point
+        in the playbook.
+[ ] T6  LinkedIn Profile       [SCRATCH]  NEW — first run
+        HYPOTHESIS: two-audience writing (recruiter + peer)
+        is a different convergence pattern than single-
+        audience prose. First profile-style data point in
+        the playbook.
+[ ] T7  Blog Post              [SCRATCH]  NEW — forward test
+        Compare against:
+          • v1.0 historical: 5 rounds / 7 min (specific
+            setup, Cl37S Builder)
+          • v2.0 historical: 37 rounds / 172 min, never
+            converged (generic setup, Gem25P Builder)
+          • Earlier 16-round historical entry (third
+            reference data point — context TBD)
+        T7 is the controlled rerun that validates the
+        project-setup-specificity hypothesis (Section 5).
+
+[ ] After T1–T4 run: replace "estimated N–N rounds"
+    text in document-playbooks.html with measured values
+    in "(measured, not estimated)" format matching the
+    existing Cover Letter / JD / Résumé entries.
+
+[ ] After T5–T7 run (assuming clean convergence): add
+    new <div class="dp-playbook"> sections to
+    document-playbooks.html with full structure (purpose
+    tile, real-world example block, rounds badge).
+    T5 LinkedIn Post is ready to add — pending T6 to
+    decide: under Content & Marketing, or new "Personal
+    & Profile" category?
+
+[ ] BONUS DATA POINT — Blog post convergence dataset
+    Same blog topic ("Why I Stopped Trusting Single-Model
+    AI for Network Docs") run multiple times with
+    different project setups, on the same Alfredo hive:
+      • v1.0 (May 6, WF v3.32.14): 5 rounds / 7 min,
+        4/6 satisfied, manual stop. Builder: Cl37S.
+        goalDocType: Social Media Post. lengthLimit:
+        800. goalNotes: 243 chars detailed anti-buzzword
+        constraint.
+      • v2.0 (May 7, WF v3.32.28): 37 rounds / 172 min,
+        never converged, manual bail. Builder: Gem25P.
+        goalDocType: Blog Post. lengthLimit: 1500.
+        goalNotes: 48 chars generic.
+      • 16-round historical entry: prior blog post run
+        referenced in earlier session notes. Setup
+        details, builder, and date NOT YET RECONSTRUCTED
+        — flagged for archive review. Sits between v1.0
+        (5 rounds, tight setup) and v2.0 (37 rounds,
+        loose setup) on the convergence spectrum.
+    NATURAL EXPERIMENT — feeds the project-setup
+    specificity callout in Section 5. Decide: do we
+    publish v1.0's clean output as the canonical blog
+    post for weirdave.github.io, or rerun v2.0 from
+    scratch with a tightened setup (= T7) to validate
+    the hypothesis?
+
+════════════════════════════════════════════════════════════
+5. DOCUMENTATION
+════════════════════════════════════════════════════════════
+
+[ ] ★ Project-setup specificity drives convergence
+    NEW from session 2026-05-07. Empirical finding:
+    convergence speed correlates with project-setup
+    specificity, not just document state. Same hive,
+    same topic, v1.0 (specific goalNotes 243 chars,
+    anchored persona, "Social Media Post" docType,
+    800-word limit, Cl37S builder) converged in 5 rounds.
+    v2.0 (generic goalNotes 48 chars, generic tone,
+    "Blog Post" docType, 1500-word limit, Gem25P builder)
+    ran 37 rounds without converging.
+    Multiple correlated variables but the goalNotes
+    shrinkage (243 → 48 chars) and docType flip
+    (Social → Blog) are the two biggest contributors.
+    LESSON FOR USERS: invest more time in setup
+    specificity — detailed goalNotes and accurate
+    docType pay off in fewer rounds.
+    Connects to existing convergence-principle callout
+    and model-diversity guidance below — they're all
+    facets of the same broader theme: explicit
+    constraints reduce convergence time.
+    PLACEMENT TBD: user manual? document-playbooks.html?
+    Both?
+
+[ ] Builder selection heuristic
+    NEW from session 2026-05-07. Companion finding to
+    the project-setup specificity item above. Empirical
+    pattern: same hive, Cl37S as Builder converged
+    cleanly on multiple docs (Blog v1.0, LinkedIn post),
+    Gem25P as Builder failed to converge on equivalent
+    prose. Likely cause: Gem25P's Builder output invites
+    more reviewer dissent (specifically from itself as
+    a reviewer of its own output, plus from Cl46O).
+    Worth documenting as a "Builder selection" guide
+    in the user manual once we have more data points
+    across doc types.
+
+[ ] Convergence-principle callout
+    "Starting from scratch converges faster than refining
+    a heavily misaligned draft" — backed by the cook's-
+    résumé-adapted-for-network-engineer example data
+    point. Now ALSO backed by the v1.0 vs v2.0 setup-
+    specificity finding above. Placement TBD: README,
+    user manual, or playbooks. Open questions on
+    placement priority and tone — not yet answered.
+
+[ ] User-manual guidance on model diversity
+    For model-server deployments: the Recommend-a-Model
+    convergence trap. Minimum-two-distinct-models rule.
+    Document somewhere in the user manual.
+
+[ ] WaxFrame_Backlog_Master.txt (this file)
+    Keep this file updated. Treat it as the
+    authoritative backlog. Punch lists in chat sessions
+    feed back into this file before the chat ends.
+    SESSION RULE (added 2026-05-07): when Claude pulls
+    items from memory or backlog into a conversation,
+    Claude cites the source explicitly ("from your
+    master backlog Section 1 BUGS") rather than treating
+    them as shared context. Master backlog file is the
+    contract — if something isn't in it, it's not real.
+
+════════════════════════════════════════════════════════════
+6. CSS CLEANUP (parked work)
+════════════════════════════════════════════════════════════
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+════════════════════════════════════════════════════════════
+7. WAXFRAME FREE EDITION
+════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+    PARITY CANDIDATES from v3.35.x run:
+      • v3.35.4 Worker Bee card link always-visible (UX)
+      • v3.35.4 CREDIT_LOW troubleshooting card (UX)
+      • v3.35.4 Notes priority swap on drawer open (UX)
+      • v3.35.5 console error link click handler (bug fix)
+      • v3.35.6 sessionAIs carryover hotfix (bug fix —
+        critical for any Free user who toggles bees mid-
+        round)
+    DEV-ONLY (Pro-only, do not port to Free):
+      • Dev Toolbar reorganizations (Pro-only feature)
+      • [wfSat] diagnostic instrumentation (now removed
+        anyway)
+
+════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first, last 15 items)
+════════════════════════════════════════════════════════════
+
+[x] v3.35.6 (2026-05-09) — sessionAIs carryover hotfix
+    [x] clearProject now resets window.sessionAIs to a
+        fresh Set containing every activeAI ID. Symmetric
+        with v3.35.2 wipes for _autoMode, _autoCeiling-
+        Target, _cleanThisRound, _roundTimings already at
+        the same chokepoint. Closes a hole in v3.35.2's
+        project-boundary state hygiene pass.
+
+[x] v3.35.5 (2026-05-09) — Console error link click
+    handler hotfix
+    [x] v3.35.4 native <a target="_blank"> click was
+        getting eaten in the work-screen layout. Switched
+        to explicit window.open() onclick handler matching
+        the working pattern at renderTroubleshootingCard
+        line ~506 (in production since v3.28.2 with zero
+        click issues). Belt + suspenders kept — href stays
+        for middle-click, copy-link, screen readers.
+
+[x] v3.35.4 (2026-05-08) — CREDIT_LOW catalog · Notes
+    priority swap on open · Worker Bee card link visible
+    [x] CREDIT_LOW WF_ERROR_CATALOG entry placed BEFORE
+        AUTH_FAILED. Matches HTTP 400/402 + body keywords
+        (credit balance is too low, insufficient credit,
+        plans & billing, etc.). Anthropic returns 400 for
+        billing failures, not 401 — explicitly handled.
+        Card actions: console-link, retry, disable-AI.
+    [x] consoleLog signature extended with optional
+        link={url, label} param. Built via DOM API, no
+        innerHTML. Append clickable provider link to HTTP
+        error console line.
+    [x] openNotesModal force-swaps Send-to-Builder
+        priority instantly on drawer open (was firing on
+        close, leaving buttons in wrong state while
+        drawer visible).
+    [x] Worker Bee card per-AI link visible regardless of
+        key-saved state. v3.31.0 gated on !hasKey which
+        broke surgical-access path for billing failures.
+        Label adapts: "Get one from..." vs "Open ...
+        account ↗". Same apiConsole URL.
+
+[x] v3.35.3 (2026-05-08) — Dark-mode label fix · Retired
+    [wfSat] diagnostic · Dev Toolbar scene-flyout ·
+    Retired cleanup.html
+    [x] Dark-mode .builder-only-label color rule
+        (style.css 5001-5002 extended from .shake-wide-
+        label-only to cover both labels symmetrically).
+    [x] [wfSat] diagnostic instrumentation removed from
+        setBeeStatus (~120 lines). Never produced a
+        captured trace. Architectural pieces preserved.
+    [x] Dev Toolbar 5 scene-playback buttons collapsed
+        into hover flyout (▶ Scenes ▾). Pure CSS hover.
+    [x] cleanup.html retired — allow-list went stale and
+        flagged legitimate state. ~295 lines of CSS
+        removed. Dev Toolbar 🧹 Cleanup button removed.
+        bulkRemoveSelectedAIs covers legitimate
+        maintenance use case.
+
+[x] v3.35.2 (2026-05-08) — Project-boundary state hygiene +
+    backup time-machine fix
+    [x] Bug A — backupSession adds await saveSession
+        before idbGet. importSession treats null
+        IDB_SESSION as explicit reset. Fixes pre-Round-1
+        backup time-machine.
+    [x] Bug B — clearProject wipes Auto state, satisfaction
+        tracking, round timings, walks activeAIs setting
+        each to idle. Single chokepoint covers Finish→New,
+        Clear button, discard-confirm.
+    [x] Auto persistence helpers ripped out entirely.
+        Page reload always boots Auto OFF.
+
+[x] v3.35.1 (2026-05-08) — Auto Mode hotfixes
+    Hotfixes shipped same day as v3.35.0 to address
+    behavioral edge cases caught in initial testing.
+
+[x] v3.35.0 (2026-05-08) — Auto Mode shipped
+    Auto chains rounds automatically until a guardrail
+    trips. Stall detection, round ceiling, halt-and-resume
+    modal with three buttons. v3.36.0 will overhaul the
+    error-handling and length-guard branching to make
+    Auto truly unattended (see P1.3).
+
+[x] v3.34.18 — Fluid scaling architectural pass closed
+    Closed the fluid scaling architectural pass referenced
+    as #1 in earlier backlogs. Footer scaling at non-
+    standard viewport sizes resolved. Deeper viewport-
+    strategy work (clamp/fluid units, 1024px floor, 1601px
+    cascade pattern) still queued in Section 2 above.
+
+[x] v3.32.30 — Sat Debug toggle moved to dev toolbar
+    [x] WF_DEBUG.satDebugOn field + setSatDebug() method.
+        localStorage key 'waxframe_satdebug' persists
+        across reloads. ⭐ Sat Debug button on dev toolbar.
+    NOTE: superseded by v3.35.3 which removed the
+    [wfSat] diagnostic entirely.
+
+[x] v3.32.29 — Length-guard fix · Sat diagnostic ·
+    Laptop dot-strip overhaul
+    [x] #7 rearmLengthGuard saveSession reorder. Cosmetic
+        console-history fix.
+    [x] Satisfaction-indicator diagnostic instrumentation
+        in setBeeStatus.
+        NOTE: superseded by v3.35.3 removal.
+    [x] Laptop dot-strip overhaul (≤1600px viewport):
+        ring 2px → 5px; previously-missing convergence
+        signal added; 3-line custom hover/focus tooltip;
+        keyboard-accessible.
+
+[x] v3.32.28 — #6b/c/d length-guard cluster
+    [x] #6b convergence-path length check. Both unanimous
+        and majority paths consult length constraint
+        before history.push, gated on override flag. New
+        helper getLengthStatus(). 'discard' blocks
+        celebration.
+    [x] #6c toolbar "Length guard: off" indicator. Amber
+        pill in .work-topbar-right, hidden by default,
+        shown when override is true. Click re-arms via
+        wfConfirm.
+    [x] #6d symmetric undersized guard. LENGTH_FLOOR_RATIO
+        = 0.5. Both bloat-fail blocks compute
+        undersizedFail.
+        NOTE: implicit-floor design superseded by #8
+        length-mode overhaul (Section 2).
+
+[x] v3.32.27 — prior baseline (5/6/2026)
+
+[x] v3.30.3 (then RETIRED in v3.35.3) — cleanup.html
+    Standalone localStorage scanner shipped, then
+    retired ~6 versions later because the allow-list
+    flagged legitimate state as Unknown. Replaced by
+    inline cleanup in bulkRemoveSelectedAIs at AI-removal
+    time (v3.30.4).
+
+════════════════════════════════════════════════════════════
+END OF FILE — keep updating
+════════════════════════════════════════════════════════════

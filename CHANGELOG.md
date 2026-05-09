@@ -1,6 +1,51 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.0
+**Build:** `20260509-003` · **Released:** May 9, 2026
+
+**The interactive loop returns.** Two surgical edits restore USER DECISION emission to the rate the original WaxFrame design intended. Verified against backup data across 6 sessions / 37 rounds where the live app surfaced **zero** USER DECISIONs while the Builder silently issued 42 BUILDER DECISIONs and the validator suppressed 37 legitimate decisions in a single Cookie-recipe session alone. Both filter layers were individually defensible and added in good faith for hallucination defense; stacked, they had eliminated the user-as-arbiter pattern that the tool was built around. v3.36.0 reopens the loop.
+
+### Edit 1 — `BUILDER_INSTRUCTIONS.refine` MAJORITY RULES rewrite
+
+The prior block included a literal `Exactly 3 reviewers agree vs 3 who disagree → flag as USER DECISION conflict` rule. With any hive size other than exactly 6 reviewers, no math produces a 3v3 split, so the rule never fires. With 6 reviewers it fires only on the narrow exact-3v3 case. The rule was example-shaped, not designed; the LLM read it as literal. Replacement at `app.js:~11420`:
+
+- **Two or more reviewers proposed substantially different alternatives for the same phrasing → USER DECISION.** This is now the default behavior at any hive size for ordinary stylistic, tonal, or wording disagreement.
+- **Strict majority of reviewers proposed the same change → apply silently.** Unchanged from prior.
+- **Solo suggestion with no opposing alternative → apply if valid, skip if not.** Unchanged from prior.
+- **BUILDER DECISION narrowed.** Now reserved for cases where a reviewer suggestion conflicts with the project goal, the reference material, or a constraint the user explicitly stated. Ordinary stylistic disagreement is no longer a Builder authority surface — it routes to the user.
+- **Framing line added at the top:** *"The user is the source of voice, audience awareness, and intent. When reviewers disagree on stylistic, tonal, or wording choices, the user picks. Your role is to apply unanimous improvements silently and surface real disagreements to the user — not to choose between competing voices on their behalf."* The framing is targeted at the founding use case (refining a document with the human's voice) and is deliberately neutral on document type — it applies equally to prose, technical writing, and structured content.
+
+### Edit 2 — `validateUserDecisions()` substring check loosened
+
+The validator's Check 2 required each attributed AI's response to contain the option text as a literal substring. This breaks under normal Builder synthesis: reviewers naturally describe diffs (`Line 5: change "X" to "Y"`) but the Builder synthesises complete-replacement options for the user, so the AI's response contains `Y` but not the full sentence the Builder produced. Strict-substring matching killed legitimate attributions. At `app.js:~12973`:
+
+- **OR-fallback added.** AI's response now matches if it contains EITHER the option text OR the CURRENT text. Reviewers who quoted CURRENT in their response (the dominant pattern in the reviewer prompt's `Line N: change 'X' to 'Y'` format) pass the check even when the Builder paraphrased their proposed replacement into a complete-replacement option.
+- **All other defenses unchanged.** AI must still be a reviewer in this round (catches fabricated attributions to AIs not in the round). AI must still NOT have said `NO CHANGES NEEDED` (catches false attribution to silent AIs). CURRENT must still be a live substring of the returned doc (catches stale-CURRENT hallucination at parser level). At least 2 verifiable options must still remain after stripping (catches partial-collapse cases).
+
+### Why these two together
+
+Path A (validator only) leaves the prompt-side funnel suppressing emission upstream. Path B (prompt only) leaves the validator chewing on whatever survives. Together they restore the pipeline end-to-end without removing any layer of hallucination defense — the v3.21.16 ANTI-HALLUCINATION RULES block in the prompt remains intact, the noChanges short-circuit remains intact, the CURRENT-must-be-live check at parser level remains intact, and the round-membership check in the validator remains intact. What's gone is the pair of overcautious rules that were the dominant cause of false-negative suppression.
+
+### What did NOT change
+
+No reviewer prompt touched. No length-guard logic touched. No Auto Mode logic touched (chain decisions, ceiling, stall detector, failure streak, convergence handlers all preserved exactly). The `_autoResolveUserDecisions` strict-attribution-majority resolver still works the same way — it just sees more decisions arrive now, which is correct: when Auto is on and a real disagreement surfaces, the resolver picks the option with the most attributed AIs and continues; ties halt with the existing `decision-tie` modal. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.35.6 functionality preserved exactly.
+
+### Behavioral side effects to expect
+
+- **Round counts may rise on heavily-disagreeing sessions.** More decisions land with the user instead of being silently absorbed. This is the desired behavior. Convergence numbers in the Document Playbooks (JD 20–22, Résumé 10–12, Thank-You 2 from scratch / 13 from rough draft) were measured against the pre-v3.36.0 emission rate — expect them to tick up modestly when refining human-voiced documents. The playbooks themselves are not edited in this release; they'll be refreshed once new convergence baselines are measured.
+- **Auto Mode may halt more often on tie.** When attribution counts split evenly across multiple options, the existing `decision-tie` halt modal fires. Stop here / Switch to Interactive / Resume Auto behaviors unchanged.
+- **No effect on recipe-style or instructional documents.** Low-subjectivity content has fewer "two or more substantially different alternatives" cases by construction, so the new rule rarely fires for it. Recipe playbooks should converge at roughly the same round count as before.
+
+### Smoke-test surface
+
+Run any human-voiced document — a résumé, business proposal, or blog post is the strongest signal. **Verify:** within the first 3–4 rounds of refinement, at least one USER DECISION block surfaces in the Conflicts panel. Open DevTools console; verify no `Suppressed USER DECISION` warnings firing on legitimate decisions. Pick an option, confirm `applyDecisions()` chains correctly. Run a recipe-style project; verify it still converges with mostly silent BUILDER DECISIONs (no regression on low-subjectivity content). Toggle Auto Mode on for one full project; verify auto-resolution by attribution majority still works and that ties halt the modal as designed.
+
+### Version stamps in code bumped
+
+To v3.36.0 / build `20260509-003` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.35.6
 **Build:** `20260509-002` · **Released:** May 9, 2026
 

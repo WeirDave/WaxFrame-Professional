@@ -1347,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-002';         // build stamp — update each session
+const BUILD       = '20260509-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -11418,11 +11418,13 @@ All reviewer suggestions are included above. Your task: produce the complete upd
 A valid suggestion is one that improves clarity, accuracy, consistency, logic, or readability without changing the document's intended meaning or scope.
 
 MAJORITY RULES — CONFLICT DECISION LOGIC:
-Before deciding whether to apply or flag a suggestion, count how many reviewers independently suggested the same change (or substantially the same change):
-- A strict majority of reviewers agree (more than half) → apply it automatically. Do not flag this as a conflict.
-- Exactly 3 reviewers agree vs 3 who disagree or suggest an alternative → flag it as a USER DECISION conflict.
-- 2 or fewer reviewers suggest something that conflicts with another suggestion → use your best judgment, apply the stronger choice, flag it as a BUILDER DECISION conflict.
-- Only 1 reviewer suggests something → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
+The user is the source of voice, audience awareness, and intent. When reviewers disagree on stylistic, tonal, or wording choices, the user picks. Your role is to apply unanimous improvements silently and surface real disagreements to the user — not to choose between competing voices on their behalf.
+
+Before deciding whether to apply or flag a suggestion, count how many reviewers independently engaged with the same phrasing or section:
+- A strict majority of reviewers (more than half) proposed the same change (or substantially the same change) → apply it automatically. Do not flag this as a conflict.
+- Two or more reviewers proposed substantially different alternatives for the same phrasing → flag as a USER DECISION conflict so the user can resolve it. This is the default behavior for ordinary stylistic, tonal, or wording disagreement at any hive size.
+- Only 1 reviewer suggests something with no opposing alternative → apply it if valid, skip it if not. Do not flag solo suggestions as conflicts.
+- BUILDER DECISION is reserved for cases where a reviewer suggestion conflicts with the project goal, the reference material, or a constraint the user explicitly stated — situations where you must override one side to maintain document integrity. Do NOT use BUILDER DECISION for ordinary stylistic or wording disagreement; that belongs in USER DECISION.
 
 RULES:
 - Return the FULL document — every section, complete. Do not use ellipses or placeholders.
@@ -12958,6 +12960,20 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
         .filter(Boolean);
       const verified = [];
       const stripped = [];
+      // v3.36.0 — Check loosened from "AI response contains option text"
+      // to "AI response contains EITHER option text OR CURRENT text".
+      // The Builder commonly synthesises a complete-replacement option
+      // (e.g. full sentence) from a reviewer's diff-style suggestion
+      // (e.g. "change 'X' to 'Y'"). The reviewer's response contains
+      // CURRENT and the proposed sub-string but not the Builder's
+      // synthesised full sentence. The OR-fallback prevents the
+      // validator from killing legitimate decisions in that case while
+      // still catching attribution to AIs who never engaged the
+      // relevant section. The hive's other defenses remain: AI must be
+      // a reviewer in this round, AI must NOT have said NO CHANGES
+      // NEEDED, CURRENT must be a live substring of the returned doc,
+      // and ≥2 verifiable options must remain after stripping.
+      const currentTextLower = (d.current || '').toLowerCase();
       for (const token of attrTokens) {
         const entry = responseByName.get(token.toLowerCase());
         if (!entry) {
@@ -12970,7 +12986,9 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
           stripped.push(entry.displayName);
           continue;
         }
-        if (optTextLower && entry.lowerResponse.includes(optTextLower)) {
+        const matchedOption  = optTextLower     && entry.lowerResponse.includes(optTextLower);
+        const matchedCurrent = currentTextLower && entry.lowerResponse.includes(currentTextLower);
+        if (matchedOption || matchedCurrent) {
           verified.push(entry.displayName);
         } else {
           stripped.push(entry.displayName);
