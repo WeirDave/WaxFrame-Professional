@@ -305,5 +305,56 @@ const WAXFRAME_TEMPLATES = [
         "text": "Pick ONE option from the brackets and remove the rest"
       }
     ]
+  },
+  {
+    "id": "contractor-letter",
+    "name": "Contractor / Vendor Letter",
+    "icon": "🧾",
+    "category": "Personal & Everyday",
+    "description": "Refine a letter to a contractor, vendor, or service provider — invoice disputes, scope concerns, punch-list items, or anything where you need to be clear, professional, and firm without escalating.",
+    "goalDocType": "Letter to my [contractor / vendor / service provider] regarding [the first invoice / scope dispute / punch-list items]",
+    "goalAudience": "The [contractor / vendor / project manager] who did the work — be specific about the relationship: e.g. The general contractor we hired, The vendor that installed our HVAC",
+    "goalOutcome": "A clear, professional record of my concerns and the items I need addressed before [I pay / we close out the project / we move forward]. The recipient understands what is wrong, what I expect, and what comes next.",
+    "goalScope": "Include all of the items I have listed including pricing but don't make anything else up and don't change my dollar figures — they are all actual. Keep my factual claims (dates, amounts, names) intact.",
+    "goalTone": "Professional and courteous but firm. Not adversarial, not apologetic.",
+    "goalNotes": "Do not soften my concerns. Do not invent context, dates, or amounts I haven't provided. If a section is unclear, suggest a rewording rather than guessing what I meant.",
+    "suggestedNotes": "",
+    "hint": [
+      {
+        "field": "Document type",
+        "text": "Pick ONE option from the brackets and remove the rest — match what you're actually writing"
+      },
+      {
+        "field": "Target audience",
+        "text": "Pick ONE option and replace with your specifics"
+      }
+    ]
+  },
+  {
+    "id": "linkedin-post",
+    "name": "LinkedIn Post",
+    "icon": "💼",
+    "category": "Content & Marketing",
+    "description": "Write a short-form LinkedIn post — a lesson, a hot take, or a war story — that reads as a peer talking to peers, not a thought leader trying to grow an audience.",
+    "goalDocType": "LinkedIn Post",
+    "goalAudience": "My LinkedIn network — [your peers, recruiters, former colleagues, anyone scrolling fast]. They scroll fast. If the first two lines don't land, they keep scrolling.",
+    "goalOutcome": "Reader stops scrolling, reads the whole post, and either comments or sends a connection request. The post should feel earned, not braggy.",
+    "goalScope": "Cover one specific topic with a clear opinion or lesson. Hook in the first line. Use real numbers and specifics where you have them. End with a question that invites comments. Do not name a current employer if there are confidentiality or OPSEC concerns.",
+    "goalTone": "Conversational, direct, no LinkedIn-influencer voice. Sounds like a peer talking to peers, not a thought leader trying to grow an audience.",
+    "goalNotes": "No \"I'm proud to announce,\" \"thrilled,\" or \"humbled\" — the LinkedIn opener virus. No emojis except maybe one at the end. No call to \"DM me to learn more.\" No buzzwords (synergy, leverage, revolutionize). If a paragraph reads like a brochure, cut it.",
+    "suggestedNotes": "",
+    "lengthMode": "hardcap",
+    "lengthLimit": "2000",
+    "lengthUnit": "characters",
+    "hint": [
+      {
+        "field": "Target audience",
+        "text": "Replace [bracketed audience] with your specific peers/recruiters/former colleagues — be specific about who you're writing for"
+      },
+      {
+        "field": "Scope & constraints",
+        "text": "After Setup 3, paste your topic, real numbers, and the lesson you want to land into Setup 4 Reference Material"
+      }
+    ]
   }
 ];

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260509-013
+     Build: 20260509-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-013">
+  <meta name="waxframe-build" content="20260509-014">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.10">
+  <link rel="stylesheet" href="style.css?v=3.36.11">
 </head>
 <body class="helper-body">
 
@@ -1140,6 +1140,101 @@ Call to action at the end: link to a tool that automates this — multiple model
     </div>
   </div>
 
+  <div class="dp-playbook" id="linkedin-post">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">💼</div>
+      <div>
+        <div class="dp-playbook-title">LinkedIn Post</div>
+        <div class="dp-playbook-desc">Write a short-form LinkedIn post — a lesson, a hot take, or a war story — that reads as a peer talking to peers, not a thought leader trying to grow an audience.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type *</td><td>LinkedIn Post</td></tr>
+          <tr><td class="dp-table-field">Target audience *</td><td>My LinkedIn network — be specific: e.g. <em>Wireless engineers, IT managers, recruiters in my field</em>, <em>Former colleagues from my last industry, current peers in this one</em>. They scroll fast. If the first two lines don't land, they keep scrolling.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome *</td><td>Reader stops scrolling, reads the whole post, and either comments or sends a connection request. Post should feel earned, not braggy.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cover one specific topic with a clear opinion or lesson. Hook in the first line. Use real numbers and specifics where you have them. End with a question that invites comments. Do not name a current employer if there are confidentiality or OPSEC concerns.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Conversational, direct, no LinkedIn-influencer voice. Sounds like a peer talking to peers, not a thought leader trying to grow an audience.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>No "I'm proud to announce," "thrilled," or "humbled" — the LinkedIn opener virus. No emojis except maybe one at the end. No call to "DM me to learn more." No buzzwords (synergy, leverage, revolutionize). If a paragraph reads like a brochure, cut it.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>2000 characters (LinkedIn's hard cap), hardcap mode</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-scratch-note">
+        <div class="dp-scratch-note-hdr">Starting from scratch? Drop your topic, real numbers, and the lesson you want to land into Setup 4 Reference Material:</div>
+        <table>
+          <tr><td class="dp-table-field">Setup 4 — Reference Material</td><td>Paste the topic, the specific facts and numbers you want to anchor the post around, the lesson or opinion you want it to land on, and the question you'd like to end with. The hive uses Reference Material as source-of-truth — anything you put here will be reflected directly in the post; anything you don't put here, the AIs will not invent.</td></tr>
+        </table>
+      </div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — LinkedIn Post on DFS in defense, 2 rounds, 3-AI budget hive</div>
+        <div class="dp-real-example-sub">A wireless-engineering hot take on abandoning DFS in defense environments: the 16-DFS-channel math problem (only 9 clean channels left in 5 GHz), the inevitability of co-channel contention in 952k sq ft mixed-use buildings, and a credit to Peter MacKenzie's "CCC vs CCI" reframe. Real voice, real opinion, no employer-naming. Run with the same 3-AI budget hive used for the Bay Area test (paid Claude + paid ChatGPT + free Gemini-as-Builder). Reached majority convergence at Round 2 (ChatGPT and Gemini both NO CHANGES NEEDED, Claude offered three minor concision edits not adopted). All Project-screen prompts below are the literal values used in the run.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>LinkedIn Post — 6 Months in and what I have learned about DFS</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>LinkedIn Post</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>My LinkedIn network (wireless engineers, former colleagues from the cable industry I was in for 30 years, some assorted high school classmates, IT people, and a few recruiters)</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Reader stops scrolling, reads the whole post, and either comments or sends a connection request</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cover: What is DFS, who uses it and why. How many channels does 5 GHz have and how many are DFS. Do not cover any other frequency. Explain CCI and how those of us in the industry are now calling it CCC because it isn't "really interference" you are mitigating. Explain how it is now inevitable in a mixed-use (office, production, warehouse) large building (some as big as 952k sq ft). My company is in defense and I abandoned DFS immediately after being hired.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Technical, direct, a bit sarcastic but willing to teach</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>We now call CCI "CCC" thanks to my friend Peter MacKenzie (@mackenziewifi)</td></tr>
+          <tr><td class="dp-table-field">Length Limit</td><td>2000 characters, hardcap</td></tr>
+          <tr><td class="dp-table-field">Hive composition</td><td>Builder: Gemini (free tier). Reviewers: ChatGPT (paid), Claude (paid), Gemini-as-reviewer (free). All other AIs toggled off via the per-session bee toggles on the work screen.</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>From Scratch (no draft pasted) — the post was generated entirely from Setup 3 fields and the Tone direction</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Why this converged in 2 rounds:</strong></div>
+        <div class="dp-real-example-sub dp-real-example-sub--continuation">The previously-measured LinkedIn Post run on an internal AI server took 5 rounds. The same 3-AI public-API hive on a more sharply-specified prompt converged in 2. Two factors compounded: a tightly-scoped Project field set (the Scope listed exactly what to cover and what not to cover — no other frequencies, no other topics), and a real opinion in Tone (<em>"a bit sarcastic but willing to teach"</em>) that gave reviewers a thesis to build around rather than a vague topic to explore. The lesson worth taking forward: short-form social posts converge fastest when the writer brings a specific opinion, names what they will and won't cover, and trusts the hive to shape the prose around that frame.</div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Go to Setup 5 — Starting Document. Paste your existing post draft using the Paste Text button. Even a rough first attempt with bullet points works — the hive will shape it.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. All your content lives in Setup 4 Reference Material — the topic, the facts, the lesson, the question. The hive builds the post from there.
+        </div>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈1.2 minutes of hive processing across 2 rounds (sum of per-round max-reviewer + Builder elapsed). Round 2 reached majority convergence (2 of 3 AIs satisfied, Claude as lone holdout with minor concision suggestions). Final output: 304 words / 1857 characters — 92% of the 2000-character hardcap, length-guard never triggered. SCRATCH-mode short-form converges fast when Project-screen scope is sharply specified; a vaguer prompt on the same category previously took 5 rounds. Plan for 2–6 rounds depending on how tightly your Scope and Tone bound the post.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — hook crafting</span>
+            <span class="dp-tag dp-tag-blue">Claude — voice authenticity</span>
+            <span class="dp-tag dp-tag-green">Gemini — concision &amp; structure</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>If you work in a sensitive industry (defense, healthcare, finance, legal), keep employer specifics out of the post. <em>"My company is in defense"</em> is fine; naming the company, the building square footage, the specific platforms, or active vendor evaluations is not. The DFS post above worked because it discussed a universal RF problem with attribution to a public industry figure (Peter MacKenzie) — none of the content was company-confidential. State your OPSEC constraints in <strong>Scope &amp; constraints</strong> explicitly: <em>"Do not name my employer. Do not reference any active project."</em></p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
   <div class="dp-playbook" id="presentation">
     <div class="dp-playbook-header">
       <div class="dp-playbook-icon">🖥️</div>
@@ -1511,7 +1606,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.10"></script>
+<script src="js/version.js?v=3.36.11"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
