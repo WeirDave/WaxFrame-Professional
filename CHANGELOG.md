@@ -1,6 +1,34 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.7
+**Build:** `20260509-010` · **Released:** May 9, 2026
+
+**Tier 1 forensic capture upgrade.** Closes the biggest gap in remote diagnostics: when David inspects a backup JSON to diagnose a session, Deep Dive's ring buffer and the last-failure context now travel with the backup, and each ring-buffer entry now contains the prompt sent, the response received, and exact token usage — not just shape and timing. The four edits live in `WF_DEBUG`, `saveSession`, `loadSession`, and the `captureRound` call site inside `callAPI`. Tier 2 items (Deep Dive viewer auto-refresh, per-phase timing, session timeline events, backup format docs) are deferred — explicitly out of scope.
+
+### Edits
+
+**1. `RING_MAX` bumped from 10 to 200 (`app.js:42`).** A multi-AI session at 4 reviewers + 1 builder per round was rotating the buffer after just 2 rounds. At 200 the buffer holds ~40 rounds, well above any realistic single-session ceiling. Memory cost is bounded by the per-entry preview caps (500 chars prompt / 1000 chars response).
+
+**2. `saveSession` persists `ringBuffer` + `lastFailure` (`app.js:~4170`).** Both are added to the session object; IDB_SESSION serialization at `app.js:~14440` carries them into backup JSONs automatically — no separate export step needed.
+
+**3. `loadSession` restores both fields (`app.js:~4258` main path + `~4347` localStorage fallback).** Pre-v3.36.7 sessions don't have these fields; defaults preserve the post-fresh-load empty state. Restored buffer survives reloads even when Deep Dive is currently off (toggling Deep Dive off mid-session still wipes the buffer — that's existing `setDeepDive(off)` behavior, unchanged).
+
+**4. `captureRound` entry extended (`app.js:~12828`).** New fields: `promptPreview` (first 500 chars), `promptChars`, `promptTokens` (`prompt_tokens || input_tokens`), `completionTokens` (`completion_tokens || output_tokens`), `totalTokens` (`total_tokens`), `responsePreview` (first 1000 chars). The `prompt` parameter was already in scope on `callAPI(ai, prompt)` — no threading changes required, just used inside the entry. Token-shape coalescence handles the OpenAI vs Anthropic naming difference; Anthropic backups will show `totalTokens: null` (consumer can sum prompt+completion if needed).
+
+### What did NOT change
+
+No reviewer prompts. No builder prompts. No validator logic. No auto-promote-CURRENT logic. No length-guard logic. No Auto Mode chain logic. No icon family. No templates. No CSS. The 80ch working-document column is untouched. The setDeepDive(off)-clears-buffer behavior is preserved (out of scope for this release).
+
+### Smoke-test surface
+
+Turn Deep Dive on (Dev Toolbar 🔬). Run a short session (3+ rounds). Open backup JSON in a viewer and verify under `IDB_SESSION`: `ringBuffer` is an array with one entry per AI call, each entry contains `promptPreview`, `promptChars`, `promptTokens`, `completionTokens`, `totalTokens`, `responsePreview`. Trigger any failure (e.g. invalid key) and verify `lastFailure` is populated with the troubleshooting context. Reload the page and confirm both fields rehydrate from IDB without the buffer resetting.
+
+### Version stamps in code bumped
+
+To v3.36.7 / build `20260509-010` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.6
 **Build:** `20260509-009` · **Released:** May 9, 2026
 

@@ -39,7 +39,12 @@ const WF_DEBUG = {
   // is genuinely a power-user feature.
   deepDiveOn:        localStorage.getItem('waxframe_deepdive') === '1',
   ringBuffer:        [],   // last N round captures when Deep Dive is on
-  RING_MAX:          10,
+  // v3.36.7 — Bumped from 10 to 200 so a multi-AI 10–20 round session fits
+  // entirely in one buffer. At ~4 reviewers + 1 builder per round and 200
+  // entries cap, the buffer holds ~40 rounds before rotation, well above
+  // any realistic single-session ceiling. Forensic capture is the priority;
+  // memory cost is bounded by the per-entry preview caps (500/1000 chars).
+  RING_MAX:          200,
   lastFailure:       null, // lightweight context from most recent failure
 
   // ── Toggles ──
@@ -1349,7 +1354,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-009';         // build stamp — update each session
+const BUILD       = '20260509-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4167,7 +4172,19 @@ function saveSession() {
   // re-initialized the Set. Same array-then-Set serialization shape
   // as cleanThisRound.
   const sessionAIs = Array.from(window.sessionAIs || []);
-  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs };
+  // v3.36.7 — Persist Deep Dive forensic capture alongside session payload.
+  // ringBuffer holds the last RING_MAX (200) per-round captures when Deep
+  // Dive is on; lastFailure holds the most recent troubleshooting context
+  // (always-on, lightweight). Both flow into backup JSONs automatically
+  // via IDB_SESSION serialization, so when David inspects a backup the
+  // forensic record is already there — no separate export step needed.
+  // ringBuffer is captured by reference but JSON-serialized at idbSet
+  // time, so we don't snapshot here; if the buffer mutates between this
+  // line and the actual write the latest contents win, which is what
+  // we want.
+  const ringBuffer  = Array.isArray(WF_DEBUG?.ringBuffer)  ? WF_DEBUG.ringBuffer  : [];
+  const lastFailure = WF_DEBUG?.lastFailure || null;
+  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs, ringBuffer, lastFailure };
 
   // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
@@ -4281,6 +4298,19 @@ async function loadSession() {
     if (Array.isArray(s.sessionAIs)) {
       window.sessionAIs = new Set(s.sessionAIs);
     }
+    // v3.36.7 — Restore Deep Dive forensic capture. Pre-v3.36.7 sessions
+    // don't have these fields; defaults preserve the post-fresh-load
+    // state (empty buffer, no lastFailure). When Deep Dive is currently
+    // off we still restore the buffer so a backup taken with Deep Dive
+    // on retains its captures across reloads — toggling Deep Dive off
+    // mid-session will still wipe the buffer (setDeepDive(off) clears
+    // it), but reload alone preserves it.
+    if (Array.isArray(s.ringBuffer)) {
+      WF_DEBUG.ringBuffer = s.ringBuffer;
+    }
+    if (s.lastFailure && typeof s.lastFailure === 'object') {
+      WF_DEBUG.lastFailure = s.lastFailure;
+    }
     if (docText && phase === 'draft' && round > 1) phase = 'refine';
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
@@ -4314,6 +4344,13 @@ async function loadSession() {
       // v3.32.26 — fallback path also restores the session toggle set.
       if (Array.isArray(s.sessionAIs)) {
         window.sessionAIs = new Set(s.sessionAIs);
+      }
+      // v3.36.7 — fallback path also restores Deep Dive forensic capture.
+      if (Array.isArray(s.ringBuffer)) {
+        WF_DEBUG.ringBuffer = s.ringBuffer;
+      }
+      if (s.lastFailure && typeof s.lastFailure === 'object') {
+        WF_DEBUG.lastFailure = s.lastFailure;
       }
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
       // Restore console HTML in the fallback path too (see main path)
@@ -12825,6 +12862,17 @@ async function callAPI(ai, prompt) {
   consoleLog(`✅ ${ai.name} — responded in ${elapsed}s (~${words} words)`, 'success');
 
   // Deep Dive capture (only writes when Deep Dive is on)
+  // v3.36.7 — Tier 1 forensic capture upgrade. Beyond the basic
+  // shape/timing fields we also snapshot the prompt and response
+  // previews (truncated), exact char counts, and token usage from
+  // the provider's response. This is the difference between "we
+  // know something failed" and "we know exactly what was sent and
+  // what came back" when David inspects a backup. Token usage
+  // shape varies by provider — OpenAI uses prompt_tokens/
+  // completion_tokens/total_tokens, Anthropic uses input_tokens/
+  // output_tokens (no total), so we coalesce with || fallbacks.
+  // Anthropic backups will show totalTokens === undefined, which
+  // is correct — the consumer can sum prompt+completion if needed.
   WF_DEBUG.captureRound({
     aiName:    ai.name,
     provider:  ai.provider,
@@ -12833,7 +12881,13 @@ async function callAPI(ai, prompt) {
     chars:     text.length,
     words,
     status:    response.status,
-    finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null
+    finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null,
+    promptPreview:    typeof prompt === 'string' ? prompt.slice(0, 500) : '',
+    promptChars:      typeof prompt === 'string' ? prompt.length : 0,
+    promptTokens:     data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || null,
+    completionTokens: data?.usage?.completion_tokens || data?.usage?.output_tokens || null,
+    totalTokens:      data?.usage?.total_tokens      || null,
+    responsePreview:  text.slice(0, 1000)
   });
 
   return text;
