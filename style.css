@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-029
+   Build: 20260508-030
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -8712,6 +8712,21 @@ kbd {
   flex-shrink: 0;
 }
 .console-err-arrow:hover { opacity: 1; }
+/* v3.35.4 — Bug A. Clickable provider-console link appended to error
+   entries. Inherits the entry's red color (so it visually belongs to
+   the error line) but underlines so it reads as a link. Hover bumps
+   opacity to full so it pops on cursor-over. Inline-styled via class
+   only — no inline style attributes per project rules. */
+.console-entry .console-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  opacity: 0.85;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  transition: opacity 0.12s;
+}
+.console-entry .console-link:hover { opacity: 1; }
 
 /* ── Console Error Detail Modal ── */
 .console-error-detail-modal {
