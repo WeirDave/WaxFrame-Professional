@@ -559,6 +559,21 @@ function renderTroubleshootingCard(entry, ctx) {
 function closeTroubleshootingCard() {
   const modal = document.getElementById('troubleshootingCard');
   if (modal) modal.classList.remove('active');
+  // v3.35.1 — If Auto deferred a chain because this card was up,
+  // resume it now that the user has dismissed the card. The helper
+  // re-checks every gate (Auto on, work screen, no in-flight round)
+  // so this is safe to call unconditionally — it's a no-op when no
+  // chain was deferred. Without this hook, deferred chains stayed
+  // deferred forever and Auto silently lost momentum mid-session.
+  if (window._autoChainDeferred && window._autoMode) {
+    const def = window._autoChainDeferred;
+    if (typeof consoleLog === 'function') {
+      consoleLog(`🤖 Auto chain resuming after card dismiss (deferred: ${def.label || 'unknown'})`, 'info');
+    }
+    if (typeof _autoFireChainedRound === 'function') {
+      _autoFireChainedRound((def.label || 'card-resume') + '-retry', def.kind || 'round');
+    }
+  }
 }
 
 function toggleTcDetails() {
@@ -1294,7 +1309,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-026';         // build stamp — update each session
+const BUILD       = '20260508-027';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3215,13 +3230,9 @@ function toggleAutoMode() {
     const roundInFlight = smokeBtn?.classList.contains('running');
     if (onWorkScreen && !roundInFlight) {
       // Defer one tick so the toggle UI updates first, then fire.
-      setTimeout(() => {
-        // Re-check in case the user flipped back off in that tick.
-        if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active') &&
-            !document.getElementById('runRoundBtn')?.classList.contains('running')) {
-          if (typeof runRound === 'function') runRound();
-        }
-      }, 60);
+      // v3.35.1 — Routed through _autoFireChainedRound for the
+      // troubleshooting-card gate.
+      _autoFireChainedRound('toggle-on');
     }
   } else {
     // Disengaging — leave any in-flight round to finish, just don't chain
@@ -3230,6 +3241,8 @@ function toggleAutoMode() {
     window._autoCeilingTarget = null;
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
+    // v3.35.1 — Clear any deferred chain so it can't resurrect later.
+    window._autoChainDeferred = null;
   }
 
   saveAutoModePreference();
@@ -3249,7 +3262,7 @@ function updateAutoToggleUI() {
     if (detailEl) {
       const r = (typeof round === 'number') ? round : 1;
       const ceiling = window._autoCeilingTarget || (r + AUTO_MAX_ROUNDS_DEFAULT);
-      const left = Math.max(0, ceiling - r + 1);
+      const left = Math.max(0, ceiling - r);
       detailEl.textContent = `${left} left`;
       detailEl.style.display = '';
     }
@@ -3383,22 +3396,54 @@ function _autoMaybeChainNextRound(ctx) {
     }
     window._decisionChoices = resolved;
     // Fire deferred so the round-complete UI/state finishes settling first.
-    setTimeout(() => {
-      if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active')) {
-        if (typeof applyDecisions === 'function') applyDecisions();
-      }
-    }, 80);
+    // v3.35.1 — Routed through _autoFireChainedRound with kind 'apply-decisions'.
+    _autoFireChainedRound('user-decision-majority', 'apply-decisions');
     updateAutoToggleUI();
     return;
   }
 
   // 6) Clean round, no halt conditions → fire next round
   updateAutoToggleUI();
+  _autoFireChainedRound('chain-success');
+}
+
+// v3.35.1 — Centralized chain-fire gate.
+// Called from every chain-fire site in Auto Mode: post-success chain,
+// toggle-on while idle, post-Resume chain, and post-USER-DECISION
+// auto-resolve. All sites need the same protections:
+//   • Auto still toggled ON (user may have flipped off in the gap)
+//   • On the work screen (user may have navigated away)
+//   • No round currently in flight (defensive — shouldn't happen)
+//   • No troubleshootingCard active (per-AI errors / slow-responder)
+//
+// If the troubleshooting card is up, set the deferred flag so
+// closeTroubleshootingCard() re-fires the chain when dismissed.
+// 'kind' is either 'round' (default — fires runRound) or 'apply-decisions'
+// (fires applyDecisions which sends to Builder and chains naturally).
+function _autoFireChainedRound(label, kind) {
+  kind = kind || 'round';
   setTimeout(() => {
     if (!window._autoMode) return;
     if (!document.getElementById('screen-work')?.classList.contains('active')) return;
     if (document.getElementById('runRoundBtn')?.classList.contains('running')) return;
-    if (typeof runRound === 'function') runRound();
+    // v3.35.1 — Gate on troubleshooting card. Per-AI errors (5xx, slow
+    // responder) pop a card on top of the work screen. Without this gate
+    // Auto fires the next round in the background while the card is still
+    // up, stacking modals from successive rounds. Defer here; the close
+    // handler will retry when the user dismisses the card.
+    if (document.getElementById('troubleshootingCard')?.classList.contains('active')) {
+      window._autoChainDeferred = { kind, label, at: Date.now() };
+      if (typeof consoleLog === 'function') {
+        consoleLog(`🤖 Auto chain deferred (${label}) — troubleshooting card is open`, 'info');
+      }
+      return;
+    }
+    window._autoChainDeferred = null;
+    if (kind === 'apply-decisions') {
+      if (typeof applyDecisions === 'function') applyDecisions();
+    } else {
+      if (typeof runRound === 'function') runRound();
+    }
   }, 120);
 }
 
@@ -3449,13 +3494,10 @@ function autoHaltResume() {
   }
   if (typeof toast === 'function') toast('🤖 Auto resumed');
   updateAutoToggleUI();
-  // Fire the next round.
-  setTimeout(() => {
-    if (window._autoMode && document.getElementById('screen-work')?.classList.contains('active') &&
-        !document.getElementById('runRoundBtn')?.classList.contains('running')) {
-      if (typeof runRound === 'function') runRound();
-    }
-  }, 80);
+  // Fire the next round via the centralized helper.
+  // v3.35.1 — Routed through _autoFireChainedRound for the
+  // troubleshooting-card gate consistency with other chain sites.
+  _autoFireChainedRound('resume');
 }
 
 function autoHaltSwitchInteractive() {
@@ -9678,6 +9720,30 @@ function showFinishModal() {
 
   if (btnDoc)       btnDoc.classList.toggle('finish-modal-btn-disabled', !hasDoc);
   if (btnTranscript) btnTranscript.classList.toggle('finish-modal-btn-disabled', !hasHistory);
+
+  // v3.35.1 — Re-enable an "exported" button when MORE rounds have run
+  // since the last export. The waxframe:exported listener stamps the
+  // button's dataset.exportedHistoryLen at export time. If history.length
+  // has grown since then, there's new content to export — restore the
+  // button from its dataset.originalHtml (captured on session boot) and
+  // clear the disabled / done classes so the user can click again.
+  // Without this fix the button stayed disabled for the rest of the
+  // session even after dozens of additional rounds, making it impossible
+  // to capture an updated transcript without reloading the page.
+  [btnDoc, btnTranscript].forEach(btn => {
+    if (!btn) return;
+    const stampStr = btn.dataset.exportedHistoryLen;
+    if (stampStr === undefined || stampStr === '') return;
+    const stamp = parseInt(stampStr, 10);
+    if (isNaN(stamp)) return;
+    if (history.length > stamp) {
+      // New content since last export — re-enable.
+      if (btn.dataset.originalHtml) btn.innerHTML = btn.dataset.originalHtml;
+      btn.disabled = false;
+      btn.classList.remove('finish-modal-btn-done');
+      delete btn.dataset.exportedHistoryLen;
+    }
+  });
 }
 
 function hideFinishModal() {
@@ -12113,7 +12179,15 @@ async function runRound() {
     // Escape or click skips. User decides when to finish via the Finish button.
     playUnanimousScene();
     // v3.35.0 — Auto Mode halt: project complete, Resume disabled.
-    _autoMaybeChainNextRound({ outcome: 'unanimous', satisfied: noChangesCount, total: successfulReviews.length });
+    // v3.35.1 — Defer halt modal until after the unanimous scene plays
+    // out (~3.5s). Without the delay, the halt modal popped on top of
+    // the still-active scene; click events landed on the scene's
+    // overlay element instead of the work-screen buttons underneath,
+    // making the Finish modal export buttons appear unclickable until
+    // a full reload. Reproduced by David in the v3.35.0 test session.
+    setTimeout(() => {
+      _autoMaybeChainNextRound({ outcome: 'unanimous', satisfied: noChangesCount, total: successfulReviews.length });
+    }, 3500);
     return;
   } else if (noChangesCount > 0) {
     consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
@@ -12207,7 +12281,13 @@ async function runRound() {
     playFlyingCarSound();
     showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
     // v3.35.0 — Auto Mode halt: holdouts to review.
-    _autoMaybeChainNextRound({ outcome: 'majority', satisfied: noChangesCount, total: successfulReviews.length });
+    // v3.35.1 — Defer halt modal 3.5s so showHiveFinish's 3-second scene
+    // can complete cleanly. Without the delay, halt modal stacked on top
+    // of the active scene and the underlying work-screen click targets
+    // (including Finish modal export buttons) became unclickable.
+    setTimeout(() => {
+      _autoMaybeChainNextRound({ outcome: 'majority', satisfied: noChangesCount, total: successfulReviews.length });
+    }, 3500);
     return;
   }
 
@@ -14372,6 +14452,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.textContent = '✅ Exported!';
         btn.disabled = true;
         btn.classList.add('finish-modal-btn-done');
+        // v3.35.1 — Stamp the history length at export time. showFinishModal
+        // re-enables the button if more rounds have run since this snapshot,
+        // because the document content has grown and there's something new
+        // to export. Without this stamp the button stayed disabled for the
+        // rest of the session even after dozens of additional rounds.
+        btn.dataset.exportedHistoryLen = String(history.length);
       }
     } else if (kind === 'transcript') {
       const btn = document.getElementById('finishBtnTranscript');
@@ -14379,6 +14465,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         btn.textContent = '✅ Transcript exported!';
         btn.disabled = true;
         btn.classList.add('finish-modal-btn-done');
+        // v3.35.1 — Same as document path; transcript also grows with
+        // every additional round so we let the user re-export when new
+        // content exists.
+        btn.dataset.exportedHistoryLen = String(history.length);
       }
     }
   });
