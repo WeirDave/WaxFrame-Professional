@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-018">
+  <meta name="waxframe-build" content="20260508-019">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.34.11">
+  <link rel="stylesheet" href="style.css?v=3.34.12">
 </head>
 <body>
 
@@ -371,7 +371,7 @@
 
         <div class="ref-action-row">
           <div class="ref-action-target" onclick="addReferenceDoc()">
-            <div class="ref-action-icon">📋</div>
+            <div class="ref-action-icon"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-paste" aria-hidden="true"><rect x="6" y="4" width="20" height="28" rx="3" fill="#5E35B1"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#3E2A78"/><line x1="9" y1="14" x2="23" y2="14" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="18" x2="23" y2="18" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="22" x2="23" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="26" x2="18" y2="26" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/></svg></div>
             <div class="ref-action-text">Paste Text</div>
             <div class="ref-action-sub">Click to add a new reference and paste your content into it</div>
           </div>
@@ -381,7 +381,7 @@
                ondragover="handleRefDragOver(event)"
                ondragleave="handleRefDragLeave(event)"
                ondrop="handleRefFileDrop(event)">
-            <div class="ref-action-icon">📚</div>
+            <div class="ref-action-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
             <div class="ref-action-text">Upload File</div>
             <div class="ref-action-sub">Drag &amp; drop or click to browse — Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), .txt, .md</div>
             <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" style="display:none" onchange="handleRefFileSelect(event)">
@@ -439,16 +439,16 @@
           <img src="images/WaxFrame_Starting_Bee_v1.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Starting Document <button class="goal-info-btn" onclick="document.getElementById('infoUploadModal').classList.add('active')" title="About file uploads"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Three buttons below let you choose where your starting document comes from. Click <strong>📄 Upload File</strong> to upload a Word doc, PDF, or other file you already have. Click <strong>📋 Paste Text</strong> to paste text directly. Click <strong>💡 Start from Scratch</strong> if you want the hive to generate a first draft using only your project goal.</p>
-            <p class="hp-section-sub hp-section-sub--newuser"><strong>Running Quick Start?</strong> Click <strong>💡 Start from Scratch</strong> — there's no recipe to upload yet, the hive will create one from your project goal.</p>
+            <p class="hp-section-sub">Three buttons below let you choose where your starting document comes from. Click <strong>Upload File</strong> to upload a Word doc, PDF, or other file you already have. Click <strong>Paste Text</strong> to paste text directly. Click <strong>Start from Scratch</strong> if you want the hive to generate a first draft using only your project goal.</p>
+            <p class="hp-section-sub hp-section-sub--newuser"><strong>Running Quick Start?</strong> Click <strong>Start from Scratch</strong> — there's no recipe to upload yet, the hive will create one from your project goal.</p>
           </div>
         </div>
         <div class="hp-section-body">
 
         <div class="doc-input-tabs">
-          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')">📄 Upload File</button>
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')">📋 Paste Text</button>
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')">💡 Start from Scratch</button>
+          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg><span class="doc-tab-label">Upload File</span></button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-paste" aria-hidden="true"><rect x="6" y="4" width="20" height="28" rx="3" fill="#5E35B1"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#3E2A78"/><line x1="9" y1="14" x2="23" y2="14" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="18" x2="23" y2="18" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="22" x2="23" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="26" x2="18" y2="26" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/></svg><span class="doc-tab-label">Paste Text</span></button>
+          <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-scratch" aria-hidden="true"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FFFFFF"/><path d="M20 2 V10 H28 Z" fill="rgba(0,0,0,0.08)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="none" stroke="#9aa3b8" stroke-width="0.7" stroke-dasharray="1.5 1.2"/><g transform="translate(11,18)"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="#f5a623"/></g><g transform="translate(20,11)" opacity="0.7"><path d="M2.5 0 L3 2 L5 2.5 L3 3 L2.5 5 L2 3 L0 2.5 L2 2 Z" fill="#f5a623"/></g></svg><span class="doc-tab-label">Start from Scratch</span></button>
         </div>
         <p id="docTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
 
@@ -462,7 +462,7 @@
         <div class="doc-tab-panel active" id="panel-upload">
           <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
                ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
-            <div class="drop-zone-icon">📚</div>
+            <div class="drop-zone-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
             <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
             <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), or Markdown (.md)</div>
             <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" style="display:none" onchange="handleFileSelect(event)">
@@ -491,7 +491,7 @@
         <div class="doc-tab-panel" id="panel-scratch">
           <div class="proj-notebook proj-notebook-scratch">
             <div class="proj-scratch-inner">
-              <div class="proj-scratch-icon">✍️</div>
+              <div class="proj-scratch-icon"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-scratch" aria-hidden="true"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FFFFFF"/><path d="M20 2 V10 H28 Z" fill="rgba(0,0,0,0.08)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="none" stroke="#9aa3b8" stroke-width="0.7" stroke-dasharray="1.5 1.2"/><g transform="translate(11,18)"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="#f5a623"/></g><g transform="translate(20,11)" opacity="0.7"><path d="M2.5 0 L3 2 L5 2.5 L3 3 L2.5 5 L2 3 L0 2.5 L2 2 Z" fill="#f5a623"/></g></svg></div>
               <div class="proj-scratch-title">Starting from Scratch</div>
               <div class="proj-scratch-msg">WaxFrame will ask all your AIs to create a first draft based on your project goal. Make sure your goal is detailed — the more specific you are, the better the first draft will be.</div>
             </div>
@@ -2029,9 +2029,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.34.11"></script>
-<script src="js/templates.js?v=3.34.11"></script>
-<script src="js/app.js?v=3.34.11"></script>
+<script src="js/version.js?v=3.34.12"></script>
+<script src="js/templates.js?v=3.34.12"></script>
+<script src="js/app.js?v=3.34.12"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
