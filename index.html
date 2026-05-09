@@ -2018,8 +2018,14 @@
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
   <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
-  <span class="dev-toolbar-sep">|</span>
-  <button onclick="window.open('cleanup.html','_blank')" title="Scan localStorage for orphaned waxframe_* keys (dust bunnies)">🧹 Cleanup</button>
+  <!-- v3.35.3 — Cleanup button + cleanup.html retired. Out-of-date
+       "known keys" list flagged legitimate state (waxframe_theme,
+       waxframe_troubleshooting, waxframe_v2_legacy_idb_purged,
+       waxframe_v2_session_mirror, waxframe_v33210_recommend_migrated)
+       as Unknown — would have offered to delete keys the app
+       actively reads. bulkRemoveSelectedAIs() in app.js already
+       handles per-AI orphan cleanup at removal time, which covers
+       the legitimate maintenance use case. -->
 </div>
 
 <div class="finish-modal-overlay" id="devModal" onclick="if(event.target===this)hideDevModal()">

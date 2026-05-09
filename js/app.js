@@ -3180,7 +3180,8 @@ const AUTO_FAILURE_STREAK_LIMIT = 2;
 // to localStorage; it's strictly per-project and resets to OFF on every
 // page reload. Legacy 'waxframe_auto_mode' keys from pre-v3.35.2
 // sessions become orphan localStorage entries — harmless, no read site
-// remains. The cleanup.html sweep (planned) will offer to remove them.
+// remains. v3.35.3 retired cleanup.html so these keys persist
+// indefinitely; they're 2 bytes each and cause no behavior.
 
 window._autoMode          = false;   // toggle state
 window._autoCeilingTarget = null;    // halt-at round number
