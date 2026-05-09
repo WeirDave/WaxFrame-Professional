@@ -1,6 +1,45 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.12
+**Build:** `20260509-015` · **Released:** May 9, 2026
+
+**Length-guard math fix.** The pages-to-words conversion was running too tight, tripping the round-bloat dialog on Builder outputs that were correct for the genre. `WORDS_PER_PAGE` bumped from 500 to 600 — industry-standard typewriter math, Word's default, what most word processors and AI assistants converge on for "single-spaced 12pt with 1-inch margins."
+
+### Edit 1 — `WORDS_PER_PAGE` constant (`app.js:3014`)
+
+```
+const WORDS_PER_PAGE = 600;   // was 500
+```
+
+The 500 was the conservative double-spaced-manuscript standard. Real-world single-spaced 12pt with 1" margins runs 500–600 words per page; business documents (proposals, reports, RFP responses) land at the upper end of that range. The 500 conversion was tripping the length guard on outputs that were correct for the genre — surfaced empirically when a 1174-word "2-page Business Proposal" Builder output read as 17% over the ceiling, when 1174 words is in fact ≈2 single-spaced pages of legitimate proposal content. Under the new 600-wpp math, "2 pages ≈ 1200 words" — the 1174-word output now lands inside the ceiling, no false-bloat trigger.
+
+The constant flows through every length-guard math path: page-mode hardcap (`limit * WORDS_PER_PAGE`), page-mode range minimums (`minV * WORDS_PER_PAGE`), the displayed `(≈X words)` text in the round-bloat dialog and length-guard intercepts, and the live document-stats pill at the top of the work screen and Setup 5 starting-document screen (`docStats` element). One constant change, all derived sites update automatically.
+
+### Edit 2 — Stale "500" text propagation across UI and docs
+
+Three sites had hardcoded "500 words per page" text that didn't auto-update with the constant:
+
+- `app.js:9810` — code comment in the `docStats` render path
+- `index.html:1856` — length-help modal explanation paragraph
+- `index.html:1860` — length-help modal Pages row description
+- `waxframe-user-manual.html:545` — user-manual page-conversion documentation
+
+All four updated to read `600 words per single-spaced 12pt page` consistently, with the user-manual and modal-row entries expanded to include sample conversions (1 page ≈ 600 words, 2 pages ≈ 1200 words, 5 pages ≈ 3000 words) so users can self-verify their length targets without doing the math.
+
+### What did NOT change
+
+Reference Material (Setup 4) does not display a pages count by design — `computeRefStats` returns chars/words/tokens/lines/paragraphs only, since reference material is informational source-of-truth rather than output sized against a target. No fix was needed there. No reviewer prompts. No builder prompts. No validator logic. No Auto Mode chain logic. No CSS. No 80ch column. The length-guard mode picker (none / hardcap / target / range) and the trajectory-aware bloat detection from v3.32.18 are untouched — only the words-per-page conversion math changes. v3.36.7 forensic-capture envelope shape preserved. v3.36.8 transcript filenames preserved. v3.36.9 Save-as-File preserved. v3.36.10 Gemini token coalescence preserved. v3.36.11 templates and Contractor / LinkedIn Post playbooks preserved.
+
+### Smoke-test surface
+
+Pick the Business Proposal template (or any template with `lengthUnit: pages`). Verify Setup 3's Length Constraint area now reads `(≈1200 words)` next to "2 pages" instead of `(≈1000 words)`. Open the work screen — verify the document-stats pill at the top reads e.g. `8367 chars · 1175 words · 130 lines · ≈2.0 pages` for a 1175-word document (was ≈2.4 pages under the old math). Run a SCRATCH-mode round with a 2-page hardcap that produces ~1100–1200 words — verify the length-guard does not fire. Click the ℹ️ next to Length Constraint on Setup 3 — verify the explanation modal reads "600 words per single-spaced 12pt page."
+
+### Version stamps in code bumped
+
+To v3.36.12 / build `20260509-015` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.11
 **Build:** `20260509-014` · **Released:** May 9, 2026
 
