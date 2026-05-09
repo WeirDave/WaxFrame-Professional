@@ -1349,7 +1349,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-007';         // build stamp — update each session
+const BUILD       = '20260509-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12887,6 +12887,23 @@ function extractConflicts(text) {
       !/included for completeness/i.test(o.text) &&
       !/placeholder/i.test(o.text)
     );
+    // v3.36.5 — Auto-promote CURRENT to an implicit "Original"-attributed
+    // option when the Builder emitted exactly 1 OPTION_N and CURRENT is
+    // present and doesn't match the option text. This captures legitimate
+    // 2-way choices the Builder formats as "here's the current text vs
+    // here's reviewer X's proposed change" rather than the canonical
+    // 2-OPTION_N format. Pre-v3.36.5 these were dropped at the floor
+    // check below, surfacing the ugly "could not be parsed" fallback
+    // and forcing the user to re-run the round. Defense-in-depth: the
+    // validator's CHECK 1 still verifies CURRENT is in the live doc, so
+    // this loosening doesn't allow Builder to fabricate a fake baseline.
+    const _currentForPromote = (decision.current || '').trim();
+    if (decision.options.length === 1 && _currentForPromote.length > 0) {
+      const _onlyOptionText = (decision.options[0].text || '').trim();
+      if (_onlyOptionText !== _currentForPromote) {
+        decision.options.unshift({ text: _currentForPromote, ais: 'Original' });
+      }
+    }
     if (decision.options.length < 2) continue;
     // Suppress no-op decisions — Builder sometimes folds duplicate reviewer
     // proposals into multiple OPTION_N entries with identical text. Exact
@@ -13007,6 +13024,19 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
       // engage the relevant section may survive — cosmetic, not
       // catastrophic, and the user judges options on text merits.
       for (const token of attrTokens) {
+        // v3.36.5 — Recognize baseline-label tokens as verified attributions.
+        // The parser auto-promotes CURRENT to an "Original"-attributed
+        // option when the Builder emits exactly 1 OPTION_N and a non-
+        // matching CURRENT (capturing legitimate "keep current vs adopt
+        // proposed change" 2-way choices). This bypass lets that
+        // auto-promoted option survive CHECK 2. Defense-in-depth: CHECK 1
+        // (CURRENT-must-be-live) above already verified the CURRENT text
+        // is a substring of the live document, so a Builder-fabricated
+        // "Original" attribution cannot smuggle in fake baseline text.
+        if (/^(original(\s+text)?|baseline|current|unchanged|no[-\s]?change)$/i.test(token)) {
+          verified.push('Original');
+          continue;
+        }
         const entry = responseByName.get(token.toLowerCase());
         if (!entry) {
           // AI not in this round's reviewer set at all — fabricated
