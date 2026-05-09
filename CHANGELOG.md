@@ -1,6 +1,48 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.11
+**Build:** `20260509-014` · **Released:** May 9, 2026
+
+**Three additions, one release.** Closes the v3.36.10 template/playbook consistency gap and adds a new playbook category with measured data.
+
+### Edit 1 — Contractor / Vendor Letter template (`templates.js`)
+
+Closes the consistency miss from v3.36.10 where the playbook shipped without a matching template entry. Setup 3's template dropdown now offers Contractor / Vendor Letter alongside the existing 12 templates. Mirrors the playbook's Project-screen field guidance, including [bracket]-form variations for Document type ("contractor / vendor / service provider") and Target audience.
+
+### Edit 2 — LinkedIn Post template (`templates.js`)
+
+New entry under Content &amp; Marketing. Based on the literal Project-screen values from a measured 2-round SCRATCH-mode run on a defense-industry DFS post. Includes the 2000-character LinkedIn hardcap as a `lengthMode: hardcap` / `lengthLimit: 2000` / `lengthUnit: characters` template default, and "no LinkedIn-influencer voice" guardrails in `goalNotes` (no "humbled," no "thrilled," no buzzwords).
+
+### Edit 3 — LinkedIn Post playbook (`document-playbooks.html`)
+
+New entry under Content &amp; Marketing, slotted between Blog Post / Article and Presentation Outline. Real-world example block uses the literal Project-screen values from the v1.0 DFS run — hand-authored prompts, real wireless-engineering opinion, no employer-naming. Measured convergence: **2 rounds in ≈1.2 minutes of hive processing**, 304 words / 1857 characters output (92% of 2000-character hardcap, length-guard never triggered). Same 3-AI budget hive (paid Claude + paid ChatGPT + free Gemini-as-Builder) as the Bay Area run. The playbook captures the lesson that short-form social posts converge fast when the writer brings a specific opinion and tightly-scoped Project fields — a vaguer prompt on the same category previously took 5 rounds (per the user manual's Getting Good Results section, measured against an internal AI server). OPSEC tip block calls out the "don't name your employer" pattern that made the DFS post safe to publish.
+
+### Templates ↔ Playbooks parity
+
+| Item | Template | Playbook |
+|---|:-:|:-:|
+| All 12 originals | ✓ | ✓ |
+| Contractor / Vendor Letter | ✓ (new this release) | ✓ |
+| LinkedIn Post | ✓ (new this release) | ✓ (new this release, with measured data) |
+
+Going forward, every new playbook ships with its matching template in the same release — the discipline missed in v3.36.10 is now caught up.
+
+### What did NOT change
+
+No reviewer prompts. No builder prompts. No validator logic. No length-guard logic. No Auto Mode chain logic. No CSS. No 80ch column. v3.36.7 forensic-capture envelope shape preserved. v3.36.8 transcript-filename convention preserved. v3.36.9 Save-as-File button preserved. v3.36.10 Gemini token coalescence preserved (and validated empirically — the LinkedIn DFS run came back with Gemini token totals populated as expected: R1 reviewer 5,323 / R1 Builder 5,087 / R2 reviewer 2,458).
+
+### Smoke-test surface
+
+**Templates:** Open Setup 3, click the Templates pill, scroll the dropdown. Verify two new entries appear: Contractor / Vendor Letter (Personal &amp; Everyday, 🧾 icon) and LinkedIn Post (Content &amp; Marketing, 💼 icon). Pick LinkedIn Post — verify the Length Constraint section auto-fills 2000 / characters / hardcap. Pick Contractor / Vendor Letter — verify all six Project fields populate with [bracketed] guidance.
+
+**Playbook:** Open Document Playbooks (📚) from the helper menu. Scroll to Content &amp; Marketing. Verify "LinkedIn Post" renders between "Blog Post / Article" and "Presentation Outline" with the 💼 icon. Confirm the real-world example block displays the v1.0 DFS-run values, the convergence row leads with "≈1.2 minutes of hive processing across 2 rounds," and the OPSEC tip block is present.
+
+### Version stamps in code bumped
+
+To v3.36.11 / build `20260509-014` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/templates.js` cache-bust bumped from `?v=3.34.18` to `?v=3.36.11` (first content change to templates.js since v3.34.18 — bump aligns with current release version). `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.10
 **Build:** `20260509-013` · **Released:** May 9, 2026
 
