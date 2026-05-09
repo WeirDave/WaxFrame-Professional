@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-018
+   Build: 20260508-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9044,6 +9044,43 @@ kbd {
   vertical-align: -5px;
   display: inline-block;
 }
+
+/* ────────────────────────────────────────────────────────────────────
+   v3.34.12 — Setup-screen icon family (extends v3.34.11 type-tab system).
+   Custom inline SVG icons live in index.html with semantic classes; the
+   *rendered size* is controlled here via context-scoped selectors so the
+   same SVG markup serves multiple call sites at appropriate sizes.
+
+   Three icons:
+     .wf-icon-upload-cluster — three colored file tabs (PPT/DOC/XLS)
+                               at slight rotations. "Upload anything."
+     .wf-icon-paste          — purple clipboard with ruled lines.
+                               Matches the ref-card paste source-icon.
+     .wf-icon-scratch        — blank document + amber sparkles.
+                               Conveys "fresh start, blank canvas."
+
+   All sizes literal (out-of-scale) since these are bespoke chrome elements
+   that should NOT scale with fluid token system — they're hand-tuned
+   per call site for visual balance against surrounding text/layout. ── */
+.wf-icon { display: inline-block; vertical-align: middle; flex-shrink: 0; }
+
+/* Reference Material action cards (Step 4) */
+.ref-action-icon .wf-icon-upload-cluster { width: 64px /* out-of-scale */; height: 56px /* out-of-scale */; }
+.ref-action-icon .wf-icon-paste          { width: 44px /* out-of-scale */; height: 50px /* out-of-scale */; }
+
+/* Starting Document drop-zone hero (Step 5, .doc-tab-panel#panel-upload) */
+.drop-zone-icon .wf-icon-upload-cluster  { width: 88px /* out-of-scale */; height: 77px /* out-of-scale */; }
+
+/* Starting Document scratch hero (Step 5, .doc-tab-panel#panel-scratch) */
+.proj-scratch-icon .wf-icon-scratch      { width: 64px /* out-of-scale */; height: 72px /* out-of-scale */; }
+
+/* Starting Document tab buttons — small inline icons next to the label */
+.doc-tab .wf-icon-upload-cluster { width: 26px /* out-of-scale */; height: 22px /* out-of-scale */; vertical-align: -5px /* out-of-scale */; margin-right: var(--space-4); }
+.doc-tab .wf-icon-paste          { width: 18px /* out-of-scale */; height: 21px /* out-of-scale */; vertical-align: -5px /* out-of-scale */; margin-right: var(--space-4); }
+.doc-tab .wf-icon-scratch        { width: 18px /* out-of-scale */; height: 21px /* out-of-scale */; vertical-align: -5px /* out-of-scale */; margin-right: var(--space-4); }
+
+.doc-tab-label { display: inline-block; }
+
 .ref-card-position {
   display: inline-flex;
   align-items: center;

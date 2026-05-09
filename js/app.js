@@ -1294,7 +1294,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-018';         // build stamp — update each session
+const BUILD       = '20260508-019';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -8439,29 +8439,82 @@ function renderReferenceCards() {
 }
 
 // File-type → inline SVG icon for reference cards. Each upload type gets a
-// document-with-folded-corner shape (cream fill + amber border, matching
-// WaxFrame palette) with a colored type label inside (PDF / DOC / PPT / XLS /
-// TXT / MD). Pasted text gets a clipboard-style alternate. Unknown extensions
-// fall back to a plain document outline. All SVG inline — no external assets,
-// air-gap safe, scales crisp at any size, no font-rendering inconsistencies
-// across OSes that emoji-based icons would have.
+// solid-color document-with-folded-corner tab with a bold white extension
+// label across the bottom AND type-appropriate decorative content (text
+// lines for prose docs, a slide layout for PPT, a grid for XLS, a hash +
+// bullet pattern for MD). All inline SVG — no external assets, air-gap
+// safe, scales crisp at any size, no font-rendering inconsistencies across
+// OSes that emoji-based icons would have. Pasted text gets a purple
+// clipboard alternate matching the .wf-icon-paste used on action cards.
 function getRefSourceIcon(doc) {
-  const docPath = '<path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FAEBC7" stroke="#C99A2B" stroke-width="1.4"/><path d="M20 2 V10 H28" fill="none" stroke="#C99A2B" stroke-width="1.4"/>';
-  const tx = (label, color, y) => `<text x="16" y="${y || 26}" text-anchor="middle" font-size="7" font-weight="800" fill="${color}" font-family="Arial,sans-serif">${label}</text>`;
-  const wrap = (inner) => `<svg viewBox="0 0 32 36" width="22" height="25" class="ref-card-source-icon" aria-hidden="true">${inner}</svg>`;
+  const wrap = (inner) =>
+    `<svg viewBox="0 0 32 36" width="22" height="25" class="ref-card-source-icon" aria-hidden="true">${inner}</svg>`;
+  const docBody = (color) =>
+    `<path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="${color}"/>` +
+    `<path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/>` +
+    `<path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/>`;
+  const label = (text, y) =>
+    `<text x="16" y="${y || 30}" text-anchor="middle" font-size="8" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif" letter-spacing="0.3">${text}</text>`;
+  const textLines = (lengths) =>
+    lengths.map((len, i) =>
+      `<line x1="7" y1="${14 + i * 3.5}" x2="${7 + len}" y2="${14 + i * 3.5}" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/>`
+    ).join('');
 
   if (doc.source !== 'upload') {
-    // Pasted text — clipboard glyph (board with clip on top + ruled lines)
-    return wrap('<rect x="6" y="4" width="20" height="28" rx="2" fill="#FAEBC7" stroke="#C99A2B" stroke-width="1.4"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#C99A2B"/><line x1="10" y1="14" x2="22" y2="14" stroke="#888" stroke-width="1.2"/><line x1="10" y1="19" x2="22" y2="19" stroke="#888" stroke-width="1.2"/><line x1="10" y1="24" x2="18" y2="24" stroke="#888" stroke-width="1.2"/>');
+    // Pasted text — purple clipboard glyph matching .wf-icon-paste in index.html
+    return wrap(
+      '<rect x="6" y="4" width="20" height="28" rx="3" fill="#5E35B1"/>' +
+      '<rect x="11" y="2" width="10" height="5" rx="1" fill="#3E2A78"/>' +
+      '<line x1="9" y1="14" x2="23" y2="14" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>' +
+      '<line x1="9" y1="18" x2="23" y2="18" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>' +
+      '<line x1="9" y1="22" x2="23" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>' +
+      '<line x1="9" y1="26" x2="18" y2="26" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/>'
+    );
   }
   const name = (doc.filename || doc.name || '').toLowerCase();
-  if (name.endsWith('.pdf'))                                                     return wrap(docPath + tx('PDF', '#C92B2B'));
-  if (name.endsWith('.docx') || name.endsWith('.doc'))                           return wrap(docPath + tx('DOC', '#1E5BB0'));
-  if (name.endsWith('.pptx') || name.endsWith('.ppt'))                           return wrap(docPath + tx('PPT', '#D2691E'));
-  if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xls')) return wrap(docPath + tx('XLS', '#1B7C3D'));
-  if (name.endsWith('.md'))                                                      return wrap(docPath + tx('MD',  '#0F766E', 27));
-  if (name.endsWith('.txt'))                                                     return wrap(docPath + tx('TXT', '#555555'));
-  return wrap(docPath); // unknown extension — plain document silhouette
+  if (name.endsWith('.pdf')) {
+    return wrap(docBody('#E53935') + textLines([11, 15, 13]) + label('PDF'));
+  }
+  if (name.endsWith('.docx') || name.endsWith('.doc')) {
+    return wrap(docBody('#1976D2') + textLines([15, 15, 11]) + label('DOC'));
+  }
+  if (name.endsWith('.pptx') || name.endsWith('.ppt')) {
+    // Slide rectangle on top + 2 caption lines below
+    return wrap(
+      docBody('#F57C00') +
+      '<rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      '<line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      '<line x1="7" y1="23" x2="18" y2="23" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      label('PPT', 32)
+    );
+  }
+  if (name.endsWith('.xlsx') || name.endsWith('.xlsm') || name.endsWith('.xls')) {
+    // 3×2 grid suggesting spreadsheet cells
+    return wrap(
+      docBody('#2E7D32') +
+      '<line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>' +
+      '<line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>' +
+      '<line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>' +
+      '<line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>' +
+      '<line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/>' +
+      label('XLS')
+    );
+  }
+  if (name.endsWith('.md')) {
+    // Markdown hash glyph + lines
+    return wrap(
+      docBody('#00897B') +
+      '<text x="7" y="17" font-size="6" font-weight="800" fill="rgba(255,255,255,0.7)" font-family="Arial,sans-serif">#</text>' +
+      '<line x1="11" y1="14.5" x2="22" y2="14.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      '<line x1="7" y1="20" x2="22" y2="20" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      '<line x1="7" y1="23" x2="18" y2="23" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/>' +
+      label('MD', 31.5)
+    );
+  }
+  if (name.endsWith('.txt')) {
+    return wrap(docBody('#546E7A') + textLines([15, 15, 13]) + label('TXT'));
+  }
+  return wrap(docBody('#9aa3b8')); // unknown extension — plain document silhouette
 }
 
 // Tooltip label paired with the icon — surfaced via the source-badge title attr.
