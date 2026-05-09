@@ -273,9 +273,11 @@ const WF_ERROR_CATALOG = [
       msg.includes('rate_limited') || msg.includes('rate limit') ||
       msg.includes('too many') || msg.includes('quota'),
     title: 'Rate limited by the provider',
-    meaning: 'The provider says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped this AI for the round and continued with the others. The next round usually works after 30–60 seconds. If it persists, your monthly quota may be exhausted.',
+    meaning: 'The provider says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped this AI for the round and continued with the others. The next round usually works after 30–60 seconds. Click Open provider console to check your usage dashboard or upgrade your plan; click Disable this AI for the session if the limit looks exhausted and you would rather keep going without this AI. The console-link button auto-hides for custom AIs that did not have an API console URL configured at Add Custom AI time.',
     actions: [
-      { label: 'Retry round', kind: 'retry' }
+      { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Retry round', kind: 'retry' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' }
     ]
   },
   {
@@ -1347,7 +1349,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-005';         // build stamp — update each session
+const BUILD       = '20260509-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
