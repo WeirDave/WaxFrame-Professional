@@ -1,6 +1,46 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.5
+**Build:** `20260509-008` · **Released:** May 9, 2026
+
+**Single-bug fix.** Live v3.36.4 testing (recipe document, round 7) surfaced the next class of suppressed USER DECISION: the Builder emitting structurally-valid but unconventionally-formatted decisions where only one reviewer proposed a change. Builder output:
+
+```
+[USER DECISION]
+QUESTION: Should the instruction about adjusting seasoning use the original phrasing or a more concise version?
+CURRENT: "Taste and add more salt, pepper, or lemon juice if needed."
+OPTION_1: "Adjust salt, pepper, and lemon juice to taste." — ChatGPT
+END_DECISION
+```
+
+This is a legitimate 2-way choice (keep current vs adopt ChatGPT's rephrase), but the parser's strict ≥2 explicit `OPTION_N` floor at `app.js:~12890` dropped it. The user saw the ugly fallback card *"CONFLICTS DETECTED BUT COULD NOT BE PARSED"* with the raw text exposed and no actionable buttons.
+
+### Two-edit fix
+
+**Edit 1 — `extractConflicts` (parser):** when a decision has exactly one explicit `OPTION_N` and a non-empty `CURRENT` whose text differs from the option, auto-prepend an `Original`-attributed option from `CURRENT`. The block becomes a clean 2-option decision: "keep current (Original) vs adopt ChatGPT's rephrase."
+
+**Edit 2 — `validateUserDecisions` (post-parse validator):** recognize baseline-label tokens (`Original`, `Baseline`, `Current`, `Unchanged`, `No Change`) as verified attributions. Without this, the auto-promoted option's `Original` attribution would fail the AI-attribution lookup at CHECK 2 and the decision would still be dropped at the ≥2-verifiable-options floor.
+
+Both edits are necessary because the validator and parser are independent layers — the parser fix alone would feed a 2-option decision to the validator, which would then strip the `Original` token as "fabricated" (no AI named "Original" in the responseByName map) and undo the fix.
+
+### Defense-in-depth still intact
+
+The validator's CHECK 1 (CURRENT must be a live substring of the document the Builder is returning) was unchanged. A Builder hallucinating a fake CURRENT cannot smuggle in fake baseline text — the live-doc check rejects it before the auto-promote logic ever runs. Hallucination defenses remain at: parser-level CURRENT-must-be-live, prompt-level ANTI-HALLUCINATION RULES, validator-level round-membership + noChanges shortcuts, and the ≥2-verifiable-options floor (which now correctly counts auto-promoted Original options).
+
+### What did NOT change
+
+No prompts touched. No reviewer instructions touched. Builder MAJORITY RULES rewrite from v3.36.0 preserved exactly. No length-guard logic touched. No Auto Mode logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. No CSS touched. v3.36.4 functionality preserved exactly. The validator shape fix from v3.36.2 remains in place.
+
+### Smoke-test surface
+
+Run a refine round on a document where one reviewer (and only one) proposes a substantive rephrase to a sentence and other reviewers say "no changes needed." **Verify:** the Builder's `[USER DECISION]` block is rendered as a structured 2-option card in the Conflicts panel — Option 1 attributed to `Original`, Option 2 attributed to the proposing AI. Pick either, click Apply My Decisions to Document, and confirm the Builder rebuilds the doc with the chosen option. The "could not be parsed" fallback card should no longer appear in this scenario.
+
+### Version stamps in code bumped
+
+To v3.36.5 / build `20260509-008` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.36.4
 **Build:** `20260509-007` · **Released:** May 9, 2026
 
