@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260508-028
+   Build: 20260508-029
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4998,8 +4998,19 @@ kbd {
   letter-spacing: 0.02em;
   pointer-events: none;
 }
-.footer-btn-smoke .shake-wide-label { color: #0a0c12; }
-.footer-btn .shake-wide-label { color: var(--text); }
+/* v3.35.3 — Extended to cover .builder-only-label. The original rules
+   only targeted .shake-wide-label (the Smoke-the-Hive button's text).
+   When updateNotesBtnPriority() flips priority on Notes-filled rounds,
+   the builderOnlyBtn gets .footer-btn-smoke (amber bg) but its
+   .builder-only-label had no matching color rule — text inherited the
+   global text color, which in dark mode is light, producing near-
+   invisible "amber on amber" labels. Light mode escaped the bug because
+   the [data-theme="light"] .footer-btn-smoke span override at line ~2578
+   already targets all spans. This pair-rule fix restores symmetry. */
+.footer-btn-smoke .shake-wide-label,
+.footer-btn-smoke .builder-only-label { color: #0a0c12; }
+.footer-btn .shake-wide-label,
+.footer-btn .builder-only-label { color: var(--text); }
 
 /* ── Console Clock ── */
 .console-clock {
@@ -7517,6 +7528,55 @@ kbd {
   background: #2dd4bf;
   border-color: #2dd4bf;
   box-shadow: 0 0 8px rgba(45, 212, 191, 0.55);
+}
+
+/* v3.35.3 — Dev Toolbar scene-flyout. Collapses 5 scene/animation
+   playback buttons (Unlock / Fly-in / Majority / Unanimous / Test
+   Card) into a single hover-triggered panel. Pure CSS — no JS event
+   handlers needed. The wrapper `.dev-flyout` is the hover target so
+   `:hover` stays true while the cursor is over either the trigger
+   button OR the absolute-positioned panel (DOM descendants count for
+   :hover regardless of visual position). The panel sits at top:100%
+   with no offset so there's no gap for the cursor to "fall into" and
+   break the hover. z-index 100000 puts it one layer above the
+   toolbar's 99999. */
+.dev-flyout {
+  position: relative;
+  display: inline-block;
+}
+.dev-flyout-trigger::after {
+  content: ' ▾';
+  opacity: 0.7;
+  margin-left: 2px;
+  font-size: var(--fs-11);
+}
+.dev-flyout-panel {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  display: none;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+  background: rgba(10, 12, 18, 0.96);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 12px rgba(245, 166, 35, 0.3);
+  z-index: 100000;
+  white-space: nowrap;
+  min-width: 160px;
+}
+.dev-flyout-panel button {
+  text-align: left;
+  width: 100%;
+}
+.dev-flyout:hover .dev-flyout-panel {
+  display: flex;
+}
+.dev-flyout:hover .dev-flyout-trigger {
+  background: var(--accent);
+  color: #000;
+  border-color: var(--accent);
 }
 
 /* ══════════════════════════════════════

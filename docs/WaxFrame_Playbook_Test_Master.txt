@@ -1,37 +1,70 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — PLAYBOOK TESTS TO RUN
+WAXFRAME — PLAYBOOK TEST MASTER
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-07
-WaxFrame version:    v3.32.28 Pro and later
+Last updated:        2026-05-08
+WaxFrame version:    v3.35.2 Pro and later
 Hive:                standard hive (5–6 AIs, default Builder)
 Maintained by:       R David Paine III
+Lives:               docs\WaxFrame_Playbook_Test_Master.txt
 
 WHAT'S IN THIS FILE
 ────────────────────────────────────────────────────────────
-6 tests for playbook categories that have either no measured
-data or only estimated round-count ranges in
-document-playbooks.html. Running each one captures real
-empirical convergence data we can paste back into the
-playbook page to replace the estimates.
+Convergence-test scenarios for playbook categories that need
+empirical round-count data. Each pending entry is paste-ready
+for the 5-screen project-setup flow (Project / Reference /
+Starting Document) plus a results slot at the bottom.
 
-Tests already run + measured (DO NOT re-run unless a fresh
-data point is wanted):
-  ✔ Quick Start (Cookies)        2 rounds
-  ✔ Cover Letter                 6–10 rounds
-  ✔ Job Description              21 rounds (Altura)
-  ✔ Résumé                       11 rounds (Dana Reyes)
-  ✔ Thank-You Letter             3 rounds (Marco Contractor)
-  ✔ Email & Outreach             3 rounds (Ferris @ Lightkeeper)
-  ✔ Blog Post / Article          16 rounds (One-Shot AI post)
-  ✔ Presentation Outline         8 rounds (Wi-Fi 7 v3.0)
+This file is the SINGLE SOURCE OF TRUTH for pending test
+runs. It supersedes:
+  - WaxFrame_Playbook_Round_Count_Tests.txt (old format)
+  - WaxFrame_Playbook_Tests_To_Run.txt
+  - WaxFrame_Playbook_Remaining.txt
 
-Tests in this file (NEED TO RUN):
-  ☐ T1  Business Proposal      [REFINE]   estimated 4–6
-  ☐ T2  Executive Summary      [REFINE]   estimated 3–5
-  ☐ T3  RFP Response           [REFINE]   estimated 20–60+
-  ☐ T4  Recipe                 [REFINE]   estimated 5–20+
-  ☐ T5  LinkedIn Post          [SCRATCH]  NEW — no estimate
-  ☐ T6  LinkedIn Profile       [SCRATCH]  NEW — no estimate
+When a test runs:
+  1. Capture the rounds, time, convergence type, and final
+     length in the RESULT block at the bottom of that test
+  2. Update the RESULTS LOG at the bottom of this file
+  3. Paste the measured value into document-playbooks.html
+     in the matching playbook entry, replacing the
+     "estimated N–N rounds" text with "(measured)"
+  4. Move the test from "Pending" to "Recently completed"
+
+For NEW playbook categories (T5 LinkedIn Post, T6 LinkedIn
+Profile, possibly T7) — after measurement, add a new
+<div class="dp-playbook"> section to document-playbooks.html
+under either Content & Marketing or a new "Personal &
+Profile" category, matching the existing playbook structure.
+
+
+════════════════════════════════════════════════════════════
+ALREADY MEASURED (in document-playbooks.html)
+════════════════════════════════════════════════════════════
+DO NOT re-run unless capturing a fresh data point is wanted
+(e.g., to see if a major version's prompt changes shifted the
+convergence behavior).
+
+  ✔ Quick Start (Cookies)         2 rounds   [SCRATCH]
+  ✔ Cover Letter                  6–10 rounds [REFINE]
+  ✔ Job Description               21 rounds   (Altura)
+  ✔ Résumé                        11 rounds   (Dana Reyes)
+  ✔ Thank-You Letter              3 rounds    (Marco Contractor)
+  ✔ Email & Outreach              3 rounds    (Ferris @ Lightkeeper)
+  ✔ Blog Post / Article           16 rounds   (One-Shot AI post)
+  ✔ Presentation Outline          8 rounds    (Wi-Fi 7 v3.0)
+
+
+════════════════════════════════════════════════════════════
+PENDING TESTS
+════════════════════════════════════════════════════════════
+  ☐ T1  Business Proposal       [REFINE]   estimated 4–6
+  ☐ T2  Executive Summary       [REFINE]   estimated 3–5
+  ☐ T3  RFP Response            [REFINE]   estimated 20–60+
+  ☐ T4  Recipe                  [REFINE]   estimated 5–20+
+  ☐ T5  LinkedIn Post           [SCRATCH]  NEW — no estimate
+  ☐ T6  LinkedIn Profile        [SCRATCH]  NEW — no estimate
+  ☐ T7  Blog Post (2nd data pt) [SCRATCH]  ★ second sample on
+                                            measured category
+
 
 HOW TO RUN AT WORK (AIR-GAPPED PATH)
 ────────────────────────────────────────────────────────────
@@ -42,7 +75,8 @@ HOW TO RUN AT WORK (AIR-GAPPED PATH)
 4. On Setup 4, paste the Reference Material payload if the
    test has one. Otherwise click Skip.
 5. On Setup 5, paste the Starting Document text into the
-   "Paste text" box.
+   "Paste text" box. For [SCRATCH] tests, leave blank or
+   paste the optional 1-line seed if provided.
 6. Run rounds with "Smoke the Hive" until the Hive converges
    on its own. Don't manually finish — let it tell you.
 7. When the celebration scene plays (or the convergence
@@ -51,10 +85,11 @@ HOW TO RUN AT WORK (AIR-GAPPED PATH)
      - Convergence type (U = unanimous, M = majority)
      - Project clock time (top-right)
      - Final document length
-8. Paste those values into the RESULTS LOG at the bottom
-   of this file and save.
-9. Email this file back to your Dropbox / personal email
-   so the data carries home.
+8. Paste those values into the RESULT block under the test
+   AND into the RESULTS LOG at the bottom of this file.
+9. Email this file back to your Dropbox / personal email so
+   the data carries home, OR commit + push if at home.
+
 
 ═════════════════════════════════════════════════════════════
 T1 · BUSINESS PROPOSAL  [REFINE]
@@ -390,8 +425,8 @@ Maps to playbook:    Candidate new playbook category —
                      short-form social post. Different
                      convergence pattern than long-form.
 Current estimate:    None — first measurement.
-Domain:              Your wireless engineering domain —
-                     uses your real voice + numbers.
+Domain:              Wireless engineering domain — uses
+                     real voice + numbers.
 
 ──── SETUP 3 — YOUR PROJECT ────────────────────────────────
 Project Name:     LinkedIn Post — 100 Wireless Site Surveys
@@ -471,7 +506,7 @@ Maps to playbook:    Candidate new playbook category —
                      one block of text — different from
                      blog post or LinkedIn post.
 Current estimate:    None — first measurement.
-Domain:              Your real profile content.
+Domain:              Real profile content.
 
 ──── SETUP 3 — YOUR PROJECT ────────────────────────────────
 Project Name:     LinkedIn Profile — About Section
@@ -552,11 +587,104 @@ Length-guard fired?:    ____ (yes/no — bloat or undersized)
 Notes:
 
 
+═════════════════════════════════════════════════════════════
+T7 · BLOG POST — MULTI-AI DOCUMENT REFINEMENT  [SCRATCH]
+═════════════════════════════════════════════════════════════
+Maps to playbook:    Content & Marketing → Blog Post / Article
+Current estimate:    16 rounds (One-Shot AI post — measured)
+Purpose:             Second data point on a category that
+                     already has one measurement. Different
+                     domain (wireless engineer voice on the
+                     same multi-AI thesis), different tone
+                     (first-person, slightly sarcastic, no
+                     marketing voice). Tells us whether the
+                     16-round figure is repeatable across
+                     domains or topic-dependent.
+
+──── SETUP 3 — YOUR PROJECT ────────────────────────────────
+Project Name:     Blog — Why I Stopped Trusting Single-Model
+                  AI for Network Docs
+Project Version:  v1.0
+Document Type:    Blog Post
+Target Audience:  Senior network engineers and IT leads who
+                  already use ChatGPT or Claude for technical
+                  documentation and have hit the wall where
+                  the output is "fine but not right." Reading
+                  on LinkedIn, Reddit r/networking, or a
+                  personal blog.
+Desired Outcome:  Reader finishes the post with a concrete
+                  reason to try running the same document
+                  through multiple models in sequence. They
+                  click through to the linked tool at the end.
+Scope:            Cover: the one-shot trap (single model
+                  leaves blind spots), why different models
+                  catch different issues, a concrete network-
+                  engineering example with real numbers, and
+                  what the reader can try this week. Do not
+                  invent statistics. No marketing fluff.
+Tone:             First-person, direct, slightly sarcastic.
+                  Written the way I would say it to another
+                  network engineer over a beer, not the way
+                  I would write a vendor whitepaper. Voice
+                  is someone who's been burned by AI-
+                  generated config drift and finally found
+                  a workflow that doesn't suck.
+Length Limit:     800 words
+Length Unit:      words
+
+Goal Notes:
+  No buzzwords. No "synergy" "leverage" "revolutionize" or
+  any LinkedIn-influencer language. If a paragraph reads
+  like a product brochure, cut it. Keep my voice — do not
+  sand it down into something that could have been written
+  by anyone.
+
+──── SETUP 4 — REFERENCE MATERIAL (paste into Setup 4) ─────
+Thesis: any single LLM, no matter how good, has blind spots.
+Run the same document through 4 or 5 different models in
+sequence and the output is meaningfully better than any one
+model can produce on its own.
+
+Concrete example to reference:
+- Took an Aruba ArubaOS 8.x configuration document, ~900
+  words, describing an ArubaOS firmware-upgrade procedure
+  for a multi-controller deployment
+- Ran it through Claude alone: got a tightened version,
+  maybe 15% better. Still missed two ordering issues that
+  would have caused a controller failover during the upgrade
+- Ran the same document through Claude → ChatGPT → Gemini →
+  back to Claude: got a version where both ordering issues
+  were caught, the prerequisites section was reorganized,
+  and one assumption about RADIUS server reachability was
+  flagged as needing verification before the change window
+
+What the reader should try today: pick a runbook or
+configuration document they care about, hand it to 3
+different models in sequence with the same prompt, compare
+the result against running it through any one model once.
+
+Call to action: link to a tool that automates this — multiple
+models, single document, convergence loop. (This is WaxFrame
+but the post should not name it overtly — let the link
+speak for itself.)
+
+──── SETUP 5 — STARTING DOCUMENT ──────────────────────────
+Mode: From scratch (leave blank)
+
+──── RESULT (fill in after run) ────────────────────────────
+Rounds to convergence:  ____
+Convergence type (U/M): ____
+Time (mm:ss):           ____
+Final length:           ____ words / ____ chars
+Length-guard fired?:    ____ (yes/no — bloat or undersized)
+Notes:
+
+
 ════════════════════════════════════════════════════════════
 RESULTS LOG (compact summary)
 ════════════════════════════════════════════════════════════
-Update this section as you go — it's the data we'll paste
-back into document-playbooks.html.
+Update this section as each test completes — it's the
+data that gets pasted back into document-playbooks.html.
 
 T1  Business Proposal       [REFINE]    ___ rounds  ___ time  ___ length
 T2  Executive Summary       [REFINE]    ___ rounds  ___ time  ___ length
@@ -564,6 +692,8 @@ T3  RFP Response            [REFINE]    ___ rounds  ___ time  ___ length
 T4  Recipe                  [REFINE]    ___ rounds  ___ time  ___ length
 T5  LinkedIn Post           [SCRATCH]   ___ rounds  ___ time  ___ length
 T6  LinkedIn Profile        [SCRATCH]   ___ rounds  ___ time  ___ length
+T7  Blog Post (2nd point)   [SCRATCH]   ___ rounds  ___ time  ___ length
+
 
 ════════════════════════════════════════════════════════════
 WHAT TO DO AFTER A RUN
@@ -578,6 +708,19 @@ section to document-playbooks.html under either Content &
 Marketing or a new "Personal & Profile" category — match
 the existing playbook structure including category header,
 purpose tile, real-world example block, and rounds badge.
+
+For T7 (second data point): update the existing Blog Post /
+Article entry to reflect a range or two-data-point average.
+If the new run lands within 2–3 rounds of the original 16,
+the playbook reads "~16 rounds (measured across 2 runs)."
+If the run is significantly different, reads "varies — 16
+rounds for tech topic, N rounds for first-person voice."
+
+After updating document-playbooks.html — move the completed
+test from the Pending section above into the "Already
+measured" list with its data, version stamp the change, and
+ship as a regular release.
+
 
 ════════════════════════════════════════════════════════════
 END OF FILE
