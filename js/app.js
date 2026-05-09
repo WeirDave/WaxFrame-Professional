@@ -1309,7 +1309,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-027';         // build stamp — update each session
+const BUILD       = '20260508-028';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3176,7 +3176,11 @@ function _abandonInFlightRoundUI() {
 const AUTO_MAX_ROUNDS_DEFAULT  = 30;
 const AUTO_STALL_WINDOW        = 3;
 const AUTO_FAILURE_STREAK_LIMIT = 2;
-const AUTO_LS_KEY              = 'waxframe_auto_mode';
+// v3.35.2 — AUTO_LS_KEY removed. Auto-mode state is no longer persisted
+// to localStorage; it's strictly per-project and resets to OFF on every
+// page reload. Legacy 'waxframe_auto_mode' keys from pre-v3.35.2
+// sessions become orphan localStorage entries — harmless, no read site
+// remains. The cleanup.html sweep (planned) will offer to remove them.
 
 window._autoMode          = false;   // toggle state
 window._autoCeilingTarget = null;    // halt-at round number
@@ -3184,27 +3188,12 @@ window._autoSatisfiedHist = [];      // sliding window of "S/T" strings
 window._autoFailureStreak = 0;       // consecutive builder failures
 window._autoChainPending  = false;   // debounce — round just kicked off
 
-// Persist + restore last-used toggle state. Called on session boot
-// (DOMContentLoaded → restoreAutoModePreference) and on every flip.
-function saveAutoModePreference() {
-  try { localStorage.setItem(AUTO_LS_KEY, window._autoMode ? '1' : '0'); }
-  catch (e) { console.warn('[auto] save pref failed:', e); }
-}
-function restoreAutoModePreference() {
-  try {
-    const v = localStorage.getItem(AUTO_LS_KEY);
-    window._autoMode = (v === '1');
-  } catch (e) {
-    window._autoMode = false;
-  }
-  // Ceiling target is computed lazily on engage, not stored — a project
-  // that loaded with Auto pre-toggled ON gets its ceiling set to round +
-  // AUTO_MAX_ROUNDS_DEFAULT the first time updateAutoToggleUI runs.
-  if (window._autoMode && window._autoCeilingTarget === null) {
-    window._autoCeilingTarget = (typeof round === 'number' ? round : 1) + AUTO_MAX_ROUNDS_DEFAULT;
-  }
-  if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
-}
+// v3.35.2 — saveAutoModePreference() and restoreAutoModePreference()
+// removed. Auto-mode is per-project state, not a user preference.
+// Page reload starts every session with Auto OFF; engaging Auto on a
+// fresh project sets ceiling lazily from the current round value.
+// The legacy 'waxframe_auto_mode' localStorage key has no read site
+// after this release.
 
 // User clicked the toggle pill in the topbar.
 function toggleAutoMode() {
@@ -3245,7 +3234,8 @@ function toggleAutoMode() {
     window._autoChainDeferred = null;
   }
 
-  saveAutoModePreference();
+  // v3.35.2 — saveAutoModePreference() call removed; Auto is no longer
+  // persisted across reloads.
   updateAutoToggleUI();
 }
 
@@ -3632,6 +3622,40 @@ async function clearProject() {
     btn.disabled = false;
     btn.classList.remove('finish-modal-btn-done');
   });
+
+  // v3.35.2 — Auto-mode state wipe. Auto is strictly per-project; a
+  // freshly-launched project must start with Auto OFF regardless of
+  // the prior project's state. Without this wipe, Finish → "Start a
+  // New Project" left _autoMode true, _autoCeilingTarget pointing at
+  // the prior project's halt round, and the toggle pill rendering
+  // "Auto: ON · N left" with stale state on the new project's work
+  // screen. Same root cause covers the explicit Clear-Project button
+  // path and the discard-confirm path — all three route through here.
+  window._autoMode          = false;
+  window._autoCeilingTarget = null;
+  window._autoSatisfiedHist = [];
+  window._autoFailureStreak = 0;
+  window._autoChainDeferred = null;
+  window._autoChainPending  = false;
+
+  // v3.35.2 — Per-bee satisfaction + DOM state wipe. Without this, a
+  // satisfied reviewer (e.g. Gemini's ★ + NO CHANGES NEEDED pill)
+  // from the prior project bled into the freshly-launched project's
+  // work screen because _cleanThisRound was preserved across the
+  // reset and the renderer rehydration walk re-applied is-clean to
+  // cards on the next renderBeeStatusGrid call. The setBeeStatus
+  // walk over activeAIs zeros each card's classlist back to idle so
+  // there's no stale visual state to rehydrate from.
+  if (window._cleanThisRound) window._cleanThisRound.clear();
+  window._roundTimings = {};
+  if (Array.isArray(activeAIs)) {
+    activeAIs.forEach(ai => setBeeStatus(ai.id, 'idle', ''));
+  }
+
+  // v3.35.2 — Refresh the Auto toggle pill so it visibly returns to
+  // "Interactive" the moment clearProject finishes, before the user
+  // navigates back to the work screen.
+  if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
 
   projectClockReset();
   toast('🗑 Project cleared — AI keys and settings kept');
@@ -14213,6 +14237,19 @@ function exportTranscript() {
 }
 
 async function backupSession() {
+  // v3.35.2 — Flush in-memory state to IDB BEFORE reading the
+  // snapshot. Without this, a backup taken while in-memory state
+  // hadn't yet been auto-saved to IDB (e.g. immediately after
+  // filling out the project setup screens, before any round has
+  // run) captured IDB_SESSION: null. Combined with the importSession
+  // bug fixed in this release — which silently skipped the IDB write
+  // when IDB_SESSION was null — the result was that importing a
+  // pre-Round-1 backup left the prior project's Round-N state in
+  // IDB to bleed through after reload. A backup must be a true
+  // time-machine: capture exactly the state at backup time, restore
+  // exactly to that state on import.
+  try { await saveSession(); } catch(e) { console.warn('[backup] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+
   const hive    = localStorage.getItem(LS_HIVE)    || null;
   const project = localStorage.getItem(LS_PROJECT) || null;
   // Legacy localStorage session — almost always null since the IDB migration
@@ -14301,12 +14338,18 @@ function importSession() {
         if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
         // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
         // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
-        // ── (v3.21.10) Restore IndexedDB session ──
-        // Prior versions never wrote to IDB on restore, so even if a backup
-        // had session data it would land in localStorage where loadSession
-        // immediately migrated it (or ignored it if null). The IDB write
-        // here is the actual session restore.
+        // ── (v3.35.2) IDB write is no longer optional ──
+        // Prior versions skipped the IDB write when data.IDB_SESSION
+        // was null/missing — leaving any prior session in IDB to
+        // bleed through after location.reload(). A backup must be a
+        // true time-machine, including the case where the captured
+        // state was "from-scratch, no rounds run yet". When
+        // IDB_SESSION is null/missing now, we explicitly wipe IDB
+        // (and the session-exists flag) so the reload reads the
+        // captured project setup against an empty session — which is
+        // exactly what was captured.
         let restoredFromIDB = false;
+        let wipedToScratch  = false;
         if (data.IDB_SESSION) {
           try {
             await idbSet(data.IDB_SESSION);
@@ -14316,18 +14359,32 @@ function importSession() {
             console.error('[importSession] IDB restore failed:', idbErr);
             toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
           }
+        } else {
+          // No session in the backup → captured state was pre-Round-1
+          // (or a v1-format pre-v3.21.10 backup). Treat as explicit
+          // "reset to from-scratch" rather than as "skip the write".
+          try {
+            await idbClear();
+            localStorage.removeItem('waxframe_v2_session_exists');
+            wipedToScratch = true;
+          } catch(clearErr) {
+            console.error('[importSession] IDB clear failed:', clearErr);
+            toast(`⚠️ Project restored but IDB clear failed: ${clearErr.message || clearErr}. Prior session may persist.`, 14000);
+          }
         }
         // Diagnostic toast — be explicit about what was captured so users know
         // whether they're getting full state or just project setup.
         const v = data._waxframe_backup_version || 1;
         if (v < 2 && !data.IDB_SESSION) {
-          toast('⚠️ Old backup format (pre-v3.21.10) — only project setup + API keys restored. Session data not in this file. Reloading…', 12000);
+          toast('⚠️ Old backup format (pre-v3.21.10) — only project setup + API keys restored, session reset to fresh. Reloading…', 12000);
         } else if (restoredFromIDB) {
           const sh = data.IDB_SESSION?.history?.length || 0;
           const sd = data.IDB_SESSION?.docText?.length || 0;
           toast(`✅ Backup restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
+        } else if (wipedToScratch) {
+          toast('✅ Backup restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
         } else {
-          toast('✅ Project setup restored (no session data in backup) — reloading…', 6000);
+          toast('✅ Project setup restored — reloading…', 6000);
         }
         setTimeout(() => location.reload(), 1500);
       } catch(e) {
@@ -14383,12 +14440,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   migrateRecommendationCachesV33210();
   initMuteBtn();
 
-  // v3.35.0 — restore Auto-mode toggle state from last session.
-  // Runs after loadSettings (which doesn't touch Auto), before any
-  // round can fire. The actual ceiling is computed lazily from the
-  // current `round` value, which is loaded later in loadSession().
-  // updateAutoToggleUI re-runs after loadSession to refresh the counter.
-  restoreAutoModePreference();
+  // v3.35.2 — restoreAutoModePreference() call removed. Auto-mode no
+  // longer persists across reloads; the toggle pill always boots in
+  // the OFF state. updateAutoToggleUI in the post-loadSession refresh
+  // path keeps the counter accurate when Auto is engaged mid-session.
 
   // v3.26.1 — silently migrate any default AI with a saved key but no
   // cached recommendation to a live-recommend model. Runs once per session.
