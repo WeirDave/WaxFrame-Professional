@@ -279,6 +279,44 @@ const WF_ERROR_CATALOG = [
     ]
   },
   {
+    // v3.35.4 — Bug A fix. Provider returned an HTTP 400/402 with a
+    // body indicating the account is out of credits / billing has
+    // failed / balance is too low. Anthropic's specific error string
+    // is "Your credit balance is too low to access the Anthropic
+    // API. Please go to Plans & Billing to upgrade or purchase
+    // credits." Other providers use similar phrasing — match the
+    // common substrings rather than exact text. Placed BEFORE
+    // AUTH_FAILED so a 400 with "credit"-flavored body doesn't
+    // misclassify as 401 auth (Anthropic returns 400 for billing
+    // failures, not 401 — a quirk we have to handle here). The
+    // console-link action uses ctx.aiConsoleUrl which routes to the
+    // provider's API console (most providers' billing pages live one
+    // click away from the API console).
+    code: 'CREDIT_LOW',
+    matches: (err, ctx, msg, status) => {
+      const s = parseInt(status, 10);
+      const matchesStatus = s === 400 || s === 402 || ctx.status === 400 || ctx.status === 402;
+      const matchesBody =
+        msg.includes('credit balance is too low') ||
+        msg.includes('insufficient credit') ||
+        msg.includes('insufficient balance') ||
+        msg.includes('insufficient_quota') ||
+        msg.includes('out of credits') ||
+        msg.includes('plans & billing') ||
+        msg.includes('billing failed') ||
+        msg.includes('payment required') ||
+        msg.includes('upgrade or purchase credits');
+      return matchesStatus && matchesBody;
+    },
+    title: 'Account is out of credits',
+    meaning: 'The provider rejected the request because your account balance is too low or billing has failed. WaxFrame skipped this AI for the round and continued with the others. Click the button below to open the provider console — most providers put their billing/credit-add page one click away from the API console.',
+    actions: [
+      { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Retry round', kind: 'retry' },
+      { label: 'Disable this AI for the session', kind: 'disable-ai' }
+    ]
+  },
+  {
     code: 'AUTH_FAILED',
     matches: (err, ctx, msg, status) =>
       status === '401' || status === '403' || ctx.status === 401 || ctx.status === 403 ||
@@ -1309,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-029';         // build stamp — update each session
+const BUILD       = '20260508-030';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1716,7 +1754,7 @@ function projectClockReset() {
   _projClockUpdateButtons();
 }
 
-function consoleLog(msg, type = 'info', rawData = null) {
+function consoleLog(msg, type = 'info', rawData = null, link = null) {
   const el = document.getElementById('liveConsole');
   if (!el) return;
   // ── (v3.21.11) Strip the page-load default entry on first real log ──
@@ -1742,6 +1780,25 @@ function consoleLog(msg, type = 'info', rawData = null) {
   msgSpan.textContent = msg.replace(/<[^>]+>/g, '');
   entry.appendChild(timeSpan);
   entry.appendChild(msgSpan);
+  // v3.35.4 — Optional clickable link appended to console entry. Used
+  // for actionable provider errors (credit-low, auth-failed, etc.) so
+  // the user can click straight through to the provider console mid-
+  // round without waiting for the round to finish. Built via DOM API
+  // (createElement + textContent + href) so the URL/label cannot
+  // inject HTML. The link is a sibling of the msgSpan, not part of
+  // its text, so consoleHTML serialization to IDB still includes it
+  // verbatim and reload restores the clickable state.
+  if (link && link.url && link.label) {
+    const sep = document.createTextNode(' · ');
+    const linkEl = document.createElement('a');
+    linkEl.className = 'console-link';
+    linkEl.href = link.url;
+    linkEl.target = '_blank';
+    linkEl.rel = 'noopener';
+    linkEl.textContent = link.label;
+    entry.appendChild(sep);
+    entry.appendChild(linkEl);
+  }
   // Clickable arrow for error/warn entries that carry raw response data
   if (rawData && (type === 'error' || type === 'warn')) {
     const entryId = 'cle_' + Date.now() + '_' + Math.random().toString(36).slice(2,6);
@@ -4313,12 +4370,18 @@ function buildAISetupRowHTML(ai) {
     const showRecheck   = hasKey && _hiveMode !== 'server';
     const modelSelector = hasKey ? buildModelSelector(ai.id, ai.provider, cfg?.model || '', showRecheck) : '';
     const consoleUrl    = ai.apiConsole || '';
-    // v3.31.0 — "Get an API key" link moved inside expanded panel as
-    // labeled text. Only renders when the AI has no key yet AND a
-    // console URL is known. Server-imported AIs typically have no
-    // console URL — link suppressed.
-    const getKeyLink = (!hasKey && consoleUrl)
-      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">Don't have a key?</span> <a class="ai-getkey-link" href="${consoleUrl}" target="_blank" rel="noopener">Get one from ${esc(ai.name)} ↗</a></div>`
+    // v3.35.4 — Bug C fix. Per-card link now ALWAYS renders when a
+    // console URL is known, regardless of key state. Pre-v3.31.0
+    // behavior is back: the link is the surgical per-AI access path
+    // for billing issues, key rotation, and account management. The
+    // mass-action "Open Default Websites" toolbar button stays as the
+    // onboarding accelerator. v3.31.0 wrongly gated this on !hasKey,
+    // which hid the link the moment a key got saved — exactly when
+    // the user would most need it for credit/billing problems.
+    // Server-imported AIs typically have no console URL → still
+    // suppressed (nothing meaningful to link to).
+    const getKeyLink = consoleUrl
+      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${consoleUrl}" target="_blank" rel="noopener">${hasKey ? `Open ${esc(ai.name)} account ↗` : `Get one from ${esc(ai.name)} ↗`}</a></div>`
       : '';
     // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
     // (snap to a recommendation pick) is now redundant with the dropdown's
@@ -12672,7 +12735,15 @@ async function callAPI(ai, prompt) {
       WF_DEBUG.showCard(entry, ctx);
       throw new Error('RATE_LIMITED:' + msg);
     }
-    consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error', rawData);
+    consoleLog(`❌ ${ai.name} — HTTP ${response.status}: ${msg}`, 'error', rawData,
+      // v3.35.4 — Bug A. When the AI has a known apiConsole URL,
+      // append a clickable link to the console error line. The
+      // troubleshooting card pops on top with full context (via
+      // showCard below), but the console link is the audit-trail
+      // copy: it stays visible after the card is dismissed and
+      // survives reload via consoleHTML serialization to IDB.
+      ai.apiConsole ? { url: ai.apiConsole, label: `Open ${ai.name} ↗` } : null
+    );
     const entry = WF_DEBUG.classify(new Error(msg), ctx);
     WF_DEBUG.showCard(entry, ctx);
     throw new Error(msg);
@@ -13848,6 +13919,22 @@ function openNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.add('active');
   setTimeout(() => document.getElementById('workNotes')?.focus(), 100);
+  // v3.35.4 — Bug B fix. Opening the Notes drawer is the user's
+  // signal of intent to use Send to Builder this round. Force the
+  // priority swap immediately so the bottom-bar buttons reflect that
+  // intent the moment the drawer comes up — Send to Builder becomes
+  // the highlighted/amber action, Smoke the Hive drops to outline-
+  // only. Previously the swap only fired on closeNotesModal(), which
+  // meant the buttons stayed in the wrong state for the entire time
+  // the user was looking at the open drawer.
+  const smokeBtn   = document.getElementById('runRoundBtn');
+  const builderBtn = document.getElementById('builderOnlyBtn');
+  if (smokeBtn && builderBtn) {
+    smokeBtn.classList.remove('footer-btn-smoke');
+    smokeBtn.classList.add('footer-btn');
+    builderBtn.classList.remove('footer-btn');
+    builderBtn.classList.add('footer-btn-smoke');
+  }
 }
 
 function closeNotesModal() {
