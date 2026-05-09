@@ -441,7 +441,7 @@ const WF_ERROR_CATALOG = [
     code: 'SLOW_RESPONDER',
     matches: () => false,
     title:   'Slow responder: {ai}',
-    meaning: '{ai} took {elapsed}s on this round vs the round average of {avg}s. It will still try on the next round, but if it stays this slow you can toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.',
+    meaning: '{ai} took {elapsed}s on this round vs the round average of {avg}s. Toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.',
     actions: [
       { label: 'Toggle off this AI', kind: 'disable-ai' },
       { label: 'Keep it on',         kind: 'dismiss' }
@@ -1347,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-003';         // build stamp — update each session
+const BUILD       = '20260509-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12960,20 +12960,21 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
         .filter(Boolean);
       const verified = [];
       const stripped = [];
-      // v3.36.0 — Check loosened from "AI response contains option text"
-      // to "AI response contains EITHER option text OR CURRENT text".
-      // The Builder commonly synthesises a complete-replacement option
-      // (e.g. full sentence) from a reviewer's diff-style suggestion
-      // (e.g. "change 'X' to 'Y'"). The reviewer's response contains
-      // CURRENT and the proposed sub-string but not the Builder's
-      // synthesised full sentence. The OR-fallback prevents the
-      // validator from killing legitimate decisions in that case while
-      // still catching attribution to AIs who never engaged the
-      // relevant section. The hive's other defenses remain: AI must be
-      // a reviewer in this round, AI must NOT have said NO CHANGES
-      // NEEDED, CURRENT must be a live substring of the returned doc,
-      // and ≥2 verifiable options must remain after stripping.
-      const currentTextLower = (d.current || '').toLowerCase();
+      // v3.36.1 — Substring check removed entirely. Reviewer responses
+      // naturally quote fragments ("Line N: change 'X' to 'Y'") not full
+      // sentences, so substring matching against Builder-synthesised
+      // complete-replacement options produced overwhelming false negatives
+      // — verified empirically on the v3.36.0 Shrimp Scampi test where
+      // Mistral-as-Builder emitted 2 legitimate USER DECISIONs and the
+      // OR-fallback (option-text OR CURRENT-text) suppressed both.
+      // Hallucination defences remain intact at: parser-level
+      // CURRENT-must-be-live (extractConflicts), prompt-level
+      // ANTI-HALLUCINATION RULES, validator-level round-membership +
+      // noChanges shortcuts (below), and ≥2-verifiable-options floor
+      // (after this loop). The cost of removing substring is that an
+      // attribution to an in-round non-silent AI who didn't actually
+      // engage the relevant section may survive — cosmetic, not
+      // catastrophic, and the user judges options on text merits.
       for (const token of attrTokens) {
         const entry = responseByName.get(token.toLowerCase());
         if (!entry) {
@@ -12986,13 +12987,7 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
           stripped.push(entry.displayName);
           continue;
         }
-        const matchedOption  = optTextLower     && entry.lowerResponse.includes(optTextLower);
-        const matchedCurrent = currentTextLower && entry.lowerResponse.includes(currentTextLower);
-        if (matchedOption || matchedCurrent) {
-          verified.push(entry.displayName);
-        } else {
-          stripped.push(entry.displayName);
-        }
+        verified.push(entry.displayName);
       }
       if (stripped.length > 0) {
         const optPreview = (opt.text || '').slice(0, 50) + ((opt.text || '').length > 50 ? '…' : '');
