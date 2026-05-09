@@ -1347,7 +1347,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260508-030';         // build stamp — update each session
+const BUILD       = '20260509-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1788,6 +1788,13 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
   // inject HTML. The link is a sibling of the msgSpan, not part of
   // its text, so consoleHTML serialization to IDB still includes it
   // verbatim and reload restores the clickable state.
+  // v3.35.5 — Native <a target="_blank"> click was getting eaten in
+  // the work-screen layout (root cause not pinned — likely a
+  // delegated handler or transparent overlay). Switched to explicit
+  // window.open() onclick handler matching the working pattern in
+  // renderTroubleshootingCard's button bindings (app.js:~506). The
+  // href stays set as a fallback for middle-click, copy-link, and
+  // screen readers, but the primary click path is the onclick.
   if (link && link.url && link.label) {
     const sep = document.createTextNode(' · ');
     const linkEl = document.createElement('a');
@@ -1796,6 +1803,12 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
     linkEl.target = '_blank';
     linkEl.rel = 'noopener';
     linkEl.textContent = link.label;
+    const url = link.url;
+    linkEl.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      window.open(url, '_blank', 'noopener,noreferrer');
+    };
     entry.appendChild(sep);
     entry.appendChild(linkEl);
   }

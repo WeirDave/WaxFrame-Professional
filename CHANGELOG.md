@@ -1,6 +1,17 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.35.5
+**Build:** `20260509-001` · **Released:** May 9, 2026
+
+**Hotfix to v3.35.4's console error link.** Single-bug release. No other changes.
+
+- **Console link click handler.** v3.35.4 introduced a clickable provider-console link on HTTP error entries in the live console (e.g. `Open Claude ↗` after a credit-low error). The link rendered correctly but clicking it did nothing in the work-screen layout. Native `<a target="_blank">` was getting eaten — root cause not pinned, likely a delegated click handler or transparent overlay somewhere above the console in the DOM tree, but the diagnostic effort was less productive than the simpler fix. **Fix at `app.js:~1807`:** added explicit `onclick` handler that calls `window.open(url, '_blank', 'noopener,noreferrer')` directly, matching the working pattern at `renderTroubleshootingCard()` line ~506 — that pattern has been in production since v3.28.2 with zero click issues. The `onclick` runs `e.preventDefault()` and `e.stopPropagation()` first to neutralize whatever was eating the native click, then opens the URL via `window.open()`. The `href` attribute stays set as a fallback for middle-click (open in background tab), right-click → copy link, and screen-reader navigation. Only one code path changed; everything else from v3.35.4 (CREDIT_LOW catalog entry, Notes priority swap on open, Worker Bee card link visibility) preserved exactly.
+- **Smoke-test surface.** Trigger the same v3.35.4 Bug A repro (any AI returning HTTP 400/402 with credit-low body, or just temporarily put a typo in your Anthropic key to fire the auth path that also gets the link). **Verify:** in the live console, the red error line ends with an underlined `Open <provider> ↗` link. Single-click it. New tab opens to the provider's API console. Card mechanism unchanged from v3.35.4 — should still pop with three action buttons. Hard-reload (Ctrl+F5) before testing to make sure the new `app.js?v=3.35.5` is loaded, not the cached `?v=3.35.4`.
+- **What did NOT change.** No prompts touched. No reviewer or Builder instructions touched. No length-guard logic touched. No 80ch column constraints touched. No icon family touched. No templates touched. v3.35.0 Auto Mode, v3.35.2 backup time-machine + Finish reset hygiene, v3.35.3 dark-mode label fix + Dev Toolbar scene-flyout + cleanup.html retirement, and v3.35.4 CREDIT_LOW catalog + Notes priority + Worker Bee link all preserved exactly.
+- **Version stamps in code bumped** to v3.35.5 / build `20260509-001` across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.35.4
 **Build:** `20260508-030` · **Released:** May 8, 2026
 
