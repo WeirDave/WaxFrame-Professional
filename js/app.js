@@ -184,6 +184,57 @@ const WF_DEBUG = {
       navigator.clipboard?.writeText(payload).catch(() => {});
     }
   },
+  // v3.36.9 — File download companion to copyViewer. With RING_MAX
+  // bumped to 200 in v3.36.7, full-session captures can exceed sane
+  // clipboard sizes; a download is the right tool for archival/share.
+  // Output is pure parseable JSON wrapped in a metadata envelope (the
+  // same shape backup files use), so external tooling can consume it
+  // without stripping a header preamble. Filename follows the v3.36.8
+  // transcript pattern: ${project}-${version}-r${N}-${stamp}-DeepDive.json
+  // — round count + local-time stamp so multiple captures from the
+  // same project don't collide on disk.
+  saveViewer() {
+    if (this.ringBuffer.length === 0) {
+      if (typeof toast === 'function') toast('Nothing to save — buffer is empty');
+      return;
+    }
+    const envelope = {
+      _waxframe_deepdive:         true,
+      _waxframe_app_version:      typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown',
+      _waxframe_build:            typeof BUILD       !== 'undefined' ? BUILD       : 'unknown',
+      _waxframe_captured_at:      new Date().toISOString(),
+      _waxframe_capture_count:    this.ringBuffer.length,
+      _waxframe_ring_max:         this.RING_MAX,
+      ringBuffer:                 this.ringBuffer
+    };
+    // Reuse buildExportName() so the project-name/version prefix
+    // matches what transcripts and documents use; fall back to
+    // "WaxFrame" if no project context is set yet (e.g. capture
+    // taken during pre-project bee testing).
+    const baseName = (typeof buildExportName === 'function')
+      ? (buildExportName() || 'WaxFrame')
+      : 'WaxFrame';
+    const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
+    const _td = new Date();
+    const _pad = n => String(n).padStart(2, '0');
+    const _stamp = `${_td.getFullYear()}${_pad(_td.getMonth()+1)}${_pad(_td.getDate())}-${_pad(_td.getHours())}${_pad(_td.getMinutes())}`;
+    const filename = `${baseName}-r${totalRoundsForName}-${_stamp}-DeepDive.json`;
+
+    const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    // 30s deferred URL.revokeObjectURL — same pattern used by
+    // backupSession (v3.21.21) and exportTranscript (v3.32.9) to
+    // avoid the 0-byte race when the browser dispatcher hasn't
+    // finished writing before the blob URL is revoked.
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    if (typeof toast === 'function') toast('💾 Deep Dive capture saved');
+  },
   clearViewer() {
     if (this.ringBuffer.length === 0) {
       if (typeof toast === 'function') toast('Buffer is already empty');
@@ -1354,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-011';         // build stamp — update each session
+const BUILD       = '20260509-012';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
