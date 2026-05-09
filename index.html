@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260508-025">
+  <meta name="waxframe-build" content="20260508-026">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.34.18">
+  <link rel="stylesheet" href="style.css?v=3.35.0">
 </head>
 <body>
 
@@ -537,6 +537,16 @@
         <span class="work-round-badge" id="workRoundBadge">Round 1 — Draft</span>
       </div>
       <div class="work-topbar-right">
+        <!-- v3.35.0 — AUTO MODE TOGGLE. Pill in topbar shows current
+             mode (Interactive / Auto: ON) and rounds-left counter when
+             engaged. Click flips. Persisted across sessions via
+             localStorage key waxframe_auto_mode. See app.js
+             toggleAutoMode / updateAutoToggleUI / _autoMaybeChainNextRound. -->
+        <button class="auto-mode-toggle" id="autoModeToggle" onclick="toggleAutoMode()" title="Auto mode is OFF — click to chain rounds automatically.">
+          <span class="auto-mode-icon">🤖</span>
+          <span class="auto-mode-label">Interactive</span>
+          <span class="auto-mode-detail" style="display:none"></span>
+        </button>
         <!-- v3.32.28 — #6c length-guard "off" indicator. Renders only
              when window._lengthGuardOverride is true (toggled via the
              is-visible class by updateLengthGuardIndicator). Click
@@ -1208,6 +1218,32 @@
     <div class="wf-confirm-actions">
       <button class="finish-modal-cancel" id="wfConfirmCancelBtn" onclick="wfConfirmCancel()">Cancel</button>
       <button class="btn btn-lg" id="wfConfirmOkBtn" onclick="wfConfirmOk()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- v3.35.0 — AUTO MODE HALT MODAL. Shown when an Auto-mode guardrail
+     trips: round-ceiling reached, satisfied-count stalled for 3 rounds,
+     2+ consecutive builder failures, USER DECISION block with no clear
+     majority, or unanimous/majority convergence. Three actions:
+       • Resume Auto         — extend ceiling +30, reset stall + failure
+                               counters, fire next round.
+       • Switch to Interactive — toggle Auto off, return to manual.
+       • Stop here           — close modal, leave Auto toggled on but
+                               idle. User picks up via Smoke or by
+                               flipping toggle off/on.
+     Resume button is disabled on unanimous convergence — the project
+     is done and chaining further is meaningless. See app.js
+     _autoHalt / autoHaltResume / autoHaltSwitchInteractive / autoHaltStop. -->
+<div class="finish-modal-overlay auto-halt-overlay" id="autoHaltModal" onclick="event.stopPropagation()">
+  <div class="finish-modal auto-halt-modal">
+    <div class="auto-halt-icon">⏸️</div>
+    <h2 class="finish-modal-title">Auto paused</h2>
+    <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
+    <div class="auto-halt-actions">
+      <button class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
+      <button class="auto-halt-btn auto-halt-interactive" onclick="autoHaltSwitchInteractive()">↩ Switch to Interactive</button>
+      <button class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
     </div>
   </div>
 </div>
@@ -2029,9 +2065,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.34.18"></script>
+<script src="js/version.js?v=3.35.0"></script>
 <script src="js/templates.js?v=3.34.18"></script>
-<script src="js/app.js?v=3.34.18"></script>
+<script src="js/app.js?v=3.35.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

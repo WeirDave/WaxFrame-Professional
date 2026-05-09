@@ -1,6 +1,22 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.35.0
+**Build:** `20260508-026` · **Released:** May 8, 2026
+
+**Auto Mode — chain rounds automatically, halt on guardrails.**
+
+- **New header pill toggle** in `work-topbar-right` — flips between Interactive (current behavior, manual click each round) and Auto: ON (chains rounds without user clicks). State persists across sessions via `localStorage` key `waxframe_auto_mode`. When engaged the pill takes the accent palette and shows an `N left` counter (rounds remaining before the ceiling). Icon pulse animation respects `prefers-reduced-motion`.
+- **Five guardrails ship in v1.** Max-rounds ceiling (default 30, set when toggle engages, extended +30 on Resume). Satisfied-count stall (3 consecutive rounds with identical `S/T` → halt). USER DECISION resolver — auto-picks the option with strict majority of attributed AIs; ties halt with prompt to resolve manually. AI-failure streak (2+ consecutive builder errors → halt). Convergence halts: unanimous (project complete, Resume disabled), majority (review holdouts).
+- **Three-button halt modal.** Resume Auto extends ceiling +30 and clears stall + failure counters before firing the next round. Switch to Interactive flips the toggle off and persists it. Stop here closes the modal, keeps the toggle on but idle, and resets stall + failure counters so a manual Smoke click won't immediately re-trip them.
+- **Mid-run flips honored.** Flipping Interactive → Auto while a round is running fires the next round immediately on completion. Flipping Auto → Interactive lets the current round finish cleanly and stops chaining. Flipping Auto on with no round running and on the work screen fires a round immediately.
+- **Auto disengages cleanly on `_abandonInFlightRoundUI`** — discarding a project mid-flight, leaving the work screen, or any abandonment path turns Auto off so phantom rounds can't chain into a freshly-cleared session.
+- **Six round-end hook points** in `runRound` and `runBuilderOnly`: success, failure, unanimous convergence, majority convergence, builder-only success, builder-only failure. All paths route through `_autoMaybeChainNextRound(ctx)` — single source of truth for chain decisions.
+- **What did NOT change.** No prompts touched. No reviewer instructions touched. No Builder instructions touched. Length guard logic preserved exactly. Trial round counter preserved exactly. License gates preserved exactly. Convergence celebration scenes preserved exactly. The 80ch working-document column constraint preserved exactly. No icon family touched. Helper pages got version-stamp + cache-bust bumps only — no content edits.
+- **Smoke-test surface.** Toggle pill on the work topbar — visible state changes, `N left` counter ticks each round, icon pulse animation, persistence across page reloads. Run Auto for 3+ rounds and verify automatic chaining. Force a satisfied-count stall and verify the halt modal appears with correct reason text. Force a USER DECISION block with attribution majority and verify auto-resolution; force a tie and verify the halt modal. Verify Resume extends the ceiling correctly. Verify Switch to Interactive flips and persists. Verify discarding a project mid-Auto-run turns the toggle off cleanly.
+- **Version stamps in code bumped** to v3.35.0 / build 20260508-026 across the canonical 4-stamp checklist + the full 6-file cache-bust sweep + the comment-header `Build:` stamps in `style.css` and the 5 helper pages. `js/nav-helper.js` and `js/license-helper.js` remain pinned at `?v=3.22.6`.
+
+---
 ## v3.34.18
 **Build:** `20260508-025` · **Released:** May 8, 2026
 
