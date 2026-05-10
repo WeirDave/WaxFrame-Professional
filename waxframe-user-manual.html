@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-008">
+  <meta name="waxframe-build" content="20260510-009">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.30">
+  <link rel="stylesheet" href="style.css?v=3.36.31">
 </head>
 <body class="helper-body">
 
@@ -398,6 +398,10 @@
         <li><strong>✗ Builder selected</strong> — shows a red ✗ until you have selected a Builder on the next screen (Setup 2). Turns green ✓ when selected.</li>
       </ul>
       <p>The <strong>Continue — Choose Builder →</strong> button at the bottom right of the screen remains inactive until the keys indicator is green.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Model diversity matters more than model count.</strong> The reviewer hive works because each AI has different training, different biases, and a different sense of what "good" looks like. A hive of six AIs that are all running the same underlying model (or near-identical fine-tunes of the same family) is functionally one reviewer with six voices — convergence happens fast because they were never going to disagree, but the result is no better than a one-shot. Use the <strong>Recommend Models for All</strong> button if you're unsure which provider models to pick; just check the picks afterward and override any that landed on the same family. <em>Minimum rule:</em> at least two distinct model families in your hive (e.g., ChatGPT + Claude, or Claude + Gemini). Three or more is better.</p></div>
+      </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -613,6 +617,10 @@
         <li><strong>✕ Clear Goal</strong> — erases all six goal fields. Your project name, version, and all other settings are kept.</li>
         <li><strong>🗑 Clear Project</strong> — erases everything on the Your Project screen: name, version, all goal fields, and length constraint. Your API keys and Builder selection are not affected.</li>
       </ul>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Setup specificity drives convergence speed more than starting-document quality.</strong> Same hive, same topic, same starting document — but a project with specific Target Audience, anchored Desired Outcome, narrow Scope, defined Tone, and explicit Additional Instructions converges in a fraction of the rounds compared to one with generic fields. Empirical example from session 2026-05-07: v1.0 with 243-character goalNotes and anchored persona converged in <strong>5 rounds</strong>. v2.0 with 48-character goalNotes and generic tone on the same topic ran <strong>37 rounds without converging</strong>. Fill every field as if you were briefing a senior contractor — say what good looks like, what the constraints are, and what definitely is not in scope. The hive cannot read your mind; vague setup forces reviewers to invent their own version of the answer, and they invent <em>different</em> answers, which is what conflicts are.</p></div>
+      </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1017,6 +1025,13 @@
     <div class="wh-block">
       <div class="wh-block-title">Using conflicts to steer the document</div>
       <p>Rather than treating conflicts as a problem to dismiss quickly, use them as a tool. They surface real decisions about the document's direction — questions about emphasis, tone, structure, or argument that you will need to answer to get the document where you want it. Each resolution tells the entire hive which direction to take. A well-resolved conflict round is often the most productive round in a session.</p>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Two kinds of convergence: unanimous and majority.</strong> WaxFrame stops the hive automatically when one of these fires:</p>
+        <p><strong>Unanimous</strong> means every reviewer in the hive marked the round as "no changes needed." Full agreement — the document is done by all of them. This is the strongest stopping signal.</p>
+        <p><strong>Majority</strong> means more than half the reviewers marked the round clean, but at least one holdout is still suggesting changes. The Builder stops here because there is no productive direction left — the holdouts' suggestions are typically nice-to-haves that the majority view as fine-as-is. The document is shippable; you can review the holdout suggestions and either incorporate selected ones via Notes or just finish.</p>
+        <p>Neither convergence type means the document is "perfect." It means the hive has converged on <em>what they think is shippable</em>. If you want stronger output beyond that, the right move is usually to inject targeted Notes (e.g., "tighten the third paragraph" or "the closing line is too long") and run another round — not to keep waiting for a state that may never come.</p></div>
+      </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1734,7 +1749,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.30"></script>
+<script src="js/version.js?v=3.36.31"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

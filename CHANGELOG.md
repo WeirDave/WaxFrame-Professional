@@ -1,6 +1,34 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.31
+**Build:** `20260510-009` · **Released:** May 10, 2026
+
+### Three audit-driven teaching callouts landed
+
+Closes out the audit-driven open work from Pass 2 (cross-surface audit). Three empirical patterns that the audits surfaced as worth teaching the user got placed into the documentation:
+
+**1. Project-setup specificity** → User Manual, end of Step 3 (Your Project). `wf-tip` callout. Empirical example: same hive, same topic — v1.0 with specific Target Audience, anchored Outcome, narrow Scope converged in 5 rounds; v2.0 with generic fields ran 37 rounds without converging.
+
+**2. Convergence-principle** → User Manual end of Step 9 (Conflicts), AND Playbook page intro. Two `wf-tip` callouts (same content tailored to each surface). Teaches what unanimous vs majority means, when each fires, and what "shippable" actually means in context.
+
+**3. Model-diversity** → User Manual end of Step 1 (Worker Bees), AND `infoBeesModal` (the ⓘ button on the bees screen). Two surfaces. Teaches: a hive of six AIs all running the same model family is functionally one reviewer with six voices — minimum rule is two distinct model families, three is better. Specifically warns about the Recommend-Models-for-All trap where the recommendation engine sometimes lands on same-family picks.
+
+All three were captured in the v15 backlog as audit-sourced placement decisions; this release retires those entries.
+
+### Pattern reuse
+
+All three teaching surfaces use existing patterns — `wf-tip` blocks in the helper pages and `goal-info-row` rows in the info modal. No new classes, no new components.
+
+### Files Changed
+
+`waxframe-user-manual.html` (3 new `wf-tip` blocks at the tails of Steps 1, 3, and 9) · `document-playbooks.html` (1 new `wf-tip` block in the page intro) · `index.html` (1 new `goal-info-row` in `infoBeesModal`) · `js/version.js` · `js/app.js` (build stamp) · `style.css` (build comment) · `CHANGELOG.md`
+
+Helper-page version stamps swept across all 5 helper pages.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files. `templates.js` and `js/app.js` content not touched (only build stamps).
+
+---
 ## v3.36.30
 **Build:** `20260510-008` · **Released:** May 10, 2026
 
