@@ -1,6 +1,36 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.30
+**Build:** `20260510-008` · **Released:** May 10, 2026
+
+### Primary CTA rest text color: white (matches Smoke)
+
+Tail-end of the v3.36.29 consistency pass. `.btn-accent` base text color was `#0a0c12` (dark) — visible on the Finish button at rest in light mode and looking out of place against Smoke's white-on-amber. Smoke's light-theme rule at L2589 explicitly sets `.footer-btn-smoke { color: #ffffff }`.
+
+Updated `.btn-accent` base color from `#0a0c12` to `#ffffff` so every primary CTA in the app has the same resting state as Smoke:
+
+- **Base:** amber background, **white text** (was: dark text)
+- **Hover (unchanged from v3.36.29):** white background, amber text, 2px lift, amber glow
+
+The base → hover transition is now a symmetric flip in any theme:
+- white-on-amber → amber-on-white
+
+Same single-source-of-truth pattern as v3.36.29: change the class, every consumer inherits the win. No `!important`, no scoped overrides, no theme-specific rules. Just the right color in the base rule.
+
+### Affected buttons (same list as v3.36.29's hover upgrade)
+
+Finish, welcome "Get Started," Reference "Continue," modal Close buttons (Notes, Reference, info modals), "Add to Hive" (custom AI + import server), "Paste Text Reference," "Use this icon," and other primary CTAs across the app.
+
+### Files Changed
+
+`style.css` (`.btn-accent` base — `color: #0a0c12` → `color: #ffffff`) · `js/version.js` · `js/app.js` (build stamp) · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
 ## v3.36.29
 **Build:** `20260510-007` · **Released:** May 10, 2026
 

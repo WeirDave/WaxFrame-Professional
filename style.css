@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260510-007
+   Build: 20260510-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -325,7 +325,13 @@ html, body {
 .btn-accent {
   background: var(--accent);
   border-color: var(--accent);
-  color: #0a0c12;
+  /* v3.36.30 — Base text color is white to match .footer-btn-smoke's
+     light-theme rule (L2589 sets footer-btn-smoke color to #ffffff).
+     White-on-amber base + amber-on-white hover gives the symmetric
+     flip that Smoke uses. Was: color #0a0c12 (dark). Same fix-the-
+     class-not-the-overrides pattern as v3.36.29 — every primary CTA
+     across the app now has consistent resting text color. */
+  color: #ffffff;
   font-weight: 700;
 }
 .btn-accent:hover {
