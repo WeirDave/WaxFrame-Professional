@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-025">
+  <meta name="waxframe-build" content="20260510-001">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.22">
+  <link rel="stylesheet" href="style.css?v=3.36.23">
 </head>
 <body class="helper-body">
 
@@ -1179,18 +1179,25 @@
     </div>
 
     <div class="wh-block">
-      <div class="wh-block-title">Three measured data points</div>
+      <div class="wh-block-title">Measured data points (selected)</div>
+      <p class="hp-section-sub">A curated set of measured runs that illustrate patterns. Full data lives in <code>docs/WaxFrame_Playbook_Test_Master.txt</code>. The point of these isn't completeness — it's to show how setup specificity, hive size, and scaffold quality drive convergence rounds.</p>
       <ul>
-        <li><strong>Job Description (Altura test):</strong> specific company name, role, seniority, and reporting structure filled into the structured goal fields — <strong>20-22 rounds</strong> convergence on a complex multi-page document.</li>
-        <li><strong>Résumé (Dana Reyes test):</strong> specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — <strong>10-12 rounds</strong> convergence.</li>
-        <li><strong>LinkedIn Post (run on internal AI server at work):</strong> tone field filled with a specific voice description, length limit set to 300 words, audience and outcome each filled with a sentence of detail — <strong>5 rounds</strong> majority convergence, refining a 16,214-character source document down to ~200 words.</li>
+        <li><strong>Job Description (Altura test):</strong> specific company name, role, seniority, and reporting structure filled into the structured goal fields — <strong>20–22 rounds</strong> convergence on a complex multi-page document.</li>
+        <li><strong>Résumé (Dana Reyes test):</strong> specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — <strong>10–12 rounds</strong> convergence.</li>
+        <li><strong>Business Proposal (Brightwater Canoe and Kayak):</strong> 3-AI hive on a from-scratch run with a fully-populated identity scaffold in Scope &amp; constraints — <strong>5 rounds, ≈10 minutes</strong>. Same scaffold with a 2-AI hive: <strong>11 rounds, ≈16 minutes</strong> (extra rounds came from a tied USER DECISION block at Round 5 that halted Auto Mode for manual selection). The third reviewer is what breaks decision ties automatically.</li>
+        <li><strong>LinkedIn Post (DFS in defense):</strong> 3-AI hive on a sharply-scoped social post with a clear opinion in the Tone field — <strong>2 rounds, ≈1 minute</strong>. Posted to live LinkedIn. A vaguer prompt on the same category previously took 5 rounds; setup specificity is the difference.</li>
+        <li><strong>LinkedIn About profile (wireless engineer):</strong> 3-AI hive with a 1,163-character identity scaffold pasted into Reference Material plus a Round 1 buzzword guard in Notes — <strong>2 rounds</strong>. The Reference Material did most of the work; the buzzword guard kept the draft clean from Round 1.</li>
+        <li><strong>Thank-You Letter (from scratch vs refining a draft):</strong> same final document type, same hive, same goal fields. Starting from scratch with empty starting document → <strong>2 rounds</strong>. Refining a misaligned draft → <strong>13 rounds</strong>. The misaligned draft cost 6× more rounds.</li>
       </ul>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">What this implies</div>
-      <p>A pattern in the runs above: the structured goal fields — audience, outcome, tone — had concrete content. The Notes/Instructions field varied in length across these runs and we don't yet have systematic data on how much that field specifically influences convergence. The minutes you spend on the structured goal fields appear to pay back as rounds you don't have to run.</p>
-      <p>If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them.</p>
+      <p>Three patterns repeat across these runs.</p>
+      <p><strong>1. Setup specificity drives convergence.</strong> The structured goal fields — audience, outcome, scope, tone — pay back as rounds you don't have to run. The minutes you spend on the Project screen save you minutes on the work screen, and usually more than break even.</p>
+      <p><strong>2. Hive size of three is the practical floor for Auto Mode.</strong> Two AIs can tie on USER DECISION blocks, halting Auto and requiring manual intervention. Three AIs break ties automatically. The cost is one more reviewer per round; the win is fewer interrupts and faster wall-clock.</p>
+      <p><strong>3. Reference Material is high-leverage.</strong> When the hive needs a body of facts to draw from (an identity scaffold, a job description, a research brief), pasting that into Setup 4 — Reference Material delivers more value per character than expanding the goal fields. The hive pulls from it on every round; you only have to type it once.</p>
+      <p>If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them. Then check whether you should be using Reference Material instead of cramming everything into Scope.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1727,7 +1734,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.22"></script>
+<script src="js/version.js?v=3.36.23"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

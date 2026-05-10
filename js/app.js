@@ -1388,24 +1388,13 @@ function snapshotReferenceDocs() {
   return referenceDocs.map(d => ({ ...d }));
 }
 
-// Sum total text across all docs — used by counters, the soft-warning
-// threshold check, and the "is reference material present" gate elsewhere.
-function getTotalReferenceText() {
-  return referenceDocs.map(d => d.text || '').join('\n\n');
-}
-
-// Reference Material is "present" if at least one doc has non-empty text.
-// Used in screen-guard checks ("you have unsaved reference material").
-function hasReferenceMaterial() {
-  return referenceDocs.some(d => (d.text || '').trim());
-}
 let workDocSaveTimer = null;
 let pasteTextSaveTimer = null;
 let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-025';         // build stamp — update each session
+const BUILD       = '20260510-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3904,7 +3893,12 @@ function renderTemplateGalleryBody() {
   }
   // Bucket templates by category, preserving original order within each bucket.
   // Quick Start always renders first (one card, top of modal).
-  const order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday'];
+  // v3.36.x+ — added 'Reviews & Recommendations' for the trip-review
+  // playbook set (Restaurant / Hotel / Business-Service / Multi-Platform
+  // Rewrite). Template gallery category buckets are hardcoded here
+  // because order matters for the gallery render and we don't want
+  // arbitrary insertion order from templates.js to dictate it.
+  const order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
   const buckets = {};
   WAXFRAME_TEMPLATES.forEach(t => {
     const k = t.category || 'Other';
@@ -7659,14 +7653,6 @@ function addImportServerModels() {
   toast(`🐝 ${added} model${added !== 1 ? 's' : ''} added to the hive`);
 }
 
-let _settingsReturnToWork = false;
-
-function openSettings() {
-  _settingsReturnToWork = true;
-  goToScreen('screen-bees');
-  renderAISetupGrid();
-}
-
 function continueFromBees() {
   const keyed = aiList.filter(ai => API_CONFIGS[ai.provider]?._key);
   if (keyed.length < 2) {
@@ -7681,14 +7667,7 @@ function continueFromBees() {
 function continueFromBuilder() {
   if (!builder) { toast('⚠️ Choose a Builder AI before continuing'); return; }
   saveHive();
-  if (_settingsReturnToWork) {
-    _settingsReturnToWork = false;
-    renderBeeStatusGrid();
-    goToScreen('screen-work');
-    showReExtractBanner();
-  } else {
-    goToScreen('screen-project');
-  }
+  goToScreen('screen-project');
 }
 
 function continueFromProject() {
