@@ -1,6 +1,30 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.24
+**Build:** `20260510-002` · **Released:** May 10, 2026
+
+### Recipe playbook — third measured data point + Reference Material methodology
+
+Captures the **Publix-style Southern Potato Salad** recipe run (2026-05-10): 4 rounds, 47 minutes, 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity) with DeepSeek as Builder. Final 1226 words, majority convergence at R4 (5/6 satisfied).
+
+The methodologically interesting bit: the source recipe (2,636 characters from a Publix copycat) was pasted into **Setup 4 — Reference Material** instead of the Starting Document. With an empty Starting Document and a fully-populated Project scaffold (audience, outcome, scope, "warm and conversational with a southern drawl" tone, anti-invention Notes), the hive built a fresh recipe from scratch while pulling facts from the reference.
+
+Word trajectory across the four rounds: 1243 → 1238 → 1226 → 1226. Minimal trimming. All the convergence work happened on prose quality and one mid-stream USER DECISION about bell peppers (resolved via a Builder-Only round between R2 and R3).
+
+**Why this matters:** when the source recipe goes into the Starting Document, the hive treats it as a draft to fight, and recipes are unusually subjective — reviewers debate technique, quantities, wording. Putting the source into Reference Material instead lets the hive write fresh while drawing facts from the reference. Same source content, very different convergence shape.
+
+### Files touched
+
+- `document-playbooks.html` — recipe playbook convergence section now has three data points: Quick Start (cookies) 2 rounds measured, Reference Material approach 4 rounds measured, traditional refinement 5–20+ estimated. Includes the explicit "why Reference Material over Starting Document" explanation.
+- `waxframe-user-manual.html` — pattern #3 in "What this implies" strengthened with the recipe data point. Same content the manual already taught (Reference Material is high-leverage), now backed by a fresh measurement that shows the magnitude of the effect.
+- No `templates.js` changes — the recipe template defaults held up cleanly across the 4-round run; the `goalScope` wording ("Do not change the core recipe — only clarify and improve what is there") works for both refinement and reference-material approaches because in both cases there's "a recipe to preserve."
+
+### Version stamps + cache busts
+
+Standard sweep across `index.html`, `js/version.js`, `js/app.js`, `style.css`, and the five helper pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`).
+
+---
 ## v3.36.23
 **Build:** `20260510-001` · **Released:** May 10, 2026
 
