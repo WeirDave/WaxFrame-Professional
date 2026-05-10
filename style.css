@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260509-018
+   Build: 20260509-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1005,9 +1005,11 @@ html, body {
   gap: var(--space-6);
   flex: 1;
 }
-/* v3.36.14 — Vertical divider between the action button group
-   (Notes / Reference / Finish / Auto) and the theme/mute control
-   group on the work screen topbar. */
+/* v3.36.14 / updated v3.36.16 — Vertical divider on the work
+   topbar separates the action button group (Notes / Reference /
+   Finish) from the selector / control cluster (Auto toggle +
+   theme/mute). Auto moved across the divider in v3.36.16 because
+   it is semantically a state toggle, not an action. */
 .work-topbar-divider {
   width: 1px;
   height: 24px;
@@ -6268,25 +6270,37 @@ kbd {
    so we inherit fade-in, backdrop, centering, and breakpoint behavior.
    Three buttons stack vertically; resume button takes the accent.
 */
+/* v3.36.16 — Auto Mode toggle uses its own three-color semantic so
+   it doesn't masquerade as a hard warning when nothing is wrong.
+   Default (Manual) = amber accent fill — matches the system's
+   --accent palette and signals "user is in the loop, this is the
+   default mode, no risk here". .is-auto = green-dim/green like
+   the License badge — signals "active and chaining, not idle".
+   Pulse animation on the icon stays on .is-auto only.
+   v3.36.16 also drops the v3.35.0-era .auto-mode-detail counter
+   rule (round-count counter was removed from the pill in v3.36.14;
+   the rule was a straggler).
+*/
 .auto-mode-toggle {
   display: inline-flex;
   align-items: center;
   gap: var(--space-6);
-  background: transparent;
-  border: 1px solid var(--border2);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
   border-radius: 20px;
-  color: var(--muted);
+  color: var(--accent);
   cursor: pointer;
   font-size: var(--fs-11);
-  font-weight: 600;
-  padding: var(--space-4) var(--space-12);
+  font-weight: 700;
+  padding: var(--space-4) var(--space-10);
   transition: all 0.12s;
   white-space: nowrap;
-  margin-right: var(--space-4);
+  user-select: none;
 }
 .auto-mode-toggle:hover:not(.is-auto) {
-  border-color: var(--accent);
-  color: var(--accent);
+  background: var(--accent);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(245, 166, 35, 0.45);
 }
 .auto-mode-toggle .auto-mode-icon {
   display: inline-block;
@@ -6296,23 +6310,15 @@ kbd {
 .auto-mode-toggle .auto-mode-label {
   letter-spacing: 0.01em;
 }
-.auto-mode-toggle .auto-mode-detail {
-  font-size: var(--fs-11);
-  font-weight: 600;
-  opacity: 0.85;
-  padding-left: var(--space-4);
-  border-left: 1px solid currentColor;
-  margin-left: var(--space-4);
-}
 .auto-mode-toggle.is-auto {
-  background: var(--accent-dim);
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 700;
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
 }
 .auto-mode-toggle.is-auto:hover {
-  background: var(--accent);
-  color: var(--bg);
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
 }
 .auto-mode-toggle.is-auto .auto-mode-icon {
   animation: autoModePulse 1.6s ease-in-out infinite;
@@ -6402,44 +6408,41 @@ kbd {
    "guard disabled — be aware". Clickable: re-arms the guard for
    the rest of the project. The hover state intensifies the amber
    to signal the affordance. */
-/* v3.36.15 — Length-guard footer pill, ALWAYS visible.
-   Default state = armed (neutral surface palette, matches license
-   badge / about button density). .is-off swaps to amber to signal
-   "guard disabled — be aware". Both states are clickable toggles
-   wired via toggleLengthGuard(). */
+/* v3.36.16 — Length-guard footer pill mirrors the License badge
+   geometry and color system. Green when armed (default, like
+   .licensed), red when off (like the unlicensed base). Same
+   font-size, weight, padding, radius as .license-badge so the two
+   pills sit as visual siblings in the footer-right cluster. */
 .length-guard-indicator {
   display: inline-flex;
   align-items: center;
   gap: var(--space-4);
   font-size: var(--fs-11);
   font-weight: 700;
-  font-family: var(--font-display);
   padding: var(--space-4) var(--space-10);
   border-radius: 20px;
-  border: 1px solid var(--border);
-  color: var(--text-dim);
-  background: var(--surface2);
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  color: var(--green);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
-  transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
+  transition: all 0.12s;
 }
 .length-guard-indicator:hover {
-  background: var(--surface3);
-  border-color: var(--border-strong);
-  color: var(--text);
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
 }
 .length-guard-indicator.is-off {
-  border-color: rgba(245, 166, 35, 0.55);
-  color: #f5a623;
-  background: rgba(245, 166, 35, 0.14);
-  box-shadow: 0 0 8px rgba(245, 166, 35, 0.22);
+  background: #c0152a;
+  border: none;
+  color: #e8ecf4;
+  box-shadow: 0 0 8px rgba(192,21,42,0.5);
 }
 .length-guard-indicator.is-off:hover {
-  background: rgba(245, 166, 35, 0.26);
-  border-color: rgba(245, 166, 35, 0.85);
-  color: #ffc56b;
-  box-shadow: 0 0 12px rgba(245, 166, 35, 0.45);
+  background: #e01830;
+  box-shadow: 0 0 12px rgba(192,21,42,0.7);
 }
 .length-guard-indicator-icon {
   font-size: var(--fs-12);
