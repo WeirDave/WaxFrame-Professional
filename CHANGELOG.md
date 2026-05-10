@@ -1,6 +1,57 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.29
+**Build:** `20260510-007` · **Released:** May 10, 2026
+
+### Finish + every primary CTA: Smoke-the-Hive hover treatment, applied globally
+
+v3.36.27 and v3.36.28 both fixed the Finish button via local override rules. Both were the wrong shape of fix — building parallel CSS infrastructure when the right move was upstream. This release does the actual right thing in two parts:
+
+**Part 1: Upstream fix for the work-topbar flattening rule.**
+The light/auto theme rules `[data-theme="light"] .work-topbar .btn` and `[data-theme="auto"] .work-topbar .btn` (and their `.work-panel-header` siblings) flattened *every* `.btn` to neutral — including `.btn-accent` buttons. Wrong scope. Updated all four to `.btn:not(.btn-accent)` so `.btn-accent` keeps its accent treatment in any context. v3.36.28's `.work-topbar .btn.btn-accent` override block is removed — redundant once the upstream rule is correctly scoped.
+
+**Part 2: Smoke-the-Hive hover treatment applied to `.btn-accent` globally.**
+Per direct feedback that the Finish button looked "more like a stuck Notes/Reference button" instead of carrying the energetic feel of Smoke-the-Hive. Rather than scoping a new treatment to Finish (more parallel infrastructure), the `.btn-accent:hover` rule itself is upgraded to match `.footer-btn-smoke:hover`:
+
+| Property | Was | Now |
+|---|---|---|
+| `background` | `var(--accent-hover)` (slight amber shift) | `#ffffff` (flip to white) |
+| `border-color` | `var(--accent-hover)` | `var(--accent)` |
+| `color` | `#0a0c12` (dark, preserved) | `var(--accent)` (text flips amber) |
+| `transform` | `translateY(-1px)` (small lift) | `translateY(-2px)` (bigger lift) |
+| `box-shadow` | `0 4px 14px rgba(245,166,35,0.35)` (small glow) | `0 6px 24px rgba(245,166,35,0.5)` (bigger glow) |
+
+Also removed the `[data-theme="light"] .btn-accent:hover` and `[data-theme="auto"] .btn-accent:hover` overrides (which used to darken to brown #a06000). The new universal rule uses absolute white + amber values that work across all themes — same flip-to-clear-with-glow behavior everywhere, matching Smoke.
+
+### What this changes in the UI
+
+Every `.btn-accent` button in the app now hovers the same way. That includes:
+
+- Finish button (work toolbar) — the bug that prompted this
+- Welcome screen "Get Started" CTA
+- Reference Material "Continue" CTA
+- Modal Close buttons (Notes drawer, Reference drawer, info modals)
+- "Add to Hive" buttons (custom AI, import server)
+- "Paste Text Reference" button
+- "Use this icon" picker confirm
+- All other primary-action CTAs
+
+UX consistency win — one visual language for every "this is the primary action" button across the entire app.
+
+### Why this is the right shape of fix this time
+
+You called the right move: don't invent new infrastructure, fix the existing class to do what it should do. v3.36.27 added `setFinishReady` state machinery (wrong). v3.36.28 added a scoped override block (better but still parallel). v3.36.29 fixes the actual class — every primary CTA inherits the upgrade. No new classes, no new IDs, no JS state, no overrides. Single source of truth.
+
+### Files Changed
+
+`style.css` (`.btn-accent:hover` upgraded; 4 theme overrides for `.btn-accent:hover` removed; 4 flattening rules in `.work-topbar` / `.work-panel-header` scoped with `:not(.btn-accent)`; v3.36.28 override block removed) · `js/version.js` · `js/app.js` (build stamp) · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
 ## v3.36.28
 **Build:** `20260510-006` · **Released:** May 10, 2026
 
