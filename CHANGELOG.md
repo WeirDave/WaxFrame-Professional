@@ -1,6 +1,54 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.15
+**Build:** `20260509-018` · **Released:** May 9, 2026
+
+### Length-guard always-on toggle, silent convergence, round counter state machine
+
+Six surgical changes informed by the v3.36.14 Brightwater BP test run. The headline change is a behavioral one: convergence (unanimous + majority) now silently flips Auto Mode OFF instead of stacking a halt modal on top of the celebration scene — the modal was pure friction, the convergence scene already communicates the win. Surrounding it: the length-guard pill is now a true always-visible two-state toggle (no more reaching the prompt to disable, then digging through settings to re-arm), the round counter no longer pre-advances at history.push completion (it now stamps the round that just finished with a status suffix), and trajectory-aware length bypasses now log a breadcrumb so an "armed but didn't fire" state isn't silent. Plus a Brightwater BP playbook update with measured 3-AI vs 2-AI convergence data, a Notes drawer subhead correction (both run modes auto-clear notes — the old copy was misleading), and a user-manual paragraph clarifying that only the Builder responds to length directives.
+
+**Phase A — Length-guard pill always-visible toggle**
+- Footer-right pill now renders in both armed and off states. Default state is armed (neutral surface palette matching license badge / About button density). `.is-off` switches to amber to signal "guard disabled".
+- Click is a true toggle — confirms via `wfConfirm()` before flipping state in either direction. Both transitions log to LIVE CONSOLE and toast.
+- Removed `display: none` default + `.is-visible` class. JS `updateLengthGuardIndicator()` flips the `.is-off` class plus label/title text on every state change.
+- New helpers: `toggleLengthGuard()` (dispatcher), `_disableLengthGuard()` (armed → off), `_rearmLengthGuard()` (off → armed). `rearmLengthGuard()` kept as backwards-compat alias routing to the dispatcher.
+
+**Phase B — Convergence skips auto-halt modal**
+- `_autoMaybeChainNextRound` for `unanimous` and `majority` outcomes now performs a clean Auto-OFF flip instead of opening the halt modal: `_autoMode = false`, all auto-state vars cleared, `updateAutoToggleUI()`, single LIVE CONSOLE entry with the convergence type.
+- Halt modal still fires for `ceiling`, `stall`, `failure-streak`, and `decision-tie` — each requires a deliberate next move. Convergence does not; the convergence scene plus reviewer-card satisfaction pills already communicate the win.
+
+**Phase C — Round counter display state machine**
+- New state model: `window._roundUiState` (`'idle'` | `'running'`) and `window._lastCompletedRoundLabel` (pre-formatted "Round N — Phase ✓ Suffix" string).
+- `updateRoundBadge()` rewritten to branch on state: `running` shows live `Round N — Phase`; `idle` with a stored label shows the label; `idle` with no label (fresh project) falls through to next-up `Round N — Phase`.
+- New `_setLastCompletedLabel(roundNum, phaseAtRound, outcome)` helper maps outcome to suffix: `unanimous_convergence` → ` ✓ Converged`, `majority_convergence` → ` ✓ Majority`, `builder_only_complete` → ` ✓ Builder Only`, `builder_only_failed` / `round_failed` → ` ⚠ Failed`, `continuing` → ` ✓ Complete`.
+- Entry transitions wired on `runRound` and `runBuilderOnly` (`state='running'`, badge update). Six round-end transition sites stamp the completion label BEFORE `round++`, then flip `state='idle'`. `clearProject()` resets both.
+- Fixes the prior pre-advance: badge no longer reads "Round 6 — Refine" the instant Round 5 finishes.
+
+**Phase D — Trajectory-bypass transparency log**
+- Trajectory-aware length-guard rule already accepts rounds that move toward the target even when still over the absolute ceiling (e.g. 1500 → 1497 against a 1200-word target). That behavior is correct, but in v3.36.14 it was silent — David asked why an armed guard didn't trip on the Brightwater Round 3 result.
+- New INFO log fires when the armed guard accepts a round on trajectory grounds that would have failed on absolute basis: `📏 Length guard armed but bypassed — output trending toward target (1500→1497 words, target 1200)`.
+- Mirrored at both surfaces — `runRound` trajectory branch and the `runBuilderOnly` mirror.
+
+**Phase E — Document Playbooks: Brightwater BP convergence update**
+- Convergence block in the business-proposal playbook expanded with measured reference data from v3.36.14 May 9 testing:
+  - 2-AI Auto-Mode run: 11 rounds / ≈16 minutes (tied USER DECISION block at Round 5 halted Auto until manual pick).
+  - 3-AI run (v3.0): 5 rounds / ≈10 minutes (third reviewer broke decision ties automatically, Auto chained without interrupts).
+  - Recommendation: run Auto Mode with at least 3 AIs.
+- Length-overshoot caveat added: hive consistently over-produces 25–50% on first draft; reviewers focus on prose quality and do not address length; only the Builder responds to length directives. Plan to inject ✂ Trim template via Builder-Only round once the bloat-guard ceiling crosses.
+- Real-world reference: a single Trim injection at Round 4 of the v3.0 reference run compressed 1499 → 1083 words (27.6% reduction) in one Builder-Only round.
+
+**Phase F — Notes drawer subhead correction**
+- Old copy: *"Notes persist across full rounds; Builder-Only runs clear them after use."* — wrong. Both run modes auto-clear notes after the Builder uses them on the next round (verified in `runRound` and `runBuilderOnly` notes-wipe paths).
+- New copy: *"Directions for the Builder only — not sent to reviewers. Notes auto-clear after the Builder uses them on the next round."*
+
+**Phase G — User manual length-directives clarifier**
+- New paragraph in the "How Length Constraint is measured" block: reviewers focus on prose quality and do not address length. Only the Builder responds to length directives, including ✂ Trim, 📈 Expand, and 📐 Match Notes templates.
+- Standard playbook documented: when a document overshoots target across multiple reviewer rounds, that's expected — the Builder is the lever for size. Wait for a round where reviewers have signaled they're done with prose changes, then run a Builder-Only round with ✂ Trim injected.
+
+**Files touched:** `index.html`, `style.css`, `js/version.js`, `js/app.js`, `document-playbooks.html`, `waxframe-user-manual.html`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.14
 **Build:** `20260509-017` · **Released:** May 9, 2026
 
