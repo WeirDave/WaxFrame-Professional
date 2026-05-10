@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-004';         // build stamp — update each session
+const BUILD       = '20260510-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1521,6 +1521,19 @@ function setStatus(msg) {
 function setFileStatusState(el, state) {
   el.classList.remove('file-status--loading', 'file-status--success', 'file-status--warn', 'file-status--error');
   if (state) el.classList.add('file-status--' + state);
+}
+
+// v3.36.27 — Finish-button visual hierarchy. Toggles the .is-ready
+// state on the work-toolbar Finish button. When convergence is reached
+// (unanimous or majority), Finish becomes the primary suggested action
+// (amber accent, beats the .work-topbar .btn neutral override). When a
+// new round starts or the project resets, Finish drops back to neutral
+// alongside Notes/Reference. CSS lives in style.css under the marker
+// "v3.36.27 Finish-button is-ready".
+function setFinishReady(ready) {
+  const btn = document.getElementById('finishBtn');
+  if (!btn) return;
+  btn.classList.toggle('is-ready', !!ready);
 }
 
 // ── MUTE STATE ──
@@ -5243,9 +5256,21 @@ function lockConflictToNotes(decisionIdx) {
     return;
   }
   const template = `Lock this line exactly as written — do not change it: "${lockText}"`;
-  applyNotesTemplate(template);
-  openNotesModal();
-  toast('🔒 Locked in Notes — run Send to Builder to apply');
+  // v3.36.27 — Silent lock. Append to Notes without opening the drawer
+  // or stealing focus. Clicking the lock button = the user's intent is
+  // already confirmed; the Notes drawer doesn't need to surface in
+  // their face. The locked sentence rides along on the next Builder
+  // round automatically (workNotes is read by both runBuilderOnly and
+  // applyDecisions). The previous version called applyNotesTemplate
+  // which focused the textarea + opened the modal — both disruptive
+  // when the user is mid-flow on multiple conflict cards. Inlined the
+  // textarea append here so the focus side-effect is also avoided.
+  const ta = document.getElementById('workNotes');
+  if (ta) {
+    const current = ta.value.trim();
+    ta.value = current ? current + '\n\n' + template : template;
+  }
+  toast('🔒 Locked');
 }
 
 function applyNotesTemplate(template) {
@@ -9811,6 +9836,13 @@ function initWorkScreen(isNewSession = false) {
   // to the work screen mid-project.
   updateLengthGuardIndicator();
   setStatus('Standing by — Smoke the Hive to begin');
+  // v3.36.27 — Restore Finish-ready state from session history. When the
+  // user re-enters the work screen with a session already at convergence
+  // (browser reopen, backup load, navigated away and back), Finish should
+  // be lit. Otherwise neutral.
+  const lastEntry = (history || []).length ? history[history.length - 1] : null;
+  const lastOutcome = lastEntry ? lastEntry.outcome : null;
+  setFinishReady(lastOutcome === 'unanimous_convergence' || lastOutcome === 'majority_convergence');
 
   // Keep line numbers filled on resize
   if (window._lineNumObserver) window._lineNumObserver.disconnect();
@@ -11977,6 +12009,7 @@ async function runBuilderOnly() {
   // up while the round is in flight; the next round-end site flips
   // back to 'idle' with a completion-suffixed label.
   window._roundUiState = 'running';
+  setFinishReady(false); // v3.36.27 — clear convergence-ready state when a new round begins
   updateRoundBadge();
 
   // v3.32.17 — Capture the project generation token for the abandonment
@@ -12379,6 +12412,7 @@ async function runRound() {
   // runBuilderOnly above. Live "Round N — Phase" stays through the
   // run; round-end sites flip back to 'idle' with a labeled suffix.
   window._roundUiState = 'running';
+  setFinishReady(false); // v3.36.27 — clear convergence-ready state when a new round begins
   updateRoundBadge();
 
   // v3.32.17 — Capture the project generation token for the abandonment
@@ -12603,6 +12637,7 @@ async function runRound() {
     // state intact. _cleanThisRound is the source of truth and stays
     // populated until the next round's 'sending' wave clears it.
     setStatus(`🏁 Unanimous — all AIs agree the document is ready`);
+    setFinishReady(true);
     const runBtnU = document.getElementById('runRoundBtn');
     runBtnU?.classList.remove('running');
     if (runBtnU) runBtnU.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';
@@ -12710,6 +12745,7 @@ async function runRound() {
     // the most useful signal at this moment for deciding whether to apply
     // their suggestions or finish.
     setStatus(`🏁 Hive converged — review holdout suggestions or finish the project`);
+    setFinishReady(true);
     const runBtn = document.getElementById('runRoundBtn');
     runBtn?.classList.remove('running');
     if (runBtn) runBtn.querySelector('.shake-wide-label').textContent = 'Smoke the Hive';

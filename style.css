@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260510-004
+   Build: 20260510-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2610,6 +2610,37 @@ html, body {
   [data-theme="auto"] .footer-btn:hover { color: #0a0c12; border-color: var(--accent); background: var(--accent-dim); }
   [data-theme="auto"] .footer-btn-smoke { color: #ffffff; }
   [data-theme="auto"] .footer-btn-smoke span { color: #ffffff; }
+}
+
+/* ── v3.36.27 Finish-button is-ready ──────────────────────────────────
+   The work-topbar Finish button (#finishBtn) defaults to neutral so it
+   visually matches Notes + Reference (per the .btn baseline plus the
+   .work-topbar .btn theme overrides above). When convergence is reached
+   (unanimous or majority), JS toggles .is-ready on the button — at that
+   point Finish lights up as the suggested action across all themes.
+   The selector uses #finishBtn to outweigh [data-theme="..."] .work-topbar
+   .btn (specificity: ID + class beats two classes). Hover lifts the
+   button slightly (matches .btn-accent:hover).
+   See app.js setFinishReady() and the convergence outcome paths
+   (unanimous_convergence, majority_convergence) in runRound. */
+#finishBtn.is-ready {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0c12;
+  font-weight: 700;
+}
+#finishBtn.is-ready:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(245,166,35,0.35);
+  color: #0a0c12;
+}
+[data-theme="light"] #finishBtn.is-ready:hover,
+[data-theme="auto"] #finishBtn.is-ready:hover {
+  background: #a06000;
+  border-color: #a06000;
+  color: #fff;
 }
 
 /* Console header has both classes — honeycomb wins for button color */
