@@ -251,7 +251,7 @@ const WAXFRAME_TEMPLATES = [
   },
   {
     "id": "rfp",
-    "name": "RFP Response (Request for Proposal)",
+    "name": "RFP Response",
     "icon": "📋",
     "category": "Business & Sales",
     "description": "Craft a disciplined, structured response to a formal RFP that addresses every stated requirement.",
@@ -389,6 +389,114 @@ const WAXFRAME_TEMPLATES = [
       {
         "field": "Scope & constraints",
         "text": "After Setup 3, paste your topic, real numbers, and the lesson you want to land into Setup 4 Reference Material"
+      }
+    ]
+  },
+  {
+    "id": "restaurant-review",
+    "name": "Restaurant Review",
+    "icon": "🍽️",
+    "category": "Reviews & Recommendations",
+    "description": "Create or refine a useful restaurant review covering food, service, atmosphere, value, logistics, and whether you'd return.",
+    "goalDocType": "Restaurant review",
+    "goalAudience": "People deciding whether this restaurant is worth visiting. They want practical details about food, service, atmosphere, value, and logistics, not vague praise or complaints.",
+    "goalOutcome": "Create a useful, honest review that explains what the experience was actually like, what was ordered, what was good, what was disappointing, whether the price made sense, and whether I would return.",
+    "goalScope": "Include visit context, food and drinks ordered, pricing if known, service, atmosphere, cleanliness, parking or location notes, standout items, disappointments, and final recommendation. Do not invent dishes, prices, staff names, dates, or facts that were not provided.",
+    "goalTone": "Conversational, detailed, fair, practical, and direct. Preserve the reviewer's natural voice. Honest criticism is fine, but avoid making it sound like a rant unless the source material genuinely supports that tone.",
+    "goalNotes": "End with a clear bottom line: whether I would return, who this restaurant is best for, and any specific warning, recommendation, or timing advice for future visitors.",
+    "suggestedNotes": "Restaurant: \nLocation: \nDate/time: \nWho was there (solo / couple / family / group / business): \nDine-in / takeout / delivery / patio / bar: \nReservation or walk-in: \nParking notes: \nFirst impression of exterior/interior: \nNoise / lighting / seating / cleanliness: \nWhat was ordered (drinks, apps, entrées, sides, dessert): \nPrices remembered: \nFood quality (flavor, temperature, portion, freshness, presentation): \nBest item: \nWorst item or disappointment: \nService quality: \nProblems and how staff handled them: \nWould you return: \nWho is this restaurant best for: ",
+    "lengthMode": "hardcap",
+    "lengthLimit": "500",
+    "lengthUnit": "words",
+    "hint": [
+      {
+        "field": "Length Constraint",
+        "text": "Default 500 words is a balanced general-purpose review. For Google Maps use 750–1,200 characters. For TripAdvisor leave blank for the full long-form."
+      },
+      {
+        "field": "Notes (Setup 5 Notes drawer)",
+        "text": "Paste the raw visit details into the 🎯 This-round notes section before Round 1 — the Suggested Notes prompt for this template lists every detail to include."
+      }
+    ]
+  },
+  {
+    "id": "hotel-review",
+    "name": "Hotel Review",
+    "icon": "🏨",
+    "category": "Reviews & Recommendations",
+    "description": "Create or refine a hotel review covering room, sleep quality, location, amenities, service, value, and dealbreakers.",
+    "goalDocType": "Hotel review",
+    "goalAudience": "Travelers deciding whether to book this hotel — especially business travelers, families, road-trippers, or people comparing nearby properties.",
+    "goalOutcome": "Create a detailed, practical hotel review that helps readers understand the room, sleep quality, location, amenities, service, value, and any problems that affected the stay.",
+    "goalScope": "Cover trip context, room type or room number if provided, rate/value, check-in, room layout, cleanliness, bed, bathroom, HVAC, noise, darkness, internet, breakfast, gym, pool, bar, parking, location, staff, and final recommendation. Do not invent amenities, prices, loyalty benefits, room numbers, or facts.",
+    "goalTone": "Practical, detailed, fair, and conversational. Preserve useful personal observations and specific traveler-focused details.",
+    "goalNotes": "Include whether I would stay again and what type of traveler this hotel is best suited for. Mention dealbreakers clearly.",
+    "suggestedNotes": "Hotel: \nLocation: \nDates of stay: \nTrip type (business / vacation / family / event / road trip): \nWho was there (solo / couple / family / group): \nRoom type and number if relevant: \nRate / points / resort fee / parking fee / other fees: \nCheck-in experience: \nStaff interactions: \nRoom size, layout, furniture, outlets, desk: \nCleanliness and maintenance: \nBed and pillows: \nNoise (hallway, street, airport, neighbors, elevators, kids): \nRoom darkness / blackout curtains: \nHVAC / temperature control: \nBathroom layout, shower pressure, hot water, towels, toiletries: \nWi-Fi speed and reliability: \nBreakfast quality and variety: \nGym / pool / bar / lounge / laundry / shuttle / parking: \nNearby restaurants / walkability / transit / airport / attractions / work site: \nProblems and how staff handled them: \nWould you stay again: \nWho is this hotel best for: ",
+    "lengthMode": "hardcap",
+    "lengthLimit": "800",
+    "lengthUnit": "words",
+    "hint": [
+      {
+        "field": "Length Constraint",
+        "text": "Default 800 words is a balanced general-purpose review. For Google Maps use 750–1,200 characters. For TripAdvisor leave blank for full long-form."
+      },
+      {
+        "field": "Notes (Setup 5 Notes drawer)",
+        "text": "Paste the raw stay details into the 🎯 This-round notes section before Round 1 — the Suggested Notes prompt lists every detail to include. Sleep quality, hidden friction (noise, HVAC, blackout, hot water, Wi-Fi, parking, fees) matter more than lobby marketing."
+      }
+    ]
+  },
+  {
+    "id": "business-review",
+    "name": "Business / Service Review",
+    "icon": "🧾",
+    "category": "Reviews & Recommendations",
+    "description": "Create or refine a review of a business, contractor, service provider, parking company, repair service, delivery experience, or other non-restaurant/non-hotel business.",
+    "goalDocType": "Business or service review",
+    "goalAudience": "People deciding whether to hire, visit, book, or use this business. They care about reliability, value, professionalism, communication, and how problems are handled.",
+    "goalOutcome": "Create a fair but useful review that explains why I used the business, what happened, what went well, what went wrong, how the business handled it, and whether I would recommend them.",
+    "goalScope": "Include reason for using the business, booking or arrival process, staff behavior, service quality, pricing/value, problems, resolution attempts, observed business practices, and final recommendation. Do not exaggerate, speculate beyond the facts, or invent details.",
+    "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports it.",
+    "goalNotes": "End with practical advice: who should use this business, who should avoid it, and what to watch out for. Do not add legal conclusions, accusations, or claims beyond the facts provided.",
+    "suggestedNotes": "Business: \nLocation: \nType of service or product: \nWhy you used them: \nDate/time: \nBooking process (app / website / phone / walk-in / reservation / estimate / quote): \nPrice quoted vs. price paid: \nArrival/check-in process: \nStaff behavior and communication: \nWhat went well: \nWhat went wrong: \nDelays / confusion / unexpected charges / damage / poor workmanship / service failures: \nHow the business responded when a problem came up: \nWhether they fixed the issue: \nObserved practices future customers should know about: \nWould you use them again: \nWho should use them and who should avoid them: ",
+    "lengthMode": "hardcap",
+    "lengthLimit": "500",
+    "lengthUnit": "words",
+    "hint": [
+      {
+        "field": "Length Constraint",
+        "text": "Default 500 words is a balanced general-purpose review. For Google Maps use 750–1,200 characters. For Yelp/TripAdvisor leave blank for full long-form."
+      },
+      {
+        "field": "Notes (Setup 5 Notes drawer)",
+        "text": "Paste the raw experience details into the 🎯 This-round notes section before Round 1 — be specific. \"They quoted X, charged Y, did Z, and responded this way\" is useful; \"they ripped me off\" is not."
+      }
+    ]
+  },
+  {
+    "id": "multi-platform-review",
+    "name": "Multi-Platform Review Rewrite",
+    "icon": "🔁",
+    "category": "Reviews & Recommendations",
+    "description": "Turn one detailed review into platform-ready versions for TripAdvisor, Google Maps, and Yelp while preserving the same facts and natural voice.",
+    "goalDocType": "Multi-platform customer review rewrite",
+    "goalAudience": "Readers on TripAdvisor, Google Maps, and Yelp who are deciding whether to visit, book, hire, or avoid the business being reviewed.",
+    "goalOutcome": "Create three platform-ready versions of the same review: a detailed TripAdvisor version, a shorter practical Google Maps version, and a conversational Yelp version. All three preserve the same facts and final recommendation.",
+    "goalScope": "Use only the facts from the source review. Do not invent dishes, rooms, prices, staff names, amenities, dates, locations, or outcomes. Preserve the reviewer's actual experience and final opinion. Remove repetition where helpful, but do not remove important practical details.",
+    "goalTone": "Natural, conversational, useful, specific, and fair. Preserve the reviewer's voice. Do not make the review sound corporate, fake, overly polished, or AI-generated.",
+    "goalNotes": "Output three clearly labeled sections — TripAdvisor, Google Maps, Yelp. TripAdvisor is the most detailed (500–900 words). Google Maps is concise and skimmable (750–1,200 characters). Yelp is conversational and personality-forward (300–700 words).",
+    "suggestedNotes": "Source review or raw experience details: \n\nBusiness type if not obvious: \n\nPlatform preference (any of):\n- All three platforms (default)\n- Only one platform: \n- Only short versions\n- Keep my tone very close to the original\n- Make it more polished\n- Make it less harsh\n- Make it more direct",
+    "lengthMode": "none",
+    "lengthLimit": "",
+    "lengthUnit": "",
+    "hint": [
+      {
+        "field": "Length Constraint",
+        "text": "Length intentionally left unset — each of the three platform versions has its own target inside the Builder output (TripAdvisor 500–900 words, Google Maps 750–1,200 chars, Yelp 300–700 words). Do not set a single hard cap or it will compress all three."
+      },
+      {
+        "field": "Notes (Setup 5 Notes drawer)",
+        "text": "Use this template AFTER you have a long detailed review (from the Restaurant / Hotel / Business-Service templates). Paste the source review into Starting Document; this template's Builder produces the three platform-ready cuts."
       }
     ]
   }
