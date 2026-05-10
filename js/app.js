@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-016';         // build stamp — update each session
+const BUILD       = '20260509-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3308,7 +3308,7 @@ function _abandonInFlightRoundUI() {
 //   • Convergence            — unanimous halts (project done);
 //                              majority halts (review holdouts)
 //
-// On any halt → modal with [Resume Auto] [Switch to Interactive]
+// On any halt → modal with [Resume Auto] [Switch to Manual]
 // [Stop here]. Resume bumps ceiling, clears the stall window and
 // failure streak, and fires the next round.
 // ────────────────────────────────────────────────────────────────────
@@ -3347,9 +3347,10 @@ function toggleAutoMode() {
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
     if (typeof consoleLog === 'function') {
-      consoleLog(`🤖 Auto mode ON — ceiling set to round ${window._autoCeilingTarget} (current round ${r})`, 'info');
+      const left = Math.max(0, window._autoCeilingTarget - r);
+      consoleLog(`🚀 Auto mode ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)`, 'info');
     }
-    if (typeof toast === 'function') toast('🤖 Auto mode ON');
+    if (typeof toast === 'function') toast('🚀 Auto mode ON');
 
     // If a round is currently running, the chain check at completion
     // will see the flag and fire the next round automatically. If no
@@ -3365,8 +3366,8 @@ function toggleAutoMode() {
     }
   } else {
     // Disengaging — leave any in-flight round to finish, just don't chain
-    if (typeof consoleLog === 'function') consoleLog('🤖 Auto mode OFF — switched to Interactive', 'info');
-    if (typeof toast === 'function') toast('🤖 Auto mode OFF — Interactive');
+    if (typeof consoleLog === 'function') consoleLog('🚀 Auto mode OFF — switched to Manual', 'info');
+    if (typeof toast === 'function') toast('🚀 Auto mode OFF — Manual');
     window._autoCeilingTarget = null;
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
@@ -3380,28 +3381,22 @@ function toggleAutoMode() {
 }
 
 // Refresh the toggle pill's visible state. Called after any mode change
-// or at end of round (so the round counter on the pill keeps current).
+// or at end of round.
+// v3.36.14 — Static "Auto" label both states (.is-auto class brightens
+// when ON). Round-count counter dropped from pill — toggleAutoMode
+// logs ceiling/rounds-left to LIVE CONSOLE on engage instead.
 function updateAutoToggleUI() {
   const btn = document.getElementById('autoModeToggle');
   if (!btn) return;
   const labelEl = btn.querySelector('.auto-mode-label');
-  const detailEl = btn.querySelector('.auto-mode-detail');
   if (window._autoMode) {
     btn.classList.add('is-auto');
-    if (labelEl) labelEl.textContent = 'Auto: ON';
-    if (detailEl) {
-      const r = (typeof round === 'number') ? round : 1;
-      const ceiling = window._autoCeilingTarget || (r + AUTO_MAX_ROUNDS_DEFAULT);
-      const left = Math.max(0, ceiling - r);
-      detailEl.textContent = `${left} left`;
-      detailEl.style.display = '';
-    }
-    btn.title = 'Auto mode is ON — chains rounds until a guardrail trips. Click to switch to Interactive.';
+    if (labelEl) labelEl.textContent = 'Auto';
+    btn.title = 'Auto mode — chains rounds until a guardrail trips. Click to switch to Manual.';
   } else {
     btn.classList.remove('is-auto');
-    if (labelEl) labelEl.textContent = 'Interactive';
-    if (detailEl) { detailEl.textContent = ''; detailEl.style.display = 'none'; }
-    btn.title = 'Auto mode is OFF — click to chain rounds automatically.';
+    if (labelEl) labelEl.textContent = 'Auto';
+    btn.title = 'Manual mode — click to enable Auto and chain rounds automatically.';
   }
 }
 
@@ -3578,7 +3573,7 @@ function _autoFireChainedRound(label, kind) {
 }
 
 // ── Halt modal ────────────────────────────────────────────────────
-// Three actions: Resume / Switch to Interactive / Stop here.
+// Three actions: Resume / Switch to Manual / Stop here.
 // Resume extends ceiling by AUTO_MAX_ROUNDS_DEFAULT and clears the
 // stall window + failure streak before chaining.
 function _autoHalt(reasonCode, reasonText) {
@@ -3630,7 +3625,7 @@ function autoHaltResume() {
   _autoFireChainedRound('resume');
 }
 
-function autoHaltSwitchInteractive() {
+function autoHaltSwitchManual() {
   const modal = document.getElementById('autoHaltModal');
   if (modal) modal.classList.remove('active');
   // Flip the toggle off via the same path that handles persistence + UI.
@@ -3813,7 +3808,7 @@ async function clearProject() {
   }
 
   // v3.35.2 — Refresh the Auto toggle pill so it visibly returns to
-  // "Interactive" the moment clearProject finishes, before the user
+  // Manual mode the moment clearProject finishes, before the user
   // navigates back to the work screen.
   if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
 
@@ -5751,6 +5746,15 @@ let _lengthGuardResolve = null;
 function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitName, limitName, builderName }) {
   return new Promise(resolve => {
     _lengthGuardResolve = resolve;
+    // v3.36.14 — Forensic log when length-guard dialog opens. Captures
+    // kind (over / under / convergence_over / convergence_under),
+    // actual size, target, builder identity. Pairs with the per-choice
+    // log in _lengthGuardChoose to give a complete audit trail of every
+    // length-guard interaction (previously only the "continue anyway"
+    // branch logged — discard / keep choices were silent).
+    if (typeof consoleLog === 'function') {
+      consoleLog(`📏 Length guard halt — kind: ${kind}, actual: ${actual} ${unitName || ''}, ${limitName || 'limit'}: ${limitNum}${builderName ? ` (builder: ${builderName})` : ''}`, 'warn');
+    }
     const modal       = document.getElementById('lengthGuardModal');
     const titleEl     = document.getElementById('lengthGuardTitle');
     const summaryEl   = document.getElementById('lengthGuardSummary');
@@ -5860,6 +5864,17 @@ function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitNa
 function _lengthGuardChoose(value) {
   const modal = document.getElementById('lengthGuardModal');
   if (modal) modal.classList.remove('active');
+  // v3.36.14 — Forensic log for the user's choice. Was previously only
+  // logged downstream when 'continue_anyway' flipped the override flag;
+  // 'discard' and 'keep' were silent. Now every choice lands in the
+  // console so transcript exports have a complete record.
+  if (typeof consoleLog === 'function') {
+    const _label = value === 'discard'         ? 'Discard round'
+                 : value === 'keep'            ? 'Keep round (guard stays armed)'
+                 : value === 'continue_anyway' ? 'Continue anyway (disable guard for project)'
+                 : value;
+    consoleLog(`📏 Length guard choice: ${_label}`, 'info');
+  }
   if (_lengthGuardResolve) {
     _lengthGuardResolve(value);
     _lengthGuardResolve = null;
@@ -11839,7 +11854,10 @@ async function runBuilderOnly() {
   let _failedRoundReason = '';
   let _failedRoundDetails = '';
   try {
-    const builderResponse = await callAPI(builderAI, prompt);
+    // v3.36.14 — Pass `notes` (already frozen at top of runBuilderOnly
+    // at L11769) as 3rd arg so the deep-dive captureRound entry holds
+    // the authoritative Builder-call notes record.
+    const builderResponse = await callAPI(builderAI, prompt, notes);
     const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
     const conflicts = extractConflicts(builderResponse);
     window._lastConflicts = conflicts || null;
@@ -12139,6 +12157,15 @@ async function runRound() {
   // Save current doc state
   docText = document.getElementById('workDocument')?.value.trim() || '';
 
+  // v3.36.14 — Builder-call notes capture. Stays '' until/unless the
+  // Builder phase fires, at which point we re-assign with the frozen
+  // drawer value. Unanimous-convergence and all-reviewers-failed paths
+  // leave it as '' which is the truthful record (Builder never read
+  // the drawer those rounds). All 4 runRound history.push sites pull
+  // from this const instead of the lazy getElementById that races with
+  // drawer mutations.
+  let _notesAtBuilderCall = '';
+
   // Check all active AIs have API keys
   const missingKeys = activeAIs.filter(ai => {
     const cfg = API_CONFIGS[ai.provider];
@@ -12208,7 +12235,11 @@ async function runRound() {
     const keyHint = cfg?._key?.length > 8 ? cfg._key.slice(0,4) + '••••' + cfg._key.slice(-4) : '••••';
     consoleLog(`📤 ${ai.name} — sending request (${prompt.length.toLocaleString()} chars · key: ${keyHint})`, 'send');
     try {
-      const response = await callAPI(ai, prompt);
+      // v3.36.14 — Reviewer calls pass '' as 3rd arg. buildPromptForAI
+      // gates USER NOTES injection to the Builder branch only (L11706),
+      // so reviewers never see notes — the deep-dive entry honestly
+      // records that with an empty notesContext.
+      const response = await callAPI(ai, prompt, '');
       window._roundTimings[ai.id] = (Date.now() - t_reviewStart) / 1000;
       const noChanges = /^no changes needed/i.test(response.trim());
       const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
@@ -12344,7 +12375,7 @@ async function runRound() {
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
-      notes:          document.getElementById('workNotes')?.value.trim()       || '',
+      notes:          _notesAtBuilderCall,
       conflicts:      { converged: true, holdouts: [] },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -12447,7 +12478,7 @@ async function runRound() {
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
-      notes:          document.getElementById('workNotes')?.value.trim()       || '',
+      notes:          _notesAtBuilderCall,
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -12503,12 +12534,29 @@ async function runRound() {
     hideSmokerOverlay();
     showBuilderOverlay();
 
+    // v3.36.14 — Freeze the drawer's notes at the moment the Builder
+    // phase fires (NOT at history.push time). This catches mid-review
+    // typing — the Brightwater Round 10 case where the user typed
+    // "trim to 2 pages" while reviewers were running and the Builder
+    // pulled the drawer fresh. The frozen value flows into:
+    //   • the Builder's callAPI deep-dive entry (3rd arg below)
+    //   • all 4 history.push records below (replaces the previous lazy
+    //     getElementById pulls that could race with drawer mutations)
+    //   • a LIVE CONSOLE log when non-empty so the audit trail shows
+    //     the Builder ingested user-injected text.
+    _notesAtBuilderCall = document.getElementById('workNotes')?.value.trim() || '';
+    if (_notesAtBuilderCall) {
+      const _np = _notesAtBuilderCall.length > 200
+        ? _notesAtBuilderCall.slice(0, 200) + '…'
+        : _notesAtBuilderCall;
+      consoleLog(`📝 Notes (used by Builder this round): ${_np}`, 'info');
+    }
     const builderPrompt = buildPromptForAI(builderAI, successfulReviews);
     const bCfg = API_CONFIGS[builderAI.provider];
     const bKeyHint = bCfg?._key?.length > 8 ? bCfg._key.slice(0,4) + '••••' + bCfg._key.slice(-4) : '••••';
     consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars · key: ${bKeyHint})`, 'send');
     try {
-      const builderResponse = await callAPI(builderAI, builderPrompt);
+      const builderResponse = await callAPI(builderAI, builderPrompt, _notesAtBuilderCall);
       const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
       const conflicts = extractConflicts(builderResponse);
       // Defensive pass: validate USER DECISIONs against returned doc + this
@@ -12708,7 +12756,7 @@ async function runRound() {
     projectName:    document.getElementById('projectName')?.value.trim()    || '',
     projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
     doc:            docText,
-    notes:          document.getElementById('workNotes')?.value.trim()       || '',
+    notes:          _notesAtBuilderCall,
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
@@ -12791,7 +12839,7 @@ async function runRound() {
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            null,
-      notes:          document.getElementById('workNotes')?.value.trim()       || '',
+      notes:          _notesAtBuilderCall,
       conflicts:      null,
       responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -12823,7 +12871,14 @@ async function runRound() {
 }
 
 // ── API CALL ──
-async function callAPI(ai, prompt) {
+// v3.36.14 — Added 3rd param notesContext: when this AI's prompt was
+// constructed with USER NOTES embedded (Builder phase only — reviewers
+// never see notes, gated in buildPromptForAI), the caller passes the
+// notes string here so it gets frozen into the deep-dive captureRound
+// entry alongside promptPreview and token usage. Reviewer call sites
+// pass '' since they had no notes context. This is the authoritative
+// per-API-call notes record for forensic replay.
+async function callAPI(ai, prompt, notesContext = '') {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg || !cfg._key) throw new Error('No API key');
 
@@ -12953,7 +13008,13 @@ async function callAPI(ai, prompt) {
     promptTokens:     data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || data?.usageMetadata?.promptTokenCount     || null,
     completionTokens: data?.usage?.completion_tokens || data?.usage?.output_tokens || data?.usageMetadata?.candidatesTokenCount || null,
     totalTokens:      data?.usage?.total_tokens      || data?.usageMetadata?.totalTokenCount || null,
-    responsePreview:  text.slice(0, 1000)
+    responsePreview:  text.slice(0, 1000),
+    // v3.36.14 — Authoritative per-API-call notes record. Frozen at
+    // prompt-construction time by the caller (runRound / runBuilderOnly).
+    // Builder API calls carry the actual notes the Builder saw; reviewer
+    // API calls carry '' (truthful — buildPromptForAI gates notes to
+    // Builder-only prompts).
+    notes:            typeof notesContext === 'string' ? notesContext : ''
   });
 
   return text;
@@ -14472,6 +14533,14 @@ function exportTranscript() {
       }
       out += `${eq}\n\n`;
       if (h.doc) out += `DOCUMENT:\n${sep}\n${h.doc}\n\n`;
+      // v3.36.14 — Per-round notes emission. h.notes is the frozen
+      // drawer value at Builder-call time (runRound) or top-of-function
+      // time (runBuilderOnly). Always present in records since v3.36.14;
+      // older history entries without it just emit nothing. Round 0
+      // (initial document) has no notes by definition.
+      if (h.notes && h.round !== 0) {
+        out += `BUILDER NOTES (used by Builder this round):\n${sep}\n${h.notes}\n\n`;
+      }
       Object.keys(h.responses || {}).forEach(id => {
         if (h.responses[id]) {
           const ai = activeAIs.find(a => a.id === id);

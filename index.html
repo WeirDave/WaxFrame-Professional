@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-016">
+  <meta name="waxframe-build" content="20260509-017">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.13">
+  <link rel="stylesheet" href="style.css?v=3.36.14">
 </head>
 <body>
 
@@ -85,7 +85,7 @@
           <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
+            <p class="hp-section-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round, but we strongly recommend <strong>3 or more</strong> — with only 2 AIs, a tied USER DECISION halts Auto Mode mid-run and forces manual intervention; with 3 or more, majority resolution is always available. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -537,27 +537,19 @@
         <span class="work-round-badge" id="workRoundBadge">Round 1 — Draft</span>
       </div>
       <div class="work-topbar-right">
-        <!-- v3.35.0 — AUTO MODE TOGGLE. Pill in topbar shows current
-             mode (Interactive / Auto: ON) and rounds-left counter when
-             engaged. Click flips. Persisted across sessions via
-             localStorage key waxframe_auto_mode. See app.js
-             toggleAutoMode / updateAutoToggleUI / _autoMaybeChainNextRound. -->
-        <button class="auto-mode-toggle" id="autoModeToggle" onclick="toggleAutoMode()" title="Auto mode is OFF — click to chain rounds automatically.">
-          <span class="auto-mode-icon">🤖</span>
-          <span class="auto-mode-label">Interactive</span>
-          <span class="auto-mode-detail" style="display:none"></span>
-        </button>
-        <!-- v3.32.28 — #6c length-guard "off" indicator. Renders only
-             when window._lengthGuardOverride is true (toggled via the
-             is-visible class by updateLengthGuardIndicator). Click
-             re-arms the guard for the rest of the project session. -->
-        <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="rearmLengthGuard()" title="Length guard is off — click to re-arm">
-          <span class="length-guard-indicator-icon">📏</span>
-          <span class="length-guard-indicator-label">Length guard: off</span>
-        </button>
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
         <button class="btn" onclick="openReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
+        <!-- v3.36.14 — AUTO MODE TOGGLE relocated between Finish and Mute.
+             Static "Auto" label both states (Auto ON brightens via
+             .is-auto class). Round-count counter dropped from pill —
+             rounds-left now logs to LIVE CONSOLE on toggle-ON. See app.js
+             toggleAutoMode / updateAutoToggleUI / _autoMaybeChainNextRound. -->
+        <button class="auto-mode-toggle" id="autoModeToggle" onclick="toggleAutoMode()" title="Manual mode — click to enable Auto and chain rounds automatically.">
+          <span class="auto-mode-icon">🚀</span>
+          <span class="auto-mode-label">Auto</span>
+        </button>
+        <span class="work-topbar-divider" aria-hidden="true"></span>
         <button class="theme-opt mute-btn" id="workMuteBtn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
@@ -688,6 +680,16 @@
         </button>
       </div>
       <div class="footer-right">
+        <!-- v3.36.14 — Length-guard "off" indicator relocated from work
+             topbar to footer-right alongside license badge + About.
+             Renders only when window._lengthGuardOverride is true
+             (toggled via the is-visible class by
+             updateLengthGuardIndicator). Click re-arms the guard for
+             the rest of the project session. -->
+        <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="rearmLengthGuard()" title="Length guard is off — click to re-arm">
+          <span class="length-guard-indicator-icon">📏</span>
+          <span class="length-guard-indicator-label">Length guard: off</span>
+        </button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
@@ -729,7 +731,7 @@
   <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
     <span class="notes-drawer-title">📝 Notes for this Round <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-    <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers.</span>
+    <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers. Notes persist across full rounds; Builder-Only runs clear them after use.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyNotes()">📋 Copy</button>
       <button class="btn" onclick="clearNotes()">✕ Clear</button>
@@ -742,6 +744,9 @@
     <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
     <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
     <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OVER the target length. Cut it down to fit within the target word/page count. Preserve all required sections; remove repetition, filler, and over-elaboration. Do not add new content.')">✂ Trim to target</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is UNDER the target length. Expand it to reach the target word/page count. Add detail, examples, and elaboration to existing sections. Preserve all required sections; do not add new top-level structure.')">📈 Expand to target</button>
+    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OUTSIDE the target range. Bring it within range — expand if under, trim if over. Preserve all required sections.')">📐 Match target</button>
   </div>
   <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession();updateNotesBtnPriority()"
     placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
@@ -1226,15 +1231,15 @@
      trips: round-ceiling reached, satisfied-count stalled for 3 rounds,
      2+ consecutive builder failures, USER DECISION block with no clear
      majority, or unanimous/majority convergence. Three actions:
-       • Resume Auto         — extend ceiling +30, reset stall + failure
-                               counters, fire next round.
-       • Switch to Interactive — toggle Auto off, return to manual.
-       • Stop here           — close modal, leave Auto toggled on but
-                               idle. User picks up via Smoke or by
-                               flipping toggle off/on.
+       • Resume Auto    — extend ceiling +30, reset stall + failure
+                          counters, fire next round.
+       • Switch to Manual — toggle Auto off, return to Manual mode.
+       • Stop here      — close modal, leave Auto toggled on but
+                          idle. User picks up via Smoke or by
+                          flipping toggle off/on.
      Resume button is disabled on unanimous convergence — the project
      is done and chaining further is meaningless. See app.js
-     _autoHalt / autoHaltResume / autoHaltSwitchInteractive / autoHaltStop. -->
+     _autoHalt / autoHaltResume / autoHaltSwitchManual / autoHaltStop. -->
 <div class="finish-modal-overlay auto-halt-overlay" id="autoHaltModal" onclick="event.stopPropagation()">
   <div class="finish-modal auto-halt-modal">
     <div class="auto-halt-icon">⏸️</div>
@@ -1242,7 +1247,7 @@
     <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
     <div class="auto-halt-actions">
       <button class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
-      <button class="auto-halt-btn auto-halt-interactive" onclick="autoHaltSwitchInteractive()">↩ Switch to Interactive</button>
+      <button class="auto-halt-btn auto-halt-manual" onclick="autoHaltSwitchManual()">↩ Switch to Manual</button>
       <button class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
     </div>
   </div>
@@ -2084,9 +2089,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.36.13"></script>
+<script src="js/version.js?v=3.36.14"></script>
 <script src="js/templates.js?v=3.36.13"></script>
-<script src="js/app.js?v=3.36.13"></script>
+<script src="js/app.js?v=3.36.14"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-016">
+  <meta name="waxframe-build" content="20260509-017">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.13">
+  <link rel="stylesheet" href="style.css?v=3.36.14">
 </head>
 <body class="helper-body">
 
@@ -382,7 +382,7 @@
         <li class="wh-step"><span class="wh-step-num">2</span><span>Click the <strong>API Key</strong> field next to that AI — the field with the placeholder text <em>Paste key — Enter to save…</em></span></li>
         <li class="wh-step"><span class="wh-step-num">3</span><span>Paste your API key using <strong>Ctrl+V</strong> on Windows or <strong>Cmd+V</strong> on Mac, then press <strong>Enter</strong>. The key status indicator changes to 🔑 to confirm the key is saved.</span></li>
         <li class="wh-step"><span class="wh-step-num">4</span><span>Click the <strong>Test</strong> button that now appears next to the key field. Confirm the test passes before continuing.</span></li>
-        <li class="wh-step"><span class="wh-step-num">5</span><span>Repeat steps 1–4 for at least one more AI. You need a minimum of two AIs with saved, working keys before you can proceed.</span></li>
+        <li class="wh-step"><span class="wh-step-num">5</span><span>Repeat steps 1–4 for at least two more AIs. You need a minimum of two AIs with saved, working keys before you can proceed, but we strongly recommend <strong>three or more</strong>. With only two AIs, a tied USER DECISION halts Auto Mode mid-run and forces manual intervention; with three or more, majority resolution is always available. In our reference Brightwater Canoe and Kayak business proposal test (May 2026), the three-AI hive converged in three rounds in about eight minutes; the same template with two AIs took eleven rounds in about sixteen minutes due to a tie-halt at round five. WaxFrame still runs with two, but three is the empirical sweet spot.</span></li>
       </ol>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -1581,7 +1581,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Smoke the Hive button is not active</div>
-      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected.</p>
+      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected. Note: two AIs is the technical minimum, but three or more is recommended for tie-free convergence — see Step 5 above.</p>
     </div>
 
     <div class="wh-block">
@@ -1726,7 +1726,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.13"></script>
+<script src="js/version.js?v=3.36.14"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
