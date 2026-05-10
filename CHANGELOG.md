@@ -1,6 +1,63 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.33
+**Build:** `20260510-011` · **Released:** May 10, 2026
+
+### USER DECISION audible alert — wired with existing alert sound
+
+Unblocks half of P1.6 by reusing what's already in the codebase. The `playAlertSound()` function (L1597) — the two-chirp 880Hz → 1320Hz Web Audio synth that fires when the user tries to start a new project without exporting — is the right audible cue for "user action required." Same role, same urgency. Wired it into the USER DECISION surface path.
+
+### What's new
+
+- Added `playAlertIfUserDecisions()` helper (L1627). One-liner: checks `history[last].conflicts.userDecisions.length` and calls `playAlertSound()` if there are pending decisions. Respects mute via `playAlertSound` itself.
+- Wired the helper to fire at the two round-end paths where USER DECISIONs commonly surface: non-converging round end (in `runRound`) and Builder-Only round end (in `runBuilderOnly`). Called right after `renderConflicts()` so the audible cue lines up with the visual surfacing of the decision cards.
+
+### What's NOT touched
+
+Convergence paths (unanimous + majority) already play `playFlyingCarSound`/the convergence fanfare; layering the alert on top would clash. USER DECISIONs in a converged round are an edge case where the fanfare is enough visual + audio signal.
+
+### Pattern reuse — no new audio assets
+
+No new `.wav` files needed, no waiting on Kai for this part. The existing `playAlertSound` is air-gap safe (Web Audio API, fully synthesized in-browser), already mute-aware, already in production for the discard-confirm flow.
+
+### What this unblocks
+
+P1.6 in the backlog is split into two parts:
+- ✓ USER DECISION audible alert — **shipped this release**
+- ⚠ Auto-halt sounds (`waxframe_user_decision_alert.wav` and `waxframe_auto_halted.wav`) — still blocked on Kai for the distinctive WaxFrame-branded sound files
+
+P1.6 stays in the backlog with the USER DECISION half marked done.
+
+### Files Changed
+
+`js/app.js` (added `playAlertIfUserDecisions` helper + 2 wire calls) · `js/version.js` · `style.css` (build comment) · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across all 5 helper pages.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
+## v3.36.32
+**Build:** `20260510-010` · **Released:** May 10, 2026
+
+### Project clock parity — Builder-Only rounds now tick the clock
+
+Surgical fix for an asymmetry between `runRound()` and `runBuilderOnly()`. `runRound()` calls `startRoundTimer()` **and** `projectClockStart()` (L12387). `runBuilderOnly()` was calling only `startRoundTimer()` — missing the `projectClockStart()` symmetric call.
+
+**The bug:** if the project clock was paused (manually via the ⏸ button, or auto-paused at a prior round's convergence), starting a Builder-Only round did NOT resume the clock. The Builder's API call time then dropped out of `_projClockSeconds`, so the transcript "Session duration" and backup `projClockSeconds` under-reported the session by exactly the Builder-Only round duration. Wall-clock timestamps on history entries (`timestamp`, `timestampISO`) were unaffected — they used `Date.now()` directly — which is what produced the discrepancy seen when comparing the transcript's session duration against the wall-clock gap between R1 and R4 in the Publix recipe run (T4 2026-05-10).
+
+**The fix:** added `projectClockStart()` immediately after `startRoundTimer()` in `runBuilderOnly()` for exact parity with `runRound()`. Every round type — Draft, Refine, Builder-Only — now ticks the project clock consistently.
+
+### Files Changed
+
+`js/app.js` (one added call + comment block in `runBuilderOnly`) · `js/version.js` · `style.css` (build comment) · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across all 5 helper pages.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
 ## v3.36.31
 **Build:** `20260510-009` · **Released:** May 10, 2026
 

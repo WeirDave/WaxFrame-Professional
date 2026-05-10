@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-009';         // build stamp — update each session
+const BUILD       = '20260510-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1615,6 +1615,18 @@ function playAlertSound() {
     chirp(now + 0.11, 1320);
     setTimeout(() => ctx.close(), 400);
   } catch(e) { /* audio not supported — fail silently */ }
+}
+
+// v3.36.33 — Plays the existing two-chirp alert (playAlertSound) ONLY
+// when the most-recent round produced one or more USER DECISIONs. Called
+// from each round-end path right after renderConflicts() so the audible
+// cue lines up with the visual surfacing of the decision cards. Mute is
+// respected via playAlertSound itself. Uses the same sound as the
+// "discard unexported project" confirm alert — no new audio assets
+// needed; pattern reused across the app for "user action required" cues.
+function playAlertIfUserDecisions() {
+  const last = history.length ? history[history.length - 1] : null;
+  if (last?.conflicts?.userDecisions?.length > 0) playAlertSound();
 }
 
 function playSmokerSound() {
@@ -11980,6 +11992,16 @@ async function runBuilderOnly() {
   if (smokeBtn) smokeBtn.querySelector('.shake-wide-label').textContent = 'Building…';
   showBuilderOverlay();
   startRoundTimer(smokeBtn, 'Building…');
+  projectClockStart(); // v3.36.32 — parity with runRound() at L12387. Without
+                       // this, a Builder-Only round runs while the project
+                       // clock is paused (manual pause or post-convergence
+                       // auto-pause), dropping its API call time from the
+                       // session total. The transcript "Session duration"
+                       // and backup projClockSeconds then under-report by
+                       // the Builder-Only round's duration. Triggered the
+                       // engaged-time discrepancy seen in the Publix recipe
+                       // run (T4 2026-05-10). Same call as runRound makes
+                       // every round type tick the clock consistently.
   setStatus(`🔨 Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   if (standingNotes) consoleLog(`📌 Standing notes: ${standingNotes}`, 'info');
@@ -12266,6 +12288,7 @@ async function runBuilderOnly() {
     renderRoundHistory();
     renderWorkPhaseBar();
     renderConflicts();
+    playAlertIfUserDecisions(); // v3.36.33 — audible cue if USER DECISIONs are now pending
     // Clear notes — they've been applied, don't carry into next round
     const notesEl = document.getElementById('workNotes');
     if (notesEl) { notesEl.value = ''; }
@@ -13035,6 +13058,7 @@ async function runRound() {
   renderRoundHistory();
   renderWorkPhaseBar();
   renderConflicts();
+  playAlertIfUserDecisions(); // v3.36.33 — audible cue if USER DECISIONs are now pending
   saveSession();
 
   // ── TRIAL COUNTER ──
