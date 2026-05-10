@@ -1,6 +1,87 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.23
+**Build:** `20260510-001` · **Released:** May 10, 2026
+
+### Audit-driven cleanup release: dead-code removal, sidebar gaps, measured-data refresh, and the staged template/playbook bundle
+
+Consolidates everything surfaced by the P1.1 audit (three passes — function-level, cross-surface, side-effect mapping) along with the staged-but-unshipped work from the 2026-05-09 evening session.
+
+### Code cleanup (Pass 1 audit findings)
+
+Audit Pass 1 surfaced three confirmed dead functions plus an orphan companion variable and an always-false branch — a "dead feature" chain that was the residue of an earlier UX flow that got removed without tidying its plumbing. Removed together:
+
+- `getTotalReferenceText()` — no callers; misleading comment claimed it was used by counters and gates that don't exist.
+- `hasReferenceMaterial()` — no callers; same false-comment pattern.
+- `openSettings()` — no callers in app.js or any HTML.
+- `_settingsReturnToWork` flag — set only by `openSettings`, so always `false` in production.
+- The `if (_settingsReturnToWork) { ... } else { ... }` branch in `continueFromBuilder()` — always took the `else` path. Simplified to just the `else` body.
+
+Net source-weight reduction: ~20 lines including the dead branch logic. No behavioral change — every removed code path was unreachable in production.
+
+### Sidebar gaps (Pass 2 audit findings)
+
+Two playbooks existed as sections in `document-playbooks.html` but had no sidebar entries — users had to scroll or browser-search to reach them:
+
+- `linkedin-post` — added under **Content & Marketing** (between Blog Post and Presentation Outline).
+- `contractor-letter` — added under **Personal & Everyday** (after Recipe).
+
+### Measured-data label additions (Pass 2 audit findings)
+
+Two playbooks had measured-run data in their convergence sections without the explicit "(measured, not estimated)" label that other measured playbooks use. Added the label to both for consistency with the rest of the playbook page:
+
+- `business-proposal` — Brightwater BP run.
+- `linkedin-post` — DFS post run.
+
+### Wellness/Law Firm BP — second-scenario data point added
+
+The business-proposal playbook had Brightwater data (3-AI 5 rounds + 2-AI 11 rounds) but didn't reference the Wellness for Law Firm v1.0 run that was sitting in the test master's ALREADY MEASURED list. Added a third paragraph to the convergence section: 5-AI hive (ChatGPT + Gemini + Grok + Perplexity + Mistral, Gemini-Builder), 11 rounds, majority convergence, 857 final words. Word-count trajectory was 897 → 854 → 857 — steady tightening rather than structural rewrites. The 11-round figure is coincidentally the same as the Brightwater 2-AI run but the cause is different (more reviewers per round, each with their own polish suggestions).
+
+### Recipe playbook — Quick Start vs general recipe distinction
+
+The recipe playbook's convergence text said `5–20+ rounds — AIs debate technique, quantities, and wording extensively`. That estimate is for general recipe refinement. The bundled Quick Start template (chocolate chip cookies) is a tightly-scaffolded special case that converges in 2 rounds (measured). Split into two paragraphs:
+
+- **Quick Start (cookies):** 2 rounds (measured)
+- **General recipe refinement:** 5–20+ rounds (estimated, with explanation of why recipes are unusually subjective)
+
+### User manual — measured-data block refreshed
+
+The "Three measured data points" block at L1180 was unchanged since the early measurements (Altura JD, Dana Reyes Résumé, internal-AI-server LinkedIn Post). Replaced with a curated set of six measured runs covering broader patterns:
+
+- Job Description (Altura) — 20-22 rounds
+- Résumé (Dana Reyes) — 10-12 rounds, with mid-stream notes injection
+- Business Proposal (Brightwater) — 3-AI 5 rounds vs 2-AI 11 rounds, illustrating hive-size effect on tied USER DECISIONs
+- LinkedIn Post (DFS in defense) — 2 rounds, posted to live LinkedIn
+- LinkedIn About (wireless engineer) — 2 rounds, illustrating Reference Material payoff
+- Thank-You (scratch vs refine) — 2 vs 13 rounds, illustrating misaligned-draft cost
+
+The "What this implies" paragraph also rewritten to surface three patterns explicitly: (1) setup specificity drives convergence, (2) hive size of three is the practical floor for Auto Mode, (3) Reference Material is high-leverage. References the test master file as the canonical full-data source.
+
+### Already-staged work (shipping in this bundle)
+
+Carried forward from working tree, held back from earlier session per "don't ship yet, bundle":
+
+- **RFP template renamed** from `RFP Response (Request for Proposal)` to `RFP Response`. The parenthetical was decoding only the `RFP` acronym, not the full template name (which is a *response* document a vendor writes back).
+- **Four new review templates** added to `templates.js` in a new `Reviews & Recommendations` category: Restaurant Review, Hotel Review, Business / Service Review, Multi-Platform Review Rewrite. Spec'd by Kai.
+- **Four new review playbooks** added to `document-playbooks.html` matching the templates above, with sidebar links and a new category section after Personal & Everyday.
+- **`order` array in `app.js`** updated to include `Reviews & Recommendations` so the gallery actually renders the new category.
+
+### Files touched
+
+`js/app.js` · `js/templates.js` · `js/version.js` · `style.css` · `index.html` · `document-playbooks.html` · `waxframe-user-manual.html` · `CHANGELOG.md`. Helper-page version stamps swept across `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+### Audit artifacts shipped alongside
+
+Three companion audit documents land in `docs/`:
+
+- `WaxFrame_Functional_Audit_P1-1.md` — function inventory and disposition (397 functions classified)
+- `WaxFrame_Cross_Surface_Audit_P1-1_Pass2.md` — templates / playbooks / manual / gospel-doc reconciliation
+- `WaxFrame_Side_Effect_Audit_P1-1_Pass3.md` — per-function side-effect classification (96 pure functions, 6 multi-effect orchestrators)
+
+These are read-only analysis docs, not part of the app deployment.
+
+---
 ## v3.36.22
 **Build:** `20260509-025` · **Released:** May 9, 2026
 
