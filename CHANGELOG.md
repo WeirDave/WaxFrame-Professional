@@ -1,6 +1,55 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.25
+**Build:** `20260510-003` · **Released:** May 10, 2026
+
+### Two measured runs landed: T2 Executive Summary + T7 Blog Post v2.0 — both playbooks updated
+
+This release captures two same-day runs and updates the matching playbook entries with measured-data convergence sections. Both pulled from the new test master to-do list (`docs/WaxFrame_Playbook_Test_Master_v11.txt`).
+
+### T2 Executive Summary measured
+
+**Project:** Exec Summary — 2025 Sustainability Report v1.0. **7 rounds, ~41 minutes wall-clock.** 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity) with DeepSeek as Builder, REFINE mode on a hedged corporate draft. Final 142 words. Majority convergence at R8 (5 of 6 satisfied; R1 was setup so the WaxFrame counter shows 7).
+
+**USER DECISION-heavy run.** 7 USER DECISION blocks surfaced across the run (1 in R2, 3 in R4, 3 in R6). Corporate sustainability prose has a lot of "commit vs. hedge" choices and reviewers don't agree on which side to land on. Two Builder-Only rounds applied locked decisions via mid-stream notes. The exec-summary playbook now sets expectations: refining a heavily-edited corporate draft full of soft commitments, expect 5–9 rounds with multiple decision blocks rather than a quick 3-round polish.
+
+**Length-cap insight added.** The 400-word Hard cap was set at the recommended value but the hive landed at 142 words and stayed there from R3 onward. Executive summaries written tight will self-bound well under a 400-word ceiling — the Hard cap acts as a safety rail rather than an active constraint. Playbook now teaches this as the "set the cap to your platform's actual limit" pattern.
+
+### T7 Blog Post v2.0 measured (4× faster than v1.0 on the same topic)
+
+**Project:** Blog — Why I Stopped Trusting One-Shot AI v2.0. **4 rounds, ~77 minutes wall-clock.** Same 5-AI hive + DeepSeek Builder. SCRATCH mode with Reference Material (1,180-char thesis scaffold pasted into Setup 4; empty Starting Document). Final 460 words / 2,795 characters. Majority convergence at R4 (4 of 6 satisfied). 2 USER DECISIONS in R2, resolved via Builder-Only round in R3 with locked-line notes ("Lock this line exactly as written — do not change it: [URL]").
+
+**The 4× speed-up over v1.0 on the same topic** (16 rounds → 4 rounds) is the headline. Driven by two general-purpose levers, both teachable beyond this topic:
+
+1. **Reference Material approach.** The source thesis went into Setup 4 — Reference Material instead of being attempted as a Starting Document. The hive built fresh from scaffold rather than fighting an existing draft. (Same pattern measured in v3.36.24's recipe run.)
+2. **Buzzword guard in Additional Instructions.** Explicit "no synergy / leverage / revolutionary" rule suppressed the AI-flavor language reviewers tend to argue about, removing a whole class of conflict from the run.
+
+The blog-post playbook now teaches both as "use the v2.0 approach when you want to converge fast; use the v1.0 approach when you want to preserve specific phrasing from an existing draft."
+
+### Two bugs captured to backlog (not fixed this release)
+
+The T2 run surfaced two UX bugs, both captured to `docs/WaxFrame_Backlog_Master_v10.txt` Section 1 (the new bug-fix list section):
+
+1. **Multi-USER-DECISION + Lock-via-Notes ordering is unclear.** When multiple decisions surface in a round and the user clicks "Lock this in" on one (which opens the Notes drawer), it's not obvious whether to send-to-Builder now (skipping unresolved decisions) or close Notes and lock the others first. Three design options spec'd in the backlog. Defer to a session focused on this.
+
+2. **Finish button visual hierarchy lost.** The Finish button now styles identically to Reference and Notes in the work toolbar, so muscle memory targets Manual instead. David accidentally started a new round when the doc was actually ready to finish — that round became R7 of the T2 run instead of being the convergence point. Fix: restore the convergence-state primary-action treatment (same emphasis as the "Smoke the Hive" button gets when ready).
+
+Both bugs are in backlog Section 1, not fixed this release. This release focuses on doc updates only.
+
+### Test Master + Backlog now bundled in the ZIP
+
+Per the new convention: `docs/WaxFrame_Backlog_Master_v10.txt` and `docs/WaxFrame_Playbook_Test_Master_v11.txt` ship inside this release ZIP. When extracted into the repo folder, they land in `docs/` alongside the code. From here on, every release ZIP includes the latest versions of both gospel docs.
+
+### Files touched
+
+`document-playbooks.html` (executive-summary + blog-post convergence sections) · `js/version.js` · `js/app.js` · `style.css` · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+ZIP contains 10 deployment files + 2 doc files in `docs/` = 12 files total. `templates.js` not touched this release.
+
+---
 ## v3.36.24
 **Build:** `20260510-002` · **Released:** May 10, 2026
 
