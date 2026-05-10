@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-018">
+  <meta name="waxframe-build" content="20260509-019">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.15">
+  <link rel="stylesheet" href="style.css?v=3.36.16">
 </head>
 <body>
 
@@ -540,16 +540,18 @@
         <button class="btn" onclick="openNotesModal()">📝 Notes</button>
         <button class="btn" onclick="openReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
         <button class="btn btn-accent" onclick="showFinishModal()">🏁 Finish</button>
-        <!-- v3.36.14 — AUTO MODE TOGGLE relocated between Finish and Mute.
-             Static "Auto" label both states (Auto ON brightens via
-             .is-auto class). Round-count counter dropped from pill —
-             rounds-left now logs to LIVE CONSOLE on toggle-ON. See app.js
+        <span class="work-topbar-divider" aria-hidden="true"></span>
+        <!-- v3.36.16 — AUTO MODE TOGGLE relocated across the divider
+             into the selector/control cluster (theme + mute + auto).
+             Semantically a state toggle, not an action button. Its
+             own three-color palette: amber-dim Manual (default) /
+             green-dim Auto (active). Label flips between "Auto" and
+             "Manual" via updateAutoToggleUI(). See app.js
              toggleAutoMode / updateAutoToggleUI / _autoMaybeChainNextRound. -->
         <button class="auto-mode-toggle" id="autoModeToggle" onclick="toggleAutoMode()" title="Manual mode — click to enable Auto and chain rounds automatically.">
           <span class="auto-mode-icon">🚀</span>
-          <span class="auto-mode-label">Auto</span>
+          <span class="auto-mode-label">Manual</span>
         </button>
-        <span class="work-topbar-divider" aria-hidden="true"></span>
         <button class="theme-opt mute-btn" id="workMuteBtn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
         <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
         <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
@@ -2091,9 +2093,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.36.15"></script>
+<script src="js/version.js?v=3.36.16"></script>
 <script src="js/templates.js?v=3.36.13"></script>
-<script src="js/app.js?v=3.36.15"></script>
+<script src="js/app.js?v=3.36.16"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

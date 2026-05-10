@@ -1,6 +1,46 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.16
+**Build:** `20260509-019` · **Released:** May 9, 2026
+
+### Three-pill color system + Auto label flip + Auto repositioning
+
+Visual coherence pass on the topbar/footer state pills. The v3.36.15 length-guard pill landed in a neutral palette next to the green License badge and read as a different class of UI; this release unifies them into a three-color system and reorganizes the work-topbar so state toggles cluster together.
+
+**Pill color system (codified):**
+- Red = real warning (License unlicensed, Length guard off — both signal real risk).
+- Amber = default / neutral (Auto Mode = Manual — user is in the loop, no risk).
+- Green = active / good (License licensed, Length guard armed, Auto Mode active).
+
+**Phase A — Length-guard pill mirrors the License badge**
+- Same font-size, weight, padding, radius as `.license-badge`. Drops the `font-family: var(--font-display)` override and the v3.36.15 neutral surface palette.
+- Default (armed) = `.licensed`-style green: `var(--green-dim)` background, `var(--green)` border + text.
+- `.is-off` = unlicensed-style red: `#c0152a` background, white text, glow shadow. Hover variants for both states.
+- Result: footer-right cluster (length-guard + license + about) reads as visual siblings.
+
+**Phase B — Auto Mode toggle gets its own three-color palette**
+- Default (Manual) = amber-dim: `var(--accent-dim)` background, `var(--accent)` border + text. Manual is the safe default; amber communicates "neutral/in-the-loop", not "warning".
+- `.is-auto` (Auto active) = green-dim: `var(--green-dim)` background, `var(--green)` border + text. Pulse animation on the icon stays gated to the active state.
+- Hover variants for both states. Same pill geometry as License + Length-guard so all three sit at matched height.
+
+**Phase C — Auto label flips back to two-state**
+- `updateAutoToggleUI()` now writes "Manual" when `_autoMode` is off and "Auto" when on, mirroring the License badge's two-text-state pattern.
+- Reverses the v3.36.14 static-Auto-both-states change. The static label hid the mode at a glance once real-world testing surfaced it.
+- Default HTML label is `Manual` so initial paint matches the off-state styling without a JS round-trip.
+
+**Phase D — Auto button moves across the divider**
+- `.auto-mode-toggle` HTML position moves from the left of `.work-topbar-divider` (action group with Notes / Reference / Finish) to the right (selector/control cluster with Mute / theme buttons).
+- Auto is semantically a state toggle, not an action. Sitting next to the theme buttons, which are also state toggles, makes the grouping read correctly.
+- Divider comment in CSS updated to reflect the new groupings.
+
+**Cleanup**
+- Dead `.auto-mode-detail` CSS rule removed (round-count counter was dropped from the pill in v3.36.14; the rule was a straggler).
+- `margin-right: var(--space-4)` removed from `.auto-mode-toggle` — the parent `.work-topbar-right` already has `gap: var(--space-6)` doing the spacing job.
+
+**Files touched:** `index.html`, `style.css`, `js/app.js`, `js/version.js`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.15
 **Build:** `20260509-018` · **Released:** May 9, 2026
 
