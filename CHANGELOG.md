@@ -1,6 +1,51 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.14
+**Build:** `20260509-017` · **Released:** May 9, 2026
+
+### Topbar reorg, Auto pill rebrand, Notes forensics, length-discipline templates
+
+Bundles the previously-staged-but-never-shipped v3.36.14 topbar work with a focused set of fixes that surfaced during the May 9 Brightwater AutoTest run. Twelve items across seven phases.
+
+**Phase A — Topbar reorg + Auto pill rebrand**
+- Auto Mode toggle relocated from far-left of `work-topbar-right` to between Finish and Mute.
+- Auto pill emoji `🤖 → 🚀`. Static `Auto` label both states (was `Interactive` / `Auto: ON`). Round-count counter dropped from pill — rounds-left now logs to LIVE CONSOLE on toggle-ON instead.
+- Length-guard "off" indicator relocated from work topbar to footer-right alongside license badge + About.
+- Vertical CSS divider added between the action button group (Notes / Reference / Finish / Auto) and the theme/mute control group.
+
+**Phase B — Interactive → Manual terminology cascade**
+- Function `autoHaltSwitchInteractive` renamed to `autoHaltSwitchManual`.
+- Halt-modal button label `↩ Switch to Interactive` → `↩ Switch to Manual` (and matching CSS class hook).
+- All console messages, toasts, pill titles, and source comments in auto-mode context updated. Final grep across `app.js`, `index.html`, `style.css` confirmed zero residual `Interactive` references in auto-mode context.
+
+**Phase C — Notes drawer z-index fix**
+- `.notes-drawer` z-index `7000 → 8500`. Drawer now sits above the smoker overlay (8000) and builder overlay (8000) so users can see what they type when opening Notes mid-round during animation. Stays well below modals (9999).
+
+**Phase D — Notes forensics trio**
+- `runRound` now captures `_notesAtBuilderCall` at the moment the Builder phase fires (not at history.push time). Catches mid-review-typing scenarios — the Brightwater Round 10 case where the user typed "trim to 2 pages" while reviewers were still running and the Builder pulled the drawer fresh.
+- All 4 `runRound` `history.push` records now reference `_notesAtBuilderCall` instead of lazy `getElementById` pulls that could race with drawer mutations.
+- `callAPI` signature gains a 3rd parameter `notesContext`. Builder calls pass the frozen drawer value; reviewer calls pass `''` (truthful — `buildPromptForAI` gates USER NOTES injection to the Builder branch only).
+- `WF_DEBUG.captureRound` deep-dive entries gain a `notes` field — authoritative per-API-call notes record for forensic replay.
+- LIVE CONSOLE log `📝 Notes (used by Builder this round): ...` fires when the Builder reads non-empty drawer content.
+- `exportTranscript` history loop now emits a `BUILDER NOTES (used by Builder this round)` block per round, surfacing user-injected notes in the audit trail (previously silent in transcript output).
+
+**Phase E — 3-AI minimum recommendation cascade**
+- Setup 1 Worker Bees subhead now recommends 3+ AIs minimum and explains the tie-halt rationale.
+- User manual Step 5 expanded with the empirical Brightwater data: three-AI hive converged in 3 rounds / ~8 minutes; same template with two AIs took 11 rounds / ~16 minutes due to a tie-halt at round 5.
+- Troubleshooting section ("Smoke the Hive button is not active") points readers to the Step 5 explanation for the recommended-vs-required distinction.
+
+**Phase F — Length-guard dialog forensic logging**
+- `lengthGuardPrompt` now logs at dialog-open with kind / actual / target / builder identity.
+- `_lengthGuardChoose` now logs all three user choices (Discard / Keep / Continue anyway). Previously only the override-flipping path logged downstream; Discard and Keep were silent.
+
+**Phase G — Length-discipline Notes templates**
+- Three new buttons in the Notes drawer template strip: `✂ Trim to target` (overshoot), `📈 Expand to target` (undershoot), `📐 Match target` (range case). Replaces the manual "type a length-correction directive" workflow with one-click injection.
+
+**Phase H — Notes drawer transparency clarifier**
+- Subhead under the drawer title now reads "Directions for the Builder only — not sent to reviewers. Notes persist across full rounds; Builder-Only runs clear them after use." Surfaces the existing dual-mode persistence behavior that was previously invisible to users. (The full sticky / one-shot drawer split is parked as the v3.36.15 headliner.)
+
+---
 ## v3.36.13
 **Build:** `20260509-016` · **Released:** May 9, 2026
 
