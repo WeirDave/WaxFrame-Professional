@@ -1,6 +1,51 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.27
+**Build:** `20260510-005` · **Released:** May 10, 2026
+
+### UX clarity: Finish button visual hierarchy + silent multi-decision lock
+
+Both bugs surfaced during the T2 Executive Summary run on 2026-05-10 morning, captured to backlog v10 Section 1 (the new bug-fix list), and shipped together in this surgical release. Both fixes share the same theme — **make the right action obvious without disrupting flow**. Both bugs now removed from the backlog.
+
+### Bug 1: Finish button visual hierarchy restored
+
+**Symptom:** the Finish button in the work toolbar styled identically to Reference and Notes. Muscle memory targeted Manual instead of Finish at convergence, so a new round started when the doc was actually ready to finish — that errant round became R7 of the T2 run.
+
+**Root cause:** the `[data-theme="light"] .work-topbar .btn` and `[data-theme="auto"] .work-topbar .btn` selectors override `.btn-accent` because their specificity is higher (two classes vs one). The Finish button had `.btn-accent` baked into the HTML but it was being flattened in light/auto themes.
+
+**Fix:**
+- Removed static `btn-accent` class from the Finish button HTML — Finish is now neutral by default, matching Notes and Reference.
+- Added `id="finishBtn"` and a new `setFinishReady(boolean)` helper in `app.js`.
+- New CSS rule `#finishBtn.is-ready { ... }` uses ID specificity to beat the theme overrides — no `!important` needed.
+- JS toggles `.is-ready` based on convergence state:
+  - **Cleared on:** reviewer round start, Builder-Only round start, work screen entry with no prior convergence
+  - **Set on:** unanimous convergence, majority convergence, work screen entry where the last history outcome was a convergence (handles browser reopen / session reload)
+
+**Verified:** the 80ch Working Document column rule was not touched per the memory protocol.
+
+### Bug 2: Multi-USER-DECISION silent lock
+
+**Symptom:** when multiple USER DECISIONs surfaced in a round, clicking "lock this in" on a card opened the Notes drawer over the conflict view. Confusion: do you click the green "Apply My Decisions" button to send everything, or does the "Send to Builder" button at the footer also work?
+
+**Root cause analysis (per the actual code):** the architecture is correct — the green Apply Decisions button reads all picked options from `_decisionChoices` AND injects the locked-line Notes content, sending both to the Builder. The footer Send to Builder reads only Notes and ignores conflict picks. The bug was never in the logic — it was in the flow disruption: opening the Notes drawer in the user's face plus a misleading toast that said "run Send to Builder to apply" without specifying which button.
+
+**Fix:**
+- `lockConflictToNotes()` no longer calls `openNotesModal()` — the lock action silently appends `Lock this line exactly as written — do not change it: "..."` to the Notes textarea.
+- Inlined the textarea append (was using `applyNotesTemplate()` which also focuses the textarea — focus would do nothing visible with the modal closed but is unwanted side-effect).
+- Toast simplified from `"🔒 Locked in Notes — run Send to Builder to apply"` to just `"🔒 Locked"`.
+
+**User mental model now matches behavior:** click lock → it's locked. The picked option on the card stays in `_decisionChoices`. When the user clicks the green Apply Decisions button (the canonical path for resolving USER DECISIONS), the picks AND the locked sentences both get sent to the Builder, exactly as they should.
+
+### Files Changed
+
+`js/app.js` (added `setFinishReady` + 5 toggle calls; rewrote `lockConflictToNotes` to silent) · `style.css` (added `#finishBtn.is-ready` rule) · `index.html` (Finish button id + class adjusted) · `js/version.js` · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+**ZIP contents:** 11 deployment files + 2 docs in `docs/` = 13 files. `templates.js` not touched this release.
+
+---
 ## v3.36.26
 **Build:** `20260510-004` · **Released:** May 10, 2026
 
