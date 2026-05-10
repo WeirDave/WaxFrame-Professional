@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260510-006
+   Build: 20260510-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -329,17 +329,25 @@ html, body {
   font-weight: 700;
 }
 .btn-accent:hover {
-  background: var(--accent-hover);
-  border-color: var(--accent-hover);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(245,166,35,0.35);
-  color: #0a0c12;
+  /* v3.36.29 — Smoke-style hover treatment applied to all .btn-accent
+     buttons for UX consistency. Background flips from amber to white,
+     text turns amber, button lifts 2px, larger amber glow shadow. Same
+     visual language as the footer-btn-smoke hover (the Smoke-the-Hive
+     button) — every primary CTA in the app now feels the same on hover.
+     Previously: subtle accent-hover background tint + small lift +
+     small shadow + dark text retained. Light/auto theme overrides
+     below removed — these absolute-color values work across all themes
+     and we want the same flip everywhere. */
+  background: #ffffff;
+  border-color: var(--accent);
+  color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(245,166,35,0.5);
 }
-/* Light/auto: darken on hover so text stays readable */
-[data-theme="light"] .btn-accent:hover { background: #a06000; border-color: #a06000; color: #fff; }
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .btn-accent:hover { background: #a06000; border-color: #a06000; color: #fff; }
-}
+/* v3.36.29 — Light/auto theme overrides removed (was: dark-brown bg
+   on hover). The universal .btn-accent:hover rule above uses
+   absolute white + amber values that work across all themes,
+   matching the Smoke-the-Hive treatment. */
 
 .btn-sm { font-size: 12px; padding: 5px 11px; }
 .btn-lg { font-size: 15px; padding: 12px 28px; border-radius: var(--radius-md); }
@@ -2574,13 +2582,18 @@ html, body {
 [data-theme="light"] .honeycomb-header .btn:hover {
   color: #0a0c12; border-color: var(--accent); background: var(--accent);
 }
-/* Light-background headers — dark text, amber fill hover */
-[data-theme="light"] .work-topbar .btn,
-[data-theme="light"] .work-panel-header .btn {
+/* Light-background headers — dark text, amber fill hover.
+   v3.36.29: scoped with :not(.btn-accent) so .btn-accent buttons
+   (e.g. the always-lit Finish button) keep their accent treatment
+   from the .btn-accent rule at L325 instead of getting flattened
+   to neutral here. Replaces the v3.36.28 work-topbar .btn.btn-accent
+   override block — fix at source rather than parallel rules. */
+[data-theme="light"] .work-topbar .btn:not(.btn-accent),
+[data-theme="light"] .work-panel-header .btn:not(.btn-accent) {
   color: #1a1d2a; border-color: #9aa3b8; background: transparent;
 }
-[data-theme="light"] .work-topbar .btn:hover,
-[data-theme="light"] .work-panel-header .btn:hover {
+[data-theme="light"] .work-topbar .btn:not(.btn-accent):hover,
+[data-theme="light"] .work-panel-header .btn:not(.btn-accent):hover {
   color: #0a0c12; border-color: var(--accent); background: var(--accent);
 }
 /* Footer buttons */
@@ -2598,58 +2611,18 @@ html, body {
   [data-theme="auto"] .honeycomb-header .btn:hover {
     color: #0a0c12; border-color: var(--accent); background: var(--accent);
   }
-  [data-theme="auto"] .work-topbar .btn,
-  [data-theme="auto"] .work-panel-header .btn {
+  [data-theme="auto"] .work-topbar .btn:not(.btn-accent),
+  [data-theme="auto"] .work-panel-header .btn:not(.btn-accent) {
     color: #1a1d2a; border-color: #9aa3b8; background: transparent;
   }
-  [data-theme="auto"] .work-topbar .btn:hover,
-  [data-theme="auto"] .work-panel-header .btn:hover {
+  [data-theme="auto"] .work-topbar .btn:not(.btn-accent):hover,
+  [data-theme="auto"] .work-panel-header .btn:not(.btn-accent):hover {
     color: #0a0c12; border-color: var(--accent); background: var(--accent);
   }
   [data-theme="auto"] .footer-btn { color: #1a1d2a; border-color: #9aa3b8; }
   [data-theme="auto"] .footer-btn:hover { color: #0a0c12; border-color: var(--accent); background: var(--accent-dim); }
   [data-theme="auto"] .footer-btn-smoke { color: #ffffff; }
   [data-theme="auto"] .footer-btn-smoke span { color: #ffffff; }
-}
-
-/* ── v3.36.28 Finish-button always lit ────────────────────────────────
-   The Finish button (#finishBtn) in the work-topbar is always available
-   as the user's exit/wrap-up action — like a permanent secondary CTA
-   alongside the footer Smoke-the-Hive button. It carries .btn-accent
-   in the HTML, but the .work-topbar .btn theme overrides above (light
-   and auto themes) flatten .btn-accent to the same neutral treatment
-   as Notes + Reference because their selectors have higher specificity
-   (1 attr + 2 classes) than .btn-accent alone (1 class).
-   This block restores the amber accent specifically for .btn-accent
-   inside .work-topbar in light/auto themes. Specificity: 1 attr +
-   3 classes — beats the override. No !important needed. */
-[data-theme="light"] .work-topbar .btn.btn-accent {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #0a0c12;
-  font-weight: 700;
-}
-[data-theme="light"] .work-topbar .btn.btn-accent:hover {
-  background: #a06000;
-  border-color: #a06000;
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(245,166,35,0.35);
-}
-@media (prefers-color-scheme: light) {
-  [data-theme="auto"] .work-topbar .btn.btn-accent {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #0a0c12;
-    font-weight: 700;
-  }
-  [data-theme="auto"] .work-topbar .btn.btn-accent:hover {
-    background: #a06000;
-    border-color: #a06000;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(245,166,35,0.35);
-  }
 }
 
 /* Console header has both classes — honeycomb wins for button color */
