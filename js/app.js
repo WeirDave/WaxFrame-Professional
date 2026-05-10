@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-018';         // build stamp — update each session
+const BUILD       = '20260509-019';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3395,7 +3395,12 @@ function updateAutoToggleUI() {
     btn.title = 'Auto mode — chains rounds until a guardrail trips. Click to switch to Manual.';
   } else {
     btn.classList.remove('is-auto');
-    if (labelEl) labelEl.textContent = 'Auto';
+    // v3.36.16 — Two-state label: "Manual" (default amber) flips to
+    // "Auto" (green) when toggled on, mirroring the License badge's
+    // two-text-state pattern. Reverses the v3.36.14 static-Auto-both-
+    // states change once we got real-world feedback that the static
+    // label hid the mode.
+    if (labelEl) labelEl.textContent = 'Manual';
     btn.title = 'Manual mode — click to enable Auto and chain rounds automatically.';
   }
 }
