@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-017';         // build stamp — update each session
+const BUILD       = '20260509-018';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3452,13 +3452,24 @@ function _autoMaybeChainNextRound(ctx) {
 
   ctx = ctx || {};
 
-  // 1) Convergence — done
-  if (ctx.outcome === 'unanimous') {
-    _autoHalt('converged', 'The hive reached unanimous convergence — document complete.');
-    return;
-  }
-  if (ctx.outcome === 'majority') {
-    _autoHalt('majority', 'The hive reached majority convergence — review holdout suggestions or finish.');
+  // 1) Convergence — done. v3.36.15 swaps the _autoHalt() modal for a
+  //    silent Auto-OFF flip on unanimous and majority. The convergence
+  //    indicators on the reviewer cards plus the toast already
+  //    communicate the win — the modal was redundant and added an
+  //    extra click before the user could review. Remaining halt cases
+  //    (ceiling, stall, failure-streak, decision-tie) still surface
+  //    the modal because each requires a deliberate next move.
+  if (ctx.outcome === 'unanimous' || ctx.outcome === 'majority') {
+    window._autoMode             = false;
+    window._autoCeilingTarget    = null;
+    window._autoSatisfiedHist    = [];
+    window._autoFailureStreak    = 0;
+    window._autoChainDeferred    = null;
+    updateAutoToggleUI();
+    consoleLog(
+      `🤖 Auto Mode OFF — ${ctx.outcome === 'unanimous' ? 'unanimous convergence' : 'majority convergence'}`,
+      'info'
+    );
     return;
   }
 
@@ -3669,6 +3680,11 @@ async function clearProject() {
   window._lengthGuardOverride = false;
   // v3.32.28 — #6c indicator follows the override flag's state.
   updateLengthGuardIndicator?.();
+  // v3.36.15 — Round-counter state machine reset. New project starts
+  // with no completed-label history; updateRoundBadge() in 'idle' with
+  // a null label falls through to the next-up "Round N — Phase" form.
+  window._roundUiState = 'idle';
+  window._lastCompletedRoundLabel = null;
   docText = ''; // clear in-memory doc first so loadSettings can't resurrect file status
   localStorage.removeItem(LS_PROJECT);
   localStorage.removeItem(LS_SESSION);
@@ -5881,23 +5897,66 @@ function _lengthGuardChoose(value) {
   }
 }
 
-// v3.32.28 — #6c toolbar "Length guard: off" indicator.
-// Renders only when window._lengthGuardOverride is true. Click re-arms
-// the guard for the rest of the project session. Called from:
+// v3.36.15 — Footer length-guard pill is now ALWAYS visible and
+// behaves as a two-state toggle. updateLengthGuardIndicator() flips
+// the .is-off class plus the label and title text between
+// "armed" and "off" depending on window._lengthGuardOverride.
+// Called from:
 //   • initWorkScreen()           — work screen paint / reload
 //   • loadSession() (both paths) — after override flag restore
 //   • clearProject()             — explicit reset to false
 //   • lengthGuardPrompt callers  — when 'continue_anyway' flips override
+//   • toggleLengthGuard helpers  — after every user-driven flip
 // Defensive: short-circuits if the indicator element is not yet in DOM
 // (e.g. called before the work screen has rendered).
 function updateLengthGuardIndicator() {
   const el = document.getElementById('lengthGuardIndicator');
   if (!el) return;
-  if (window._lengthGuardOverride) el.classList.add('is-visible');
-  else                              el.classList.remove('is-visible');
+  const labelEl = el.querySelector('.length-guard-indicator-label');
+  if (window._lengthGuardOverride) {
+    el.classList.add('is-off');
+    el.title = 'Length guard is off — click to re-arm';
+    if (labelEl) labelEl.textContent = 'Length guard: off';
+  } else {
+    el.classList.remove('is-off');
+    el.title = 'Length guard is armed — click to disable';
+    if (labelEl) labelEl.textContent = 'Length guard: armed';
+  }
 }
 
-async function rearmLengthGuard() {
+// v3.36.15 — Toggle dispatcher wired to the footer pill onclick.
+// Routes to _disableLengthGuard (armed → off) or _rearmLengthGuard
+// (off → armed). Both paths confirm via wfConfirm() before flipping
+// state, then save the session last so the persisted console snapshot
+// includes the transition entry (see v3.32.29 #7 fix).
+async function toggleLengthGuard() {
+  if (window._lengthGuardOverride) {
+    await _rearmLengthGuard();
+  } else {
+    await _disableLengthGuard();
+  }
+}
+
+// v3.36.15 — Disable path. Confirms, flips override true, logs, toasts,
+// saves last.
+async function _disableLengthGuard() {
+  if (window._lengthGuardOverride) return; // already off — defensive
+  const ok = await wfConfirm(
+    '📏 Disable length guard?',
+    'The length guard will stop blocking rounds and convergence events that exceed your length target. The Hive will continue producing rounds even when the document is over the ceiling or under the floor. You can re-arm it any time from the same pill.',
+    { okText: 'Disable guard', cancelText: 'Cancel' }
+  );
+  if (!ok) return;
+  window._lengthGuardOverride = true;
+  updateLengthGuardIndicator();
+  consoleLog(`📏 Length guard disabled for this project`, 'info');
+  toast('📏 Length guard disabled', 3000);
+  saveSession();
+}
+
+// v3.36.15 — Re-arm path. Confirms, flips override false, logs, toasts,
+// saves last. (Replaces the v3.32.28-era body of rearmLengthGuard().)
+async function _rearmLengthGuard() {
   if (!window._lengthGuardOverride) return; // already armed — defensive
   const ok = await wfConfirm(
     '📏 Re-arm length guard?',
@@ -5909,13 +5968,17 @@ async function rearmLengthGuard() {
   updateLengthGuardIndicator();
   consoleLog(`📏 Length guard re-armed for this project`, 'info');
   toast('📏 Length guard re-armed', 3000);
-  // v3.32.29 — #7 fix. saveSession() moved to last statement so the
-  // persisted console snapshot includes the "re-armed" line. Prior
-  // ordering wrote the snapshot BEFORE consoleLog/toast fired, which
-  // meant the persisted console (consoleHTML in IDB session) lost the
-  // re-arm entry after refresh. Override flag round-trips correctly
-  // either way — this is a cosmetic console-history fix only.
+  // v3.32.29 — #7 fix. saveSession() last so the persisted console
+  // snapshot includes the "re-armed" line.
   saveSession();
+}
+
+// v3.36.15 — Backwards-compat alias. Older call sites and any inline
+// onclick that may have been cached will route through the toggle
+// dispatcher, which preserves the original "click to re-arm" behavior
+// when override is true.
+async function rearmLengthGuard() {
+  return toggleLengthGuard();
 }
 
 function setCachedRecommendation(cacheId, model, why, labels, none) {
@@ -10404,11 +10467,56 @@ function setPhase(id) {
   updateRoundBadge();
 }
 
+// v3.36.15 — Round-counter display state machine. The earlier behavior
+// was to bump round++ at history.push completion and then call
+// updateRoundBadge — which left the badge reading "Round 6 — Refine"
+// the instant Round 5 finished, before the user could even glance at
+// the result of the round they just completed.
+//
+// New model:
+//   • window._roundUiState — 'idle' | 'running'
+//   • window._lastCompletedRoundLabel — pre-formatted string with a
+//     state suffix (Converged / Majority / Builder Only / Failed /
+//     Complete). Set just before round++ at every round-end site.
+//
+// updateRoundBadge() now branches on state:
+//   • 'running'                          → live "Round N — Phase"
+//   • 'idle' & _lastCompletedRoundLabel  → use the stored label
+//   • 'idle' & no label  (fresh project) → "Round N — Phase" (next-up)
+//
+// runRound + runBuilderOnly entry both flip state='running' and
+// updateRoundBadge() before any work; round-end sites call
+// _setLastCompletedLabel() BEFORE round++, then flip state='idle' and
+// updateRoundBadge() after. clearProject() resets both.
+window._roundUiState = window._roundUiState || 'idle';
+window._lastCompletedRoundLabel = window._lastCompletedRoundLabel || null;
+
+const _ROUND_OUTCOME_SUFFIX = {
+  unanimous_convergence: ' ✓ Converged',
+  majority_convergence:  ' ✓ Majority',
+  builder_only_complete: ' ✓ Builder Only',
+  builder_only_failed:   ' ⚠ Failed',
+  round_failed:          ' ⚠ Failed',
+  continuing:            ' ✓ Complete'
+};
+
+function _setLastCompletedLabel(roundNum, phaseAtRound, outcome) {
+  const phaseLabel = phaseAtRound === 'draft' ? 'Draft' : 'Refine';
+  const suffix = _ROUND_OUTCOME_SUFFIX[outcome] || ' ✓ Complete';
+  window._lastCompletedRoundLabel = `Round ${roundNum} — ${phaseLabel}${suffix}`;
+}
+
 function updateRoundBadge() {
   const el = document.getElementById('workRoundBadge');
   if (!el) return;
   const phaseLabel = phase === 'draft' ? 'Draft' : 'Refine';
-  el.textContent = `Round ${round} — ${phaseLabel}`;
+  if (window._roundUiState === 'running') {
+    el.textContent = `Round ${round} — ${phaseLabel}`;
+  } else if (window._lastCompletedRoundLabel) {
+    el.textContent = window._lastCompletedRoundLabel;
+  } else {
+    el.textContent = `Round ${round} — ${phaseLabel}`;
+  }
   // v3.35.0 — refresh Auto-toggle counter ("N left") whenever the round
   // ticks. updateRoundBadge already runs at every round boundary, so
   // this is the cheapest hook for the persistent counter display.
@@ -11819,6 +11927,11 @@ async function runBuilderOnly() {
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   consoleLog(`📝 Notes: ${notes}`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
+  // v3.36.15 — Round-counter state machine entry. Live "Round N" stays
+  // up while the round is in flight; the next round-end site flips
+  // back to 'idle' with a completion-suffixed label.
+  window._roundUiState = 'running';
+  updateRoundBadge();
 
   // v3.32.17 — Capture the project generation token for the abandonment
   // check below. If the user fires clearProject() while this round is
@@ -11914,6 +12027,19 @@ async function runBuilderOnly() {
         } else {
           // Prior was within target — strict ceiling applies.
           bloatFail = (actual > limitNum);
+        }
+        // v3.36.15 — Trajectory-bypass transparency. When the guard is
+        // armed (no override) and the trajectory rule accepted a round
+        // that would have failed on absolute basis, emit an INFO log
+        // so it's not silent. Brightwater BP Round 3 (v3.36.14 May 9
+        // test) hit exactly this case — 1497 words against a 1200
+        // ceiling, prior 1500 → 1497 = down, accepted with no console
+        // breadcrumb. David asked why armed guard didn't trip.
+        if (prevActual > limitNum && !bloatFail && actual > limitNum) {
+          consoleLog(
+            `📏 Length guard armed but bypassed — output trending toward target (${prevActual}→${actual} ${unitName}, target ${limitNum})`,
+            'info'
+          );
         }
         // v3.32.28 / v3.33.0 — Symmetric undersized branch. Only fires when
         // a floor exists (target or range mode). Mirror of the bloat
@@ -12071,7 +12197,12 @@ async function runBuilderOnly() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    // v3.36.15 — Round-counter state: stamp the completion label
+    // BEFORE round++ so the suffix reflects the round that just
+    // finished, not the next-up round.
+    _setLastCompletedLabel(round, phase, 'builder_only_complete');
     round++;
+    window._roundUiState = 'idle';
     updateRoundBadge();
     renderRoundHistory();
     renderWorkPhaseBar();
@@ -12126,6 +12257,13 @@ async function runBuilderOnly() {
     });
     renderRoundHistory();
     saveSession();
+    // v3.36.15 — Round-counter state: failed Builder-Only does not
+    // bump round; we still flip back to 'idle' and stamp the failed
+    // label so the badge reads "Round N — Phase ⚠ Failed" instead of
+    // hanging on "Round N — Phase" (live state).
+    _setLastCompletedLabel(round, phase, 'builder_only_failed');
+    window._roundUiState = 'idle';
+    updateRoundBadge();
     showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
     // v3.35.0 — Auto Mode: builder-only failure. Counts toward the
     // failure-streak guardrail like a regular failed round.
@@ -12184,6 +12322,11 @@ async function runRound() {
   projectClockStart(); // start/resume project clock on every round
   setStatus(`⚡ Round ${round} in progress — WaxFrame is thinking…`);
   consoleLog(`═══ Round ${round} · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
+  // v3.36.15 — Round-counter state machine entry. Same pattern as
+  // runBuilderOnly above. Live "Round N — Phase" stays through the
+  // run; round-end sites flip back to 'idle' with a labeled suffix.
+  window._roundUiState = 'running';
+  updateRoundBadge();
 
   // v3.32.17 — Capture the project generation token for the abandonment
   // checks at every history.push / saveSession write block below. If
@@ -12386,7 +12529,11 @@ async function runRound() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    // v3.36.15 — Round-counter state: stamp converged label BEFORE
+    // round++ so the badge reads "Round N — Phase ✓ Converged".
+    _setLastCompletedLabel(round, phase, 'unanimous_convergence');
     round++;
+    window._roundUiState = 'idle';
     if (phase === 'draft') { phase = 'refine'; consoleLog(`📍 Phase advanced to Refine Text`, 'info'); }
     updateRoundBadge();
     renderRoundHistory();
@@ -12489,7 +12636,11 @@ async function runRound() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    // v3.36.15 — Round-counter state: stamp majority label BEFORE
+    // round++ so the badge reads "Round N — Phase ✓ Majority".
+    _setLastCompletedLabel(round, phase, 'majority_convergence');
     round++;
+    window._roundUiState = 'idle';
     if (phase === 'draft') { phase = 'refine'; consoleLog(`📍 Phase advanced to Refine Text`, 'info'); }
     updateRoundBadge();
     renderRoundHistory();
@@ -12621,6 +12772,16 @@ async function runRound() {
             bloatFail = (actual >= prevActual);
           } else {
             bloatFail = (actual > limitNum);
+          }
+          // v3.36.15 — Trajectory-bypass transparency (mirror of the
+          // runBuilderOnly branch above). Emits an INFO line whenever
+          // the armed guard let a round pass on trajectory grounds
+          // even though it was still over the absolute ceiling.
+          if (prevActual > limitNum && !bloatFail && actual > limitNum) {
+            consoleLog(
+              `📏 Length guard armed but bypassed — output trending toward target (${prevActual}→${actual} ${unitName}, target ${limitNum})`,
+              'info'
+            );
           }
           // v3.32.28 / v3.33.0 — Symmetric undersized branch. Only fires when
           // a floor exists (target or range mode). See runRound for full comment.
@@ -12783,7 +12944,11 @@ async function runRound() {
   if (notesTa) notesTa.value = '';
   updateNotesBtnPriority();
 
+  // v3.36.15 — Round-counter state: stamp continuing label BEFORE
+  // round++ so the badge reads "Round N — Phase ✓ Complete".
+  _setLastCompletedLabel(round, phase, 'continuing');
   round++;
+  window._roundUiState = 'idle';
 
   // Auto-advance from Draft to Refine after first round completes
   if (phase === 'draft') {
@@ -12854,6 +13019,12 @@ async function runRound() {
     });
     renderRoundHistory();
     saveSession();
+    // v3.36.15 — Round-counter state: failed runRound does not bump
+    // round; we still flip back to 'idle' and stamp the failed label
+    // so the badge reads "Round N — Phase ⚠ Failed".
+    _setLastCompletedLabel(round, phase, 'round_failed');
+    window._roundUiState = 'idle';
+    updateRoundBadge();
     showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
     // v3.35.0 — Auto Mode: builder errored. Tracks the failure-streak
     // counter; chains halt at AUTO_FAILURE_STREAK_LIMIT consecutive.

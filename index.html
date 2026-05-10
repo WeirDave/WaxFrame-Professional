@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-017">
+  <meta name="waxframe-build" content="20260509-018">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.14">
+  <link rel="stylesheet" href="style.css?v=3.36.15">
 </head>
 <body>
 
@@ -680,15 +680,17 @@
         </button>
       </div>
       <div class="footer-right">
-        <!-- v3.36.14 — Length-guard "off" indicator relocated from work
-             topbar to footer-right alongside license badge + About.
-             Renders only when window._lengthGuardOverride is true
-             (toggled via the is-visible class by
-             updateLengthGuardIndicator). Click re-arms the guard for
-             the rest of the project session. -->
-        <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="rearmLengthGuard()" title="Length guard is off — click to re-arm">
+        <!-- v3.36.15 — Length-guard pill is now ALWAYS visible in the
+             footer-right (no .is-visible gating). Acts as a true
+             toggle: when armed, click disables; when off, click
+             re-arms. Both transitions confirm via wfConfirm() before
+             flipping window._lengthGuardOverride. The .is-off class
+             switches the pill to amber styling.
+             updateLengthGuardIndicator() syncs class + label + title
+             on every state change. -->
+        <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="toggleLengthGuard()" title="Length guard is armed — click to disable">
           <span class="length-guard-indicator-icon">📏</span>
-          <span class="length-guard-indicator-label">Length guard: off</span>
+          <span class="length-guard-indicator-label">Length guard: armed</span>
         </button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
@@ -731,7 +733,7 @@
   <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
     <span class="notes-drawer-title">📝 Notes for this Round <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-    <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers. Notes persist across full rounds; Builder-Only runs clear them after use.</span>
+    <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers. Notes auto-clear after the Builder uses them on the next round.</span>
     <div class="notes-drawer-actions">
       <button class="btn" onclick="copyNotes()">📋 Copy</button>
       <button class="btn" onclick="clearNotes()">✕ Clear</button>
@@ -2089,9 +2091,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.36.14"></script>
+<script src="js/version.js?v=3.36.15"></script>
 <script src="js/templates.js?v=3.36.13"></script>
-<script src="js/app.js?v=3.36.14"></script>
+<script src="js/app.js?v=3.36.15"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

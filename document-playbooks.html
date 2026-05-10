@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-017">
+  <meta name="waxframe-build" content="20260509-018">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.14">
+  <link rel="stylesheet" href="style.css?v=3.36.15">
 </head>
 <body class="helper-body">
 
@@ -764,7 +764,7 @@ What we want him to know:
 
       <div class="dp-field">
         <div class="dp-field-label">Convergence</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈8 minutes wall-clock across 3 rounds (per the document footer's "Produced by WaxFrame in 3 rounds and 8 minutes" byline). Final output: 1175 words / 8369 characters — sits at the upper end of the 1–2 page range under v3.36.12's corrected 600-words-per-page math (2 pages ≈ 1200 words). SCRATCH-mode runs with a fully-populated identity scaffold converge faster than draft-refinement runs because there's no rough-prose to wrestle into shape — the hive builds clean from Round 1. Plan for 3–6 rounds depending on how complete your Scope &amp; constraints scaffold is and whether you have specific client objections to address.</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈8 minutes wall-clock across 3 rounds (per the document footer's "Produced by WaxFrame in 3 rounds and 8 minutes" byline). Final output: 1175 words / 8369 characters — sits at the upper end of the 1–2 page range under v3.36.12's corrected 600-words-per-page math (2 pages ≈ 1200 words). SCRATCH-mode runs with a fully-populated identity scaffold converge faster than draft-refinement runs because there's no rough-prose to wrestle into shape — the hive builds clean from Round 1. Plan for 3–6 rounds depending on how complete your Scope &amp; constraints scaffold is and whether you have specific client objections to address.<br><br><strong>3-AI vs 2-AI reference data (v3.36.14, May 2026):</strong> A 2-AI Auto-Mode run on the same Brightwater scaffold took 11 rounds / ≈16 minutes because Round 5 produced a tied USER DECISION block with no majority, halting Auto until the user manually picked. A 3-AI run (Brightwater BP v3.0) on the same scaffold converged in 5 rounds / ≈10 minutes — the third reviewer broke decision ties automatically and Auto chained without interrupts. <strong>Recommendation: run Auto Mode with at least 3 AIs.</strong> The cost is one more reviewer per round; the win is fewer manual decision interrupts and faster wall-clock.<br><br><strong>Length-overshoot caveat:</strong> The hive consistently over-produces 25–50% on the first draft regardless of length target. <strong>Reviewers focus on prose quality and do not address length</strong> — only the Builder responds to length directives. If the document holds steady above the ceiling for multiple rounds despite an armed length guard, plan to inject the ✂ Trim template via a Builder-Only round once the bloat-guard ceiling crosses. The v3.0 reference run did exactly this: a single Trim injection at Round 4 compressed 1499 → 1083 words (a 27.6% reduction) in one Builder-Only round, and the next reviewer round confirmed convergence at the new size.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -1626,7 +1626,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.14"></script>
+<script src="js/version.js?v=3.36.15"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

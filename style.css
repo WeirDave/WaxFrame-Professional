@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260509-017
+   Build: 20260509-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -6402,8 +6402,13 @@ kbd {
    "guard disabled — be aware". Clickable: re-arms the guard for
    the rest of the project. The hover state intensifies the amber
    to signal the affordance. */
+/* v3.36.15 — Length-guard footer pill, ALWAYS visible.
+   Default state = armed (neutral surface palette, matches license
+   badge / about button density). .is-off swaps to amber to signal
+   "guard disabled — be aware". Both states are clickable toggles
+   wired via toggleLengthGuard(). */
 .length-guard-indicator {
-  display: none;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-4);
   font-size: var(--fs-11);
@@ -6411,19 +6416,26 @@ kbd {
   font-family: var(--font-display);
   padding: var(--space-4) var(--space-10);
   border-radius: 20px;
-  border: 1px solid rgba(245, 166, 35, 0.55);
-  color: #f5a623;
-  background: rgba(245, 166, 35, 0.14);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  background: var(--surface2);
   white-space: nowrap;
   cursor: pointer;
   user-select: none;
   transition: background 0.12s, border-color 0.12s, color 0.12s, box-shadow 0.12s;
-  box-shadow: 0 0 8px rgba(245, 166, 35, 0.22);
-}
-.length-guard-indicator.is-visible {
-  display: inline-flex;
 }
 .length-guard-indicator:hover {
+  background: var(--surface3);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+.length-guard-indicator.is-off {
+  border-color: rgba(245, 166, 35, 0.55);
+  color: #f5a623;
+  background: rgba(245, 166, 35, 0.14);
+  box-shadow: 0 0 8px rgba(245, 166, 35, 0.22);
+}
+.length-guard-indicator.is-off:hover {
   background: rgba(245, 166, 35, 0.26);
   border-color: rgba(245, 166, 35, 0.85);
   color: #ffc56b;

@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-017">
+  <meta name="waxframe-build" content="20260509-018">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.14">
+  <link rel="stylesheet" href="style.css?v=3.36.15">
 </head>
 <body class="helper-body">
 
@@ -548,6 +548,7 @@
         </tbody>
       </table>
       <p>The convergence-time gate is symmetric: when the hive converges (unanimous or majority), WaxFrame checks the final document against your mode's bounds before celebrating. If the doc is over a cap, under a target, or outside a range, you get the same three-option prompt — Discard returns you to the work screen to edit and re-run, Keep accepts the convergence, Continue anyway accepts and silences the guard for the rest of the project session.</p>
+      <p><strong>Who actually responds to length directives.</strong> Reviewers focus on prose quality — clarity, structure, persuasion, accuracy — and do <em>not</em> address length. <strong>Only the Builder responds to length directives</strong>, including the ✂ Trim, 📈 Expand, and 📐 Match Notes templates. If the document consistently overshoots your target across multiple reviewer rounds, that is expected — the reviewers are doing their job and the Builder is the lever for size. The standard playbook: wait for a round where reviewers signal they are done with prose changes, then run a Builder-Only round with the ✂ Trim template injected to compress the output. Real-world reference: a 1499-word document compressed to 1083 words (a 27.6% reduction) in a single Builder-Only round with one Trim injection.</p>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p>If you projects from before v3.33.0 (the mode picker addition), the migration assumes <strong>Hard cap</strong> mode if you had a length set, or <strong>No limit</strong> if you didn't. Open the project on the Setup 3 screen, look at the active pill, and switch modes if you want different behavior.</p></div>
@@ -1726,7 +1727,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.14"></script>
+<script src="js/version.js?v=3.36.15"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
