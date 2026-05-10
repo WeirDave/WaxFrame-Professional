@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-002">
+  <meta name="waxframe-build" content="20260510-003">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.24">
+  <link rel="stylesheet" href="style.css?v=3.36.25">
 </head>
 <body class="helper-body">
 
@@ -1053,7 +1053,7 @@ Sender:
 
       <div class="dp-field">
         <div class="dp-field-label">Rounds</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>3–5 rounds — AIs often disagree on what to cut</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div><strong>7 rounds, ≈41 minutes wall-clock (measured, not estimated).</strong> Reference run: 2025 Sustainability Report, 2026-05-10. 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity) with DeepSeek as Builder, REFINE mode on a hedged corporate draft. Final 142 words / 998 characters. Majority convergence at R8 (5 of 6 satisfied — R1 was the setup round, so the WaxFrame round counter shows 7).<br><br><strong>USER DECISION-heavy run.</strong> 7 USER DECISION blocks surfaced across the run (1 in R2, 3 in R4, 3 in R6) — corporate sustainability prose has a lot of choices about what to commit to vs. what to hedge, and reviewers don't agree on which side to land on. Two Builder-Only rounds applied locked decisions via mid-stream notes. If you're refining a heavily-edited corporate draft full of soft commitments, expect 5–9 rounds with multiple decision blocks rather than a quick 3-round polish.<br><br><strong>Length-cap insight.</strong> The 400-word Hard cap was set at the recommended value but the hive landed at 142 words and stayed there from Round 3 onward. Executive summaries written tight will self-bound well under a 400-word ceiling — the Hard cap acts as a safety rail rather than an active constraint. If your source has a hard one-page or 250-word requirement, set the cap accordingly; otherwise 400 is generous enough that you'll never hit it.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -1246,7 +1246,7 @@ Call to action at the end: link to a tool that automates this — multiple model
 
       <div class="dp-field">
         <div class="dp-field-label">Convergence</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈13 minutes · 16 rounds (measured, not estimated) — refining a strong existing draft with Reference Material guidance. Voice-driven posts take more rounds than transactional documents because reviewers tune phrasing and rhythm sentence by sentence. The recent run (Blog — Why I Stopped Trusting One-Shot AI v1.0) reached majority convergence at Round 16.</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div><strong>4 rounds, ≈77 minutes wall-clock (measured, not estimated).</strong> Reference run: Blog — Why I Stopped Trusting One-Shot AI v2.0, 2026-05-10. 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity) with DeepSeek as Builder, SCRATCH mode with Reference Material. 1,180-char thesis scaffold pasted into Setup 4 — Reference Material; empty Starting Document. Final 460 words / 2,795 characters. Majority convergence at R4 (4 of 6 satisfied).<br><br><strong>4× faster than the v1.0 measurement on the same topic.</strong> The first measured run on this exact thesis (v1.0, earlier) took 16 rounds. The v2.0 run shipped at 4 rounds — a 4× improvement driven by two changes: (1) the source thesis went into Reference Material instead of being attempted as a Starting Document, so the hive built fresh from scaffold rather than fighting an existing draft; and (2) the Additional Instructions field carried an explicit buzzword guard ("No 'synergy,' 'leverage,' 'revolutionary.' If a section feels padded, cut it.") that suppressed the AI-flavor language reviewers tend to argue about. Both are general-purpose levers — they apply to most Blog Post runs, not just this topic.<br><br><strong>USER DECISION moderate-load run.</strong> 2 USER DECISION blocks surfaced in R2, both resolved via a Builder-Only round in R3 with locked-line notes ("Lock this line exactly as written — do not change it: [URL]"). Blog posts in the wild will surface 2–4 decisions per run depending on how strong the voice is in the draft.<br><br><strong>Length-cap insight.</strong> Hard cap was set in characters (not words) for this run. The hive landed at 2,795 chars and stayed there from R3 onward. For voice-driven posts, the hive self-bounds at the length the prose wants to be — set the cap at your platform's actual limit (LinkedIn, Medium, etc.) as a safety rail rather than as an active constraint.<br><br><strong>For comparison — the v1.0 run (without Reference Material approach):</strong> ≈13 minutes · 16 rounds (measured). Refining a strong existing draft with the source IN the Starting Document. Voice-driven posts take more rounds when reviewers tune phrasing and rhythm sentence by sentence on a draft they're committed to. Use this approach when you want to preserve specific phrasing from an existing draft; use the v2.0 approach (Reference Material + scratch) when you want to converge fast.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -2094,7 +2094,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.24"></script>
+<script src="js/version.js?v=3.36.25"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

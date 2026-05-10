@@ -1,0 +1,640 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG (v9)
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-10 (post v3.36.24, time-tracking idea added)
+Current version:     v3.36.24 Pro / build 20260510-002
+Maintained by:       R David Paine III
+Lives:               docs\WaxFrame_Backlog_Master_v9.txt
+
+This file is the single source of truth for code work, feature
+ideas, and bugs in WaxFrame. Companion to:
+
+  docs\WaxFrame_Playbook_Test_Master_vN.txt
+    — David's project to-do list (test runs to gather data)
+
+Two-document persistence system, per memory rule:
+  • This file = code work + ideas + bug-fix list (non-historical)
+                + Recently Shipped (history)
+  • Test Master = ALREADY MEASURED + PENDING TESTS + HISTORICAL
+                  RUNS (permanent)
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+CHANGES IN v9 (from v8, 2026-05-10):
+  - NEW idea captured: Engaged-time tracking for runs (Section
+    2). Wall-clock time is misleading when the user steps away
+    mid-session (lunch break, dinner). The "47 minutes" the
+    Publix recipe run shows is wall-clock; actual engaged time
+    was much lower because David ate lunch in the middle.
+    Surfaces a measurement-quality issue for HISTORICAL RUNS
+    data — times currently logged are not comparable across
+    runs because they conflate engaged work and idle time.
+
+CHANGES IN v8 (from v7, 2026-05-10):
+  - P1.1 Functional Audit COMPLETE — all three passes shipped:
+      Pass 1 (function-level static analysis, 397 functions
+      classified, 3 dead identified)
+      Pass 2 (cross-surface consistency: templates ↔ playbooks
+      ↔ manual ↔ gospel docs reconciled)
+      Pass 3 (side-effect mapping: 96 pure functions, 6 multi-
+      effect orchestrators, all heuristic flags scanned)
+    Moved to RECENTLY SHIPPED.
+  - Three releases shipped 2026-05-10: v3.36.22 (LinkedIn About
+    template+playbook), v3.36.23 (audit-driven cleanup), v3.36.24
+    (recipe playbook 3rd data point). All in RECENTLY SHIPPED.
+  - NEW SECTION 1: Bug-fix list (non-historical) — currently
+    empty. This section gets things added as they're noticed
+    and removed as they're fixed. Per memory rule #28.
+  - Three audit-surfaced placement decisions added to "Other
+    open items": project-setup specificity callout home,
+    convergence-principle callout home, model-diversity
+    guidance home. These were findings from Pass 2 that don't
+    have a home in user-facing surfaces yet.
+  - WaxFrame Free parity list updated with v3.36.21–v3.36.24
+    items.
+
+═════════════════════════════════════════════════════════════
+0. PRIORITY 1 (do these next)
+═════════════════════════════════════════════════════════════
+
+[-] ★ P1.3  v3.36.0 — "Auto really means Auto" behavioral
+    group  (#5–#10 from session discussion 2026-05-09)
+
+    Real-world pain trail validating this work: 53-minute
+    Business Proposal session 2026-05-08 → 2026-05-09. 18
+    rounds. Two AIs manually disabled mid-session (DeepSeek
+    slow, Mistral 429). Claude credit-low fired on rounds
+    8/9/10 with no auto-recovery. Auto turned itself OFF
+    twice mid-session (12:05:14, 12:06:11) because errors
+    flipped the toggle when Auto should have soldiered on.
+
+    [ ] #5  Per-AI 5xx during Auto → auto-disable bee +
+            toast notification, suppress troubleshooting
+            card, continue round with surviving AIs
+    [ ] #6  Slow-responder during Auto → same auto-disable
+            pattern as #5. Threshold: more than 3x round
+            average for two consecutive rounds. Toast
+            tells the user which AI was disabled.
+    [ ] #7  Suppress showRoundErrorModal in Auto. Increment
+            _autoFailureStreak instead. At streak limit
+            (currently 2), trigger _autoHalt('failure-
+            streak') to surface the auto-halt modal. Reset
+            counter on any clean round so an early blip
+            doesn't halt 5 rounds later.
+    [ ] #8  lengthGuardPrompt mid-round in Auto returns
+            'keep' automatically + log delta to console.
+            No modal interruption.
+    [ ] #9  lengthGuardPrompt AT convergence in Auto →
+            trigger _autoHalt('length-at-convergence')
+            with copy explaining the convergence is a
+            length violation and asking the user to choose.
+    [ ] #10 Builder auto-disabled by #5/#6 → promote first
+            eligible reviewer alphabetically. If no
+            eligible AI remains, _autoHalt('no-builder-
+            available'). Open question whether alphabetical
+            is the right heuristic — alternative is
+            user-configurable preference order.
+
+    Phase 1 (the small, low-risk part):
+      [x] "Interactive" → "Auto OFF" / "Manual" label
+          rationalization across UI surfaces — SHIPPED
+          via v3.36.14 (Interactive→Manual cascade) and
+          v3.36.16 (three-pill codification + two-state
+          Manual/Auto label flip).
+      [ ] DELETE "Stop here" button in auto-halt modal —
+          STILL OPEN. Confusing relative to Resume + Switch.
+      [ ] DELETE autoHaltStop function in app.js — STILL
+          OPEN. Verify no straggler call sites before
+          removal.
+      [ ] Auto-halt modal copy sweep — STILL OPEN. Check
+          modal title and reason text against the new
+          Manual/Auto vocabulary.
+
+    DESIGN-DISCUSSION ITEMS still open from session:
+      • Phase 2 silent auto-disable: should be a TOAST not
+        just console line — user away in another tab needs
+        to see WHY half their hive vanished
+      • Builder alphabetical promotion in #10 — opinionated.
+        Alternatives: user-configurable preference order,
+        or prompt user
+      • #7 streak counter — confirm reset on successful
+        round (otherwise early blip halts later)
+      • Mid-round vs at-convergence length-guard call site
+        discrimination (#8 vs #9) — need to inspect each
+        of the 4 lengthGuardPrompt call sites to know which
+        is which before coding
+
+    PROTOCOL: this is a multi-touchpoint behavioral
+    overhaul. Per memory entry #6, commit current state
+    via GitHub Desktop as checkpoint BEFORE any code
+    changes. Do not start unless the working tree is clean.
+
+[ ] ★ P1.4  Playbook test master — rewrite all pending
+    tests in David's voice
+
+    PROBLEM: T2–T11 in WaxFrame_Playbook_Test_Master_vN.txt
+    are written in a polished, slightly verbose,
+    AI-comma-spliced style ("Reading on tablet between
+    meetings — needs to skim and still get the value prop
+    in 60 seconds"). The current text is fine but doesn't
+    sound like David, and he's noted the prompts can blow
+    up the runs with too much loaded into each setup field.
+
+    WHAT TO DO:
+      • Tone shift to David's voice — direct, peer-to-peer,
+        no marketing-style sentence construction
+      • Trim each test's setup fields. The current Target
+        Audience / Desired Outcome / Scope / Tone fields
+        are routinely 4–7 sentences. Aim for 1–3 short
+        sentences each that actually sound like notes
+        someone would write to themselves.
+      • Goal Notes field similarly — the current voice is
+        a polished editor's note. The real voice is
+        whatever's quickest to type while thinking
+        "what's the actual ask here."
+      • DO NOT touch the ALREADY MEASURED entries at the
+        top — those are historical reference data.
+      • DO NOT touch the Reference Material payloads
+        wholesale — those are technical content blobs
+        that may legitimately need the verbosity (e.g.
+        T6's identity-stack notes).
+      • DO touch: Project Name, Document Type, Target
+        Audience, Desired Outcome, Scope, Tone, Length
+        Limit/Unit, Goal Notes — all the Setup 3 fields
+        that get pasted into the live app.
+
+    APPROACH: Pull the file open, rewrite T2–T11 setup
+    sections, ship the updated file. Not a code change —
+    pure content rewrite. Probably 90 minutes of focused
+    editing. Defer to a fresh head.
+
+[ ] ★ P1.5  Storage-clean indicator pill
+    UI pill in the work footer-right cluster (alongside
+    License + Length-guard + About) showing whether
+    localStorage is in a clean state — only the expected
+    AI/API keys present, no orphaned waxframe_recommend_*
+    / waxframe_models_* / other dust bunnies.
+
+    Click behavior: opens a scanner overlay (or scrolls
+    to a dedicated section) showing what was found, with
+    a "Clean these up" action button.
+
+    Visual: fits the v3.36.16 three-pill color system.
+      • Green = clean (no orphans detected)
+      • Amber = N orphans found, click to review
+      • Red = used only if scan errors out / can't read
+
+    NOT a re-do of the retired cleanup.html page (which
+    used a stale allow-list and was retired in v3.35.3).
+    This is a passive indicator that runs scan-on-boot,
+    surfaces a count, and routes to remediation. The
+    scanning logic is reusable across both — can crib
+    from the retired page's source if it's still in git
+    history.
+
+    Estimated 3–4 hours surgical work. Fits cleanly
+    between heavier items as a palate cleanser.
+
+[ ] ⚠ P1.6  USER DECISION audible alert + Auto-halt
+    sounds
+    BLOCKED on Kai producing two .wav assets:
+      • sounds/waxframe_user_decision_alert.wav — fires
+        when a USER DECISION block surfaces during Auto
+        mode (user is presumably away from keyboard).
+      • sounds/waxframe_auto_halted.wav — fires whenever
+        _autoHalt() opens its modal for any reason
+        (ceiling, stall, failure-streak, decision-tie,
+        future length-at-convergence per P1.3 #9).
+
+    Both gated by the global mute state (per audio rule
+    in memory: every direct-audio function starts with
+    `if (_isMuted) return;` as first statement).
+
+    Code wiring is small once assets land. Don't start
+    until WAVs are in /sounds.
+
+
+═════════════════════════════════════════════════════════════
+1. BUG-FIX LIST  (non-historical — items removed when fixed)
+═════════════════════════════════════════════════════════════
+
+(currently empty)
+
+This section is for bugs noticed during sessions that don't
+get fixed immediately because we're scope-disciplined on
+something else. Items here ARE NOT historical — once fixed,
+they're removed entirely (the fact they existed is captured
+in CHANGELOG.md and Recently Shipped, not here).
+
+When David surfaces a bug mid-conversation that doesn't get
+fixed that turn: append to this list same turn.
+
+
+═════════════════════════════════════════════════════════════
+2. OTHER OPEN WORK
+═════════════════════════════════════════════════════════════
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    UNREACHABLE-SERVER WARNING TEMPLATE:
+      "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    EXPORT FORMAT — TWO OPTIONS:
+      • Bundled inside Backup format v3 (existing pipe)
+      • Standalone .waxprofile files (purpose-built,
+        share single profile between machines without
+        full backup overhead)
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it. Import a Source on a new
+    machine and the Profiles light up.
+    DESIGN NOTE: AIs without a Source are direct-API
+    customs — the Sources view doesn't need to account
+    for every AI, only the ones that came from a server.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+[ ] ★ Project-setup specificity callout — placement decision
+    PASS 2 AUDIT FINDING. Empirical pattern from session
+    2026-05-07: convergence speed correlates with project-
+    setup specificity, not just document state. Same hive,
+    same topic, v1.0 (specific goalNotes 243 chars,
+    anchored persona, "Social Media Post" docType,
+    800-word limit) converged in 5 rounds. v2.0 (generic
+    goalNotes 48 chars, generic tone, "Blog Post" docType,
+    1500-word limit) ran 37 rounds without converging.
+
+    The user manual's measured-data block currently leads
+    with "setup specificity drives convergence" as
+    Pattern #1, so the principle IS named. What's missing
+    is the v1.0 vs v2.0 magnitude data point — the 5-round
+    vs 37-round contrast on the same topic with the same
+    hive.
+
+    PLACEMENT DECISION:
+      Option A — Add a 7th data point to the manual's
+      measured-data block (the contrast is more dramatic
+      than any current entry).
+      Option B — Add as a section in the manual after
+      "What this implies" called "When setup is too
+      generic" or similar.
+      Option C — Surface in document-playbooks.html on
+      the relevant playbook (which one? blog-post is
+      where the 37-round run lives.)
+      Option D — All three (highest leverage, most
+      surface-area).
+
+    Decide and ship.
+
+[ ] ★ Convergence-principle callout — placement decision
+    PASS 2 AUDIT FINDING. "Starting from scratch converges
+    faster than refining a heavily misaligned draft" is
+    backed by:
+      • Cook's-résumé-adapted-for-network-engineer data
+      • Thank-You from scratch (2 rounds) vs refining
+        rough draft (13 rounds) — already in the user
+        manual measured-data block as Pattern #6
+      • v3.36.24 Recipe with Reference Material approach
+        (4 rounds) vs 5–20+ general refinement estimate
+
+    The PRINCIPLE is named in the manual via the Thank-You
+    point, but it's listed as one of six measured points
+    rather than surfaced as a top-level "lesson." The
+    recipe-playbook page now teaches the same lesson in
+    methodology language.
+
+    PLACEMENT DECISION:
+      Option A — Pull this principle out of the data
+      points and give it its own paragraph at the top
+      of the "What this implies" block in the manual.
+      Option B — Land it as a new top-level section in
+      the manual ("When you should start from scratch
+      instead of refining").
+      Option C — Surface on every playbook where it's
+      relevant (currently: thank-you, recipe, eventually
+      others).
+
+    Decide and ship.
+
+[ ] ★ Model-diversity guidance — placement decision
+    PASS 2 AUDIT FINDING. The Recommend-a-Model
+    convergence trap: when all AIs in a hive run on the
+    same underlying model (e.g., 3 different LM Studio
+    bees all running Llama 3 8B), they tend to agree
+    excessively, producing low-quality convergence. Need
+    a minimum-two-distinct-models rule documented
+    somewhere user-facing.
+
+    Currently lives only in Claude's memory (rule about
+    model diversity for model-server deployments). Not
+    in the user manual, not in the playbook page.
+
+    PLACEMENT DECISION:
+      Option A — Add to the Worker Bees screen in the
+      app as inline guidance text near the model picker.
+      Option B — Add to the user manual in a section
+      about hive composition.
+      Option C — Both.
+
+    Decide and ship.
+
+[ ] ★ Engaged-time tracking for runs  (NEW v9)
+    NEW from session 2026-05-10. Wall-clock session time is
+    misleading because it includes idle periods when the user
+    stepped away (lunch break, dinner, distracted by other
+    work). The Publix potato salad recipe run shows "47 min"
+    wall-clock; actual engaged time was a fraction of that.
+
+    PROBLEM IT CAUSES: HISTORICAL RUNS times aren't comparable
+    across runs. Two 4-round runs that both show "30 min" might
+    actually have very different engaged times. This degrades
+    the value of the time-component of measurement data.
+
+    DESIGN OPTIONS:
+      Option A (manual pause): add a Pause button next to the
+      Auto/Manual control. User clicks before stepping away,
+      clicks again on return. Simple, reliable, requires user
+      discipline. The existing Auto-pause-on-Notes-open guard
+      from v3.36.17 is a similar pattern — extend it.
+
+      Option B (auto-detect idle): track last user-interaction
+      timestamp (keystroke, click, scroll). If idle > N minutes
+      (configurable, e.g., 5 min default), pause the round
+      timer. Resume on next interaction. Smart but heuristic.
+
+      Option C (both): manual pause for known breaks, auto-
+      detect for forgotten ones. Best UX but most code.
+
+    WHAT IT TOUCHES:
+      • Round timer (currently wall-clock-based)
+      • Console log timestamps (also wall-clock — these are
+        good as-is for forensic purposes; engaged-time is a
+        separate metric)
+      • Transcript export "Session duration" line — should
+        report both wall-clock AND engaged time for clarity
+      • HISTORICAL RUNS rows in test master — going forward
+        should record both metrics
+      • Round badge / topbar elapsed display — show engaged
+        time, not wall-clock
+
+    NOT a blocker for current work — runs already in the wild
+    have wall-clock data, that's what we have, we move on.
+    Going forward, capturing engaged time would make the data
+    more meaningful.
+
+    PRIORITY: high but not P1 — affects measurement quality,
+    not blocking any release. Lift when there's a quiet
+    session with no other surgical work to do.
+
+[ ] Builder selection heuristic
+    Companion finding to project-setup specificity.
+    Empirical pattern: same hive, Cl37S as Builder
+    converged cleanly on multiple docs (Blog v1.0,
+    LinkedIn post), Gem25P as Builder failed to converge
+    on equivalent prose. Likely cause: Gem25P's Builder
+    output invites more reviewer dissent.
+
+    Worth documenting as a "Builder selection" guide
+    in the user manual once we have more data points
+    across doc types.
+
+    PARTIAL DATA from v3.36.x session: Brightwater BP
+    v3.0 with Gemini-as-Builder converged in 5 rounds /
+    ≈10 min (3-AI hive). 2-AI run on same scaffold took
+    11 rounds / ≈16 min due to tied USER DECISION at
+    Round 5. v3.36.24 Recipe run with DeepSeek-as-Builder
+    converged in 4 rounds with a 5-AI hive on Reference
+    Material approach.
+
+    NOT yet ready for placement — still gathering data
+    across doc types. Stays in backlog as "future doc
+    write-up" until enough data accumulates.
+
+[ ] Backlog file maintenance (this file)
+    Keep this file updated. Treat it as the
+    authoritative backlog. Punch lists in chat sessions
+    feed back into this file before the chat ends.
+    SESSION RULE: when Claude pulls items from memory or
+    backlog into a conversation, Claude cites the source
+    explicitly ("from your master backlog Section 0
+    PRIORITY 1") rather than treating them as shared
+    context. Master backlog file is the contract — if
+    something isn't in it, it's not real.
+
+
+═════════════════════════════════════════════════════════════
+3. CSS CLEANUP (parked work)
+═════════════════════════════════════════════════════════════
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+
+═════════════════════════════════════════════════════════════
+4. WAXFRAME FREE EDITION
+═════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+
+    PARITY CANDIDATES from v3.35.x run:
+      • v3.35.4 Worker Bee card link always-visible (UX)
+      • v3.35.4 CREDIT_LOW troubleshooting card (UX)
+      • v3.35.4 Notes priority swap on drawer open (UX)
+      • v3.35.5 console error link click handler (bug fix)
+      • v3.35.6 sessionAIs carryover hotfix (bug fix —
+        critical for any Free user who toggles bees mid-
+        round)
+
+    PARITY CANDIDATES from v3.36.x run:
+      • v3.36.14 Interactive→Manual label cascade (UX)
+      • v3.36.14 Notes forensics — _notesAtBuilderCall
+        freeze pattern (forensic improvement)
+      • v3.36.14 length-guard logging + length templates
+        Trim/Expand/Match (UX, length discipline)
+      • v3.36.15 length-guard always-visible toggle (UX)
+      • v3.36.15 convergence skips auto-halt modal (UX)
+      • v3.36.15 round counter state machine (UX)
+      • v3.36.15 trajectory-bypass log (forensic)
+      • v3.36.16 three-pill color system (UX)
+      • v3.36.16 Auto label flip back to two-state (UX)
+      • v3.36.16 Auto button repositioning (UX)
+      • v3.36.17 Notes drawer sticky/one-shot split — IF
+        Free ships Notes at all (verify before porting)
+      • v3.36.17 Auto-pause-on-Notes-open guard (UX)
+      • v3.36.18 Notes + Reference button toggle (UX)
+      • v3.36.20 length-guard pill height parity (visual)
+      • v3.36.21 sessionAIs in transcript export (bug fix)
+
+    PARITY CANDIDATES from 2026-05-10 (v3.36.22–24):
+      • v3.36.22 LinkedIn About template + playbook
+      • v3.36.23 dead-feature chain cleanup (code hygiene)
+      • v3.36.23 sidebar gap closure for linkedin-post
+        and contractor-letter
+      • v3.36.23 RFP rename + 4 review templates and
+        playbooks (Reviews & Recommendations category)
+      • v3.36.23 user-manual measured-data block refresh
+      • v3.36.24 recipe playbook 3rd data point +
+        Reference Material methodology callout
+
+    BACKLOG GAP: v3.35.7 through v3.36.13 not enumerated
+    (session records weren't loaded). Backfill from
+    GitHub Desktop history when there's a quiet moment.
+
+    DEV-ONLY (Pro-only, do not port to Free):
+      • Dev Toolbar reorganizations (Pro-only feature)
+      • [wfSat] diagnostic instrumentation (now removed
+        anyway)
+
+
+═════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first)
+═════════════════════════════════════════════════════════════
+
+v3.36.24  2026-05-10  Recipe playbook — 3rd data point +
+                      Reference Material methodology
+                      • document-playbooks.html: recipe section
+                        gets Quick Start (cookies) 2 rounds +
+                        Reference Material approach 4 rounds +
+                        general refinement 5–20+ estimated.
+                        Includes "why Reference Material over
+                        Starting Document" methodology callout.
+                      • waxframe-user-manual.html: pattern #3
+                        (Reference Material is high-leverage)
+                        strengthened with the Publix potato
+                        salad recipe data point — magnitude of
+                        the effect now visible in numbers.
+                      • No templates.js changes — recipe
+                        template defaults held up cleanly
+                        across the 4-round run.
+
+v3.36.23  2026-05-10  Audit-driven cleanup release
+                      • Removed dead-feature chain:
+                        getTotalReferenceText, hasReferenceMaterial,
+                        openSettings, _settingsReturnToWork orphan
+                        flag, always-false branch in
+                        continueFromBuilder (~20 lines, no
+                        behavioral change)
+                      • Sidebar gaps closed: linkedin-post +
+                        contractor-letter now have sidebar links
+                      • Wellness/Law Firm BP 11-round 5-AI added
+                        as second-scenario data point in BP
+                        playbook
+                      • Recipe playbook split: Quick Start
+                        (measured 2 rounds) vs general (5-20+
+                        estimated)
+                      • User manual measured-data block fully
+                        refreshed with 6 curated data points + 3
+                        explicit patterns
+                      • RFP template renamed (parenthetical
+                        dropped)
+                      • 4 review templates (Restaurant, Hotel,
+                        Business/Service, Multi-Platform) in new
+                        Reviews & Recommendations category
+                      • 4 matching review playbooks with sidebar
+                        entries
+                      • app.js category order updated
+                      • P1.1 audit pass 2 + 3 docs shipped
+
+v3.36.22  2026-05-09  LinkedIn About template + playbook
+                      NEW DOCUMENT TYPE: linkedin-about.
+                      • Template in templates.js (Career & Hiring
+                        category, between Resume and Thank-You)
+                      • Playbook in document-playbooks.html with
+                        sidebar link
+                      • Real-world example: 1,163-char identity
+                        scaffold for wireless engineer profile
+                      • Buzzword guard in goalNotes
+                      • 11-file ZIP (templates.js touched)
+
+v3.36.21  2026-05-09  sessionAIs in transcript export fix
+                      exportTranscript() HIVE COMPOSITION header
+                      was reading activeAIs (full configured
+                      hive) instead of sessionAIs (per-session
+                      toggle Set). Real-world: user with 3 of 7
+                      AIs toggled got "Reviewers (6 of 7 total)"
+                      lying.
+
+v3.36.20  2026-05-09  Length-guard pill height parity
+v3.36.19  2026-05-09  Length-guard pill height parity (initial)
+v3.36.18  2026-05-09  Notes + Reference button toggle
+v3.36.17  2026-05-09  Notes drawer split + Auto-pause on Notes
+                      open
+v3.36.16  2026-05-09  Three-pill color system codified
+                      (red/amber/green) + Auto button
+                      repositioning + label flip
+v3.36.15  2026-05-09  Length-guard always-visible toggle +
+                      convergence skips auto-halt modal +
+                      round counter state machine +
+                      trajectory-bypass log
+v3.36.14  2026-05-09  Interactive→Manual label cascade +
+                      length-guard logging + length templates
+                      (Trim/Expand/Match) + Notes forensics
+                      (_notesAtBuilderCall freeze pattern)
+
+P1.1 AUDIT (three passes, completed 2026-05-10):
+  • Pass 1 — Functional audit
+    docs\WaxFrame_Functional_Audit_P1-1.md (599 lines)
+    397 functions classified. 3 confirmed DEAD (shipped in
+    v3.36.23). 128 PRODUCTION, 124 LOW-USE, 99 SINGLE-CALL,
+    43 INLINE-CANDIDATE.
+  • Pass 2 — Cross-surface consistency
+    docs\WaxFrame_Cross_Surface_Audit_P1-1_Pass2.md (225 lines)
+    Templates ↔ playbooks ↔ manual ↔ gospel docs reconciled.
+    19 templates, 18 playbooks, 12 measured rows in test
+    master, 3 → 6 in user manual block (refreshed in v3.36.23).
+    Surfaced 3 placement-decision items now in this backlog
+    Section 2.
+  • Pass 3 — Side-effect mapping
+    docs\WaxFrame_Side_Effect_Audit_P1-1_Pass3.md (766 lines)
+    96 pure functions (24%), 6 multi-effect orchestrators (2%).
+    Heuristic flags scanned — all false positives, no code
+    bugs surfaced.
+
+
+════════════════════════════════════════════════════════════
+END OF FILE
+════════════════════════════════════════════════════════════
