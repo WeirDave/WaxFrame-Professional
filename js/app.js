@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-020';         // build stamp — update each session
+const BUILD       = '20260509-023';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -9599,6 +9599,19 @@ function closeReferenceMaterialDrawer() {
   const drawer = document.getElementById('referenceMaterialDrawer');
   if (drawer) drawer.classList.remove('active');
 }
+// v3.36.18 — Toggle wrapper for the 📚 Reference button. Open if
+// closed, close if already open. The two single-purpose helpers
+// above stay as-is so other callsites (footer routing, modal close
+// buttons) can be explicit about intent.
+function toggleReferenceMaterialDrawer() {
+  const drawer = document.getElementById('referenceMaterialDrawer');
+  if (!drawer) return;
+  if (drawer.classList.contains('active')) {
+    closeReferenceMaterialDrawer();
+  } else {
+    openReferenceMaterialDrawer();
+  }
+}
 
 // "Clear all" — wipes every reference doc. Confirmation modal guards the
 // whole-list nuke. Past rounds' snapshots are unaffected (history captures
@@ -14492,6 +14505,22 @@ function closeNotesModal() {
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.remove('active');
   updateNotesBtnPriority();
+}
+
+// v3.36.18 — Toggle wrapper for the 📝 Notes button. Open if closed,
+// close if already open. Delegates to the existing single-purpose
+// helpers so the v3.36.17 Auto-pause guard inside openNotesModal()
+// still fires when the user opens the drawer mid-running-round —
+// only the OPEN path triggers it; the CLOSE path is a no-op for
+// Auto Mode (Auto stays in whatever state the user left it).
+function toggleNotesModal() {
+  const modal = document.getElementById('notesModal');
+  if (!modal) return;
+  if (modal.classList.contains('active')) {
+    closeNotesModal();
+  } else {
+    openNotesModal();
+  }
 }
 
 function openRoundHistoryModal() {
