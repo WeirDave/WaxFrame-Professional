@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-023';         // build stamp — update each session
+const BUILD       = '20260509-024';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -14749,6 +14749,16 @@ function exportTranscript() {
   out += `Length limit:     ${lengthStr}\n\n`;
 
   // ── HIVE COMPOSITION ──
+  // v3.36.21 — Reviewer list reads from window.sessionAIs (the per-
+  // session toggle Set) instead of activeAIs (the full configured
+  // hive). Without this, the transcript header said e.g. "Reviewers
+  // (6 of 7 total): ..." when the user only had 3 of the 7 toggled
+  // on for the session. The actual round behavior was correct
+  // (sessionAIs governs runRound's reviewer fan-out); only the
+  // export header was lying.
+  // Defensive fallback: if sessionAIs is not yet a Set (pre-init or
+  // some edge case), fall back to the full activeAIs list so the
+  // header is at least populated rather than empty.
   out += `HIVE COMPOSITION\n${sep}\n`;
   const builderAI = (typeof builder !== 'undefined' && builder)
     ? (activeAIs.find(a => a.id === builder) || { id: builder, name: builder, model: '?' })
@@ -14759,8 +14769,12 @@ function exportTranscript() {
   } else {
     out += `Builder: (not set)\n`;
   }
-  const reviewers = (activeAIs || []).filter(a => a.id !== builder);
-  out += `Reviewers (${reviewers.length} of ${(activeAIs || []).length} total):\n`;
+  const _sessionSet = (window.sessionAIs instanceof Set)
+    ? window.sessionAIs
+    : new Set((activeAIs || []).map(a => a.id));
+  const _activeForSession = (activeAIs || []).filter(a => _sessionSet.has(a.id));
+  const reviewers = _activeForSession.filter(a => a.id !== builder);
+  out += `Reviewers (${reviewers.length} of ${_activeForSession.length} total):\n`;
   reviewers.forEach(a => {
     const m = a.model || '';
     out += `  • ${a.name}${m ? ` (model: ${m})` : ''}\n`;

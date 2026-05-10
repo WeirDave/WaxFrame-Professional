@@ -1,6 +1,22 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.21
+**Build:** `20260509-024` · **Released:** May 9, 2026
+
+### Transcript export reads sessionAIs (not activeAIs) for hive header
+
+The transcript export's HIVE COMPOSITION header was reading `activeAIs` — the full configured hive — when listing reviewers. With v3.32.26's `sessionAIs` Set governing per-session bee-toggle state on the work screen, the header would lie when the user had unchecked some bees for the current session. Example caught in real-world testing 2026-05-09 evening: user had 3 of 7 AIs toggled on for the session, transcript header reported `Reviewers (6 of 7 total)` listing all 6 non-Builder AIs from the configured hive.
+
+The actual round behavior was always correct — `sessionAIs` governs the reviewer fan-out in `runRound`. Only the post-hoc transcript export header was wrong.
+
+Fix: `exportTranscript()` filters `activeAIs` by `sessionAIs` membership before building the reviewer list. The "N of M total" count now reflects "active for this session of currently-toggled-on", not "non-Builder of full configured hive". Defensive fallback: if `window.sessionAIs` isn't a Set (pre-init or edge case), the export falls back to the full active list so the header is populated rather than empty.
+
+The console log `🐝 N AIs reviewing simultaneously` and the per-round responses dict in history records were already correct — those read from the actual round flow.
+
+**Files touched:** `js/app.js`, `js/version.js`, `style.css`, `index.html`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.20
 **Build:** `20260509-023` · **Released:** May 9, 2026
 
