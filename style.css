@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260509-019
+   Build: 20260509-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5778,8 +5778,12 @@ kbd {
      ABOVE the smoker overlay (8000) and builder overlay (8000).
      Without this, opening Notes mid-round forced the user to type
      blind underneath the running animation. Stays well below modals
-     (9999) so any modal opened mid-typing still wins. */
+     (9999) so any modal opened mid-typing still wins.
+     v3.36.17 — drawer height grows to accommodate two stacked
+     sections (one-shot + standing). max-height caps at viewport
+     minus chrome so it never overflows. */
   z-index: 8500;
+  max-height: calc(100vh - 96px);
   background: var(--surface);
   border: 1px solid var(--accent);
   border-bottom: none;
@@ -5790,6 +5794,7 @@ kbd {
   transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1);
   pointer-events: none;
   visibility: hidden;
+  overflow: hidden;
 }
 .notes-drawer.active {
   transform: translateX(-50%) translateY(0%);
@@ -5832,12 +5837,59 @@ kbd {
   padding: var(--space-12) var(--space-16);
   resize: none;
   outline: none;
-  height: 280px;
   width: 100%;
   box-sizing: border-box;
-  border-radius: 0 0 var(--radius-md) var(--radius-md);
 }
 .notes-drawer-ta:focus { background: var(--surface3); }
+
+/* v3.36.17 — Two-section drawer: stacked sections within #notesModal.
+   One-shot on top (auto-clears after Builder), standing on bottom
+   (persists across rounds). Each section has its own header strip
+   with title, sub-label, and per-section actions (Copy / Clear).
+   Standing section gets a subtle top divider so the two read as
+   distinct surfaces without heavy chrome. */
+.notes-section {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+}
+.notes-section-standing {
+  border-top: 1px solid var(--border);
+}
+.notes-section-hdr {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-8) var(--space-16);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.notes-section-title {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--text);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.notes-section-sub {
+  font-size: var(--fs-11);
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+}
+.notes-section-actions {
+  display: flex;
+  gap: var(--space-6);
+  flex-shrink: 0;
+}
+.notes-ta-oneshot {
+  height: 200px;
+}
+.notes-ta-standing {
+  height: 140px;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
 
 /* ── notes-templates: quick-fill template buttons in the Notes drawer ── */
 .notes-templates {
