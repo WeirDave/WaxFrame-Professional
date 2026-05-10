@@ -1,6 +1,33 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.26
+**Build:** `20260510-004` · **Released:** May 10, 2026
+
+### Review templates: length is arbitrary, set per-platform
+
+Per direct feedback after the T7 blog-post run (the test-master entries for T8/T9/T10 already noted "No limit or Target · 250 words for a tight review"): the actual templates that ship in the app shouldn't pre-load a word count. Length on a review depends on where it's being posted — Google Maps caps characters, Yelp accepts a wide range, TripAdvisor wants long-form. Forcing a default number creates anchoring bias and the user has to override it every time.
+
+**Fix:** all four review templates in `js/templates.js` now default to `lengthMode: "none"` (No limit) with empty `lengthLimit` and `lengthUnit`. The hint text is rewritten to lead with **"Length is arbitrary — set based on the platform where the review will be posted"** followed by per-platform guidance:
+
+- **Restaurant Review** — Google Maps Hard cap · 750–1,200 chars · Yelp Range · 200–1,500 words · TripAdvisor No limit (or Hard cap · 500–900 words)
+- **Hotel Review** — Google Maps Hard cap · 750–1,200 chars · TripAdvisor No limit · Booking.com / Hotels.com Hard cap · 200–600 words
+- **Business / Service Review** — Google Maps Hard cap · 750–1,200 chars · Yelp Range · 200–1,500 words · TripAdvisor / BBB / industry-specific No limit
+- **Multi-Platform Review Rewrite** — already had `lengthMode: "none"`, no change needed (it generates platform-specific outputs by design)
+
+### Docs-in-ZIP convention codified
+
+`docs/WaxFrame_Backlog_Master_v11.txt` and `docs/WaxFrame_Playbook_Test_Master_v12.txt` ship inside this release ZIP. From here forward, only **ZIP + release notes** are delivered per release — the gospel docs ride inside the ZIP, never as standalone sibling files. Earlier today's standalone doc deliveries were redundant with what was already in the ZIP.
+
+### Files Changed
+
+`js/templates.js` (3 review templates updated — restaurant, hotel, business; multi-platform untouched) · `js/version.js` · `js/app.js` (build stamp) · `style.css` (build comment) · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+**ZIP contents:** 11 deployment files (templates.js touched) + 2 doc files in `docs/` = 13 files total.
+
+---
 ## v3.36.25
 **Build:** `20260510-003` · **Released:** May 10, 2026
 
