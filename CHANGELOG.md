@@ -1,6 +1,55 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.17
+**Build:** `20260509-020` · **Released:** May 9, 2026
+
+### Notes drawer sticky / one-shot split + Auto-pause on Notes-open
+
+The Notes drawer was a single buffer that conflated two genuinely different kinds of Builder direction: project-wide rules ("always use Oxford commas") and one-shot directives ("trim to 2 pages this round"). Auto-clearing after every round was correct for the directive but lossy for the rule. This release splits them into two named, separately-managed sections inside the drawer.
+
+**Two-section drawer**
+- **🎯 This-round notes (top section)** — the one-shot buffer. Auto-clears after the Builder uses them on the next round (preserves the v3.36.15 wipe behavior). Templates apply here. Gets focus on drawer open. Same DOM id `#workNotes`, so existing references and DOM inspector muscle memory survive.
+- **📌 Standing notes (bottom section)** — new buffer with id `#workStandingNotes`. Persists across rounds for the project's lifetime. Only cleared by user action (✕ Clear in the section header) or by Clear Project. No template buttons — standing notes are user-written project rules, not stock templates.
+
+**Builder envelope grows two labeled sections**
+The previous single `USER NOTES FOR THIS ROUND` block becomes:
+
+```
+STANDING NOTES (apply every round, every Builder):
+[content if any]
+
+THIS-ROUND NOTES (apply only this round, then discard):
+[content if any]
+```
+
+Both blocks are omitted from the prompt when their respective buffer is empty. Reviewers still see neither — both sections are Builder-only.
+
+**State, persistence, history**
+- `saveSession()` writes both buffers; `loadSession()` restores both.
+- Pre-v3.36.17 sessions have no `standingNotes` field; load defaults to empty string and the existing one-shot content lands in `#workNotes` as it always did. No migration banner; the user won't notice except that they now have a second empty textarea below.
+- All five `history.push` records (4 in `runRound`, 1 in `runBuilderOnly` success, 1 in failed, plus the Round 0 setup record) carry both `notes` (one-shot) and new `standingNotes` field.
+- `_notesAtBuilderCall` freeze-at-Builder-fire pattern from v3.36.14 grows a parallel `_standingAtBuilderCall`. Both fields freeze together at the moment the Builder phase starts in `runRound`; mirrored on `runBuilderOnly` (no race there but kept symmetric for forensics).
+- Console emission at Builder-fire splits into two lines: `📌 Standing notes (used by Builder this round)` and `🎯 This-round notes (used by Builder this round)` — fired only when the respective buffer is non-empty.
+
+**Auto-pause on Notes-open during running round**
+Opening the Notes drawer is an explicit signal of manual intervention. When the user opens Notes WHILE a round is running AND Auto Mode is on, the drawer-open handler now flips Auto OFF immediately. The currently-running round completes naturally; `_autoMaybeChainNextRound` short-circuits at round-end on the existing `_autoMode` check; no chain. Toast + console line communicate the pause.
+
+This kills the mid-stream typing race that the v3.36.14 freeze-at-Builder-fire pattern was a band-aid for. The user was getting lucky; now it's deterministic.
+
+Three states the trigger does not apply:
+- Auto already off — no-op.
+- No round running (idle, between rounds) — no-op.
+- Notes drawer already open before the round started — edge case, not handled in v1.
+
+**Cosmetic**
+- Drawer header no longer says "for this Round" since the split makes the round-vs-standing semantics explicit per section.
+- Copy / Clear buttons moved from the drawer header into per-section action groups so the user knows which buffer they affect.
+- `clearProject()` wipes both buffers (existing wipe extended).
+
+**Files touched:** `index.html`, `style.css`, `js/app.js`, `js/version.js`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.16
 **Build:** `20260509-019` · **Released:** May 9, 2026
 
