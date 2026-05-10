@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260509-016
+   Build: 20260509-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1004,6 +1004,16 @@ html, body {
   justify-content: flex-end;
   gap: var(--space-6);
   flex: 1;
+}
+/* v3.36.14 — Vertical divider between the action button group
+   (Notes / Reference / Finish / Auto) and the theme/mute control
+   group on the work screen topbar. */
+.work-topbar-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+  margin: 0 var(--space-4);
+  align-self: center;
 }
 .work-project-info {
   display: flex;
@@ -5762,7 +5772,12 @@ kbd {
   transform: translateX(-50%) translateY(150%);
   width: 720px;
   max-width: calc(100vw - 48px);
-  z-index: 7000;
+  /* v3.36.14 — z-index bumped from 7000 to 8500 so the drawer sits
+     ABOVE the smoker overlay (8000) and builder overlay (8000).
+     Without this, opening Notes mid-round forced the user to type
+     blind underneath the running animation. Stays well below modals
+     (9999) so any modal opened mid-typing still wins. */
+  z-index: 8500;
   background: var(--surface);
   border: 1px solid var(--accent);
   border-bottom: none;
@@ -6244,10 +6259,11 @@ kbd {
    ─────────────────────────────────────────────────────────────────
    Toggle pill mirrors the .theme-opt aesthetic (rounded, compact,
    topbar-friendly) and shifts color palette by state:
-     • Interactive (default) — neutral border, dim text
-     • Auto: ON              — accent border + accent fill, animated
-                                pulse on the icon to communicate "live"
-   Detail span ("N left") only renders in Auto state.
+     • Manual (default) — neutral border, dim text
+     • Auto: ON         — accent border + accent fill, animated
+                           pulse on the icon to communicate "live"
+   v3.36.14: Static "Auto" label both states; round-count counter
+   moved off the pill, logged to LIVE CONSOLE on toggle-ON instead.
    Halt modal piggybacks on the existing .finish-modal-overlay base
    so we inherit fade-in, backdrop, centering, and breakpoint behavior.
    Three buttons stack vertically; resume button takes the accent.
