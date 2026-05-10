@@ -130,6 +130,33 @@ const WAXFRAME_TEMPLATES = [
     ]
   },
   {
+    "id": "linkedin-about",
+    "name": "LinkedIn About",
+    "icon": "🔗",
+    "category": "Career & Hiring",
+    "description": "Write the About section of your LinkedIn profile — what you actually do, who you do it for, and the credentials that prove it. Recruiter-scannable in 30 seconds, peer-credible on a closer read.",
+    "goalDocType": "LinkedIn About Profile",
+    "goalAudience": "Recruiters scanning for [your key certs / platforms / tools] keywords in 30 seconds. Peers in the field reading it on a closer pass to decide if you actually do the work.",
+    "goalOutcome": "Recruiter sees credentials and platform experience and flags it as a match. Peer reads it and thinks \"this person actually does the work, not just talks about it.\"",
+    "goalScope": "Lead with what you actually do, not where you work. Include credentials and platform experience without it reading like a resume bullet list. End with one line that gives a peer something to connect on.",
+    "goalTone": "Professional but human. Not stiff. Engineer that can speak customer.",
+    "goalNotes": "No \"passionate about,\" \"results-driven,\" or \"proven track record.\" If a sentence sounds like it could have been written about anyone in this field, rewrite it until it could only have been written about me. No \"open to opportunities\" or \"looking for my next chapter.\"",
+    "suggestedNotes": "",
+    "lengthMode": "hardcap",
+    "lengthLimit": "2000",
+    "lengthUnit": "characters",
+    "hint": [
+      {
+        "field": "Target audience",
+        "text": "Replace [bracketed key certs / platforms / tools] with the keywords recruiters in your field actually search on"
+      },
+      {
+        "field": "Reference Material (Setup 4)",
+        "text": "Paste your role, credentials, primary platform, tools, identity stack, and what-you-do-day-to-day notes as your identity scaffold. The reference run used a 1,163-character payload and converged in 2 rounds."
+      }
+    ]
+  },
+  {
     "id": "thank-you",
     "name": "Thank-You Letter",
     "icon": "🙏",

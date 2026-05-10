@@ -1,6 +1,40 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.22
+**Build:** `20260509-025` · **Released:** May 9, 2026
+
+### LinkedIn About template + playbook (new content)
+
+A new document type. The existing `linkedin-post` template covers status posts; this one covers the persistent About section of a LinkedIn profile — different audience, different lifecycle, different convergence shape.
+
+**New template `linkedin-about` in `templates.js`**
+Sits in the Career & Hiring category, between Résumé and Thank-You Letter. Pre-fills Goal fields with a generalized version of the empirical run scaffold:
+
+- Audience: recruiters scanning for keywords + peers reading on a closer pass
+- Outcome: recruiter flags as match; peer thinks "this person actually does the work"
+- Scope: lead with what you actually do not where you work; credentials without resume-bullet feel
+- Tone: professional but human, not stiff, "engineer that can speak customer"
+- Goal Notes: the buzzword guard — no "passionate about," "results-driven," "proven track record," "open to opportunities," "looking for my next chapter"
+- Length: 2,000 characters (LinkedIn permits 2,600; headroom keeps the run from bumping the ceiling)
+
+Hint banner directs the user to (1) replace bracketed keywords with their own field's terms, (2) populate Setup 4 Reference Material with the identity scaffold (the high-leverage move).
+
+**New playbook `linkedin-about` in `document-playbooks.html`**
+Sidebar link added between Résumé and Thank-You Letter. Playbook includes the literal real-world example payload from the 2026-05-09 measured run:
+
+- Project name / version / docType / audience / outcome / scope / tone — David's actual values
+- Reference Material payload — the full 1,163-character identity scaffold (Role / Credentials / Primary platform / Tools / What I actually do / Identity stack / What I want a peer to know / What I want a recruiter to know)
+- Round 1 Notes drawer payload — the buzzword guard directive used as a one-shot Builder note
+
+Convergence section is honest about the 2-rounds-in-1-minute number: it reflects three things working together (3-AI hive where majority is 2 of 3, rich Reference Material payload, and a Round 1 Builder note). Fresh runs from the template alone (no Round 1 note, generic identity scaffold) should expect 4–6 rounds. Reference Material is doing most of the heavy lifting.
+
+**Cache-bust bumped on templates.js**
+`templates.js` cache-bust query string in `index.html` bumped from `?v=3.36.13` to `?v=3.36.22` so the new template lands on next page load. This is the first content change to `templates.js` since v3.32.0 — the file has been load-bearing-but-unchanged for many releases.
+
+**Files touched:** `js/templates.js`, `document-playbooks.html`, `index.html`, `js/version.js`, `style.css`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.21
 **Build:** `20260509-024` · **Released:** May 9, 2026
 
