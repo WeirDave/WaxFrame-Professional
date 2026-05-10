@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260509-019">
+  <meta name="waxframe-build" content="20260509-020">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.16">
+  <link rel="stylesheet" href="style.css?v=3.36.17">
 </head>
 <body>
 
@@ -734,26 +734,57 @@
 
   <div class="notes-drawer" id="notesModal">
   <div class="notes-drawer-hdr">
-    <span class="notes-drawer-title">📝 Notes for this Round <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
-    <span class="notes-drawer-sub">Directions for the Builder only — not sent to reviewers. Notes auto-clear after the Builder uses them on the next round.</span>
+    <span class="notes-drawer-title">📝 Notes <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
+    <span class="notes-drawer-sub">Directions for the Builder only — never sent to reviewers.</span>
     <div class="notes-drawer-actions">
-      <button class="btn" onclick="copyNotes()">📋 Copy</button>
-      <button class="btn" onclick="clearNotes()">✕ Clear</button>
       <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
   </div>
-  <div class="notes-templates">
-    <span class="notes-templates-label">Templates:</span>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OVER the target length. Cut it down to fit within the target word/page count. Preserve all required sections; remove repetition, filler, and over-elaboration. Do not add new content.')">✂ Trim to target</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is UNDER the target length. Expand it to reach the target word/page count. Add detail, examples, and elaboration to existing sections. Preserve all required sections; do not add new top-level structure.')">📈 Expand to target</button>
-    <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OUTSIDE the target range. Bring it within range — expand if under, trim if over. Preserve all required sections.')">📐 Match target</button>
+
+  <!-- v3.36.17 — One-shot section. Auto-clears after the Builder uses
+       it on the next round. Top of the drawer because it gets focus
+       on open and is the more frequent write surface. Templates apply
+       only to this section. -->
+  <div class="notes-section notes-section-oneshot">
+    <div class="notes-section-hdr">
+      <span class="notes-section-title">🎯 This-round notes</span>
+      <span class="notes-section-sub">Auto-clears after the Builder uses them on the next round.</span>
+      <div class="notes-section-actions">
+        <button class="btn" onclick="copyNotes()">📋 Copy</button>
+        <button class="btn" onclick="clearNotes()">✕ Clear</button>
+      </div>
+    </div>
+    <div class="notes-templates">
+      <span class="notes-templates-label">Templates:</span>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OVER the target length. Cut it down to fit within the target word/page count. Preserve all required sections; remove repetition, filler, and over-elaboration. Do not add new content.')">✂ Trim to target</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is UNDER the target length. Expand it to reach the target word/page count. Add detail, examples, and elaboration to existing sections. Preserve all required sections; do not add new top-level structure.')">📈 Expand to target</button>
+      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OUTSIDE the target range. Bring it within range — expand if under, trim if over. Preserve all required sections.')">📐 Match target</button>
+    </div>
+    <textarea id="workNotes" class="notes-drawer-ta notes-ta-oneshot" oninput="saveSession();updateNotesBtnPriority()"
+      placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
   </div>
-  <textarea id="workNotes" class="notes-drawer-ta" oninput="saveSession();updateNotesBtnPriority()"
-    placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
+
+  <!-- v3.36.17 — Standing section. Persists across all rounds; only
+       cleared by user (✕ Clear in this section) or by Clear Project.
+       Below one-shot because it's reference/rules, not the active
+       write surface. Injected into the prompt envelope every round
+       above the one-shot block. -->
+  <div class="notes-section notes-section-standing">
+    <div class="notes-section-hdr">
+      <span class="notes-section-title">📌 Standing notes</span>
+      <span class="notes-section-sub">Apply every round, every Builder. Persist until you clear them or start a new project.</span>
+      <div class="notes-section-actions">
+        <button class="btn" onclick="copyStandingNotes()">📋 Copy</button>
+        <button class="btn" onclick="clearStandingNotes()">✕ Clear</button>
+      </div>
+    </div>
+    <textarea id="workStandingNotes" class="notes-drawer-ta notes-ta-standing" oninput="saveSession()"
+      placeholder="Project-wide rules the Builder should respect every round.&#10;&#10;e.g. Always use Oxford commas&#10;e.g. Keep tone formal throughout&#10;e.g. Never change the numbers in the cost table&#10;e.g. Cite the RFP doc by section number when referencing requirements"></textarea>
+  </div>
 </div>
 
 <!-- ── Reference Material Drawer (Work screen — editable mid-session) ── -->
@@ -2093,9 +2124,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.36.16"></script>
+<script src="js/version.js?v=3.36.17"></script>
 <script src="js/templates.js?v=3.36.13"></script>
-<script src="js/app.js?v=3.36.16"></script>
+<script src="js/app.js?v=3.36.17"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

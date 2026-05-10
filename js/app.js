@@ -1405,7 +1405,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260509-019';         // build stamp — update each session
+const BUILD       = '20260509-020';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1939,6 +1939,21 @@ function clearNotes() {
   if (ta) ta.value = '';
   saveSession();
   updateNotesBtnPriority();
+}
+
+// v3.36.17 — Standing notes helpers. Mirror copyNotes / clearNotes
+// but target the standing textarea. Standing notes don't influence
+// the priority button glow (they inject every round automatically;
+// the glow signals one-shot pending injection only), so clearStandingNotes
+// does not call updateNotesBtnPriority().
+function copyStandingNotes() {
+  copyToClipboard(document.getElementById('workStandingNotes')?.value, 'Standing notes');
+}
+
+function clearStandingNotes() {
+  const ta = document.getElementById('workStandingNotes');
+  if (ta) ta.value = '';
+  saveSession();
 }
 
 function copyGoal() {
@@ -3721,6 +3736,11 @@ async function clearProject() {
   if (workDoc) workDoc.value = '';
   const workNotes = document.getElementById('workNotes');
   if (workNotes) workNotes.value = '';
+  // v3.36.17 — Standing notes are project-scoped (apply every round
+  // for the current project's lifetime). clearProject is the
+  // explicit "starting fresh" gesture, so wipe both buffers.
+  const workStandingNotes = document.getElementById('workStandingNotes');
+  if (workStandingNotes) workStandingNotes.value = '';
   updateNotesBtnPriority();
   const pasteText = document.getElementById('pasteText');
   if (pasteText) pasteText.value = '';
@@ -4226,6 +4246,12 @@ function saveSession() {
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
   const notesEl = document.getElementById('workNotes');
   const notes = notesEl ? notesEl.value : '';
+  // v3.36.17 — Standing notes persist across rounds (one-shot still
+  // auto-clears after Builder). Read alongside the one-shot buffer
+  // and write to the same session payload. Pre-v3.36.17 sessions
+  // have no standingNotes field; loadSession defaults to empty.
+  const standingNotesEl = document.getElementById('workStandingNotes');
+  const standingNotes = standingNotesEl ? standingNotesEl.value : '';
   // v3.32.18 — Persist the length-guard override flag alongside the rest
   // of the session payload. Set when the user picks "Continue anyway"
   // from the length-guard modal; persisted so it survives reloads
@@ -4262,7 +4288,7 @@ function saveSession() {
   // we want.
   const ringBuffer  = Array.isArray(WF_DEBUG?.ringBuffer)  ? WF_DEBUG.ringBuffer  : [];
   const lastFailure = WF_DEBUG?.lastFailure || null;
-  const session = { round, phase, history, docText, consoleHTML, notes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs, ringBuffer, lastFailure };
+  const session = { round, phase, history, docText, consoleHTML, notes, standingNotes, projClockSeconds: _projClockSeconds, lengthGuardOverride, cleanThisRound, sessionAIs, ringBuffer, lastFailure };
 
   // Chain through previous save so writes serialize and never overlap.
   _saveSessionChain = _saveSessionChain.then(async () => {
@@ -4393,6 +4419,14 @@ async function loadSession() {
     if (s.notes) {
       const notesEl = document.getElementById('workNotes');
       if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority(); }
+    }
+    // v3.36.17 — Standing notes restore. Pre-v3.36.17 sessions don't
+    // have this field; we leave the standing textarea empty (the
+    // user's existing one-shot buffer migrates as-is into the new
+    // one-shot field, which is the same DOM id #workNotes).
+    if (s.standingNotes) {
+      const standingEl = document.getElementById('workStandingNotes');
+      if (standingEl) standingEl.value = s.standingNotes;
     }
     // Restore console HTML synchronously — inline with the rest of state
     // restore so there is no async gap between load and render during which
@@ -9692,7 +9726,8 @@ async function startSession() {
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
-      notes:          document.getElementById('workNotes')?.value.trim()       || '',
+      notes:          document.getElementById('workNotes')?.value.trim()         || '',
+      standingNotes:  document.getElementById('workStandingNotes')?.value.trim() || '',
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
@@ -11772,7 +11807,14 @@ function buildPromptForAI(ai, reviewerResponses) {
   const doc      = document.getElementById('workDocument')?.value.trim() || '';
   const goal     = assembleProjectGoal();
   const name     = document.getElementById('projectName')?.value.trim()  || '';
-  const notes    = document.getElementById('workNotes')?.value.trim()    || '';
+  // v3.36.17 — Notes drawer split: read BOTH the standing buffer
+  // (project-wide rules, persists across rounds) and the one-shot
+  // buffer (this-round directive, auto-clears after Builder uses it).
+  // Both are Builder-only — never sent to reviewers. Either or both
+  // may be empty; the prompt envelope omits the corresponding header
+  // when empty so we don't pad the prompt with no-op sections.
+  const standingNotes = document.getElementById('workStandingNotes')?.value.trim() || '';
+  const notes         = document.getElementById('workNotes')?.value.trim()         || '';
   const sep      = '─'.repeat(60);
   const eq       = '═'.repeat(60);
   const isScratch     = !doc;
@@ -11831,7 +11873,8 @@ function buildPromptForAI(ai, reviewerResponses) {
       prompt += `\n`;
     }
 
-    if (notes) prompt += `USER NOTES FOR THIS ROUND:\n${sep}\n${notes}\n\n`;
+    if (standingNotes) prompt += `STANDING NOTES (apply every round, every Builder):\n${sep}\n${standingNotes}\n\n`;
+    if (notes)         prompt += `THIS-ROUND NOTES (apply only this round, then discard):\n${sep}\n${notes}\n\n`;
 
     reviewerResponses.forEach(r => {
       prompt += `${sep}\nFROM ${r.name.toUpperCase()}:\n${sep}\n${r.response}\n\n`;
@@ -11904,6 +11947,11 @@ async function runBuilderOnly() {
     toast('⚠️ Add a note first — tell the Builder what to change');
     return;
   }
+  // v3.36.17 — Standing notes capture for runBuilderOnly. Same
+  // freeze-at-build-fire pattern as runRound (no race here since
+  // runBuilderOnly is single-call, but we keep symmetry for the
+  // history record + console emission).
+  const standingNotes = document.getElementById('workStandingNotes')?.value.trim() || '';
 
   docText = document.getElementById('workDocument')?.value.trim() || '';
   if (!docText) {
@@ -11930,7 +11978,8 @@ async function runBuilderOnly() {
   startRoundTimer(smokeBtn, 'Building…');
   setStatus(`🔨 Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
-  consoleLog(`📝 Notes: ${notes}`, 'info');
+  if (standingNotes) consoleLog(`📌 Standing notes: ${standingNotes}`, 'info');
+  consoleLog(`🎯 This-round notes: ${notes}`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
   // v3.36.15 — Round-counter state machine entry. Live "Round N" stays
   // up while the round is in flight; the next round-end site flips
@@ -12191,6 +12240,7 @@ async function runBuilderOnly() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
       notes:          notes,
+      standingNotes:  standingNotes,
       conflicts:      window._lastConflicts || null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
@@ -12247,6 +12297,7 @@ async function runBuilderOnly() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            null,
       notes:          notes,
+      standingNotes:  standingNotes,
       conflicts:      null,
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
@@ -12307,7 +12358,12 @@ async function runRound() {
   // the drawer those rounds). All 4 runRound history.push sites pull
   // from this const instead of the lazy getElementById that races with
   // drawer mutations.
+  // v3.36.17 — Parallel capture for standing notes (the persistent
+  // project-wide rules, distinct from the one-shot this-round buffer).
+  // Same freeze-at-Builder-fire pattern; lands in history records as
+  // standingNotes alongside the one-shot notes field.
   let _notesAtBuilderCall = '';
+  let _standingAtBuilderCall = '';
 
   // Check all active AIs have API keys
   const missingKeys = activeAIs.filter(ai => {
@@ -12524,6 +12580,7 @@ async function runRound() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
       notes:          _notesAtBuilderCall,
+      standingNotes:  _standingAtBuilderCall,
       conflicts:      { converged: true, holdouts: [] },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -12631,6 +12688,7 @@ async function runRound() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            docText,
       notes:          _notesAtBuilderCall,
+      standingNotes:  _standingAtBuilderCall,
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -12700,12 +12758,19 @@ async function runRound() {
     //     getElementById pulls that could race with drawer mutations)
     //   • a LIVE CONSOLE log when non-empty so the audit trail shows
     //     the Builder ingested user-injected text.
-    _notesAtBuilderCall = document.getElementById('workNotes')?.value.trim() || '';
+    _notesAtBuilderCall    = document.getElementById('workNotes')?.value.trim()         || '';
+    _standingAtBuilderCall = document.getElementById('workStandingNotes')?.value.trim() || '';
+    if (_standingAtBuilderCall) {
+      const _sp = _standingAtBuilderCall.length > 200
+        ? _standingAtBuilderCall.slice(0, 200) + '…'
+        : _standingAtBuilderCall;
+      consoleLog(`📌 Standing notes (used by Builder this round): ${_sp}`, 'info');
+    }
     if (_notesAtBuilderCall) {
       const _np = _notesAtBuilderCall.length > 200
         ? _notesAtBuilderCall.slice(0, 200) + '…'
         : _notesAtBuilderCall;
-      consoleLog(`📝 Notes (used by Builder this round): ${_np}`, 'info');
+      consoleLog(`🎯 This-round notes (used by Builder this round): ${_np}`, 'info');
     }
     const builderPrompt = buildPromptForAI(builderAI, successfulReviews);
     const bCfg = API_CONFIGS[builderAI.provider];
@@ -12923,6 +12988,7 @@ async function runRound() {
     projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
     doc:            docText,
     notes:          _notesAtBuilderCall,
+    standingNotes:  _standingAtBuilderCall,
     conflicts:      window._lastConflicts || null,
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
@@ -13010,6 +13076,7 @@ async function runRound() {
       projectVersion: document.getElementById('projectVersion')?.value.trim() || '',
       doc:            null,
       notes:          _notesAtBuilderCall,
+      standingNotes:  _standingAtBuilderCall,
       conflicts:      null,
       responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
@@ -14380,6 +14447,26 @@ function updateNotesBtnPriority() {
 }
 
 function openNotesModal() {
+  // v3.36.17 — Auto-Mode safety: opening the Notes drawer while a
+  // round is in flight AND Auto Mode is on is a strong signal of
+  // manual intervention. We flip Auto OFF immediately so the
+  // currently-running round completes naturally and then halts at
+  // round-end (per _autoMaybeChainNextRound's _autoMode short-circuit).
+  // The user can re-toggle Auto from the topbar pill once they're done
+  // typing if they want to keep chaining. Kills the mid-stream typing
+  // race that v3.36.14's freeze-at-Builder-fire only band-aided.
+  const smokeBtn = document.getElementById('runRoundBtn');
+  const isRoundRunning = smokeBtn?.classList.contains('running');
+  if (window._autoMode && isRoundRunning) {
+    window._autoMode             = false;
+    window._autoCeilingTarget    = null;
+    window._autoSatisfiedHist    = [];
+    window._autoFailureStreak    = 0;
+    window._autoChainDeferred    = null;
+    if (typeof updateAutoToggleUI === 'function') updateAutoToggleUI();
+    consoleLog(`🛑 Auto Mode paused — Notes drawer opened mid-round. Round will complete, then chain stops. Re-toggle Auto to resume.`, 'info');
+    toast('🛑 Auto paused — opening Notes implies manual intervention', 4000);
+  }
   const modal = document.getElementById('notesModal');
   if (modal) modal.classList.add('active');
   setTimeout(() => document.getElementById('workNotes')?.focus(), 100);
@@ -14391,11 +14478,11 @@ function openNotesModal() {
   // only. Previously the swap only fired on closeNotesModal(), which
   // meant the buttons stayed in the wrong state for the entire time
   // the user was looking at the open drawer.
-  const smokeBtn   = document.getElementById('runRoundBtn');
+  const smokeBtn2  = document.getElementById('runRoundBtn');
   const builderBtn = document.getElementById('builderOnlyBtn');
-  if (smokeBtn && builderBtn) {
-    smokeBtn.classList.remove('footer-btn-smoke');
-    smokeBtn.classList.add('footer-btn');
+  if (smokeBtn2 && builderBtn) {
+    smokeBtn2.classList.remove('footer-btn-smoke');
+    smokeBtn2.classList.add('footer-btn');
     builderBtn.classList.remove('footer-btn');
     builderBtn.classList.add('footer-btn-smoke');
   }
