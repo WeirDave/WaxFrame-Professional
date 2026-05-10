@@ -1,6 +1,41 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.28
+**Build:** `20260510-006` · **Released:** May 10, 2026
+
+### Finish button: always lit (correction to v3.36.27)
+
+v3.36.27's Finish-button fix made it state-dependent — neutral by default, lit only when convergence was reached. **Wrong call.** The original spec was: Finish is always your next available action, so it should always be visually emphasized like the Smoke-the-Hive button is. Always-lit, not state-dependent.
+
+This release reverts the state-dependent infrastructure and replaces it with a simpler, correct fix.
+
+### What was reverted
+
+- `setFinishReady(boolean)` helper function (removed from `app.js`)
+- All 5 callsites that toggled the state (Standing-by entry, reviewer round start, Builder-Only round start, unanimous convergence, majority convergence — all removed)
+- `#finishBtn.is-ready` CSS rule (removed from `style.css`)
+
+### What replaced it
+
+- Static `class="btn btn-accent"` restored on the Finish button HTML.
+- New CSS rules `[data-theme="light"] .work-topbar .btn.btn-accent` and `[data-theme="auto"] .work-topbar .btn.btn-accent` (with hover variants) override the work-topbar theme overrides via specificity (1 attr + 3 classes beats 1 attr + 2 classes). Dark theme already worked because no override flattens `.btn-accent` there.
+
+Net result: Finish is amber across all three themes, all the time. No JS state machinery — just CSS.
+
+### What this still preserves from v3.36.27
+
+The silent-lock fix on `lockConflictToNotes()` is unchanged from v3.36.27 — that part landed correctly.
+
+### Files Changed
+
+`index.html` (Finish button class restored to `btn btn-accent`) · `style.css` (state-dependent rule removed, theme-aware overrides added) · `js/app.js` (setFinishReady removed entirely; 5 callsites cleaned) · `js/version.js` · `CHANGELOG.md`
+
+Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
 ## v3.36.27
 **Build:** `20260510-005` · **Released:** May 10, 2026
 
