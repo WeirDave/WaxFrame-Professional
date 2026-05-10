@@ -1,6 +1,57 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.20
+**Build:** `20260509-023` · **Released:** May 9, 2026
+
+### Length-guard pill height parity (real fix this time)
+
+v3.36.19's attempted fix was at the wrong layer — removing `line-height: 1` from the icon child doesn't change a flex container's height when the parent already has its own line-height from the user-agent stylesheet. The actual cause:
+
+- `.license-badge` is a `<span>` that inherits `html, body { line-height: 1.6 }`.
+- `.length-guard-indicator` is a `<button>` and `<button>` does **not** inherit body line-height by default — UA stylesheets give buttons their own line-height (`normal`, ~1.15–1.2 in most browsers).
+
+Without an explicit override, the Length-guard pill rendered ~4px shorter than the License badge sitting right next to it.
+
+Fix: explicit `line-height: 1.6` on `.length-guard-indicator`. Matches the body line-height that the License span inherits, brings the two pills to identical height.
+
+The Auto Mode toggle stays untouched. It's also a `<button>` with the UA default, but it lives next to other `<button>` elements (theme buttons, mute) that share the same default — so the topbar cluster is already coherent. Forcing 1.6 on Auto would break the topbar to fix the footer.
+
+CSS-only change.
+
+**Files touched:** `style.css`, `js/version.js`, `index.html`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
+## v3.36.19
+**Build:** `20260509-022` · **Released:** May 9, 2026
+
+### Three-pill height parity fix
+
+The Length-guard pill was rendering shorter than the License badge in the footer-right cluster. Cause: `.length-guard-indicator-icon` had `line-height: 1`, which clamped the `inline-flex` container's height below the License badge's natural line-box height (default browser line-height ~1.5 on an 11px font). Same pattern existed on `.auto-mode-toggle .auto-mode-icon`, so the Auto pill in the topbar would have shown the same mismatch under direct comparison.
+
+Both icon overrides drop `line-height: 1`. The icons now inherit their parent pill's line-height, which brings all three pills (License, Length-guard, Auto) to identical height.
+
+CSS-only change. No HTML, no JS.
+
+**Files touched:** `style.css`, `js/version.js`, `index.html` (cache-bust + meta build stamp), `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
+## v3.36.18
+**Build:** `20260509-021` · **Released:** May 9, 2026
+
+### Notes + Reference buttons now toggle
+
+The 📝 Notes and 📚 Reference buttons in the work topbar previously only opened their respective drawers — closing required hunting for the ✕ Close button inside the drawer header. With v3.36.17's two-section Notes drawer they're now taller and used more often, which made the asymmetry obvious.
+
+Both buttons now toggle: click once to open, click again to close.
+
+- New `toggleNotesModal()` — delegates to existing `openNotesModal()` / `closeNotesModal()` based on the drawer's `.active` state. The v3.36.17 Auto-Mode pause guard inside `openNotesModal()` still fires correctly because the toggle wrapper only routes to `openNotesModal()` on the open path.
+- New `toggleReferenceMaterialDrawer()` — same pattern over the existing Reference open/close pair.
+- Topbar button onclicks updated. The single-purpose `open*` and `close*` helpers stay intact for other callsites (footer routing, the drawers' own ✕ Close buttons) that need explicit-intent behavior.
+
+**Files touched:** `index.html`, `js/app.js`, `js/version.js`, `CHANGELOG.md`. Helper-page version stamps swept across `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`.
+
+---
 ## v3.36.17
 **Build:** `20260509-020` · **Released:** May 9, 2026
 

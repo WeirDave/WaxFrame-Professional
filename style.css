@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260509-020
+   Build: 20260509-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -6355,9 +6355,12 @@ kbd {
   box-shadow: 0 0 10px rgba(245, 166, 35, 0.45);
 }
 .auto-mode-toggle .auto-mode-icon {
+  /* v3.36.19 — line-height removed for the same reason as
+     .length-guard-indicator-icon: the explicit `line-height: 1`
+     was clamping the inline-flex container shorter than the
+     .license-badge pill. Three-pill height parity restored. */
   display: inline-block;
   font-size: var(--fs-13);
-  line-height: 1;
 }
 .auto-mode-toggle .auto-mode-label {
   letter-spacing: 0.01em;
@@ -6471,6 +6474,14 @@ kbd {
   gap: var(--space-4);
   font-size: var(--fs-11);
   font-weight: 700;
+  /* v3.36.20 — Explicit line-height matches html/body's 1.6.
+     The .license-badge sibling is a <span> that inherits body
+     line-height; this <button> does NOT (UA default ~1.15-1.2).
+     Without this override the pill renders ~4px shorter than
+     License. v3.36.19's icon-line-height removal was the wrong
+     layer — the parent line-height drives the inline-flex
+     container height, not the icon child's line-height. */
+  line-height: 1.6;
   padding: var(--space-4) var(--space-10);
   border-radius: 20px;
   background: var(--green-dim);
@@ -6497,8 +6508,12 @@ kbd {
   box-shadow: 0 0 12px rgba(192,21,42,0.7);
 }
 .length-guard-indicator-icon {
+  /* v3.36.19 — line-height removed. Was 1, which clamped the
+     inline-flex container to ~22px tall versus the .license-badge
+     span which renders at ~26px (default line-height ~1.5 on a
+     11px font). Letting the icon inherit the parent's line-height
+     brings the pill to the same height as License. */
   font-size: var(--fs-12);
-  line-height: 1;
 }
 .length-guard-indicator-label {
   letter-spacing: 0.2px;
