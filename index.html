@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-008">
+  <meta name="waxframe-build" content="20260510-009">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.30">
+  <link rel="stylesheet" href="style.css?v=3.36.31">
 </head>
 <body>
 
@@ -1831,6 +1831,10 @@
         <span class="goal-info-desc">Running WaxFrame against an internal gateway (Alfredo), self-hosted Open WebUI, Ollama, or any other custom endpoint? Use <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> to get those endpoints into your hive. If you want a clean workspace with only your imported models visible, use <strong>Hide All Defaults</strong> to clear the public AIs out of the way — they stay in the system and can be reset back in with one click.</span>
       </div>
       <div class="goal-info-row">
+        <span class="info-label">Model diversity matters</span>
+        <span class="goal-info-desc">The reviewer hive works because each AI has different training, different biases, and a different sense of "good." A hive of six AIs that are all the same underlying model (or near-identical fine-tunes of the same family) is functionally one reviewer with six voices — convergence is fast because they were never going to disagree, but the result is no better than a one-shot. When using <strong>Recommend Models for All</strong>, check the picks afterward and override any that landed on the same family. <strong>Minimum:</strong> at least two distinct model families (e.g., ChatGPT + Claude). Three or more is better.</span>
+      </div>
+      <div class="goal-info-row">
         <span class="info-label">CORS errors</span>
         <span class="goal-info-desc">CORS is a browser security rule that decides whether a webpage running at <code>weirdave.github.io</code> is allowed to read responses from a given API endpoint. The 6 default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity) all whitelist browser clients, so you'll never see CORS errors with default keys. You'll see them with <strong>custom endpoints</strong> — Open WebUI / Ollama / internal gateways like Alfredo — when the gateway operator hasn't added <code>Access-Control-Allow-Origin</code> for browser callers. The fix is on the gateway side, not on WaxFrame's side. Click the ⓘ on Test All Keys for the full troubleshooting reference.</span>
       </div>
@@ -2124,9 +2128,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.36.30"></script>
-<script src="js/templates.js?v=3.36.30"></script>
-<script src="js/app.js?v=3.36.30"></script>
+<script src="js/version.js?v=3.36.31"></script>
+<script src="js/templates.js?v=3.36.31"></script>
+<script src="js/app.js?v=3.36.31"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-008">
+  <meta name="waxframe-build" content="20260510-009">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.30">
+  <link rel="stylesheet" href="style.css?v=3.36.31">
 </head>
 <body class="helper-body">
 
@@ -92,6 +92,13 @@
         <p class="hp-section-sub">Each playbook gives you the exact text to enter into every WaxFrame field for a specific document type. Open WaxFrame on one screen and this page on another. Work through the fields top to bottom — replace anything in [brackets] with your own information.</p>
         <p class="hp-section-sub"><strong>Tip:</strong> Every playbook on this page is also available as a one-click template inside the app. On the Project screen, click <strong>📋 Use Template</strong> to populate all six Goal fields automatically — no copy/paste needed. Use this page when you want to read the full reasoning behind each playbook, and the in-app templates when you want to apply one fast.</p>
         <p class="hp-section-sub">New to WaxFrame? Read the <a href="waxframe-user-manual.html" target="_blank" class="link-accent">User Manual</a> first — it walks you through every screen step by step.</p>
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p><strong>How to read the convergence numbers below.</strong> Every playbook shows a measured round count. Two stopping signals can produce that number:</p>
+          <p><strong>Unanimous convergence</strong> — every reviewer in the hive marked the round as "no changes needed." Full agreement. The strongest stopping signal.</p>
+          <p><strong>Majority convergence</strong> — more than half the reviewers marked the round clean, but at least one holdout is still suggesting changes. The Builder stops here because there's no productive direction left; holdouts' suggestions are typically nice-to-haves the majority sees as fine. The document is shippable.</p>
+          <p>Neither type means "perfect." It means the hive converged on <em>what they think is shippable</em>. If you want stronger output, inject targeted Notes ("tighten paragraph three," "rework the closing line") and run another round rather than waiting for a state that may never come.</p></div>
+        </div>
       </div>
     </div>
   </div>
@@ -2094,7 +2101,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.30"></script>
+<script src="js/version.js?v=3.36.31"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
