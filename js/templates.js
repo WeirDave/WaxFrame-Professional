@@ -1,5 +1,5 @@
 // ============================================================
-//  WaxFrame — templates.js  (v3.38.2 — per-path descriptions)
+//  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -96,7 +96,7 @@ const WAXFRAME_TEMPLATES = [
     "name": "Quick Start",
     "icon": "⭐",
     "category": "Quick Start",
-    "description": "Try the system end-to-end with a low-stakes example: the perfect chocolate chip cookie recipe. Converges in just a few rounds and shows you how the whole hive works — recommended for your first WaxFrame run.",
+    "description": "Try WaxFrame end-to-end on a low-stakes chocolate-chip-cookie recipe. Converges in a few rounds and gives you a clear feel for how the whole hive works — recommended for your first run.",
     "paths": ["scratch"],
     "pathContent": {
       "scratch": {
@@ -124,6 +124,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "A cover letter that reads like you — your story, this role, real specifics in place of the openers everyone uses.",
         "goalDocType": "Cover letter",
         "goalAudience": "Hiring manager at [company name] reviewing applications for a [job title] position",
         "goalOutcome": "Reader wants to interview me. Three short paragraphs: a strong opening hook, a direct connection between my experience and the role, and a confident close with a clear call to action.",
@@ -140,6 +141,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "pages"
       },
       "refine": {
+        "description": "Move your cover letter from generic to specific — every line tied to what this employer actually wants to see.",
         "goalDocType": "Cover letter",
         "goalAudience": "Hiring manager at [company name] reviewing applications for a [job title] position",
         "goalOutcome": "Tighten my existing cover letter so the reader wants to interview me. Strengthen the opening hook, sharpen the connection between my experience and the role, and make the close confident and specific.",
@@ -171,7 +173,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write a job posting that attracts the right candidates and accurately represents the role.",
+        "description": "Attract the right candidates and quietly turn away the wrong ones — an honest, specific posting that reflects what working there is actually like.",
         "goalDocType": "Job description",
         "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in defense or aerospace",
         "goalOutcome": "Qualified candidates immediately understand the role, the requirements, and why the job is worth applying for. Unqualified candidates self-select out. Responsibilities are listed in order of importance, most critical first.",
@@ -186,7 +188,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Polish a draft job posting so it attracts the right candidates and accurately represents the role.",
+        "description": "Audit your existing posting for vague requirements, hidden barriers, and copy that's scaring off the people you want to hire.",
         "goalDocType": "Job description",
         "goalAudience": "Candidates applying for a [job title] role — be specific: e.g. Mid-level software engineers with 3–5 years of experience, Entry-level candidates in defense or aerospace",
         "goalOutcome": "Tighten my existing job description so qualified candidates immediately understand the role and unqualified candidates self-select out. Strengthen the opening, sharpen requirements, and make the culture statement land.",
@@ -215,6 +217,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "Generate a résumé from your career notes — accomplishments quantified, claims defensible, every line earning its space on the page.",
         "goalDocType": "Résumé",
         "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a defense technology company",
         "goalOutcome": "Reader invites me to interview. The résumé shows clear impact and achievements, not just job duties. Every bullet demonstrates value.",
@@ -230,6 +233,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "pages"
       },
       "refine": {
+        "description": "Take a strong draft to ready-to-submit — sharper impact statements, cleaner structure, fewer words doing more work.",
         "goalDocType": "Résumé",
         "goalAudience": "Hiring manager or recruiter reviewing candidates for a [job title] role — e.g. Hiring manager at a defense technology company",
         "goalOutcome": "Polish my existing résumé so it shows clear impact and gets me interviewed. Replace duty-language with achievement-language. Tighten weak bullets. Surface the wins that are hiding inside generic phrasing.",
@@ -260,7 +264,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write the About section of your LinkedIn profile — what you actually do, who you do it for, and the credentials that prove it. Recruiter-scannable in 30 seconds, peer-credible on a closer read.",
+        "description": "Say what you actually do, who you do it for, and why your background is the proof — recruiter-scannable in 30 seconds, peer-credible on a closer read.",
         "goalDocType": "LinkedIn About Profile",
         "goalAudience": "Recruiters scanning for [your key certs / platforms / tools] keywords in 30 seconds. Peers in the field reading it on a closer pass to decide if you actually do the work.",
         "goalOutcome": "Recruiter sees credentials and platform experience and flags it as a match. Peer reads it and thinks \"this person actually does the work, not just talks about it.\"",
@@ -276,7 +280,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "characters"
       },
       "refine": {
-        "description": "Polish your LinkedIn About section — what you actually do, who you do it for, and the credentials that prove it. Recruiter-scannable in 30 seconds, peer-credible on a closer read.",
+        "description": "Pull your About section out of consultant-speak — credentials proven, expertise specific, first two lines doing the heavy lifting.",
         "goalDocType": "LinkedIn About Profile",
         "goalAudience": "Recruiters scanning for [your key certs / platforms / tools] keywords in 30 seconds. Peers in the field reading it on a closer pass to decide if you actually do the work.",
         "goalOutcome": "Polish my existing LinkedIn About so recruiters flag me as a match and peers think \"this person actually does the work.\" Strip clichés. Surface real specifics. Tighten the opener so it lands in the first 30 seconds.",
@@ -307,7 +311,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write a warm, genuine thank-you for any professional or personal occasion.",
+        "description": "A thank-you that lands — specific enough to feel personal, warm enough to be remembered, short enough to actually be read.",
         "goalDocType": "Thank-you letter",
         "goalAudience": "The person receiving it — be specific: e.g. My hiring manager John Smith, A client named Sarah at Acme Corp, My mentor Dr. Jones",
         "goalOutcome": "Reader feels genuinely appreciated and remembers the specific moment I am referencing.",
@@ -323,7 +327,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "pages"
       },
       "refine": {
-        "description": "Polish a draft thank-you so it lands as warm and genuine for any professional or personal occasion.",
+        "description": "Elevate a thank-you draft from polite to memorable — same gratitude, more specifics, none of the obligatory phrases.",
         "goalDocType": "Thank-you letter",
         "goalAudience": "The person receiving it — be specific: e.g. My hiring manager John Smith, A client named Sarah at Acme Corp, My mentor Dr. Jones",
         "goalOutcome": "Polish my existing thank-you so the reader feels genuinely appreciated and remembers the specific moment I referenced. Cut anything generic. Strengthen the one detail that makes it personal.",
@@ -354,7 +358,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Build a proposal to win a client, secure a partnership, or pitch a new venture.",
+        "description": "Your offer end-to-end — problem, approach, deliverables, pricing — confident and credible without overpromising.",
         "goalDocType": "Business proposal",
         "goalAudience": "[Client name or type] — be specific: e.g. IT Director at a mid-size manufacturing firm, or Procurement committee at [company name]",
         "goalOutcome": "Reader approves the proposal or schedules a follow-up meeting. They clearly understand what we are offering, what it costs, and what happens next.",
@@ -372,7 +376,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "pages"
       },
       "refine": {
-        "description": "Sharpen a draft proposal to win a client, secure a partnership, or pitch a new venture.",
+        "description": "Push your proposal from competent to compelling — clearer offer, stronger justification, sharper close. Built to win the meeting.",
         "goalDocType": "Business proposal",
         "goalAudience": "[Client name or type] — be specific: e.g. IT Director at a mid-size manufacturing firm, or Procurement committee at [company name]",
         "goalOutcome": "Polish my existing proposal so the reader approves it or schedules a follow-up. Strengthen the executive summary, tighten the problem statement, make the pricing crystal clear, and sharpen the call to action.",
@@ -404,7 +408,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write cold outreach, sales emails, follow-ups, or any important one-off message that needs to land.",
+        "description": "A cold email, sales follow-up, or one-off ask that gets read past the first line and actually answered. No fluff, no openers nobody reads.",
         "goalDocType": "Be specific about the email type: e.g. Cold outreach email, Follow-up email after a meeting, Sales introduction email",
         "goalAudience": "Who is receiving this — be specific: e.g. VP of Engineering at a mid-size SaaS company, A former colleague I have not spoken to in two years, Hiring manager who interviewed me last week",
         "goalOutcome": "Reader opens it, reads it in full, and takes one specific action — e.g. replies to schedule a 20-minute call, clicks the link, responds with a yes or no.",
@@ -417,7 +421,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Sharpen cold outreach, sales emails, follow-ups, or any important one-off message that needs to land.",
+        "description": "Recast a message draft so it lands — clearer ask, less throat-clearing, a call to action they can answer in one click.",
         "goalDocType": "Be specific about the email type: e.g. Cold outreach email, Follow-up email after a meeting, Sales introduction email",
         "goalAudience": "Who is receiving this — be specific: e.g. VP of Engineering at a mid-size SaaS company, A former colleague I have not spoken to in two years, Hiring manager who interviewed me last week",
         "goalOutcome": "Polish my existing email so the reader opens it, reads it in full, and takes the specific action I'm asking for. Sharpen the opening, cut sender-background fluff, make the ask unmistakable.",
@@ -445,6 +449,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "Condense the long version into one page leadership can act on — the decision, the trade-offs, the recommendation, the next step.",
         "goalDocType": "Executive summary",
         "goalAudience": "Be specific about who reads this — e.g. VP of Operations and CFO, Board of Directors, Program managers and senior leadership",
         "goalOutcome": "Reader understands the situation, the recommendation, and why it matters — in that order. They can make a decision or take action without reading the full source document.",
@@ -458,6 +463,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthUnit": "pages"
       },
       "refine": {
+        "description": "Compress an exec-summary draft into a two-minute read — decision first, evidence second, no buried lede.",
         "goalDocType": "Executive summary",
         "goalAudience": "Be specific about who reads this — e.g. VP of Operations and CFO, Board of Directors, Program managers and senior leadership",
         "goalOutcome": "Tighten my existing executive summary so the reader understands the situation, the recommendation, and why it matters — in that order. They can make a decision without reading the full source document.",
@@ -487,7 +493,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Craft a disciplined, structured response to a formal RFP that addresses every stated requirement.",
+        "description": "Answer every requirement, every section, every scoring criterion — a disciplined response that gives the evaluator no reason to set it aside.",
         "goalDocType": "RFP response",
         "goalAudience": "Evaluation committee at [issuing organization] reviewing responses to [RFP name or number]",
         "goalOutcome": "Every stated requirement in the RFP is addressed directly and clearly. Evaluators can find our response to each item without hunting for it. Our differentiators are clear and credible.",
@@ -500,7 +506,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Sharpen a draft RFP response into a disciplined, structured document that addresses every stated requirement.",
+        "description": "Pressure-test your RFP draft against the requirements list — gaps closed, claims supported, scoring criteria addressed line by line.",
         "goalDocType": "RFP response",
         "goalAudience": "Evaluation committee at [issuing organization] reviewing responses to [RFP name or number]",
         "goalOutcome": "Tighten my existing RFP response so every stated requirement is addressed clearly and the evaluators can find each answer without hunting. Sharpen our differentiators.",
@@ -528,6 +534,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "An idea turned into a publish-ready post — voice intact, structure clear, opening that earns the click and closing that earns a share.",
         "goalDocType": "Blog post — or be specific about format: e.g. Opinion piece, How-to article, Listicle",
         "goalAudience": "Who reads this and where — e.g. Small business owners new to AI, reading on LinkedIn, Senior engineers evaluating wireless platforms",
         "goalOutcome": "Reader finishes the post and [takes a specific action or understands a specific thing]. End with a clear call to action. e.g. Reader understands the three main options and clicks through to learn more.",
@@ -545,6 +552,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
+        "description": "Bring a rough draft to ready — tighter paragraphs, stronger transitions, the kind of structure readers don't notice because it's working.",
         "goalDocType": "Blog post — or be specific about format: e.g. Opinion piece, How-to article, Listicle",
         "goalAudience": "Who reads this and where — e.g. Small business owners new to AI, reading on LinkedIn, Senior engineers evaluating wireless platforms",
         "goalOutcome": "Polish my existing draft so the reader finishes the post and [takes a specific action or understands a specific thing]. Strengthen the opening, tighten the middle, sharpen the call to action.",
@@ -576,7 +584,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Build a slide-by-slide speaker outline ready to drop into PowerPoint, Keynote, or Slides.",
+        "description": "A slide-by-slide speaker outline ready to drop into PowerPoint, Keynote, or Slides — every slide doing exactly one job.",
         "goalDocType": "Presentation outline — speaker notes format",
         "goalAudience": "The audience for the talk — e.g. C-suite leadership team, New hire onboarding group, External conference attendees",
         "goalOutcome": "A slide-by-slide outline ready to copy into a presentation tool. Each slide must have: a slide title, 3–5 speaker note bullets, and one suggested visual or data point. Open with a strong hook, close with a clear call to action.",
@@ -590,7 +598,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Refine a draft slide outline so it's ready to drop into PowerPoint, Keynote, or Slides.",
+        "description": "Reshape your slide outline so each slide earns its place — clearer arc, sharper takeaways, no filler.",
         "goalDocType": "Presentation outline — speaker notes format",
         "goalAudience": "The audience for the talk — e.g. C-suite leadership team, New hire onboarding group, External conference attendees",
         "goalOutcome": "Polish my existing outline so the slide flow is tight, each slide earns its place, and the speaker bullets are actually one-liners. Strengthen the hook and the close.",
@@ -618,6 +626,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "Cooking notes turned into a recipe anyone can follow — ingredients listed, steps in order, timings that match how the dish actually comes together.",
         "goalDocType": "Recipe",
         "goalAudience": "Who will cook from this — e.g. Home cook, beginner level, Experienced baker, Meal prep audience, intermediate skill",
         "goalOutcome": "Anyone following this recipe can cook the dish successfully on the first try. Instructions are clear, ingredient quantities are precise, and steps are in a logical order with nothing assumed.",
@@ -630,6 +639,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
+        "description": "A recipe draft cleaned up into a polished write-up — consistent measurements, clear ordering, instructions that match how you actually cook it.",
         "goalDocType": "Recipe",
         "goalAudience": "Who will cook from this — e.g. Home cook, beginner level, Experienced baker, Meal prep audience, intermediate skill",
         "goalOutcome": "Polish my draft recipe so anyone following it can cook the dish successfully on the first try. Clarify ambiguous steps, lock the ingredient list, ensure nothing is assumed.",
@@ -657,7 +667,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write a letter to a contractor, vendor, or service provider — invoice disputes, scope concerns, punch-list items, or anything where you need to be clear, professional, and firm without escalating.",
+        "description": "Address an invoice dispute, scope concern, or punch-list issue in writing — clear, professional, firm without escalating.",
         "goalDocType": "Letter to my [contractor / vendor / service provider] regarding [the first invoice / scope dispute / punch-list items]",
         "goalAudience": "The [contractor / vendor / project manager] who did the work — be specific about the relationship: e.g. The general contractor we hired, The vendor that installed our HVAC",
         "goalOutcome": "A clear, professional record of my concerns and the items I need addressed before [I pay / we close out the project / we move forward]. The recipient understands what is wrong, what I expect, and what comes next.",
@@ -671,7 +681,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Refine a letter to a contractor, vendor, or service provider — invoice disputes, scope concerns, punch-list items, or anything where you need to be clear, professional, and firm without escalating.",
+        "description": "Rework a frustrated draft so it lands — same point, more composure. Clear, professional, firm without escalating.",
         "goalDocType": "Letter to my [contractor / vendor / service provider] regarding [the first invoice / scope dispute / punch-list items]",
         "goalAudience": "The [contractor / vendor / project manager] who did the work — be specific about the relationship: e.g. The general contractor we hired, The vendor that installed our HVAC",
         "goalOutcome": "Polish my existing letter so the recipient understands what is wrong, what I expect, and what comes next. Tighten the prose, sharpen the asks, keep the tone firm but professional.",
@@ -700,7 +710,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
-        "description": "Write a short-form LinkedIn post — a lesson, a hot take, or a war story — that reads as a peer talking to peers, not a thought leader trying to grow an audience.",
+        "description": "A short-form LinkedIn post — a lesson, a hot take, a war story — that reads as a peer talking to peers, not a thought leader trying to grow an audience.",
         "goalDocType": "LinkedIn Post",
         "goalAudience": "My LinkedIn network — [your peers, recruiters, former colleagues, anyone scrolling fast]. They scroll fast. If the first two lines don't land, they keep scrolling.",
         "goalOutcome": "Reader stops scrolling, reads the whole post, and either comments or sends a connection request. The post should feel earned, not braggy.",
@@ -716,7 +726,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
-        "description": "Polish a draft LinkedIn post — a lesson, a hot take, or a war story — so it reads as a peer talking to peers, not a thought leader trying to grow an audience.",
+        "description": "Tune your post draft from interesting to scroll-stopping — same idea, sharper voice, no LinkedIn-speak.",
         "goalDocType": "LinkedIn Post",
         "goalAudience": "My LinkedIn network — [your peers, recruiters, former colleagues, anyone scrolling fast]. They scroll fast. If the first two lines don't land, they keep scrolling.",
         "goalOutcome": "Polish my draft post so the reader stops scrolling, reads the whole thing, and engages. Strengthen the hook, cut the brochure-language, sharpen the closing question.",
@@ -747,6 +757,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "A useful restaurant review covering food, service, atmosphere, value, logistics, and whether you'd actually return.",
         "goalDocType": "Restaurant review",
         "goalAudience": "People deciding whether this restaurant is worth visiting. They want practical details about food, service, atmosphere, value, and logistics, not vague praise or complaints.",
         "goalOutcome": "Create a useful, honest review that explains what the experience was actually like, what was ordered, what was good, what was disappointing, whether the price made sense, and whether I would return.",
@@ -762,6 +773,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
+        "description": "Lift a review draft from vague to genuinely useful — concrete examples, fair framing, the kind of detail other diners act on.",
         "goalDocType": "Restaurant review",
         "goalAudience": "People deciding whether this restaurant is worth visiting. They want practical details about food, service, atmosphere, value, and logistics, not vague praise or complaints.",
         "goalOutcome": "Polish my existing review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise/complaints, make sure the final recommendation lands clearly.",
@@ -792,6 +804,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "A hotel review that covers what travelers actually want to know — room, sleep quality, location, amenities, service, value, dealbreakers.",
         "goalDocType": "Hotel review",
         "goalAudience": "Travelers deciding whether to book this hotel — especially business travelers, families, road-trippers, or people comparing nearby properties.",
         "goalOutcome": "Create a detailed, practical hotel review that helps readers understand the room, sleep quality, location, amenities, service, value, and any problems that affected the stay.",
@@ -807,6 +820,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
+        "description": "Rewrite a hotel review draft so it earns trust — specific examples, fair tone, the kind of detail that helps other travelers decide.",
         "goalDocType": "Hotel review",
         "goalAudience": "Travelers deciding whether to book this hotel — especially business travelers, families, road-trippers, or people comparing nearby properties.",
         "goalOutcome": "Polish my existing hotel review so it's detailed, practical, and traveler-useful. Surface the friction points (noise, HVAC, hot water, Wi-Fi, parking, fees) that lobby marketing won't.",
@@ -837,6 +851,7 @@ const WAXFRAME_TEMPLATES = [
     "paths": ["scratch", "refine"],
     "pathContent": {
       "scratch": {
+        "description": "A review of a contractor, repair service, parking company, delivery experience, or any business outside the restaurant/hotel buckets — useful, specific, fair.",
         "goalDocType": "Business or service review",
         "goalAudience": "People deciding whether to hire, visit, book, or use this business. They care about reliability, value, professionalism, communication, and how problems are handled.",
         "goalOutcome": "Create a fair but useful review that explains why I used the business, what happened, what went well, what went wrong, how the business handled it, and whether I would recommend them.",
@@ -852,6 +867,7 @@ const WAXFRAME_TEMPLATES = [
         ]
       },
       "refine": {
+        "description": "Strengthen a service-review draft into something useful — concrete examples, fair framing, no rant-with-no-evidence.",
         "goalDocType": "Business or service review",
         "goalAudience": "People deciding whether to hire, visit, book, or use this business. They care about reliability, value, professionalism, communication, and how problems are handled.",
         "goalOutcome": "Polish my existing review so it's fair, useful, and specific. Strengthen the concrete details, cut vagueness, sharpen the recommendation.",
