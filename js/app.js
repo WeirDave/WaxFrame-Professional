@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260511-004';         // build stamp — update each session
+const BUILD       = '20260511-008';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3005,7 +3005,7 @@ function updateBeesRequirements() {
   const keyedCount = aiList.filter(ai => API_CONFIGS[ai.provider]?._key).length;
   const reqKeys = document.getElementById('req-keys');
   if (reqKeys) {
-    reqKeys.textContent = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 API keys saved (${keyedCount} saved)`;
+    reqKeys.textContent = (keyedCount >= 2 ? '✓' : '✗') + ` At least 2 AIs set up (${keyedCount} so far)`;
     reqKeys.classList.toggle('met', keyedCount >= 2);
   }
   const btn = document.getElementById('beesContinueBtn');
