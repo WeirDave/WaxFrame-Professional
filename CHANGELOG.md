@@ -1,6 +1,110 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.35
+**Build:** `20260510-013` · **Released:** May 10, 2026
+
+### Playbook page — Step labeling fix + Reference Material as the right channel for scratch-mode review facts
+
+Two related improvements driven by a real hotel-review session: the user struggled to write a review a month after the trip, opened the playbook to follow along, and immediately hit confusion about Step numbering AND about where to put visit details.
+
+### Step labeling — "Setup — Step N of 5" everywhere
+
+The playbook page jumped straight to "Step 3 — Your Project screen" with no context about Steps 1, 2, 4. Users wondered where 1 and 2 were. Fixed across 38 occurrences:
+
+- `Step 3 — Your Project screen` → `Setup — Step 3 of 5 — Your Project screen`
+- `Step 5 — Starting Document screen` → `Setup — Step 5 of 5 — Starting Document screen`
+
+Steps 1 and 2 (Worker Bees and Builder selection) are session-level setup — the same choices apply to all playbooks — so they're not customized per playbook. The new labels make the 5-screen setup flow context immediate.
+
+### Reference Material — the architecturally correct home for scratch-mode review facts
+
+**The problem:** the 3 review playbooks (restaurant, hotel, business) routed scratch-mode visit details through Notes ("open the Notes drawer and paste the raw visit details"). That's the wrong channel:
+- Notes is for **one-shot mid-round Builder instructions** (cleared after applied)
+- Notes UI is **4 lines** — cramped for multi-paragraph factual content
+- Notes drawer is only visible on the work screen — users don't see it during setup
+
+**The right channel is Reference Material (Setup 4):**
+- Persists across every round
+- Never altered by the hive
+- Multi-paragraph friendly
+- Lives in the setup flow where users encounter it naturally
+
+The mistake happened structurally — the review playbooks skipped Step 4 entirely (jumping Step 3 → Step 5 with a parenthetical "(the next screen after Reference Material)" as if Step 4 was just dead air). When the original author treated Setup 4 as optional/skippable, Notes became the next-best "where do I put facts" channel by elimination.
+
+**The fix:**
+
+1. **New Step 4 section** on all 3 review playbooks with `<div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>` and `dp-s4-pair` structure matching Step 5.
+2. **Copy-pasteable detail checklist** in each Step 4 — content lifted from existing curated `suggestedNotes` (18 lines for restaurant, 23 for hotel, 17 for business). Surfaces what was previously orphan JSON data.
+3. **New CSS class** `.dp-checklist-block` + `.dp-checklist-block-hdr` mirroring `.dp-real-example pre` styling for the fillable scaffold visual treatment.
+4. **Step 5 scratch-mode advice rewritten** to route to Reference Material — "The hive will use your filled-in Reference Material from Step 4 to write the review from scratch."
+5. **Scratch-note "Desired outcome" cell rewritten** — "from the details I provide in Notes" → "from the details I provide in Reference Material (Setup 4)."
+6. **Parenthetical "(the next screen after Reference Material)"** removed from Step 5 headers on the 3 review playbooks — Step 4 is no longer skipped, so the hint is redundant.
+
+### Pattern recognition — same issue may exist on other playbooks
+
+Six other playbooks have substantial `suggestedNotes` content (JD, Thank-You, Outreach, Blog Post, Presentation Outline, Résumé). Several likely have the same Notes-vs-Reference-Material miscategorization. Captured in backlog as a separate audit pass — not bundled into this release to keep the change focused.
+
+### Captured in backlog as v3.37.0 candidate — dual-path templates
+
+User suggested the broader architectural fix: every template should have a path selector ("Starting from scratch" vs "Refining an existing draft") at the top of the modal, and content routes to different channels per path. Resume case is the test — scratch path asks for components (→ Reference Material), refine path takes existing resume (→ Starting Document). Same template, two paths, two correct routings. Captured for v3.37.0 in a fresh session.
+
+### Files Changed
+
+`document-playbooks.html`:
+- 38 step-label replacements
+- 3 review playbooks each gained a Step 4 Reference Material section with copy-pasteable detail checklist
+- 3 review playbooks' scratch-mode advice updated to route through Reference Material instead of Notes
+- 3 review playbooks' Step 5 header parenthetical removed
+
+`style.css`:
+- New `.dp-checklist-block` + `.dp-checklist-block-hdr` rules (3 declarations total, mirrors existing `.dp-real-example pre` styling)
+
+Also: `js/version.js` · `js/app.js` (build stamp) · `index.html` · `CHANGELOG.md` · helper-page version stamps swept across all 5 helper pages.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files.
+
+---
+## v3.36.34
+**Build:** `20260510-012` · **Released:** May 10, 2026
+
+### Convergence-numbers callout: moved out of the page header into its own section + sidebar entry
+
+v3.36.31 added a convergence-principle `wf-tip` block to the playbook page. Wrong placement — jammed inside `hp-section-header` / `hp-section-title-block` (the page title block), not the body content area. Two problems:
+
+1. **Visual bug in light mode** — the wf-tip rendered with faint amber/orange text because surrounding header styles were bleeding through the scope, fighting the `.helper-body .wf-tip-body { color: var(--text-dim); }` rule. Dark mode was muddy; light mode was unreadable.
+2. **Structural wrong** — a substantive teaching callout doesn't belong in a page header. The header is for the page intro, not standalone content.
+
+### The fix — build it as a proper section, not a cram
+
+- **New section** between "Running at work" and "Career & Hiring" — own `hp-section` with `hp-section-header is-bare` + `hp-section-body`, matching the same structure used by every other category on the page.
+- **New sidebar entry** under "⚠️ Read first" — `📊 Reading convergence numbers` with anchor `#cat-convergence`. Same pattern as the existing `🔒 Running at work` entry in that group.
+- **Content** rewritten to use `goal-info-row` + `info-label` / `goal-info-desc` for the two convergence types — same pattern as the user manual and `infoBeesModal`. Reuses existing CSS, no new rules.
+
+Result: the callout reads naturally as a "before you dive in" reference, has a stable URL, is discoverable from the sidebar, and renders correctly in both themes because the CSS scope is now where it belongs.
+
+### Other v3.36.31 additions audited — all correct
+
+Per direct concern that this might be a pattern: I audited the other four content additions from v3.36.31. All were placed properly:
+
+| Addition | Container | Sidebar/nav needed? |
+|---|---|---|
+| User manual Step 1 wf-tip (model diversity) | Inside `<div id="step1">` | No — Step 1 has its own sidebar entry; this is content INSIDE |
+| User manual Step 3 wf-tip (setup specificity) | Inside `<div id="step3">` | No — same |
+| User manual Step 9 wf-tip (convergence) | Inside `<div id="step9">` | No — same |
+| `infoBeesModal` model-diversity row | Inside the modal body | No — modals don't have sidebar implications |
+
+Only the playbook header cram needed fixing. Pattern lesson reinforced: substantive content gets a section + nav entry; augmentations to existing sections live inline.
+
+### Files Changed
+
+`document-playbooks.html` (removed bad header insertion, added proper `<div class="hp-section">` with title block + body between Running at Work and Career & Hiring, added `<a>` sidebar entry under "Read first") · `js/version.js` · `js/app.js` (build stamp) · `style.css` (build comment) · `index.html` · `CHANGELOG.md`
+
+Helper-page version stamps swept across all 5 helper pages.
+
+**ZIP contents:** 10 deployment files + 2 docs in `docs/` = 12 files. No new CSS.
+
+---
 ## v3.36.33
 **Build:** `20260510-011` · **Released:** May 10, 2026
 

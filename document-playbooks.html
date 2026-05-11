@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-011">
+  <meta name="waxframe-build" content="20260510-013">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.36.33">
+  <link rel="stylesheet" href="style.css?v=3.36.35">
 </head>
 <body class="helper-body">
 
@@ -92,13 +92,6 @@
         <p class="hp-section-sub">Each playbook gives you the exact text to enter into every WaxFrame field for a specific document type. Open WaxFrame on one screen and this page on another. Work through the fields top to bottom — replace anything in [brackets] with your own information.</p>
         <p class="hp-section-sub"><strong>Tip:</strong> Every playbook on this page is also available as a one-click template inside the app. On the Project screen, click <strong>📋 Use Template</strong> to populate all six Goal fields automatically — no copy/paste needed. Use this page when you want to read the full reasoning behind each playbook, and the in-app templates when you want to apply one fast.</p>
         <p class="hp-section-sub">New to WaxFrame? Read the <a href="waxframe-user-manual.html" target="_blank" class="link-accent">User Manual</a> first — it walks you through every screen step by step.</p>
-        <div class="wf-tip">
-          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
-          <div class="wf-tip-body"><p><strong>How to read the convergence numbers below.</strong> Every playbook shows a measured round count. Two stopping signals can produce that number:</p>
-          <p><strong>Unanimous convergence</strong> — every reviewer in the hive marked the round as "no changes needed." Full agreement. The strongest stopping signal.</p>
-          <p><strong>Majority convergence</strong> — more than half the reviewers marked the round clean, but at least one holdout is still suggesting changes. The Builder stops here because there's no productive direction left; holdouts' suggestions are typically nice-to-haves the majority sees as fine. The document is shippable.</p>
-          <p>Neither type means "perfect." It means the hive converged on <em>what they think is shippable</em>. If you want stronger output, inject targeted Notes ("tighten paragraph three," "rework the closing line") and run another round rather than waiting for a state that may never come.</p></div>
-        </div>
       </div>
     </div>
   </div>
@@ -117,6 +110,7 @@
 
         <div class="doc-sidebar-category">⚠️ Read first</div>
         <a href="#cat-at-work"         class="doc-sidebar-link">🔒 Running at work</a>
+        <a href="#cat-convergence"     class="doc-sidebar-link">📊 Reading convergence numbers</a>
 
         <div class="doc-sidebar-category">Career &amp; Hiring</div>
         <a href="#cover-letter"        class="doc-sidebar-link">✉️ Cover Letter</a>
@@ -176,7 +170,7 @@
           <p>This is a guided test run. Classic chocolate chip cookies — pantry ingredients, familiar territory for almost everyone — built from scratch by the hive. It will give you a feel for what WaxFrame does without any domain pressure. The goal fields below are written in plain human voice, the way you'd actually describe what you want to a friend. With a well-phrased goal, the hive typically converges in 2 rounds.</p>
         </div>
 
-        <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+        <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
         <p class="dp-section-sub">Copy each value into the matching field on the Project screen. Fields marked * are required to continue.</p>
 
         <table class="dp-table">
@@ -196,7 +190,7 @@
 
         <div class="dp-field-divider"></div>
 
-        <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+        <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
 
         <p>Click <strong>Start from Scratch</strong> and leave the text box empty. That's it — the six goal fields above are all the hive needs. Head to the work screen and click <strong>Smoke the Hive</strong>.</p>
 
@@ -264,6 +258,37 @@
       </div><!-- /hp-section Running at Work -->
 
     <!-- ═══════════════════════════════════════════════ -->
+    <!-- CATEGORY: HOW TO READ CONVERGENCE NUMBERS -->
+    <!-- ═══════════════════════════════════════════════ -->
+      <div class="hp-section">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title" id="cat-convergence">📊 How to read the convergence numbers</h2>
+            <p class="hp-section-sub">What "rounds to convergence" actually means — and why it's not the same as "perfect."</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+  <div class="wh-section" id="convergence-principle">
+    <div class="wh-block">
+      <p>Every playbook below shows a measured round count. Two stopping signals can produce that number, and they mean different things.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Unanimous convergence</span>
+        <span class="goal-info-desc">Every reviewer in the hive marked the round as "no changes needed." Full agreement. The strongest stopping signal — the document is done by all of them.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Majority convergence</span>
+        <span class="goal-info-desc">More than half the reviewers marked the round clean, but at least one holdout is still suggesting changes. The Builder stops here because there's no productive direction left — holdouts' suggestions are typically nice-to-haves the majority sees as fine-as-is. The document is shippable; you can review the holdout suggestions and either incorporate selected ones via Notes or just finish.</span>
+      </div>
+      <p>Neither convergence type means the document is <strong>perfect</strong>. It means the hive has converged on <em>what they think is shippable</em>. If you want stronger output beyond that, the right move is usually to inject targeted Notes (e.g., "tighten the third paragraph" or "the closing line is too long") and run another round — not to keep waiting for a state that may never come.</p>
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+        </div><!-- /hp-section-body Convergence -->
+      </div><!-- /hp-section Convergence -->
+
+    <!-- ═══════════════════════════════════════════════ -->
     <!-- CATEGORY: CAREER & HIRING -->
     <!-- ═══════════════════════════════════════════════ -->
       <div class="hp-section">
@@ -285,7 +310,7 @@
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -309,7 +334,7 @@
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -359,7 +384,7 @@
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -421,7 +446,7 @@ Culture: small team, we fix our own mistakes, no politics, no unnecessary meetin
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -471,7 +496,7 @@ Culture: small team, we fix our own mistakes, no politics, no unnecessary meetin
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -551,7 +576,7 @@ Things I forgot to include in my resume:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -601,7 +626,7 @@ Things I forgot to include in my resume:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -653,7 +678,7 @@ What I want a recruiter to know about me:  I have shipped production wireless de
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining your existing About</div>
@@ -703,7 +728,7 @@ What I want a recruiter to know about me:  I have shipped production wireless de
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -756,7 +781,7 @@ What we want him to know:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -821,7 +846,7 @@ What we want him to know:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. The Scope &amp; constraints field is where you tell the hive who you are and what you sell — fill in the identity/offering/pricing scaffold below the section list.</p>
 
       <table class="dp-table">
@@ -866,7 +891,7 @@ What we want him to know:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -917,7 +942,7 @@ What we want him to know:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -969,7 +994,7 @@ Sender:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1019,7 +1044,7 @@ Sender:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1044,7 +1069,7 @@ Sender:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1094,7 +1119,7 @@ Sender:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1119,7 +1144,7 @@ Sender:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1184,7 +1209,7 @@ Sender:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1237,7 +1262,7 @@ Call to action at the end: link to a tool that automates this — multiple model
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1288,7 +1313,7 @@ Call to action at the end: link to a tool that automates this — multiple model
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1333,7 +1358,7 @@ Call to action at the end: link to a tool that automates this — multiple model
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1383,7 +1408,7 @@ Call to action at the end: link to a tool that automates this — multiple model
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1444,7 +1469,7 @@ Hard constraints:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1510,7 +1535,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1535,7 +1560,7 @@ Hard constraints:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1585,7 +1610,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information.</p>
 
       <table class="dp-table">
@@ -1622,7 +1647,7 @@ Hard constraints:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1687,7 +1712,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Replace anything in [brackets] with your own information. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -1706,14 +1731,51 @@ Hard constraints:
       <div class="dp-scratch-note">
         <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
         <table>
-          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete restaurant review from the details I provide in Notes. Organize the review around the actual visit, what I ordered, food quality, service, atmosphere, value, and final recommendation.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete restaurant review from the details I provide in Reference Material (Setup 4). Organize the review around the actual visit, what I ordered, food quality, service, atmosphere, value, and final recommendation.</td></tr>
           <tr><td class="dp-table-field">Additional instructions</td><td>If important details are missing, write around them without inventing. Do not add fake menu items, fake prices, fake staff names, or fake dates.</td></tr>
         </table>
       </div>
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Skip this screen — click <strong>Continue</strong>. Your existing review goes in Setup 5 below.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Click <strong>Paste Text</strong>. Paste the detail checklist below, fill in the lines with what you remember from the visit, then continue to Setup 5.
+        </div>
+      </div>
+      <p class="dp-tight-p">Reference Material persists across every round and is never altered by the hive — exactly the right home for raw visit facts. Notes is for one-shot mid-round Builder tweaks (like "tighten the third paragraph"), not setup facts.</p>
+      <div class="dp-checklist-block">
+        <div class="dp-checklist-block-hdr">Detail checklist — copy and paste into Reference Material:</div>
+<pre>Restaurant:
+Location:
+Date/time:
+Who was there (solo / couple / family / group / business):
+Dine-in / takeout / delivery / patio / bar:
+Reservation or walk-in:
+Parking notes:
+First impression of exterior/interior:
+Noise / lighting / seating / cleanliness:
+What was ordered (drinks, apps, entrées, sides, dessert):
+Prices remembered:
+Food quality (flavor, temperature, portion, freshness, presentation):
+Best item:
+Worst item or disappointment:
+Service quality:
+Problems and how staff handled them:
+Would you return:
+Who is this restaurant best for:
+</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen</div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1721,7 +1783,7 @@ Hard constraints:
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before clicking Smoke the Hive on Round 1, open the Notes drawer (📝 Notes in the top bar) and paste the raw visit details — what you ordered, prices, service quality, atmosphere, problems, the bottom line.
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. The hive will use your filled-in Reference Material from Step 4 to write the review from scratch.
         </div>
       </div>
 
@@ -1770,7 +1832,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -1789,14 +1851,56 @@ Hard constraints:
       <div class="dp-scratch-note">
         <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
         <table>
-          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete hotel review from the details I provide in Notes. Organize the review around the stay context, check-in, room, sleep quality, bathroom, amenities, location, value, and final recommendation.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete hotel review from the details I provide in Reference Material (Setup 4). Organize the review around the stay context, check-in, room, sleep quality, bathroom, amenities, location, value, and final recommendation.</td></tr>
           <tr><td class="dp-table-field">Additional instructions</td><td>If important details are missing, do not invent them. Focus on the details provided and flag missing items only if needed.</td></tr>
         </table>
       </div>
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Skip this screen — click <strong>Continue</strong>. Your existing review goes in Setup 5 below.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Click <strong>Paste Text</strong>. Paste the detail checklist below, fill in the lines with what you remember from the stay, then continue to Setup 5.
+        </div>
+      </div>
+      <p class="dp-tight-p">Reference Material persists across every round and is never altered by the hive — exactly the right home for raw stay facts. Notes is for one-shot mid-round Builder tweaks (like "tighten the third paragraph"), not setup facts. Writing a review weeks after the trip? The checklist scaffolds your memory by prompting for the specifics that matter — bed, noise, HVAC, blackout curtains, hot water, Wi-Fi, parking, fees — the stuff that fades fast.</p>
+      <div class="dp-checklist-block">
+        <div class="dp-checklist-block-hdr">Detail checklist — copy and paste into Reference Material:</div>
+<pre>Hotel:
+Location:
+Dates of stay:
+Trip type (business / vacation / family / event / road trip):
+Who was there (solo / couple / family / group):
+Room type and number if relevant:
+Rate / points / resort fee / parking fee / other fees:
+Check-in experience:
+Staff interactions:
+Room size, layout, furniture, outlets, desk:
+Cleanliness and maintenance:
+Bed and pillows:
+Noise (hallway, street, airport, neighbors, elevators, kids):
+Room darkness / blackout curtains:
+HVAC / temperature control:
+Bathroom layout, shower pressure, hot water, towels, toiletries:
+Wi-Fi speed and reliability:
+Breakfast quality and variety:
+Gym / pool / bar / lounge / laundry / shuttle / parking:
+Nearby restaurants / walkability / transit / airport / attractions / work site:
+Problems and how staff handled them:
+Would you stay again:
+Who is this hotel best for:
+</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen</div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1804,7 +1908,7 @@ Hard constraints:
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before clicking Smoke the Hive on Round 1, open the Notes drawer and paste the raw stay details — bed, noise, HVAC, blackout curtains, hot water, Wi-Fi, parking, fees, problems and how staff handled them, bottom line.
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. The hive will use your filled-in Reference Material from Step 4 to write the review from scratch.
         </div>
       </div>
 
@@ -1853,7 +1957,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -1872,14 +1976,50 @@ Hard constraints:
       <div class="dp-scratch-note">
         <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
         <table>
-          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete business or service review from the details I provide in Notes. Organize the review around why I used the business, what happened, staff behavior, service quality, value, problem handling, and final recommendation.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete business or service review from the details I provide in Reference Material (Setup 4). Organize the review around why I used the business, what happened, staff behavior, service quality, value, problem handling, and final recommendation.</td></tr>
           <tr><td class="dp-table-field">Additional instructions</td><td>Do not add legal conclusions, accusations, or claims beyond the facts provided. If the experience was negative, keep the review specific and evidence-based.</td></tr>
         </table>
       </div>
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <div class="dp-s4-pair">
+        <div class="dp-s4-item">
+          <div class="dp-s4-label">Refining a draft</div>
+          Skip this screen — click <strong>Continue</strong>. Your existing review goes in Setup 5 below.
+        </div>
+        <div class="dp-s4-item">
+          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
+          Click <strong>Paste Text</strong>. Paste the detail checklist below, fill in the lines specifically (quoted prices, dates, what was said, what happened), then continue to Setup 5.
+        </div>
+      </div>
+      <p class="dp-tight-p">Reference Material persists across every round and is never altered by the hive — exactly the right home for raw service-experience facts. Notes is for one-shot mid-round Builder tweaks (like "tighten the third paragraph"), not setup facts. <em>"They quoted X, charged Y, did Z, and responded this way"</em> is useful; <em>"they ripped me off"</em> is not — the more specific your details, the stronger and more defensible the review.</p>
+      <div class="dp-checklist-block">
+        <div class="dp-checklist-block-hdr">Detail checklist — copy and paste into Reference Material:</div>
+<pre>Business:
+Location:
+Type of service or product:
+Why you used them:
+Date/time:
+Booking process (app / website / phone / walk-in / reservation / estimate / quote):
+Price quoted vs. price paid:
+Arrival/check-in process:
+Staff behavior and communication:
+What went well:
+What went wrong:
+Delays / confusion / unexpected charges / damage / poor workmanship / service failures:
+How the business responded when a problem came up:
+Whether they fixed the issue:
+Observed practices future customers should know about:
+Would you use them again:
+Who should use them and who should avoid them:
+</pre>
+      </div>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen</div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft</div>
@@ -1887,7 +2027,7 @@ Hard constraints:
         </div>
         <div class="dp-s4-item">
           <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before clicking Smoke the Hive on Round 1, open the Notes drawer and paste the raw experience details — be specific. <em>"They quoted X, charged Y, did Z, and responded this way"</em> is useful; <em>"they ripped me off"</em> is not.
+          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. The hive will use your filled-in Reference Material from Step 4 to write the review from scratch.
         </div>
       </div>
 
@@ -1936,7 +2076,7 @@ Hard constraints:
     </div>
     <div class="dp-playbook-body">
 
-      <div class="dp-section-hdr">Step 3 — Your Project screen</div>
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
       <p class="dp-section-sub">Fill in each field on the Project screen. Fields marked * are required to continue.</p>
 
       <table class="dp-table">
@@ -1962,7 +2102,7 @@ Hard constraints:
 
       <div class="dp-field-divider"></div>
 
-      <div class="dp-section-hdr dp-section-hdr--s4">Step 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
       <div class="dp-s4-pair">
         <div class="dp-s4-item">
           <div class="dp-s4-label">Refining a draft (recommended)</div>
@@ -2101,7 +2241,7 @@ Hard constraints:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.36.33"></script>
+<script src="js/version.js?v=3.36.35"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
