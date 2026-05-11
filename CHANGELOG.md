@@ -1,6 +1,49 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.3
+**Build:** `20260511-004` · **Released:** May 11, 2026
+
+### Template card wording overhaul — every card audited, every side worded for it
+
+Follow-on to v3.38.2. The per-path description infrastructure introduced in v3.38.2 was sound but the wording I picked was bland and leaned hard on "polish / sharpen / refine" repeated across cards. New users see these cards first, so they should be inviting and useful — outcome-focused, varied in voice, distinct in verb. Every both-path template now has its own per-side wording. Quick Start got a top-level rewrite too.
+
+### Verb diversity on the refine side
+
+16 unique verbs across 17 refine-path descriptions, zero repeats of "polish / sharpen / refine" as primary verbs:
+
+Move · Audit · Take · Pull · Elevate · Push · Recast · Compress · Pressure-test · Bring · Reshape · Rework · Tune · Lift · Rewrite · Strengthen · (noun-phrase opening for Recipe)
+
+### Scratch side leads with the deliverable
+
+Most scratch descriptions open with what the user **gets** — a noun phrase — rather than what the system does. Cards now read as the output, not the process.
+
+### Quick Start
+
+Tightened the top-level description so it reads as an invitation rather than a recommendation buried at the end.
+
+> Try WaxFrame end-to-end on a low-stakes chocolate-chip-cookie recipe. Converges in a few rounds and gives you a clear feel for how the whole hive works — recommended for your first run.
+
+### What didn't change
+
+- `index.html` — no edits
+- `style.css` — no edits
+- `app.js` — only the BUILD stamp; render code from v3.38.2 already reads per-path descriptions with fallback
+- Multi-Platform Review Rewrite (refine-only) — existing description already specific and useful, left as-is
+
+### Files Changed
+
+`js/templates.js`
+- Schema header bumped to v3.38.3
+- All 17 both-path templates: per-path `pathContent.scratch.description` and `pathContent.refine.description` written or rewritten
+- Quick Start: top-level description rewritten
+
+`js/app.js`, `js/version.js`, `index.html`, 5 helper pages
+- BUILD `20260511-004`; APP_VERSION `v3.38.3 Pro`; cache-bust `?v=3.38.3` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+No CSS changes. No HTML structural changes.
+
+---
 ## v3.38.2
 **Build:** `20260511-003` · **Released:** May 11, 2026
 
