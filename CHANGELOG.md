@@ -1,6 +1,59 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.37.0
+**Build:** `20260510-015` · **Released:** May 10, 2026
+
+### Dual-path templates
+
+Every template in the gallery now declares which starting condition it supports — **scratch** (the user has no draft yet; the hive creates one) or **refine** (the user already has a draft; the hive polishes it). The modal gains a path-picker step at the top: the user chooses "Starting from scratch" or "Refining an existing draft", then the category grid filters to templates supporting the chosen path. A path-indicator pill at the top of the grid lets the user change paths without closing the modal.
+
+17 of 19 templates support both paths. Two single-path templates by design: **Quick Start** (scratch only — the onboarding demo) and **Multi-Platform Review Rewrite** (refine only — operates on a source review pasted into Starting Document).
+
+### Schema changes (templates.js)
+
+Path-agnostic identity fields stay at the top level: `id`, `name`, `icon`, `category`, `description`, `paths`, `pathContent`. Per-path content lives inside `pathContent[path]` and holds `goalDocType`, `goalAudience`, `goalOutcome`, `goalScope`, `goalTone`, `goalNotes`, `refMaterial`, `hint`, `lengthMode`, `lengthLimit`, `lengthMin`, `lengthUnit`.
+
+**Retired field:** `suggestedNotes`. Content that previously lived there is now routed to **Reference Material** as a card on apply (scratch path), tagged `source: 'template'` and `templateOriginId: tpl.id`. Every subsequent `applyTemplate` call sweeps prior template-sourced cards so the RM panel stays clean and idempotent — switching templates cleans up after the previous one. Manually added RM cards (`source: 'paste'` or `'file'`) are preserved by the sweep.
+
+### Routing changes (applyTemplate)
+
+Signature changed to `applyTemplate(templateId, path)`. Reads all per-path content from `tpl.pathContent[path]`. Falls back to `tpl.paths[0]` with a console warning if the caller passes an invalid path. The hint banner title now includes a path suffix — "starting from scratch" or "refining an existing draft" — so the user can see at a glance which path was applied.
+
+For scratch paths the refMaterial scaffold is the heavy lifter — every both-path template ships a questionnaire-style scaffold authored to match what the hive needs to know to write that document type from zero. For refine paths the refMaterial is empty by default; the hint banner instead points the user to paste their existing draft into Setup — Step 5 of 5 — Starting Document.
+
+### Per-template path classifications
+
+- **scratch-only (1):** `quick-start`
+- **refine-only (1):** `multi-platform-review`
+- **both-path (17):** `cover-letter`, `job-description`, `resume`, `linkedin-about`, `thank-you`, `business-proposal`, `email-campaign`, `executive-summary`, `rfp`, `blog-post`, `presentation`, `recipe`, `contractor-letter`, `linkedin-post`, `restaurant-review`, `hotel-review`, `business-review`
+
+### Files Changed
+
+`js/templates.js`:
+- Full rewrite to dual-path schema; 19 templates migrated; all 17 dual-path refine variants authored
+
+`js/app.js`:
+- New module-level `_selectedTemplatePath` state
+- `showTemplateGallery` resets path on every open
+- `renderTemplateGalleryBody` becomes two-state (path picker → template grid filtered by path)
+- New `selectTemplatePath` / `resetTemplatePath` helpers
+- `applyTemplate(templateId, path)` reads from `tpl.pathContent[path]`; sweeps + injects Reference Material cards tagged `source: 'template'`
+- Build stamp bumped to `20260510-015`
+
+`style.css`:
+- New `.template-path-selector` / `.template-path-grid` / `.template-path-card` / `.template-path-indicator` rule blocks
+
+`js/version.js`:
+- `APP_VERSION = 'v3.37.0 Pro'`
+
+`index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Build stamp + cache-bust sync (v3.36.36 → v3.37.0; 20260510-014 → 20260510-015)
+
+`docs/WaxFrame_Backlog_Master_v22.txt`:
+- Bumped from v21; v3.37.0 in CHANGES + Recently Shipped
+
+---
 ## v3.36.36
 **Build:** `20260510-014` · **Released:** May 10, 2026
 
