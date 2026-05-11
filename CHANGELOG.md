@@ -1,6 +1,49 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.36.36
+**Build:** `20260510-014` · **Released:** May 10, 2026
+
+### Playbook page — Convergence section copy rewrite + anchor jump-to fix
+
+Three amendments to the "How to read the convergence numbers" section shipped in v3.36.34, plus a CSS fix for the sidebar anchor jump.
+
+### Copy changes
+
+Section header de-emojified — `📊 How to read the convergence numbers` → `How to read the convergence numbers`. Sidebar entry matched — `📊 Reading convergence numbers` → `Reading convergence numbers`.
+
+**Unanimous convergence** description: "the document is done by all of them" → "the document has been approved by all of them." More accurate framing — the hive can mark a round clean without the document being objectively complete.
+
+**Majority convergence** description rewritten in the user's voice: "This occurs when a majority of the Hive have approved the document but there are some that feel the document needs more work. The document having been approved by the majority is ready to be shipped, but holdouts will offer up their last suggestions which you can review and decide if you'd like to incorporate them or just Finish." The previous copy framed holdouts pejoratively ("nice-to-haves the majority sees as fine-as-is"); the rewrite is neutral.
+
+**Closing paragraph** rewritten in the user's voice: "Neither convergence type means the document is perfect — only YOU can decide that, it's your document after all. So, If you would like to make hand crafted amendments you can do so as always on the working document itself or if you want to have the builder 'tighten the third paragraph' or 'adjust the closing line it is too long' you can send those NOTES and run another round, you are in charge!" Returns agency to the user as the final arbiter.
+
+### Anchor jump-to fix
+
+`.hp-section-title` had no `scroll-margin-top`. Sidebar links targeting `#cat-convergence` and `#cat-at-work` land on the `<h2>` inside the section header, so without scroll-margin the h2 sat under the sticky page header and the user saw content below it.
+
+Fixed by adding `scroll-margin-top: 116px` to `.hp-section-title` — matches the value already on `.dp-playbook` (every other sidebar entry targets a `.dp-playbook` div, which is why the bug only surfaced on the two `#cat-*` anchors). Fixes both at-work and convergence in one rule.
+
+### Files Changed
+
+`document-playbooks.html`:
+- Section H2 + sidebar entry de-emojified
+- Three text blocks rewritten in the Convergence section
+- Build stamp + cache-bust sync
+
+`style.css`:
+- `scroll-margin-top: 116px` added to `.hp-section-title`
+
+`index.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Build stamp + cache-bust sync
+
+`js/version.js`:
+- `APP_VERSION = 'v3.36.36 Pro'`
+
+`js/app.js`:
+- `BUILD = '20260510-014'`
+
+---
 ## v3.36.35
 **Build:** `20260510-013` · **Released:** May 10, 2026
 
