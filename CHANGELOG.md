@@ -2,17 +2,23 @@
 
 ---
 ## v3.38.4
-**Build:** `20260511-008` · **Released:** May 11, 2026
+**Build:** `20260511-011` · **Released:** May 11, 2026
 
-### Onboarding accuracy + readability sweep — five scope items
+### Onboarding accuracy + readability sweep — six scope items
 
-Five related onboarding-cleanup scope items in one release:
+Six related onboarding-cleanup scope items in one release:
 
-1. **Docs accuracy sweep** — `waxframe-user-manual.html`, `README.md`, and `document-playbooks.html` still referenced the original 12-template / 5-category library and a pre-v3.37.0 "click Use Template and pick Quick Start" flow that skipped the path picker. Current reality: **19 templates, 6 categories, path picker first.** All live docs brought into line.
+1. **Docs accuracy sweep** — user manual, README, and Document Playbooks intro tip brought into line with current reality of **19 templates across 6 categories** and the path-picker-first gallery flow (the old "12 templates / 5 categories" zombie was still referenced in places).
+
 2. **Worker Bees onboarding jargon trim** — caught by Candy on a fresh walkthrough. The 95-word intro paragraph dumping USER DECISION, Auto Mode, "majority resolution," "saved API keys," and "work screen" jargon was rewritten as three short scannable paragraphs with every undefined term dropped — the ⓘ info modal keeps the deep detail. Footer requirement label also updated: "API keys saved" → "AIs set up."
+
 3. **Hive-size recommendation alignment** — empirical evidence (Brightwater 3-AI vs 2-AI runs) shows that **3+ converges meaningfully faster**, not just "Auto Mode requires 3+." Manual Step 1 description, hive-count-chip note, Step 5 procedure, best-practices block, and troubleshooting note plus README Step 1 now all lead with "3 or more for faster convergence." Plain-English replacements for USER DECISION / Auto Mode jargon throughout.
-4. **Brightwater empirical data cited with scaffold versions (Option B)** — the manual cited two different 3-AI Brightwater numbers without distinguishing which scaffold version produced each. Audited the backup JSONs in `docs/` and confirmed three measured runs: v1.0 scaffold (3 AIs, 3 rounds, 7m 30s), v2.0 stress test (2 AIs, 11 rounds, 15m 53s), v3.0 polished scaffold (3 AIs, 5 rounds, 10m 12s). All three now cited with explicit scaffold version labels so the comparison is honest — v3.0 took slightly more rounds than v1.0 not because the hive got worse but because the scaffold accumulated more legitimate constraints to satisfy.
-5. **Welcome → "What's in the Menu" modal audit** — the modal listed only six items (User Manual, API Key Guide, Document Playbooks, What Are Tokens?, Prompt Editor, License & Account) in a non-menu-matching order, and was missing the entire **Tools** section: Buy WaxFrame Pro, Round History, Backup Session, Import Backup. Modal now mirrors the actual menu's four-section structure (Navigation, Tools, Documentation, Advanced), lists every significant menu item, and uses the menu's label wording verbatim ("License Key" instead of "License & Account"). Adds a brief one-line Navigation entry pointing at the screen-jump links so users know those exist too.
+
+4. **Brightwater empirical data cited with scaffold versions (Option B)** — the manual cited two different 3-AI Brightwater numbers without distinguishing which scaffold version produced each. Audited the backup JSONs in `/mnt/project/` and confirmed three measured runs: v1.0 scaffold (3 AIs, 3 rounds, 7m 30s), v2.0 stress test (2 AIs, 11 rounds, 15m 53s), v3.0 polished scaffold (3 AIs, 5 rounds, 10m 12s). All three now cited with explicit scaffold version labels.
+
+5. **Welcome → "What's in the Menu" modal audit** — the modal listed only six items in non-menu-matching order and was missing the entire **Tools** section (Buy WaxFrame Pro, Round History, Backup Session, Import Backup). Modal now mirrors the actual menu's four-section structure section-for-section.
+
+6. **User-manual Worker Bees screen audit** — the manual's Step 1 documentation hadn't been touched since before the v3.31.0 hive-mode split. It documented buttons that no longer exist (Hide All Defaults, Reset to Defaults, per-row Hide button), missed buttons that have been there for months (Recommend Models for All, Expand all / Collapse all, per-row Recommend a Model, bulk-select checkbox on customs), and missed the entire **Hive Mode toggle** (Internet vs Server) that sits above the toolbar. Full rewrite of the toolbar and AI-row sections, plus the Setting-up-an-internal-only-hive block on line 1423 which still told users to click the (long-gone) Hide All Defaults button.
 
 ### Worker Bees screen — copy changes
 
@@ -26,6 +32,8 @@ Five related onboarding-cleanup scope items in one release:
 >
 > Click any AI card below to set it up. For the full guide, tap the **ⓘ** next to the heading above.
 
+Footer requirement label: *"✗ At least 2 API keys saved"* → *"✗ At least 2 AIs set up"* (both the static `<span>` text and the dynamic `updateRequirements()` text).
+
 ### Hive-size language — what changed
 
 | Before | After |
@@ -37,43 +45,55 @@ Five related onboarding-cleanup scope items in one release:
 
 ### Brightwater audit — three runs, three scaffold versions
 
-Direct inspection of the backup JSON files in `/mnt/project/` (the canonical source of run data) reconciled the discrepancy:
-
 | Scaffold | Hive | Rounds | Wall-clock | App ver |
 |---|---|---|---|---|
 | **v1.0** | 3 AIs (ChatGPT, Claude, Gemini-as-Builder) | 3 | 7m 30s | v3.36.11 |
 | **v2.0 stress test** | 2 AIs (ChatGPT + Gemini-as-Builder) | 11 | 15m 53s | v3.36.13 |
 | **v3.0 polished** | 3 AIs (ChatGPT, Claude, Gemini-as-Builder) | 5 | 10m 12s | v3.36.14 |
 
-All three figures are now cited with explicit scaffold version labels in both the user manual Step 5 and the document-playbooks reference (manual line 1203).
+All three cited with explicit scaffold version labels in both the user manual Step 5 and the document-playbooks reference (manual line 1203).
 
 ### Welcome menu modal — items added, order corrected
 
-Modal now matches the actual menu drawer's structure section-for-section:
+Modal now matches the actual menu drawer section-for-section: **Navigation** (one summary entry) · **Tools** (Buy WaxFrame Pro, Round History, Backup Session, Import Backup, License Key — four of those five are new in this release) · **Documentation** (API Key Guide, Document Playbooks, User Manual, What Are Tokens?) · **Advanced** (Prompt Editor). "License Key" renamed from "License & Account" to match the menu. Section labels rendered with plain `<p><strong>` headers — no new CSS classes.
 
-**Navigation** — one summary entry pointing at the screen-jump links.
+### User-manual Worker Bees section — what was wrong, and what changed
 
-**Tools** (4 of 5 entries are new in this release):
-- 🛒 Buy WaxFrame Pro *(new)*
-- ⏱ Round History *(new)*
-- 💾 Backup Session *(new)*
-- 📂 Import Backup *(new)*
-- 🔑 License Key *(was "License & Account" — renamed to match menu)*
+**Toolbar block (manual line 305)** documented seven buttons in this order: API Key Guide, Add Custom AI, Import from Model Server, Hide All Defaults, Open API Websites, Reset to Defaults, Test All Keys. Comparison to current code (`renderWorkerBeeToolbar()`):
 
-**Documentation:**
-- 🔑 API Key Guide
-- 📋 Document Playbooks
-- 📖 User Manual
-- 🪙 What Are Tokens?
+| Manual claimed | Reality |
+|---|---|
+| Import from Model Server (always shown) | Only shown in Server mode |
+| Hide All Defaults | **Gone** — removed in v3.31.0 |
+| Reset to Defaults | **Gone** — removed in v3.31.0 |
+| (not mentioned) | Recommend Models for All — present since v3.32.10 |
+| (not mentioned) | ⊞ Expand all / ⊟ Collapse all — present |
+| (not mentioned) | 🌎 Internet / 🖥 Server **Hive Mode toggle** above the toolbar — present since v3.31.0 |
+| "Open API Websites" | Actual label is "Open default AI websites" |
+| Test All Keys (listed last) | Actually appears 3rd in Internet mode |
 
-**Advanced:**
-- ✏️ Prompt Editor
+**AI-row block (manual line 339)** described a flat row layout with a per-row Hide button and an inline ↗️ link icon. Comparison to current code (`buildAISetupRowHTML()`):
 
-Section labels rendered with plain `<p><strong>` headers — no new CSS classes. Closing tip now mentions the ℹ️ About button in the menu header for completeness.
+| Manual claimed | Reality |
+|---|---|
+| Flat row layout | Collapsible — chevron ▶/▼, clicking the row expands the setup panel |
+| Per-row Hide button | **Gone** — removed in v3.31.0 |
+| ↗️ link icon next to name | Moved to a contextual link inside the expanded panel ("Get one from X ↗" / "Open X account ↗") |
+| (not mentioned) | Bulk-select checkbox on custom AIs only (for bulk-removal toolbar) |
+| (not mentioned) | Per-row Recommend a Model button (Internet mode, when key saved) |
+| (not mentioned) | Dimmed name when no key saved |
+
+**Internal-only-hive block (manual line 1423)** still instructed users to click Hide All Defaults and Reset to Defaults — both removed in v3.31.0. Rewritten to use the **🖥 Server Based AI** mode toggle, which is how internal-only-hive setup actually works in the current app.
+
+**Rewrites added to the manual:**
+- New "Hive mode — Internet vs Server" block at the top of Step 1 documenting the mode toggle
+- "The toolbar — Internet mode" block with the five current Internet-mode buttons plus the Expand/Collapse row controls
+- "The toolbar — Server mode" block with the three Server-mode buttons
+- "The AI list — collapsible rows" block documenting the chevron pattern, collapsed-state controls, expanded-state controls, and the bulk-select checkbox on custom AIs
 
 ### Historical CHANGELOG entries (unchanged)
 
-CHANGELOG entries from v3.21–v3.32 still reference the old 12-template / 5-category counts. Those are historical records and accurately describe the state at the time of those releases — they are not touched.
+CHANGELOG entries from v3.21–v3.32 still reference the old 12-template / 5-category counts and old toolbar buttons. Those are historical records and accurately describe the state at the time of those releases — they are not touched.
 
 ### What didn't change
 
@@ -84,32 +104,34 @@ No CSS changes. No template content changes. No render-logic changes (the dual-p
 `index.html`
 - Worker Bees screen intro paragraph split into three scannable paragraphs with jargon stripped
 - Footer requirement label: "API keys saved" → "AIs set up"
-- "What's in the Menu" modal (line ~1782) — full rewrite to mirror menu sections and order, with five new entries (Navigation summary, Buy WaxFrame Pro, Round History, Backup Session, Import Backup) and "License Key" renamed from "License & Account"
-- meta build → `20260511-008`; cache-bust `?v=3.38.4` across `style.css`, `version.js`, `templates.js`, `app.js`
+- "What's in the Menu" modal fully rewritten to mirror menu sections and order
+- meta build → `20260511-009`; cache-bust `?v=3.38.4` across `style.css`, `version.js`, `templates.js`, `app.js`
 
 `js/app.js`
 - `updateRequirements()` — dynamic requirement label updated to match
-- BUILD → `20260511-008`
+- BUILD → `20260511-009`
 
 `js/version.js`
 - APP_VERSION → `v3.38.4 Pro`
 
 `waxframe-user-manual.html`
-- Template count `12 → 19`; category count `5 → 6` (Step 3 block + table rebuilt)
+- Template count + table updated (12 → 19, 5 → 6 categories)
 - Quick Start walkthroughs acknowledge the path-picker step
 - Hive-size recommendation alignment across Step 1 description, hive-count-chip note, Step 5 procedure, best-practices block, and troubleshooting note
-- Brightwater empirical data (Step 5 + line 1203) cites all three scaffold versions with explicit labels
+- Brightwater empirical data cites all three scaffold versions
+- **Step 1 Worker Bees screen audit**: new Hive Mode toggle block, rewritten Internet-mode and Server-mode toolbar blocks, rewritten AI-list block describing the collapsible-row structure, status-bar label updated
+- **Internal-only-hive block (line 1423)** rewritten to use the Server Based AI mode toggle instead of the long-gone Hide All Defaults / Reset to Defaults buttons
 
 `README.md`
 - Template count + table updated; Quick Start walkthrough acknowledges path picker
 - Step 1 ("Set up your Hive"): adds 3+ recommendation, adjusts cost-management example to fit
-- Version/build badges bumped to v3.38.4 / `20260511-008`
+- Version/build badges bumped to v3.38.4 / `20260511-009`
 
 `document-playbooks.html`
 - Intro Tip block acknowledges the path picker step
 
 `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
-- meta build → `20260511-008`; cache-bust on `style.css` and `version.js` → `?v=3.38.4`
+- meta build → `20260511-009`; cache-bust on `style.css` and `version.js` → `?v=3.38.4`
 
 ---
 ## v3.38.3
