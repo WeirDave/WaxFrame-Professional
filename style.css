@@ -6538,6 +6538,54 @@ kbd {
   letter-spacing: 0.2px;
 }
 
+/* v3.38.0 — Slow-AI alerts pill. Mirrors .length-guard-indicator
+   structure and dimensions so the two sit as visual siblings in the
+   footer-right cluster. Distinct color story:
+     ON  state = green (default, "alerts armed")
+     OFF state = amber (default-styled, "alerts suppressed")
+   Length Guard's OFF is RED because disabling it overrides a safety
+   constraint — a stronger visual signal. Slow alerts disabled is a
+   workflow preference, not a safety override, so amber rather than red. */
+.slow-responder-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--fs-11);
+  font-weight: 700;
+  line-height: 1.6;
+  padding: var(--space-4) var(--space-10);
+  border-radius: 20px;
+  background: var(--green-dim);
+  border: 1px solid var(--green);
+  color: var(--green);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.12s;
+}
+.slow-responder-indicator:hover {
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+}
+.slow-responder-indicator.is-off {
+  background: var(--accent-dim);
+  border: 1px solid var(--accent, #f4b400);
+  color: var(--accent, #f4b400);
+  box-shadow: 0 0 8px rgba(244,180,0,0.35);
+}
+.slow-responder-indicator.is-off:hover {
+  background: var(--accent, #f4b400);
+  color: #0a0c12;
+  box-shadow: 0 0 12px rgba(244,180,0,0.55);
+}
+.slow-responder-indicator-icon {
+  font-size: var(--fs-12);
+}
+.slow-responder-indicator-label {
+  letter-spacing: 0.2px;
+}
+
 /* ══════════════════════════════════════
    LICENSE BADGE + MODAL
 ══════════════════════════════════════ */

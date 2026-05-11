@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — MASTER BACKLOG (v20)
+WAXFRAME — MASTER BACKLOG (v24)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-10 (post v3.36.35, playbook page step labels + Ref Material reroute)
-Current version:     v3.36.35 Pro / build 20260510-013
+Last updated:        2026-05-11 (post v3.38.0, slow-AI alerts toggle Phase 1)
+Current version:     v3.38.0 Pro / build 20260511-001
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Backlog_Master_v20.txt
+Lives:               docs\WaxFrame_Backlog_Master_v24.txt
 
 This file is the single source of truth for code work, feature
 ideas, and bugs in WaxFrame. Companion to:
@@ -25,6 +25,138 @@ Marker key:
   ★     high priority
   ☐     low priority
   ⚠     blocked / waiting on something else
+
+CHANGES IN v24 (from v23, 2026-05-11):
+  - v3.38.0 SHIPPED — Slow-AI alerts toggle (Phase 1 of
+    Settings architecture). New 🐢 footer pill alongside
+    Length Guard; default ON; click toggles. When OFF,
+    SLOW_RESPONDER troubleshooting card surfacing is gated
+    so the Auto-Mode chain gate doesn't block on slow AIs
+    during hands-off long runs (the DeepSeek-weekend pain
+    point). Detection + console log run unconditionally —
+    only the user-facing card is suppressed, so diagnostic
+    info stays available. User-level preference (global)
+    via localStorage waxframe_slow_responder_enabled,
+    distinct from Length Guard which is per-project. Amber
+    off-state (not red like Length Guard) because this is
+    a workflow preference, not a safety override.
+  - Phase 2 of Settings architecture (nav-menu Settings
+    surface bundling Length Guard + Slow Alerts + future
+    toggleable features) parked. Footer-pill UX is proven
+    and the v3.38.0 ship validates the pattern; Phase 2
+    waits until there are 3+ togglable features in hand
+    rather than designing the bundle around 2.
+  - REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5-#10).
+
+CHANGES IN v23 (from v22, 2026-05-10):
+  - v3.37.2 SHIPPED — Auto-halted sound. Closes out the
+    second half of P1.6. Ascending major-triad arpeggio
+    (C5 → E5 → G5) — an "upper" cadence that reads as
+    "your turn, look at the modal" rather than "you failed."
+    Distinct from playAlertSound (ascending two-chirp
+    880→1320Hz = USER DECISION needs attention — both
+    ascend, but alert is two fast chirps in the 880Hz+
+    range; halt is three slower tones starting at C5 and
+    topping out at G5) and playRoundCompleteSound (bee
+    trill + ping = round done, positive). No new .wav
+    asset — pure Web Audio synthesis. Wired into _autoHalt
+    with reasonCode guard: fires for ceiling/stall/
+    failure-streak/decision-tie, SKIPPED on converged (the
+    unanimous-convergence path already plays its own
+    fanfare elsewhere — stacking the halt sound on top
+    would muddy that moment). Auditioned six candidates
+    via interactive widget in chat; David picked Option A
+    after hearing them in the context of the full WaxFrame
+    audio family.
+  - P1.5 (Storage-clean indicator pill) DROPPED — the
+    underlying orphan-key problem is structurally fixed by
+    v3.30.2's removeAI sweep. A passive indicator solves a
+    problem that no longer exists; sits green forever for
+    properly-maintained installs and adds visual noise. If
+    orphan-key problems surface in the wild later, revisit.
+  - P1.6 (Audible alerts) CLOSED. Half shipped in v3.36.33
+    (USER DECISION alert reusing playAlertSound, no new
+    assets needed). Second half (auto-halted sound) shipped
+    in v3.37.2 — also no .wav, pure synthesis. Removed
+    Kai-blocked status; no asset dependency remained.
+  - P1.1 audit removed from open items — completed 2026-05-10
+    (all three passes shipped, see Recently Shipped entries
+    for v3.36.13 / v3.36.14 / v3.36.15).
+  - REMAINING OPEN P1: only P1.3 (Auto really means Auto
+    behavioral group, items #5–#10). Multi-touchpoint
+    behavioral overhaul — checkpoint protocol applies.
+
+CHANGES IN v22 (from v21, 2026-05-10):
+  - v3.37.0 SHIPPED — Dual-path templates. Every template
+    in the gallery now declares which starting condition it
+    supports: "scratch" (user has no draft; hive creates one)
+    or "refine" (user has a draft; hive polishes it). 17 of
+    19 templates support both paths. Two single-path:
+    Quick Start (scratch only — the onboarding demo) and
+    Multi-Platform Review Rewrite (refine only — operates
+    on a source review).
+    Modal flow: open gallery → pick "Starting from scratch"
+    or "Refining an existing draft" → category grid filters
+    to templates supporting that path → click a template →
+    Project Goal fields populate from the per-path content,
+    and (scratch only, by default) a Reference Material card
+    is injected with a questionnaire scaffold. Refine paths
+    inject no RM card; instead the hint banner points the
+    user to paste their existing draft into Starting Document.
+    schema (templates.js):
+      Top-level path-agnostic identity fields:
+        id, name, icon, category, description, paths,
+        pathContent
+      pathContent[path] holds per-path fields:
+        goalDocType, goalAudience, goalOutcome, goalScope,
+        goalTone, goalNotes, refMaterial, hint, lengthMode,
+        lengthLimit, lengthMin, lengthUnit
+    Retired field: suggestedNotes. Content that previously
+    lived in suggestedNotes is now routed to Reference
+    Material as a card on apply (scratch path), tagged
+    source: 'template' + templateOriginId. Subsequent
+    applyTemplate calls sweep prior template-sourced cards
+    so the RM panel stays clean and idempotent (switching
+    templates cleans up after the previous one).
+    routing (applyTemplate):
+      Signature changed: applyTemplate(templateId, path).
+      Resolves with fallback (warn + default to first
+      supported path) if caller passes invalid path. Reads
+      all per-path content from tpl.pathContent[path].
+      RM sweep filters d.source !== 'template'; manually
+      added cards (source: 'paste' or 'file') are preserved.
+      Hint banner title now includes path suffix
+      ("starting from scratch" / "refining an existing
+      draft") so the user can see at a glance which path
+      was applied.
+
+CHANGES IN v21 (from v20, 2026-05-10):
+  - v3.36.36 shipped — Convergence section copy rewrite +
+    anchor jump-to fix. Three text blocks rewritten on the
+    document-playbooks "How to read the convergence numbers"
+    section (Unanimous + Majority + closing paragraph) in
+    David's voice — returns agency to the user as the final
+    arbiter, removes pejorative framing of holdouts ("nice-
+    to-haves the majority sees as fine-as-is"). Section H2 +
+    sidebar entry de-emojified. CSS fix: scroll-margin-top
+    116px added to .hp-section-title so sidebar links
+    targeting #cat-convergence and #cat-at-work land on the
+    section header instead of disappearing under the page
+    header. Both anchors fixed by one rule.
+  - v3.37.0 candidate (dual-path templates) STILL PENDING.
+    Schema design partially scoped in fresh session:
+    paths array per template (['scratch'], ['refine'], or
+    ['scratch','refine']), pathContent object keyed by path
+    name, refMaterial field per path (replaces suggestedNotes
+    for scratch — content routes to Reference Material as a
+    questionnaire card via addReferenceDoc()). RM cards
+    injected by templates get tagged source:'template' and
+    swept on subsequent template application. Quick Start
+    classified as ['scratch'] only (the from-scratch demo);
+    Multi-Platform Rewrite classified as ['refine'] only.
+    17 others are ['scratch','refine']. Build paused at
+    Phase A; resume in next fresh session.
 
 CHANGES IN v20 (from v19, 2026-05-10):
   - v3.36.35 shipped — Playbook page Step labeling
@@ -338,50 +470,20 @@ CHANGES IN v8 (from v7, 2026-05-10):
     pure content rewrite. Probably 90 minutes of focused
     editing. Defer to a fresh head.
 
-[ ] ★ P1.5  Storage-clean indicator pill
-    UI pill in the work footer-right cluster (alongside
-    License + Length-guard + About) showing whether
-    localStorage is in a clean state — only the expected
-    AI/API keys present, no orphaned waxframe_recommend_*
-    / waxframe_models_* / other dust bunnies.
+[ ] ★ P1.5  Storage-clean indicator pill — DROPPED v23
+    (2026-05-10). Underlying orphan-key problem
+    structurally fixed by v3.30.2's removeAI sweep — a
+    passive indicator solves a non-problem and sits green
+    forever for healthy installs. Re-open only if orphan
+    keys reappear in the wild.
 
-    Click behavior: opens a scanner overlay (or scrolls
-    to a dedicated section) showing what was found, with
-    a "Clean these up" action button.
-
-    Visual: fits the v3.36.16 three-pill color system.
-      • Green = clean (no orphans detected)
-      • Amber = N orphans found, click to review
-      • Red = used only if scan errors out / can't read
-
-    NOT a re-do of the retired cleanup.html page (which
-    used a stale allow-list and was retired in v3.35.3).
-    This is a passive indicator that runs scan-on-boot,
-    surfaces a count, and routes to remediation. The
-    scanning logic is reusable across both — can crib
-    from the retired page's source if it's still in git
-    history.
-
-    Estimated 3–4 hours surgical work. Fits cleanly
-    between heavier items as a palate cleanser.
-
-[-] ⚠ P1.6  USER DECISION audible alert + Auto-halt
-    sounds
-    BLOCKED on Kai producing two .wav assets:
-      • sounds/waxframe_user_decision_alert.wav — fires
-        when a USER DECISION block surfaces during Auto
-        mode (user is presumably away from keyboard).
-      • sounds/waxframe_auto_halted.wav — fires whenever
-        _autoHalt() opens its modal for any reason
-        (ceiling, stall, failure-streak, decision-tie,
-        future length-at-convergence per P1.3 #9).
-
-    Both gated by the global mute state (per audio rule
-    in memory: every direct-audio function starts with
-    `if (_isMuted) return;` as first statement).
-
-    Code wiring is small once assets land. Don't start
-    until WAVs are in /sounds.
+[x] ⚠ P1.6  Audible alerts — CLOSED v23 (2026-05-10).
+    Half 1 (USER DECISION alert) shipped v3.36.33 reusing
+    playAlertSound — no new asset needed. Half 2
+    (auto-halted cadence) shipped v3.37.2 — playAutoHaltSound,
+    ascending major-triad arpeggio (C5 → E5 → G5), pure
+    Web Audio synthesis, no .wav asset.
+    Kai-blocked status removed; no asset dependency remained.
 
 
 ═════════════════════════════════════════════════════════════
@@ -620,6 +722,143 @@ lock. Captured in Recently Shipped + CHANGELOG.)
 ═════════════════════════════════════════════════════════════
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
+
+v3.38.0   2026-05-11  Slow-AI alerts toggle (Phase 1 of Settings)
+                      • New 🐢 footer pill alongside Length
+                        Guard. Same UX pattern: always visible,
+                        click to toggle, .is-off class flips
+                        visual state.
+                      • ON (default, green) = pre-v3.38.0 behavior
+                        preserved — SLOW_RESPONDER cards surface
+                        as normal.
+                      • OFF (amber) = card surfacing gated. Auto-
+                        Mode chain gate no longer blocks on slow
+                        AIs during hands-off long runs.
+                      • Detection always runs. Per-AI timing
+                        comparison + console warning fire
+                        unconditionally; only WF_DEBUG.showCard
+                        is gated. Diagnostic info still available
+                        in console pane / DevTools.
+                      • User-level preference (global, not per-
+                        project) via localStorage
+                        waxframe_slow_responder_enabled.
+                      • Color story: amber off-state (not red
+                        like Length Guard) because this is a
+                        workflow preference, not a safety
+                        override.
+                      • Solves the DeepSeek-weekend pain — long
+                        hands-off Auto runs with the 6-AI default
+                        hive can now ride through chronically
+                        slow AIs without manual intervention.
+                      • Phase 1 of v4.0 Settings architecture.
+                        Phase 2 (nav-menu Settings surface) parked
+                        until 3+ togglable features warrant the
+                        bundle.
+
+v3.37.2   2026-05-10  Auto-halted sound — closes out P1.6
+                      • New playAutoHaltSound: ascending
+                        major-triad arpeggio (C5 → E5 → G5),
+                        an "upper" cadence that reads as
+                        "your turn, look at the modal" rather
+                        than "you failed." ~450ms total. Peak
+                        gain 0.16.
+                      • Distinct from existing audio:
+                        - playAlertSound = ascending 880→1320Hz
+                          two-chirp (= USER DECISION). Both
+                          halt and alert ascend, but alert is
+                          two fast chirps in the 880Hz+ range;
+                          halt is three slower tones starting
+                          at C5 and topping out at G5.
+                        - playRoundCompleteSound = bee trill +
+                          ping (= round done, positive)
+                      • Wired into _autoHalt with reasonCode
+                        guard: fires for ceiling, stall,
+                        failure-streak, decision-tie. SKIPPED
+                        on converged — that path already plays
+                        its own fanfare; stacking would muddy
+                        the moment.
+                      • Replaces the previous placeholder call
+                        to playRoundCompleteSound() inside
+                        _autoHalt (round-complete sound was the
+                        wrong cadence for a halt event — too
+                        positive, indistinguishable from any
+                        normal round-end chime).
+                      • Pure Web Audio synthesis — no new
+                        .wav asset. Removed the Kai dependency
+                        from P1.6.
+                      • Auditioned six candidates via interactive
+                        widget; David picked Option A after
+                        hearing all three finalists in the
+                        context of the existing WaxFrame audio
+                        family.
+                      • Dev → Scenes flyout gets a permanent
+                        🔊 Halt Sound preview button for any
+                        future tuning.
+                      • Backlog: P1.5 (storage-clean pill)
+                        dropped as non-problem. P1.6 closed.
+                        P1.3 (Auto really means Auto #5-#10)
+                        is now the sole remaining P1 item.
+
+v3.37.0   2026-05-10  Dual-path templates
+                      • Every template now declares which starting
+                        condition it supports: scratch (no draft yet)
+                        or refine (existing draft to polish).
+                      • Modal gains a path-picker step: "Starting
+                        from scratch" vs "Refining an existing draft".
+                        Template grid filters to the chosen path.
+                        Path-indicator pill at top of grid with a
+                        "Change" button so the user can re-pick
+                        without closing the modal.
+                      • 17 templates support both paths. Single-path:
+                        Quick Start (scratch only) and Multi-Platform
+                        Review Rewrite (refine only).
+                      • Schema (templates.js): top-level
+                        path-agnostic id/name/icon/category/
+                        description/paths/pathContent. pathContent[path]
+                        holds per-path goalDocType/goalAudience/
+                        goalOutcome/goalScope/goalTone/goalNotes/
+                        refMaterial/hint/length*.
+                      • Retired: suggestedNotes field. Content that
+                        was in suggestedNotes is now routed to
+                        Reference Material as a card via
+                        addReferenceDoc(), tagged source: 'template'
+                        and templateOriginId. Subsequent applyTemplate
+                        calls sweep prior template-sourced cards so
+                        switching templates is idempotent.
+                      • Routing: applyTemplate(templateId, path).
+                        Falls back to tpl.paths[0] with console warn
+                        if path invalid. Hint banner title now
+                        includes path suffix so the user sees which
+                        path was applied at a glance.
+
+v3.36.36  2026-05-10  Convergence section copy rewrite +
+                      anchor jump-to fix
+                      • document-playbooks "How to read the
+                        convergence numbers" section: H2 +
+                        sidebar entry de-emojified.
+                      • Unanimous convergence: "the document
+                        is done by all of them" → "the document
+                        has been approved by all of them."
+                      • Majority convergence rewritten in
+                        David's voice. Previous copy framed
+                        holdouts pejoratively ("nice-to-haves
+                        the majority sees as fine-as-is");
+                        new copy is neutral and accurate.
+                      • Closing paragraph rewritten in David's
+                        voice. Returns agency to the user as
+                        the final arbiter ("only YOU can decide
+                        that, it's your document after all...
+                        you are in charge!").
+                      • CSS: scroll-margin-top 116px added to
+                        .hp-section-title. Fixes both
+                        #cat-convergence and #cat-at-work
+                        anchor-jump bugs in one rule —
+                        previously the h2 landed under the
+                        sticky page header. 116px matches the
+                        value already on .dp-playbook (every
+                        other sidebar entry targets a
+                        .dp-playbook div, which is why only
+                        the two #cat-* anchors were affected).
 
 v3.36.35  2026-05-10  Playbook page — step labels + Reference
                       Material as the right channel for scratch-
