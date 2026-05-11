@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260511-001';         // build stamp — update each session
+const BUILD       = '20260511-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4021,6 +4021,13 @@ function resetTemplatePath() {
 //      filtered to templates supporting the selected path. Quick Start
 //      shows only in scratch mode (paths: ['scratch']); Multi-Platform
 //      Rewrite shows only in refine mode (paths: ['refine']).
+//
+// v3.38.1 — Path-aware newuser callouts. The modal header previously
+// carried a static "New to WaxFrame? Start with ⭐ Quick Start below"
+// paragraph; that copy is wrong on the path-picker state (no templates
+// rendered yet) and on the refine path (Quick Start filtered out). The
+// newuser callout now renders inside the body with one of three copies
+// chosen by state.
 function renderTemplateGalleryBody() {
   const body = document.getElementById('templateGalleryBody');
   if (!body) return;
@@ -4035,6 +4042,7 @@ function renderTemplateGalleryBody() {
       <div class="template-path-selector">
         <h3 class="template-path-selector-title">Are you starting from scratch, or refining an existing draft?</h3>
         <p class="template-path-selector-sub">This determines how the template fills in your Project fields and Reference Material. You can change this any time by re-opening the gallery.</p>
+        <p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>Starting from scratch</strong> and then click on <strong>⭐ Quick Start</strong> — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</p>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
             <span class="template-path-card-icon">📝</span>
@@ -4081,6 +4089,14 @@ function renderTemplateGalleryBody() {
       <button class="template-path-indicator-change" onclick="resetTemplatePath()" type="button">Change</button>
     </div>`;
 
+  // v3.38.1 — Per-path newuser callout. Scratch path points at the
+  // Quick Start card rendered below; refine path reframes for users
+  // who already have a draft and points back to the path picker for
+  // the onboarding demo.
+  const newuserCallout = (path === 'scratch')
+    ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
+    : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
+
   const sections = order.filter(c => buckets[c] && buckets[c].length).map(cat => `
     <div class="template-gallery-section">
       <h3 class="template-gallery-section-title">${esc(cat)}</h3>
@@ -4097,19 +4113,25 @@ function renderTemplateGalleryBody() {
           const badge   = isRecommended
             ? '<span class="template-card-badge">⭐ Start Here</span>'
             : '';
+          // v3.38.2 — Per-path card description. Both-path templates can
+          // override the top-level description per path inside
+          // pathContent[path].description; the top-level description is
+          // used as the fallback for templates that don't need per-path
+          // wording (e.g. cover-letter already reads "Create or refine…").
+          const desc = (t.pathContent && t.pathContent[path] && t.pathContent[path].description) || t.description || '';
           return `
           <button class="${cardCls}" onclick="applyTemplate('${esc(t.id)}', '${path}')" title="Apply the ${esc(t.name)} template (${esc(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
               <div class="template-card-name">${esc(t.name)}${badge}</div>
-              <div class="template-card-desc">${esc(t.description || '')}</div>
+              <div class="template-card-desc">${esc(desc)}</div>
             </div>
           </button>`;
         }).join('')}
       </div>
     </div>`).join('');
 
-  body.innerHTML = pathIndicator + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
+  body.innerHTML = pathIndicator + newuserCallout + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
 }
 
 // Check whether any of the six Goal fields currently has content.

@@ -1,6 +1,103 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.2
+**Build:** `20260511-003` · **Released:** May 11, 2026
+
+### Path-aware template card descriptions + modal polish
+
+Follow-on to v3.38.1. Three changes to the Project Templates modal: the 📋 emoji is dropped from the title (the Project Bee mascot already serves that visual cue), the path-picker callout is reworded to literal "Start with Starting from scratch and then click on ⭐ Quick Start" phrasing, and template card descriptions now read correctly on whichever side (scratch / refine) the user is on.
+
+### Per-path card descriptions — what changed and why
+
+The dual-path schema introduced in v3.37.0 gave every template a single top-level `description` field rendered on the card regardless of path. For some templates this was wrong on one side — a card saying "Sharpen a draft proposal" appearing under the "Starting from scratch" path makes no sense because there's no draft to sharpen.
+
+Templates now accept an optional `description` field inside `pathContent[path]` that overrides the top-level description on that path. The top-level description remains as fallback for templates that don't need per-path wording.
+
+**Per-path descriptions added for 9 templates** (3 clearly broken + 6 with creation-leaning verbs that read awkwardly on the refine side):
+
+| Template | Scratch | Refine |
+|---|---|---|
+| Job Description | "Write a job posting…" | "Polish a draft job posting…" |
+| LinkedIn About | "Write the About section…" | "Polish your LinkedIn About section…" |
+| Thank-You Letter | "Write a warm, genuine thank-you…" | "Polish a draft thank-you…" |
+| Business Proposal | "Build a proposal…" | "Sharpen a draft proposal…" |
+| Email & Outreach | "Write cold outreach…" | "Sharpen cold outreach…" |
+| RFP Response | "Craft a disciplined, structured response…" | "Sharpen a draft RFP response…" |
+| Presentation Outline | "Build a slide-by-slide speaker outline…" | "Refine a draft slide outline…" |
+| Contractor / Vendor Letter | "Write a letter to a contractor…" | "Refine a letter to a contractor…" |
+| LinkedIn Post | "Write a short-form LinkedIn post…" | "Polish a draft LinkedIn post…" |
+
+**Templates left alone (8 both-path templates already covered both sides):** Cover Letter ("Create or refine"), Résumé ("Polish… or generate"), Executive Summary ("Distil"), Blog Post (neutral), Recipe ("Turn rough notes or a draft"), Restaurant Review / Hotel Review / Business Review (all "Create or refine"). These render their top-level description on both paths via the fallback.
+
+**Single-path templates (no change needed):** Quick Start (scratch-only), Multi-Platform Review Rewrite (refine-only).
+
+### Modal polish
+
+- 📋 dropped from the modal title — the Project Bee mascot in the modal header already provides the visual cue, and the title now reads cleaner alongside it
+- Path-picker callout reworded to your phrasing: "**New to WaxFrame?** Start with **Starting from scratch** and then click on **⭐ Quick Start** — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document."
+
+### Files Changed
+
+`js/templates.js`:
+- Schema comment updated to document the optional `pathContent[path].description` field
+- 9 templates received per-path description overrides
+
+`js/app.js`:
+- `renderTemplateGalleryBody()` reads `t.pathContent[path].description` first, falls back to `t.description`
+- Path-picker callout copy updated
+- BUILD `20260511-003`
+
+`index.html`:
+- Project Templates modal title — emoji removed
+- meta build `20260511-003`; cache-bust on `style.css`, `version.js`, `templates.js`, `app.js` → `?v=3.38.2`
+
+`js/version.js`:
+- APP_VERSION `v3.38.2 Pro`
+
+`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Comment-header build → `20260511-003`; meta build → `20260511-003`; cache-bust on `style.css` and `version.js` → `?v=3.38.2`
+
+No CSS changes.
+
+---
+## v3.38.1
+**Build:** `20260511-002` · **Released:** May 11, 2026
+
+### Path-aware template gallery captions
+
+The "**New to WaxFrame?** Start with ⭐ Quick Start below" callout in the Project Templates modal is no longer valid in two of the modal's three render states. Quick Start lives on the scratch path only (`paths: ["scratch"]`), so on the refine path the card is filtered out — and on the initial path-picker state, no template cards are rendered yet at all. This release moves the callout out of the modal header and into the body, where it renders one of three copies depending on which state the user is in.
+
+### What changed
+
+- **Path picker (no path selected):** "First time here? Pick **Starting from scratch** below and choose the **⭐ Quick Start** template — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document."
+- **Scratch path:** unchanged from v3.38.0 — "New to WaxFrame? Start with ⭐ Quick Start below…"
+- **Refine path:** new copy reframed for users with an existing draft — "Refining a draft? Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click **Change** above and run the **⭐ Quick Start** demo from the Starting from scratch side."
+
+### Consistency cascade
+
+The Project-screen Help section carried the same staleness — telling users to "Click 📋 Use Template above and pick ⭐ Quick Start" without acknowledging the path-picker step introduced in v3.37.0. Copy updated to walk through the three clicks.
+
+### Files Changed
+
+`index.html`:
+- Removed the static `template-gallery-intro--newuser` paragraph from the Project Templates modal header (line 1561). General intro paragraph preserved.
+- Project-screen Help (line 195) — "Click Use Template above and pick Quick Start" → "Click Use Template above, pick Starting from scratch, then choose Quick Start"
+- meta build → `20260511-002`; cache-bust on `style.css`, `version.js`, `templates.js`, `app.js` → `?v=3.38.1`
+
+`js/app.js`:
+- `renderTemplateGalleryBody()` — newuser callout now rendered inside the body, with copy chosen by state (path picker / scratch / refine). Reuses the existing `.template-gallery-intro--newuser` class.
+- BUILD `20260511-002`
+
+`js/version.js`:
+- APP_VERSION `v3.38.1 Pro`
+
+`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Comment-header build → `20260511-002`; meta build → `20260511-002`; cache-bust on `style.css` and `version.js` → `?v=3.38.1`
+
+No CSS changes.
+
+---
 ## v3.38.0
 **Build:** `20260511-001` · **Released:** May 11, 2026
 
