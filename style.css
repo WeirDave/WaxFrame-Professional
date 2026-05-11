@@ -11110,6 +11110,124 @@ kbd {
   padding: var(--space-32);
 }
 
+/* ── v3.37.0 — Dual-path template picker ─────────────────────────
+   Two-state modal body. State 1 shows .template-path-selector (the
+   big "Starting from scratch" / "Refining an existing draft" cards)
+   when _selectedTemplatePath is null. State 2 shows the template
+   grid (existing .template-gallery-section rules below) with a
+   .template-path-indicator at the top so the user can see and
+   change the active path without closing the modal. */
+.template-path-selector {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+  padding: var(--space-8) 0 var(--space-16);
+}
+.template-path-selector-title {
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+.template-path-selector-sub {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  margin: 0 0 var(--space-8);
+  line-height: 1.5;
+}
+.template-path-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-16);
+}
+.template-path-card {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-14);
+  padding: var(--space-20) var(--space-20);
+  background: var(--surface3);
+  border: 2px solid var(--border2);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  color: var(--text);
+  transition: border-color 0.12s, background 0.12s, transform 0.06s;
+  min-height: 140px;
+}
+.template-path-card:hover {
+  border-color: var(--accent, #f4b400);
+  background: var(--accent-dim);
+}
+.template-path-card:active {
+  transform: translateY(1px);
+}
+.template-path-card:focus-visible {
+  outline: 2px solid var(--accent, #f4b400);
+  outline-offset: 2px;
+}
+.template-path-card-icon {
+  font-size: 36px;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.template-path-card-text {
+  flex: 1;
+  min-width: 0;
+}
+.template-path-card-name {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--space-6);
+}
+.template-path-card-desc {
+  font-size: var(--fs-13);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.template-path-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-12);
+  padding: var(--space-10) var(--space-14);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent, #f4b400);
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-16);
+}
+.template-path-indicator-label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text);
+}
+.template-path-indicator-change {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--accent, #f4b400);
+  background: transparent;
+  border: 1px solid var(--accent, #f4b400);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-12);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: background 0.12s, color 0.12s;
+}
+.template-path-indicator-change:hover {
+  background: var(--accent, #f4b400);
+  color: #000;
+}
+
+/* Mobile-ish narrowing — the dual-path-card grid stacks on narrower
+   modals (still desktop-only viewport but the modal can be narrower
+   than the page on some configs). */
+@media (max-width: 720px) {
+  .template-path-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .template-gallery-section + .template-gallery-section {
   margin-top: 22px;
 }

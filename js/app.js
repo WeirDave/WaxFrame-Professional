@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-014';         // build stamp — update each session
+const BUILD       = '20260510-015';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3885,17 +3885,47 @@ const _TEMPLATE_GOAL_FIELD_IDS = [
   'goalScope',   'goalTone',     'goalNotes'
 ];
 
-// Open the gallery modal and render its content.
+// v3.37.0 — Dual-path templates. Every template declares which paths it
+// supports ('scratch' and/or 'refine'). The modal shows a two-step flow:
+// pick a path first, then pick a template. The path determines which
+// pathContent block applyTemplate() reads from. _selectedTemplatePath
+// is the module-level state for the picker; reset on every open.
+let _selectedTemplatePath = null;  // 'scratch' | 'refine' | null
+
+// Open the gallery modal and render its content. Path picker resets
+// on every open — fresh state, no carryover between opens.
 function showTemplateGallery() {
   const modal = document.getElementById('templateGalleryModal');
   if (!modal) return;
+  _selectedTemplatePath = null;
   renderTemplateGalleryBody();
   modal.classList.add('active');
 }
 
-// Render the gallery into the modal body. Groups templates by category
-// and emits one card per template. Cards are clickable; click handlers
-// call applyTemplate() with the template id.
+// v3.37.0 — Path selector handler. Called when the user clicks one of
+// the two big path cards. Sets module state and re-renders the gallery
+// in template-grid mode.
+function selectTemplatePath(path) {
+  if (path !== 'scratch' && path !== 'refine') return;
+  _selectedTemplatePath = path;
+  renderTemplateGalleryBody();
+}
+
+// v3.37.0 — "Change path" link handler. Resets state and re-renders
+// back to the path-picker view. Available at the top of the template
+// grid so the user can change their mind without closing the modal.
+function resetTemplatePath() {
+  _selectedTemplatePath = null;
+  renderTemplateGalleryBody();
+}
+
+// Render the gallery into the modal body. Two states:
+//   1. _selectedTemplatePath === null → show path picker (two big cards:
+//      Starting from scratch / Refining an existing draft)
+//   2. _selectedTemplatePath set → show category-grouped template grid,
+//      filtered to templates supporting the selected path. Quick Start
+//      shows only in scratch mode (paths: ['scratch']); Multi-Platform
+//      Rewrite shows only in refine mode (paths: ['refine']).
 function renderTemplateGalleryBody() {
   const body = document.getElementById('templateGalleryBody');
   if (!body) return;
@@ -3903,20 +3933,59 @@ function renderTemplateGalleryBody() {
     body.innerHTML = '<p class="template-gallery-empty">⚠️ Template data not loaded. Reload the page and try again.</p>';
     return;
   }
-  // Bucket templates by category, preserving original order within each bucket.
-  // Quick Start always renders first (one card, top of modal).
-  // v3.36.x+ — added 'Reviews & Recommendations' for the trip-review
-  // playbook set (Restaurant / Hotel / Business-Service / Multi-Platform
-  // Rewrite). Template gallery category buckets are hardcoded here
-  // because order matters for the gallery render and we don't want
-  // arbitrary insertion order from templates.js to dictate it.
+
+  // ── State 1: Path picker ──────────────────────────────────────────
+  if (_selectedTemplatePath === null) {
+    body.innerHTML = `
+      <div class="template-path-selector">
+        <h3 class="template-path-selector-title">Are you starting from scratch, or refining an existing draft?</h3>
+        <p class="template-path-selector-sub">This determines how the template fills in your Project fields and Reference Material. You can change this any time by re-opening the gallery.</p>
+        <div class="template-path-grid">
+          <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
+            <span class="template-path-card-icon">📝</span>
+            <div class="template-path-card-text">
+              <div class="template-path-card-name">Starting from scratch</div>
+              <div class="template-path-card-desc">I have an idea but no draft yet. The hive will write one for me from the Project Goal + a Reference Material scaffold this template fills in.</div>
+            </div>
+          </button>
+          <button class="template-path-card" onclick="selectTemplatePath('refine')" type="button">
+            <span class="template-path-card-icon">✂️</span>
+            <div class="template-path-card-text">
+              <div class="template-path-card-name">Refining an existing draft</div>
+              <div class="template-path-card-desc">I already have a draft. The hive will polish, tighten, and restructure what I paste into Starting Document — without rewriting wholesale.</div>
+            </div>
+          </button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  // ── State 2: Template grid filtered to selected path ──────────────
+  const path = _selectedTemplatePath;
+  const pathLabel = (path === 'scratch') ? 'Starting from scratch' : 'Refining an existing draft';
+  const pathIcon  = (path === 'scratch') ? '📝' : '✂️';
+
+  // Filter templates to those supporting the selected path.
+  const visibleTemplates = WAXFRAME_TEMPLATES.filter(t =>
+    Array.isArray(t.paths) && t.paths.includes(path)
+  );
+
+  // Bucket by category, preserving original order. Same category list
+  // as before — Quick Start always first, Reviews & Recs last.
   const order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
   const buckets = {};
-  WAXFRAME_TEMPLATES.forEach(t => {
+  visibleTemplates.forEach(t => {
     const k = t.category || 'Other';
     if (!buckets[k]) buckets[k] = [];
     buckets[k].push(t);
   });
+
+  const pathIndicator = `
+    <div class="template-path-indicator">
+      <span class="template-path-indicator-label">${pathIcon} ${esc(pathLabel)}</span>
+      <button class="template-path-indicator-change" onclick="resetTemplatePath()" type="button">Change</button>
+    </div>`;
+
   const sections = order.filter(c => buckets[c] && buckets[c].length).map(cat => `
     <div class="template-gallery-section">
       <h3 class="template-gallery-section-title">${esc(cat)}</h3>
@@ -3934,7 +4003,7 @@ function renderTemplateGalleryBody() {
             ? '<span class="template-card-badge">⭐ Start Here</span>'
             : '';
           return `
-          <button class="${cardCls}" onclick="applyTemplate('${esc(t.id)}')" title="Apply the ${esc(t.name)} template">
+          <button class="${cardCls}" onclick="applyTemplate('${esc(t.id)}', '${path}')" title="Apply the ${esc(t.name)} template (${esc(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
               <div class="template-card-name">${esc(t.name)}${badge}</div>
@@ -3944,7 +4013,8 @@ function renderTemplateGalleryBody() {
         }).join('')}
       </div>
     </div>`).join('');
-  body.innerHTML = sections || '<p class="template-gallery-empty">No templates found.</p>';
+
+  body.innerHTML = pathIndicator + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
 }
 
 // Check whether any of the six Goal fields currently has content.
@@ -3956,17 +4026,51 @@ function _projectGoalFieldsHaveContent() {
   });
 }
 
-// Apply a template by id. Uses wfConfirm for the overwrite warning when
-// any Goal field already has content. Updates DOM values, fires the same
-// input handlers the user would trigger by typing (saveProject, counter,
-// requirements update), then closes the modal and toasts.
-async function applyTemplate(templateId) {
+// Apply a template by id and path. v3.37.0 dual-path:
+//   - templateId : the template's id (e.g. 'resume')
+//   - path       : 'scratch' or 'refine'; determines which pathContent
+//                  block populates the Project fields and Reference
+//                  Material. Falls back to tpl.paths[0] with a console
+//                  warning if the path is missing or unsupported.
+// Behavior:
+//   - Overwrite confirm fires if any Project Goal field has content.
+//   - Project Goal fields, length fields, and hint banner all read
+//     from pc = tpl.pathContent[path].
+//   - Reference Material: prior template-sourced cards are swept on
+//     every apply (idempotent — switching templates cleans up after
+//     the previous one). If pc.refMaterial has content, a new card is
+//     pushed with source: 'template' and templateOriginId for the
+//     sweep next time.
+async function applyTemplate(templateId, path) {
   if (typeof WAXFRAME_TEMPLATES === 'undefined') return;
   const tpl = WAXFRAME_TEMPLATES.find(t => t.id === templateId);
   if (!tpl) {
     toast('⚠️ Template not found');
     return;
   }
+
+  // v3.37.0 — Resolve path with fallback. If the caller didn't pass a
+  // path (or passed one the template doesn't support), default to the
+  // first supported path and log a warning. Callers from the gallery
+  // always pass a valid path; the fallback exists for any legacy or
+  // programmatic entry point we might add later.
+  if (!path || !Array.isArray(tpl.paths) || !tpl.paths.includes(path)) {
+    const fallback = (Array.isArray(tpl.paths) && tpl.paths[0]) || null;
+    if (!fallback) {
+      console.warn(`applyTemplate: template "${templateId}" has no paths defined`);
+      toast('⚠️ Template path content missing');
+      return;
+    }
+    console.warn(`applyTemplate: no/invalid path "${path}" for template "${templateId}", defaulting to "${fallback}"`);
+    path = fallback;
+  }
+  const pc = (tpl.pathContent && tpl.pathContent[path]) || null;
+  if (!pc) {
+    console.warn(`applyTemplate: pathContent["${path}"] missing for template "${templateId}"`);
+    toast('⚠️ Template path content missing');
+    return;
+  }
+
   // v3.32.1 build 012 — close the gallery modal BEFORE the overwrite
   // confirmation can fire. Two reasons: (1) modal-on-modal stacking is
   // confusing — the user sees the gallery dim and a confirm pop on top
@@ -3980,14 +4084,16 @@ async function applyTemplate(templateId) {
   if (galleryModal) galleryModal.classList.remove('active');
 
   if (_projectGoalFieldsHaveContent()) {
+    const pathLabel = (path === 'scratch') ? 'starting from scratch' : 'refining an existing draft';
     const ok = await wfConfirm(
       'Apply Template',
-      `Apply the "${tpl.name}" template? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters). Project name, version, and reference material are not affected.`,
+      `Apply the "${tpl.name}" template (${pathLabel})? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters) and inject a Reference Material scaffold. Project name and version are not affected.`,
       { okText: `Apply ${tpl.name}` }
     );
     if (!ok) return;
   }
-  // Map template fields → DOM ids. Each entry: [domId, templateKey].
+
+  // Map per-path Goal fields → DOM ids. Each entry: [domId, pathContentKey].
   const map = [
     ['goalDocType',  'goalDocType'],
     ['goalAudience', 'goalAudience'],
@@ -3999,21 +4105,53 @@ async function applyTemplate(templateId) {
   map.forEach(([domId, key]) => {
     const el = document.getElementById(domId);
     if (!el) return;
-    el.value = tpl[key] || '';
+    el.value = pc[key] || '';
   });
-  // v3.33.1 — Length Constraint pre-fill from template. Templates that
-  // specify lengthMode get all four length fields written and the mode
-  // applied. Templates without lengthMode leave the user's existing
-  // length config untouched (matches pre-v3.33.1 behavior).
-  if (tpl.lengthMode && ['none','hardcap','target','range'].includes(tpl.lengthMode)) {
+
+  // v3.33.1 — Length Constraint pre-fill from template. v3.37.0 — now
+  // reads from pc (per-path content). Templates that specify lengthMode
+  // get all four length fields written and the mode applied. Templates
+  // without lengthMode leave the user's existing length config untouched
+  // (matches pre-v3.33.1 behavior).
+  if (pc.lengthMode && ['none','hardcap','target','range'].includes(pc.lengthMode)) {
     const llEl = document.getElementById('lengthLimit');
     const lmEl = document.getElementById('lengthMin');
     const luEl = document.getElementById('lengthUnit');
-    if (llEl) llEl.value = tpl.lengthLimit || '';
-    if (lmEl) lmEl.value = tpl.lengthMin   || '';
-    if (luEl && tpl.lengthUnit) luEl.value = tpl.lengthUnit;
-    if (typeof setLengthMode === 'function') setLengthMode(tpl.lengthMode);
+    if (llEl) llEl.value = pc.lengthLimit || '';
+    if (lmEl) lmEl.value = pc.lengthMin   || '';
+    if (luEl && pc.lengthUnit) luEl.value = pc.lengthUnit;
+    if (typeof setLengthMode === 'function') setLengthMode(pc.lengthMode);
   }
+
+  // v3.37.0 — Reference Material injection. Every applyTemplate call
+  // sweeps prior template-sourced cards (source: 'template') so the
+  // RM panel stays clean and idempotent: switching templates or paths
+  // cleans up after the previous one. If this template+path has
+  // refMaterial content, a new card is pushed.
+  if (typeof referenceDocs !== 'undefined' && Array.isArray(referenceDocs)) {
+    const before = referenceDocs.length;
+    referenceDocs = referenceDocs.filter(d => d.source !== 'template');
+    const swept = before - referenceDocs.length;
+
+    if (pc.refMaterial && pc.refMaterial.trim().length > 0 && typeof generateRefDocId === 'function') {
+      const pathSlug = (path === 'scratch') ? 'scratch' : 'refine';
+      referenceDocs.push({
+        id: generateRefDocId(),
+        name: `${tpl.name} — scaffold (${pathSlug})`,
+        text: pc.refMaterial,
+        source: 'template',
+        templateOriginId: tpl.id,
+        filename: null
+      });
+    }
+
+    if (typeof renderReferenceCards === 'function')   renderReferenceCards();
+    if (typeof updateRefGrandTotals === 'function')   updateRefGrandTotals();
+    if (swept > 0 || pc.refMaterial) {
+      console.log(`applyTemplate: RM sweep removed ${swept} template card(s); ${pc.refMaterial ? 'added 1 new card' : 'no new card injected (refMaterial empty)'}`);
+    }
+  }
+
   // Fire the same downstream updates the user's input would trigger.
   if (typeof saveProject === 'function')              saveProject();
   if (typeof updateGoalCounter === 'function')        updateGoalCounter();
@@ -4028,13 +4166,16 @@ async function applyTemplate(templateId) {
   // v3.32.3 — hint is now an array of {field, text} entries, one per
   // affected form field. Banner renders a bulleted list so the user
   // knows exactly which form field to scroll to and what to fix there.
-  const hint = Array.isArray(tpl.hint) ? tpl.hint : [];
+  // v3.37.0 — hint reads from pc.hint (per-path). Title also gets a
+  // path suffix so the user can see at a glance which path was applied.
+  const hint = Array.isArray(pc.hint) ? pc.hint : [];
   const banner = document.getElementById('templateHintBanner');
   if (banner) {
     if (hint.length > 0) {
       const titleEl = document.getElementById('templateHintBannerTitle');
       const textEl  = document.getElementById('templateHintBannerText');
-      if (titleEl) titleEl.textContent = `${tpl.icon || '📋'} ${tpl.name} template applied — placeholders to fill in`;
+      const pathSuffix = (path === 'scratch') ? 'starting from scratch' : 'refining an existing draft';
+      if (titleEl) titleEl.textContent = `${tpl.icon || '📋'} ${tpl.name} template applied (${pathSuffix}) — placeholders to fill in`;
       if (textEl) {
         // Render each entry as a list item: "Field: text". esc() escapes
         // any user-facing HTML in field/text strings even though template
@@ -4051,8 +4192,9 @@ async function applyTemplate(templateId) {
     }
   }
 
+  const pathToastLabel = (path === 'scratch') ? 'from scratch' : 'refining';
   const toastTail = (hint.length > 0) ? ' — see the amber banner above for placeholders to fill in' : '';
-  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} template applied${toastTail}`, hint.length > 0 ? 5500 : 4000);
+  toast(`✓ ${tpl.icon || '📋'} ${tpl.name} (${pathToastLabel}) template applied${toastTail}`, hint.length > 0 ? 5500 : 4000);
 }
 
 // v3.32.1 — Dismiss handler for the template hint banner. Hides the
