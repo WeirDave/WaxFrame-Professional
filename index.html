@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-017">
+  <meta name="waxframe-build" content="20260511-001">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.37.2">
+  <link rel="stylesheet" href="style.css?v=3.38.0">
 </head>
 <body>
 
@@ -693,6 +693,17 @@
         <button class="length-guard-indicator" id="lengthGuardIndicator" onclick="toggleLengthGuard()" title="Length guard is armed — click to disable">
           <span class="length-guard-indicator-icon">📏</span>
           <span class="length-guard-indicator-label">Length guard: armed</span>
+        </button>
+        <!-- v3.38.0 — Slow-AI alerts pill. Mirrors Length Guard UX: always
+             visible, click to toggle, .is-off class flips visual state.
+             User-level preference (not per-project); persisted globally
+             via localStorage waxframe_slow_responder_enabled. When OFF,
+             SLOW_RESPONDER detection still runs and logs to console; only
+             the troubleshooting card is suppressed so it can't block the
+             Auto-Mode chain gate on long hands-off runs. -->
+        <button class="slow-responder-indicator" id="slowResponderIndicator" onclick="toggleSlowResponder()" title="Slow-AI alerts are on — click to suppress for hands-off Auto runs">
+          <span class="slow-responder-indicator-icon">🐢</span>
+          <span class="slow-responder-indicator-label">Slow alerts: on</span>
         </button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
@@ -2129,9 +2140,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.37.2"></script>
-<script src="js/templates.js?v=3.37.2"></script>
-<script src="js/app.js?v=3.37.2"></script>
+<script src="js/version.js?v=3.38.0"></script>
+<script src="js/templates.js?v=3.38.0"></script>
+<script src="js/app.js?v=3.38.0"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

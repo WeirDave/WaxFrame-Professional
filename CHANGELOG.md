@@ -1,6 +1,59 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.0
+**Build:** `20260511-001` · **Released:** May 11, 2026
+
+### Slow-AI alerts toggle — Phase 1 of Settings architecture
+
+A new footer pill — **🐢 Slow alerts: on / off** — lets you suppress the `SLOW_RESPONDER` Troubleshooting Card for hands-off Auto Mode runs. Detection still runs and logs to console; only the user-facing card is gated, which keeps the Auto-Mode chain gate from blocking on slow AIs.
+
+### The pain point this solves
+
+The `SLOW_RESPONDER` card (v3.29.0) surfaces when a reviewer exceeds 2× the round average AND is more than 15s above the average. It's a useful diagnostic during interactive use — but during long hands-off Auto runs with the 6-AI default hive, a chronically slow AI (DeepSeek under load, for example) surfaces the card every round, and the troubleshooting-card gate at `_autoHalt` blocks Auto Mode chaining until acknowledged. For a multi-hour run, that means manual intervention every time the slow AI lags. The toggle lets you opt out of those cards for the run, then re-arm afterwards if you want the diagnostic back.
+
+### How it works
+
+- **Footer pill** alongside Length Guard. Same UX pattern: always visible, click to toggle, `.is-off` class flips visual state.
+- **On (default)** — green pill, "Slow alerts: on". Pre-v3.38.0 behavior preserved.
+- **Off** — amber pill, "Slow alerts: off". `SLOW_RESPONDER` cards suppressed. Auto-Mode chain continues even when a reviewer goes slow.
+- **Detection always runs.** The per-reviewer timing comparison + console warning at the round-end checkpoint fires unconditionally regardless of toggle state. Only the `WF_DEBUG.showCard(...)` call is gated. DevTools / console pane stays diagnostic.
+
+### Persistence
+
+User-level preference, not per-project. Stored globally in `localStorage` (`waxframe_slow_responder_enabled`). The choice persists across projects, page reloads, and sessions until you flip it back. (Length Guard, by contrast, is per-project — different documents have different length needs; slow-alert preference is a workflow choice that's the same across all your projects.)
+
+### Color story
+
+- Length Guard OFF = red (disabling a safety override warrants the stronger visual signal)
+- Slow alerts OFF = amber (suppressing a notification, not a safety override)
+
+### Architecture note
+
+This is Phase 1 of the bigger Settings infrastructure mentioned in the v4.0 parking-lot. Phase 2 — a Settings nav-menu surface bundling Length Guard + Slow Alerts + future toggleable features — is queued but not scheduled. Footer-pill UX is proven (Length Guard) and surgical to ship; Settings panel adds design surface area that's better tackled with 3+ togglable features in hand rather than 2.
+
+### Files Changed
+
+`js/app.js`:
+- New `_slowResponderEnabled` module state hydrated from `localStorage`
+- New `toggleSlowResponder()`, `updateSlowResponderIndicator()`, `initSlowResponderIndicator()` helpers
+- `SLOW_RESPONDER` card surfacing at the round-end checkpoint gated on `_slowResponderEnabled` — detection + console log preserved
+- `initWorkScreen()` calls `updateSlowResponderIndicator()` alongside the Length Guard sync
+- BUILD `20260511-001`
+
+`index.html`:
+- New `<button class="slow-responder-indicator" id="slowResponderIndicator">` adjacent to the Length Guard pill in the footer-right cluster
+
+`style.css`:
+- New `.slow-responder-indicator` rule block modeled on `.length-guard-indicator` with the amber off-state color story
+
+`js/version.js`:
+- `APP_VERSION = 'v3.38.0 Pro'`
+
+`index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Build stamp + cache-bust sync (3.37.2 → 3.38.0; 20260510-017 → 20260511-001)
+
+---
 ## v3.37.2
 **Build:** `20260510-017` · **Released:** May 10, 2026
 

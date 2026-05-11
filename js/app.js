@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-017';         // build stamp — update each session
+const BUILD       = '20260511-001';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1542,6 +1542,58 @@ function _updateMuteBtn() {
 
 function initMuteBtn() {
   _updateMuteBtn();
+}
+
+// ── SLOW-RESPONDER ALERT STATE ──
+// v3.38.0 — User-level preference (not per-project, unlike length guard).
+// Stored globally in localStorage so the choice persists across projects
+// and sessions. Default: ENABLED (preserves pre-v3.38.0 behavior).
+//
+// When OFF, slow-responder DETECTION still runs at the round-end checkpoint
+// (~line 12687, the per-AI timing comparison) and the console warning still
+// fires unconditionally — so the diagnostic info remains available in the
+// console pane for anyone who wants it. Only the WF_DEBUG.showCard(...) call
+// is gated. This matters operationally because the Auto-Mode chain gate
+// (~line 3612) blocks chaining whenever a troubleshooting card is active.
+// Suppressing the card lets Auto Mode continue chaining through slow AIs
+// — the use case David surfaced after a weekend of slow DeepSeek runs
+// interrupting hands-off long-form Auto Mode work.
+let _slowResponderEnabled =
+  (localStorage.getItem('waxframe_slow_responder_enabled') !== 'false');
+
+function toggleSlowResponder() {
+  _slowResponderEnabled = !_slowResponderEnabled;
+  localStorage.setItem('waxframe_slow_responder_enabled', _slowResponderEnabled);
+  updateSlowResponderIndicator();
+  if (_slowResponderEnabled) {
+    consoleLog('🐢 Slow-AI alerts re-armed (cards will surface when a reviewer is >2× round avg)', 'info');
+    toast('🐢 Slow-AI alerts: on', 3000);
+  } else {
+    consoleLog('🐢 Slow-AI alerts disabled (detection still runs and logs to console; cards suppressed for hands-off Auto runs)', 'info');
+    toast('🐢 Slow-AI alerts: off', 3000);
+  }
+}
+
+// Mirrors updateLengthGuardIndicator() — flips the .is-off class plus label
+// and title between "on" and "off" depending on _slowResponderEnabled.
+// Defensive: short-circuits if the indicator element is not in DOM yet.
+function updateSlowResponderIndicator() {
+  const el = document.getElementById('slowResponderIndicator');
+  if (!el) return;
+  const labelEl = el.querySelector('.slow-responder-indicator-label');
+  if (_slowResponderEnabled) {
+    el.classList.remove('is-off');
+    el.title = 'Slow-AI alerts are on — click to suppress for hands-off Auto runs';
+    if (labelEl) labelEl.textContent = 'Slow alerts: on';
+  } else {
+    el.classList.add('is-off');
+    el.title = 'Slow-AI alerts are off — click to re-arm';
+    if (labelEl) labelEl.textContent = 'Slow alerts: off';
+  }
+}
+
+function initSlowResponderIndicator() {
+  updateSlowResponderIndicator();
 }
 
 // ── ROUND COMPLETE SOUND ──
@@ -10019,6 +10071,12 @@ function initWorkScreen(isNewSession = false) {
   // mounted yet so the helper short-circuited) and any navigation back
   // to the work screen mid-project.
   updateLengthGuardIndicator();
+  // v3.38.0 — Same defensive-init pattern for the slow-AI alerts pill.
+  // _slowResponderEnabled is module-level and hydrated from localStorage
+  // at script-load time, but the indicator DOM only exists once the work
+  // topbar mounts. Call here to sync class + label + title on the live
+  // element. (No project-persistence path needed — preference is global.)
+  updateSlowResponderIndicator();
   setStatus('Standing by — Smoke the Hive to begin');
 
   // Keep line numbers filled on resize
@@ -12698,6 +12756,12 @@ async function runRound() {
       const _t = _timings[ai.id];
       if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
         consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
+        // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
+        // preference. Detection + console log run unconditionally above
+        // so diagnostic info is always available. Only the user-facing
+        // card (which blocks Auto-Mode chaining via the troubleshooting-
+        // card gate at ~3612) is suppressed when the toggle is off.
+        if (!_slowResponderEnabled) return;
         if (!_slowSet.has(ai.id)) {
           _slowSet.add(ai.id);
           const entry = WF_ERROR_CATALOG.find(e => e.code === 'SLOW_RESPONDER');
