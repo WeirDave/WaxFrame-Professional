@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-015';         // build stamp — update each session
+const BUILD       = '20260510-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1627,6 +1627,39 @@ function playAlertSound() {
 function playAlertIfUserDecisions() {
   const last = history.length ? history[history.length - 1] : null;
   if (last?.conflicts?.userDecisions?.length > 0) playAlertSound();
+}
+
+// v3.37.1 — Closes out P1.6 (auto-halted sound). Fires from _autoHalt()
+// for every halt reason EXCEPT convergence — descending three-tone sine
+// pattern, the universal "stopped / paused" cadence. Distinct from
+// playAlertSound (ascending two-chirp = USER DECISION needs attention)
+// and playRoundCompleteSound (bee trill + ping = round done, positive).
+// No new .wav asset — pure Web Audio synthesis, same approach as the
+// rest of the audio system. Respects mute per the standard audio rule.
+function playAutoHaltSound() {
+  if (_isMuted) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const now = ctx.currentTime;
+    // Each tone: 120ms sustain, 15ms attack ramp, 25ms exp release.
+    // Three tones descending E5 → C5 → G#4 — clearly downward, not jarring.
+    const tone = (startAt, freq) => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type  = 'sine';
+      o.frequency.setValueAtTime(freq, startAt);
+      g.gain.setValueAtTime(0, startAt);
+      g.gain.linearRampToValueAtTime(0.16, startAt + 0.015);
+      g.gain.setValueAtTime(0.16, startAt + 0.12);
+      g.gain.exponentialRampToValueAtTime(0.001, startAt + 0.145);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(startAt); o.stop(startAt + 0.15);
+    };
+    tone(now,         660);   // E5
+    tone(now + 0.14,  523);   // C5
+    tone(now + 0.28,  415);   // G#4 / Ab4
+    setTimeout(() => ctx.close(), 600);
+  } catch (e) { /* audio not supported — fail silently */ }
 }
 
 function playSmokerSound() {
@@ -3629,8 +3662,13 @@ function _autoHalt(reasonCode, reasonText) {
   }
   if (modal) modal.classList.add('active');
   updateAutoToggleUI();
-  if (typeof playRoundCompleteSound === 'function') {
-    try { playRoundCompleteSound(); } catch (e) {}
+  // v3.37.1 — Distinct "Auto halted" cadence. Skip on converged because
+  // the unanimous-convergence path already played its fanfare; stacking
+  // the halt-sound on top would muddy that moment. Halt reasons that
+  // need their own audible cue: ceiling, stall, failure-streak,
+  // decision-tie (and future length-at-convergence per P1.3 #9).
+  if (reasonCode !== 'converged' && typeof playAutoHaltSound === 'function') {
+    try { playAutoHaltSound(); } catch (e) {}
   }
 }
 
