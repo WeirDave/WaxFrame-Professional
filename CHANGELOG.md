@@ -1,22 +1,22 @@
 # WaxFrame Professional — Changelog
 
 ---
-## v3.37.1
-**Build:** `20260510-016` · **Released:** May 10, 2026
+## v3.37.2
+**Build:** `20260510-017` · **Released:** May 10, 2026
 
 ### Auto-halted sound — closes out P1.6
 
-When Auto Mode halts (ceiling reached, stall detected, failure-streak hit, or a USER DECISION tie with no clear majority), `_autoHalt()` now plays a **distinct three-tone descending cadence** — the universal "stopped / paused" sound idiom — instead of reusing the round-complete chime. The user can tell from sound alone whether a round finished normally or Auto Mode stopped and needs them.
+When Auto Mode halts (ceiling reached, stall detected, failure-streak hit, or a USER DECISION tie with no clear majority), `_autoHalt()` now plays a **distinct ascending three-tone cadence** — an "upper" sound that reads as "your turn, look at the modal" rather than "you failed." The user can tell from sound alone whether a round finished normally or Auto Mode stopped and needs them.
 
 ### Sound design
 
-Descending sine tones `E5 → C5 → G#4` (660Hz → 523Hz → 415Hz). Each tone ~120ms sustain with a 15ms attack ramp and 25ms exponential release. Peak gain `0.16` — slightly under `playAlertSound`'s 0.18 so it reads as "stop and look" rather than "panic." Total duration ~450ms. Pure Web Audio synthesis; no new `.wav` asset.
+Major-triad arpeggio climbing `C5 → E5 → G5` (523Hz → 659Hz → 784Hz). Each tone ~120ms sustain with a 15ms attack ramp and 25ms exponential release. Peak gain `0.16`. Total duration ~450ms. Pure Web Audio synthesis; no new `.wav` asset.
 
 ### Distinct from existing audio
 
-- `playAlertSound` — ascending 880→1320Hz two-chirp = **USER DECISION needs attention**
+- `playAlertSound` — ascending 880→1320Hz two-chirp = **USER DECISION needs attention** (both halt and alert ascend, but alert is two fast chirps in the 880Hz+ range; halt is three slower tones starting at C5 and topping out at G5)
 - `playRoundCompleteSound` — bee trill + high ping = **round done, positive**
-- `playAutoHaltSound` (new) — descending three-tone = **Auto stopped, look at the modal**
+- `playAutoHaltSound` (new) — ascending three-tone arpeggio = **Auto stopped, look at the modal**
 
 ### Wiring
 
@@ -35,16 +35,31 @@ Halt reasons that now get the audible cue: `ceiling`, `stall`, `failure-streak`,
 `js/app.js`:
 - New `playAutoHaltSound()` function near `playAlertIfUserDecisions`
 - `_autoHalt()` replaces `playRoundCompleteSound` call with gated `playAutoHaltSound` call
-- BUILD `20260510-016`
+- BUILD `20260510-017`
 
 `js/version.js`:
-- `APP_VERSION = 'v3.37.1 Pro'`
+- `APP_VERSION = 'v3.37.2 Pro'`
 
-`index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
-- Build stamp + cache-bust sync (3.37.0 → 3.37.1; 20260510-015 → 20260510-016)
+`index.html`:
+- 🔊 Halt Sound preview button added to Dev → Scenes flyout
+- Build stamp + cache-bust sync (3.37.0 → 3.37.2; 20260510-015 → 20260510-017)
+
+`document-playbooks.html`:
+- Hotel Review Convergence block updated from estimated (2–4 rounds) to measured (19 rounds, majority at R18, zero USER DECISIONS surfaced)
+- New `.dp-real-example` block for Hotel Review with the Melbourne Marriott v1.0 run values + Reference Material payload (paste-ready, reproducible)
+- Build stamp + cache-bust sync
+
+`waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Build stamp + cache-bust sync
 
 `docs/WaxFrame_Backlog_Master_v23.txt`:
 - Bumped from v22; P1.6 closed, P1.5 dropped, P1.3 confirmed sole remaining P1
+
+`docs/WaxFrame_Playbook_Test_Master_v18.txt`:
+- Bumped from v17 (v17 dropped from staging)
+- T9 Hotel Review logged with full HISTORICAL RUNS entry
+- RUNS COMPLETED tracking table updated, ALREADY MEASURED expanded
+- PROJECTS TO RUN NEXT renumbered (T9 removed), PENDING TESTS T9 ✔
 
 ---
 ## v3.37.0

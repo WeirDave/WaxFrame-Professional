@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260510-016">
+  <meta name="waxframe-build" content="20260510-017">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.37.1">
+  <link rel="stylesheet" href="style.css?v=3.37.2">
 </head>
 <body class="helper-body">
 
@@ -1898,6 +1898,48 @@ Who is this hotel best for:
 </pre>
       </div>
 
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Hotel review that took 19 rounds</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own stay.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Review — Melbourne Marriott Hotel</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v1.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Hotel review</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Travelers deciding whether to book this hotel — especially business travelers, families, road-trippers, or people comparing nearby properties.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Create a detailed, practical hotel review that helps readers understand the room, sleep quality, location, amenities, service, value, and any problems that affected the stay.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Cover trip context, room type or room number if provided, rate/value, check-in, room layout, cleanliness, bed, bathroom, HVAC, noise, darkness, internet, breakfast, gym, pool, bar, parking, location, staff, and final recommendation. Build only from the stay details in my Reference Material — do not invent amenities, prices, loyalty benefits, room numbers, or facts.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Practical, detailed, fair, and conversational. Preserve useful personal observations and specific traveler-focused details.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>Include whether I would stay again and what type of traveler this hotel is best suited for. Mention dealbreakers clearly.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>No limit (template default — set per-platform at publish time)</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Click <strong>Start from Scratch</strong> and leave the text box empty</td></tr>
+        </table>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Reference Material payload (paste into Setup 4 — Reference Material as "Paste Text" before Round 1):</strong></div>
+<pre>Hotel: Melbourne Marriott Hotel
+Location: Corner Exhibition and Lonsdale Streets, Melbourne
+Dates of stay: 04/01/2026 - 04/03/2026
+Trip type (business / vacation): I was traveling to Australia for the first time ever and it was a last minute work trip that I pulled together in 4 days.
+Who was there: Solo
+Room type and number if relevant: 1 Bedroom King Suite, Room 403
+Rate / points / resort fee / parking fee / other fees: AUD $320-$350 a night credit card fee of $13.07
+Check-in experience: I arrived early and was prepared to drop my bags and just take off exploring but they provided me a room instead!
+Staff interactions: Excellent and Friendly staff who were expedient.
+Room size, layout, furniture, outlets, desk: Very Spacious Suite view of the city corner and nightlife.
+Cleanliness and maintenance: quite clean and well maintained property
+Bed and pillows: Comfortable bed and I always ask for extra pillows and had no trouble getting them here.
+Noise (hallway, street, airport, neighbors, elevators, kids): Very quiet
+Room darkness / blackout curtains: It was probably almost a 9 with the bedroom door shut. With it open it was more like a 7 out of 10
+HVAC / temperature control: excellent I sleep cold and this was great. I lowered it as low as it would go in celcius and it felt great
+Bathroom layout, shower pressure, hot water, towels, toiletries: Water pressure on the shower was AMAZING definitely an incredible feature
+Wi-Fi speed and reliability: wi-fi at my level is free for "gold" and I never had any issues connecting or using the wifi
+Breakfast quality and variety: This breakfast was the highlight! It was the most amazing breakfast I have ever had in any Marriott property ANYWHERE. It was filled with traditional, and non-traditional items, 5 juices, pastries and danishes, fresh fruit, savory and sweet options I mean it was amazing the wait staff are super friendly and accommodating.
+Nearby restaurants / walkability / transit / airport / attractions / work site: This is in the heart of downtown and you can walk to comedy clubs, shows, restaurants and parks. It's really in the thick of it. There is even a 7-11 directly across the street for last minute I forgot items.
+Problems and how staff handled them:
+Would you stay again: YES!
+Who is this hotel best for: Business and pleasure travelers alike
+</pre>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>What this run produced:</strong> 400 words / 2,488 characters · majority convergence at Round 18 · zero USER DECISIONS surfaced · 6-AI hive (DeepSeek as Builder; ChatGPT, Claude, Gemini, Grok, Perplexity as reviewers).</div>
+      </div>
+
       <div class="dp-field-divider"></div>
 
       <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen</div>
@@ -1922,7 +1964,7 @@ Who is this hotel best for:
 
       <div class="dp-field">
         <div class="dp-field-label">Convergence</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>2–4 rounds typical (estimated, not measured). Round 1 builds a complete review. Round 2 improves order, clarity, and usefulness. Additional rounds are useful for shortening or creating platform-specific versions.</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>19 rounds (measured, not estimated) — Round 18 reached majority convergence; Round 19 was a builder-only finalize. Notable: <strong>zero USER DECISIONS surfaced across the entire run</strong>. The questionnaire-scaffold approach pre-answers most ambiguities reviewers would normally escalate, so the round count is driven by prose-polish rather than decision pressure points. Hotel reviews can therefore run long without any user input — expect to hit majority convergence between rounds 15 and 20, not the 3–5 rounds typical of shorter documents.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -2241,7 +2283,7 @@ Who should use them and who should avoid them:
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.37.1"></script>
+<script src="js/version.js?v=3.37.2"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

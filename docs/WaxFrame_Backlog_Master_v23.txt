@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v23)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-10 (post v3.37.1, auto-halted sound + P1.5/P1.6 cleanup)
-Current version:     v3.37.1 Pro / build 20260510-016
+Last updated:        2026-05-10 (post v3.37.2, auto-halted sound + P1.5/P1.6 cleanup)
+Current version:     v3.37.2 Pro / build 20260510-017
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v23.txt
 
@@ -27,18 +27,25 @@ Marker key:
   ⚠     blocked / waiting on something else
 
 CHANGES IN v23 (from v22, 2026-05-10):
-  - v3.37.1 SHIPPED — Auto-halted sound. Closes out the
-    second half of P1.6. Descending three-tone sine pattern
-    (E5 → C5 → G#4) — the universal "stopped/paused"
-    cadence, clearly distinct from playAlertSound
-    (ascending two-chirp = USER DECISION needs attention)
-    and playRoundCompleteSound (bee trill + ping = round
-    done, positive). No new .wav asset — pure Web Audio
-    synthesis. Wired into _autoHalt with reasonCode guard:
-    fires for ceiling/stall/failure-streak/decision-tie,
-    SKIPPED on converged (the unanimous-convergence path
-    already plays its own fanfare elsewhere — stacking the
-    halt sound on top would muddy that moment).
+  - v3.37.2 SHIPPED — Auto-halted sound. Closes out the
+    second half of P1.6. Ascending major-triad arpeggio
+    (C5 → E5 → G5) — an "upper" cadence that reads as
+    "your turn, look at the modal" rather than "you failed."
+    Distinct from playAlertSound (ascending two-chirp
+    880→1320Hz = USER DECISION needs attention — both
+    ascend, but alert is two fast chirps in the 880Hz+
+    range; halt is three slower tones starting at C5 and
+    topping out at G5) and playRoundCompleteSound (bee
+    trill + ping = round done, positive). No new .wav
+    asset — pure Web Audio synthesis. Wired into _autoHalt
+    with reasonCode guard: fires for ceiling/stall/
+    failure-streak/decision-tie, SKIPPED on converged (the
+    unanimous-convergence path already plays its own
+    fanfare elsewhere — stacking the halt sound on top
+    would muddy that moment). Auditioned six candidates
+    via interactive widget in chat; David picked Option A
+    after hearing them in the context of the full WaxFrame
+    audio family.
   - P1.5 (Storage-clean indicator pill) DROPPED — the
     underlying orphan-key problem is structurally fixed by
     v3.30.2's removeAI sweep. A passive indicator solves a
@@ -48,7 +55,7 @@ CHANGES IN v23 (from v22, 2026-05-10):
   - P1.6 (Audible alerts) CLOSED. Half shipped in v3.36.33
     (USER DECISION alert reusing playAlertSound, no new
     assets needed). Second half (auto-halted sound) shipped
-    in v3.37.1 — also no .wav, pure synthesis. Removed
+    in v3.37.2 — also no .wav, pure synthesis. Removed
     Kai-blocked status; no asset dependency remained.
   - P1.1 audit removed from open items — completed 2026-05-10
     (all three passes shipped, see Recently Shipped entries
@@ -450,8 +457,9 @@ CHANGES IN v8 (from v7, 2026-05-10):
 [x] ⚠ P1.6  Audible alerts — CLOSED v23 (2026-05-10).
     Half 1 (USER DECISION alert) shipped v3.36.33 reusing
     playAlertSound — no new asset needed. Half 2
-    (auto-halted cadence) shipped v3.37.1 — playAutoHaltSound,
-    descending three-tone sine synthesis, no .wav asset.
+    (auto-halted cadence) shipped v3.37.2 — playAutoHaltSound,
+    ascending major-triad arpeggio (C5 → E5 → G5), pure
+    Web Audio synthesis, no .wav asset.
     Kai-blocked status removed; no asset dependency remained.
 
 
@@ -692,18 +700,20 @@ lock. Captured in Recently Shipped + CHANGELOG.)
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
-v3.37.1   2026-05-10  Auto-halted sound — closes out P1.6
-                      • New playAutoHaltSound: descending
-                        three-tone sine (E5 → C5 → G#4),
-                        the universal "stopped/paused"
-                        cadence. ~450ms total. Peak gain
-                        0.16, slightly under playAlertSound's
-                        0.18 — less startling for an event
-                        the user is meant to read rather
-                        than panic about.
+v3.37.2   2026-05-10  Auto-halted sound — closes out P1.6
+                      • New playAutoHaltSound: ascending
+                        major-triad arpeggio (C5 → E5 → G5),
+                        an "upper" cadence that reads as
+                        "your turn, look at the modal" rather
+                        than "you failed." ~450ms total. Peak
+                        gain 0.16.
                       • Distinct from existing audio:
                         - playAlertSound = ascending 880→1320Hz
-                          (= USER DECISION needs attention)
+                          two-chirp (= USER DECISION). Both
+                          halt and alert ascend, but alert is
+                          two fast chirps in the 880Hz+ range;
+                          halt is three slower tones starting
+                          at C5 and topping out at G5.
                         - playRoundCompleteSound = bee trill +
                           ping (= round done, positive)
                       • Wired into _autoHalt with reasonCode
@@ -721,6 +731,14 @@ v3.37.1   2026-05-10  Auto-halted sound — closes out P1.6
                       • Pure Web Audio synthesis — no new
                         .wav asset. Removed the Kai dependency
                         from P1.6.
+                      • Auditioned six candidates via interactive
+                        widget; David picked Option A after
+                        hearing all three finalists in the
+                        context of the existing WaxFrame audio
+                        family.
+                      • Dev → Scenes flyout gets a permanent
+                        🔊 Halt Sound preview button for any
+                        future tuning.
                       • Backlog: P1.5 (storage-clean pill)
                         dropped as non-problem. P1.6 closed.
                         P1.3 (Auto really means Auto #5-#10)

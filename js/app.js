@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260510-016';         // build stamp — update each session
+const BUILD       = '20260510-017';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1629,11 +1629,15 @@ function playAlertIfUserDecisions() {
   if (last?.conflicts?.userDecisions?.length > 0) playAlertSound();
 }
 
-// v3.37.1 — Closes out P1.6 (auto-halted sound). Fires from _autoHalt()
-// for every halt reason EXCEPT convergence — descending three-tone sine
-// pattern, the universal "stopped / paused" cadence. Distinct from
-// playAlertSound (ascending two-chirp = USER DECISION needs attention)
-// and playRoundCompleteSound (bee trill + ping = round done, positive).
+// v3.37.2 — Closes out P1.6 (auto-halted sound). Fires from _autoHalt()
+// for every halt reason EXCEPT convergence — ascending major-triad
+// arpeggio (C5 → E5 → G5), an "upper" cadence that reads as
+// "your turn, look at the modal" rather than "you failed." Distinct
+// from playAlertSound (ascending two-chirp 880→1320Hz = USER DECISION
+// needs attention) — both ascend, but the alert sound is two fast
+// chirps in the 880Hz+ range; halt sound is three slower tones starting
+// at C5 (523Hz) and topping out at G5 (784Hz). Distinct from
+// playRoundCompleteSound (bee trill + ping = round done, positive).
 // No new .wav asset — pure Web Audio synthesis, same approach as the
 // rest of the audio system. Respects mute per the standard audio rule.
 function playAutoHaltSound() {
@@ -1642,7 +1646,8 @@ function playAutoHaltSound() {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
     const now = ctx.currentTime;
     // Each tone: 120ms sustain, 15ms attack ramp, 25ms exp release.
-    // Three tones descending E5 → C5 → G#4 — clearly downward, not jarring.
+    // Three sine tones climbing C5 → E5 → G5 — a major-triad arpeggio,
+    // unambiguously upward and positive.
     const tone = (startAt, freq) => {
       const o = ctx.createOscillator();
       const g = ctx.createGain();
@@ -1655,9 +1660,9 @@ function playAutoHaltSound() {
       o.connect(g); g.connect(ctx.destination);
       o.start(startAt); o.stop(startAt + 0.15);
     };
-    tone(now,         660);   // E5
-    tone(now + 0.14,  523);   // C5
-    tone(now + 0.28,  415);   // G#4 / Ab4
+    tone(now,         523);   // C5
+    tone(now + 0.14,  659);   // E5
+    tone(now + 0.28,  784);   // G5
     setTimeout(() => ctx.close(), 600);
   } catch (e) { /* audio not supported — fail silently */ }
 }
@@ -3662,7 +3667,7 @@ function _autoHalt(reasonCode, reasonText) {
   }
   if (modal) modal.classList.add('active');
   updateAutoToggleUI();
-  // v3.37.1 — Distinct "Auto halted" cadence. Skip on converged because
+  // v3.37.2 — Distinct "Auto halted" cadence. Skip on converged because
   // the unanimous-convergence path already played its fanfare; stacking
   // the halt-sound on top would muddy that moment. Halt reasons that
   // need their own audible cue: ceiling, stall, failure-streak,
