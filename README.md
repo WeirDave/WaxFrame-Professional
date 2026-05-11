@@ -10,7 +10,7 @@ WaxFrame orchestrates a team of AIs around your document — every round, all of
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-3.38.4-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260511--008-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Build](https://img.shields.io/badge/Build-20260511--011-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
