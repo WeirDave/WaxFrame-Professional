@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260511-004
+     Build: 20260511-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-004">
+  <meta name="waxframe-build" content="20260511-008">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.3">
+  <link rel="stylesheet" href="style.css?v=3.38.4">
 </head>
 <body class="helper-body">
 
@@ -297,8 +297,8 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>After clicking <strong>Let's get started →</strong> on the welcome screen, you arrive at the first setup screen: <strong>Worker Bees</strong>. This is a full-width screen dedicated to connecting your AI assistants. Your Worker Bees are the AI assistants that act as reviewers each round. They each read your document independently and produce a numbered list of specific suggestions. You need <strong>at least two Worker Bees with saved API keys</strong> before WaxFrame will allow you to proceed. A status indicator at the bottom of the screen shows whether this requirement is met.</p>
-      <p>Directly above the list of AIs, a <strong>hive count chip</strong> shows the total number of AIs in your hive and how many of them have saved API keys. This is purely informational — WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals, so there is no tie risk regardless of whether your count is even or odd.</p>
+      <p>After clicking <strong>Let's get started →</strong> on the welcome screen, you arrive at the first setup screen: <strong>Worker Bees</strong>. This is a full-width screen dedicated to connecting your AI assistants. Your Worker Bees are the AI assistants that act as reviewers each round. They each read your document independently and produce a numbered list of specific suggestions. You need <strong>at least two Worker Bees with saved API keys</strong> before WaxFrame will allow you to proceed — but <strong>three or more is the empirical recommendation</strong> because runs converge faster with three reviewers and reviewer disagreements get resolved automatically by majority instead of pausing the run for your decision. A status indicator at the bottom of the screen shows whether the minimum is met.</p>
+      <p>Directly above the list of AIs, a <strong>hive count chip</strong> shows the total number of AIs in your hive and how many of them have saved API keys. This is purely informational — WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals, so there is no tie risk on convergence regardless of whether your count is even or odd. (This is different from how reviewers resolve specific change disagreements during a round — with only two reviewers a disagreement can tie and pause the run for your decision, which is why three or more is recommended. See Step 5 below.)</p>
     </div>
 
     <div class="wh-block">
@@ -382,7 +382,7 @@
         <li class="wh-step"><span class="wh-step-num">2</span><span>Click the <strong>API Key</strong> field next to that AI — the field with the placeholder text <em>Paste key — Enter to save…</em></span></li>
         <li class="wh-step"><span class="wh-step-num">3</span><span>Paste your API key using <strong>Ctrl+V</strong> on Windows or <strong>Cmd+V</strong> on Mac, then press <strong>Enter</strong>. The key status indicator changes to 🔑 to confirm the key is saved.</span></li>
         <li class="wh-step"><span class="wh-step-num">4</span><span>Click the <strong>Test</strong> button that now appears next to the key field. Confirm the test passes before continuing.</span></li>
-        <li class="wh-step"><span class="wh-step-num">5</span><span>Repeat steps 1–4 for at least two more AIs. You need a minimum of two AIs with saved, working keys before you can proceed, but we strongly recommend <strong>three or more</strong>. With only two AIs, a tied USER DECISION halts Auto Mode mid-run and forces manual intervention; with three or more, majority resolution is always available. In our reference Brightwater Canoe and Kayak business proposal test (May 2026), the three-AI hive converged in three rounds in about eight minutes; the same template with two AIs took eleven rounds in about sixteen minutes due to a tie-halt at round five. WaxFrame still runs with two, but three is the empirical sweet spot.</span></li>
+        <li class="wh-step"><span class="wh-step-num">5</span><span>Repeat steps 1–4 for at least two more AIs. Two AIs is the technical minimum to proceed, but <strong>three or more is strongly recommended</strong> — runs converge faster with three reviewers, and disagreements between reviewers about specific changes get resolved automatically by majority instead of pausing the run for your decision. In our reference Brightwater Canoe and Kayak business proposal test (May 2026, three measured runs): the early <strong>v1.0 scaffold</strong> with a three-AI hive converged in <strong>3 rounds in about 8 minutes</strong>; the polished <strong>v3.0 scaffold</strong> (a more developed version of the same project with more constraints to satisfy) with a three-AI hive converged in <strong>5 rounds in about 10 minutes</strong>; the <strong>v2.0 stress test</strong> with only two AIs took <strong>11 rounds in about 16 minutes</strong> because Round 5 hit a tied reviewer disagreement that paused the run for manual resolution. The two-AI tie-halt is what drove the move to recommending three or more reviewers.</span></li>
       </ol>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -454,20 +454,21 @@
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
       <p>Setup 3 — <strong>Your Project</strong> — is a single scrollable screen. At the top is your project name and version, followed by the Project Goal section with six structured fields. Work through the fields top to bottom.</p>
-      <p>You can either fill in the goal fields manually, or click <strong>📋 Use Template</strong> in the section header to pre-fill them from a curated library of document types. <strong>If this is your first time running WaxFrame, start by clicking 📋 Use Template and picking ⭐ Quick Start</strong> — it is a low-stakes chocolate-chip-cookie example that converges in a few rounds and shows you how the whole hive works end-to-end before you bring your real document.</p>
+      <p>You can either fill in the goal fields manually, or click <strong>📋 Use Template</strong> in the section header to pre-fill them from a curated library of document types. <strong>If this is your first time running WaxFrame, click 📋 Use Template, pick Starting from scratch on the path picker, then choose ⭐ Quick Start</strong> — it is a low-stakes chocolate-chip-cookie example that converges in a few rounds and shows you how the whole hive works end-to-end before you bring your real document.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">📋 Project Templates — pre-fill the Goal fields</div>
-      <p>The <strong>📋 Use Template</strong> button at the top of the Project section opens a gallery of 12 templates organised into 5 categories. Click any card to populate all six Project Goal fields with proven starting content for that document type.</p>
+      <p>The <strong>📋 Use Template</strong> button at the top of the Project section opens a gallery of 19 templates organised into 6 categories. The gallery first asks whether you are starting from scratch or refining an existing draft (the path picker), then shows the templates that fit your chosen path. Click any card to populate all six Project Goal fields with proven starting content for that document type.</p>
       <table class="wh-table">
         <thead><tr><th>Category</th><th>Templates</th></tr></thead>
         <tbody>
-          <tr><td><strong>Quick Start</strong></td><td>⭐ Quick Start (chocolate chip cookies — recommended for new users)</td></tr>
-          <tr><td><strong>Career &amp; Hiring</strong></td><td>Cover Letter · Job Description · Résumé · Thank-You Letter</td></tr>
-          <tr><td><strong>Business &amp; Sales</strong></td><td>Business Proposal · Email &amp; Outreach · Executive Summary · RFP Response</td></tr>
-          <tr><td><strong>Content &amp; Marketing</strong></td><td>Blog Post / Article · Presentation Outline</td></tr>
-          <tr><td><strong>Personal &amp; Everyday</strong></td><td>Recipe</td></tr>
+          <tr><td><strong>Quick Start</strong></td><td>⭐ Quick Start (chocolate chip cookies — recommended for new users; scratch path only)</td></tr>
+          <tr><td><strong>Career &amp; Hiring</strong></td><td>✉️ Cover Letter · 🔍 Job Description · 📄 Résumé · 🔗 LinkedIn About · 🙏 Thank-You Letter</td></tr>
+          <tr><td><strong>Business &amp; Sales</strong></td><td>💼 Business Proposal · 📬 Email &amp; Outreach · 📊 Executive Summary · 📋 RFP Response</td></tr>
+          <tr><td><strong>Content &amp; Marketing</strong></td><td>📝 Blog Post / Article · 🖥️ Presentation Outline · 💼 LinkedIn Post</td></tr>
+          <tr><td><strong>Personal &amp; Everyday</strong></td><td>🍳 Recipe · 🧾 Contractor / Vendor Letter</td></tr>
+          <tr><td><strong>Reviews &amp; Recommendations</strong></td><td>🍽️ Restaurant Review · 🏨 Hotel Review · 🧾 Business / Service Review · 🔁 Multi-Platform Review Rewrite (refine path only)</td></tr>
         </tbody>
       </table>
       <p><strong>How template apply works.</strong> Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. <strong>Project name, version, length constraint, Reference Material, and Starting Document are never touched</strong> — only the six Goal fields.</p>
@@ -1199,7 +1200,7 @@
       <ul>
         <li><strong>Job Description (Altura test):</strong> specific company name, role, seniority, and reporting structure filled into the structured goal fields — <strong>20–22 rounds</strong> convergence on a complex multi-page document.</li>
         <li><strong>Résumé (Dana Reyes test):</strong> specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — <strong>10–12 rounds</strong> convergence.</li>
-        <li><strong>Business Proposal (Brightwater Canoe and Kayak):</strong> 3-AI hive on a from-scratch run with a fully-populated identity scaffold in Scope &amp; constraints — <strong>5 rounds, ≈10 minutes</strong>. Same scaffold with a 2-AI hive: <strong>11 rounds, ≈16 minutes</strong> (extra rounds came from a tied USER DECISION block at Round 5 that halted Auto Mode for manual selection). The third reviewer is what breaks decision ties automatically.</li>
+        <li><strong>Business Proposal (Brightwater Canoe and Kayak):</strong> <strong>v3.0 scaffold</strong>, 3-AI hive on a from-scratch run with a fully-populated identity scaffold in Scope &amp; constraints — <strong>5 rounds, ≈10 minutes</strong>. Earlier <strong>v2.0 scaffold</strong> with a 2-AI hive: <strong>11 rounds, ≈16 minutes</strong> (extra rounds came from a tied USER DECISION block at Round 5 that halted Auto Mode for manual selection). The third reviewer is what breaks decision ties automatically. For reference, the original <strong>v1.0 scaffold</strong> with a 3-AI hive converged faster (3 rounds, ≈8 minutes) because the scaffold had fewer constraints to satisfy; v3.0 is the polished version reflected in the in-app Business Proposal template today.</li>
         <li><strong>LinkedIn Post (DFS in defense):</strong> 3-AI hive on a sharply-scoped social post with a clear opinion in the Tone field — <strong>2 rounds, ≈1 minute</strong>. Posted to live LinkedIn. A vaguer prompt on the same category previously took 5 rounds; setup specificity is the difference.</li>
         <li><strong>LinkedIn About profile (wireless engineer):</strong> 3-AI hive with a 1,163-character identity scaffold pasted into Reference Material plus a Round 1 buzzword guard in Notes — <strong>2 rounds</strong>. The Reference Material did most of the work; the buzzword guard kept the draft clean from Round 1.</li>
         <li><strong>Thank-You Letter (from scratch vs refining a draft):</strong> same final document type, same hive, same goal fields. Starting from scratch with empty starting document → <strong>2 rounds</strong>. Refining a misaligned draft → <strong>13 rounds</strong>. The misaligned draft cost 6× more rounds.</li>
@@ -1210,7 +1211,7 @@
       <div class="wh-block-title">What this implies</div>
       <p>Three patterns repeat across these runs.</p>
       <p><strong>1. Setup specificity drives convergence.</strong> The structured goal fields — audience, outcome, scope, tone — pay back as rounds you don't have to run. The minutes you spend on the Project screen save you minutes on the work screen, and usually more than break even.</p>
-      <p><strong>2. Hive size of three is the practical floor for Auto Mode.</strong> Two AIs can tie on USER DECISION blocks, halting Auto and requiring manual intervention. Three AIs break ties automatically. The cost is one more reviewer per round; the win is fewer interrupts and faster wall-clock.</p>
+      <p><strong>2. Three or more AIs converges faster than two.</strong> When two reviewers disagree on a specific change, the run pauses and asks you to break the tie; with three or more reviewers, disagreements resolve automatically by majority and the run keeps moving. The cost is one more reviewer per round; the win is fewer interruptions and noticeably faster wall-clock — the Brightwater data above is the clearest example.</p>
       <p><strong>3. Reference Material is high-leverage.</strong> When the hive needs a body of facts to draw from (an identity scaffold, a job description, a research brief, a source recipe), pasting that into Setup 4 — Reference Material delivers more value per character than expanding the goal fields. The hive pulls from it on every round; you only have to type it once. Demonstrated in the Recipe (Publix-style Southern potato salad) test: a 2,636-character reference recipe paired with an empty Starting Document and a fully-populated Project scaffold converged in <strong>4 rounds</strong>, well below the 5–20+ range estimated for traditional recipe refinement. When the source recipe instead sits in the Starting Document, the hive treats it as a draft to fight; when it's in Reference Material, the hive builds fresh from the scaffold. Same source content, very different convergence shape.</p>
       <p>If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them. Then check whether you should be using Reference Material instead of cramming everything into Scope.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
@@ -1604,7 +1605,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">The Smoke the Hive button is not active</div>
-      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected. Note: two AIs is the technical minimum, but three or more is recommended for tie-free convergence — see Step 5 above.</p>
+      <p>WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected. Note: two AIs is the technical minimum, but <strong>three or more is the empirical recommendation</strong> for faster convergence and automatic resolution of reviewer disagreements — see Step 5 above.</p>
     </div>
 
     <div class="wh-block">
@@ -1749,7 +1750,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.38.3"></script>
+<script src="js/version.js?v=3.38.4"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

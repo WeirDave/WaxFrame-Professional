@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-004">
+  <meta name="waxframe-build" content="20260511-008">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.3">
+  <link rel="stylesheet" href="style.css?v=3.38.4">
 </head>
 <body>
 
@@ -85,7 +85,9 @@
           <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need <strong>at least 2 AIs with saved API keys</strong> to run a round, but we strongly recommend <strong>3 or more</strong> — with only 2 AIs, a tied USER DECISION halts Auto Mode mid-run and forces manual intervention; with 3 or more, majority resolution is always available. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.</p>
+            <p class="hp-section-sub">Each AI in your hive acts as a <strong>reviewer</strong> — it reads your document and suggests improvements each round.</p>
+            <p class="hp-section-sub"><strong>Pick at least 2 AIs to continue. 3 or more is recommended</strong> — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.</p>
+            <p class="hp-section-sub">Click any AI card below to set it up. For the full guide, tap the <strong>ⓘ</strong> next to the heading above.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -101,7 +103,7 @@
       <div class="fs-footer-spacer"></div>
       <div class="launch-requirements">
         <span class="launch-req-title">To continue you need:</span>
-        <span class="launch-req-item" id="req-keys">✗ At least 2 API keys saved</span>
+        <span class="launch-req-item" id="req-keys">✗ At least 2 AIs set up</span>
       </div>
       <button class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
         <img src="images/WaxFrame_Builder_v3.png" class="bee-btn-img">
@@ -1782,32 +1784,61 @@
     <div class="goal-info-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img"></div>
     <h2 class="finish-modal-title">What's in the Menu</h2>
     <div class="goal-info-body">
-      <p>The Menu is the navigation drawer you'll find at the top-left of every screen. It's where reference material, account tools, and helper guides live — none of it is needed to run a round, but all of it helps when you want to go deeper.</p>
+      <p>The Menu is the navigation drawer you'll find at the top-left of every screen. The top section jumps you between setup screens and the Working Console; below that, four grouped sections hold tools, documentation, and advanced features. None of it is required to run a round, but most of it earns its place once you've used the app for a while.</p>
+
+      <p><strong>Navigation</strong></p>
       <div class="goal-info-row">
-        <span class="info-label">User Manual</span>
-        <span class="goal-info-desc">Step-by-step walkthrough of every screen and feature, written like a long-form guide rather than a reference card. The best entry point if you're new.</span>
+        <span class="info-label">Home + Setup 1–5 + Working Console</span>
+        <span class="goal-info-desc">Direct jumps to every screen in the flow. Useful for going back to fix something — change the Builder, add another reviewer, edit the project goal — without rewinding through the rest of the setup. The active screen is highlighted so you always know where you are.</span>
+      </div>
+
+      <p><strong>Tools</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">🛒 Buy WaxFrame Pro</span>
+        <span class="goal-info-desc">Purchase a WaxFrame Professional license key via Gumroad. Every new installation includes three free trial rounds; after that, a one-time license unlocks unlimited rounds. Opens in a new tab.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">API Key Guide</span>
+        <span class="info-label">⏱ Round History</span>
+        <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">💾 Backup Session</span>
+        <span class="goal-info-desc">Save your full current state — hive, project, reference material, round history, work-in-progress document — to a single JSON file you can re-import later. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">📂 Import Backup</span>
+        <span class="goal-info-desc">Restore from a previously-saved backup JSON. Replaces your current session entirely, so back up your current work first if you need to keep both.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">🔑 License Key</span>
+        <span class="goal-info-desc">Manage your WaxFrame Professional license — replace, remove, or check status. Your trial round count is preserved across license changes, so removing a key can't escape an expired trial.</span>
+      </div>
+
+      <p><strong>Documentation</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">🔑 API Key Guide</span>
         <span class="goal-info-desc">How to get an API key from each of the six default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity), with direct billing links and the exact paid-plan tier you need for the Builder role.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Document Playbooks</span>
-        <span class="goal-info-desc">Worked examples of WaxFrame on common document types — résumés, job descriptions, thank-you letters — with the exact Project Goal and Notes payload that converged the document, and how many rounds it took.</span>
+        <span class="info-label">📋 Document Playbooks</span>
+        <span class="goal-info-desc">Worked examples of WaxFrame on common document types — résumés, job descriptions, business proposals, thank-you letters, and more — with the exact Project Goal and Notes payload that converged the document, plus measured round counts and wall-clock times where available.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">What Are Tokens?</span>
-        <span class="goal-info-desc">Plain-English explanation of tokens, the unit each AI provider charges by, and how to read the round-cost numbers WaxFrame surfaces.</span>
+        <span class="info-label">📖 User Manual</span>
+        <span class="goal-info-desc">Step-by-step walkthrough of every screen and feature, written like a long-form guide rather than a reference card. The best entry point if you're new.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Prompt Editor</span>
+        <span class="info-label">🪙 What Are Tokens?</span>
+        <span class="goal-info-desc">Plain-English explanation of tokens — the unit each AI provider charges by — and how to read the round-cost numbers WaxFrame surfaces.</span>
+      </div>
+
+      <p><strong>Advanced</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">✏️ Prompt Editor</span>
         <span class="goal-info-desc">View and override the exact prompts WaxFrame sends to reviewers and the Builder. Most users never need it, but if you're tuning behavior or debugging an oddly-behaved AI, this is where you'd look.</span>
       </div>
-      <div class="goal-info-row">
-        <span class="info-label">License &amp; Account</span>
-        <span class="goal-info-desc">Manage your WaxFrame Professional license key — replace, remove, or check status. Trial round count is preserved across license changes.</span>
-      </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Helper pages open in new browser tabs — your in-progress WaxFrame session won't be disturbed.</p>
+
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Documentation pages open in new browser tabs — your in-progress WaxFrame session won't be disturbed. The Menu also has an <strong>ℹ️ About</strong> button at the top with credits, build info, and license details.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoWelcomeMenuModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2139,9 +2170,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.38.3"></script>
-<script src="js/templates.js?v=3.38.3"></script>
-<script src="js/app.js?v=3.38.3"></script>
+<script src="js/version.js?v=3.38.4"></script>
+<script src="js/templates.js?v=3.38.4"></script>
+<script src="js/app.js?v=3.38.4"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
