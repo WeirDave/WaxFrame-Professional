@@ -9945,6 +9945,11 @@ kbd {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  /* v3.36.36 — anchor jump-to fix. Sidebar links targeting #cat-* land on the
+     h2 inside the section header. Without scroll-margin-top, the h2 lands
+     under the sticky page header and the user sees content below it.
+     116px matches .dp-playbook's scroll-margin-top (line 8409). */
+  scroll-margin-top: 116px;
 }
 
 .hp-section .hp-section-header.is-bare .hp-section-title {
