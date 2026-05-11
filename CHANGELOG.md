@@ -1,6 +1,52 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.37.1
+**Build:** `20260510-016` · **Released:** May 10, 2026
+
+### Auto-halted sound — closes out P1.6
+
+When Auto Mode halts (ceiling reached, stall detected, failure-streak hit, or a USER DECISION tie with no clear majority), `_autoHalt()` now plays a **distinct three-tone descending cadence** — the universal "stopped / paused" sound idiom — instead of reusing the round-complete chime. The user can tell from sound alone whether a round finished normally or Auto Mode stopped and needs them.
+
+### Sound design
+
+Descending sine tones `E5 → C5 → G#4` (660Hz → 523Hz → 415Hz). Each tone ~120ms sustain with a 15ms attack ramp and 25ms exponential release. Peak gain `0.16` — slightly under `playAlertSound`'s 0.18 so it reads as "stop and look" rather than "panic." Total duration ~450ms. Pure Web Audio synthesis; no new `.wav` asset.
+
+### Distinct from existing audio
+
+- `playAlertSound` — ascending 880→1320Hz two-chirp = **USER DECISION needs attention**
+- `playRoundCompleteSound` — bee trill + high ping = **round done, positive**
+- `playAutoHaltSound` (new) — descending three-tone = **Auto stopped, look at the modal**
+
+### Wiring
+
+`_autoHalt()` previously called `playRoundCompleteSound()` as a placeholder. Replaced with `playAutoHaltSound()`, gated on `reasonCode !== 'converged'`. Convergence halts already trigger their own fanfare elsewhere; stacking the halt sound on top would muddy that moment, so converged is intentionally silent through this path.
+
+Halt reasons that now get the audible cue: `ceiling`, `stall`, `failure-streak`, `decision-tie` (and any future length-at-convergence trigger from P1.3 #9).
+
+### Backlog cleanup (v23)
+
+- **P1.6 (Audible alerts)** — CLOSED. First half shipped v3.36.33 (USER DECISION alert reusing `playAlertSound`). Second half shipped here. No `.wav` assets needed; Kai dependency removed.
+- **P1.5 (Storage-clean indicator pill)** — DROPPED. The underlying orphan-key problem was structurally fixed by v3.30.2's `removeAI` sweep. A passive indicator solves a non-problem; sits green forever for healthy installs. Re-open only if orphan keys reappear in the wild.
+- **Remaining open P1:** only P1.3 (Auto really means Auto behavioral group, #5–#10).
+
+### Files Changed
+
+`js/app.js`:
+- New `playAutoHaltSound()` function near `playAlertIfUserDecisions`
+- `_autoHalt()` replaces `playRoundCompleteSound` call with gated `playAutoHaltSound` call
+- BUILD `20260510-016`
+
+`js/version.js`:
+- `APP_VERSION = 'v3.37.1 Pro'`
+
+`index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`:
+- Build stamp + cache-bust sync (3.37.0 → 3.37.1; 20260510-015 → 20260510-016)
+
+`docs/WaxFrame_Backlog_Master_v23.txt`:
+- Bumped from v22; P1.6 closed, P1.5 dropped, P1.3 confirmed sole remaining P1
+
+---
 ## v3.37.0
 **Build:** `20260510-015` · **Released:** May 10, 2026
 
