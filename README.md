@@ -9,8 +9,8 @@
 WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.32.13-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260504--004-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Version](https://img.shields.io/badge/Version-3.38.4-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260511--008-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -36,10 +36,10 @@ No install. No server. No account. No data leaves your machine. Just open it and
 <img src="images/WaxFrame_Worker_Bee_v2.png" width="160" align="right" alt="Worker Bee">
 
 **1. Set up your Hive**
-Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round. Start with just Gemini (free tier) and one paid AI if you want to keep costs low.
+Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round, but **3 or more is recommended** for faster convergence. To keep costs low, start with Gemini (free tier) plus a couple of paid AIs.
 
 **2. Describe your project**
-Give it a name, version, and a detailed goal. Pick from a library of 12 templates if you want a strong starting point. The more specific your goal, the better your results from round one.
+Give it a name, version, and a detailed goal. Pick from a library of 19 templates if you want a strong starting point. The more specific your goal, the better your results from round one.
 
 **3. Start your document**
 Upload an existing file (Word, PDF, PowerPoint, plain text, or Markdown), paste text directly, or let the hive generate a first draft from your goal. If you upload or paste, WaxFrame drops you straight into refinement — no draft phase needed.
@@ -76,9 +76,10 @@ The fastest way to understand how WaxFrame works is to run the **⭐ Quick Start
 
 1. Set up at least two AI keys and pick a Builder
 2. On the Project screen, click **📋 Use Template**
-3. Click the **⭐ Quick Start** card (it's at the top, marked "Start Here")
-4. On the Starting Document screen, click **💡 Start from Scratch**
-5. Click Launch and run a few rounds
+3. Pick **Starting from scratch** on the path picker
+4. Click the **⭐ Quick Start** card (marked "Start Here")
+5. On the Starting Document screen, click **💡 Start from Scratch**
+6. Click Launch and run a few rounds
 
 You'll see how reviewers send suggestions, how the Builder applies them, what conflicts look like, and how the document evolves. Then come back, pick the template that matches your real document, and run it for real.
 
@@ -104,15 +105,16 @@ Give your project a name, version number, and a detailed goal. The goal tells ev
 
 ### 📋 Project Templates — pre-fill the Goal fields
 
-The **📋 Use Template** button at the top of the Project section opens a gallery of 12 templates organised into 5 categories. Click any card to populate all six Project Goal fields with proven starting content for that document type.
+The **📋 Use Template** button at the top of the Project section opens a gallery of 19 templates organised into 6 categories. The gallery first asks whether you are starting from scratch or refining an existing draft (the path picker), then shows the templates that fit your chosen path. Click any card to populate all six Project Goal fields with proven starting content for that document type.
 
 | Category | Templates |
 |---|---|
-| **Quick Start** | ⭐ Quick Start (chocolate chip cookies — recommended for new users) |
-| **Career & Hiring** | Cover Letter · Job Description · Résumé · Thank-You Letter |
-| **Business & Sales** | Business Proposal · Email & Outreach · Executive Summary · RFP Response |
-| **Content & Marketing** | Blog Post / Article · Presentation Outline |
-| **Personal & Everyday** | Recipe |
+| **Quick Start** | ⭐ Quick Start (chocolate chip cookies — recommended for new users; scratch path only) |
+| **Career & Hiring** | ✉️ Cover Letter · 🔍 Job Description · 📄 Résumé · 🔗 LinkedIn About · 🙏 Thank-You Letter |
+| **Business & Sales** | 💼 Business Proposal · 📬 Email & Outreach · 📊 Executive Summary · 📋 RFP Response |
+| **Content & Marketing** | 📝 Blog Post / Article · 🖥️ Presentation Outline · 💼 LinkedIn Post |
+| **Personal & Everyday** | 🍳 Recipe · 🧾 Contractor / Vendor Letter |
+| **Reviews & Recommendations** | 🍽️ Restaurant Review · 🏨 Hotel Review · 🧾 Business / Service Review · 🔁 Multi-Platform Review Rewrite (refine path only) |
 
 **How template apply works.** Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. Project name, version, length constraint, Reference Material, and Starting Document are never touched — only the six Goal fields.
 

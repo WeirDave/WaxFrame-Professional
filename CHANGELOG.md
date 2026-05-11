@@ -1,6 +1,117 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.4
+**Build:** `20260511-008` · **Released:** May 11, 2026
+
+### Onboarding accuracy + readability sweep — five scope items
+
+Five related onboarding-cleanup scope items in one release:
+
+1. **Docs accuracy sweep** — `waxframe-user-manual.html`, `README.md`, and `document-playbooks.html` still referenced the original 12-template / 5-category library and a pre-v3.37.0 "click Use Template and pick Quick Start" flow that skipped the path picker. Current reality: **19 templates, 6 categories, path picker first.** All live docs brought into line.
+2. **Worker Bees onboarding jargon trim** — caught by Candy on a fresh walkthrough. The 95-word intro paragraph dumping USER DECISION, Auto Mode, "majority resolution," "saved API keys," and "work screen" jargon was rewritten as three short scannable paragraphs with every undefined term dropped — the ⓘ info modal keeps the deep detail. Footer requirement label also updated: "API keys saved" → "AIs set up."
+3. **Hive-size recommendation alignment** — empirical evidence (Brightwater 3-AI vs 2-AI runs) shows that **3+ converges meaningfully faster**, not just "Auto Mode requires 3+." Manual Step 1 description, hive-count-chip note, Step 5 procedure, best-practices block, and troubleshooting note plus README Step 1 now all lead with "3 or more for faster convergence." Plain-English replacements for USER DECISION / Auto Mode jargon throughout.
+4. **Brightwater empirical data cited with scaffold versions (Option B)** — the manual cited two different 3-AI Brightwater numbers without distinguishing which scaffold version produced each. Audited the backup JSONs in `docs/` and confirmed three measured runs: v1.0 scaffold (3 AIs, 3 rounds, 7m 30s), v2.0 stress test (2 AIs, 11 rounds, 15m 53s), v3.0 polished scaffold (3 AIs, 5 rounds, 10m 12s). All three now cited with explicit scaffold version labels so the comparison is honest — v3.0 took slightly more rounds than v1.0 not because the hive got worse but because the scaffold accumulated more legitimate constraints to satisfy.
+5. **Welcome → "What's in the Menu" modal audit** — the modal listed only six items (User Manual, API Key Guide, Document Playbooks, What Are Tokens?, Prompt Editor, License & Account) in a non-menu-matching order, and was missing the entire **Tools** section: Buy WaxFrame Pro, Round History, Backup Session, Import Backup. Modal now mirrors the actual menu's four-section structure (Navigation, Tools, Documentation, Advanced), lists every significant menu item, and uses the menu's label wording verbatim ("License Key" instead of "License & Account"). Adds a brief one-line Navigation entry pointing at the screen-jump links so users know those exist too.
+
+### Worker Bees screen — copy changes
+
+**Before** (one ~95-word paragraph):
+> Each AI in your hive acts as a reviewer — reading your document and giving numbered suggestions each round. You need at least 2 AIs with saved API keys to run a round, but we strongly recommend 3 or more — with only 2 AIs, a tied USER DECISION halts Auto Mode mid-run and forces manual intervention; with 3 or more, majority resolution is always available. You can add as many as you like. Only AIs with a saved key will run automatically — the rest are ignored. On the work screen you can toggle individual AIs on or off per session without losing their keys.
+
+**After** (three short scannable paragraphs):
+> Each AI in your hive acts as a **reviewer** — it reads your document and suggests improvements each round.
+>
+> **Pick at least 2 AIs to continue. 3 or more is recommended** — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.
+>
+> Click any AI card below to set it up. For the full guide, tap the **ⓘ** next to the heading above.
+
+### Hive-size language — what changed
+
+| Before | After |
+|---|---|
+| *"a tied USER DECISION halts Auto Mode mid-run and forces manual intervention"* | *"the run pauses and asks you to break the tie"* |
+| *"majority resolution is always available"* | *"disagreements resolve automatically by majority and the run keeps moving"* |
+| *"Hive size of three is the practical floor for Auto Mode"* (header) | *"Three or more AIs converges faster than two"* |
+| *"tie-free convergence"* | *"faster convergence and automatic resolution of reviewer disagreements"* |
+
+### Brightwater audit — three runs, three scaffold versions
+
+Direct inspection of the backup JSON files in `/mnt/project/` (the canonical source of run data) reconciled the discrepancy:
+
+| Scaffold | Hive | Rounds | Wall-clock | App ver |
+|---|---|---|---|---|
+| **v1.0** | 3 AIs (ChatGPT, Claude, Gemini-as-Builder) | 3 | 7m 30s | v3.36.11 |
+| **v2.0 stress test** | 2 AIs (ChatGPT + Gemini-as-Builder) | 11 | 15m 53s | v3.36.13 |
+| **v3.0 polished** | 3 AIs (ChatGPT, Claude, Gemini-as-Builder) | 5 | 10m 12s | v3.36.14 |
+
+All three figures are now cited with explicit scaffold version labels in both the user manual Step 5 and the document-playbooks reference (manual line 1203).
+
+### Welcome menu modal — items added, order corrected
+
+Modal now matches the actual menu drawer's structure section-for-section:
+
+**Navigation** — one summary entry pointing at the screen-jump links.
+
+**Tools** (4 of 5 entries are new in this release):
+- 🛒 Buy WaxFrame Pro *(new)*
+- ⏱ Round History *(new)*
+- 💾 Backup Session *(new)*
+- 📂 Import Backup *(new)*
+- 🔑 License Key *(was "License & Account" — renamed to match menu)*
+
+**Documentation:**
+- 🔑 API Key Guide
+- 📋 Document Playbooks
+- 📖 User Manual
+- 🪙 What Are Tokens?
+
+**Advanced:**
+- ✏️ Prompt Editor
+
+Section labels rendered with plain `<p><strong>` headers — no new CSS classes. Closing tip now mentions the ℹ️ About button in the menu header for completeness.
+
+### Historical CHANGELOG entries (unchanged)
+
+CHANGELOG entries from v3.21–v3.32 still reference the old 12-template / 5-category counts. Those are historical records and accurately describe the state at the time of those releases — they are not touched.
+
+### What didn't change
+
+No CSS changes. No template content changes. No render-logic changes (the dual-path render and per-path descriptions from v3.38.3 are untouched). Single small JS edit: the dynamic requirement-label text in `updateRequirements`.
+
+### Files Changed
+
+`index.html`
+- Worker Bees screen intro paragraph split into three scannable paragraphs with jargon stripped
+- Footer requirement label: "API keys saved" → "AIs set up"
+- "What's in the Menu" modal (line ~1782) — full rewrite to mirror menu sections and order, with five new entries (Navigation summary, Buy WaxFrame Pro, Round History, Backup Session, Import Backup) and "License Key" renamed from "License & Account"
+- meta build → `20260511-008`; cache-bust `?v=3.38.4` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`js/app.js`
+- `updateRequirements()` — dynamic requirement label updated to match
+- BUILD → `20260511-008`
+
+`js/version.js`
+- APP_VERSION → `v3.38.4 Pro`
+
+`waxframe-user-manual.html`
+- Template count `12 → 19`; category count `5 → 6` (Step 3 block + table rebuilt)
+- Quick Start walkthroughs acknowledge the path-picker step
+- Hive-size recommendation alignment across Step 1 description, hive-count-chip note, Step 5 procedure, best-practices block, and troubleshooting note
+- Brightwater empirical data (Step 5 + line 1203) cites all three scaffold versions with explicit labels
+
+`README.md`
+- Template count + table updated; Quick Start walkthrough acknowledges path picker
+- Step 1 ("Set up your Hive"): adds 3+ recommendation, adjusts cost-management example to fit
+- Version/build badges bumped to v3.38.4 / `20260511-008`
+
+`document-playbooks.html`
+- Intro Tip block acknowledges the path picker step
+
+`what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-008`; cache-bust on `style.css` and `version.js` → `?v=3.38.4`
+
+---
 ## v3.38.3
 **Build:** `20260511-004` · **Released:** May 11, 2026
 
