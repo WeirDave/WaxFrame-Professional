@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-016">
+  <meta name="waxframe-build" content="20260511-017">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.9">
+  <link rel="stylesheet" href="style.css?v=3.38.10">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 <div class="screen active" id="screen-welcome">
   <div class="welcome-bg"></div>
   <div class="welcome-menu-btn" onclick="openNavMenu()" title="Menu">
-    <button class="nav-hamburger" tabindex="-1" aria-hidden="true">
+    <button title="Open the navigation menu" class="nav-hamburger" tabindex="-1" aria-hidden="true">
       <span></span><span></span><span></span>
     </button>
     <span class="welcome-menu-label">Menu</span>
@@ -44,7 +44,7 @@
     </div>
     <p class="welcome-menu-hint">New here? Open the <strong>Menu</strong> for the User Manual, API setup guide, and more. <button class="goal-info-btn welcome-info-inline" onclick="document.getElementById('infoWelcomeMenuModal').classList.add('active')" title="What's in the Menu?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></p>
 
-    <button class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
+    <button title="Begin first-time setup — configure your Worker Bees" class="btn btn-lg btn-accent btn-cta" onclick="goToScreen('screen-bees')">
       <img src="images/WaxFrame_Worker_Bee_v2.png" class="bee-btn-img">
       Let's get started →
     </button>
@@ -66,7 +66,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" onclick="goToScreen('screen-welcome')">← Back</button>
+        <button class="btn" title="Back to the Welcome screen" onclick="goToScreen('screen-welcome')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -106,7 +106,7 @@
         <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-keys">✗ At least 2 AIs set up</span>
       </div>
-      <button class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
+      <button title="Save your hive and continue to Setup 2 — Builder" class="btn btn-lg btn-cta" id="beesContinueBtn" onclick="continueFromBees()">
         <img src="images/WaxFrame_Builder_v3.png" class="bee-btn-img">
         Continue — Choose Builder →
       </button>
@@ -123,7 +123,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" onclick="goToScreen('screen-bees')">← Back</button>
+        <button class="btn" title="Back to Setup 1 — Worker Bees" onclick="goToScreen('screen-bees')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -158,7 +158,7 @@
         <span class="launch-req-title">To continue you need:</span>
         <span class="launch-req-item" id="req-builder">✗ Builder selected</span>
       </div>
-      <button class="btn btn-lg btn-cta" id="builderContinueBtn" onclick="continueFromBuilder()">
+      <button title="Save your Builder and continue to Setup 3 — Your Project" class="btn btn-lg btn-cta" id="builderContinueBtn" onclick="continueFromBuilder()">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Your Project →
       </button>
@@ -175,7 +175,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" onclick="goToScreen('screen-builder')">← Back</button>
+        <button class="btn" title="Back to Setup 2 — Builder" onclick="goToScreen('screen-builder')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -275,10 +275,10 @@
           </div>
           <p class="length-constraint-desc">Pick a mode that matches what your document needs. The Builder is told the rule for the mode you choose, and round-end and convergence-time guards fire accordingly.</p>
           <div class="length-mode-pills" id="lengthModePills" role="tablist" aria-label="Length constraint mode">
-            <button type="button" class="length-mode-pill is-active" data-length-mode="none"    onclick="setLengthMode('none')"    role="tab" aria-selected="true">No limit</button>
-            <button type="button" class="length-mode-pill"           data-length-mode="hardcap" onclick="setLengthMode('hardcap')" role="tab" aria-selected="false">Hard cap</button>
-            <button type="button" class="length-mode-pill"           data-length-mode="target"  onclick="setLengthMode('target')"  role="tab" aria-selected="false">Target</button>
-            <button type="button" class="length-mode-pill"           data-length-mode="range"   onclick="setLengthMode('range')"   role="tab" aria-selected="false">Range</button>
+            <button type="button" class="length-mode-pill is-active" data-length-mode="none"    onclick="setLengthMode('none')" title="No length constraint — the AIs decide how long the document should be"    role="tab" aria-selected="true">No limit</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="hardcap" onclick="setLengthMode('hardcap')" title="Set a maximum length the document cannot exceed" role="tab" aria-selected="false">Hard cap</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="target"  onclick="setLengthMode('target')" title="Set a target length the AIs aim for"  role="tab" aria-selected="false">Target</button>
+            <button type="button" class="length-mode-pill"           data-length-mode="range"   onclick="setLengthMode('range')" title="Set a minimum and maximum length range"   role="tab" aria-selected="false">Range</button>
           </div>
           <p class="length-mode-desc" id="lengthModeDesc"></p>
           <div class="length-constraint-fields" id="lengthConstraintFields">
@@ -318,7 +318,7 @@
         <span class="launch-req-item" id="req-audience">✗ Target audience</span>
         <span class="launch-req-item" id="req-outcome">✗ Desired outcome</span>
       </div>
-      <button class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
+      <button title="Save your project and continue to Setup 4 — Reference Material (optional)" class="btn btn-lg btn-cta" id="projectContinueBtn" onclick="continueFromProject()">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Reference Material →
       </button>
@@ -334,7 +334,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" onclick="goToScreen('screen-project')">← Back</button>
+        <button class="btn" title="Back to Setup 3 — Your Project" onclick="goToScreen('screen-project')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -406,7 +406,7 @@
         <span class="launch-req-title">Reference material is optional</span>
         <span class="launch-req-item ref-optional-hint">Skip this step if your project has no source material for The Hive to reference.</span>
       </div>
-      <button class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
+      <button title="Continue to Setup 5 — Starting Document" class="btn btn-lg btn-cta btn-accent" id="refContinueBtn" onclick="goToScreen('screen-document')">
         <img src="images/WaxFrame_Project_Bee_v2.png" class="bee-btn-img">
         Continue — Starting Document →
       </button>
@@ -423,7 +423,7 @@
     <div class="fs-header">
       <div class="fs-header-left">
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
-        <button class="btn" onclick="goToScreen('screen-reference')">← Back</button>
+        <button class="btn" title="Back to Setup 4 — Reference Material" onclick="goToScreen('screen-reference')">← Back</button>
       </div>
       <div class="fs-header-brand">
         <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
@@ -448,9 +448,9 @@
         <div class="hp-section-body">
 
         <div class="doc-input-tabs">
-          <button class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg><span class="doc-tab-label">Upload File</span></button>
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-paste" aria-hidden="true"><rect x="6" y="4" width="20" height="28" rx="3" fill="#5E35B1"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#3E2A78"/><line x1="9" y1="14" x2="23" y2="14" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="18" x2="23" y2="18" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="22" x2="23" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="26" x2="18" y2="26" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/></svg><span class="doc-tab-label">Paste Text</span></button>
-          <button class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-scratch" aria-hidden="true"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FFFFFF"/><path d="M20 2 V10 H28 Z" fill="rgba(0,0,0,0.08)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="none" stroke="#9aa3b8" stroke-width="0.7" stroke-dasharray="1.5 1.2"/><g transform="translate(11,18)"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="#f5a623"/></g><g transform="translate(20,11)" opacity="0.7"><path d="M2.5 0 L3 2 L5 2.5 L3 3 L2.5 5 L2 3 L0 2.5 L2 2 Z" fill="#f5a623"/></g></svg><span class="doc-tab-label">Start from Scratch</span></button>
+          <button title="Upload a PDF, DOCX, PPTX, XLSX, RTF, or text file as your starting document" class="btn btn-sm btn-ghost doc-tab active" id="tab-upload" onclick="switchDocTab('upload')"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg><span class="doc-tab-label">Upload File</span></button>
+          <button title="Paste your starting document text directly" class="btn btn-sm btn-ghost doc-tab" id="tab-paste" onclick="switchDocTab('paste')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-paste" aria-hidden="true"><rect x="6" y="4" width="20" height="28" rx="3" fill="#5E35B1"/><rect x="11" y="2" width="10" height="5" rx="1" fill="#3E2A78"/><line x1="9" y1="14" x2="23" y2="14" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="18" x2="23" y2="18" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="22" x2="23" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/><line x1="9" y1="26" x2="18" y2="26" stroke="rgba(255,255,255,0.7)" stroke-width="1.5"/></svg><span class="doc-tab-label">Paste Text</span></button>
+          <button title="Start with a blank document — let the hive write the first draft from your project goal" class="btn btn-sm btn-ghost doc-tab" id="tab-scratch" onclick="switchDocTab('scratch')"><svg viewBox="0 0 32 36" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-scratch" aria-hidden="true"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#FFFFFF"/><path d="M20 2 V10 H28 Z" fill="rgba(0,0,0,0.08)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="none" stroke="#9aa3b8" stroke-width="0.7" stroke-dasharray="1.5 1.2"/><g transform="translate(11,18)"><path d="M5 0 L6 4 L10 5 L6 6 L5 10 L4 6 L0 5 L4 4 Z" fill="#f5a623"/></g><g transform="translate(20,11)" opacity="0.7"><path d="M2.5 0 L3 2 L5 2.5 L3 3 L2.5 5 L2 3 L0 2.5 L2 2 Z" fill="#f5a623"/></g></svg><span class="doc-tab-label">Start from Scratch</span></button>
         </div>
         <p id="docTabHint" class="doc-tab-hint">Click the area below to browse for a file, or drag and drop one directly onto it.</p>
 
@@ -471,7 +471,7 @@
           </div>
           <div id="fileStatus" class="file-status" style="display:none;"></div>
           <div id="fileClearRow" class="file-clear-row" style="display:none;">
-            <button class="btn btn-sm" onclick="clearUploadedFile()">✕ Remove file</button>
+            <button title="Remove the uploaded file and choose a different one" class="btn btn-sm" onclick="clearUploadedFile()">✕ Remove file</button>
           </div>
         </div>
 
@@ -486,7 +486,7 @@
             </div>
           </div>
           <div class="file-clear-row">
-            <button class="btn btn-sm" onclick="clearPasteText()">✕ Clear text</button>
+            <button title="Wipe the pasted text and start over" class="btn btn-sm" onclick="clearPasteText()">✕ Clear text</button>
           </div>
         </div>
 
@@ -510,7 +510,7 @@
         <span class="launch-req-title">To launch you need:</span>
         <span class="launch-req-item" id="req-doc">✗ Document — upload a file, paste text, or choose Start from Scratch</span>
       </div>
-      <button class="btn btn-lg btn-cta" id="launchBtn" onclick="startSession()">
+      <button title="Save everything and launch the Work screen" class="btn btn-lg btn-cta" id="launchBtn" onclick="startSession()">
         <img src="images/Waxframe_logo_v19.png" class="bee-btn-img">
         <span class="launch-label">Launch WaxFrame →</span>
       </button>
@@ -539,9 +539,9 @@
         <span class="work-round-badge" id="workRoundBadge">Round 1 — Draft</span>
       </div>
       <div class="work-topbar-right">
-        <button class="btn" onclick="toggleNotesModal()">📝 Notes</button>
+        <button title="Open the Notes drawer — per-round directives and persistent Standing Notes" class="btn" onclick="toggleNotesModal()">📝 Notes</button>
         <button class="btn" onclick="toggleReferenceMaterialDrawer()" title="View / edit reference material">📚 Reference</button>
-        <button class="btn btn-accent" id="finishBtn" onclick="showFinishModal()">🏁 Finish</button>
+        <button title="Open the Finish panel to export your document or start a new project" class="btn btn-accent" id="finishBtn" onclick="showFinishModal()">🏁 Finish</button>
         <span class="work-topbar-divider" aria-hidden="true"></span>
         <!-- v3.36.16 — AUTO MODE TOGGLE relocated across the divider
              into the selector/control cluster (theme + mute + auto).
@@ -555,9 +555,9 @@
           <span class="auto-mode-label">Manual</span>
         </button>
         <button class="theme-opt mute-btn" id="workMuteBtn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
-        <button class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
-        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
-        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
+        <button title="Light mode" class="theme-opt" data-theme="light" onclick="setTheme('light')">☀️</button>
+        <button title="Auto mode — follows your operating system preference" class="theme-opt" data-theme="auto" onclick="setTheme('auto')">⚙️</button>
+        <button title="Dark mode" class="theme-opt" data-theme="dark" onclick="setTheme('dark')">🌙</button>
       </div>
     </div>
 
@@ -571,7 +571,7 @@
           <span class="work-section-title">The Hive <button class="goal-info-btn" onclick="document.getElementById('infoHiveModal').classList.add('active')" title="About The Hive"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
             <button class="btn hive-edit-btn" onclick="openEditHive()" title="Toggle AIs on/off">Edit Hive</button>
-            <button class="btn" onclick="openChangeBuilder()">Change Builder</button>
+            <button class="btn" title="Switch which AI is acting as Builder for this session" onclick="openChangeBuilder()">Change Builder</button>
           </div>
         </div>
         <div class="hex-grid" id="beeStatusGrid"></div>
@@ -579,7 +579,7 @@
         <div class="left-panel-header left-panel-section-border">
           <span class="work-section-title">Conflicts <button class="goal-info-btn" onclick="document.getElementById('infoConflictsModal').classList.add('active')" title="About Conflicts"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
-            <button class="btn" onclick="copyConflicts()">📋 Copy</button>
+            <button title="Copy current conflicts to clipboard" class="btn" onclick="copyConflicts()">📋 Copy</button>
           </div>
         </div>
         <div class="conflicts-panel" id="conflictsPanel">
@@ -594,9 +594,9 @@
           <div class="work-panel-header-row">
             <span class="work-section-title">📄 Working Document <button class="goal-info-btn" onclick="document.getElementById('infoDocModal').classList.add('active')" title="About Working Document"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
             <div class="flex-row">
-              <button class="btn" onclick="exportDocument()">💾 Export</button>
-              <button class="btn" onclick="copyDocument()">📋 Copy</button>
-              <button class="btn" onclick="clearDocument()">✕ Clear</button>
+              <button class="btn" title="Download the working document as a .txt file immediately" onclick="exportDocument()">💾 Export</button>
+              <button title="Copy the entire working document to your clipboard" class="btn" onclick="copyDocument()">📋 Copy</button>
+              <button title="Wipe the working document (you will be asked to confirm)" class="btn" onclick="clearDocument()">✕ Clear</button>
             </div>
           </div>
           <div class="doc-stats-row">
@@ -605,7 +605,7 @@
         </div>
         <div class="reextract-banner" id="reExtractBanner" style="display:none">
           <span class="reextract-banner-text">📄 Imported from PDF — if the text looks garbled, re-extract it using AI vision.</span>
-          <button class="btn btn-sm" id="reExtractBtn" onclick="reExtractWithVision()">🔍 Re-extract with AI Vision</button>
+          <button title="Re-extract the original upload using a vision-capable AI — useful for scanned PDFs or garbled local extractions" class="btn btn-sm" id="reExtractBtn" onclick="reExtractWithVision()">🔍 Re-extract with AI Vision</button>
           <button class="reextract-dismiss" onclick="document.getElementById('reExtractBanner').style.display='none'" title="Dismiss">✕</button>
         </div>
         <div class="work-doc-editor">
@@ -652,7 +652,7 @@
         <div class="work-panel-header honeycomb-header">
           <span class="work-section-title">🖥️ Live Console <button class="goal-info-btn" onclick="document.getElementById('infoConsoleModal').classList.add('active')" title="About Live Console"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
           <div class="flex-row-sm">
-            <button class="btn" onclick="copyConsole()">📋 Copy</button>
+            <button title="Copy the full console log to your clipboard" class="btn" onclick="copyConsole()">📋 Copy</button>
           </div>
         </div>
         <div class="console-body-wrap">
@@ -676,10 +676,10 @@
     <div class="work-footer">
       <span id="statusText" class="footer-status">Standing by — Smoke the Hive to begin</span>
       <div class="footer-actions">
-        <button class="footer-btn" id="builderOnlyBtn" onclick="footerSendToBuilder()">
+        <button title="Send to Builder — runs only the Builder AI on your current document (saves tokens; no reviewer feedback this round)" class="footer-btn" id="builderOnlyBtn" onclick="footerSendToBuilder()">
           <span class="builder-only-label">Send to Builder</span>
         </button>
-        <button class="footer-btn-smoke" id="runRoundBtn" onclick="footerSmokeOrBuilder()">
+        <button title="Smoke the Hive — runs a full round with all reviewers and the Builder" class="footer-btn-smoke" id="runRoundBtn" onclick="footerSmokeOrBuilder()">
           <span class="shake-wide-label">Smoke the Hive</span>
         </button>
       </div>
@@ -708,7 +708,7 @@
           <span class="slow-responder-indicator-label">Slow alerts: on</span>
         </button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
-        <button class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
+        <button title="Open the About panel — credits, build info, and license details" class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
     </div>
   </div>
@@ -750,7 +750,7 @@
     <span class="notes-drawer-title">📝 Notes <button class="goal-info-btn" onclick="document.getElementById('infoNotesModal').classList.add('active')" title="About Notes"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
     <span class="notes-drawer-sub">Directions for the Builder only — never sent to reviewers.</span>
     <div class="notes-drawer-actions">
-      <button class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
+      <button title="Close the Notes drawer" class="btn btn-accent" onclick="closeNotesModal()">✕ Close</button>
     </div>
   </div>
 
@@ -763,19 +763,19 @@
       <span class="notes-section-title">🎯 This-round notes</span>
       <span class="notes-section-sub">Auto-clears after the Builder uses them on the next round.</span>
       <div class="notes-section-actions">
-        <button class="btn" onclick="copyNotes()">📋 Copy</button>
-        <button class="btn" onclick="clearNotes()">✕ Clear</button>
+        <button title="Copy your per-round notes to clipboard" class="btn" onclick="copyNotes()">📋 Copy</button>
+        <button title="Clear the per-round notes field" class="btn" onclick="clearNotes()">✕ Clear</button>
       </div>
     </div>
     <div class="notes-templates">
       <span class="notes-templates-label">Templates:</span>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OVER the target length. Cut it down to fit within the target word/page count. Preserve all required sections; remove repetition, filler, and over-elaboration. Do not add new content.')">✂ Trim to target</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is UNDER the target length. Expand it to reach the target word/page count. Add detail, examples, and elaboration to existing sections. Preserve all required sections; do not add new top-level structure.')">📈 Expand to target</button>
-      <button class="notes-template-btn" onclick="applyNotesTemplate('The document is OUTSIDE the target range. Bring it within range — expand if under, trim if over. Preserve all required sections.')">📐 Match target</button>
+      <button title="Insert a directive to lock a specific line — the AIs will leave it untouched" class="notes-template-btn" onclick="applyNotesTemplate('Lock this line exactly as written — do not change it: &quot;[PASTE THE EXACT LINE HERE]&quot;')">🔒 Lock a line</button>
+      <button title="Insert a directive to lock an entire section by its heading" class="notes-template-btn" onclick="applyNotesTemplate('Do not change anything in this section. The section begins with: &quot;[PASTE THE SECTION HEADING OR FIRST LINE HERE]&quot;')">🔒 Lock a section</button>
+      <button title="Tell the AIs you manually reverted the document — ignore the previous round" class="notes-template-btn" onclick="applyNotesTemplate('I have reverted the document. Ignore any changes from the previous round and work from what is here now.')">↩ Reverted document</button>
+      <button title="Lock the document structure — no new sections or headings" class="notes-template-btn" onclick="applyNotesTemplate('Do not add any new sections or headings. Work only with the existing structure.')">🚫 No new sections</button>
+      <button title="Direct the AIs to trim the document to fit within target length" class="notes-template-btn" onclick="applyNotesTemplate('The document is OVER the target length. Cut it down to fit within the target word/page count. Preserve all required sections; remove repetition, filler, and over-elaboration. Do not add new content.')">✂ Trim to target</button>
+      <button title="Direct the AIs to expand the document toward target length" class="notes-template-btn" onclick="applyNotesTemplate('The document is UNDER the target length. Expand it to reach the target word/page count. Add detail, examples, and elaboration to existing sections. Preserve all required sections; do not add new top-level structure.')">📈 Expand to target</button>
+      <button title="Direct the AIs to bring the document inside the target range" class="notes-template-btn" onclick="applyNotesTemplate('The document is OUTSIDE the target range. Bring it within range — expand if under, trim if over. Preserve all required sections.')">📐 Match target</button>
     </div>
     <textarea id="workNotes" class="notes-drawer-ta notes-ta-oneshot" oninput="saveSession();updateNotesBtnPriority()"
       placeholder="The Builder can only edit your document — it has no internet access and cannot answer questions or look up facts.&#10;&#10;e.g. Line 5: change tone to be more formal&#10;e.g. Line 12–15: expand this section&#10;e.g. Overall: make it more concise"></textarea>
@@ -791,8 +791,8 @@
       <span class="notes-section-title">📌 Standing notes</span>
       <span class="notes-section-sub">Apply every round, every Builder. Persist until you clear them or start a new project.</span>
       <div class="notes-section-actions">
-        <button class="btn" onclick="copyStandingNotes()">📋 Copy</button>
-        <button class="btn" onclick="clearStandingNotes()">✕ Clear</button>
+        <button title="Copy your persistent Standing Notes to clipboard" class="btn" onclick="copyStandingNotes()">📋 Copy</button>
+        <button title="Clear the Standing Notes field (you will be asked to confirm)" class="btn" onclick="clearStandingNotes()">✕ Clear</button>
       </div>
     </div>
     <textarea id="workStandingNotes" class="notes-drawer-ta notes-ta-standing" oninput="saveSession()"
@@ -806,9 +806,9 @@
     <span class="notes-drawer-title">📚 Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ"></button></span>
     <span class="notes-drawer-sub">Source material The Hive will reference on every round but never edit. Edits apply to the next round.</span>
     <div class="notes-drawer-actions">
-      <button class="btn" onclick="copyReferenceMaterial()">📋 Copy All</button>
-      <button class="btn" onclick="clearAllReferenceMaterial()">✕ Clear All</button>
-      <button class="btn btn-accent" onclick="closeReferenceMaterialDrawer()">✕ Close</button>
+      <button title="Copy all reference material to clipboard" class="btn" onclick="copyReferenceMaterial()">📋 Copy All</button>
+      <button title="Remove all reference documents (you will be asked to confirm)" class="btn" onclick="clearAllReferenceMaterial()">✕ Clear All</button>
+      <button title="Close the Reference Material drawer" class="btn btn-accent" onclick="closeReferenceMaterialDrawer()">✕ Close</button>
     </div>
   </div>
   <div class="ref-drawer-counter-row">
@@ -824,7 +824,7 @@
     <div class="ref-cards-empty">No reference material yet.</div>
   </div>
   <div class="ref-add-row ref-add-row--drawer">
-    <button class="btn btn-accent" onclick="addReferenceDoc()">+ Paste Text Reference</button>
+    <button title="Paste new reference material to add to this session" class="btn btn-accent" onclick="addReferenceDoc()">+ Paste Text Reference</button>
     <span class="ref-add-drawer-note">To upload files, use Setup 4 — Reference Material from the menu.</span>
   </div>
 </div>
@@ -891,7 +891,7 @@
         <div class="custom-ai-model-input-wrap">
           <input type="text" id="customAIModel" placeholder="e.g. gpt-4o, llama-3, mistral-small-latest">
           <select id="customAIModelSelect" class="custom-ai-select" style="display:none;"></select>
-          <button class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
+          <button title="Fetch the model list from this endpoint using the API key you provided" class="btn btn-sm" id="customAIFetchModelsBtn" onclick="fetchCustomAIModels()">Fetch Models</button>
         </div>
         <div class="custom-ai-model-aids" id="customAIModelAids">
           <a id="customAIChooseModelLink" class="custom-ai-choose-model-link" href="#" target="_blank" rel="noopener noreferrer" title="Open this provider's model catalog in a new browser tab">↗ Browse models on website</a>
@@ -905,7 +905,7 @@
             <button type="button" class="custom-ai-icon-clear-btn" id="customAIIconClearBtn" title="Remove uploaded icon" aria-label="Remove uploaded icon">×</button>
           </div>
           <div class="custom-ai-icon-actions">
-            <button type="button" class="btn btn-sm custom-ai-icon-upload-btn" id="customAIIconUploadBtn">📷 Upload Icon</button>
+            <button title="Upload a custom icon for this AI (image is auto-resized to 256×256 PNG)" type="button" class="btn btn-sm custom-ai-icon-upload-btn" id="customAIIconUploadBtn">📷 Upload Icon</button>
             <button type="button" class="btn btn-sm custom-ai-icon-browse-btn" id="customAIIconBrowseBtn" onclick="openCustomAIIconPicker()" title="Pick from bundled icons (Providers, Tools & Servers, Mascots)">📂 Browse Icons</button>
           </div>
           <span class="custom-ai-icon-help">PNG/JPEG/WebP · 256×256 recommended · auto-resized</span>
@@ -914,8 +914,8 @@
       </div>
     </div>
     <div class="custom-ai-form-footer">
-      <button class="btn" onclick="showAddCustomAI()">Cancel</button>
-      <button class="btn btn-accent btn-sm" id="customAIAddBtn" onclick="addCustomAI()">Add to Hive</button>
+      <button title="Cancel without adding a custom AI" class="btn" onclick="showAddCustomAI()">Cancel</button>
+      <button title="Add this custom AI to your hive" class="btn btn-accent btn-sm" id="customAIAddBtn" onclick="addCustomAI()">Add to Hive</button>
     </div>
   </div>
 </div>
@@ -952,7 +952,7 @@
       <p>Most providers WaxFrame doesn't list still work — they just need to be filled in manually. If the provider's docs say "OpenAI-compatible," set API Format to OpenAI compatible and use whatever URL their docs give you. If it's not OpenAI compatible, you'll need a provider that is, or wait for WaxFrame to add native support.</p>
     </div>
     <div class="custom-ai-form-footer">
-      <button class="btn btn-accent btn-sm" onclick="hideCustomAIInfoModal()">Got it</button>
+      <button title="Dismiss this info" class="btn btn-accent btn-sm" onclick="hideCustomAIInfoModal()">Got it</button>
     </div>
   </div>
 </div>
@@ -1003,7 +1003,7 @@
           </div>
         </div>
         <div class="import-server-fetch-row">
-          <button class="btn btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
+          <button title="Fetch the model list from the configured server endpoint" class="btn btn-sm" id="importServerFetchBtn" onclick="fetchImportServerModels()">Fetch Models</button>
           <span id="importServerFetchStatus" class="custom-ai-test-status"></span>
         </div>
         <div class="custom-ai-field-wrap">
@@ -1032,7 +1032,7 @@
             </button>
           </div>
           <div class="custom-ai-icon-uploader" id="importServerIconWrap">
-            <button type="button" class="btn btn-sm" id="importServerIconUploadBtn">📷 Upload Icon</button>
+            <button title="Upload a custom icon for this server (image is auto-resized to 256×256 PNG)" type="button" class="btn btn-sm" id="importServerIconUploadBtn">📷 Upload Icon</button>
             <div class="custom-ai-icon-preview-box">
               <img id="importServerIconPreview" alt="" style="display:none;">
               <button type="button" class="custom-ai-icon-clear-btn" id="importServerIconClearBtn" title="Remove icon" aria-label="Remove icon">×</button>
@@ -1042,8 +1042,8 @@
           </div>
         </div>
         <div class="import-server-actions-row">
-          <button class="btn btn-sm import-server-raw-toggle" id="importServerRawToggle" onclick="toggleImportServerRawPane()">📋 View response details</button>
-          <button class="btn btn-sm import-server-forget-btn" id="importServerForgetBtn" onclick="forgetImportServerDefaults()">🗑 Forget saved server</button>
+          <button title="Toggle the raw API response details for debugging" class="btn btn-sm import-server-raw-toggle" id="importServerRawToggle" onclick="toggleImportServerRawPane()">📋 View response details</button>
+          <button title="Forget the saved server defaults — you will need to re-enter them next time" class="btn btn-sm import-server-forget-btn" id="importServerForgetBtn" onclick="forgetImportServerDefaults()">🗑 Forget saved server</button>
         </div>
       </div>
 
@@ -1111,8 +1111,8 @@
               <span id="importChecklistTimestamp" class="import-checklist-timestamp"></span>
             </div>
             <div class="import-server-checklist-actions">
-              <button class="btn btn-xs" onclick="importServerSelectAll()">All</button>
-              <button class="btn btn-xs" onclick="importServerSelectNone()">None</button>
+              <button title="Select all models in the list" class="btn btn-xs" onclick="importServerSelectAll()">All</button>
+              <button title="Deselect all models" class="btn btn-xs" onclick="importServerSelectNone()">None</button>
             </div>
           </div>
           <div class="import-server-checklist-hint">
@@ -1127,8 +1127,8 @@
 
     <div class="custom-ai-form-footer">
       <span></span>
-      <button class="btn" onclick="closeImportServerModal()">Cancel</button>
-      <button class="btn btn-accent btn-sm" id="importServerAddBtn" onclick="addImportServerModels()" disabled>Add 0 to Hive</button>
+      <button title="Cancel without importing" class="btn" onclick="closeImportServerModal()">Cancel</button>
+      <button title="Add the selected models to your hive" class="btn btn-accent btn-sm" id="importServerAddBtn" onclick="addImportServerModels()" disabled>Add 0 to Hive</button>
     </div>
   </div>
 </div>
@@ -1148,8 +1148,8 @@
     </div>
 
     <div class="icon-picker-tabs">
-      <button type="button" class="icon-picker-tab is-active" id="iconPickerTab-bundled" onclick="_iconPickerSwitchTab('bundled')">Bundled icons</button>
-      <button type="button" class="icon-picker-tab" id="iconPickerTab-upload" onclick="_iconPickerSwitchTab('upload')">Upload custom</button>
+      <button title="Choose from WaxFrame's bundled provider icons" type="button" class="icon-picker-tab is-active" id="iconPickerTab-bundled" onclick="_iconPickerSwitchTab('bundled')">Bundled icons</button>
+      <button title="Upload your own icon image" type="button" class="icon-picker-tab" id="iconPickerTab-upload" onclick="_iconPickerSwitchTab('upload')">Upload custom</button>
     </div>
 
     <div class="icon-picker-body">
@@ -1169,7 +1169,7 @@
             <img id="iconPickerUploadPreview" class="icon-picker-upload-preview" alt="">
           </div>
           <div class="icon-picker-upload-footer">
-            <button type="button" class="btn btn-accent" id="iconPickerUploadConfirm" onclick="_iconPickerConfirmUpload()" disabled>Use this icon</button>
+            <button title="Confirm and use this icon" type="button" class="btn btn-accent" id="iconPickerUploadConfirm" onclick="_iconPickerConfirmUpload()" disabled>Use this icon</button>
           </div>
         </div>
       </div>
@@ -1188,8 +1188,8 @@
         </div>
       </div>
       <div class="finish-history-row">
-        <button class="btn" onclick="exportTranscript()">📋 Export Transcript</button>
-        <button class="btn" onclick="closeRoundHistoryModal()">✕ Close</button>
+        <button class="btn" title="Download the full session transcript — every round, every AI response, and the final document" onclick="exportTranscript()">📋 Export Transcript</button>
+        <button title="Close Round History" class="btn" onclick="closeRoundHistoryModal()">✕ Close</button>
       </div>
     </div>
     <div class="round-history" id="roundHistory">
@@ -1207,19 +1207,19 @@
     <h2 class="finish-modal-title">🏁 Project Complete!</h2>
     <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do. If you want to review which reviewers were still suggesting changes (the <strong>holdouts</strong>), make a manual edit, or run another round before exporting, click <strong>← Back to Hive</strong> at the bottom.</p>
     <div class="finish-modal-actions">
-      <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="exportDocument()">💾 Export Document</button>
-      <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportTranscript()">
+      <button title="Download the current working document as a .txt file" id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="exportDocument()">💾 Export Document</button>
+      <button title="Download the full session transcript — every round, every AI response, and the final document" id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportTranscript()">
         📋 Export Full Transcript
         <span class="finish-modal-btn-sub">Every round, every AI response, and the final document — all in one file</span>
       </button>
-      <button class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
+      <button title="Start a fresh project — clears your current document and round history (export first if you need them)" class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
         <span>Start New Project</span>
         <span class="finish-modal-btn-new-sub">Clears your current document and round history — export first if you need them</span>
       </button>
     </div>
     <div class="finish-modal-footer-btns">
       <button class="finish-modal-cancel" onclick="hideFinishModal()" title="Return to the work screen to review holdouts (the AIs that still had suggestions), make manual edits, or run another round">← Back to Hive</button>
-      <button class="finish-modal-cancel" onclick="hideFinishModal();goToScreen('screen-welcome')">⌂ Exit to Home</button>
+      <button title="Close the panel and return to the welcome screen" class="finish-modal-cancel" onclick="hideFinishModal();goToScreen('screen-welcome')">⌂ Exit to Home</button>
     </div>
   </div>
 </div>
@@ -1232,9 +1232,9 @@
     <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
-    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <button title="Submit your license key to unlock WaxFrame Pro" class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
     <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
-    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+    <button title="Close without entering a license — continue using the free trial" class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
 
@@ -1246,10 +1246,10 @@
     <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
     <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
     <div class="license-modal-actions">
-      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
-      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+      <button title="Replace your current license key with a new one" class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button title="Remove your current license key (your remaining trial rounds will be preserved)" class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
     </div>
-    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+    <button title="Close the license panel" class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
   </div>
 </div>
 
@@ -1259,7 +1259,7 @@
     <h2 class="finish-modal-title"><img src="images/WaxFrame_Builder_v3.png" class="modal-title-bee" alt="" onerror="this.style.display='none'"> Change Builder</h2>
     <p class="finish-modal-msg">The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity.</p>
     <div class="builder-pick-grid" id="changeBuilderGrid"></div>
-    <button class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
+    <button title="Cancel without changing the Builder" class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
   </div>
 </div>
 
@@ -1269,8 +1269,8 @@
     <h2 class="finish-modal-title" id="wfConfirmTitle">Confirm</h2>
     <p class="finish-modal-msg" id="wfConfirmMsg"></p>
     <div class="wf-confirm-actions">
-      <button class="finish-modal-cancel" id="wfConfirmCancelBtn" onclick="wfConfirmCancel()">Cancel</button>
-      <button class="btn btn-lg" id="wfConfirmOkBtn" onclick="wfConfirmOk()">OK</button>
+      <button title="Cancel this action" class="finish-modal-cancel" id="wfConfirmCancelBtn" onclick="wfConfirmCancel()">Cancel</button>
+      <button title="Confirm and proceed" class="btn btn-lg" id="wfConfirmOkBtn" onclick="wfConfirmOk()">OK</button>
     </div>
   </div>
 </div>
@@ -1294,9 +1294,9 @@
     <h2 class="finish-modal-title">Auto paused</h2>
     <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
     <div class="auto-halt-actions">
-      <button class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
-      <button class="auto-halt-btn auto-halt-manual" onclick="autoHaltSwitchManual()">↩ Switch to Manual</button>
-      <button class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
+      <button title="Resume Auto Mode and chain the next round automatically" class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
+      <button title="Switch to Manual Mode — you click Smoke the Hive for each round" class="auto-halt-btn auto-halt-manual" onclick="autoHaltSwitchManual()">↩ Switch to Manual</button>
+      <button title="Stop here — keep the current document and end Auto Mode" class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
     </div>
   </div>
 </div>
@@ -1339,9 +1339,9 @@
       </div>
     </div>
     <div class="length-guard-actions">
-      <button class="btn length-guard-discard"  id="lengthGuardDiscardBtn"  onclick="_lengthGuardChoose('discard')">Discard round</button>
-      <button class="btn length-guard-keep"     id="lengthGuardKeepBtn"     onclick="_lengthGuardChoose('keep')">Keep this round</button>
-      <button class="btn length-guard-continue" id="lengthGuardContinueBtn" onclick="_lengthGuardChoose('continue_anyway')">Continue anyway · disable guard</button>
+      <button title="Discard this round and roll back to the previous document" class="btn length-guard-discard"  id="lengthGuardDiscardBtn"  onclick="_lengthGuardChoose('discard')">Discard round</button>
+      <button title="Keep this round's output even though it's outside your length constraint" class="btn length-guard-keep"     id="lengthGuardKeepBtn"     onclick="_lengthGuardChoose('keep')">Keep this round</button>
+      <button title="Keep this round AND disable the Length Guard for the rest of the session" class="btn length-guard-continue" id="lengthGuardContinueBtn" onclick="_lengthGuardChoose('continue_anyway')">Continue anyway · disable guard</button>
     </div>
     <p class="length-guard-help" id="lengthGuardHelp">
       <strong>Discard</strong> rejects the round (default). <strong>Keep</strong> accepts this round's output as the new document, but the guard stays active for future rounds. <strong>Continue anyway</strong> accepts and disables the length guard for the rest of this project — useful when the guard's target doesn't match what the document actually needs to be.
@@ -1355,7 +1355,7 @@
     <h2 class="finish-modal-title">🐝 Edit Hive</h2>
     <p class="finish-modal-msg">Toggle AIs on or off for this session. AIs without a saved API key are skipped automatically.</p>
     <div class="edit-hive-list" id="editHiveList"></div>
-    <button class="finish-modal-cancel" onclick="closeEditHive()">← Done</button>
+    <button title="Close the Edit Hive panel" class="finish-modal-cancel" onclick="closeEditHive()">← Done</button>
   </div>
 </div>
 
@@ -1369,10 +1369,10 @@
       <div class="round-error-note"><strong>Note:</strong> This round was not saved to your history, but your API request was still processed and tokens were consumed.</div>
     </div>
     <div class="round-error-actions">
-      <button class="finish-modal-btn finish-modal-btn-export round-error-retry-btn" onclick="closeRoundErrorModal()">↩ Try Again</button>
-      <button class="finish-modal-btn finish-modal-btn-transcript round-error-builder-btn" onclick="closeRoundErrorModal(); openChangeBuilder()"><img src="images/WaxFrame_Builder_v3.png" class="modal-btn-bee" alt="" onerror="this.style.display='none'"> Change Builder</button>
+      <button title="Dismiss this error and stay on the work screen" class="finish-modal-btn finish-modal-btn-export round-error-retry-btn" onclick="closeRoundErrorModal()">↩ Try Again</button>
+      <button title="Close this error and switch to a different Builder AI" class="finish-modal-btn finish-modal-btn-transcript round-error-builder-btn" onclick="closeRoundErrorModal(); openChangeBuilder()"><img src="images/WaxFrame_Builder_v3.png" class="modal-btn-bee" alt="" onerror="this.style.display='none'"> Change Builder</button>
     </div>
-    <button class="finish-modal-cancel" onclick="closeRoundErrorModal()">← Dismiss</button>
+    <button title="Dismiss this error and stay on the work screen" class="finish-modal-cancel" onclick="closeRoundErrorModal()">← Dismiss</button>
   </div>
 </div>
 
@@ -1387,16 +1387,16 @@
       <p class="tc-meaning" id="tcMeaning"></p>
       <div class="tc-actions" id="tcActions"></div>
       <div class="tc-details-wrap" id="tcDetailsWrap">
-        <button class="tc-details-toggle" type="button" onclick="toggleTcDetails()">
+        <button title="Expand to see full error details" class="tc-details-toggle" type="button" onclick="toggleTcDetails()">
           <span class="tc-details-arrow">▸</span> Show technical details
         </button>
         <pre class="tc-details" id="tcDetails"></pre>
         <div class="tc-details-actions">
-          <button class="tc-action-btn tc-copy-btn" type="button" onclick="tcCopyDetails()">📋 Copy report</button>
+          <button title="Copy the error report to clipboard for support" class="tc-action-btn tc-copy-btn" type="button" onclick="tcCopyDetails()">📋 Copy report</button>
         </div>
       </div>
     </div>
-    <button class="finish-modal-cancel" onclick="closeTroubleshootingCard()">← Dismiss</button>
+    <button title="Dismiss this troubleshooting alert" class="finish-modal-cancel" onclick="closeTroubleshootingCard()">← Dismiss</button>
   </div>
 </div>
 
@@ -1432,13 +1432,13 @@
       </div>
       <div class="ddv-actions">
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.testViewer()" title="Inject 6 fake captures so you can preview the populated viewer in both themes">🌱 Seed sample</button>
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
+        <button title="Copy the debug buffer as JSON" class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.saveViewer()" title="Download the capture buffer as a JSON file. Best for full-session captures or archival.">💾 Save as File</button>
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
+        <button title="Clear the debug buffer" class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
+        <button title="Refresh the debug view" class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
       </div>
     </div>
-    <button class="finish-modal-cancel" onclick="WF_DEBUG.closeViewer()">← Close</button>
+    <button title="Close the debug viewer" class="finish-modal-cancel" onclick="WF_DEBUG.closeViewer()">← Close</button>
   </div>
 </div>
 
@@ -1454,8 +1454,8 @@
       <p class="round-error-msg" id="refConfirmBody"></p>
     </div>
     <div class="round-error-actions">
-      <button class="finish-modal-btn finish-modal-btn-export" onclick="closeRefConfirmModal()">← Cancel</button>
-      <button class="finish-modal-btn finish-modal-btn-new" id="refConfirmOkBtn" onclick="executeRefConfirm()">🗑️ Remove</button>
+      <button title="Cancel — keep the reference material" class="finish-modal-btn finish-modal-btn-export" onclick="closeRefConfirmModal()">← Cancel</button>
+      <button title="Remove the reference material" class="finish-modal-btn finish-modal-btn-new" id="refConfirmOkBtn" onclick="executeRefConfirm()">🗑️ Remove</button>
     </div>
   </div>
 </div>
@@ -1471,8 +1471,8 @@
       <strong>What gets converted:</strong> Cell values (formulas evaluated to displayed values), merged cells flattened by repetition, embedded comments, defined names. <strong>What's skipped:</strong> Cell colors and conditional formatting, embedded images and charts (data labels are captured), pivot table source data (cached display values shown), hidden sheets, and macros.
     </div>
     <div class="sheet-picker-actions">
-      <button class="finish-modal-cancel sheet-picker-cancel">Cancel</button>
-      <button class="finish-modal-btn finish-modal-btn-new sheet-picker-confirm">Ingest selected sheets</button>
+      <button title="Cancel without ingesting any sheets" class="finish-modal-cancel sheet-picker-cancel">Cancel</button>
+      <button title="Ingest the selected sheets as your starting document" class="finish-modal-btn finish-modal-btn-new sheet-picker-confirm">Ingest selected sheets</button>
     </div>
   </div>
 </div>
@@ -1484,8 +1484,8 @@
       <p class="round-error-msg">If you start a new project now, your working document and round history will be permanently discarded. Export the document and / or full transcript first if you need them.</p>
     </div>
     <div class="round-error-actions">
-      <button class="finish-modal-btn finish-modal-btn-export" onclick="closeDiscardConfirm()">← Go back and export</button>
-      <button class="finish-modal-btn finish-modal-btn-new" onclick="confirmDiscardAndNew()">🗑️ Discard and start fresh</button>
+      <button title="Cancel — go back and export your current document first" class="finish-modal-btn finish-modal-btn-export" onclick="closeDiscardConfirm()">← Go back and export</button>
+      <button title="Discard the current document and start fresh" class="finish-modal-btn finish-modal-btn-new" onclick="confirmDiscardAndNew()">🗑️ Discard and start fresh</button>
     </div>
   </div>
 </div>
@@ -1503,9 +1503,9 @@
       <div id="projectGoalModalRefineText" class="goal-modal-refine-text"></div>
     </div>
     <div class="goal-modal-footer">
-      <button class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
-      <button class="finish-modal-cancel" onclick="copyGoal()">📋 Copy</button>
-      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
+      <button title="Close the Project Goal viewer" class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
+      <button title="Copy the full assembled project goal to clipboard" class="finish-modal-cancel" onclick="copyGoal()">📋 Copy</button>
+      <button title="Jump back to Setup 3 to edit your project goal" class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
     </div>
   </div>
 </div>
@@ -1599,8 +1599,8 @@
       </div>
     </div>
     <div class="custom-ai-form-footer">
-      <button class="btn tkp-retest-all-btn is-hidden" id="tkpRetryAllBtn" onclick="retestAllFailures()">↻ Retest all failures</button>
-      <button class="btn" id="tkpDismiss" onclick="dismissTestPanel()">← Close</button>
+      <button title="Retry all failed API key tests" class="btn tkp-retest-all-btn is-hidden" id="tkpRetryAllBtn" onclick="retestAllFailures()">↻ Retest all failures</button>
+      <button title="Close the API key test panel" class="btn" id="tkpDismiss" onclick="dismissTestPanel()">← Close</button>
     </div>
   </div>
 </div>
@@ -1693,7 +1693,7 @@
     </div>
     <div class="custom-ai-form-footer">
       <a id="cedBillingLink" class="link-accent is-hidden" href="#" target="_blank"></a>
-      <button class="btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')">← Close</button>
+      <button title="Close this error detail" class="btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')">← Close</button>
     </div>
   </div>
 </div>
@@ -1739,7 +1739,7 @@
     </div>
     <div class="custom-ai-form-footer">
       <span></span>
-      <button class="btn" onclick="closeTestKeyModal()">← Close</button>
+      <button title="Close this test" class="btn" onclick="closeTestKeyModal()">← Close</button>
     </div>
   </div>
 </div>
@@ -2096,7 +2096,7 @@
   <div class="dev-flyout">
     <button class="dev-flyout-trigger" type="button" title="Scene & animation previews — hover for menu">▶ Scenes</button>
     <div class="dev-flyout-panel">
-      <button onclick="playUnlockScene()">▶ Unlock Scene</button>
+      <button title="Preview the dev-mode unlock scene animation" onclick="playUnlockScene()">▶ Unlock Scene</button>
       <button onclick="devTestFlyInOnly()" title="Bee fly-in overlay with no audio">▶ Fly-in</button>
       <button onclick="devTestMajorityConverge()" title="Majority convergence — 4s / 10 puffs + flying-car sound">▶ Majority</button>
       <button onclick="devTestUnanimous()" title="Unanimous — 5s / 14 puffs + flying-car sound + finish modal">▶ Unanimous</button>
@@ -2121,8 +2121,8 @@
   <div class="finish-modal dev-pw-modal">
     <h2 class="finish-modal-title">Dev Tools</h2>
     <input class="license-modal-input" id="devPwInput" type="password" placeholder="Password" onkeydown="if(event.key==='Enter')submitDevPassword()">
-    <button class="license-modal-btn" onclick="submitDevPassword()">Unlock</button>
-    <button class="close-btn" onclick="hideDevModal()">✕ Cancel</button>
+    <button title="Submit dev password to enter Dev Mode" class="license-modal-btn" onclick="submitDevPassword()">Unlock</button>
+    <button title="Cancel" class="close-btn" onclick="hideDevModal()">✕ Cancel</button>
   </div>
 </div>
 
@@ -2172,9 +2172,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.38.9"></script>
-<script src="js/templates.js?v=3.38.9"></script>
-<script src="js/app.js?v=3.38.9"></script>
+<script src="js/version.js?v=3.38.10"></script>
+<script src="js/templates.js?v=3.38.10"></script>
+<script src="js/app.js?v=3.38.10"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
@@ -2219,28 +2219,28 @@
         <span class="nav-panel-title">WaxFrame</span>
         <span class="nav-panel-tagline">Many minds, one refined result.</span>
         <span class="app-version-stamp nav-panel-version"></span>
-        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
+        <button title="About WaxFrame — credits, build info, and version" class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
     </div>
-    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+    <button title="Close the menu" class="nav-close-btn" onclick="closeNavMenu()">✕</button>
   </div>
   <div class="nav-body">
     <div class="nav-section-label">Navigation</div>
-    <button class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-builder')">· Setup 2 — Builder</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 3 — Your Project</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 4 — Reference Material</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 5 — Starting Document</button>
-    <button class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
+    <button title="Return to the Home / Welcome screen" class="nav-item" onclick="closeNavMenu();confirmGoHome()">⌂ Home</button>
+    <button title="Open Setup 1 — Worker Bees" class="nav-item" onclick="closeNavMenu();goToScreen('screen-bees')">· Setup 1 — Worker Bees</button>
+    <button title="Open Setup 2 — Builder" class="nav-item" onclick="closeNavMenu();goToScreen('screen-builder')">· Setup 2 — Builder</button>
+    <button title="Open Setup 3 — Your Project" class="nav-item" onclick="closeNavMenu();goToScreen('screen-project')">· Setup 3 — Your Project</button>
+    <button title="Open Setup 4 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 4 — Reference Material</button>
+    <button title="Open Setup 5 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 5 — Starting Document</button>
+    <button title="Return to the Working Console (the main work screen)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
-    <button class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
-    <button class="nav-item" onclick="backupSession()">💾 Backup Session</button>
-    <button class="nav-item" onclick="importSession()">📂 Import Backup</button>
-    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
+    <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
+    <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
+    <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Documentation</div>
@@ -2252,9 +2252,9 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
     <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
-    <button class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
+    <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
     <div class="nav-dev-section" id="navDevSection">
-      <button class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
+      <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
     </div>
   </div>
 </div>
