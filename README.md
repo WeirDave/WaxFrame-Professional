@@ -4,13 +4,27 @@
 
 # WaxFrame
 
-**Many minds, one refined result.**
+### One-shot AI writing is good.
+### Multi-AI refinement is better.
 
-WaxFrame orchestrates a team of AIs around your document — every round, all of them review, one of them builds, and the result gets better each time.
+**Many minds. One refined result.**
+
+WaxFrame is a browser-based multi-AI document refinement system that lets multiple AIs review, critique, and improve the same document simultaneously — while one AI acts as the Builder, merging the best ideas into a new version each round.
+
+Instead of trusting a single AI response, WaxFrame creates a structured editorial workflow:
+- multiple reviewers,
+- one Builder,
+- conflict tracking,
+- iterative refinement,
+- and human oversight at every stage.
+
+No install. No server. No account. No cloud lock-in.
+
+Your documents stay on your machine.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.38.11-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260511--018-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Version](https://img.shields.io/badge/Version-3.38.13-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Build](https://img.shields.io/badge/Build-20260512--001-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -21,269 +35,412 @@ WaxFrame orchestrates a team of AIs around your document — every round, all of
 
 ---
 
-## What is WaxFrame?
+# Why WaxFrame Exists
 
-WaxFrame is a browser-based multi-AI document collaboration tool. You bring the AIs — WaxFrame coordinates them.
+Most AI writing workflows are one-shot:
+- ask one model,
+- get one answer,
+- manually rewrite,
+- repeat.
 
-One AI acts as the **Builder**, rewriting your document each round based on numbered suggestions from your **Worker Bees**. The Builder reads every suggestion, resolves disagreements, flags conflicts for your review, and produces the updated document. Round by round, your document converges on something great.
+That works for simple tasks.
 
-No install. No server. No account. No data leaves your machine. Just open it and go.
+But longer, more important documents break down quickly:
+- inconsistent tone,
+- hallucinated details,
+- weak structure,
+- repetitive wording,
+- conflicting edits,
+- unclear priorities.
 
----
+WaxFrame approaches document creation differently.
 
-## How It Works
+Instead of relying on one AI response, it creates a collaborative review process where multiple AIs critique the same document simultaneously. One AI — the **Builder** — then evaluates those suggestions, resolves disagreements, and rewrites the document into a new refined version.
 
-<img src="images/WaxFrame_Worker_Bee_v2.png" width="160" align="right" alt="Worker Bee">
-
-**1. Set up your Hive**
-Add API keys for the AIs you want to use and pick your Builder. You need at least 2 AIs to run a round, but **3 or more is recommended** for faster convergence. To keep costs low, start with Gemini (free tier) plus a couple of paid AIs.
-
-**2. Describe your project**
-Give it a name, version, and a detailed goal. Pick from a library of 19 templates if you want a strong starting point. The more specific your goal, the better your results from round one.
-
-**3. Start your document**
-Upload an existing file (Word, PDF, PowerPoint, plain text, or Markdown), paste text directly, or let the hive generate a first draft from your goal. If you upload or paste, WaxFrame drops you straight into refinement — no draft phase needed.
-
-**4. Smoke the Hive**
-Hit **Smoke the Hive** to run a round. Every Worker Bee reads the document simultaneously and returns numbered suggestions. Your Builder reads all of them, applies the best ones, resolves disagreements, and rewrites the full document. The whole thing is automatic.
-
-**5. Review conflicts**
-When AIs disagree on something, the Builder flags it in the **Conflicts panel** rather than guessing. You pick the direction — or type your own — and the Builder applies your decision immediately.
-
-**6. Iterate — you're always in charge**
-Add notes before each round to steer the hive. Keep going as long as you want. There's no magic number of rounds. When *you* think the document is done, hit **Finish**. The hive works for you, not the other way around.
-
-**7. Export**
-Export your clean final document as a `.txt` file, complete with a project byline showing how many rounds it took and how long the session ran. You can also export a **Full Transcript** — a complete record of every round, every AI response, and every document version — from the History panel or the Finish screen.
-
-> 💾 **Your session is saved automatically** using IndexedDB — no size limits, no data loss even on long multi-round sessions. If storage ever approaches its limit, WaxFrame will warn you and offer an immediate export.
+Round by round, the document converges toward something stronger.
 
 ---
 
-## Two Modes
+# What Makes WaxFrame Different
 
-### 🆓 Free — Manual Workflow
-No API keys needed. WaxFrame generates the prompts for you. Open each AI in its own tab, copy the prompt in, paste the response back. WaxFrame assembles the Builder prompt automatically and tells you what to do at every step. Works with any AI — free tiers included, no subscriptions required.
+## Multiple AIs reviewing the same document
 
-### ⚡ Pro — Fully Automated
-One button does everything. Each AI needs its own API key. WaxFrame sends every prompt, collects every response, and runs the full round automatically — no copy/paste, no tab switching. **3 free rounds included** — try it before you buy. After that, a license key from [Gumroad](https://weirdave.gumroad.com/l/WaxFrame) unlocks unlimited rounds. **Gemini's API is currently free** — pair it with one paid AI and you're running full automated rounds for as little as $5 in credits.
+Each AI brings different strengths:
+- structure,
+- clarity,
+- tone,
+- factual rigor,
+- conciseness,
+- formatting,
+- persuasion,
+- editing style.
 
----
-
-## New to WaxFrame? Start with Quick Start
-
-The fastest way to learn WaxFrame is to run the **⭐ Quick Start template** — a small, low-stakes project where the hive writes and refines a real chocolate-chip-cookie recipe in a few rounds. Same complete flow as any other document; the topic is harmless enough to focus on the workflow.
-
-1. Set up at least two AI keys and pick a Builder
-2. On the Project screen, click **📋 Use Template**
-3. Pick **Starting from scratch** on the path picker
-4. Click the **⭐ Quick Start** card (marked "Start Here")
-5. On the Starting Document screen, click **💡 Start from Scratch**
-6. Click Launch and run a few rounds
-
-You'll see how reviewers send suggestions, how the Builder applies them, what conflicts look like, and how the document evolves. Then come back, pick the template that matches your real document, and run it for real.
+WaxFrame lets them all review the same document at once.
 
 ---
 
-## Setup — Configure Your Hive
+## One Builder — two roles
 
-![Setup Step 1 — Worker Bees and Builder](screenshots/screenshot_setup1_dark.png)
+The Builder is both a **synthesizer** and a **handyman**.
 
-Add API keys for each AI you want to use. Every AI with a saved key becomes a **Worker Bee** — reading the document and sending numbered suggestions each round.
+As **synthesizer**, the Builder:
+- reads the entire document,
+- reads every reviewer suggestion,
+- resolves conflicts,
+- rewrites the document,
+- and flags unresolved disagreements for you.
 
-Then pick your **Builder** — the AI that rewrites the document every round. The Builder does the heavy lifting: it reads the full document plus every suggestion and produces the updated version. Your Builder needs a paid API subscription with enough token capacity for your document size. You can change your Builder any time from the work screen without losing anything.
+As **handyman**, the Builder acts on direct instructions from you. Write a targeted directive in the **Notes drawer** — *"rewrite the first paragraph,"* *"stop saying 'refine' so much,"* *"tighten paragraph three"* — and click **Send to Builder**. The Builder performs just that one task, no reviewer round needed. Click **Smoke the Hive** afterward when you want the reviewers to weigh in on the change.
 
-You can also add any custom AI with an OpenAI-compatible API endpoint.
+The pairing — Notes plus Send to Builder for targeted edits, then full reviewer feedback when you want validation — is one of WaxFrame's most useful workflows.
+
+You stay in control the entire time.
 
 ---
 
-## Setup — Your Project
+## Human decisions stay human
 
-![Setup Step 2 — Your Project](screenshots/screenshot_setup2_dark.png)
+When reviewer AIs disagree, WaxFrame surfaces the conflict instead of pretending certainty.
 
-Give your project a name, version number, and a detailed goal. The goal tells every AI what the document is, what it's trying to achieve, and what direction to take. The first 300 characters are sent as active context every round — make them count.
+You can:
+- choose an option,
+- override the Builder,
+- type your own direction,
+- or bypass the conflict entirely.
 
-### 📋 Project Templates — pre-fill the Goal fields
+Nothing is hidden.
 
-The **📋 Use Template** button at the top of the Project section opens a gallery of 19 templates organised into 6 categories. The gallery first asks whether you are starting from scratch or refining an existing draft (the path picker), then shows the templates that fit your chosen path. Click any card to populate all six Project Goal fields with proven starting content for that document type.
+---
 
-| Category | Templates |
+## Privacy-first architecture
+
+WaxFrame runs entirely in your browser.
+
+There is:
+- no WaxFrame server,
+- no cloud sync,
+- no account system,
+- no telemetry,
+- no document collection.
+
+Your API keys remain in your browser storage and connect directly to the AI providers you choose.
+
+This makes WaxFrame especially useful for:
+- business documents,
+- proposals,
+- RFPs,
+- internal drafts,
+- technical writing,
+- legal-adjacent workflows,
+- and sensitive material you may not want routed through another SaaS platform.
+
+---
+
+# How It Works
+
+## 1. Build your Hive
+
+Choose the AIs you want reviewing your document.
+
+Every AI with an API key becomes a reviewer.
+
+Then choose one Builder AI responsible for rewriting the document each round.
+
+You need at least:
+- 2 AIs total,
+- 1 Builder,
+- 1 reviewer.
+
+Three or more is recommended for faster convergence — a third reviewer breaks decision ties automatically and lets Auto Mode chain rounds without interrupts.
+
+---
+
+## 2. Define your project
+
+Give the Hive context:
+- document type,
+- audience,
+- desired outcome,
+- tone,
+- constraints,
+- scope,
+- and additional instructions.
+
+WaxFrame includes built-in templates for:
+- cover letters,
+- resumes,
+- RFP responses,
+- executive summaries,
+- blog posts,
+- proposals,
+- recipes,
+- reviews,
+- and more.
+
+---
+
+## 3. Add Reference Material (optional)
+
+Reference Material is source content the hive **consults but never edits** — distinct from the Notes drawer and the Starting Document.
+
+Use it for:
+- a source recipe the hive should base a write-up on,
+- a transcript or interview the document needs to draw facts from,
+- a competitor's RFP response you want to outflank,
+- a stay-details questionnaire for a hotel review,
+- any concrete material the hive should treat as ground truth rather than as a draft to refine.
+
+Reference Material is the lever behind WaxFrame's biggest convergence-speed gains. The same blog post that took 16 rounds when refined as a Starting Document converged in 4 rounds when the source thesis went into Reference Material instead, with an empty Starting Document — the hive built fresh from the scaffold rather than fighting an existing draft.
+
+You can also edit Reference Material mid-session via the **📚 Reference** button on the work toolbar.
+
+---
+
+## 4. Start your document
+
+You can:
+- upload an existing file,
+- paste text directly,
+- or start entirely from scratch.
+
+Supported formats include:
+- Word (.docx),
+- PDF (.pdf),
+- PowerPoint (.pptx),
+- Excel (.xlsx, .xlsm),
+- Markdown (.md),
+- plain text (.txt).
+
+---
+
+## 5. Smoke the Hive
+
+Every reviewer AI reads the document simultaneously and returns structured suggestions.
+
+The Builder:
+- evaluates those suggestions,
+- merges the best ones,
+- rewrites the document,
+- and generates the next version.
+
+For targeted edits between rounds, use **Send to Builder** (described in *One Builder — two roles* above) — write a directive in Notes, run a Builder-only round, then return to full reviewer rounds with **Smoke the Hive**.
+
+---
+
+## 6. Resolve conflicts
+
+When AIs disagree, WaxFrame creates conflict cards instead of silently guessing.
+
+You decide what happens next.
+
+---
+
+## 7. Iterate until convergence
+
+Keep running rounds until:
+- the document stabilizes,
+- reviewer disagreement drops,
+- and the result feels finished.
+
+There is no forced endpoint.
+
+You decide when the document is done.
+
+---
+
+# Free vs Pro
+
+## Free Mode — Manual Workflow
+
+No API keys required.
+
+WaxFrame generates prompts for you:
+1. copy prompt,
+2. paste into AI websites,
+3. paste responses back into WaxFrame.
+
+Works with:
+- ChatGPT,
+- Claude,
+- Gemini,
+- DeepSeek,
+- Grok,
+- Perplexity,
+- or virtually any AI service.
+
+---
+
+## Pro Mode — Fully Automated
+
+One button runs the entire round automatically.
+
+WaxFrame:
+- sends prompts,
+- collects responses,
+- builds Builder prompts,
+- rewrites the document,
+- tracks conflicts,
+- and advances the workflow automatically.
+
+You provide your own API keys. **3 free rounds included** — try it before you buy. After that, a license key from [Gumroad](https://weirdave.gumroad.com/l/WaxFrame) unlocks unlimited rounds.
+
+---
+
+# Supported AI Providers
+
+WaxFrame ships with default configurations for these providers:
+
+| AI | Default Model |
 |---|---|
-| **Quick Start** | ⭐ Quick Start (chocolate chip cookies — recommended for new users; scratch path only) |
-| **Career & Hiring** | ✉️ Cover Letter · 🔍 Job Description · 📄 Résumé · 🔗 LinkedIn About · 🙏 Thank-You Letter |
-| **Business & Sales** | 💼 Business Proposal · 📬 Email & Outreach · 📊 Executive Summary · 📋 RFP Response |
-| **Content & Marketing** | 📝 Blog Post / Article · 🖥️ Presentation Outline · 💼 LinkedIn Post |
-| **Personal & Everyday** | 🍳 Recipe · 🧾 Contractor / Vendor Letter |
-| **Reviews & Recommendations** | 🍽️ Restaurant Review · 🏨 Hotel Review · 🧾 Business / Service Review · 🔁 Multi-Platform Review Rewrite (refine path only) |
+| ChatGPT (OpenAI) | gpt-4.1 |
+| Claude (Anthropic) | claude-sonnet-4-6 |
+| Gemini (Google) | gemini-2.5-flash |
+| Copilot (Microsoft) | gpt-4o |
+| Grok (xAI) | grok-4-fast-non-reasoning |
+| DeepSeek | deepseek-chat |
+| Perplexity | sonar-pro |
 
-**How template apply works.** Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. Project name, version, length constraint, Reference Material, and Starting Document are never touched — only the six Goal fields.
+You can change any AI's model at any time from the Worker Bee screen.
 
-**Template Hint banner.** Most templates contain `[bracketed]` placeholders the user must fill in — for example `[company name]` or `[job title]`. After applying a template with placeholders, an amber-bordered banner appears above the Project Name with a per-field bulleted list telling you exactly which form field to look at and what to fix there. Templates that ship clean (Quick Start, Executive Summary) skip the banner entirely.
-
-> Templates are starting points — every field can still be edited after the template populates. Treat the populated content as a strong first draft, then tailor it to your specific situation.
-
-### Choose how to start your document
-
-Then choose how to start:
-
-| Option | When to use it |
-|---|---|
-| **📄 Upload File** | You have an existing document — Word, PDF, PowerPoint, plain text, or Markdown |
-| **📋 Paste Text** | You have content elsewhere and want to copy it in directly |
-| **💡 Start from Scratch** | You have a goal but no document yet — the hive builds the first draft |
-
-> **Heads up on PDFs:** PDF extraction works best with standard digitally-created documents. Heavily designed files, scanned documents, or image-based PDFs may extract poorly. If the text looks garbled, use the **Project** button in the topbar to go back and try Paste Text instead.
-
-> **To launch you need:** a project name, a version number, a project goal, and a document source. The Launch button won't proceed until all four are in place.
+**Custom OpenAI-compatible endpoints** are also supported — connect to a local **LMStudio** or **Open WebUI** instance, a hosted **Together AI** or **Mistral** or **Cohere** endpoint, an enterprise gateway, or any other API that speaks the OpenAI chat-completions shape.
 
 ---
 
-## The Work Screen
+# Why the Builder Matters
 
-![Work Screen](screenshots/screenshot_work_dark.png)
+Reviewer AIs are lightweight.
 
-Three panels keep everything in view:
+The Builder does the heavy lifting.
 
-**The Hive** — your active Worker Bees, each showing real-time status as the round runs. Toggle individual AIs on or off between rounds without losing their keys. Change your Builder at any time.
+It must:
+- read the entire document,
+- read every reviewer response,
+- reconcile disagreements,
+- and rewrite the next version.
 
-**Working Document** — your live document with line numbers. Edit directly at any time between rounds. AIs reference line numbers in their suggestions, which is how the hive stays coordinated across multiple models.
+For large documents, the Builder benefits from:
+- larger context windows,
+- stronger instruction following,
+- and higher token limits.
 
-**Conflicts** — anything the Builder couldn't resolve on its own is flagged here. User Decisions need your input. Builder Decisions show what the Builder chose — override if you disagree.
-
-The **Live Console** on the right shows everything happening in real time: which AIs are sending, responding, succeeding, or failing, with timestamps and response previews.
-
----
-
-## Conflicts
-
-<img src="images/WaxFrame_Builder_v3.png" width="140" align="right" alt="Builder Bee">
-
-When AIs disagree, the Builder flags it rather than making an arbitrary call. There are two kinds:
-
-**User Decision** — the Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own, bypass if you've already edited the document directly, or decline. Your decision is applied to the document immediately and locked — the AIs won't re-raise it.
-
-**Builder Decision** — the Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.
-
-**Bypass** — if you've already fixed something directly in the working document, choose "I edited the document directly — skip this conflict" to lock it without triggering another Builder pass. If all conflicts are bypassed, the round advances immediately.
-
-> 💡 Click the "Current:" text on any conflict card to scroll the working document directly to that line and highlight it.
+DeepSeek, Claude, ChatGPT, and Gemini all work well as Builders depending on your budget and document size.
 
 ---
 
-## Clocks
+# Quick Start
 
-Two clocks sit above the Live Console:
+New users should start with the built-in:
 
-**Round clock** — tracks how long the current round is taking, from the moment you hit Smoke the Hive through to round complete. Resets at the start of each new round. Green when running.
+## ⭐ Quick Start Template
 
-**Project clock** — tracks total time spent on the project. Starts when you smoke the hive for the first time, persists across refreshes, and pauses when you hit Finish. Amber when running, flashing amber when paused with time on it. Use the pause button any time you step away so your project time stays accurate.
+It walks through the entire workflow using a simple chocolate-chip-cookie recipe so you can:
+- see reviewer suggestions,
+- understand conflict handling,
+- watch convergence happen,
+- and learn the interface quickly before using real documents.
 
----
-
-## Supported AIs
-
-| AI | Provider | Notes |
-|---|---|---|
-| ChatGPT | OpenAI | `gpt-4.1` — excellent at high-volume document work |
-| Claude | Anthropic | `claude-sonnet-4-6` — large context, precise instruction following |
-| Gemini | Google | `gemini-2.5-flash` — **free API tier available**, great starting point |
-| DeepSeek | DeepSeek | `deepseek-chat` — very low cost per token, strong Builder |
-| Grok | xAI | `grok-4` — good context window |
-| Perplexity | Perplexity | `sonar-pro` — search-aware, works well as a reviewer |
-| Custom | Any | Add any AI with an OpenAI-compatible API endpoint |
-
-Any AI can act as either a Worker Bee or Builder. Mix and match however you like. If a round fails with a missing output structure error, try switching to a different Builder — some AIs are less consistent at following strict formatting instructions on large or complex documents.
+Typical convergence:
+- 2–4 rounds,
+- only a few minutes,
+- very low API cost.
 
 ---
 
-## Getting Started
+# Export Options
 
-WaxFrame runs entirely in your browser — no install, no server, no account required.
+WaxFrame can export:
+- the final document,
+- or a complete transcript of the entire session.
 
-> ⚠️ **Desktop only.** WaxFrame is designed for desktop and laptop computers. Mobile phones are not currently supported.
-
-**Option 1 — Hosted version (easiest):**
-👉 [weirdave.github.io/WaxFrame-Professional](https://weirdave.github.io/WaxFrame-Professional/)
-
-**Option 2 — Run locally:**
-1. Download or clone this repo
-2. Open `index.html` in your browser
-3. That's it — no build step, no dependencies
-
-For a step-by-step local setup walkthrough, see `WaxFrame-Getting-Started.pdf` included in the ZIP.
+Full transcripts include:
+- every round,
+- every AI response,
+- every Builder rewrite,
+- every conflict,
+- timestamps,
+- and session history.
 
 ---
 
-## User Guide
+# Local-First Design
 
-For detailed usage instructions — writing effective goals, applying templates, handling conflicts, course correcting mid-session, and knowing when you're done — see the **[User Manual](https://weirdave.github.io/WaxFrame-Professional/waxframe-user-manual.html)** and **[Document Playbooks](https://weirdave.github.io/WaxFrame-Professional/document-playbooks.html)**.
+WaxFrame intentionally avoids:
+- backend dependency,
+- SaaS lock-in,
+- forced subscriptions,
+- cloud document storage,
+- account systems,
+- and platform surveillance.
 
----
+Everything possible happens locally in the browser. Sessions persist via IndexedDB — no size limits, no data loss across long multi-round sessions, no third party between you and the AI providers.
 
-## API Keys
-
-Each AI in Pro mode needs its own key from that provider. Keys are stored in your browser's `localStorage` and never leave your machine.
-
-| Provider | Key Console |
-|---|---|
-| OpenAI (ChatGPT) | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) |
-| Anthropic (Claude) | [console.anthropic.com/settings/keys](https://console.anthropic.com/settings/keys) |
-| Google (Gemini) | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
-| DeepSeek | [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys) |
-| xAI (Grok) | [console.x.ai](https://console.x.ai) |
-| Perplexity | [perplexity.ai/settings/api](https://www.perplexity.ai/settings/api) |
-
-For step-by-step instructions and direct billing links, open the **API Key Guide** inside the app.
+Your workflow stays yours.
 
 ---
 
-## What Are Tokens?
+# Best Use Cases
 
-If you're using Pro mode, tokens matter — especially for your Builder. Every round, your Builder reads the entire document plus all Worker Bee suggestions and rewrites the full document. On a 2,000-word document with 5 Worker Bees that's roughly **8,000–12,000 tokens per Builder call**.
+WaxFrame works especially well for:
 
-**Gemini's free tier is genuinely generous** and a great way to get started with zero cost. For paid options, DeepSeek is the most cost-effective Builder by a wide margin.
+- RFP responses
+- executive summaries
+- technical documentation
+- blog posts
+- business proposals
+- job application materials
+- editing existing drafts
+- collaborative refinement
+- review rewriting
+- structured long-form writing
 
-If a round fails with a missing output structure error — especially on a large or complex document — try switching your Builder to ChatGPT or Gemini and retrying. Some AIs are less consistent at following strict formatting instructions under heavy load. This is a behavioral difference between models, not a hard size limit.
+It is less useful for:
+- very short social posts,
+- one-sentence prompts,
+- or quick disposable AI output.
 
-Open the **Token Guide** inside the app for a full cost breakdown by provider.
-
----
-
-## Also looks great in Light Mode
-
-| Welcome | Setup | Work |
-|---|---|---|
-| ![](screenshots/screenshot_welcome_light.png) | ![](screenshots/screenshot_setup1_light.png) | ![](screenshots/screenshot_work_light.png) |
-
----
-
-## Privacy
-
-- **No server.** No backend. No tracking. No analytics.
-- **Your documents stay on your machine.** Nothing is ever sent anywhere except directly to the AI providers you choose.
-- **Your API keys stay in your browser.** They are stored in `localStorage` and go directly to each provider — WaxFrame never sees them.
-- **Fully open source.** Read every line at [github.com/WeirDave/WaxFrame-Professional](https://github.com/WeirDave/WaxFrame-Professional).
+WaxFrame shines when multiple perspectives improve the result.
 
 ---
 
-## License
+# Getting Started
 
-WaxFrame is open source under the **AGPL-3.0** license. See [LICENSE](LICENSE) for full terms.
+## Hosted Version
 
----
-
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md) for the full version history.
+https://weirdave.github.io/WaxFrame-Professional/
 
 ---
 
-<div align="center">
+## Run Locally
 
-<img src="images/Waxframe_logo_v19.png" width="60" alt="WaxFrame">
+1. Download the repository ZIP
+2. Extract the files
+3. Open `index.html`
 
-Built by **WeirDave** · [github.com/WeirDave](https://github.com/WeirDave)
+No build step required.
 
-*With a lot of help from the hive.* 🐝
+---
 
-</div>
+# License
+
+WaxFrame Professional is licensed under:
+
+## AGPL-3.0
+
+See the LICENSE file for details.
+
+---
+
+# Final Thought
+
+Most AI tools try to replace the writing process.
+
+WaxFrame treats writing more like editing:
+- iterative,
+- collaborative,
+- opinionated,
+- imperfect,
+- and improved through multiple perspectives.
+
+The Hive works for you.
+
+You make the final call.
