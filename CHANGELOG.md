@@ -1,6 +1,47 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.14
+**Build:** `20260512-002` · **Released:** May 12, 2026
+
+### USER DECISION suppression fix — two latent parser/validator bugs
+
+USER DECISION blocks were dying with the "could not be parsed" red banner on every prefixed-AI session (Anduril Alfredo `[Base]` namespace, imported-server flows, custom prefixes). Forensically tracked to two distinct bugs in the parser → validator pipeline, both verified empirically against a live round-9 backup from the Wireless Network Planning Guide session at work.
+
+### Bug B — Validator name normalization (primary, production-breaking)
+
+`validateUserDecisions` built its reviewer-lookup map keyed by full lowercase display name (`[Base] Claude-4-6-Opus`). Builders attribute options by model name only (`Claude-4-6-Opus`). The `responseByName.get('claude-4-6-opus')` lookup against the `[base] claude-4-6-opus` key always missed, every attribution got treated as fabricated, every option was stripped, every USER DECISION died at the ≥2-verifiable-options floor.
+
+Fix: dual-key map build. Each reviewer now registers under both the full lowercase name AND the bracketed-prefix-stripped lowercase name. Token-side lookup tries the full form first, then the normalized form. All four name shapes resolve correctly: `Claude-4-6-Opus`, `[Base] Claude-4-6-Opus`, `GEMINI-2-5-PRO` (uppercase), and the inverse cases where Builder echoes the prefix.
+
+`_normalizeAIName(s)` helper strips one bracketed prefix and trims: `^\s*\[[^\]]*\]\s*` → empty. Works for any prefix shape (`[Base]`, `[Server]`, `[Anduril]`, custom labels). Display name preservation unchanged — original case retained for the conflict UI.
+
+Bug latent since v3.21.16 (April 26, 2026) but masked by Bug C — the `r.ai.name` vs `r.name` shape mismatch which made the validator a silent no-op for ~2 weeks. v3.36.2 fixed Bug C on May 9, which unmasked Bug B immediately. Every prefixed-AI session since May 9 has been silently dropping legitimate USER DECISIONs.
+
+### Bug A — Parser fake-baseline suppression ordering (secondary, latent)
+
+In `extractConflicts`, the v3.36.5 auto-promote synthesizes an `Original`-attributed option from CURRENT when the Builder emits a single OPTION_N. The v3.21.x fake-baseline suppression check then immediately killed that synthesized option, because `hasFakeBaseline` matched the `Original` attribution and `currentMatchesAnOption` matched the auto-promoted text against CURRENT — both conditions met every time auto-promote fired. The v3.36.5 fix has been dead code in production since it shipped.
+
+Fix: move the fake-baseline suppression check ahead of the auto-promote block. No logic changes inside either block — only the order. Genuine Builder-fabricated fake baselines (the actual intent of the suppression) are still caught because the check now runs against Builder-emitted options before the parser synthesizes anything. Single-OPTION_N cases survive cleanly: auto-promote runs after the suppression check, produces its 2-option `Original` + reviewer pair, and passes through.
+
+### Verification
+
+Test harness ran both `extractConflicts` and `validateUserDecisions` against the actual `history[5]` data from the work backup. Three scenarios verified before shipping:
+
+- Real production backup (Bug B trigger): multi-OPTION_N with `[Base]`-prefix mismatch → PASS, decision now surfaces
+- Synthetic single-OPTION_N (Bug A trigger): one reviewer proposal, no opposing alternative → PASS, decision now surfaces
+- Synthetic genuine fake baseline (preserved suppression intent): Builder fabricated an `Original` attribution on a unanimous-applied change → SUPPRESS as before, correctly
+
+### Not touched
+
+`BUILDER_INSTRUCTIONS.refine` prompt unchanged. Reviewer prompts unchanged. Auto Mode logic unchanged. Length-guard logic unchanged. 80ch column constraints unchanged. Audio mute guards unchanged. Inline `display:none` attributes unchanged. CSS untouched.
+
+### Files changed
+
+`js/app.js` (parser reorder + validator name normalization, ~30 lines net change), `js/version.js`, `index.html` (build stamp + cache-busts), `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` (cache-bust sweep + build stamp).
+
+---
+---
 ## v3.38.13
 **Build:** `20260512-001` · **Released:** May 12, 2026
 
