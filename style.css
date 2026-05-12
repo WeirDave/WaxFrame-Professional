@@ -5430,6 +5430,21 @@ kbd {
   box-shadow: none;
   opacity: 0.7;
 }
+/* v3.39.2 — Locked-state lock button (toggles to Unlock). Same green
+   treatment as the previous disabled state so the visual signal "this
+   is locked" carries through, but remains clickable so the user can
+   reverse an accidental lock. Hover lifts opacity and adds the
+   amber-warning shadow to telegraph "clicking this will undo something". */
+.applied-lock-btn-locked {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green);
+}
+.applied-lock-btn-locked:hover {
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+}
 
 .decision-question {
   font-size: var(--fs-13);
