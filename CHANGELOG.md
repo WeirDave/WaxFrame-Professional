@@ -1,6 +1,66 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.13
+**Build:** `20260512-001` · **Released:** May 12, 2026
+
+### Docs-only release — README rewrite + backlog cleanup + test master reconciliation
+
+No code changes. The `.dp-rounds` CSS fix shipped in v3.38.12; this release is the documentation work that fell out of the same forensic session — split out so the CSS fix could land cleanly without waiting on a docs review cycle.
+
+### Three pieces
+
+**1. README rewrite.** Polished marketing-style rewrite contributed by Kai (David's ChatGPT instance) replacing the prior workflow-tutorial-with-screenshots format. The new structure leads with value proposition, then mechanics — better fit for someone landing on GitHub cold. Factual fixes applied before shipping:
+
+- Version badge `3.38.12` → `3.38.13`, Build badge → `20260512-001`
+- Grok default model `grok-4` → `grok-4-fast-non-reasoning` (matches `templates.js` line 811)
+- Microsoft Copilot (`gpt-4o`) added to supported-providers table
+- Excel (`.xlsx`, `.xlsm`) added to supported file formats (Kai missed it though it's in the `accept` attribute and `extractPPTX` siblings)
+- Custom-endpoint mention expanded to name LMStudio, Open WebUI, Together, Mistral, Cohere explicitly (the prior `OpenAI-compatible endpoints are also supported` line was technically correct but read narrower than the reality)
+
+Two concept gaps filled:
+
+- **Reference Material** got its own step in *How It Works* (new step 3, between Project and Starting Document) and a callout explaining it's the lever behind the 16-round → 4-round Blog Post v1.0 → v2.0 speedup
+- **Send-to-Builder / Notes drawer** added under a new *"One Builder — two roles"* subsection — explicitly names the synthesizer + handyman framing from v3.38.11
+
+Welcome screenshot preserved from prior README at the top after the badges.
+
+**2. Backlog cleanup.** Recently Shipped entries v3.36.23 → v3.38.0 had drifted into 15–44 line entries duplicating CHANGELOG content. Trimmed all back to one-line marker format. ~414 lines removed. Recently Shipped is a pointer now, not a record — full forensic detail stays in CHANGELOG.md. Backlog v26 also adds the restaurant-review playbook-page-stale entry to Section 1 BUG-FIX LIST (see below).
+
+**3. Test master reconciliation.** Two measured runs (T9 Hotel Review and T12 Contractor/Vendor Letter) had shipped to the playbook page and CHANGELOG in earlier releases but never made it into the canonical test master file. Restored in test master v23:
+
+- **T9 Hotel Review** (Melbourne Marriott v1.0, 19 rounds, 2026-05-10) — shipped to the playbook page in v3.37.2 and logged to test master v18, but file numbering went non-linear (v17 → v19, skipping v18) and the v19+ chain inherited a v17 baseline that didn't have T9. Restored to RUNS COMPLETED + TEST UNIVERSE + HISTORICAL RUNS in v23.
+- **T12 Contractor/Vendor Letter** (Bay Area First Invoice Concerns v3.0, 12 rounds, 2026-05-09) — shipped to the playbook page as the Personal & Everyday real-world example. Documented in CHANGELOG with full per-AI editorial behavior notes. Never logged to test master. Added in v23.
+
+New **TEST UNIVERSE** section at the top of the test master replaces three older sections (ALREADY MEASURED quick list, PROJECTS TO RUN NEXT, PENDING TESTS status table) — answers *"what's measured, what's open, what can I run right now?"* in one glance. Final counts: **16 of 19 playbooks measured, 3 open** (T3 RFP deferred, T10 Business/Service Review pending real service data, T11 Multi-Platform Rewrite ready to run today with T8 or T9 output as source).
+
+### Known follow-up parked in backlog
+
+**Restaurant Review playbook page is stale.** `document-playbooks.html` line ~96 still reads *"2–4 rounds typical (estimated, not measured)"* despite T8 ran 2026-05-10 (Pearl's Saltwater Grille v2.0, 5 rounds, 14 min, 5-AI + DeepSeek Builder, REFINE, final 392w / 2,179c, majority at R6). Test master tracks this correctly; the playbook page needs the same treatment Hotel Review got in v3.37.2 — convergence block updated to measured rounds + a `.dp-real-example` block. **Logged in Backlog v26 Section 1 BUG-FIX LIST** for its own focused release.
+
+### Files Changed
+
+`README.md` — Kai's marketing-style rewrite with factual fixes + Reference Material step + Send-to-Builder / Notes drawer under new "One Builder — two roles" subsection
+
+`CHANGELOG.md` — new v3.38.13 entry on top (this one)
+
+`index.html` — meta build `20260511-019` → `20260512-001`; cache-bust `?v=3.38.12` → `?v=3.38.13` on `style.css`, `version.js`, `app.js`
+
+`js/app.js` — `BUILD` → `20260512-001`
+
+`js/version.js` — `APP_VERSION` → `v3.38.13 Pro`
+
+`document-playbooks.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — comment-header `Build:` → `20260512-001`; meta build → `20260512-001`; cache-bust `?v=3.38.13` on `style.css` and `version.js`
+
+`docs/WaxFrame_Backlog_Master_v26.txt` — new file (supersedes v25). Recently Shipped entries v3.38.12 → v3.36.23 trimmed to brief markers (~414 lines removed); Section 1 BUG-FIX LIST: restaurant-review playbook-page-stale entry added; new `CHANGES IN v26` block at top.
+
+`docs/WaxFrame_Playbook_Test_Master_v23.txt` — new file (supersedes v22). New TEST UNIVERSE section at top; T9 + T12 restored with full HISTORICAL RUNS entries; T9/T12 detail blocks removed (they're measured, not pending). Final counts: 16 measured, 3 open.
+
+### What didn't change
+
+No JS logic. No HTML structure. No template content. No round / hive / Notes mechanics. No new selectors, no new classes. No CSS — `.dp-rounds` fix already on main from v3.38.12 (commit `fe7bb93`). Restaurant Review playbook page is NOT touched in this release; the fix is parked in Backlog v26 Section 1.
+
+---
 ## v3.38.12
 **Build:** `20260511-019` · **Released:** May 11, 2026
 
