@@ -1,6 +1,57 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.12
+**Build:** `20260511-019` · **Released:** May 11, 2026
+
+### `.dp-rounds` flex-explosion fixed — playbook Rounds field renders as prose again
+
+David opened **document-playbooks.html** to the Recipe playbook and the Rounds field had collapsed into ten one-word-wide vertical columns of text. Diagnosis: `.dp-rounds` was styled `display: inline-flex; align-items: center; gap: var(--space-6)` — designed for the short single-line pill indicator pattern (• 2 rounds typical — …) it was built for in v3.30.x. But the Recipe, Business Proposal, Blog Post, and Executive Summary playbooks had since grown multi-paragraph Rounds fields with `<strong>` subheaders and `<br><br>` separators packed into the same `.dp-rounds` div.
+
+Per the Flexbox spec, **each in-flow child of a flex container becomes its own flex item**, and contiguous runs of inline content get wrapped in anonymous flex items. So `<strong>`, `<br>`, and each text-run between them each became separate flex items. With ~15 of them inside a constrained-width parent and default `flex-shrink: 1` + `min-width: auto`, every item collapsed toward its min-content width (one word) and wrapped internally. That's the narrow vertical stripes you saw.
+
+The short single-line playbooks never showed the bug because their content was a single text-run — one flex item, one line, looked correct.
+
+### The fix
+
+Two CSS lines in `style.css` (8470–8471):
+
+`.dp-rounds` flipped from `display: inline-flex` to `display: block` — plain block flow, no flex layout. `.dp-rounds-dot` flipped from a flex-item with `flex-shrink: 0` to `display: inline-block` with `vertical-align: middle` and `margin-right: var(--space-6)` — an inline icon at the start of the text run.
+
+Visual outcome:
+- **Short single-line playbooks** (12 of 19) — unchanged. Dot still sits left of text, vertically centered. The `vertical-align: middle` against 14px text at 1.6 line-height places a 6px dot indistinguishably from the previous flex-center math.
+- **Multi-paragraph playbooks** (Recipe, Business Proposal, Blog Post, Executive Summary) — now flow as normal prose. `<strong>` headers bold, `<br><br>` produces the intended paragraph breaks, text wraps at field width.
+
+### What I didn't bundle
+
+The CSS Cleanup section of the backlog has a parked "second `!important` cleanup pass" — ~18 instances on `.convergence-card`, `.decision-opt-btn.selected.*`, `.decision-card.bypassed`, `.hist-resp-tab.active`. The backlog's own trigger rule for that work is *"if touching any of those selectors for unrelated reasons, take the !important pass at the same time"* — and none of those selectors are touched by this fix. Verification surfaces also differ: this fix is verified by opening document-playbooks.html and scrolling; the `!important` cleanup requires running a real document through to convergence and clicking state-toggles. Bundling would mix verification surfaces. The `!important` pass stays in the backlog for its own focused release.
+
+### Files Changed
+
+`style.css`
+- `.dp-rounds` → `display: block` (was `inline-flex`)
+- `.dp-rounds-dot` → `display: inline-block; vertical-align: middle; margin-right: var(--space-6)` (was a flex item with `flex-shrink: 0`)
+
+`index.html`
+- meta build → `20260511-019`; cache-bust `?v=3.38.12` on `style.css`, `version.js`, `app.js`
+
+`js/app.js`
+- BUILD → `20260511-019`
+
+`js/version.js`
+- APP_VERSION → `v3.38.12 Pro`
+
+`document-playbooks.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- Comment-header `Build:` → `20260511-019`; meta build → `20260511-019`; cache-bust `?v=3.38.12` on `style.css` and `version.js`
+
+`docs/WaxFrame_Backlog_Master_v25.txt`
+- Bumped from v24. Added v3.38.12 to RECENTLY SHIPPED. No backlog items closed (bug never made it into the bug-fix list — discovered and fixed same session).
+
+### What didn't change
+
+No JS logic. No HTML structure or markup. No template content. No round / hive / Notes mechanics. No new selectors, no new classes — same two CSS rules, two property changes.
+
+---
 ## v3.38.11
 **Build:** `20260511-018` · **Released:** May 11, 2026
 

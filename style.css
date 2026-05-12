@@ -8467,8 +8467,8 @@ kbd {
 .dp-field-value code { font-family:'Courier New', monospace; font-size:var(--fs-13); background:rgba(255,255,255,0.05); border:1px solid var(--border2); border-radius:4px; padding:1px var(--space-6); color:var(--text); display:inline-block; margin-top:2px; }
 .dp-field-divider { height:1px; background:var(--border2); margin:2px 0; }
 
-.dp-rounds { display:inline-flex; align-items:center; gap:var(--space-6); font-size:var(--fs-14); color:var(--text-dim); margin-top:var(--space-4); }
-.dp-rounds-dot { width:6px; height:6px; border-radius:50%; background:var(--accent); flex-shrink:0; }
+.dp-rounds { display:block; font-size:var(--fs-14); color:var(--text-dim); margin-top:var(--space-4); }
+.dp-rounds-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent); margin-right:var(--space-6); vertical-align:middle; }
 
 .dp-tags { display:flex; flex-wrap:wrap; gap:var(--space-6); margin-top:var(--space-4); }
 .dp-tag { font-size:var(--fs-11); font-weight:700; padding:2px var(--space-8); border-radius:20px; letter-spacing:0.04em; }
