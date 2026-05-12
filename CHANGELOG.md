@@ -1,6 +1,74 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.9
+**Build:** `20260511-016` · **Released:** May 11, 2026
+
+### Convergence celebration duration + auto-open Finish modal
+
+Two connected fixes from Candy's continuing coleslaw walkthrough on v3.38.8. The convergence celebration was dismissing before she could read what happened, and after dismissal she was stranded on the work screen unsure whether to click **Send to Builder** or **Smoke the Hive**. A slow-AI alert (Grok) layered on top of the confusion — she dismissed it and was still left without a clear next step.
+
+### Diagnosis
+
+The majority-convergence celebration (`showHiveFinish`) was running at **3000ms auto-dismiss** — short enough that the *X of Y agree* subline didn't register. Once the celebration faded, the work screen looked identical to mid-session, so there was no visible signal that the project had reached a meaningful endpoint. Auto Mode flips off silently at convergence (v3.36.15), so even users who'd been chaining rounds got no handoff to a next action.
+
+The Finish modal was always available via the 🏁 Finish button in the top bar — but a user who's just finished a round isn't necessarily looking there. The button is a permanent fixture; convergence is an event. The event needed to trigger the modal, not depend on the user knowing to find it.
+
+### Fixes
+
+**1. Majority-convergence celebration duration doubled.** `showHiveFinish` call at the real round-completion site bumped from `duration: 3000` → `duration: 6000`. The deferred-action setTimeout (which now also chains the Finish modal) follows at 6500ms to give the scene clean shutdown. Dev test functions `devTestFlyInOnly` and `devTestMajorityConverge` stay at 3000ms for fast iteration.
+
+**2. Finish modal auto-opens after every convergence.** Both convergence paths now chain to `showFinishModal()` after the celebration plays out:
+
+- **Majority path:** `showFinishModal()` fires inside the existing 6500ms setTimeout (right after `_autoMaybeChainNextRound`).
+- **Unanimous path:** new dedicated setTimeout at 13500ms — waits for the full unanimous scene timeline (~12.9s) to complete. If the user skips the scene via Esc or click, they'll wait briefly for this timer to fire.
+
+The Finish modal already had **← Back to Hive** as its primary "I'm not done yet" escape hatch, so no new UI was needed for the typical-user / advanced-user fork.
+
+**3. Finish modal message extended** to make the **← Back to Hive** path discoverable. The main `finish-modal-msg` paragraph now reads:
+
+> *"Export your document before starting a new project — your working document and round history will be cleared when you do. If you want to review which reviewers were still suggesting changes (the **holdouts**), make a manual edit, or run another round before exporting, click **← Back to Hive** at the bottom."*
+
+The **← Back to Hive** button also picks up a `title` tooltip explaining its purpose for users who hover but don't read.
+
+### What this changes for users
+
+- **Typical user:** Round converges → celebration plays for 6s (or the unanimous scene plays through) → Finish modal opens automatically → they pick **💾 Export Document** and are done. No more "what do I do now?" moment.
+- **Advanced user (holdouts review, more rounds):** Same flow until the Finish modal opens, then they click **← Back to Hive** to inspect the holdouts in the Conflicts panel, make manual edits, or run another round. The path stays open, just routed through one extra modal.
+- **Auto Mode user:** Auto Mode still flips off silently on convergence (v3.36.15 behaviour preserved). The Finish modal now opens as the deliberate handoff, replacing the earlier silent end-state.
+
+### What this doesn't change
+
+The slow-AI alert (Slow Responder card) timing is unchanged. If it fires after convergence — as it did in Candy's run with Grok — it may still stack on top of the Finish modal. Once dismissed, the Finish modal is right there with clear options, which is the actual fix for the stranded-on-work-screen problem.
+
+The Conflicts panel, holdouts rendering, and unanimous scene visuals are unchanged. Only the duration of the majority celebration and the post-celebration handoff are touched.
+
+### Files Changed
+
+`js/app.js`
+- Majority convergence at line ~13027: `duration: 3000` → `duration: 6000`; setTimeout delay `3500` → `6500`; `showFinishModal()` added inside the setTimeout
+- Unanimous convergence at line ~12920: new `setTimeout(() => showFinishModal(), 13500)` after the existing 3500ms `_autoMaybeChainNextRound` timer
+- BUILD → `20260511-016`
+
+`js/version.js`
+- APP_VERSION → `v3.38.9 Pro`
+
+`index.html`
+- `finish-modal-msg` paragraph extended with the **← Back to Hive** explanation including the *holdouts* term
+- **← Back to Hive** button gets a `title` tooltip mirroring the message paragraph
+- meta build → `20260511-016`; cache-bust `?v=3.38.9` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-016`; cache-bust `?v=3.38.9` on `style.css` and `version.js`
+
+`README.md`
+- Version badge → `Version-3.38.9`; build badge → `20260511-016`
+
+### What didn't change
+
+No CSS. No new HTML elements added (one `<p>` was extended; no new classes). No changes to convergence detection logic, no changes to `_autoMaybeChainNextRound`, no changes to slow-AI alert behaviour. Surgical: two duration constants and two function calls in `app.js`, plus copy on one paragraph and one tooltip in `index.html`.
+
+---
 ## v3.38.8
 **Build:** `20260511-015` · **Released:** May 11, 2026
 
