@@ -1,6 +1,80 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.10
+**Build:** `20260511-017` · **Released:** May 11, 2026
+
+### Tooltip audit — coverage from 30% → 91%
+
+Candy hit a button without a tooltip on her continuing walkthrough and pointed out that some buttons had hover-helpers and others didn't. Audit confirmed: only **64 of 211** buttons in `index.html` (30%) had `title=` tooltips. The rest were a mix of icon-only buttons (where the tooltip is the only label), main-flow action buttons (where hover-context helps the user understand what's about to happen), and Notes template buttons (where the inserted text wasn't visible without clicking).
+
+This release adds **130 tooltips** across the app — bringing coverage to **194 / 211 (91%)**. The remaining 17 are all "Got it →" info-modal close buttons where the label is self-explanatory and a tooltip would be noise.
+
+### What got tooltips (categorized)
+
+**Tier 1 — Icon-only / accessibility-critical** (these were the most urgent — pure-emoji buttons with no readable text label):
+- Nav hamburger (☰)
+- Work-screen theme buttons (☀️ ⚙️ 🌙) — Light / Auto / Dark mode
+- All Setup screen `Continue →` buttons (Setup 1 / 2 / 3 / 4 / 5 → next)
+- Footer round-trigger buttons (Send to Builder, Smoke the Hive — these had only emoji labels)
+- Nav close (✕)
+- Troubleshooting card details toggle
+
+**Tier 2 — Main-flow action buttons** (Work screen, Notes drawer, Reference drawer, top bar):
+- 📝 Notes / 📚 Reference / 🏁 Finish in top bar
+- 💾 Export / 📋 Copy / ✕ Clear on Working Document
+- 🔍 Re-extract with AI Vision (now explains it's for scanned/garbled PDFs)
+- 📋 Copy on Conflicts and Live Console
+- ℹ️ About in footer
+- Edit Hive / Change Builder
+- Send to Builder vs Smoke the Hive — tooltips explain the token-saving difference
+- Length Mode pills (No limit / Hard cap / Target / Range)
+- Document tab buttons (Upload / Paste / Start from Scratch)
+
+**Tier 3 — Notes template buttons** (the inserted directive text wasn't visible without clicking):
+- 🔒 Lock a line — *"Insert a directive to lock a specific line — the AIs will leave it untouched"*
+- 🔒 Lock a section — *"Insert a directive to lock an entire section by its heading"*
+- ↩ Reverted document — *"Tell the AIs you manually reverted the document — ignore the previous round"*
+- 🚫 No new sections — *"Lock the document structure — no new sections or headings"*
+- ✂ Trim to target / 📈 Expand to target / 📐 Match target
+
+**Tier 4 — Modal action buttons** (License, Custom AI, Import Server, Round Error, Auto Halt, Length Guard, Project Goal, Test Key panel, Round History, Finish, Discard confirm, Reference confirm, WF_DEBUG viewer, Dev tools)
+
+**Tier 5 — Navigation menu items** — every nav item now has a tooltip describing what screen / action it opens, including Setup 1–5, Working Console, Round History, Backup / Import Session, License Key, About, Dev Tools, Exit Dev Mode
+
+**Tier 6 — Setup screen ← Back buttons** — each tooltip names the destination screen explicitly (*"Back to Setup 1 — Worker Bees"* etc.)
+
+### What didn't get tooltips (intentionally skipped)
+
+The 17 "Got it →" buttons across every info modal in the app. The label is the action. A tooltip saying "Close" or "Got it" would be noise.
+
+### Approach
+
+Audit and apply done in a single scripted pass — regex-matched each button by `id` / `onclick` / `class` and inserted `title="…"` as the first attribute after `<button`. Used negative lookahead to disambiguate buttons that share the same `onclick` (e.g., `exportDocument()` appears on both the Working Document toolbar AND the Finish modal — different tooltips for each). Final validation confirms no duplicate `title=` attrs, balanced `<button>`/`</button>` count, and balanced div count.
+
+### Files Changed
+
+`index.html`
+- 130 tooltips added across buttons in: top bar, footer, Work screen panels, Notes drawer, Reference drawer, Setup screens (1–5), Custom AI / Import Server modals, License modal, Round History, Finish modal, Project Goal viewer, Auto Halt modal, Length Guard modal, Round Error modal, Troubleshooting card, WF_DEBUG viewer, Edit Hive modal, navigation menu
+- meta build → `20260511-017`; cache-bust `?v=3.38.10` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`js/app.js`
+- BUILD → `20260511-017`
+
+`js/version.js`
+- APP_VERSION → `v3.38.10 Pro`
+
+`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-017`; cache-bust `?v=3.38.10` on `style.css` and `version.js`
+
+`README.md`
+- Version badge → `Version-3.38.10`; build badge → `20260511-017`
+
+### What didn't change
+
+No CSS. No JS logic. No HTML markup beyond the new `title=` attributes. No removed or restructured elements. No template content. No manual content. Surgical sweep of one attribute type across one file.
+
+---
 ## v3.38.9
 **Build:** `20260511-016` · **Released:** May 11, 2026
 
