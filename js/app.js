@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260511-013';         // build stamp — update each session
+const BUILD       = '20260511-014';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3882,7 +3882,7 @@ async function clearProject() {
   const liveConsoleEl = document.getElementById('liveConsole');
   if (liveConsoleEl) liveConsoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
   const conflictsEl = document.getElementById('conflictsPanel');
-  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
+  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty"><strong>No rounds yet.</strong> Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts <em>from the most recent round only</em> — it\'s not a project-wide completion indicator.</div>';
 
   // Reset Finish modal export buttons to their pristine innerHTML captured on
   // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
@@ -14056,14 +14056,31 @@ function renderConflicts() {
 
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest) {
-    el.innerHTML = '<div class="conflicts-empty">No conflicts yet — run a round to see what the Builder couldn\'t resolve.</div>';
+    el.innerHTML = '<div class="conflicts-empty"><strong>No rounds yet.</strong> Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts <em>from the most recent round only</em> — it\'s not a project-wide completion indicator.</div>';
     return;
   }
 
   const conflicts = latest.conflicts;
 
   if (!conflicts) {
-    el.innerHTML = '<div class="conflicts-empty">No conflicts from the last round. The Builder resolved everything.</div>';
+    // v3.38.7 — empty-state messages rewritten with per-round framing and
+    // context-aware guidance. The prior message "No conflicts from the last
+    // round. The Builder resolved everything." was reading as completion (Candy
+    // coleslaw discovery, 2026-05-11), particularly after Round 1 of a
+    // scratch project where the Builder always produces a clean draft with
+    // nothing to conflict against. Two branches: Builder-Only rounds (no
+    // reviewers ran) get a structural explanation; full-hive rounds with no
+    // surfaced conflicts get a "this is per-round, run another round to
+    // converge" framing.
+    const roundNum = latest.round || history.length;
+    const isBuilderOnly = latest.outcome === 'builder_only_complete';
+    let msg;
+    if (isBuilderOnly) {
+      msg = `<strong>Round ${roundNum} was a Builder-Only round</strong> — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document.<br><br>To gather reviewer feedback on the current draft, click <strong>Smoke the Hive</strong> below — that\'s the full multi-AI round, and this panel will populate with anything the reviewers disagreed on.`;
+    } else {
+      msg = `<strong>No conflicts in Round ${roundNum}.</strong> Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts <em>from the most recent round only</em>. It\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong> (a majority of reviewers agree there are no more changes needed).<br><br>To keep refining, click <strong>Smoke the Hive</strong> below for another full round. If you\'re already satisfied with the current draft, click <strong>🏁 Finish</strong> in the top toolbar to export.`;
+    }
+    el.innerHTML = `<div class="conflicts-empty">${msg}</div>`;
     return;
   }
 

@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-013">
+  <meta name="waxframe-build" content="20260511-014">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.6">
+  <link rel="stylesheet" href="style.css?v=3.38.7">
 </head>
 <body>
 
@@ -1955,6 +1955,8 @@
     <h2 class="finish-modal-title">Conflicts</h2>
     <div class="goal-info-body">
       <p>When AIs disagree on something, the Builder flags it here rather than making an arbitrary call.</p>
+      <p><strong>The panel always shows conflicts from the most recent round only — it is not a project-wide completion indicator.</strong> "No conflicts" can mean any of three things: the round was a Builder-Only round (no reviewers ran), the round was Round 1 of a from-scratch project (the Builder writes the first draft before reviewers have anything to evaluate), or the round was a full reviewer round and everyone happened to agree on the changes. None of those mean the document is finished.</p>
+      <p>The document is "done" when the hive reaches <strong>✓ Converged</strong> — a majority of reviewers agree there are no more changes needed. Before that point, keep running rounds with <strong>Smoke the Hive</strong>, or click <strong>🏁 Finish</strong> if you're already satisfied with the current draft.</p>
       <div class="goal-info-row"><span class="info-label">User Decision</span><span class="goal-info-desc">The Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own resolution, bypass if you've already fixed it directly, or decline to suppress it entirely. Your decision is applied immediately and locked.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder Decision</span><span class="goal-info-desc">The Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the <strong>Current:</strong> label on any conflict card to jump directly to that line in the working document.</p>
@@ -2170,9 +2172,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.38.6"></script>
-<script src="js/templates.js?v=3.38.6"></script>
-<script src="js/app.js?v=3.38.6"></script>
+<script src="js/version.js?v=3.38.7"></script>
+<script src="js/templates.js?v=3.38.7"></script>
+<script src="js/app.js?v=3.38.7"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
