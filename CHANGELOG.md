@@ -44,12 +44,35 @@ The CSS Cleanup section of the backlog has a parked "second `!important` cleanup
 `document-playbooks.html`, `waxframe-user-manual.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
 - Comment-header `Build:` → `20260511-019`; meta build → `20260511-019`; cache-bust `?v=3.38.12` on `style.css` and `version.js`
 
-`docs/WaxFrame_Backlog_Master_v25.txt`
-- Bumped from v24. Added v3.38.12 to RECENTLY SHIPPED. No backlog items closed (bug never made it into the bug-fix list — discovered and fixed same session).
+`docs/WaxFrame_Backlog_Master_v27.txt`
+- Bumped to v27 (landing cleanly forward of every prior version in the folder, including intermediate v25/v26 drafts I built during this session before the reconciliation pass).
+- **Recently Shipped entries v3.36.23 → v3.38.0 trimmed back to brief one-line marker format.** They had drifted into duplicate-CHANGELOG verbosity (15–44 lines each); full record stays in CHANGELOG.md. Backlog is forward-looking now — Recently Shipped is a pointer, not a record. ~415 lines removed.
+- **Section 1 BUG-FIX LIST updated** — `restaurant-review` playbook page still shows *"2–4 rounds typical (estimated, not measured)"* despite T8 ran 2026-05-10 (Pearl's Saltwater Grille v2.0, 5 rounds, 14 min, 5-AI hive + DeepSeek Builder, REFINE, final 392w / 2,179c, majority at R6, 3 USER DECISIONS). Needs the same treatment Hotel Review got in v3.37.2: convergence block updated to measured rounds + a `.dp-real-example` block with the run values.
+
+`docs/WaxFrame_Playbook_Test_Master_v25.txt`
+- Bumped to v25 (same versioning rationale — cleanly forward of v23/v24 intermediate drafts from this session).
+- New **TEST UNIVERSE** section at top — all 19 playbooks grouped by category, measured-or-open status, blocker per open test, and where each is runnable. Replaces the older ALREADY MEASURED quick list + PROJECTS TO RUN NEXT + PENDING TESTS status table.
+- **T9 Hotel Review reconciled** — measured run (Melbourne Marriott v1.0, 19 rounds, 2026-05-10, 6-AI hive + DeepSeek Builder, 0 USER DECISIONS, majority at R18) was logged to test master v18 when v3.37.2 shipped, but fell out of the v19+ chain because file numbering went non-linear (v17 → v19, skipping v18). v19/v20/v21/v22 were a parallel branch built on v17 that lost the T9 entry. T9 row restored to RUNS COMPLETED and HISTORICAL RUNS in v25.
+- **T12 Contractor/Vendor Letter reconciled** — measured run (Bay Area First Invoice Concerns v3.0, 12 rounds, 2026-05-09, 3-AI budget hive with Gemini-as-Builder, majority at R12, 735 → 624 words) shipped to `document-playbooks.html` and CHANGELOG but never logged to the test master file. T12 row added to RUNS COMPLETED, TEST UNIVERSE matrix, and HISTORICAL RUNS in v25. (Earlier this session I'd labeled T12 as a "gap" needing a pending test entry — that was wrong. It was already measured; the gap was in the test master, not the playbook page.)
+- **T8 Restaurant Review stays measured** — the test master entry is correct. The fix needed is on the playbook page side (see Backlog v27 Section 1).
+- Final counts: **16 of 19 playbooks measured, 3 open** (T3 RFP deferred, T10 Business/Service Review pending real service data, T11 Multi-Platform Rewrite ready to run today with T8 or T9 output as source).
+
+`README.md`
+- Polished rewrite contributed by Kai (David's ChatGPT instance) with marketing-style structure: "Why WaxFrame Exists" / "What Makes WaxFrame Different" / "How It Works" / "Free vs Pro" / use-cases / closer. Replaces the previous workflow-step-with-screenshots format. Reasoning: the prior README was workflow-tutorial-shaped; new one leads with value proposition, then mechanics — better fit for someone landing on GitHub cold.
+- Factual fixes applied in this release before shipping:
+  - Version badge `3.38.3` → `3.38.12`, Build badge restored at `20260511-019`
+  - Grok default model `grok-4` → `grok-4-fast-non-reasoning` (matches templates.js line 811)
+  - Microsoft Copilot (`gpt-4o`) added to supported-providers table
+  - Excel (.xlsx, .xlsm) added to supported file formats (Kai missed it though it's in `accept` and `extractPPTX` siblings)
+  - Custom-endpoint mention expanded to call out LMStudio, Open WebUI, Together, Mistral, Cohere by name (the prior `OpenAI-compatible endpoints are also supported` line was technically correct but read narrower than the reality)
+- Concept gaps filled:
+  - **Reference Material** got its own step in "How It Works" (new step 3, between Project and Starting Document) and a callout explaining it's the lever behind the 16-round → 4-round Blog Post v1.0 → v2.0 speedup
+  - **Send-to-Builder / Notes drawer** added under "One Builder — two roles" subsection (replaces the prior "One Builder merges the best ideas" heading) — explicitly names the synthesizer + handyman framing from v3.38.11 release
+- Welcome screenshot preserved from prior README at the top after the badges
 
 ### What didn't change
 
-No JS logic. No HTML structure or markup. No template content. No round / hive / Notes mechanics. No new selectors, no new classes — same two CSS rules, two property changes.
+No JS logic. No HTML structure or markup. No template content. No round / hive / Notes mechanics. No new selectors, no new classes — same two CSS rules, two property changes. Restaurant Review playbook page is NOT touched in this release; the fix is logged in Backlog v27 Section 1 for a focused follow-up release.
 
 ---
 ## v3.38.11

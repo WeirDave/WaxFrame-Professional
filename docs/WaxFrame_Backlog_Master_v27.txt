@@ -1,0 +1,845 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG (v27)
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-11 (post v3.38.12, .dp-rounds layout fix)
+Current version:     v3.38.12 Pro / build 20260511-019
+Maintained by:       R David Paine III
+Lives:               docs\WaxFrame_Backlog_Master_v27.txt
+
+This file is the single source of truth for code work, feature
+ideas, and bugs in WaxFrame. Companion to:
+
+  docs\WaxFrame_Playbook_Test_Master_vN.txt
+    — David's project to-do list (test runs to gather data)
+
+Two-document persistence system, per memory rule:
+  • This file = code work + ideas + bug-fix list (non-historical)
+                + Recently Shipped (history)
+  • Test Master = ALREADY MEASURED + PENDING TESTS + HISTORICAL
+                  RUNS (permanent)
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+CHANGES IN v27 (from v24 in main, 2026-05-11):
+  - v3.38.12 shipped — .dp-rounds layout fix for multi-
+    paragraph playbook Rounds fields. See CHANGELOG.
+  - Recently Shipped entries v3.36.23 → v3.38.0 trimmed
+    back to brief one-line marker format. They had drifted
+    into duplicate-CHANGELOG verbosity (15–44 lines each);
+    full record stays in CHANGELOG.md. Backlog is forward-
+    looking: P1 + ideas + bug-fix list, with Recently
+    Shipped as a pointer, not a record.
+  - BUG-FIX LIST (Section 1) updated — restaurant-review
+    playbook page never got the T8 measurement update.
+    See Section 1.
+  - Note on versioning: v25 and v26 were intermediate
+    drafts that I built without seeing your local v25 and
+    v26, then re-versioned. Landing as v27 to be cleanly
+    forward of everything in your folder. There is no
+    "v25 or v26 distinct content" to reconcile — those
+    were intermediate copies of this same work.
+
+CHANGES IN v24 (from v23, 2026-05-11):
+  - v3.38.0 SHIPPED — Slow-AI alerts toggle (Phase 1 of
+    Settings architecture). New 🐢 footer pill alongside
+    Length Guard; default ON; click toggles. When OFF,
+    SLOW_RESPONDER troubleshooting card surfacing is gated
+    so the Auto-Mode chain gate doesn't block on slow AIs
+    during hands-off long runs (the DeepSeek-weekend pain
+    point). Detection + console log run unconditionally —
+    only the user-facing card is suppressed, so diagnostic
+    info stays available. User-level preference (global)
+    via localStorage waxframe_slow_responder_enabled,
+    distinct from Length Guard which is per-project. Amber
+    off-state (not red like Length Guard) because this is
+    a workflow preference, not a safety override.
+  - Phase 2 of Settings architecture (nav-menu Settings
+    surface bundling Length Guard + Slow Alerts + future
+    toggleable features) parked. Footer-pill UX is proven
+    and the v3.38.0 ship validates the pattern; Phase 2
+    waits until there are 3+ togglable features in hand
+    rather than designing the bundle around 2.
+  - REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5-#10).
+
+CHANGES IN v23 (from v22, 2026-05-10):
+  - v3.37.2 SHIPPED — Auto-halted sound. Closes out the
+    second half of P1.6. Ascending major-triad arpeggio
+    (C5 → E5 → G5) — an "upper" cadence that reads as
+    "your turn, look at the modal" rather than "you failed."
+    Distinct from playAlertSound (ascending two-chirp
+    880→1320Hz = USER DECISION needs attention — both
+    ascend, but alert is two fast chirps in the 880Hz+
+    range; halt is three slower tones starting at C5 and
+    topping out at G5) and playRoundCompleteSound (bee
+    trill + ping = round done, positive). No new .wav
+    asset — pure Web Audio synthesis. Wired into _autoHalt
+    with reasonCode guard: fires for ceiling/stall/
+    failure-streak/decision-tie, SKIPPED on converged (the
+    unanimous-convergence path already plays its own
+    fanfare elsewhere — stacking the halt sound on top
+    would muddy that moment). Auditioned six candidates
+    via interactive widget in chat; David picked Option A
+    after hearing them in the context of the full WaxFrame
+    audio family.
+  - P1.5 (Storage-clean indicator pill) DROPPED — the
+    underlying orphan-key problem is structurally fixed by
+    v3.30.2's removeAI sweep. A passive indicator solves a
+    problem that no longer exists; sits green forever for
+    properly-maintained installs and adds visual noise. If
+    orphan-key problems surface in the wild later, revisit.
+  - P1.6 (Audible alerts) CLOSED. Half shipped in v3.36.33
+    (USER DECISION alert reusing playAlertSound, no new
+    assets needed). Second half (auto-halted sound) shipped
+    in v3.37.2 — also no .wav, pure synthesis. Removed
+    Kai-blocked status; no asset dependency remained.
+  - P1.1 audit removed from open items — completed 2026-05-10
+    (all three passes shipped, see Recently Shipped entries
+    for v3.36.13 / v3.36.14 / v3.36.15).
+  - REMAINING OPEN P1: only P1.3 (Auto really means Auto
+    behavioral group, items #5–#10). Multi-touchpoint
+    behavioral overhaul — checkpoint protocol applies.
+
+CHANGES IN v22 (from v21, 2026-05-10):
+  - v3.37.0 SHIPPED — Dual-path templates. Every template
+    in the gallery now declares which starting condition it
+    supports: "scratch" (user has no draft; hive creates one)
+    or "refine" (user has a draft; hive polishes it). 17 of
+    19 templates support both paths. Two single-path:
+    Quick Start (scratch only — the onboarding demo) and
+    Multi-Platform Review Rewrite (refine only — operates
+    on a source review).
+    Modal flow: open gallery → pick "Starting from scratch"
+    or "Refining an existing draft" → category grid filters
+    to templates supporting that path → click a template →
+    Project Goal fields populate from the per-path content,
+    and (scratch only, by default) a Reference Material card
+    is injected with a questionnaire scaffold. Refine paths
+    inject no RM card; instead the hint banner points the
+    user to paste their existing draft into Starting Document.
+    schema (templates.js):
+      Top-level path-agnostic identity fields:
+        id, name, icon, category, description, paths,
+        pathContent
+      pathContent[path] holds per-path fields:
+        goalDocType, goalAudience, goalOutcome, goalScope,
+        goalTone, goalNotes, refMaterial, hint, lengthMode,
+        lengthLimit, lengthMin, lengthUnit
+    Retired field: suggestedNotes. Content that previously
+    lived in suggestedNotes is now routed to Reference
+    Material as a card on apply (scratch path), tagged
+    source: 'template' + templateOriginId. Subsequent
+    applyTemplate calls sweep prior template-sourced cards
+    so the RM panel stays clean and idempotent (switching
+    templates cleans up after the previous one).
+    routing (applyTemplate):
+      Signature changed: applyTemplate(templateId, path).
+      Resolves with fallback (warn + default to first
+      supported path) if caller passes invalid path. Reads
+      all per-path content from tpl.pathContent[path].
+      RM sweep filters d.source !== 'template'; manually
+      added cards (source: 'paste' or 'file') are preserved.
+      Hint banner title now includes path suffix
+      ("starting from scratch" / "refining an existing
+      draft") so the user can see at a glance which path
+      was applied.
+
+CHANGES IN v21 (from v20, 2026-05-10):
+  - v3.36.36 shipped — Convergence section copy rewrite +
+    anchor jump-to fix. Three text blocks rewritten on the
+    document-playbooks "How to read the convergence numbers"
+    section (Unanimous + Majority + closing paragraph) in
+    David's voice — returns agency to the user as the final
+    arbiter, removes pejorative framing of holdouts ("nice-
+    to-haves the majority sees as fine-as-is"). Section H2 +
+    sidebar entry de-emojified. CSS fix: scroll-margin-top
+    116px added to .hp-section-title so sidebar links
+    targeting #cat-convergence and #cat-at-work land on the
+    section header instead of disappearing under the page
+    header. Both anchors fixed by one rule.
+  - v3.37.0 candidate (dual-path templates) STILL PENDING.
+    Schema design partially scoped in fresh session:
+    paths array per template (['scratch'], ['refine'], or
+    ['scratch','refine']), pathContent object keyed by path
+    name, refMaterial field per path (replaces suggestedNotes
+    for scratch — content routes to Reference Material as a
+    questionnaire card via addReferenceDoc()). RM cards
+    injected by templates get tagged source:'template' and
+    swept on subsequent template application. Quick Start
+    classified as ['scratch'] only (the from-scratch demo);
+    Multi-Platform Rewrite classified as ['refine'] only.
+    17 others are ['scratch','refine']. Build paused at
+    Phase A; resume in next fresh session.
+
+CHANGES IN v20 (from v19, 2026-05-10):
+  - v3.36.35 shipped — Playbook page Step labeling
+    everywhere ("Setup — Step N of 5" pattern, 38
+    replacements). New Step 4 (Reference Material)
+    section on all 3 review playbooks with copy-
+    pasteable detail checklist. Scratch-mode advice
+    rerouted from Notes to Reference Material — the
+    architecturally correct channel for persistent
+    factual scaffolds.
+  - NEW v3.37.0 CANDIDATE — dual-path templates.
+    Architectural feature: every template gets a path
+    selector ("Starting from scratch" vs "Refining
+    existing draft") at top of modal. Content routes
+    to different channels per path. Resume case tests
+    it: scratch → Ref Material checklist; refine →
+    existing resume → Starting Document. Captured
+    fully below; will be built in a fresh session.
+  - NEW SEPARATE AUDIT NEEDED — six other playbooks
+    (JD, Thank-You, Outreach, Blog Post, Presentation,
+    Résumé) likely have the same Notes-vs-Reference-
+    Material miscategorization v3.36.35 fixed for the
+    3 reviews. Not bundled into v3.36.35 to keep it
+    focused.
+
+CHANGES IN v19 (from v18, 2026-05-10):
+  - v3.36.34 shipped — convergence-numbers callout
+    moved out of the page header on document-playbooks
+    and rebuilt as a proper section between Running at
+    Work and Career & Hiring. Sidebar entry added under
+    "Read first" with anchor #cat-convergence. Audited
+    the other 4 v3.36.31 additions — all correctly
+    placed inside existing sections that already have
+    sidebar entries. Pattern lesson reinforced:
+    substantive content gets a section + nav entry;
+    augmentations to existing sections live inline.
+
+CHANGES IN v18 (from v17, 2026-05-10):
+  - v3.36.33 shipped — USER DECISION audible alert
+    wired. Reuses the existing playAlertSound (two-
+    chirp Web Audio synth used by the discard-unexported
+    confirm modal). No new .wav assets needed, no Kai
+    blocker for this part. Auto-halt sounds remain
+    blocked on Kai for branded .wav files.
+
+CHANGES IN v17 (from v16, 2026-05-10):
+  - v3.36.32 shipped — project clock parity fix.
+    runBuilderOnly was missing the projectClockStart()
+    call that runRound has. Result: Builder-Only rounds
+    didn't resume the project clock if it was paused,
+    so the transcript Session duration and backup
+    projClockSeconds under-reported by the Builder-Only
+    round duration. THIS WAS the root cause of the
+    engaged-time discrepancy on T4 Recipe (Publix). The
+    broader engaged-time-tracking feature idea (auto-
+    idle detection etc.) is now optional — the consistency
+    bug is fixed.
+
+CHANGES IN v16 (from v15, 2026-05-10):
+  - v3.36.31 shipped — three audit-driven teaching
+    callouts placed and shipped:
+    1. Project-setup specificity → User Manual Step 3 tail
+    2. Convergence-principle → User Manual Step 9 tail +
+       Playbook page intro
+    3. Model-diversity guidance → User Manual Step 1 tail +
+       infoBeesModal (ⓘ on bees screen)
+    All three placement-decision items REMOVED from
+    Section 2 — they shipped this release. Closes out the
+    audit-driven open work from Pass 2 (cross-surface
+    audit). Captured in Recently Shipped + CHANGELOG.
+
+CHANGES IN v15 (from v14, 2026-05-10):
+  - v3.36.30 shipped — .btn-accent base text color
+    changed from #0a0c12 (dark) to #ffffff (white) to
+    match .footer-btn-smoke's light-theme rule. Every
+    primary CTA in the app now has consistent resting
+    text color: white-on-amber. Tail-end of the v3.36.29
+    consistency pass. Same fix-the-class-not-the-
+    overrides pattern.
+
+CHANGES IN v14 (from v13, 2026-05-10):
+  - v3.36.29 shipped — global Smoke-style hover applied
+    to all .btn-accent buttons across the app, plus the
+    upstream flattening rule for .work-topbar .btn scoped
+    with :not(.btn-accent). v3.36.28's local override
+    block removed (redundant). Every primary CTA in the
+    UI now hovers with the same lit-to-clear-with-glow
+    visual language. Reuses existing class, no new
+    infrastructure. Pattern: when a class isn't doing
+    what it should, fix the class — don't build parallel
+    rules around it.
+
+CHANGES IN v13 (from v12, 2026-05-10):
+  - v3.36.28 shipped — Finish button always-lit
+    correction. v3.36.27's state-dependent approach was
+    wrong per spec; Finish is the user's exit/wrap-up
+    action and is always available, like Smoke-the-Hive
+    is always the next action. Reverted setFinishReady
+    infrastructure (helper + 5 callsites + CSS rule),
+    replaced with a static .btn-accent on the HTML and
+    theme-aware CSS overrides for light/auto themes.
+    No JS state machinery; just CSS specificity. Silent
+    multi-decision lock from v3.36.27 unchanged (that
+    part landed correctly).
+
+CHANGES IN v12 (from v11, 2026-05-10):
+  - v3.36.27 shipped — bundled UX clarity release. Two
+    bugs fixed:
+    1. Finish button visual hierarchy restored. Button is
+       now neutral by default and lights up amber when
+       convergence is reached. JS toggle on .is-ready
+       class; CSS uses #finishBtn specificity to beat the
+       work-topbar .btn theme overrides. Hooks: setStatus
+       Standing-by entry (restores from history if last
+       outcome was convergence), reviewer round start,
+       builder-only round start, unanimous convergence,
+       majority convergence.
+    2. Multi-USER-DECISION silent lock. lockConflictToNotes
+       no longer opens the Notes modal or steals focus —
+       the lock action just silently appends the "Lock
+       this line..." sentence to the Notes textarea. Toast
+       simplified to "🔒 Locked" (was misleading
+       "run Send to Builder to apply"). User mental model:
+       click lock → it's locked, no further interaction
+       needed. The picked option on the conflict card
+       remains in _decisionChoices and gets sent to
+       Builder when the green Apply Decisions button is
+       clicked, exactly as before.
+  - BOTH bug entries REMOVED from Section 1 (non-historical
+    per the bug-list rule).
+  - P1.4 (test master voice rewrite) deprioritized to "non-
+    item if we don't have stuff left to test" — keep the
+    polished voice while T8/T9/T10/T11 are still queued.
+
+CHANGES IN v11 (from v10, 2026-05-10):
+  - v3.36.25 shipped (post-v10): T2 Executive Summary +
+    T7 Blog Post v2.0 measured, both playbooks updated
+    with measured-data convergence sections.
+  - v3.36.26 shipped (post-v10): four Review templates
+    (restaurant, hotel, business, multi-platform) now
+    default to lengthMode "none" instead of pre-loading
+    a word count. Length is arbitrary based on platform —
+    hint text rewritten to lead with platform-specific
+    guidance (Google Maps chars, TripAdvisor long-form,
+    Yelp range, etc.)
+  - DOCS-IN-ZIP CONVENTION confirmed: backlog and test
+    master ship inside the release ZIP under docs/, never
+    delivered standalone. Standalone doc deliveries from
+    earlier today were redundant — going forward, only ZIP
+    + release notes (2 outputs per release) are delivered.
+
+CHANGES IN v10 (from v9, 2026-05-10):
+  - TWO NEW BUGS captured to Section 1 from the T2 Executive
+    Summary run:
+      • Multi-USER-DECISION + Lock-via-Notes ordering is unclear
+      • Finish button visual hierarchy is lost — looks identical
+        to Reference + Notes buttons in the work toolbar; user
+        muscle-memoried into clicking Manual instead and started
+        a new round when the doc was actually ready to finish
+  - Both surfaced from the Executive Summary run that took 7
+    rounds (above 3–5 estimate) — a 7-round run gives more
+    surface area for UX bugs to appear than a 2-round run.
+
+CHANGES IN v9 (from v8, 2026-05-10):
+  - NEW idea captured: Engaged-time tracking for runs (Section
+    2). Wall-clock time is misleading when the user steps away
+    mid-session (lunch break, dinner). The "47 minutes" the
+    Publix recipe run shows is wall-clock; actual engaged time
+    was much lower because David ate lunch in the middle.
+    Surfaces a measurement-quality issue for HISTORICAL RUNS
+    data — times currently logged are not comparable across
+    runs because they conflate engaged work and idle time.
+
+CHANGES IN v8 (from v7, 2026-05-10):
+  - P1.1 Functional Audit COMPLETE — all three passes shipped:
+      Pass 1 (function-level static analysis, 397 functions
+      classified, 3 dead identified)
+      Pass 2 (cross-surface consistency: templates ↔ playbooks
+      ↔ manual ↔ gospel docs reconciled)
+      Pass 3 (side-effect mapping: 96 pure functions, 6 multi-
+      effect orchestrators, all heuristic flags scanned)
+    Moved to RECENTLY SHIPPED.
+  - Three releases shipped 2026-05-10: v3.36.22 (LinkedIn About
+    template+playbook), v3.36.23 (audit-driven cleanup), v3.36.24
+    (recipe playbook 3rd data point). All in RECENTLY SHIPPED.
+  - NEW SECTION 1: Bug-fix list (non-historical) — currently
+    empty. This section gets things added as they're noticed
+    and removed as they're fixed. Per memory rule #28.
+  - Three audit-surfaced placement decisions added to "Other
+    open items": project-setup specificity callout home,
+    convergence-principle callout home, model-diversity
+    guidance home. These were findings from Pass 2 that don't
+    have a home in user-facing surfaces yet.
+  - WaxFrame Free parity list updated with v3.36.21–v3.36.24
+    items.
+
+═════════════════════════════════════════════════════════════
+0. PRIORITY 1 (do these next)
+═════════════════════════════════════════════════════════════
+
+[-] ★ P1.3  v3.36.0 — "Auto really means Auto" behavioral
+    group  (#5–#10 from session discussion 2026-05-09)
+
+    Real-world pain trail validating this work: 53-minute
+    Business Proposal session 2026-05-08 → 2026-05-09. 18
+    rounds. Two AIs manually disabled mid-session (DeepSeek
+    slow, Mistral 429). Claude credit-low fired on rounds
+    8/9/10 with no auto-recovery. Auto turned itself OFF
+    twice mid-session (12:05:14, 12:06:11) because errors
+    flipped the toggle when Auto should have soldiered on.
+
+    [ ] #5  Per-AI 5xx during Auto → auto-disable bee +
+            toast notification, suppress troubleshooting
+            card, continue round with surviving AIs
+    [ ] #6  Slow-responder during Auto → same auto-disable
+            pattern as #5. Threshold: more than 3x round
+            average for two consecutive rounds. Toast
+            tells the user which AI was disabled.
+    [ ] #7  Suppress showRoundErrorModal in Auto. Increment
+            _autoFailureStreak instead. At streak limit
+            (currently 2), trigger _autoHalt('failure-
+            streak') to surface the auto-halt modal. Reset
+            counter on any clean round so an early blip
+            doesn't halt 5 rounds later.
+    [ ] #8  lengthGuardPrompt mid-round in Auto returns
+            'keep' automatically + log delta to console.
+            No modal interruption.
+    [ ] #9  lengthGuardPrompt AT convergence in Auto →
+            trigger _autoHalt('length-at-convergence')
+            with copy explaining the convergence is a
+            length violation and asking the user to choose.
+    [ ] #10 Builder auto-disabled by #5/#6 → promote first
+            eligible reviewer alphabetically. If no
+            eligible AI remains, _autoHalt('no-builder-
+            available'). Open question whether alphabetical
+            is the right heuristic — alternative is
+            user-configurable preference order.
+
+    Phase 1 (the small, low-risk part):
+      [x] "Interactive" → "Auto OFF" / "Manual" label
+          rationalization across UI surfaces — SHIPPED
+          via v3.36.14 (Interactive→Manual cascade) and
+          v3.36.16 (three-pill codification + two-state
+          Manual/Auto label flip).
+      [ ] DELETE "Stop here" button in auto-halt modal —
+          STILL OPEN. Confusing relative to Resume + Switch.
+      [ ] DELETE autoHaltStop function in app.js — STILL
+          OPEN. Verify no straggler call sites before
+          removal.
+      [ ] Auto-halt modal copy sweep — STILL OPEN. Check
+          modal title and reason text against the new
+          Manual/Auto vocabulary.
+
+    DESIGN-DISCUSSION ITEMS still open from session:
+      • Phase 2 silent auto-disable: should be a TOAST not
+        just console line — user away in another tab needs
+        to see WHY half their hive vanished
+      • Builder alphabetical promotion in #10 — opinionated.
+        Alternatives: user-configurable preference order,
+        or prompt user
+      • #7 streak counter — confirm reset on successful
+        round (otherwise early blip halts later)
+      • Mid-round vs at-convergence length-guard call site
+        discrimination (#8 vs #9) — need to inspect each
+        of the 4 lengthGuardPrompt call sites to know which
+        is which before coding
+
+    PROTOCOL: this is a multi-touchpoint behavioral
+    overhaul. Per memory entry #6, commit current state
+    via GitHub Desktop as checkpoint BEFORE any code
+    changes. Do not start unless the working tree is clean.
+
+[ ] ☐ P1.4  Playbook test master — rewrite all pending
+    tests in David's voice  (DEPRIORITIZED v12 — non-item
+    while T8/T9/T10/T11 are still in the test queue; only
+    revisit if/when the queue empties)
+
+    PROBLEM: T2–T11 in WaxFrame_Playbook_Test_Master_vN.txt
+    are written in a polished, slightly verbose,
+    AI-comma-spliced style ("Reading on tablet between
+    meetings — needs to skim and still get the value prop
+    in 60 seconds"). The current text is fine but doesn't
+    sound like David, and he's noted the prompts can blow
+    up the runs with too much loaded into each setup field.
+
+    WHAT TO DO:
+      • Tone shift to David's voice — direct, peer-to-peer,
+        no marketing-style sentence construction
+      • Trim each test's setup fields. The current Target
+        Audience / Desired Outcome / Scope / Tone fields
+        are routinely 4–7 sentences. Aim for 1–3 short
+        sentences each that actually sound like notes
+        someone would write to themselves.
+      • Goal Notes field similarly — the current voice is
+        a polished editor's note. The real voice is
+        whatever's quickest to type while thinking
+        "what's the actual ask here."
+      • DO NOT touch the ALREADY MEASURED entries at the
+        top — those are historical reference data.
+      • DO NOT touch the Reference Material payloads
+        wholesale — those are technical content blobs
+        that may legitimately need the verbosity (e.g.
+        T6's identity-stack notes).
+      • DO touch: Project Name, Document Type, Target
+        Audience, Desired Outcome, Scope, Tone, Length
+        Limit/Unit, Goal Notes — all the Setup 3 fields
+        that get pasted into the live app.
+
+    APPROACH: Pull the file open, rewrite T2–T11 setup
+    sections, ship the updated file. Not a code change —
+    pure content rewrite. Probably 90 minutes of focused
+    editing. Defer to a fresh head.
+
+[ ] ★ P1.5  Storage-clean indicator pill — DROPPED v23
+    (2026-05-10). Underlying orphan-key problem
+    structurally fixed by v3.30.2's removeAI sweep — a
+    passive indicator solves a non-problem and sits green
+    forever for healthy installs. Re-open only if orphan
+    keys reappear in the wild.
+
+[x] ⚠ P1.6  Audible alerts — CLOSED v23 (2026-05-10).
+    Half 1 (USER DECISION alert) shipped v3.36.33 reusing
+    playAlertSound — no new asset needed. Half 2
+    (auto-halted cadence) shipped v3.37.2 — playAutoHaltSound,
+    ascending major-triad arpeggio (C5 → E5 → G5), pure
+    Web Audio synthesis, no .wav asset.
+    Kai-blocked status removed; no asset dependency remained.
+
+
+═════════════════════════════════════════════════════════════
+1. BUG-FIX LIST  (non-historical — items removed when fixed)
+═════════════════════════════════════════════════════════════
+
+This section is for bugs noticed during sessions that don't
+get fixed immediately because we're scope-disciplined on
+something else. Items here ARE NOT historical — once fixed,
+they're removed entirely (the fact they existed is captured
+in CHANGELOG.md and Recently Shipped, not here).
+
+When David surfaces a bug mid-conversation that doesn't get
+fixed that turn: append to this list same turn.
+
+[ ] restaurant-review playbook page still shows
+    "2–4 rounds typical (estimated, not measured)"
+    --------------------------------------------------
+    T8 RAN — Pearl's Saltwater Grille v2.0 (Savannah,
+    GA), 2026-05-10, 5 rounds / 14 min wall-clock, 5-AI
+    hive + DeepSeek as Builder, REFINE on existing v1.0
+    draft, final 392w / 2,179c, majority at R6 (4/6
+    satisfied), 3 USER DECISIONS resolved via Builder-
+    Only rounds. Test master Playbook_Test_Master_v25
+    has the measured row in RUNS COMPLETED + the ✔ in
+    TEST UNIVERSE.
+    document-playbooks.html line ~96 inside the
+    restaurant-review section still has the
+    "estimated, not measured" text. Needs the same
+    treatment Hotel Review got in v3.37.2: convergence
+    block updated to measured rounds + a
+    .dp-real-example block with the Pearl's Saltwater
+    Grille run values. No project backup file was
+    captured at the time, but David confirms the run:
+    pulled an existing review he had written, dissected
+    it, and put it into the template. The 5-round /
+    14-min / 392w numbers come from the v22 test master
+    CHANGES IN v20 entry.
+
+    SURFACED: 2026-05-11 forensic reconciliation
+    session — playbook page and test master had drifted
+    out of sync between the v3.36 and v3.38 batches.
+
+
+═════════════════════════════════════════════════════════════
+2. OTHER OPEN WORK
+═════════════════════════════════════════════════════════════
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    UNREACHABLE-SERVER WARNING TEMPLATE:
+      "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    EXPORT FORMAT — TWO OPTIONS:
+      • Bundled inside Backup format v3 (existing pipe)
+      • Standalone .waxprofile files (purpose-built,
+        share single profile between machines without
+        full backup overhead)
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it. Import a Source on a new
+    machine and the Profiles light up.
+    DESIGN NOTE: AIs without a Source are direct-API
+    customs — the Sources view doesn't need to account
+    for every AI, only the ones that came from a server.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+[ ] ☐ Engaged-time tracking for runs  (NEW v9 — DOWNGRADED v17:
+        the consistency bug was the Builder-Only project clock
+        parity issue, fixed in v3.36.32. The broader feature
+        below — auto-idle detection, manual pause UX — is now
+        optional enhancement, not a bug fix)
+    NEW from session 2026-05-10. Wall-clock session time is
+    misleading because it includes idle periods when the user
+    stepped away (lunch break, dinner, distracted by other
+    work). The Publix potato salad recipe run shows "47 min"
+    wall-clock; actual engaged time was a fraction of that.
+
+    PROBLEM IT CAUSES: HISTORICAL RUNS times aren't comparable
+    across runs. Two 4-round runs that both show "30 min" might
+    actually have very different engaged times. This degrades
+    the value of the time-component of measurement data.
+
+    DESIGN OPTIONS:
+      Option A (manual pause): add a Pause button next to the
+      Auto/Manual control. User clicks before stepping away,
+      clicks again on return. Simple, reliable, requires user
+      discipline. The existing Auto-pause-on-Notes-open guard
+      from v3.36.17 is a similar pattern — extend it.
+
+      Option B (auto-detect idle): track last user-interaction
+      timestamp (keystroke, click, scroll). If idle > N minutes
+      (configurable, e.g., 5 min default), pause the round
+      timer. Resume on next interaction. Smart but heuristic.
+
+      Option C (both): manual pause for known breaks, auto-
+      detect for forgotten ones. Best UX but most code.
+
+    WHAT IT TOUCHES:
+      • Round timer (currently wall-clock-based)
+      • Console log timestamps (also wall-clock — these are
+        good as-is for forensic purposes; engaged-time is a
+        separate metric)
+      • Transcript export "Session duration" line — should
+        report both wall-clock AND engaged time for clarity
+      • HISTORICAL RUNS rows in test master — going forward
+        should record both metrics
+      • Round badge / topbar elapsed display — show engaged
+        time, not wall-clock
+
+    NOT a blocker for current work — runs already in the wild
+    have wall-clock data, that's what we have, we move on.
+    Going forward, capturing engaged time would make the data
+    more meaningful.
+
+    PRIORITY: high but not P1 — affects measurement quality,
+    not blocking any release. Lift when there's a quiet
+    session with no other surgical work to do.
+
+[ ] Builder selection heuristic
+    Companion finding to project-setup specificity.
+    Empirical pattern: same hive, Cl37S as Builder
+    converged cleanly on multiple docs (Blog v1.0,
+    LinkedIn post), Gem25P as Builder failed to converge
+    on equivalent prose. Likely cause: Gem25P's Builder
+    output invites more reviewer dissent.
+
+    Worth documenting as a "Builder selection" guide
+    in the user manual once we have more data points
+    across doc types.
+
+    PARTIAL DATA from v3.36.x session: Brightwater BP
+    v3.0 with Gemini-as-Builder converged in 5 rounds /
+    ≈10 min (3-AI hive). 2-AI run on same scaffold took
+    11 rounds / ≈16 min due to tied USER DECISION at
+    Round 5. v3.36.24 Recipe run with DeepSeek-as-Builder
+    converged in 4 rounds with a 5-AI hive on Reference
+    Material approach.
+
+    NOT yet ready for placement — still gathering data
+    across doc types. Stays in backlog as "future doc
+    write-up" until enough data accumulates.
+
+[ ] Backlog file maintenance (this file)
+    Keep this file updated. Treat it as the
+    authoritative backlog. Punch lists in chat sessions
+    feed back into this file before the chat ends.
+    SESSION RULE: when Claude pulls items from memory or
+    backlog into a conversation, Claude cites the source
+    explicitly ("from your master backlog Section 0
+    PRIORITY 1") rather than treating them as shared
+    context. Master backlog file is the contract — if
+    something isn't in it, it's not real.
+
+
+═════════════════════════════════════════════════════════════
+3. CSS CLEANUP (parked work)
+═════════════════════════════════════════════════════════════
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+
+═════════════════════════════════════════════════════════════
+4. WAXFRAME FREE EDITION
+═════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+
+    PARITY CANDIDATES from v3.35.x run:
+      • v3.35.4 Worker Bee card link always-visible (UX)
+      • v3.35.4 CREDIT_LOW troubleshooting card (UX)
+      • v3.35.4 Notes priority swap on drawer open (UX)
+      • v3.35.5 console error link click handler (bug fix)
+      • v3.35.6 sessionAIs carryover hotfix (bug fix —
+        critical for any Free user who toggles bees mid-
+        round)
+
+    PARITY CANDIDATES from v3.36.x run:
+      • v3.36.14 Interactive→Manual label cascade (UX)
+      • v3.36.14 Notes forensics — _notesAtBuilderCall
+        freeze pattern (forensic improvement)
+      • v3.36.14 length-guard logging + length templates
+        Trim/Expand/Match (UX, length discipline)
+      • v3.36.15 length-guard always-visible toggle (UX)
+      • v3.36.15 convergence skips auto-halt modal (UX)
+      • v3.36.15 round counter state machine (UX)
+      • v3.36.15 trajectory-bypass log (forensic)
+      • v3.36.16 three-pill color system (UX)
+      • v3.36.16 Auto label flip back to two-state (UX)
+      • v3.36.16 Auto button repositioning (UX)
+      • v3.36.17 Notes drawer sticky/one-shot split — IF
+        Free ships Notes at all (verify before porting)
+      • v3.36.17 Auto-pause-on-Notes-open guard (UX)
+      • v3.36.18 Notes + Reference button toggle (UX)
+      • v3.36.20 length-guard pill height parity (visual)
+      • v3.36.21 sessionAIs in transcript export (bug fix)
+
+    PARITY CANDIDATES from 2026-05-10 (v3.36.22–24):
+      • v3.36.22 LinkedIn About template + playbook
+      • v3.36.23 dead-feature chain cleanup (code hygiene)
+      • v3.36.23 sidebar gap closure for linkedin-post
+        and contractor-letter
+      • v3.36.23 RFP rename + 4 review templates and
+        playbooks (Reviews & Recommendations category)
+      • v3.36.23 user-manual measured-data block refresh
+      • v3.36.24 recipe playbook 3rd data point +
+        Reference Material methodology callout
+
+    BACKLOG GAP: v3.35.7 through v3.36.13 not enumerated
+    (session records weren't loaded). Backfill from
+    GitHub Desktop history when there's a quiet moment.
+
+    DEV-ONLY (Pro-only, do not port to Free):
+      • Dev Toolbar reorganizations (Pro-only feature)
+      • [wfSat] diagnostic instrumentation (now removed
+        anyway)
+
+
+═════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first)
+═════════════════════════════════════════════════════════════
+
+v3.38.12  2026-05-11  .dp-rounds layout fix — playbook Rounds fields render as prose
+v3.38.0   2026-05-11  Slow-AI alerts toggle (Phase 1 of Settings)
+v3.37.2   2026-05-10  Auto-halted sound — closes out P1.6
+v3.37.0   2026-05-10  Dual-path templates
+v3.36.36  2026-05-10  Convergence section copy rewrite + anchor jump-to fix
+v3.36.35  2026-05-10  Playbook page — step labels + Reference Material as right channel for scratch-mode review facts
+v3.36.34  2026-05-10  Convergence-numbers callout: proper section + sidebar entry
+v3.36.33  2026-05-10  USER DECISION audible alert wired (existing playAlertSound)
+v3.36.32  2026-05-10  Project clock parity — Builder-Only rounds now tick the clock
+v3.36.31  2026-05-10  Three audit-driven teaching callouts shipped (Pass 2 placement decisions)
+v3.36.30  2026-05-10  Primary CTA rest text: white (matches Smoke)
+v3.36.29  2026-05-10  Global Smoke-style hover on .btn-accent
+v3.36.28  2026-05-10  Finish button always-lit (correction to v3.36.27)
+v3.36.27  2026-05-10  UX clarity: Finish button + silent multi-decision lock
+v3.36.26  2026-05-10  Review templates length-mode fix
+v3.36.25  2026-05-10  T2 Exec Summary + T7 Blog Post v2.0 measured; docs bundled in ZIP
+v3.36.24  2026-05-10  Recipe playbook — 3rd data point + Reference Material methodology
+v3.36.23  2026-05-10  Audit-driven cleanup release
+
+v3.36.22  2026-05-09  LinkedIn About template + playbook
+                      NEW DOCUMENT TYPE: linkedin-about.
+                      • Template in templates.js (Career & Hiring
+                        category, between Resume and Thank-You)
+                      • Playbook in document-playbooks.html with
+                        sidebar link
+                      • Real-world example: 1,163-char identity
+                        scaffold for wireless engineer profile
+                      • Buzzword guard in goalNotes
+                      • 11-file ZIP (templates.js touched)
+
+v3.36.21  2026-05-09  sessionAIs in transcript export fix
+                      exportTranscript() HIVE COMPOSITION header
+                      was reading activeAIs (full configured
+                      hive) instead of sessionAIs (per-session
+                      toggle Set). Real-world: user with 3 of 7
+                      AIs toggled got "Reviewers (6 of 7 total)"
+                      lying.
+
+v3.36.20  2026-05-09  Length-guard pill height parity
+v3.36.19  2026-05-09  Length-guard pill height parity (initial)
+v3.36.18  2026-05-09  Notes + Reference button toggle
+v3.36.17  2026-05-09  Notes drawer split + Auto-pause on Notes
+                      open
+v3.36.16  2026-05-09  Three-pill color system codified
+                      (red/amber/green) + Auto button
+                      repositioning + label flip
+v3.36.15  2026-05-09  Length-guard always-visible toggle +
+                      convergence skips auto-halt modal +
+                      round counter state machine +
+                      trajectory-bypass log
+v3.36.14  2026-05-09  Interactive→Manual label cascade +
+                      length-guard logging + length templates
+                      (Trim/Expand/Match) + Notes forensics
+                      (_notesAtBuilderCall freeze pattern)
+
+P1.1 AUDIT (three passes, completed 2026-05-10):
+  • Pass 1 — Functional audit
+    docs\WaxFrame_Functional_Audit_P1-1.md (599 lines)
+    397 functions classified. 3 confirmed DEAD (shipped in
+    v3.36.23). 128 PRODUCTION, 124 LOW-USE, 99 SINGLE-CALL,
+    43 INLINE-CANDIDATE.
+  • Pass 2 — Cross-surface consistency
+    docs\WaxFrame_Cross_Surface_Audit_P1-1_Pass2.md (225 lines)
+    Templates ↔ playbooks ↔ manual ↔ gospel docs reconciled.
+    19 templates, 18 playbooks, 12 measured rows in test
+    master, 3 → 6 in user manual block (refreshed in v3.36.23).
+    Surfaced 3 placement-decision items now in this backlog
+    Section 2.
+  • Pass 3 — Side-effect mapping
+    docs\WaxFrame_Side_Effect_Audit_P1-1_Pass3.md (766 lines)
+    96 pure functions (24%), 6 multi-effect orchestrators (2%).
+    Heuristic flags scanned — all false positives, no code
+    bugs surfaced.
+
+
+════════════════════════════════════════════════════════════
+END OF FILE
+════════════════════════════════════════════════════════════
