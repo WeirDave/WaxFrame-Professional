@@ -1,6 +1,91 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.3
+**Build:** `20260512-006` · **Released:** May 12, 2026
+
+### Builder Applied blurb — workflow guidance
+
+User reported that after clicking 🔒 Lock this line, the next step wasn't clear: was it Smoke the Hive, or Send to Builder? Neither the section copy nor the button labels said. Locks only take effect on the next Smoke the Hive (full reviewer round) — they get injected into the next round's reviewer + Builder prompts. Send to Builder doesn't run reviewers so the lock signal has no effect there.
+
+Extended the existing Builder Applied section blurb to spell out the workflow:
+
+> These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it. Once you've locked anything you want locked, click **Smoke the Hive** below to run the next round — the hive will see your locks and leave those lines alone.
+
+Pure copy addition. No logic, no new components.
+
+### Files changed
+
+`js/app.js` (buildAppliedChangesHTML blurb extension), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
+## v3.39.2
+**Build:** `20260512-005` · **Released:** May 12, 2026
+
+### Lock-button unlock + paragraph counter punctuation-aware
+
+Two user-reported gaps from the v3.39.0 ship, both verified against the round-24 Wireless Network Planning Guide deep dive before code changes.
+
+### Lock-button toggle (unlock)
+
+Previous Lock-this-line button became a disabled "🔒 Locked" badge after click with no way to reverse — an accidental click was permanent until the user manually edited `_resolvedDecisions` in localStorage. Closes the UX gap.
+
+Same handler now toggles. When `change.locked === true`, the button renders as **🔓 Unlock** (clickable, same green treatment). Click reverses everything the lock did:
+
+1. Removes the locked text from `window._resolvedDecisions` (matched by `chosen`)
+2. Removes per-AI warnings for every source reviewer (matched by `chosen`)
+3. Cleans up empty `_aiWarnings[aiId]` arrays so the prompt envelope stays tidy
+4. Flips `change.locked` back to `false`
+5. Re-renders the conflicts panel; saves session
+
+Both branches share the source-name normalization helper (strips `[Base]` prefix), so unlock matches lock symmetrically across prefixed and unprefixed reviewer names.
+
+### Paragraph counter requires terminal sentence punctuation
+
+User reported requesting a 4-paragraph document and getting a "8-paragraph" structure that was really 4 headers + 4 paragraphs. Confirmed by inspecting the actual round-24 Builder output: ALL-CAPS headers like `INTRODUCTION`, `WHY WIRELESS NETWORKS ARE SENSITIVE TO SPACE CHANGES`, `CONCLUSION` sit as their own blocks separated by blank lines from the paragraphs below, and the prior split-on-blank-lines counter treated each header as a paragraph.
+
+Fix: paragraph blocks must contain at least one terminal sentence punctuation mark (`.`, `!`, `?`) to count. Standalone headers and section dividers no longer inflate the count. Applied at both call sites: `countInUnit` (length-guard / bloat-gate) and `computeRefStats` (reference-doc stats card).
+
+Edge cases the regex handles:
+
+- Headers with no punctuation: skipped ✓
+- Section dividers (em-dashes only): skipped ✓
+- Single-sentence paragraphs (legitimate): counted ✓
+- Multi-sentence paragraphs: counted ✓
+- One-sentence "paragraphs" without terminal punctuation (rare — taglines, callouts): skipped. Acceptable trade-off given header-inflation was the dominant real-world failure mode.
+
+### Files changed
+
+`js/app.js` (lockAppliedChange toggle refactor with unlock branch, buildAppliedChangesHTML button-state logic, countInUnit punctuation filter, computeRefStats punctuation filter), `style.css` (new `.applied-lock-btn-locked` clickable state, replaces the prior `disabled` styling pattern for this button only), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
+## v3.39.1
+**Build:** `20260512-004` · **Released:** May 12, 2026
+
+### Conflicts-panel copy fix — "no conflicts" + applied changes was contradictory
+
+v3.39.0's empty-state panel copy read as broken logic when the new Builder Applied section had content. The user-facing sequence was "No conflicts in Round 2" followed immediately by "Builder Applied 7 Changes This Round" — a plain reader sees a contradiction. Internally we distinguish reviewer disagreement (conflicts) from silent single-reviewer adoption (applied changes), but the word "conflicts" in the top message reads as "nothing happened" to users not steeped in the model.
+
+Fix is copy-only, no logic change. Both empty-state branches (full-hive and Builder-Only) now pivot on whether `appliedChanges.length > 0`:
+
+**Full-hive, no conflicts, no applied changes (unchanged):** "No conflicts in Round N. Reviewers and the Builder agreed on the changes this round..."
+
+**Full-hive, no conflicts, has applied changes (NEW):** "No reviewer disagreements in Round N — but the Builder applied N silent changes from individual reviewer suggestions (see below). Review each one and click 🔒 Lock this line on anything you want the hive to stop revising..."
+
+**Builder-Only, no applied changes (unchanged):** "Round N was a Builder-Only round — no reviewers ran..."
+
+**Builder-Only, has applied changes (NEW):** "Round N was a Builder-Only round. No reviewers ran — the Builder applied your directives plus N carry-forward changes (see below). Review each and lock any line you want left alone..."
+
+Word "conflicts" reserved for actual reviewer disagreement in the top message; word "changes" used for silent applications. The two coexist without contradiction.
+
+### Files changed
+
+`js/app.js` (renderConflicts empty-state branch — both sub-cases), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
 ## v3.39.0
 **Build:** `20260512-003` · **Released:** May 12, 2026
 
