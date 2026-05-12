@@ -1,6 +1,68 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.0
+**Build:** `20260512-003` · **Released:** May 12, 2026
+
+### Builder Applied surfacing + per-line lock + length-guard pill color fix
+
+Two pieces shipped together: a new visibility layer for silent Builder applications (the bigger feature) and a small CSS fix for the length-guard pill that was breaking the universal toolbar styling.
+
+### Builder Applied This Round — closes the silent-application visibility gap
+
+Until now, micro-suggestions from individual reviewers (one reviewer proposes a phrasing tweak, nobody else weighs in, Builder accepts it silently) were invisible to the user. They didn't trigger USER DECISIONs because there was no conflict; they didn't trigger BUILDER DECISIONs because they weren't a constraint override. They just got merged into the working document round after round. With chatty reviewers and short documents, this manifests as perpetual bikeshedding: the same two or three lines keep getting nitpicked across rounds, the document never substantively changes, the user has no way to see who's nitpicking what or to shut it down.
+
+This release adds a third surface alongside USER DECISIONs and BUILDER DECISIONs: the **APPLIED CHANGES envelope**.
+
+**Builder side.** Every Refine-phase Builder response now emits a new envelope after the conflicts block:
+
+```
+%%APPLIED_START%%
+[APPLIED]
+LINE_REF: Line 7
+ORIGINAL: "previous text"
+NEW: "new text as it appears in the doc"
+FROM: AI name(s) whose suggestion was adopted
+END_APPLIED
+%%APPLIED_END%%
+```
+
+One block per silent change. Same attribution-integrity and live-text rules as USER DECISION (`FROM` names must match this round's reviewers, `NEW` must be verbatim from the emitted document). Builder writes `NO APPLIED CHANGES` if it applied zero silent reviewer-sourced edits this round. Solo suggestions, unanimous-majority changes, anything reviewer-sourced that didn't surface as USER/BUILDER DECISION goes here.
+
+**Parser side.** New `extractAppliedChanges(text)` function pulls the envelope into an array of `{ lineRef, original, new, from }` entries. Validates each: requires all four fields, drops entries where `NEW === ORIGINAL`. Persists in history under `appliedChanges` alongside existing `conflicts`. Wired in at both `runRound` (full Refine path) and `runBuilderOnly` (Apply Decisions path). All six history-push sites in app.js carry the new field (continuing, builder-only, unanimous, majority, failed, builder-error) so transcript replay stays clean.
+
+**UI side.** New section in the conflicts panel: **"Builder Applied N Changes This Round."** Renders below USER DECISIONs (or below the empty-state copy on rounds with no conflicts). Each change is a card showing:
+
+- Line locator (whatever the Builder said in `LINE_REF`)
+- Source AI attribution
+- Original text struck through
+- New text (the live doc version)
+- Repeat-touch badge if the same `LINE_REF` was touched 2+ rounds ago (yellow) or 3+ (red — "rounds in a row")
+- **🔒 Lock this line** button
+
+Helper `buildAppliedChangesHTML(latest)` wired into all three `renderConflicts` branches: empty-state, converged-with-holdouts, main-conflicts-present. Section appears wherever applied changes exist.
+
+**Lock side.** New `lockAppliedChange(roundNum, idx)` function. Mirrors the existing USER DECISION lock machinery exactly:
+
+1. Pushes the locked text to `window._resolvedDecisions` (the same array `applyDecisions()` uses), which is persisted to localStorage and injected into every future Builder + reviewer prompt as `PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED`
+2. Adds per-AI warnings to `window._aiWarnings[ai.id]` for each source reviewer, also persisted, also injected into future reviewer prompts as `SPECIFIC WARNINGS FOR YOU — REPEATED VIOLATIONS`
+3. Marks the change with `locked: true` so the UI shows the locked tag and disables the button
+4. Re-renders the conflicts panel; saves session
+
+Name matching tolerates the same `[Base]`-prefix variation that v3.38.14 fixed in the validator. Source attribution `Claude-4-6-Opus` matches reviewer display name `[Base] Claude-4-6-Opus` via the same `^\s*\[[^\]]*\]\s*` strip.
+
+**Net effect.** User sees every silent change Builder is making. When a reviewer keeps proposing micro-edits to the same line round after round, the repeat-touch badge surfaces it visually. One click locks the text and routes the appropriate signal back into the reviewer + Builder prompts. The "no-memory" problem (LLMs don't remember rejected suggestions across rounds) gets solved by the user, at the right moment, on the right line, using machinery that's already wired up. No new prompt-injection plumbing, no new persistence layer.
+
+### Length-guard pill color fix
+
+The length-guard pill's "off" state was the only pill in the work toolbar breaking the universal `--*-dim` background + colored-border + colored-text pattern that every other footer pill follows. It rendered as solid red (`#c0152a`) with no border and white text — visually loud and inconsistent with the Auto Mode pill, the Notes pill, the License pill, and its own "on" state. Replaced with the canonical pattern: `--red-dim` background, `--red` border, `--red` text. Hover state retained (fills solid red with shadow). Red semantics preserved (guard off is still a warning) but rendered in the universal idiom.
+
+### Files changed
+
+`js/app.js` (BUILDER_INSTRUCTIONS prompt, extractAppliedChanges parser, runRound + runBuilderOnly wire-in, history pushes across 6 sites, lockAppliedChange function, buildAppliedChangesHTML helper, renderConflicts integration at 3 branches), `style.css` (length-guard pill off-state rewrite + applied-changes section styling), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
 ## v3.38.14
 **Build:** `20260512-002` · **Released:** May 12, 2026
 

@@ -5302,6 +5302,135 @@ kbd {
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .conflict-repeat-warning { background: rgba(239,68,68,0.05); }
 }
+
+/* v3.39.0 — Builder Applied This Round section. Surfaces silent
+   reviewer-sourced changes the Builder accepted without flagging.
+   Visual language: blue/info treatment (informational, not warning)
+   to distinguish from the amber USER DECISION cards and the red
+   repeat-warning band. Cards reuse spacing tokens and border-radius
+   from the existing .decision-card pattern. */
+.applied-changes-header {
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  margin-top: var(--space-10);
+}
+.applied-changes-blurb {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  margin-bottom: var(--space-10);
+  line-height: 1.5;
+}
+.applied-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-10) var(--space-12);
+  margin-bottom: var(--space-8);
+  transition: border-color 0.12s, opacity 0.12s;
+}
+.applied-card-locked {
+  opacity: 0.65;
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.applied-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+  margin-bottom: var(--space-6);
+}
+.applied-line-ref {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.02em;
+}
+.applied-from {
+  font-size: var(--fs-11);
+  color: var(--text-dim);
+  font-style: italic;
+}
+.applied-repeat-badge {
+  font-size: var(--fs-10);
+  font-weight: 700;
+  padding: 2px var(--space-6);
+  border-radius: 10px;
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.applied-repeat-strong {
+  background: var(--red-dim);
+  color: var(--red);
+  border-color: var(--red);
+}
+.applied-locked-tag {
+  font-size: var(--fs-10);
+  font-weight: 700;
+  padding: 2px var(--space-6);
+  border-radius: 10px;
+  background: var(--green-dim);
+  color: var(--green);
+  border: 1px solid var(--green);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.applied-original,
+.applied-new {
+  font-size: var(--fs-12);
+  line-height: 1.5;
+  margin-top: var(--space-4);
+  color: var(--text);
+}
+.applied-original {
+  color: var(--text-dim);
+  text-decoration: line-through;
+  text-decoration-color: var(--border2);
+}
+.applied-label {
+  font-weight: 700;
+  color: var(--text);
+  margin-right: var(--space-4);
+  font-style: normal;
+}
+.applied-actions {
+  display: flex;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  justify-content: flex-end;
+}
+.applied-lock-btn {
+  font-family: inherit;
+  font-size: var(--fs-11);
+  font-weight: 700;
+  padding: var(--space-4) var(--space-10);
+  background: var(--accent-dim);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s;
+  letter-spacing: 0.02em;
+}
+.applied-lock-btn:hover {
+  background: var(--accent);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(245, 166, 35, 0.45);
+}
+.applied-lock-btn-disabled,
+.applied-lock-btn-disabled:hover {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green);
+  cursor: default;
+  box-shadow: none;
+  opacity: 0.7;
+}
+
 .decision-question {
   font-size: var(--fs-13);
   font-weight: 600;
@@ -6517,14 +6646,23 @@ kbd {
   box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
 }
 .length-guard-indicator.is-off {
-  background: #c0152a;
-  border: none;
-  color: #e8ecf4;
-  box-shadow: 0 0 8px rgba(192,21,42,0.5);
+  /* v3.39.0 — Universal pill pattern: dim background + colored border +
+     colored text, same shape as .auto-mode-toggle's two states and the
+     on-state above. Previous solid-red treatment was the only pill in
+     the toolbar breaking the rule. Red semantics preserved (guard off
+     is still a warning) but rendered with --red-dim / --red so it sits
+     visually alongside the other footer pills. Border explicit at 1px
+     (same as default state) so the height stays parity-stable across
+     on/off transitions. */
+  background: var(--red-dim);
+  border: 1px solid var(--red);
+  color: var(--red);
+  box-shadow: none;
 }
 .length-guard-indicator.is-off:hover {
-  background: #e01830;
-  box-shadow: 0 0 12px rgba(192,21,42,0.7);
+  background: var(--red);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(248,113,113,0.45);
 }
 .length-guard-indicator-icon {
   /* v3.36.19 — line-height removed. Was 1, which clamped the

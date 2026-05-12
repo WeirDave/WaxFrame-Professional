@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-002';         // build stamp — update each session
+const BUILD       = '20260512-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12019,7 +12019,28 @@ ANTI-HALLUCINATION RULES — every USER DECISION must satisfy ALL of these or it
 - DO NOT BOTH APPLY AND FLAG: If you applied a reviewer's suggestion to the document, do not also surface that same change as a USER DECISION. The user resolves USER DECISIONs by replacing CURRENT with their chosen option in the document. If CURRENT is no longer in the document, the resolution mechanism cannot work.
 
 If there are no conflicts write exactly: NO CONFLICTS
-%%CONFLICTS_END%%`,
+%%CONFLICTS_END%%
+
+After %%CONFLICTS_END%%, emit an APPLIED CHANGES envelope listing every silent change you applied to the document this round — solo reviewer suggestions you accepted, unanimous-majority changes, and any other reviewer-sourced edits that did NOT become a USER DECISION or BUILDER DECISION. This gives the user visibility into what's being applied silently round after round so they can lock down lines that keep getting nitpicked.
+
+%%APPLIED_START%%
+For each silent change applied to the document this round, emit ONE block in EXACTLY this format:
+
+[APPLIED]
+LINE_REF: A short locator like "Line 7" or "Introduction paragraph 2" — whatever helps the user find it in the doc
+ORIGINAL: "exact previous text"
+NEW: "exact new text as it appears in your %%DOCUMENT_START%% block"
+FROM: AI name(s) whose suggestion you adopted (comma-separated if multiple)
+END_APPLIED
+
+Rules for APPLIED CHANGES:
+- ONLY list changes where the NEW text differs from ORIGINAL — do not list unchanged lines
+- ONLY list changes sourced from a reviewer suggestion this round — do not list edits you made on your own initiative
+- FROM names must match reviewers who actually proposed the change in THIS round — same attribution rule as USER DECISION
+- NEW must be verbatim text from your %%DOCUMENT_START%% output — same live-text rule as USER DECISION's CURRENT
+- Do not list a change here AND surface it as a USER DECISION — pick one
+- If you applied zero silent changes this round write exactly: NO APPLIED CHANGES
+%%APPLIED_END%%`,
 
   draft: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
 
@@ -12319,6 +12340,10 @@ async function runBuilderOnly() {
     const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
     const conflicts = extractConflicts(builderResponse);
     window._lastConflicts = conflicts || null;
+    // v3.39.0 — Applied-changes parse for Builder-only path too. Apply
+    // Decisions → runBuilderOnly may still silently apply user-injected
+    // edits or carry-forward changes — those need surfacing.
+    window._lastAppliedChanges = extractAppliedChanges(builderResponse);
     const hasConflictBlock = builderResponse.includes('%%CONFLICTS_START%%');
 
     if (!hasConflictBlock) {
@@ -12533,6 +12558,7 @@ async function runBuilderOnly() {
       notes:          notes,
       standingNotes:  standingNotes,
       conflicts:      window._lastConflicts || null,
+      appliedChanges: Array.isArray(window._lastAppliedChanges) ? window._lastAppliedChanges : [],
       responses:      {},
       timestamp:      new Date().toLocaleTimeString(),
       timestampISO:   new Date().toISOString(),
@@ -12543,6 +12569,7 @@ async function runBuilderOnly() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    window._lastAppliedChanges = null;
     // v3.36.15 — Round-counter state: stamp the completion label
     // BEFORE round++ so the suffix reflects the round that just
     // finished, not the next-up round.
@@ -12880,6 +12907,7 @@ async function runRound() {
       notes:          _notesAtBuilderCall,
       standingNotes:  _standingAtBuilderCall,
       conflicts:      { converged: true, holdouts: [] },
+      appliedChanges: [],
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
       timestampISO:   new Date().toISOString(),
@@ -12889,6 +12917,7 @@ async function runRound() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    window._lastAppliedChanges = null;
     // v3.36.15 — Round-counter state: stamp converged label BEFORE
     // round++ so the badge reads "Round N — Phase ✓ Converged".
     _setLastCompletedLabel(round, phase, 'unanimous_convergence');
@@ -12998,6 +13027,7 @@ async function runRound() {
       notes:          _notesAtBuilderCall,
       standingNotes:  _standingAtBuilderCall,
       conflicts:      { converged: true, holdouts: holdouts.map(r => ({ name: r.name, response: r.response })), satisfied: noChangesCount, totalAIs: successfulReviews.length },
+      appliedChanges: [],
       responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
       timestampISO:   new Date().toISOString(),
@@ -13007,6 +13037,7 @@ async function runRound() {
       referenceMaterialAtRound: snapshotReferenceDocs()
     });
     window._lastConflicts = null;
+    window._lastAppliedChanges = null;
     // v3.36.15 — Round-counter state: stamp majority label BEFORE
     // round++ so the badge reads "Round N — Phase ✓ Majority".
     _setLastCompletedLabel(round, phase, 'majority_convergence');
@@ -13106,6 +13137,11 @@ async function runRound() {
       if (conflicts && Array.isArray(conflicts.userDecisions) && conflicts.userDecisions.length > 0) {
         conflicts.userDecisions = validateUserDecisions(conflicts.userDecisions, newDoc || '', successfulReviews);
       }
+      // v3.39.0 — Parse APPLIED CHANGES envelope. Builder lists every silent
+      // change it made this round; user gets visibility plus per-line lock
+      // affordance via renderConflicts UI.
+      const appliedChanges = extractAppliedChanges(builderResponse);
+      window._lastAppliedChanges = appliedChanges;
       window._lastConflicts = conflicts || null;
       // v3.35.0 — Auto Mode capture. Conflicts get nulled later in this
       // function before the chain-check fires; snapshot now so the
@@ -13309,6 +13345,7 @@ async function runRound() {
     notes:          _notesAtBuilderCall,
     standingNotes:  _standingAtBuilderCall,
     conflicts:      window._lastConflicts || null,
+    appliedChanges: Array.isArray(window._lastAppliedChanges) ? window._lastAppliedChanges : [],
     responses:      Object.fromEntries(reviewerResponses.map(r => [r.id, r.response])),
     timestamp:      new Date().toLocaleTimeString(),
     timestampISO:   new Date().toISOString(),
@@ -13318,6 +13355,7 @@ async function runRound() {
       referenceMaterialAtRound: snapshotReferenceDocs()
   });
   window._lastConflicts = null;
+  window._lastAppliedChanges = null;
 
   // Clear notes after every successful Builder run. Notes are documented as
   // round-specific directives — once the Builder has applied them, they should
@@ -13398,6 +13436,7 @@ async function runRound() {
       notes:          _notesAtBuilderCall,
       standingNotes:  _standingAtBuilderCall,
       conflicts:      null,
+      appliedChanges: [],
       responses:      Object.fromEntries((reviewerResponses || []).map(r => [r.id, r.response])),
       timestamp:      new Date().toLocaleTimeString(),
       timestampISO:   new Date().toISOString(),
@@ -13689,6 +13728,51 @@ function extractConflicts(text) {
   }
 
   return result;
+}
+
+// v3.39.0 — Parse the %%APPLIED_START%%...%%APPLIED_END%% envelope. Each
+// [APPLIED] block lists a silent change Builder made this round — a solo
+// reviewer suggestion accepted, a unanimous-majority change, or any other
+// reviewer-sourced edit that did NOT become a USER DECISION or BUILDER
+// DECISION. Surfaces what's being applied silently so the user can lock
+// down lines that keep getting nitpicked round after round.
+//
+// Returns array of { lineRef, original, new, from } objects. Empty array
+// if no envelope, no entries, or explicit "NO APPLIED CHANGES" content.
+function extractAppliedChanges(text) {
+  if (!text || typeof text !== 'string') return [];
+  const clean = text.replace(/`\[/g, '[').replace(/\]`/g, ']');
+  const start = clean.lastIndexOf('%%APPLIED_START%%');
+  const end   = clean.lastIndexOf('%%APPLIED_END%%');
+  if (start === -1 || end === -1 || end <= start) return [];
+  const raw = clean.slice(start + '%%APPLIED_START%%'.length, end).trim();
+  if (!raw || /^NO APPLIED CHANGES$/i.test(raw)) return [];
+
+  const normalised = raw.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const blockRegex = /\[APPLIED\]([\s\S]*?)END_APPLIED/gi;
+  const out = [];
+  let match;
+  while ((match = blockRegex.exec(normalised)) !== null) {
+    const block = match[1].trim();
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    const entry = { lineRef: '', original: '', new: '', from: '' };
+    for (const line of lines) {
+      if (/^LINE_REF:/i.test(line)) {
+        entry.lineRef = line.replace(/^LINE_REF:/i, '').trim();
+      } else if (/^ORIGINAL:/i.test(line)) {
+        entry.original = line.replace(/^ORIGINAL:/i, '').trim().replace(/^"|"$/g, '');
+      } else if (/^NEW:/i.test(line)) {
+        entry.new = line.replace(/^NEW:/i, '').trim().replace(/^"|"$/g, '');
+      } else if (/^FROM:/i.test(line)) {
+        entry.from = line.replace(/^FROM:/i, '').trim();
+      }
+    }
+    // Validity: require all four fields and that NEW differs from ORIGINAL
+    if (!entry.lineRef || !entry.original || !entry.new || !entry.from) continue;
+    if (entry.original.trim() === entry.new.trim()) continue;
+    out.push(entry);
+  }
+  return out;
 }
 
 // Defensive validation against Builder hallucination — verified against a real
@@ -14092,6 +14176,67 @@ function stripLineRefs(text) {
     .trim();
 }
 
+// v3.39.0 — Build the "Builder Applied This Round" section. Pulls the
+// appliedChanges array from the latest history entry, counts repeat
+// touches across recent rounds (for the "×N rounds" badge), and renders
+// each as a card with a "Lock this line" button. Wired through
+// lockAppliedChange() which mirrors the existing USER DECISION lock-in
+// path (push to _resolvedDecisions + per-AI warnings).
+function buildAppliedChangesHTML(latest) {
+  if (!latest || !Array.isArray(latest.appliedChanges) || latest.appliedChanges.length === 0) return '';
+  const items = latest.appliedChanges;
+  const latestRound = latest.round || (history.length || 0);
+
+  // Repeat-touch counter: for each item, how many recent rounds touched
+  // the same line locator (case-insensitive). Window = last 5 rounds back
+  // including this one.
+  const recent = history.slice(-5);
+  const repeatCount = (lineRef) => {
+    if (!lineRef) return 0;
+    const key = lineRef.trim().toLowerCase();
+    let n = 0;
+    for (const h of recent) {
+      if (!Array.isArray(h.appliedChanges)) continue;
+      if (h.appliedChanges.some(a => (a.lineRef || '').trim().toLowerCase() === key)) n++;
+    }
+    return n;
+  };
+
+  let html = `<div class="conflicts-section-header applied-changes-header">
+    ✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} This Round
+  </div>
+  <div class="applied-changes-blurb">
+    These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it.
+  </div>`;
+
+  items.forEach((c, i) => {
+    const rep = repeatCount(c.lineRef);
+    const repeatBadge = rep >= 3
+      ? `<span class="applied-repeat-badge applied-repeat-strong">⚠ ${rep} rounds in a row</span>`
+      : (rep >= 2 ? `<span class="applied-repeat-badge">↻ touched ${rep} rounds</span>` : '');
+    const lockedTag = c.locked ? `<span class="applied-locked-tag">🔒 Locked</span>` : '';
+    const lockBtn = c.locked
+      ? `<button class="applied-lock-btn applied-lock-btn-disabled" disabled>🔒 Locked</button>`
+      : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Lock this line</button>`;
+
+    html += `<div class="applied-card${c.locked ? ' applied-card-locked' : ''}">
+      <div class="applied-card-header">
+        <span class="applied-line-ref">${esc(c.lineRef || '(unspecified line)')}</span>
+        <span class="applied-from">← ${esc(c.from || 'unknown reviewer')}</span>
+        ${repeatBadge}
+        ${lockedTag}
+      </div>
+      <div class="applied-original"><span class="applied-label">was:</span> "${esc(c.original || '')}"</div>
+      <div class="applied-new"><span class="applied-label">now:</span> "${esc(c.new || '')}"</div>
+      <div class="applied-actions">
+        ${lockBtn}
+      </div>
+    </div>`;
+  });
+
+  return html;
+}
+
 function renderConflicts() {
   const el = document.getElementById('conflictsPanel');
   if (!el) return;
@@ -14122,7 +14267,7 @@ function renderConflicts() {
     } else {
       msg = `<strong>No conflicts in Round ${roundNum}.</strong> Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts <em>from the most recent round only</em>. It\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong> (a majority of reviewers agree there are no more changes needed).<br><br>To keep refining, click <strong>Smoke the Hive</strong> below for another full round. If you\'re already satisfied with the current draft, click <strong>🏁 Finish</strong> in the top toolbar to export.`;
     }
-    el.innerHTML = `<div class="conflicts-empty">${msg}</div>`;
+    el.innerHTML = `<div class="conflicts-empty">${msg}</div>${buildAppliedChangesHTML(latest)}`;
     return;
   }
 
@@ -14216,6 +14361,7 @@ function renderConflicts() {
     html += `<div class="convergence-footer">
       The hive is satisfied. Review each suggestion above — apply, decline, or customise individually. Or hit <strong>Finish</strong> to finalise the document as-is.
     </div>`;
+    html += buildAppliedChangesHTML(latest);
     el.innerHTML = html;
     return;
   }
@@ -14327,7 +14473,7 @@ function renderConflicts() {
     }
   }
 
-  el.innerHTML = html;
+  el.innerHTML = html + buildAppliedChangesHTML(latest);
 }
 
 function selectDecision(decisionIdx, optionIdx, total) {
@@ -14543,6 +14689,66 @@ function applyDecisions() {
   }
   runBuilderOnly();
 }
+
+// v3.39.0 — Lock a silently-applied change so reviewers stop suggesting
+// further changes to that text and Builder treats it as final. Same
+// downstream machinery as USER DECISION lock-in: pushes to
+// window._resolvedDecisions (injected into every future Builder + reviewer
+// prompt as "FINAL AND LOCKED") and adds a per-AI warning to every
+// reviewer attributed as the source so they get a targeted "stop
+// raising this" notice in their next prompt. No round fires; lock takes
+// effect from the next Run Round.
+function lockAppliedChange(roundNum, idx) {
+  const h = history.find(e => e.round === roundNum && Array.isArray(e.appliedChanges));
+  if (!h) {
+    consoleLog(`⚠️ lockAppliedChange: history entry for round ${roundNum} not found`, 'warn');
+    return;
+  }
+  const change = h.appliedChanges[idx];
+  if (!change) {
+    consoleLog(`⚠️ lockAppliedChange: applied change ${idx} not found in round ${roundNum}`, 'warn');
+    return;
+  }
+  if (change.locked) {
+    consoleLog(`ℹ️ lockAppliedChange: change already locked, skipping`, 'info');
+    return;
+  }
+  const lockedText = (change.new || '').trim();
+  if (!lockedText) {
+    consoleLog(`⚠️ lockAppliedChange: empty NEW text — refusing to lock`, 'warn');
+    return;
+  }
+  // Push to resolved decisions — Builder + reviewer prompts both inject this
+  window._resolvedDecisions = window._resolvedDecisions || [];
+  const alreadyResolved = window._resolvedDecisions.some(rd =>
+    (rd.chosen || '').trim() === lockedText
+  );
+  if (!alreadyResolved) {
+    window._resolvedDecisions.push({ original: lockedText, chosen: lockedText });
+    localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
+  }
+  // Per-AI warnings for the source reviewer(s)
+  const norm = (s) => (s || '').replace(/^\s*\[[^\]]*\]\s*/, '').trim().toLowerCase();
+  const sourceNames = (change.from || '').split(/,|\/| and | & /i).map(s => s.trim()).filter(Boolean);
+  window._aiWarnings = window._aiWarnings || {};
+  sourceNames.forEach(srcName => {
+    const srcNorm = norm(srcName);
+    const ai = (aiList || []).find(a => norm(a.name) === srcNorm || (a.name || '').toLowerCase() === srcName.toLowerCase());
+    if (!ai) return;
+    if (!window._aiWarnings[ai.id]) window._aiWarnings[ai.id] = [];
+    const dup = window._aiWarnings[ai.id].some(w => (w.chosen || '').trim() === lockedText);
+    if (!dup) {
+      window._aiWarnings[ai.id].push({ original: lockedText, chosen: lockedText });
+      consoleLog(`🔒 Locked applied change — ${ai.name} will be told to stop revising this`, 'info');
+    }
+  });
+  try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) { console.warn('[ai-warnings] write failed:', e); }
+  change.locked = true;
+  saveSession();
+  renderConflicts();
+  toast(`🔒 Locked — Builder and reviewers will leave this line alone`);
+}
+
 
 function selectHoldout(idx, choice, total) {
   window._holdoutChoices = window._holdoutChoices || {};
