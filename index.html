@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-015">
+  <meta name="waxframe-build" content="20260511-016">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.8">
+  <link rel="stylesheet" href="style.css?v=3.38.9">
 </head>
 <body>
 
@@ -1205,7 +1205,7 @@
   <div class="finish-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="finish-modal-logo">
     <h2 class="finish-modal-title">🏁 Project Complete!</h2>
-    <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do.</p>
+    <p class="finish-modal-msg">Export your document before starting a new project — your working document and round history will be cleared when you do. If you want to review which reviewers were still suggesting changes (the <strong>holdouts</strong>), make a manual edit, or run another round before exporting, click <strong>← Back to Hive</strong> at the bottom.</p>
     <div class="finish-modal-actions">
       <button id="finishBtnDoc" class="finish-modal-btn finish-modal-btn-export" onclick="exportDocument()">💾 Export Document</button>
       <button id="finishBtnTranscript" class="finish-modal-btn finish-modal-btn-export finish-modal-btn-transcript" onclick="exportTranscript()">
@@ -1218,7 +1218,7 @@
       </button>
     </div>
     <div class="finish-modal-footer-btns">
-      <button class="finish-modal-cancel" onclick="hideFinishModal()">← Back to Hive</button>
+      <button class="finish-modal-cancel" onclick="hideFinishModal()" title="Return to the work screen to review holdouts (the AIs that still had suggestions), make manual edits, or run another round">← Back to Hive</button>
       <button class="finish-modal-cancel" onclick="hideFinishModal();goToScreen('screen-welcome')">⌂ Exit to Home</button>
     </div>
   </div>
@@ -2172,9 +2172,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.38.8"></script>
-<script src="js/templates.js?v=3.38.8"></script>
-<script src="js/app.js?v=3.38.8"></script>
+<script src="js/version.js?v=3.38.9"></script>
+<script src="js/templates.js?v=3.38.9"></script>
+<script src="js/app.js?v=3.38.9"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->

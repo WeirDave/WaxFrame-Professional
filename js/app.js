@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260511-015';         // build stamp — update each session
+const BUILD       = '20260511-016';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12928,6 +12928,16 @@ async function runRound() {
     setTimeout(() => {
       _autoMaybeChainNextRound({ outcome: 'unanimous', satisfied: noChangesCount, total: successfulReviews.length });
     }, 3500);
+    // v3.38.9 — Auto-open Finish modal after the unanimous scene fully plays
+    // out (~12.9s timeline; user can skip via Esc or click, in which case
+    // they'll wait briefly for this timer to fire). Same rationale as the
+    // majority path — Candy's coleslaw walkthrough showed users get stranded
+    // on the work screen after convergence dismisses. The Finish modal's
+    // ← Back to Hive button is the path for advanced users who want to
+    // review holdouts or run more rounds.
+    setTimeout(() => {
+      showFinishModal();
+    }, 13500);
     return;
   } else if (noChangesCount > 0) {
     consoleLog(`✓ ${noChangesCount} of ${successfulReviews.length} AIs had no further changes`, 'info');
@@ -13024,15 +13034,26 @@ async function runRound() {
     hideSmokerOverlay();
     // 🎉 Hive Approved — majority convergence earns the fanfare
     playFlyingCarSound();
-    showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
-    // v3.35.0 — Auto Mode halt: holdouts to review.
-    // v3.35.1 — Defer halt modal 3.5s so showHiveFinish's 3-second scene
-    // can complete cleanly. Without the delay, halt modal stacked on top
-    // of the active scene and the underlying work-screen click targets
-    // (including Finish modal export buttons) became unclickable.
+    // v3.38.9 — Bumped celebration duration from 3000→6000ms and chained the
+    // Finish modal open after it. Candy's coleslaw walkthrough (2026-05-11):
+    // the 3-second auto-dismiss wasn't long enough for her to read "X of Y
+    // agree", and after the celebration dismissed she was stranded on the
+    // work screen unsure whether to click Send to Builder or Smoke the Hive.
+    // The Finish modal gives clear next-step options (Export, Start New,
+    // Back to Hive). Back to Hive is the path for users who want to review
+    // holdouts or run another round — keeps the advanced workflow available
+    // without stranding the typical user.
+    showHiveFinish({ duration: 6000, smokeBursts: 10, satisfied: noChangesCount, total: successfulReviews.length });
+    // v3.35.1 / v3.38.9 — Defer Auto-Mode chain + Finish modal until after
+    // showHiveFinish's scene completes cleanly. Without the delay, popping a
+    // modal on top of the active scene caused click events to land on the
+    // scene's overlay element instead of the work-screen buttons underneath,
+    // making the Finish modal export buttons appear unclickable until a full
+    // reload (reproduced by David in the v3.35.0 test session).
     setTimeout(() => {
       _autoMaybeChainNextRound({ outcome: 'majority', satisfied: noChangesCount, total: successfulReviews.length });
-    }, 3500);
+      showFinishModal();
+    }, 6500);
     return;
   }
 
