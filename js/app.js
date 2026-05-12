@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-003';         // build stamp — update each session
+const BUILD       = '20260512-006';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3163,7 +3163,16 @@ function getLengthMode() {
 function countInUnit(text, unit) {
   if (!text) return 0;
   if (unit === 'characters')  return text.length;
-  if (unit === 'paragraphs')  return text.split(/\n\s*\n/).filter(p => p.trim()).length;
+  // v3.39.2 — Paragraph counter now requires terminal sentence punctuation
+  // (.!?) in the block. Prior split-on-blank-lines counted standalone
+  // headers (INTRODUCTION, CONCLUSION) and section dividers as paragraphs,
+  // inflating the count and breaking length-guard targets. A paragraph
+  // without sentence-ending punctuation is structurally a heading or a
+  // fragment, not a paragraph.
+  if (unit === 'paragraphs')  return text.split(/\n\s*\n/).filter(p => {
+    const t = p.trim();
+    return t.length > 0 && /[.!?]/.test(t);
+  }).length;
   // words and pages both reduce to whitespace-split word count
   return text.trim().split(/\s+/).filter(Boolean).length;
 }
@@ -9600,7 +9609,13 @@ function computeRefStats(text) {
   const tokens = Math.round(chars / 4);
   const lines = t === '' ? 0 : t.split('\n').length;
   const paragraphs = t.trim()
-    ? t.trim().split(/\n\s*\n/).filter(p => p.trim()).length
+    ? t.trim().split(/\n\s*\n/).filter(p => {
+        // v3.39.2 — Match countInUnit: paragraph requires terminal
+        // sentence punctuation (.!?). Headers and section dividers no
+        // longer inflate the count.
+        const trimmed = p.trim();
+        return trimmed.length > 0 && /[.!?]/.test(trimmed);
+      }).length
     : 0;
   return { chars, words, tokens, lines, paragraphs };
 }
@@ -14206,7 +14221,7 @@ function buildAppliedChangesHTML(latest) {
     ✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} This Round
   </div>
   <div class="applied-changes-blurb">
-    These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it.
+    These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it. Once you've locked anything you want locked, click <strong>Smoke the Hive</strong> below to run the next round — the hive will see your locks and leave those lines alone.
   </div>`;
 
   items.forEach((c, i) => {
@@ -14215,8 +14230,12 @@ function buildAppliedChangesHTML(latest) {
       ? `<span class="applied-repeat-badge applied-repeat-strong">⚠ ${rep} rounds in a row</span>`
       : (rep >= 2 ? `<span class="applied-repeat-badge">↻ touched ${rep} rounds</span>` : '');
     const lockedTag = c.locked ? `<span class="applied-locked-tag">🔒 Locked</span>` : '';
+    // v3.39.2 — Button toggles. When locked, shows Unlock (clicks the same
+    // handler which detects locked state and reverses). Previous version
+    // disabled the button entirely, leaving no escape for an accidental
+    // click.
     const lockBtn = c.locked
-      ? `<button class="applied-lock-btn applied-lock-btn-disabled" disabled>🔒 Locked</button>`
+      ? `<button class="applied-lock-btn applied-lock-btn-locked" onclick="lockAppliedChange(${latestRound}, ${i})">🔓 Unlock</button>`
       : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Lock this line</button>`;
 
     html += `<div class="applied-card${c.locked ? ' applied-card-locked' : ''}">
@@ -14259,13 +14278,30 @@ function renderConflicts() {
     // reviewers ran) get a structural explanation; full-hive rounds with no
     // surfaced conflicts get a "this is per-round, run another round to
     // converge" framing.
+    // v3.39.1 — Both branches now pivot on whether the Builder Applied
+    // section has content. The prior copy read as a contradiction when
+    // followed by a populated "Builder Applied N Changes" section ("no
+    // conflicts" + "7 changes" landed as broken logic on a plain read).
+    // Fix: when appliedChanges.length > 0, reframe the top message to
+    // distinguish reviewer DISAGREEMENT (the conflicts panel's actual
+    // domain) from silent CHANGES (which the new section already shows).
     const roundNum = latest.round || history.length;
     const isBuilderOnly = latest.outcome === 'builder_only_complete';
+    const appliedCount = Array.isArray(latest.appliedChanges) ? latest.appliedChanges.length : 0;
+    const hasApplied = appliedCount > 0;
     let msg;
     if (isBuilderOnly) {
-      msg = `<strong>Round ${roundNum} was a Builder-Only round</strong> — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document.<br><br>To gather reviewer feedback on the current draft, click <strong>Smoke the Hive</strong> below — that\'s the full multi-AI round, and this panel will populate with anything the reviewers disagreed on.`;
+      if (hasApplied) {
+        msg = `<strong>Round ${roundNum} was a Builder-Only round.</strong> No reviewers ran — the Builder applied your directives plus ${appliedCount} carry-forward change${appliedCount !== 1 ? 's' : ''} (see below). Review each and lock any line you want left alone.<br><br>To gather reviewer feedback on the updated draft, click <strong>Smoke the Hive</strong> below.`;
+      } else {
+        msg = `<strong>Round ${roundNum} was a Builder-Only round</strong> — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document.<br><br>To gather reviewer feedback on the current draft, click <strong>Smoke the Hive</strong> below — that\'s the full multi-AI round, and this panel will populate with anything the reviewers disagreed on.`;
+      }
     } else {
-      msg = `<strong>No conflicts in Round ${roundNum}.</strong> Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts <em>from the most recent round only</em>. It\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong> (a majority of reviewers agree there are no more changes needed).<br><br>To keep refining, click <strong>Smoke the Hive</strong> below for another full round. If you\'re already satisfied with the current draft, click <strong>🏁 Finish</strong> in the top toolbar to export.`;
+      if (hasApplied) {
+        msg = `<strong>No reviewer disagreements in Round ${roundNum}</strong> — but the Builder applied ${appliedCount} silent change${appliedCount !== 1 ? 's' : ''} from individual reviewer suggestions (see below). Review each one and click <strong>🔒 Lock this line</strong> on anything you want the hive to stop revising.<br><br>This panel shows the most recent round only — it\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong>. To keep refining, click <strong>Smoke the Hive</strong>. To finalize as-is, click <strong>🏁 Finish</strong> in the top toolbar.`;
+      } else {
+        msg = `<strong>No conflicts in Round ${roundNum}.</strong> Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts <em>from the most recent round only</em>. It\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong> (a majority of reviewers agree there are no more changes needed).<br><br>To keep refining, click <strong>Smoke the Hive</strong> below for another full round. If you\'re already satisfied with the current draft, click <strong>🏁 Finish</strong> in the top toolbar to export.`;
+      }
     }
     el.innerHTML = `<div class="conflicts-empty">${msg}</div>${buildAppliedChangesHTML(latest)}`;
     return;
@@ -14698,6 +14734,10 @@ function applyDecisions() {
 // reviewer attributed as the source so they get a targeted "stop
 // raising this" notice in their next prompt. No round fires; lock takes
 // effect from the next Run Round.
+// v3.39.2 — Toggles. If the change is already locked, this function
+// REVERSES the lock: removes the text from _resolvedDecisions, removes
+// the matching per-AI warnings, flips change.locked back to false.
+// Closes the "oh I clicked it by accident" UX gap.
 function lockAppliedChange(roundNum, idx) {
   const h = history.find(e => e.round === roundNum && Array.isArray(e.appliedChanges));
   if (!h) {
@@ -14709,15 +14749,44 @@ function lockAppliedChange(roundNum, idx) {
     consoleLog(`⚠️ lockAppliedChange: applied change ${idx} not found in round ${roundNum}`, 'warn');
     return;
   }
-  if (change.locked) {
-    consoleLog(`ℹ️ lockAppliedChange: change already locked, skipping`, 'info');
-    return;
-  }
   const lockedText = (change.new || '').trim();
   if (!lockedText) {
-    consoleLog(`⚠️ lockAppliedChange: empty NEW text — refusing to lock`, 'warn');
+    consoleLog(`⚠️ lockAppliedChange: empty NEW text — refusing to ${change.locked ? 'unlock' : 'lock'}`, 'warn');
     return;
   }
+  const norm = (s) => (s || '').replace(/^\s*\[[^\]]*\]\s*/, '').trim().toLowerCase();
+
+  // ── UNLOCK BRANCH ──
+  if (change.locked) {
+    // Remove from resolved decisions (match by chosen text)
+    window._resolvedDecisions = (window._resolvedDecisions || []).filter(rd =>
+      (rd.chosen || '').trim() !== lockedText
+    );
+    try { localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions)); } catch(e) { console.warn('[resolved] write failed:', e); }
+
+    // Remove per-AI warnings (match by chosen text on each source AI)
+    const sourceNames = (change.from || '').split(/,|\/| and | & /i).map(s => s.trim()).filter(Boolean);
+    window._aiWarnings = window._aiWarnings || {};
+    sourceNames.forEach(srcName => {
+      const srcNorm = norm(srcName);
+      const ai = (aiList || []).find(a => norm(a.name) === srcNorm || (a.name || '').toLowerCase() === srcName.toLowerCase());
+      if (!ai || !window._aiWarnings[ai.id]) return;
+      window._aiWarnings[ai.id] = window._aiWarnings[ai.id].filter(w =>
+        (w.chosen || '').trim() !== lockedText
+      );
+      if (window._aiWarnings[ai.id].length === 0) delete window._aiWarnings[ai.id];
+    });
+    try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) { console.warn('[ai-warnings] write failed:', e); }
+
+    change.locked = false;
+    saveSession();
+    renderConflicts();
+    consoleLog(`🔓 Unlocked applied change — reviewers may revise this line again`, 'info');
+    toast(`🔓 Unlocked — reviewers can revise this line again`);
+    return;
+  }
+
+  // ── LOCK BRANCH ──
   // Push to resolved decisions — Builder + reviewer prompts both inject this
   window._resolvedDecisions = window._resolvedDecisions || [];
   const alreadyResolved = window._resolvedDecisions.some(rd =>
@@ -14728,7 +14797,6 @@ function lockAppliedChange(roundNum, idx) {
     localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
   }
   // Per-AI warnings for the source reviewer(s)
-  const norm = (s) => (s || '').replace(/^\s*\[[^\]]*\]\s*/, '').trim().toLowerCase();
   const sourceNames = (change.from || '').split(/,|\/| and | & /i).map(s => s.trim()).filter(Boolean);
   window._aiWarnings = window._aiWarnings || {};
   sourceNames.forEach(srcName => {
