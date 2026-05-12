@@ -1,8 +1,55 @@
 # WaxFrame Professional — Changelog
 
 ---
-## v3.38.5
+## v3.38.6
 **Build:** `20260511-013` · **Released:** May 11, 2026
+
+### Step 5 Quick Start hint — deleted entirely
+
+Follow-up hotfix to v3.38.5. The Step 5 hint *"For the Quick Start template: click Start from Scratch — Quick Start has no source recipe to upload, so the hive will write the first draft from your project goal"* — newly reworded in v3.38.5 — still caused real-world confusion.
+
+**The discovery:** Candy did a fresh-eyes walkthrough on v3.38.5 and ran a coleslaw recipe project from scratch (she'd rejected Quick Start in v3.38.5 because of the prior "demo" framing — see v3.38.5 scope 8). On Step 5 she read *"Quick Start has no source recipe to upload"* and thought the system had detected her recipe-themed project and was asking her where her source recipe was. The word "recipe" in the hint collided with the Recipe content type she was working on, even with the *"For the Quick Start template:"* prefix scoping it.
+
+**The realization:** the hint never earned its place. The general description paragraph directly above it already covers what it was trying to add:
+
+> *"Three buttons below let you choose where your starting document comes from. Click **Upload File** to upload a Word doc, PDF, or other file you already have. Click **Paste Text** to paste text directly. Click **Start from Scratch** if you want the hive to generate a first draft using only your project goal."*
+
+The Quick Start hint was scope-narrowing duplication that made the screen worse, not better. Three rounds of attempted wording fixes (question → directive → strip "recipe") landed on the right answer: delete it.
+
+### Process lesson worth capturing
+
+Before iterating on copy, ask: *"does this paragraph earn its place at all?"* The Quick Start hint failed that test in three different ways across two sessions before deletion surfaced as the answer. The general description directly above it already did the work.
+
+### Files Changed
+
+`index.html`
+- Step 5 Quick Start hint paragraph (`p.hp-section-sub--newuser` at the Starting Document screen) deleted
+- meta build → `20260511-013`; cache-bust `?v=3.38.6` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`js/app.js`
+- BUILD → `20260511-013`
+
+`js/version.js`
+- APP_VERSION → `v3.38.6 Pro`
+
+`waxframe-user-manual.html`
+- Parallel Step 5 Quick Start manual block (last `<p>` in the "What you are looking at" wh-block of Step 5) deleted
+- meta build → `20260511-013`; cache-bust `?v=3.38.6` on `style.css` and `version.js`
+
+`README.md`
+- Version badge bumped to `Version-3.38.6`
+- Build badge bumped to `20260511-013`
+
+`document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-013`; cache-bust `?v=3.38.6` on `style.css` and `version.js`
+
+### What didn't change
+
+No CSS, no JS logic, no template content, no other screens touched. Purely a copy deletion + standard version-stamp sweep.
+
+---
+## v3.38.5
+**Build:** `20260511-012` · **Released:** May 11, 2026
 
 ### Onboarding accuracy + readability sweep — six scope items
 
