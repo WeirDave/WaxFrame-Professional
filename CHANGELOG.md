@@ -1,6 +1,74 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.11
+**Build:** `20260511-018` · **Released:** May 11, 2026
+
+### Builder's "handyman" role explained — Send to Builder workflow surfaced
+
+Candy completed the cole-slaw recipe in 5 rounds / 24 minutes on v3.38.10 (transcript saved). The output's solid — but reading through her run with David surfaced a documentation gap: the Builder was described everywhere as the *synthesizer who compiles reviewer feedback into the next draft*, with no mention of its second role as the *user's personal editor* via **Send to Builder** + Notes directives.
+
+This is one of WaxFrame's most useful workflows and was effectively invisible to a first-time user. If you have a specific change in mind — *"rewrite the first paragraph,"* *"stop saying 'refine' so much,"* *"tighten paragraph three"* — you don't need to wait for the whole hive to debate it. Write the directive in the Notes drawer, click **Send to Builder**, and the Builder performs just that one task. Then click **Smoke the Hive** when you want the reviewers to weigh in on the change.
+
+### Framing applied: Builder = "handyman as well as synthesizer"
+
+Seven surfaces updated to consistently describe the dual role:
+
+**1. Setup 2 (Builder screen) subtitle.** New second paragraph after the existing synthesizer explanation — introduces the handyman framing with three concrete directive examples and the Send to Builder → Smoke the Hive pattern.
+
+**2. `infoBuilderModal` (Work-screen "About the Builder").** New `goal-info-row` *"The Builder's two roles"* added between the intro paragraph and the existing token-cost / which-AI / can-I-change-it rows. Explicitly names "synthesizer" and "handyman" with directive examples.
+
+**3. `infoHiveModal` Builder row.** Expanded with the dual-role framing and a pointer to the Notes drawer + Send to Builder. Token-cost and Builder-recommendation guidance preserved.
+
+**4. `infoNotesModal`.** New second paragraph at the top — calls out that Notes pair powerfully with Send to Builder for the handyman workflow. Existing template-button breakdowns unchanged.
+
+**5. Send to Builder button tooltip.** Updated to lead with *"Like asking a handyman to do a specific task"* and explicitly chain to *"Then Smoke the Hive to see if the reviewers agree"*. (Previous tooltip from v3.38.10 just said "runs only the Builder AI; saves tokens" — accurate but didn't surface the workflow.)
+
+**6. User manual Step 2 — new `wh-block` "The Builder's two roles"** inserted between *"What makes the Builder different from reviewers"* and *"The Builder picker — what you see"*. Three paragraphs:
+- Defines synthesizer role (Smoke the Hive)
+- Defines handyman role (Notes + Send to Builder) with three directive examples
+- Closes with *"This pairing is one of WaxFrame's most useful workflows: targeted edits via Notes + Send to Builder, then full reviewer feedback via Smoke the Hive when you want validation."*
+
+**7. User manual Step 7 — Send to Builder footer description** rewritten to lead with the handyman framing instead of the dry *"runs only the Builder AI without running the reviewers"*. Three directive examples included. Builder-Only round Conflicts-panel note preserved as a parenthetical.
+
+### Why this matters
+
+The Builder-as-only-synthesizer framing makes WaxFrame look like a heavier process than it actually is. A typical first-timer reading the existing docs would conclude that every change requires a full hive round, which would deter quick targeted edits. The handyman framing puts a natural workflow into the user's head: *"I want this specific thing changed — Notes + Send to Builder."* Then the reviewer round becomes the validation step they reach for when they want a sanity check, not the only path to making any change.
+
+The framing also explains why the Notes drawer exists at all. Without the handyman role, Notes look like a niche feature for advanced users; with it, Notes become the most natural way to direct the Builder for targeted work.
+
+### Files Changed
+
+`index.html`
+- Setup 2 subtitle — new second `<p class="hp-section-sub">` with handyman framing
+- `infoBuilderModal` — new "The Builder's two roles" `goal-info-row` at top of body
+- `infoHiveModal` — Builder row rewritten with dual-role framing
+- `infoNotesModal` — new second paragraph at top about Notes + Send to Builder
+- Send to Builder footer button `title` tooltip rewritten
+- meta build → `20260511-018`; cache-bust `?v=3.38.11` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`waxframe-user-manual.html`
+- Step 2 — new `wh-block` "The Builder's two roles" inserted (three paragraphs)
+- Step 7 — Send to Builder description in footer block rewritten with handyman framing
+- meta build → `20260511-018`; cache-bust `?v=3.38.11` on `style.css` and `version.js`
+
+`js/app.js`
+- BUILD → `20260511-018`
+
+`js/version.js`
+- APP_VERSION → `v3.38.11 Pro`
+
+`document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-018`; cache-bust `?v=3.38.11` on `style.css` and `version.js`
+
+`README.md`
+- Version badge → `Version-3.38.11`; build badge → `20260511-018`
+
+### What didn't change
+
+No CSS. No JS logic. No HTML structure (only paragraph content added inside existing containers; no new classes, no new elements beyond `<p>` and `<div class="goal-info-row">` reusing the established pattern). No template content. No round / hive / Notes mechanics — the Send-to-Builder + Notes workflow already existed and worked correctly; this release just makes it discoverable. Div balance preserved (index 678/678, manual 522/522).
+
+---
 ## v3.38.10
 **Build:** `20260511-017` · **Released:** May 11, 2026
 
