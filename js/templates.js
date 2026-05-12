@@ -96,7 +96,7 @@ const WAXFRAME_TEMPLATES = [
     "name": "Quick Start",
     "icon": "⭐",
     "category": "Quick Start",
-    "description": "Try WaxFrame end-to-end on a low-stakes chocolate-chip-cookie recipe. Converges in a few rounds and gives you a clear feel for how the whole hive works — recommended for your first run.",
+    "description": "A real low-stakes project: the hive writes and refines a chocolate-chip-cookie recipe in a few rounds. Same complete WaxFrame flow as any other document, just with stakes small enough for a comfortable first run.",
     "paths": ["scratch"],
     "pathContent": {
       "scratch": {

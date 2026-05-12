@@ -10,7 +10,7 @@ WaxFrame orchestrates a team of AIs around your document — every round, all of
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-3.38.5-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
-[![Build](https://img.shields.io/badge/Build-20260511--011-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
+[![Build](https://img.shields.io/badge/Build-20260511--013-blue.svg)](https://github.com/WeirDave/WaxFrame-Professional)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 
 <a href="https://weirdave.github.io/WaxFrame-Professional/" target="_blank"><strong>→ Launch WaxFrame</strong></a>
@@ -72,7 +72,7 @@ One button does everything. Each AI needs its own API key. WaxFrame sends every 
 
 ## New to WaxFrame? Start with Quick Start
 
-The fastest way to understand how WaxFrame works is to run the **⭐ Quick Start template** — a low-stakes chocolate-chip-cookie example that converges in just a few rounds and shows you the entire flow end-to-end before you bring your real document.
+The fastest way to learn WaxFrame is to run the **⭐ Quick Start template** — a small, low-stakes project where the hive writes and refines a real chocolate-chip-cookie recipe in a few rounds. Same complete flow as any other document; the topic is harmless enough to focus on the workflow.
 
 1. Set up at least two AI keys and pick a Builder
 2. On the Project screen, click **📋 Use Template**
