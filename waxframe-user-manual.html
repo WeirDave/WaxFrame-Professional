@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260511-014
+     Build: 20260511-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-014">
+  <meta name="waxframe-build" content="20260511-015">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.7">
+  <link rel="stylesheet" href="style.css?v=3.38.8">
 </head>
 <body class="helper-body">
 
@@ -892,40 +892,54 @@
 
     <div class="wh-block">
       <div class="wh-block-title">What you are looking at</div>
-      <p>The Work screen is where all rounds happen. It has a top bar, a three-column main area, and a footer bar at the bottom. Here is what each area contains.</p>
+      <p>The Work screen is where all rounds happen. It has a top bar, a three-column main area (left panel · Working Document · right panel), and a footer bar at the bottom. Most of the screen's controls are clustered into those four zones. Here is what each contains, top to bottom and left to right.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The top bar</div>
-      <p>Running across the very top of the Work screen:</p>
+      <p>Running across the very top of the Work screen, three zones — left, centre, right:</p>
+      <p><strong>Top bar — left zone</strong></p>
       <div class="goal-info-row">
-        <span class="info-label">Menu button</span>
-        <span class="goal-info-desc">Three horizontal lines in the top left. Opens the slide-in navigation menu, which gives you access to Round History, the User Manual, API Key Guide, Document Playbooks, session backup and import, license entry, and navigation between screens.</span>
+        <span class="info-label">Menu button (☰)</span>
+        <span class="goal-info-desc">Three horizontal lines in the top-left corner. Opens the slide-in navigation drawer with access to Setup screens, Round History, the User Manual, API Key Guide, Document Playbooks, session backup and import, license management, and more.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Project name and version</span>
-        <span class="goal-info-desc">Shows your project name and version number. Clicking on this area opens a Project Goal viewer where you can read your full assembled goal and copy it without leaving the Work screen.</span>
+        <span class="info-label">Project info (clickable)</span>
+        <span class="goal-info-desc">Shows your project name, version, and start mode (e.g. <em>From scratch</em>, <em>From upload</em>, <em>From paste</em>). Clicking anywhere on this cluster opens a Project Goal viewer where you can read your full assembled goal and copy it without leaving the Work screen.</span>
       </div>
+
+      <p><strong>Top bar — centre zone</strong></p>
       <div class="goal-info-row">
         <span class="info-label">Round badge</span>
-        <span class="goal-info-desc">In the centre of the top bar. Shows the current round number — for example <em>Round 1</em> or <em>Round 3</em>. Updates automatically after each round completes.</span>
+        <span class="goal-info-desc">Shows the current round number and phase — for example <em>Round 1 — Draft</em>, <em>Round 3 — Reviewing</em>, <em>Round 5 — Building</em>, or <em>Round 7 — ✓ Converged</em>. Updates live as a round progresses through its phases and again after the round completes.</span>
       </div>
+
+      <p><strong>Top bar — right zone</strong> (left to right):</p>
       <div class="goal-info-row">
         <span class="info-label">📝 Notes</span>
-        <span class="goal-info-desc">Opens the Notes drawer — a text area where you can write instructions specifically for the Builder for the next round only. Notes are cleared after each round. Use this to give targeted direction: <em>"Tighten the third paragraph,"</em> or <em>"The conclusion needs to be more decisive,"</em> or <em>"Do not add any new bullet points."</em></span>
+        <span class="goal-info-desc">Opens the Notes drawer. Contains two fields: a <strong>per-round Notes</strong> field that's cleared after each round (use it for one-time directives like <em>"Tighten the third paragraph"</em>), and a <strong>Standing Notes</strong> field that persists across all rounds (use it for invariants like <em>"Always use Oxford commas"</em> or <em>"Never invent statistics"</em>).</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">📚 Reference</span>
+        <span class="goal-info-desc">Opens the Reference Material drawer where you can view, edit, add, or remove reference documents during an active session. Changes take effect on the next round; past rounds keep the reference snapshot that was active when they ran. (Setup 4 — Reference Material is the entry point for first-time setup; this is the live-edit equivalent on the Work screen.)</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🏁 Finish</span>
         <span class="goal-info-desc">Opens the Finish panel where you can export your document, export the full transcript, or start a new project. Covered in full in Step 11.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">License badge</span>
-        <span class="goal-info-desc">A small indicator showing your current license status — either the number of free rounds remaining or a Pro indicator if you have a valid license.</span>
+        <span class="info-label">🚀 Auto Mode toggle</span>
+        <span class="goal-info-desc">A two-state toggle to the right of the divider, labelled <em>Manual</em> (amber) or <em>Auto</em> (green). When set to Auto, WaxFrame chains rounds automatically — after each round completes, the next round fires without you clicking Smoke the Hive. Auto Mode pauses for USER DECISION blocks and for slow-AI alerts so you stay in the loop on anything that needs a human call.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">📖 Round History</span>
-        <span class="goal-info-desc">Found in the <strong>Menu</strong> (top left). Opens the Round History panel — a log of every completed round in the current session. Click any entry to view the full document as it was at the end of that round, or restore it as the current working document if you want to roll back.</span>
+        <span class="info-label">🔊 Mute</span>
+        <span class="goal-info-desc">Toggles sound effects on and off. WaxFrame plays subtle sound cues at round start, round end, convergence, and a few other key moments. The icon flips to 🔇 when muted.</span>
       </div>
+      <div class="goal-info-row">
+        <span class="info-label">☀️ / ⚙️ / 🌙 Theme buttons</span>
+        <span class="goal-info-desc">Three compact buttons at the far right: <strong>☀️ Light</strong>, <strong>⚙️ Auto</strong> (follows your operating system's preference), and <strong>🌙 Dark</strong>. Theme choice persists across sessions.</span>
+      </div>
+      <p>Round History is reachable via the Menu (top-left) — covered in detail in Step 10.</p>
     </div>
 
     <div class="wh-block">
@@ -934,7 +948,7 @@
       <p><strong>The Hive</strong> section has a small ⓘ info button and two buttons in its header:</p>
       <div class="goal-info-row">
         <span class="info-label">Edit Hive button</span>
-        <span class="goal-info-desc">This button only appears on laptop-sized screens (at or below 1600px wide). On those screens the full AI cards are hidden and replaced with a compact dot strip — one small dot per AI — to save space. Clicking <strong>Edit Hive</strong> opens a modal where you can toggle individual AIs on or off for the session. On a full desktop screen this button is not shown — you interact with the AI cards directly instead.</span>
+        <span class="goal-info-desc">On laptop-sized screens (at or below 1600px wide) the full AI cards are hidden and replaced with a compact dot strip — one small dot per AI — to save space. Clicking <strong>Edit Hive</strong> opens a modal where you can toggle individual AIs on or off for the session. On a full desktop screen this button may be hidden because you can interact with the AI cards directly instead.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Change Builder button</span>
@@ -943,16 +957,16 @@
       <p>Below the header, the AI status area displays differently depending on your screen size:</p>
       <div class="goal-info-row">
         <span class="info-label">Desktop (wider than 1600px)</span>
-        <span class="goal-info-desc">Each active AI is shown as a full card with its name, icon, and live status. During a round each card updates to show the AI's current state — idle, running, complete, or error. After a round you can click any card to view that AI's full reviewer response.</span>
+        <span class="goal-info-desc">Each active AI is shown as a full card with its name, icon, and live status. During a round each card updates to show the AI's current state — idle, reviewing, complete, or error. After a round you can click any card to view that AI's full reviewer response.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Laptop (1600px or narrower)</span>
-        <span class="goal-info-desc">The full cards are hidden and replaced by a compact row of small circular dots — one per active AI — showing colour-coded status. Tap any dot to see which AI it represents. The Edit Hive button appears in the header to compensate for the loss of the card controls.</span>
+        <span class="goal-info-desc">The full cards are hidden and replaced by a compact row of small circular dots — one per active AI — showing colour-coded status. Hover any dot to see which AI it represents. The Edit Hive button appears in the header to compensate for the loss of the card controls.</span>
       </div>
       <p>Below the AI status area is the <strong>Conflicts</strong> section, also in the left column:</p>
       <div class="goal-info-row">
         <span class="info-label">Conflicts</span>
-        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A 📋 Copy button and a ✕ Clear button appear in the Conflicts header. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. Covered in full in Step 9.</span>
+        <span class="goal-info-desc">Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A <strong>📋 Copy</strong> button in the Conflicts header copies the current conflicts to your clipboard. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. <strong>The panel always shows conflicts from the most recent round only — it's not a project-wide completion indicator</strong> (see the ⓘ button next to the Conflicts heading for the full breakdown of when "no conflicts" does and does not mean done). Conflict resolution covered in full in Step 9.</span>
       </div>
     </div>
 
@@ -968,46 +982,61 @@
         <span class="goal-info-desc">Below the document editor. Shows the current line count, word count, and character count of the document, updated live as you type or as rounds complete.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">💾 Export, 📋 Copy, ✕ Clear</span>
-        <span class="goal-info-desc">Three buttons in the Working Document header. Export downloads the document as a .txt file immediately without opening the Finish panel. Copy puts the full document text on your clipboard. Clear wipes the document editor — use with caution.</span>
+        <span class="info-label">💾 Export · 📋 Copy · ✕ Clear</span>
+        <span class="goal-info-desc">Three buttons in the Working Document header. <strong>💾 Export</strong> downloads the document as a .txt file immediately without opening the Finish panel. <strong>📋 Copy</strong> puts the full document text on your clipboard. <strong>✕ Clear</strong> wipes the document editor — use with caution; WaxFrame asks you to confirm.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">🔍 Re-extract with AI Vision</span>
+        <span class="goal-info-desc">A conditional button that appears under the Working Document toolbar only when your starting document was uploaded from a file (PDF, DOCX, etc.). Clicking it asks a vision-capable AI to re-read your original source file and replace the current document text with a cleaner extraction. Useful when local PDF.js / Mammoth extraction produced garbled text — particularly common with scanned PDFs, multi-column layouts, or rich formatting that doesn't translate well to plain text.</span>
       </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The right column — Timers and Live Console</div>
-      <p>The right column contains three elements stacked vertically: the WaxFrame logo, the dual-face clock widget, and the Live Console.</p>
+      <p>The right column contains three elements stacked vertically: the WaxFrame logo and version stamp, the dual-face clock widget, and the Live Console.</p>
       <div class="goal-info-row">
         <span class="info-label">Dual-face clock widget</span>
-        <span class="goal-info-desc">Two timers displayed side by side in a single bezel. The left face — labelled <strong>ROUND</strong> — counts up automatically while a round is running and stops when the round completes, showing you how long that round took. It resets when the next round starts. The right face — labelled <strong>PROJECT</strong> — is a manual stopwatch for your overall session. It has a ▶ Start button and a ⏸ Pause button. Use it to track total time spent on a project across multiple rounds and sessions.</span>
+        <span class="goal-info-desc">Two timers displayed side by side in a single bezel. The left face — labelled <strong>ROUND</strong> — counts up automatically while a round is running and stops when the round completes, showing you how long that round took. It resets when the next round starts. The right face — labelled <strong>PROJECT</strong> — is a manual stopwatch for your overall session. It has a ▶ Start button and a ⏸ Pause button. Use it to track total time spent on a project across multiple rounds and sessions; this value is what the Brightwater empirical reference numbers and the playbook convergence times in the User Manual are measured against.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🖥️ Live Console</span>
-        <span class="goal-info-desc">A colour-coded live log of everything happening during a round — when each AI request was sent, the HTTP status code returned, response received, and any errors. A legend at the top of the console identifies what each colour means: Round, Sending, Response, Success, Warning, Error, Info. A 📋 Copy button copies the full log to your clipboard. A ✕ Clear button wipes the console. Use the console to monitor progress during a round and to diagnose problems if something goes wrong.</span>
+        <span class="goal-info-desc">A colour-coded live log of everything happening during a round — when each AI request was sent, the HTTP status code returned, response received, and any errors. A legend at the top of the console identifies what each colour means: Round, Sending, Response, Success, Warning, Error, Info. A <strong>📋 Copy</strong> button in the console header copies the full log to your clipboard. Use the console to monitor progress during a round and to diagnose problems if something goes wrong.</span>
       </div>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">The footer bar</div>
-      <p>At the very bottom of the Work screen is the footer bar. It contains:</p>
+      <p>At the very bottom of the Work screen is the footer bar. Three zones — left status, centre actions, right indicators.</p>
+      <p><strong>Footer — left zone</strong></p>
       <div class="goal-info-row">
         <span class="info-label">Status text</span>
-        <span class="goal-info-desc">A status line on the left that shows what WaxFrame is currently doing — <em>Standing by — Smoke the Hive to begin</em> when idle, or progress updates while a round is running.</span>
+        <span class="goal-info-desc">A status line on the left that shows what WaxFrame is currently doing — <em>Standing by — Smoke the Hive to begin</em> when idle, or progress updates like <em>Reviewing — ChatGPT, Claude, Gemini…</em> while a round is in flight.</span>
+      </div>
+      <p><strong>Footer — centre zone (the two big round-trigger buttons)</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">Send to Builder</span>
+        <span class="goal-info-desc">Runs only the Builder AI without running the reviewers first. Use this when you've made direct edits to the document and want the Builder to clean them up and integrate them — or to apply a Notes directive — without burning tokens on a full reviewer cycle. The Conflicts panel will not populate from a Builder-Only round because no reviewers ran.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Send to Builder button</span>
-        <span class="goal-info-desc">Runs only the Builder AI without running the reviewers first. Use this when you have made direct edits to the document and want the Builder to clean them up and integrate them without a full reviewer cycle — saving time and tokens.</span>
+        <span class="info-label">Smoke the Hive</span>
+        <span class="goal-info-desc">The main round button. Runs a full round — all reviewers process the document simultaneously, then the Builder reads all their suggestions and produces the updated document. This is the button you click to start each round and to keep refining toward convergence. Covered in detail in Step 8.</span>
+      </div>
+      <p><strong>Footer — right zone (indicators and info, left to right)</strong></p>
+      <div class="goal-info-row">
+        <span class="info-label">📏 Length Guard pill</span>
+        <span class="goal-info-desc">Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 3). Reads <em>Length guard: armed</em> while watching the document, and switches to amber <em>Length guard: off</em> if you've disabled it for the session via the round-end gate's <strong>Continue anyway</strong> option. Click the pill to toggle (with a confirmation prompt).</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Smoke the Hive button</span>
-        <span class="goal-info-desc">The main round button. Runs a full round — all reviewers process the document simultaneously, then the Builder reads all their suggestions and produces the updated document. This is the button you click to start each round. Covered in detail in Step 8.</span>
+        <span class="info-label">🐢 Slow alerts pill</span>
+        <span class="goal-info-desc">A user-level preference for whether to surface the troubleshooting card when an AI takes more than ~2× the hive's average response time. Default is <em>Slow alerts: on</em>; click to switch to <em>Slow alerts: off</em>, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Sound toggle</span>
-        <span class="goal-info-desc">A 🔊 button that toggles sound effects on and off. WaxFrame plays sound effects at key moments — when a round starts, when it completes, and when conflicts are ready. Turn this off if you are working in a quiet environment.</span>
+        <span class="info-label">License badge</span>
+        <span class="goal-info-desc">A small indicator showing your current license status — either the number of free trial rounds remaining or a Pro indicator if you have a valid license. Click it to open the Manage License modal where you can replace, remove, or check the status of your license key.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Theme buttons</span>
-        <span class="goal-info-desc">☀️ Light, ⚙️ Auto, and 🌙 Dark mode buttons. Auto follows your operating system's preference.</span>
+        <span class="info-label">ℹ️ About</span>
+        <span class="goal-info-desc">Opens the About modal with credits, build info, and license details.</span>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1827,7 +1856,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.38.7"></script>
+<script src="js/version.js?v=3.38.8"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
