@@ -2,7 +2,7 @@
 
 ---
 ## v3.38.5
-**Build:** `20260511-011` · **Released:** May 11, 2026
+**Build:** `20260511-013` · **Released:** May 11, 2026
 
 ### Onboarding accuracy + readability sweep — six scope items
 
