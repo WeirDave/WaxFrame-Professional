@@ -1,6 +1,59 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.7
+**Build:** `20260511-014` · **Released:** May 11, 2026
+
+### Conflicts panel + info modal — "no conflicts" no longer reads as "you're done"
+
+Follow-up to v3.38.6. Candy's coleslaw walkthrough surfaced a second issue on the same run: after Round 1 produced a draft from her project goal, the Conflicts panel showed *"No conflicts from the last round. The Builder resolved everything"* — which reads as **the document is finished**. She thought she was done and was unsure whether to click **Send to Builder** or **Smoke the Hive** next, even though David told her the draft was quick-and-dirty and the hive hadn't actually evaluated anything yet.
+
+The root cause: Round 1 of a from-scratch project is structurally a Builder-Only round — the Builder writes the first draft from the project goal, but reviewers have nothing to evaluate yet (no prior document, no prior round). So *"no conflicts"* on Round 1 of scratch is mechanical, not meaningful, and definitely not convergence.
+
+### Two fixes
+
+**1. `renderConflicts()` empty-state messages rewritten with per-round framing.** Three branches now:
+
+- **No rounds yet** — *"No rounds yet. Run a round (the Smoke the Hive button below) to see what the Builder couldn't resolve. This panel always shows conflicts from the most recent round only — it's not a project-wide completion indicator."*
+- **Builder-Only round just completed** — *"Round N was a Builder-Only round — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document. To gather reviewer feedback on the current draft, click Smoke the Hive below — that's the full multi-AI round, and this panel will populate with anything the reviewers disagreed on."*
+- **Full round, no conflicts surfaced** — *"No conflicts in Round N. Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts from the most recent round only. It's not a project-wide completion indicator. The document is 'done' when the hive reaches ✓ Converged (a majority of reviewers agree there are no more changes needed). To keep refining, click Smoke the Hive below for another full round. If you're already satisfied with the current draft, click 🏁 Finish in the top toolbar to export."*
+
+Branches use `latest.outcome === 'builder_only_complete'` to distinguish. The empty state also appears at `_resetWorkScreen()` (line 3885) and was synced to the new wording. Round 1 of scratch falls into the Builder-Only branch automatically because that's its actual `outcome` value.
+
+**2. Conflicts info modal (`infoConflictsModal`) updated** to explain the per-round semantics up front. Two new paragraphs added between the intro and the User-Decision / Builder-Decision row breakdown:
+
+- *"The panel always shows conflicts from the most recent round only — it is not a project-wide completion indicator. 'No conflicts' can mean any of three things: the round was a Builder-Only round (no reviewers ran), the round was Round 1 of a from-scratch project (the Builder writes the first draft before reviewers have anything to evaluate), or the round was a full reviewer round and everyone happened to agree on the changes. None of those mean the document is finished."*
+- *"The document is 'done' when the hive reaches ✓ Converged — a majority of reviewers agree there are no more changes needed. Before that point, keep running rounds with Smoke the Hive, or click 🏁 Finish if you're already satisfied with the current draft."*
+
+### Why this matters
+
+Candy's response to *"The Builder resolved everything"* was rational: it sounds like completion. Without a clear distinction between *this-round status* and *project status*, every user who runs Round 1 of a scratch project will hit the same false-finish moment. The empty-state language is the load-bearing UX cue — the words themselves were the bug.
+
+### Files Changed
+
+`js/app.js`
+- `renderConflicts()` empty states rewritten — three branches, context-aware
+- Duplicate empty-state message in `_resetWorkScreen()` (line 3885) synced
+- BUILD → `20260511-014`
+
+`js/version.js`
+- APP_VERSION → `v3.38.7 Pro`
+
+`index.html`
+- `infoConflictsModal` — two new paragraphs explaining per-round scope and the ✓ Converged path to "done"
+- meta build → `20260511-014`; cache-bust `?v=3.38.7` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-014`; cache-bust `?v=3.38.7` on `style.css` and `version.js`
+
+`README.md`
+- Version badge → `Version-3.38.7`; build badge → `20260511-014`
+
+### What didn't change
+
+No CSS. No template content. No render-logic changes beyond the conflicts empty-state branching. No changes to actual conflict resolution code paths — only the messaging shown when there are no conflicts to resolve.
+
+---
 ## v3.38.6
 **Build:** `20260511-013` · **Released:** May 11, 2026
 
