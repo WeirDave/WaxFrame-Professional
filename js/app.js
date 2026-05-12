@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-001';         // build stamp — update each session
+const BUILD       = '20260512-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -13631,6 +13631,26 @@ function extractConflicts(text) {
       !/included for completeness/i.test(o.text) &&
       !/placeholder/i.test(o.text)
     );
+    // Suppress unanimous-vote decisions where the Builder applied a change
+    // (current matches one option) but used a fake baseline label like
+    // "original text" as another option to manufacture a 2-way choice. Per
+    // the Builder's own MAJORITY RULES, a unanimous vote should be applied
+    // silently, not surfaced as a USER DECISION. Defensive parsing because
+    // Builder LLMs occasionally violate that rule.
+    // v3.38.14 — MUST run BEFORE the auto-promote block below. Auto-promote
+    // synthesises an "Original"-attributed option from CURRENT, which would
+    // trip this check every time it fires and undo the v3.36.5 fix. By
+    // running this check first, we only catch Builder-emitted fake baselines
+    // (the real intent), not the parser's own legitimate Original synthesis.
+    const baselineLabelRegex = /^\s*(original(\s+text)?|unchanged|baseline|no[\s-]?change|current|n\/?a|none)\s*$/i;
+    const currentText = (decision.current || '').trim();
+    const hasFakeBaseline = decision.options.some(o => baselineLabelRegex.test(o.ais || ''));
+    const currentMatchesAnOption = currentText.length > 0 &&
+      decision.options.some(o => o.text.trim() === currentText);
+    if (hasFakeBaseline && currentMatchesAnOption) {
+      consoleLog(`⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`, 'warn');
+      continue;
+    }
     // v3.36.5 — Auto-promote CURRENT to an implicit "Original"-attributed
     // option when the Builder emitted exactly 1 OPTION_N and CURRENT is
     // present and doesn't match the option text. This captures legitimate
@@ -13657,21 +13677,6 @@ function extractConflicts(text) {
     if (uniqueTexts.size < 2) {
       const sample = decision.options[0]?.text || '(empty)';
       consoleLog(`⚠️ Suppressed no-op USER DECISION — all options identical: "${sample}"`, 'warn');
-      continue;
-    }
-    // Suppress unanimous-vote decisions where the Builder applied a change
-    // (current matches one option) but used a fake baseline label like
-    // "original text" as another option to manufacture a 2-way choice. Per
-    // the Builder's own MAJORITY RULES, a unanimous vote should be applied
-    // silently, not surfaced as a USER DECISION. Defensive parsing because
-    // Builder LLMs occasionally violate that rule.
-    const baselineLabelRegex = /^\s*(original(\s+text)?|unchanged|baseline|no[\s-]?change|current|n\/?a|none)\s*$/i;
-    const currentText = (decision.current || '').trim();
-    const hasFakeBaseline = decision.options.some(o => baselineLabelRegex.test(o.ais || ''));
-    const currentMatchesAnOption = currentText.length > 0 &&
-      decision.options.some(o => o.text.trim() === currentText);
-    if (hasFakeBaseline && currentMatchesAnOption) {
-      consoleLog(`⚠️ Suppressed no-op USER DECISION — unanimous vote, current already matches applied option`, 'warn');
       continue;
     }
     result.userDecisions.push(decision);
@@ -13717,6 +13722,15 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
   const docLower = (returnedDoc || '').toLowerCase();
 
   // Build name → response map (lowercased keys for lookup, original-case names retained for re-display)
+  // v3.38.14 — Dual-key build to handle prefix variation. Builders attribute
+  // by model name ("Claude-4-6-Opus"); display names from imported-server
+  // flows ship with bracketed prefixes ("[Base] Claude-4-6-Opus", "[Server X]
+  // Claude-Sonnet-4-6", etc.). A single full-name lookup misses, the
+  // attribution gets treated as fabricated, the option is stripped, and 100%
+  // of USER DECISIONs die at CHECK 3 with prefixed AIs. Fix: also key the
+  // map by a normalized form (bracketed prefix stripped) so either Builder
+  // phrasing matches. Token-side lookup below tries both forms.
+  const _normalizeAIName = (s) => (s || '').replace(/^\s*\[[^\]]*\]\s*/, '').trim().toLowerCase();
   const responseByName = new Map(); // lower-name → { lowerResponse, displayName, noChanges }
   for (const r of reviews || []) {
     // v3.36.2 — Tolerate both call shapes. Real shape from runRound is
@@ -13724,11 +13738,15 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
     // shape) which the validator never actually received.
     const displayName = r?.name || r?.ai?.name || '';
     if (!displayName) continue;
-    responseByName.set(displayName.toLowerCase(), {
+    const entry = {
       lowerResponse: (r.response || '').toLowerCase(),
       displayName,
       noChanges: !!r.noChanges
-    });
+    };
+    const fullKey = displayName.toLowerCase();
+    const normKey = _normalizeAIName(displayName);
+    responseByName.set(fullKey, entry);
+    if (normKey && normKey !== fullKey) responseByName.set(normKey, entry);
   }
 
   const cleaned = [];
@@ -13781,7 +13799,10 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
           verified.push('Original');
           continue;
         }
-        const entry = responseByName.get(token.toLowerCase());
+        // v3.38.14 — Try full-lowercase first, then normalized (bracketed-
+        // prefix stripped). Builder may attribute as model name or as full
+        // display name; map carries both keys so either resolves.
+        const entry = responseByName.get(token.toLowerCase()) || responseByName.get(_normalizeAIName(token));
         if (!entry) {
           // AI not in this round's reviewer set at all — fabricated
           stripped.push(token);
