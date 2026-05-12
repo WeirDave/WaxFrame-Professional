@@ -1,6 +1,68 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.38.8
+**Build:** `20260511-015` · **Released:** May 11, 2026
+
+### User-manual Step 7 (Work Screen) — full audit pass
+
+Per Candy's continued walkthrough: the manual's Step 7 description of the Work screen had drifted significantly from the actual UI. Step 7 had never received a full audit pass during the manual rewrites — the previous Worker Bees / Builder / Reference / Document audits (v3.38.5–v3.38.7) all stopped at Step 6. This release closes that gap.
+
+### Mismatches found and fixed
+
+| Surface | Manual claimed | Reality | Fix |
+|---|---|---|---|
+| Top bar — buttons | Notes, Finish, License badge | Notes, **📚 Reference** (missing), Finish, divider, **🚀 Auto Mode toggle** (missing), 🔊 Mute, ☀️⚙️🌙 Theme buttons | Added Reference, Auto Mode toggle, Mute, and Theme buttons to the top-bar block in their correct left-to-right order |
+| Top bar — round badge | *"Round 1 or Round 3"* | *"Round 1 — Draft"* / *"Round 5 — Building"* / *"Round 7 — ✓ Converged"* | Documented the phase suffix and convergence state |
+| Top bar — project info | name + version | name + version + **start mode** (e.g. *From scratch*, *From upload*) | Documented start-mode badge |
+| License badge | *"in the top bar"* | Actually in **footer-right** | Removed from top-bar block; added to footer block in correct position |
+| Left column — Conflicts | *"📋 Copy and ✕ Clear"* | Only **📋 Copy** (no Clear button exists) | Dropped the ✕ Clear claim; added per-round-scope note pointing at the ⓘ button for the full breakdown |
+| Centre column | Editor + Export/Copy/Clear + Stats | Adds **🔍 Re-extract with AI Vision** (PDF/upload-only conditional button) | Added the Re-extract button as a separate row with use-case explanation |
+| Right column — Live Console | *"📋 Copy and ✕ Clear"* | Only **📋 Copy** (no Clear button exists) | Dropped the ✕ Clear claim |
+| Footer — items | Status, Send to Builder, Smoke, **Sound, Theme** | Status, Send to Builder, Smoke, **📏 Length guard pill**, **🐢 Slow alerts pill**, **License badge**, **ℹ️ About** | Removed Sound + Theme from footer block (they're in the top bar); added all four missing items to footer block in correct left-to-right order |
+
+### What's now documented that wasn't before
+
+- **📚 Reference button** in the top bar (live-edit equivalent of Setup 4)
+- **🚀 Auto Mode toggle** (Manual / Auto with chain-rounds-automatically explanation, including USER DECISION and slow-AI pause behaviour)
+- **🔍 Re-extract with AI Vision** button (conditional, for upload-source documents with garbled extraction)
+- **📏 Length Guard pill** in the footer (live state of the guard, click to toggle)
+- **🐢 Slow Alerts pill** in the footer (Slow-Responder card suppression for hands-off Auto runs)
+- **ℹ️ About button** in the footer
+- **Start-mode badge** in the project info cluster
+- **Phase suffix** on the round badge (Draft / Reviewing / Building / ✓ Converged)
+- **Conflicts panel scope note** pointing at the v3.38.7 ⓘ-modal clarification
+
+### Structure
+
+Top-bar and footer-bar blocks both restructured into three sub-zones (left / centre / right) with `<p><strong>` sub-headers between them — same scannable pattern Candy approved on the Worker Bees screen rewrite (v3.38.5). The dense original single-list rendering was making it hard to map the manual to what's on screen because zone position wasn't obvious in the documentation.
+
+### Files Changed
+
+`waxframe-user-manual.html`
+- Step 7 — six wh-block sections rewritten (intro · top bar · left column · centre column · right column · footer bar) to match current Work screen layout
+- meta build → `20260511-015`; cache-bust `?v=3.38.8` on `style.css` and `version.js`
+
+`index.html`
+- meta build → `20260511-015`; cache-bust `?v=3.38.8` across `style.css`, `version.js`, `templates.js`, `app.js`
+
+`js/app.js`
+- BUILD → `20260511-015`
+
+`js/version.js`
+- APP_VERSION → `v3.38.8 Pro`
+
+`document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+- meta build → `20260511-015`; cache-bust `?v=3.38.8` on `style.css` and `version.js`
+
+`README.md`
+- Version badge → `Version-3.38.8`; build badge → `20260511-015`
+
+### What didn't change
+
+No CSS. No JS logic. No templates. No screen markup. No other manual sections (Steps 1–6 audited in v3.38.5–v3.38.7; Steps 8–11 audited and confirmed current at time of v3.38.5 sweep but did not need rewrites). Purely a Step 7 manual rewrite + standard version stamp sweep.
+
+---
 ## v3.38.7
 **Build:** `20260511-014` · **Released:** May 11, 2026
 
