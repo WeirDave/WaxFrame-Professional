@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260511-017
+     Build: 20260511-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-017">
+  <meta name="waxframe-build" content="20260511-018">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.10">
+  <link rel="stylesheet" href="style.css?v=3.38.11">
 </head>
 <body class="helper-body">
 
@@ -503,6 +503,13 @@
         <li>The Builder <strong>must</strong> have a paid API subscription with sufficient token capacity. Free-tier API accounts have low limits and will cause rounds to fail mid-way through.</li>
         <li>Choosing a capable, reliable AI as your Builder matters more than your choice of reviewers. The Builder's output is what you see in the working document after each round.</li>
       </ul>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The Builder's two roles</div>
+      <p>The Builder plays two distinct roles in WaxFrame. In a full round (when you click <strong>Smoke the Hive</strong>), it acts as the <strong>synthesizer</strong> — reading every reviewer's suggestions plus the full document and producing the new version that incorporates the consensus.</p>
+      <p>Between full rounds, the Builder also acts as your <strong>handyman</strong>. Open the Notes drawer (📝 Notes button in the top bar), write a directive — anything from <em>"rewrite the first paragraph"</em> to <em>"stop using the word 'refine' so much"</em> to <em>"the conclusion needs to be more decisive"</em> — then click <strong>Send to Builder</strong> in the footer. The Builder performs just that one task without running the reviewers, saving tokens and time. After the Builder finishes, you can click <strong>Smoke the Hive</strong> to see if the reviewers agree with the change.</p>
+      <p>This pairing is one of WaxFrame's most useful workflows: targeted edits via Notes + Send to Builder, then full reviewer feedback via Smoke the Hive when you want validation. Use it when you have a specific change in mind that you don't need the whole hive to debate first.</p>
     </div>
 
     <div class="wh-block">
@@ -1015,7 +1022,7 @@
       <p><strong>Footer — centre zone (the two big round-trigger buttons)</strong></p>
       <div class="goal-info-row">
         <span class="info-label">Send to Builder</span>
-        <span class="goal-info-desc">Runs only the Builder AI without running the reviewers first. Use this when you've made direct edits to the document and want the Builder to clean them up and integrate them — or to apply a Notes directive — without burning tokens on a full reviewer cycle. The Conflicts panel will not populate from a Builder-Only round because no reviewers ran.</span>
+        <span class="goal-info-desc">Like asking a <strong>handyman</strong> to perform a specific task. Pair it with a directive in the Notes drawer (<em>"rewrite the first paragraph"</em>, <em>"stop saying 'refine'"</em>, <em>"tighten paragraph three"</em>) and click Send to Builder — the Builder performs just that task without running the reviewers. Saves tokens and time. After the Builder finishes, click <strong>Smoke the Hive</strong> to see if the reviewers agree with the change. (The Conflicts panel won't populate from a Builder-Only round because no reviewers ran.)</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Smoke the Hive</span>
@@ -1856,7 +1863,7 @@
 <script src="js/theme.js"></script>
 <script src="js/nav-helper.js?v=3.22.6"></script>
 <script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.38.10"></script>
+<script src="js/version.js?v=3.38.11"></script>
 <script src="js/docs-scrollspy.js?v=3.22.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });

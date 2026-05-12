@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260511-017">
+  <meta name="waxframe-build" content="20260511-018">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.38.10">
+  <link rel="stylesheet" href="style.css?v=3.38.11">
 </head>
 <body>
 
@@ -143,6 +143,7 @@
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
             <p class="hp-section-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
+            <p class="hp-section-sub">Think of the Builder as a <strong>handyman as well as a synthesizer</strong>. Between full rounds, you can write a quick directive in the Notes drawer — <em>"rewrite the first paragraph,"</em> <em>"stop using the word 'refine' so much,"</em> <em>"tighten paragraph three"</em> — and click <strong>Send to Builder</strong> to have it perform just that one task without running the full hive. Saves tokens and time. Then click <strong>Smoke the Hive</strong> when you want the reviewers to weigh in on the change.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -676,7 +677,7 @@
     <div class="work-footer">
       <span id="statusText" class="footer-status">Standing by — Smoke the Hive to begin</span>
       <div class="footer-actions">
-        <button title="Send to Builder — runs only the Builder AI on your current document (saves tokens; no reviewer feedback this round)" class="footer-btn" id="builderOnlyBtn" onclick="footerSendToBuilder()">
+        <button title="Send to Builder — like asking a handyman to do a specific task. Pair with a Note directive (e.g. 'rewrite the first paragraph') to make a targeted change without running the full hive. Then Smoke the Hive to see if the reviewers agree." class="footer-btn" id="builderOnlyBtn" onclick="footerSendToBuilder()">
           <span class="builder-only-label">Send to Builder</span>
         </button>
         <button title="Smoke the Hive — runs a full round with all reviewers and the Builder" class="footer-btn-smoke" id="runRoundBtn" onclick="footerSmokeOrBuilder()">
@@ -1894,6 +1895,10 @@
     <div class="goal-info-body">
       <p>The Builder is the AI that actually <strong>rewrites your document</strong> each round. While your reviewers each read the document and give numbered suggestions, the Builder reads all of those suggestions plus the full document and produces the updated version.</p>
       <div class="goal-info-row">
+        <span class="info-label">The Builder's two roles</span>
+        <span class="goal-info-desc">In a full round (<strong>Smoke the Hive</strong>) the Builder is the <em>synthesizer</em> — taking every reviewer's suggestions and producing the new document. Between rounds it's also your <em>handyman</em>: write a directive in the Notes drawer (<em>"rewrite the first paragraph,"</em> <em>"stop saying 'refine' so much"</em>) and click <strong>Send to Builder</strong> to have it perform just that task without running the full hive. After the Builder finishes, click Smoke the Hive when you want the reviewers to weigh in on the change.</span>
+      </div>
+      <div class="goal-info-row">
         <span class="info-label">Why it uses more tokens</span>
         <span class="goal-info-desc">Every round, the Builder processes the entire document plus every reviewer's suggestions in a single request. This is significantly more tokens than any individual reviewer uses. A paid API subscription with sufficient capacity is required — free-tier accounts will fail mid-round.</span>
       </div>
@@ -1988,7 +1993,7 @@
     <div class="goal-info-body">
       <p>Your hive is the team of AIs collaborating on your document each round. Every checked AI with a saved API key participates automatically. AIs without a key are skipped silently.</p>
       <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
-      <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds — it reads all reviewer suggestions and rewrites the working document each round. It uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
+      <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds. In a full round it reads all reviewer suggestions and rewrites the document. Between rounds it also acts as your <strong>handyman</strong> — give it a directive in the Notes drawer (<em>"rewrite the first paragraph"</em>, <em>"stop saying 'refine'"</em>) and click <strong>Send to Builder</strong> to make a targeted change without running the full hive. Then Smoke the Hive to see if the reviewers agree. The Builder uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
       <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
@@ -2034,6 +2039,7 @@
     <h2 class="finish-modal-title">Notes</h2>
     <div class="goal-info-body">
       <p>Notes are directions for the Builder only — not sent to reviewers. They apply to the next round only and are cleared automatically after that round runs. Use Notes for one-round-only instructions; for rules that must survive every round, put them in <strong>Additional instructions</strong> on the Project screen instead.</p>
+      <p>Notes pair powerfully with the <strong>Send to Builder</strong> button: write a directive (<em>"rewrite the first paragraph,"</em> <em>"stop saying 'refine'"</em>, <em>"tighten the conclusion"</em>), click Send to Builder, and the Builder performs just that task without running the full hive — like asking a handyman for a specific repair. After it's done, click <strong>Smoke the Hive</strong> to see if the reviewers agree with the change.</p>
       <div class="goal-info-row"><span class="info-label">🔒 Lock a line</span><span class="goal-info-desc">Prevents the Builder or reviewers from changing a specific line. Paste the exact text between the quotes — paraphrasing or line numbers will not work because the AIs pattern-match against the document text.</span></div>
       <div class="goal-info-row"><span class="info-label">🔒 Lock a section</span><span class="goal-info-desc">Protects a block of content starting at a specific heading or first line. Paste the section heading exactly as it appears.</span></div>
       <div class="goal-info-row"><span class="info-label">↩ Reverted document</span><span class="goal-info-desc">Tells the Builder you have manually reverted the document to an earlier state. Instructs it to ignore all changes from the previous round and treat the current text as the new baseline.</span></div>
@@ -2172,9 +2178,9 @@
 <script src="lib/mammoth.browser.min.js?v=3.27.13"></script>
 <script src="lib/jszip.min.js?v=3.27.13"></script>
 <script src="lib/xlsx.full.min.js?v=3.27.13"></script>
-<script src="js/version.js?v=3.38.10"></script>
-<script src="js/templates.js?v=3.38.10"></script>
-<script src="js/app.js?v=3.38.10"></script>
+<script src="js/version.js?v=3.38.11"></script>
+<script src="js/templates.js?v=3.38.11"></script>
+<script src="js/app.js?v=3.38.11"></script>
 <script src="js/api-links.js"></script>
 
 <!-- WaxFrame Finish Animation -->
