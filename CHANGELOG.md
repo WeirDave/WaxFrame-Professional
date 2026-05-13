@@ -1,6 +1,48 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.7
+**Build:** `20260512-010` · **Released:** May 12, 2026
+
+### Lock my selection on USER DECISIONs — wired to canonical lock channel
+
+User reported that clicking 🔒 Lock my selection in Notes on a USER DECISION did nothing. Investigation revealed two layered failures:
+
+1. **The active handler `lockConflictToNotes(di)` referenced by the button onclick was missing from the codebase entirely.** Drafted-without-implementation gap.
+2. **A stale older implementation existed at line 5508** (last touched v3.36.27) but was no longer reachable from any UI — and even that older version was broken: it scraped the DOM for the selected option button (the conflicts UI was later rewritten to use `window._decisionChoices` as the source of truth, leaving DOM-scraping logic silently broken), AND it wrote the lock to `workNotes` (this-round Notes textarea) which gets consumed and cleared after a single round. So the historical behavior — even when "working" — only locked for one round and never persisted across sessions.
+
+The correct lock channel is `window._resolvedDecisions`, which is the same canonical mechanism the per-line Applied Changes lock uses (v3.39.0+) and that `applyDecisions()` writes to. Resolved decisions persist to localStorage and are injected into every future prompt envelope as "PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED" — strongest lock signal in the system, read by both Builder and reviewers.
+
+### Behavior
+
+New `lockConflictDecision(decisionIdx)` function mirrors the lock block of `applyDecisions()` exactly, minus the Builder call:
+
+1. Reads the user's selection from `window._decisionChoices[decisionIdx]`
+2. Resolves chosen text by choice type (option → `d.options[idx].text`, custom → `choice.text`, bypass → `d.current` locked as-is)
+3. Dedup-checks against existing `_resolvedDecisions` (same original AND chosen) — skips with toast if already locked
+4. Pushes to `_resolvedDecisions` and persists to localStorage
+5. Marks the conflict ledger entry as suppressed (`fingerprintConflict` + `_conflictLedger`)
+6. For 3+ repeat-offender conflicts, issues targeted per-AI warnings to reviewers who kept suggesting the losing options — identical machinery to applyDecisions's 3+ branch
+7. `saveSession()`; toast confirms
+
+No Builder round runs. The user can lock multiple decisions across multiple rounds before deciding to apply (which is the Builder-call path) — or never apply at all and let the locks just suppress re-raising on future rounds.
+
+### UI changes
+
+- Button label: **🔒 Lock my selection in Notes** → **🔒 Lock my selection**. The previous label was historically accurate (Notes WAS the lock channel before `_resolvedDecisions` existed) but became misleading once the canonical lock moved to `_resolvedDecisions`. Dropping "in Notes" reflects what the button actually does today.
+- Button tooltip rewritten: "Lock the selected option as a final decision — Builder and reviewers will not raise this conflict again or change the chosen text."
+
+### Stale code removed
+
+`lockConflictToNotes(decisionIdx)` (the old broken DOM-scraping version writing to `workNotes`) deleted entirely. Not referenced from any UI after the rename. No stragglers.
+
+### Files changed
+
+`js/app.js` (new `lockConflictDecision` function, button onclick + label + tooltip updated, stale `lockConflictToNotes` removed), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
+---
 ## v3.39.6
 **Build:** `20260512-009` · **Released:** May 12, 2026
 
