@@ -5135,6 +5135,26 @@ kbd {
   font-style: italic;
   padding: 4px 0;
 }
+/* v3.39.8 — Empty-state card. Same visual treatment as .applied-card so
+   the "no conflicts this round" / "no rounds yet" / "Builder-Only round"
+   explanations read as a contained card instead of floating italic
+   prose. Left-edge accent uses the neutral accent color (not green/red)
+   because these states are informational, not success/warning. */
+.conflicts-empty-card {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius-sm);
+  padding: var(--space-12) var(--space-14);
+  margin-bottom: var(--space-10);
+  color: var(--text);
+  font-size: var(--fs-13);
+  line-height: 1.6;
+}
+.conflicts-empty-card strong {
+  color: var(--accent);
+  font-weight: 700;
+}
 .conflicts-section-header {
   font-size: 11px;
   font-weight: 700;
@@ -5240,6 +5260,40 @@ kbd {
 }
 .decision-card.resolved {
   border-color: #00b300;
+}
+/* v3.39.8 — Locked decision card. Stronger green than .resolved
+   (which just means "user picked an option") to distinguish "selected"
+   from "selected + locked." Matches the green-tint treatment of
+   .applied-card-locked so locked-state visual reads the same across
+   the conflicts panel. */
+.decision-card.decision-card-locked {
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.decision-card.decision-card-locked .decision-badge {
+  background: transparent;
+  color: var(--green);
+  border-color: var(--green);
+}
+.decision-locked-badge {
+  font-size: var(--fs-10);
+  font-weight: 700;
+  padding: 2px var(--space-6);
+  border-radius: 10px;
+  background: var(--green);
+  color: #0a0c12;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.decision-lock-btn-locked {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green);
+}
+.decision-lock-btn-locked:hover {
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
 }
 /* Repeat offender — hot card (3+ appearances) */
 .decision-card.decision-card-hot {
