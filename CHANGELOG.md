@@ -1,6 +1,97 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.8
+**Build:** `20260512-011` · **Released:** May 12, 2026
+
+### Empty-state card + USER DECISION lock toggle
+
+Two pieces in flight, bundled into one release.
+
+### Empty-state visual overhaul
+
+User reported the "No reviewer disagreements in Round N — but the Builder applied N silent changes" empty-state block at the top of the conflicts panel looked weird: bold scattered through the running text on phrases that weren't actionable UI ("No reviewer disagreements in Round 14", "✓ Converged"), and the whole explanation floated as italic prose without a card container, contrasting badly against the bordered Builder Applied section below it.
+
+Fix is three changes:
+
+1. **Wrapped in a proper card** — new `.conflicts-empty-card` CSS class gives the empty-state the same visual treatment as `.applied-card`: surface background, neutral-accent left-edge border, rounded corners, padding. The block now reads as a contained card flush with the rest of the panel instead of floating prose.
+2. **Random bolding stripped** — only **Smoke the Hive** and **Finish** retain `<strong>` since those are the actual UI buttons the user is being directed to. "No reviewer disagreements", "Round N", "Converged", etc. are now regular weight. Easier to scan, less visual noise.
+3. **"✓ Converged" reference dropped** — that label only appears as a tiny status suffix on the round badge during `unanimous_convergence` outcomes, not as a UI element a user can scan for from the empty-state. Replaced with plain-language framing: "The hive converges when a majority of reviewers stop proposing changes."
+
+Same treatment applied to all four empty-state branches (full-hive with/without applied changes, Builder-Only with/without applied changes) plus the "No rounds yet" first-load state.
+
+### USER DECISION lock toggle
+
+v3.39.7 wired the previously-dead Lock my selection button to push to `_resolvedDecisions`, but the button state didn't change visually after clicking — toast fired, console logged, but the user couldn't tell it had worked. Also no escape hatch for an accidental click.
+
+Refactored `lockConflictDecision` into a toggle, symmetric with the per-line Applied Changes lock pattern from v3.39.0+:
+
+- **Lock detection**: function checks if `_resolvedDecisions` has any entry whose `original` matches the decision's current text. Match by original only (one lock per decision), so re-locking after changing selection cleanly replaces any stale entry.
+- **Unlock branch**: removes the `_resolvedDecisions` entry for this decision, clears matching per-AI warnings, unsuppresses the conflict ledger entry, persists everything to localStorage, re-renders.
+- **Lock branch**: unchanged from v3.39.7 (push to `_resolvedDecisions`, suppress ledger, fire 3+ repeat-offender warnings).
+- **Re-render call added after both branches** so the button label and card styling update without a page refresh.
+
+UI feedback when locked:
+
+- **Card** gets `.decision-card-locked` class — green-dim background, green border, green decision badge. Stronger green than the existing `.resolved` class (which only means "an option is selected"), so locked state is visually distinct from merely-selected.
+- **🔒 LOCKED** pill badge added to the card header next to the decision number and repeat-count badge.
+- **Lock button** label flips to **🔓 Unlock**, button styling shifts to green-on-green (same pattern as the Applied Changes Unlock button). Hover state lifts to solid green for confirmation feedback.
+- **Tooltip** rewrites to "Remove the lock so reviewers can suggest changes to this again" when in locked state.
+
+### Files changed
+
+`js/app.js` (lockConflictDecision toggle refactor with unlock branch + re-render calls, renderConflicts decision loop detects locked state and renders accordingly), `style.css` (new `.conflicts-empty-card`, `.decision-card-locked`, `.decision-locked-badge`, `.decision-lock-btn-locked`), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
+## v3.39.8
+**Build:** `20260512-011` · **Released:** May 12, 2026
+
+### Conflicts panel empty-state — card wrapper, bolding cleanup, dropped dangling Converged reference
+
+User reported the empty-state section above Builder Applied looked sloppy: random words bolded, the explanation read as floating prose rather than a contained card matching the Applied/conflict cards below it, and the "✓ Converged" UI reference pointed to a label that doesn't appear in the user's current state. Three fixes, all CSS + copy, zero logic touched.
+
+### Card wrapper
+
+New `.conflicts-empty-card` class mirrors the `.applied-card` visual treatment — surface background, 1px border with a 3px left-edge accent in the neutral accent color (not green/red, these states are informational), rounded corners, 14px font, 1.6 line-height. Replaces the prior `.conflicts-empty` floating-italic-prose treatment across all four empty-state branches:
+
+1. No rounds yet (initial render before any round runs)
+2. Full-hive round, no conflicts, no applied changes
+3. Full-hive round, no conflicts, has applied changes (David's screenshot state)
+4. Builder-Only round, with or without applied changes
+
+Each branch now reads as a contained card with consistent margin to the Applied Changes section below.
+
+### Bolding cleanup
+
+Prior copy bolded the lead sentence, "from the most recent round only", "Converged", "Smoke the Hive", "Lock this line", and "🏁 Finish". Five emphasis points in two paragraphs reads as noise — the eye stops being able to tell which words matter.
+
+New rule: only the actual UI buttons the user is being directed to stay bolded. That's **Smoke the Hive** and **Finish**. Everything else (lead sentence, the "most recent round only" caveat, the "Lock this line" instruction which is now duplicated in the Applied Changes blurb anyway) reverts to plain prose. Strong tags inside the card render in accent color via the new `.conflicts-empty-card strong` rule for a tasteful pop without italic-bold-emphasis pile-up.
+
+### Dropped dangling Converged reference
+
+The prior copy said "The document is 'done' when the hive reaches **✓ Converged**" — but ✓ Converged only appears as a small status suffix on the round badge (`_ROUND_OUTCOME_SUFFIX.unanimous_convergence`) when the round outcome is `unanimous_convergence`. From any other outcome (continuing, builder_only_complete, majority_convergence), the label isn't visible. Telling the user to look for it from a `continuing` state is a forward-reference to a UI element they can't see — confusing.
+
+Rewrote functionally: "The hive converges when a majority of reviewers stop proposing changes." No quoted label, no false UI scavenger hunt. The same information communicated without the dangling reference.
+
+### Copy diffs (full-hive, has-applied branch — the one in the screenshot)
+
+**Before:**
+> **No reviewer disagreements in Round 14** — but the Builder applied 3 silent changes from individual reviewer suggestions (see below). Review each one and click **🔒 Lock this line** on anything you want the hive to stop revising. This panel shows the most recent round only — it's not a project-wide completion indicator. The document is "done" when the hive reaches **✓ Converged**. To keep refining, click **Smoke the Hive**. To finalize as-is, click **🏁 Finish** in the top toolbar.
+
+**After:**
+> No reviewer disagreements in Round 14. The Builder applied 3 silent changes from individual reviewer suggestions, listed below. This panel shows the most recent round only — not project-wide completion. The hive converges when a majority of reviewers stop proposing changes. To run another round, click **Smoke the Hive**. To finalize the current draft, click **Finish** in the top toolbar.
+
+Removed the duplicate "click Lock this line" instruction since the Builder Applied section blurb directly below already says that. Removed the dangling Converged reference. Five bolded fragments down to two (the actual button labels).
+
+Same treatment applied to the no-applied / Builder-Only / no-rounds-yet branches.
+
+### Files changed
+
+`js/app.js` (all four empty-state branches rewritten — `renderConflicts` empty-state plus the initial `conflictsEl` empty render in the new-session reset), `style.css` (new `.conflicts-empty-card` + `.conflicts-empty-card strong` rules; prior `.conflicts-empty` rule preserved as defense-in-depth in case any code path still uses it), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
 ## v3.39.7
 **Build:** `20260512-010` · **Released:** May 12, 2026
 

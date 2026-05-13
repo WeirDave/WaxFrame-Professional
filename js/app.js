@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-010';         // build stamp — update each session
+const BUILD       = '20260512-011';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3891,7 +3891,7 @@ async function clearProject() {
   const liveConsoleEl = document.getElementById('liveConsole');
   if (liveConsoleEl) liveConsoleEl.innerHTML = '<div class="console-entry console-info">Console ready — Smoke the hive to begin.</div>';
   const conflictsEl = document.getElementById('conflictsPanel');
-  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty"><strong>No rounds yet.</strong> Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts <em>from the most recent round only</em> — it\'s not a project-wide completion indicator.</div>';
+  if (conflictsEl) conflictsEl.innerHTML = '<div class="conflicts-empty-card">No rounds yet. Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts from the most recent round only — not project-wide completion.</div>';
 
   // Reset Finish modal export buttons to their pristine innerHTML captured on
   // DOMContentLoaded. Without this, a prior session's "✅ Exported!" / done
@@ -14330,6 +14330,11 @@ function unlockAllAppliedChanges(roundNum) {
 //   option → d.options[choice.idx].text
 //   custom → choice.text (user's typed override)
 //   bypass → d.current (lock current text as-is, treat skip as keep)
+// v3.39.7 — Lock my selection. Was a dead handler (button wired to a
+// function that didn't exist).
+// v3.39.8 — Toggle. Click locks; click again unlocks. Symmetric with
+// the per-line Applied Changes lock pattern from v3.39.0+ — every
+// "lock" in WaxFrame is reversible so accidental clicks aren't fatal.
 function lockConflictDecision(decisionIdx) {
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest?.conflicts?.userDecisions) {
@@ -14338,14 +14343,57 @@ function lockConflictDecision(decisionIdx) {
   }
   const decisions = latest.conflicts.userDecisions;
   const d = decisions[decisionIdx];
-  if (!d) return;
+  if (!d || !d.current) return;
+  const dCurrent = d.current.trim();
+
+  // ── DETECT LOCKED STATE ──
+  // Match by ORIGINAL only (not original+chosen). If user changed
+  // selection mid-locked, unlock still finds and removes the stale
+  // lock cleanly. One lock per decision, identified by original.
+  window._resolvedDecisions = window._resolvedDecisions || [];
+  const isLocked = window._resolvedDecisions.some(rd =>
+    (rd.original || '').trim() === dCurrent
+  );
+
+  // ── UNLOCK BRANCH ──
+  if (isLocked) {
+    window._resolvedDecisions = window._resolvedDecisions.filter(rd =>
+      (rd.original || '').trim() !== dCurrent
+    );
+    try { localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions)); } catch(e) { console.warn('[resolved] write failed:', e); }
+
+    window._aiWarnings = window._aiWarnings || {};
+    Object.keys(window._aiWarnings).forEach(aiId => {
+      window._aiWarnings[aiId] = window._aiWarnings[aiId].filter(w =>
+        (w.original || '').trim() !== dCurrent
+      );
+      if (window._aiWarnings[aiId].length === 0) delete window._aiWarnings[aiId];
+    });
+    try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) { console.warn('[ai-warnings] write failed:', e); }
+
+    if (typeof fingerprintConflict === 'function' && Array.isArray(window._conflictLedger)) {
+      const fp = fingerprintConflict(d);
+      const entry = window._conflictLedger.find(e => e.fingerprint === fp);
+      if (entry && entry.suppressed) {
+        entry.suppressed = false;
+        try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) { console.warn('[conflict-ledger:unsuppress] write failed:', e); }
+      }
+    }
+
+    saveSession();
+    renderConflicts();
+    consoleLog(`🔓 Unlocked decision — "${dCurrent.slice(0, 50)}${dCurrent.length > 50 ? '…' : ''}"`, 'info');
+    toast(`🔓 Unlocked — reviewers can suggest changes to this again`);
+    return;
+  }
+
+  // ── LOCK BRANCH ──
   const choice = window._decisionChoices ? window._decisionChoices[decisionIdx] : null;
   if (!choice) {
     toast('⚠️ Pick an option first, then lock it');
     return;
   }
 
-  // Resolve selected text by choice type — same path as applyDecisions
   let chosenText = '';
   if (choice.type === 'option') {
     chosenText = (d.options && d.options[choice.idx] && d.options[choice.idx].text) || '';
@@ -14355,28 +14403,14 @@ function lockConflictDecision(decisionIdx) {
     chosenText = d.current || '';
   }
 
-  if (!d.current || !chosenText) {
+  if (!chosenText) {
     toast('⚠️ Selected option has no text to lock');
     return;
   }
 
-  // Dedup against existing _resolvedDecisions — if user clicked lock on
-  // the same selection twice in a row, don't push a duplicate entry.
-  window._resolvedDecisions = window._resolvedDecisions || [];
-  const already = window._resolvedDecisions.some(rd =>
-    (rd.original || '').trim() === d.current.trim() &&
-    (rd.chosen || '').trim() === chosenText.trim()
-  );
-  if (already) {
-    toast('ℹ️ Already locked — Builder and reviewers will leave this alone');
-    return;
-  }
-
-  // Push canonical lock
   window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
   try { localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions)); } catch(e) { console.warn('[resolved] write failed:', e); }
 
-  // Mark as suppressed in conflict ledger — same as applyDecisions does
   if (typeof fingerprintConflict === 'function' && Array.isArray(window._conflictLedger)) {
     const fp = fingerprintConflict(d);
     const entry = window._conflictLedger.find(e => e.fingerprint === fp);
@@ -14384,7 +14418,6 @@ function lockConflictDecision(decisionIdx) {
       entry.suppressed = true;
       try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) { console.warn('[conflict-ledger:suppress] write failed:', e); }
 
-      // 3+ repeat-offender targeted warnings — same logic as applyDecisions
       if (entry.count >= 3) {
         const losingOptions = (d.options || []).filter(opt => opt.text !== chosenText && opt.ais);
         window._aiWarnings = window._aiWarnings || {};
@@ -14407,7 +14440,8 @@ function lockConflictDecision(decisionIdx) {
   }
 
   saveSession();
-  consoleLog(`🔒 Locked decision — "${d.current.slice(0, 50)}${d.current.length > 50 ? '…' : ''}" → "${chosenText.slice(0, 50)}${chosenText.length > 50 ? '…' : ''}"`, 'info');
+  renderConflicts();
+  consoleLog(`🔒 Locked decision — "${dCurrent.slice(0, 50)}${dCurrent.length > 50 ? '…' : ''}" → "${chosenText.slice(0, 50)}${chosenText.length > 50 ? '…' : ''}"`, 'info');
   toast(`🔒 Locked — Builder and reviewers will leave this alone`);
 }
 
@@ -14417,7 +14451,7 @@ function renderConflicts() {
 
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest) {
-    el.innerHTML = '<div class="conflicts-empty"><strong>No rounds yet.</strong> Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts <em>from the most recent round only</em> — it\'s not a project-wide completion indicator.</div>';
+    el.innerHTML = '<div class="conflicts-empty-card">No rounds yet. Run a round (the <strong>Smoke the Hive</strong> button below) to see what the Builder couldn\'t resolve. This panel always shows conflicts from the most recent round only — not project-wide completion.</div>';
     return;
   }
 
@@ -14440,6 +14474,16 @@ function renderConflicts() {
     // Fix: when appliedChanges.length > 0, reframe the top message to
     // distinguish reviewer DISAGREEMENT (the conflicts panel's actual
     // domain) from silent CHANGES (which the new section already shows).
+    // v3.39.8 — Empty-state copy and styling overhaul. Three fixes from
+    // David's feedback: (1) wrap the explanation in a proper card with
+    // left-edge accent so it visually matches the Applied Changes and
+    // conflict cards instead of reading as floating prose; (2) strip the
+    // random bolding pattern — only Smoke the Hive and Finish stay
+    // emphasised (those are the actual UI buttons the user is being
+    // directed to); (3) drop the dangling "✓ Converged" reference since
+    // that label only appears as a tiny status suffix on the round
+    // badge on unanimous_convergence outcomes, not as a UI element the
+    // user can scan for from this state.
     const roundNum = latest.round || history.length;
     const isBuilderOnly = latest.outcome === 'builder_only_complete';
     const appliedCount = Array.isArray(latest.appliedChanges) ? latest.appliedChanges.length : 0;
@@ -14447,18 +14491,18 @@ function renderConflicts() {
     let msg;
     if (isBuilderOnly) {
       if (hasApplied) {
-        msg = `<strong>Round ${roundNum} was a Builder-Only round.</strong> No reviewers ran — the Builder applied your directives plus ${appliedCount} carry-forward change${appliedCount !== 1 ? 's' : ''} (see below). Review each and lock any line you want left alone.<br><br>To gather reviewer feedback on the updated draft, click <strong>Smoke the Hive</strong> below.`;
+        msg = `Round ${roundNum} was a Builder-Only round. No reviewers ran — the Builder applied your directives plus ${appliedCount} carry-forward change${appliedCount !== 1 ? 's' : ''}, listed below.<br><br>To gather reviewer feedback on the updated draft, click <strong>Smoke the Hive</strong> below.`;
       } else {
-        msg = `<strong>Round ${roundNum} was a Builder-Only round</strong> — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document.<br><br>To gather reviewer feedback on the current draft, click <strong>Smoke the Hive</strong> below — that\'s the full multi-AI round, and this panel will populate with anything the reviewers disagreed on.`;
+        msg = `Round ${roundNum} was a Builder-Only round — no reviewers ran, so there's nothing to conflict against. The Builder applied your directives directly to the document.<br><br>To gather reviewer feedback on the current draft, click <strong>Smoke the Hive</strong> — that's a full multi-AI round, and this panel will populate with anything the reviewers disagreed on.`;
       }
     } else {
       if (hasApplied) {
-        msg = `<strong>No reviewer disagreements in Round ${roundNum}</strong> — but the Builder applied ${appliedCount} silent change${appliedCount !== 1 ? 's' : ''} from individual reviewer suggestions (see below). Review each one and click <strong>🔒 Lock this line</strong> on anything you want the hive to stop revising.<br><br>This panel shows the most recent round only — it\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong>. To keep refining, click <strong>Smoke the Hive</strong>. To finalize as-is, click <strong>🏁 Finish</strong> in the top toolbar.`;
+        msg = `No reviewer disagreements in Round ${roundNum}. The Builder applied ${appliedCount} silent change${appliedCount !== 1 ? 's' : ''} from individual reviewer suggestions, listed below.<br><br>This panel shows the most recent round only — not project-wide completion. The hive converges when a majority of reviewers stop proposing changes. To run another round, click <strong>Smoke the Hive</strong>. To finalize the current draft, click <strong>Finish</strong> in the top toolbar.`;
       } else {
-        msg = `<strong>No conflicts in Round ${roundNum}.</strong> Reviewers and the Builder agreed on the changes this round — but this panel shows conflicts <em>from the most recent round only</em>. It\'s not a project-wide completion indicator. The document is "done" when the hive reaches <strong>✓ Converged</strong> (a majority of reviewers agree there are no more changes needed).<br><br>To keep refining, click <strong>Smoke the Hive</strong> below for another full round. If you\'re already satisfied with the current draft, click <strong>🏁 Finish</strong> in the top toolbar to export.`;
+        msg = `No conflicts in Round ${roundNum}. Reviewers and the Builder agreed on the changes this round.<br><br>This panel shows the most recent round only — not project-wide completion. The hive converges when a majority of reviewers stop proposing changes. To keep refining, click <strong>Smoke the Hive</strong> for another full round. If the current draft is good as-is, click <strong>Finish</strong> in the top toolbar to export.`;
       }
     }
-    el.innerHTML = `<div class="conflicts-empty">${msg}</div>${buildAppliedChangesHTML(latest)}`;
+    el.innerHTML = `<div class="conflicts-empty-card">${msg}</div>${buildAppliedChangesHTML(latest)}`;
     return;
   }
 
@@ -14584,16 +14628,33 @@ function renderConflicts() {
       const repeatCount = ledgerEntry ? ledgerEntry.count : 1;
       const isRepeat = repeatCount >= 2;
       const isHot = repeatCount >= 3;
+      // v3.39.8 — Detect locked state for visual feedback. Matched by
+      // original only (one lock per decision). If locked, card gets a
+      // green tint and the lock button reads Unlock.
+      const dCurrentTrim = (d.current || '').trim();
+      const isLocked = dCurrentTrim && (window._resolvedDecisions || []).some(rd =>
+        (rd.original || '').trim() === dCurrentTrim
+      );
       const repeatBadge = isRepeat
         ? `<span class="conflict-repeat-badge ${isHot ? 'conflict-repeat-hot' : ''}">
             🔁 Seen ${repeatCount}x
            </span>`
         : '';
-      html += `<div class="decision-card${isHot ? ' decision-card-hot' : ''}" id="dcard-${di}"
+      const lockedBadge = isLocked
+        ? `<span class="decision-locked-badge">🔒 LOCKED</span>`
+        : '';
+      const lockBtnLabel = isLocked ? '🔓 Unlock' : '🔒 Lock my selection';
+      const lockBtnClass = isLocked ? 'decision-lock-btn decision-lock-btn-locked' : 'decision-lock-btn';
+      const lockBtnTitle = isLocked
+        ? 'Remove the lock so reviewers can suggest changes to this again'
+        : 'Lock the selected option as a final decision — Builder and reviewers will not raise this conflict again or change the chosen text';
+      const cardClass = `decision-card${isHot ? ' decision-card-hot' : ''}${isLocked ? ' decision-card-locked' : ''}`;
+      html += `<div class="${cardClass}" id="dcard-${di}"
         data-option-texts="${esc(JSON.stringify(d.options.map(o => o.text || '')))}">
         <div class="decision-card-header">
           <span class="decision-badge">⚡ USER DECISION ${di + 1} of ${total}</span>
           ${repeatBadge}
+          ${lockedBadge}
         </div>
         <div class="decision-question">${esc(stripLineRefs(d.question))}</div>
         ${d.current ? (() => { window._conflictCurrentTexts[di] = d.current; return `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>`; })() : ''}
@@ -14617,8 +14678,8 @@ function renderConflicts() {
           </button>
         </div>
         <div class="decision-lock-row">
-          <button class="decision-lock-btn" onclick="lockConflictDecision(${di})" title="Lock the selected option as a final decision — Builder and reviewers will not raise this conflict again or change the chosen text">
-            🔒 Lock my selection
+          <button class="${lockBtnClass}" onclick="lockConflictDecision(${di})" title="${lockBtnTitle}">
+            ${lockBtnLabel}
           </button>
         </div>
         <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
