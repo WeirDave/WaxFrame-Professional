@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-009';         // build stamp — update each session
+const BUILD       = '20260512-010';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -5503,41 +5503,6 @@ function openConsoleErrorDetail(id) {
     }
   }
   modal.classList.add('active');
-}
-
-function lockConflictToNotes(decisionIdx) {
-  // Get the selected option text — fall back to Current: text if nothing selected yet
-  const card = document.getElementById(`dcard-${decisionIdx}`);
-  let lockText = '';
-  if (card) {
-    const selectedBtn = card.querySelector('.decision-opt-btn.selected .decision-opt-text');
-    if (selectedBtn) {
-      lockText = selectedBtn.textContent.replace(/^"|"$/g, '').trim();
-    } else {
-      // Nothing selected yet — use the Current: text
-      lockText = window._conflictCurrentTexts?.[decisionIdx] || '';
-    }
-  }
-  if (!lockText) {
-    toast('⚠️ Select an option first, then lock it');
-    return;
-  }
-  const template = `Lock this line exactly as written — do not change it: "${lockText}"`;
-  // v3.36.27 — Silent lock. Append to Notes without opening the drawer
-  // or stealing focus. Clicking the lock button = the user's intent is
-  // already confirmed; the Notes drawer doesn't need to surface in
-  // their face. The locked sentence rides along on the next Builder
-  // round automatically (workNotes is read by both runBuilderOnly and
-  // applyDecisions). The previous version called applyNotesTemplate
-  // which focused the textarea + opened the modal — both disruptive
-  // when the user is mid-flow on multiple conflict cards. Inlined the
-  // textarea append here so the focus side-effect is also avoided.
-  const ta = document.getElementById('workNotes');
-  if (ta) {
-    const current = ta.value.trim();
-    ta.value = current ? current + '\n\n' + template : template;
-  }
-  toast('🔒 Locked');
 }
 
 function applyNotesTemplate(template) {
@@ -14345,6 +14310,107 @@ function unlockAllAppliedChanges(roundNum) {
   toast(`🔓 Unlocked all — reviewers can revise these lines again`);
 }
 
+// v3.39.7 — Lock my selection. The button has existed in the USER
+// DECISION UI since the conflicts panel was first built but the
+// handler was never wired (drafted-without-implementation gap, same
+// flavor the per-line Lock had before v3.39.0). Behavior mirrors
+// applyDecisions's lock block but for a single decision and without
+// the Builder call — useful when the user wants to lock a decision
+// across rounds without forcing a Builder send right now.
+//
+// The historical button label "Lock my selection in Notes" was
+// misleading. Standing Notes is soft guidance text injected into
+// prompts; window._resolvedDecisions is the canonical hard lock,
+// injected as "PREVIOUSLY RESOLVED DECISIONS — FINAL AND LOCKED" to
+// both Builder and reviewers. This handler writes to the lock
+// channel, not to Notes. Button relabeled to "Lock my selection"
+// at the call site to match what it actually does.
+//
+// Choice-type resolution mirrors applyDecisions exactly:
+//   option → d.options[choice.idx].text
+//   custom → choice.text (user's typed override)
+//   bypass → d.current (lock current text as-is, treat skip as keep)
+function lockConflictDecision(decisionIdx) {
+  const latest = history.length > 0 ? history[history.length - 1] : null;
+  if (!latest?.conflicts?.userDecisions) {
+    toast('⚠️ No active conflict to lock');
+    return;
+  }
+  const decisions = latest.conflicts.userDecisions;
+  const d = decisions[decisionIdx];
+  if (!d) return;
+  const choice = window._decisionChoices ? window._decisionChoices[decisionIdx] : null;
+  if (!choice) {
+    toast('⚠️ Pick an option first, then lock it');
+    return;
+  }
+
+  // Resolve selected text by choice type — same path as applyDecisions
+  let chosenText = '';
+  if (choice.type === 'option') {
+    chosenText = (d.options && d.options[choice.idx] && d.options[choice.idx].text) || '';
+  } else if (choice.type === 'custom') {
+    chosenText = choice.text || '';
+  } else if (choice.type === 'bypass') {
+    chosenText = d.current || '';
+  }
+
+  if (!d.current || !chosenText) {
+    toast('⚠️ Selected option has no text to lock');
+    return;
+  }
+
+  // Dedup against existing _resolvedDecisions — if user clicked lock on
+  // the same selection twice in a row, don't push a duplicate entry.
+  window._resolvedDecisions = window._resolvedDecisions || [];
+  const already = window._resolvedDecisions.some(rd =>
+    (rd.original || '').trim() === d.current.trim() &&
+    (rd.chosen || '').trim() === chosenText.trim()
+  );
+  if (already) {
+    toast('ℹ️ Already locked — Builder and reviewers will leave this alone');
+    return;
+  }
+
+  // Push canonical lock
+  window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
+  try { localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions)); } catch(e) { console.warn('[resolved] write failed:', e); }
+
+  // Mark as suppressed in conflict ledger — same as applyDecisions does
+  if (typeof fingerprintConflict === 'function' && Array.isArray(window._conflictLedger)) {
+    const fp = fingerprintConflict(d);
+    const entry = window._conflictLedger.find(e => e.fingerprint === fp);
+    if (entry) {
+      entry.suppressed = true;
+      try { localStorage.setItem('waxframe_conflict_ledger', JSON.stringify(window._conflictLedger)); } catch(e) { console.warn('[conflict-ledger:suppress] write failed:', e); }
+
+      // 3+ repeat-offender targeted warnings — same logic as applyDecisions
+      if (entry.count >= 3) {
+        const losingOptions = (d.options || []).filter(opt => opt.text !== chosenText && opt.ais);
+        window._aiWarnings = window._aiWarnings || {};
+        losingOptions.forEach(opt => {
+          const aiNames = opt.ais.split(',').map(n => n.trim().toLowerCase());
+          (aiList || []).forEach(ai => {
+            if (aiNames.includes((ai.name || '').toLowerCase())) {
+              if (!window._aiWarnings[ai.id]) window._aiWarnings[ai.id] = [];
+              const alreadyWarned = window._aiWarnings[ai.id].some(w => w.original === d.current);
+              if (!alreadyWarned) {
+                window._aiWarnings[ai.id].push({ original: d.current, chosen: chosenText });
+                consoleLog(`⚠️ Targeted warning issued to ${ai.name} — repeatedly raised "${d.current}" after it was resolved`, 'warn');
+              }
+            }
+          });
+        });
+        try { localStorage.setItem('waxframe_ai_warnings', JSON.stringify(window._aiWarnings)); } catch(e) { console.warn('[ai-warnings] write failed:', e); }
+      }
+    }
+  }
+
+  saveSession();
+  consoleLog(`🔒 Locked decision — "${d.current.slice(0, 50)}${d.current.length > 50 ? '…' : ''}" → "${chosenText.slice(0, 50)}${chosenText.length > 50 ? '…' : ''}"`, 'info');
+  toast(`🔒 Locked — Builder and reviewers will leave this alone`);
+}
+
 function renderConflicts() {
   const el = document.getElementById('conflictsPanel');
   if (!el) return;
@@ -14551,8 +14617,8 @@ function renderConflicts() {
           </button>
         </div>
         <div class="decision-lock-row">
-          <button class="decision-lock-btn" onclick="lockConflictToNotes(${di})" title="Lock selected option into Notes so the Builder can't change it">
-            🔒 Lock my selection in Notes
+          <button class="decision-lock-btn" onclick="lockConflictDecision(${di})" title="Lock the selected option as a final decision — Builder and reviewers will not raise this conflict again or change the chosen text">
+            🔒 Lock my selection
           </button>
         </div>
         <div class="decision-custom-wrap" id="dcustom-${di}" style="display:none">
