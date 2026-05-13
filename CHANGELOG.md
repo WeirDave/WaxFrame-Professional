@@ -1,6 +1,81 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.6
+**Build:** `20260512-009` · **Released:** May 12, 2026
+
+### Builder Applied section — visual polish, Lock All, repeat-touch counter restored
+
+User feedback after using v3.39.5 in a real work session: the Builder Applied cards read as a wall of text, weren't visually distinct from each other, and were easy to glaze over. Also asked for a Lock All button for the "don't care, just keep going" workflow, and noted the repeat-touch indicator that was supposed to show "this line was touched N rounds in a row" wasn't appearing.
+
+### Card redesign
+
+Three structural changes to make cards read as cards instead of paragraphs:
+
+- **Left-edge accent bar.** Each card has a 3px accent-colored vertical bar on the left edge. Cheap visual anchor; you can see the start of each card at a glance even when scrolling fast. Locked cards get a green accent bar.
+- **Line-ref as a pill tag.** Was bold inline text running into the attribution; now a small uppercase pill in accent-colored background, separated from everything else. Reads as a label, not a sentence.
+- **Diff-style ± rows.** Replaced the inline `was: "..." / now: "..."` paragraphs with two distinct rows: red-tinted background with a − marker for the old text, green-tinted background with a + marker for the new text. Each row reads as its own block with its own visual treatment. Strikethrough preserved on the old text but now done in red instead of border-grey so the diff intent is unambiguous.
+
+Attribution moved to its own dim italic line below the header (`suggested by Gemini-2.5-Flash`) instead of running into the line-ref with an arrow character. Locked cards keep their green border treatment but no longer dim to 0.65 opacity — David wanted to keep them readable so the user can still review and unlock individual items.
+
+### Lock All / Unlock All
+
+New button in the section header pill row. Smart toggle:
+
+- ANY change unlocked → button reads **🔒 Lock All**
+- ALL changes locked → button reads **🔓 Unlock All**
+
+No confirmation dialog by design (David's call): locking is fully reversible per-line, so the worst case is the user unlocks the ones they didn't want after reading the doc. The friction of a confirm dialog would defeat the purpose of the bulk operation.
+
+Implementation iterates the items and calls the existing `lockAppliedChange` toggle on each (which already handles all the `_resolvedDecisions` + `_aiWarnings` plumbing per-item). New functions `lockAllAppliedChanges(roundNum)` and `unlockAllAppliedChanges(roundNum)` are thin wrappers; toast on completion summarizes.
+
+### Repeat-touch counter expanded
+
+The badge was correctly wired but only counted touches in the last 5 rounds (a trailing window). On David's Round 8 session, lines touched in Round 2 fell outside the window so no badge showed. Fix: count across the full project history. Badge now reads "↻ N of M rounds" where M is the total project round count. Threshold for showing the badge is still 2+ touches (one touch isn't a pattern); the strong-warning red treatment kicks in at 3+ touches.
+
+### Files changed
+
+`js/app.js` (`buildAppliedChangesHTML` redesign, new `lockAllAppliedChanges` and `unlockAllAppliedChanges` functions), `style.css` (`.applied-card` left-edge accent bar, `.applied-line-ref` pill styling, `.applied-from-line` new attribution row, `.applied-diff` + `.applied-diff-row` + `.applied-diff-old` + `.applied-diff-new` + `.applied-diff-marker` + `.applied-diff-text` new diff layout, `.applied-changes-header` flex layout with bulk button slot, `.applied-bulk-btn` + `.applied-bulk-btn-locked` new styles, locked-card opacity dim removed), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
+## v3.39.5
+**Build:** `20260512-008` · **Released:** May 12, 2026
+
+### Builder prompt restructure — hotfix for v3.39.4's nested-instructions regression
+
+User reported that after switching Builder to Claude-4-6-Opus following v3.39.4's recommendation, the round failed with `Builder did not return the required formatting — Builder produced output but did not include the %%CONFLICTS_START%% block`. Root cause is mine, in v3.39.4: I put the decision tree, anti-hallucination rules, format rules, and mandatory self-check INSIDE the `%%CONFLICTS_START%% ... %%CONFLICTS_END%%` template envelope in the prompt. The pre-existing prompt had a similar pattern with the original anti-hallucination block but at much smaller volume; my v3.39.4 expansion roughly tripled the in-envelope instructional bulk.
+
+Opus, being a strong reasoning model, interpreted the wall of instructions inside the template as meta-content describing what the envelope is, rather than literal content to emit. Result: it produced a clean document, then skipped the wrapper entirely because the wrapper "was just instructions." GPT-4o didn't trip on this because GPT-4o pattern-matches more than it reasons — it sees `%%CONFLICTS_START%%` in the prompt and dutifully echoes the literal string. The very model behavior difference v3.39.4 was meant to surface (Opus reasons; GPT-4o pattern-matches) is the same behavior that made my structural shortcut backfire on Opus first.
+
+### Fix
+
+Restructure the prompt so instructions live OUTSIDE the template envelope. Keep the template minimal — just the literal wrapper structure showing what content goes inside. New prompt structure:
+
+1. **RULES** block (unchanged) — high-level Builder responsibilities
+2. **CONFLICTS BLOCK — DECISION TREE** — pulled out of the template envelope, sits as a top-level section before any template appears. Four numbered steps with STOP directives. Followed by ABSOLUTE RULE.
+3. **BUILDER DECISION format** — single line, named separately, instruction not example
+4. **USER DECISION format** — multi-line, named separately. Format-line example shows the structure but is clearly labeled as a format, not as a template wrapper.
+5. **Rules for USER DECISION format** (unchanged)
+6. **ANTI-HALLUCINATION RULES** (unchanged content, moved outside template)
+7. **MANDATORY SELF-CHECK** (unchanged content, moved outside template)
+8. **APPLIED CHANGES BLOCK — instructions** — separated from the template envelope
+9. **APPLIED entry format** — named separately, instruction not example
+10. **Rules for APPLIED CHANGES** (unchanged)
+11. **REQUIRED OUTPUT STRUCTURE** — final section that shows the THREE-block wrapper structure with placeholder content inside each block. Explicit line stating "The wrapper markers must appear LITERALLY in your output — they are not template placeholders, they are required delimiters the application parses. Do not omit them even on rounds with no conflicts and no applied changes."
+
+The template at the bottom now uses placeholder text (`...USER DECISION blocks, BUILDER DECISION lines, or the literal string "NO CONFLICTS"...`) instead of nested instructions, so reasoning models can't mistake instructional content for the template. The explicit "they are not template placeholders, they are required delimiters" line is the belt-and-suspenders catch.
+
+### Lesson
+
+I should have caught this in my own scrutiny before shipping v3.39.4. Adding ~40 lines of instructions inside a template envelope while keeping the "Structure your response EXACTLY like this:" header above it was a structural smell I should have noticed. Filing under "always inspect the prompt for nested template confusion when adding instructional bulk." Future Builder prompt expansions go OUTSIDE the wrapper template by default.
+
+### Files changed
+
+`js/app.js` (BUILDER_INSTRUCTIONS.refine restructure — content unchanged, organisation rewritten), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
 ## v3.39.4
 **Build:** `20260512-007` · **Released:** May 12, 2026
 

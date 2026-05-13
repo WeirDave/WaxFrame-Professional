@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-007';         // build stamp — update each session
+const BUILD       = '20260512-009';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -11995,16 +11995,10 @@ RULES:
 - Preserve the existing section order and structure unless a reviewer suggestion specifically requires a change.
 - Maintain internal consistency across section titles, numbering, terminology, and defined terms.
 - If reviewer suggestions are incomplete or partially invalid, produce the best complete document possible.
-- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%CONFLICTS_END%%.
-- Structure your response EXACTLY like this:
+- Do not place any content outside the required wrapper blocks. Nothing before %%DOCUMENT_START%%, nothing after %%APPLIED_END%%.
 
-%%DOCUMENT_START%%
-...the complete updated document here...
-%%DOCUMENT_END%%
-
-%%CONFLICTS_START%%
-
-DECISION TREE — follow these steps in order for every disagreement you found between reviewers. Do not skip steps. Do not collapse them. Each disagreement reaches exactly ONE outcome — apply, USER DECISION, or BUILDER DECISION — and that outcome is final for that disagreement.
+CONFLICTS BLOCK — DECISION TREE:
+Follow these steps in order for every disagreement you found between reviewers. Do not skip steps. Do not collapse them. Each disagreement reaches exactly ONE outcome — apply, USER DECISION, or BUILDER DECISION — and that outcome is final for that disagreement.
 
 STEP 1 — COUNT reviewers per proposed alternative for the disagreement.
 STEP 2 — IF a strict majority (more than half of reviewers) proposed the SAME alternative → APPLY it to your %%DOCUMENT_START%% block. STOP. Do not emit a USER DECISION for this disagreement. Move to the next disagreement.
@@ -12013,11 +12007,10 @@ STEP 4 — OTHERWISE the disagreement is a stylistic / tonal / wording split →
 
 ABSOLUTE RULE: If you reached Step 2 (apply) for a disagreement, you must NOT also emit a USER DECISION for that same disagreement. If you reached Step 4 (USER DECISION), you must NOT also modify that text in the document. One path per disagreement, exclusive. Violating this rule corrupts the user's resolution flow because CURRENT will no longer exist in the document for the user to replace.
 
-For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
-Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
+BUILDER DECISION format (single line inside the conflicts block):
+[BUILDER DECISION] "quoted text" — explanation naming AIs.
 
-For USER DECISION conflicts: use EXACTLY this structured format so the app can present it as a choice to the user:
-
+USER DECISION format (multi-line block inside the conflicts block):
 [USER DECISION]
 QUESTION: A plain-English question describing what the user needs to decide — one sentence.
 CURRENT: "the exact current text in the document as it stands"
@@ -12050,14 +12043,11 @@ For each USER DECISION you have written, perform this check in your head:
 3. IF FOUND → the USER DECISION is valid; keep it.
 4. IF NOT FOUND → you have violated the apply-and-flag rule. Two ways to fix: (a) delete this USER DECISION entirely (because you already applied one of its options), or (b) revert that line in the document back to the original CURRENT text so the user can resolve the disagreement themselves. Pick ONE and do it before writing %%CONFLICTS_END%%.
 
-If there are no conflicts write exactly: NO CONFLICTS
-%%CONFLICTS_END%%
+If there are no conflicts at all this round, the entire content between %%CONFLICTS_START%% and %%CONFLICTS_END%% must be exactly: NO CONFLICTS
 
-After %%CONFLICTS_END%%, emit an APPLIED CHANGES envelope listing every silent change you applied to the document this round — solo reviewer suggestions you accepted, unanimous-majority changes, and any other reviewer-sourced edits that did NOT become a USER DECISION or BUILDER DECISION. This gives the user visibility into what's being applied silently round after round so they can lock down lines that keep getting nitpicked.
+APPLIED CHANGES BLOCK — list every silent change you applied to the document this round (solo reviewer suggestions you accepted, unanimous-majority changes, and any other reviewer-sourced edits that did NOT become a USER DECISION or BUILDER DECISION). This gives the user visibility into what's being applied silently round after round so they can lock down lines that keep getting nitpicked.
 
-%%APPLIED_START%%
-For each silent change applied to the document this round, emit ONE block in EXACTLY this format:
-
+APPLIED entry format (one block per silent change, inside the applied block):
 [APPLIED]
 LINE_REF: A short locator like "Line 7" or "Introduction paragraph 2" — whatever helps the user find it in the doc
 ORIGINAL: "exact previous text"
@@ -12071,7 +12061,20 @@ Rules for APPLIED CHANGES:
 - FROM names must match reviewers who actually proposed the change in THIS round — same attribution rule as USER DECISION
 - NEW must be verbatim text from your %%DOCUMENT_START%% output — same live-text rule as USER DECISION's CURRENT
 - Do not list a change here AND surface it as a USER DECISION — pick one
-- If you applied zero silent changes this round write exactly: NO APPLIED CHANGES
+- If you applied zero silent changes this round, the entire content between %%APPLIED_START%% and %%APPLIED_END%% must be exactly: NO APPLIED CHANGES
+
+REQUIRED OUTPUT STRUCTURE — your response must contain ALL THREE blocks in this order, every round, no exceptions. The wrapper markers (%%DOCUMENT_START%%, %%DOCUMENT_END%%, %%CONFLICTS_START%%, %%CONFLICTS_END%%, %%APPLIED_START%%, %%APPLIED_END%%) must appear LITERALLY in your output — they are not template placeholders, they are required delimiters the application parses. Do not omit them even on rounds with no conflicts and no applied changes:
+
+%%DOCUMENT_START%%
+...the complete updated document here...
+%%DOCUMENT_END%%
+
+%%CONFLICTS_START%%
+...USER DECISION blocks, BUILDER DECISION lines, or the literal string "NO CONFLICTS"...
+%%CONFLICTS_END%%
+
+%%APPLIED_START%%
+...APPLIED blocks, or the literal string "NO APPLIED CHANGES"...
 %%APPLIED_END%%`,
 
   draft: `You are the Builder in this WaxFrame collaboration. Do not adopt any additional role, persona, or framing beyond what is stated here.
@@ -14237,23 +14240,35 @@ function buildAppliedChangesHTML(latest) {
   const items = latest.appliedChanges;
   const latestRound = latest.round || (history.length || 0);
 
-  // Repeat-touch counter: for each item, how many recent rounds touched
-  // the same line locator (case-insensitive). Window = last 5 rounds back
-  // including this one.
-  const recent = history.slice(-5);
+  // v3.39.6 — Repeat-touch counter expanded from a 5-round trailing window
+  // to the full project history. On a long-running session a line can sit
+  // idle for several rounds and then get touched again; the 5-round window
+  // missed those. Counting across history gives a "touched N of M rounds"
+  // signal that scales with project length.
   const repeatCount = (lineRef) => {
     if (!lineRef) return 0;
     const key = lineRef.trim().toLowerCase();
     let n = 0;
-    for (const h of recent) {
+    for (const h of history) {
       if (!Array.isArray(h.appliedChanges)) continue;
       if (h.appliedChanges.some(a => (a.lineRef || '').trim().toLowerCase() === key)) n++;
     }
     return n;
   };
 
+  // Lock All / Unlock All — every applied change has a locked boolean.
+  // If ANY is unlocked → button reads "Lock All". If ALL are locked →
+  // button reads "Unlock All". No confirm dialog by design — David's
+  // call: locking is fully reversible per-line, worst case the user
+  // unlocks the ones they didn't want after reading the doc.
+  const allLocked = items.every(c => !!c.locked);
+  const bulkBtn = allLocked
+    ? `<button class="applied-bulk-btn applied-bulk-btn-locked" onclick="unlockAllAppliedChanges(${latestRound})">🔓 Unlock All</button>`
+    : `<button class="applied-bulk-btn" onclick="lockAllAppliedChanges(${latestRound})">🔒 Lock All</button>`;
+
   let html = `<div class="conflicts-section-header applied-changes-header">
-    ✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} This Round
+    <span class="applied-changes-header-text">✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} This Round</span>
+    ${bulkBtn}
   </div>
   <div class="applied-changes-blurb">
     These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it. Once you've locked anything you want locked, click <strong>Smoke the Hive</strong> below to run the next round — the hive will see your locks and leave those lines alone.
@@ -14261,27 +14276,42 @@ function buildAppliedChangesHTML(latest) {
 
   items.forEach((c, i) => {
     const rep = repeatCount(c.lineRef);
+    // v3.39.6 — "Touched 2 of 8 rounds" reads better than "↻ touched 2
+    // rounds". Threshold for showing the badge is still 2+ (one touch
+    // isn't a pattern). Strong-warning threshold for 3+ unchanged.
     const repeatBadge = rep >= 3
-      ? `<span class="applied-repeat-badge applied-repeat-strong">⚠ ${rep} rounds in a row</span>`
-      : (rep >= 2 ? `<span class="applied-repeat-badge">↻ touched ${rep} rounds</span>` : '');
+      ? `<span class="applied-repeat-badge applied-repeat-strong">⚠ ${rep} of ${history.length} rounds</span>`
+      : (rep >= 2 ? `<span class="applied-repeat-badge">↻ ${rep} of ${history.length} rounds</span>` : '');
     const lockedTag = c.locked ? `<span class="applied-locked-tag">🔒 Locked</span>` : '';
-    // v3.39.2 — Button toggles. When locked, shows Unlock (clicks the same
-    // handler which detects locked state and reverses). Previous version
-    // disabled the button entirely, leaving no escape for an accidental
-    // click.
     const lockBtn = c.locked
       ? `<button class="applied-lock-btn applied-lock-btn-locked" onclick="lockAppliedChange(${latestRound}, ${i})">🔓 Unlock</button>`
       : `<button class="applied-lock-btn" onclick="lockAppliedChange(${latestRound}, ${i})">🔒 Lock this line</button>`;
 
+    // v3.39.6 — Card layout redesigned to read as a proper card and not
+    // a wall of text. Left-edge accent bar anchors each card visually.
+    // Header row: line-ref styled as a pill tag (not bold inline text),
+    // badges to the right. Attribution on its own dim italic line.
+    // Diff-style ± rows replace inline "was:"/"now:" labels — old text
+    // gets a red-tint minus row, new text gets a green-tint plus row,
+    // each with its own visual treatment instead of running into a
+    // single paragraph block.
     html += `<div class="applied-card${c.locked ? ' applied-card-locked' : ''}">
       <div class="applied-card-header">
         <span class="applied-line-ref">${esc(c.lineRef || '(unspecified line)')}</span>
-        <span class="applied-from">← ${esc(c.from || 'unknown reviewer')}</span>
         ${repeatBadge}
         ${lockedTag}
       </div>
-      <div class="applied-original"><span class="applied-label">was:</span> "${esc(c.original || '')}"</div>
-      <div class="applied-new"><span class="applied-label">now:</span> "${esc(c.new || '')}"</div>
+      <div class="applied-from-line">suggested by <em>${esc(c.from || 'unknown reviewer')}</em></div>
+      <div class="applied-diff">
+        <div class="applied-diff-row applied-diff-old">
+          <span class="applied-diff-marker">−</span>
+          <span class="applied-diff-text">${esc(c.original || '')}</span>
+        </div>
+        <div class="applied-diff-row applied-diff-new">
+          <span class="applied-diff-marker">+</span>
+          <span class="applied-diff-text">${esc(c.new || '')}</span>
+        </div>
+      </div>
       <div class="applied-actions">
         ${lockBtn}
       </div>
@@ -14289,6 +14319,30 @@ function buildAppliedChangesHTML(latest) {
   });
 
   return html;
+}
+
+// v3.39.6 — Bulk lock/unlock. No confirm dialog by design (locking is
+// fully reversible per-line, worst case user unlocks the ones they
+// didn't want after reading the doc). Iterates items, calls the
+// existing lockAppliedChange toggle on each unlocked one to lock,
+// or each locked one to unlock. Single render at the end (the
+// inner toggles also render but the final state is correct).
+function lockAllAppliedChanges(roundNum) {
+  const h = history.find(e => e.round === roundNum && Array.isArray(e.appliedChanges));
+  if (!h) return;
+  h.appliedChanges.forEach((c, i) => {
+    if (!c.locked) lockAppliedChange(roundNum, i);
+  });
+  toast(`🔒 Locked all ${h.appliedChanges.length} changes — hive will leave these lines alone next round`);
+}
+
+function unlockAllAppliedChanges(roundNum) {
+  const h = history.find(e => e.round === roundNum && Array.isArray(e.appliedChanges));
+  if (!h) return;
+  h.appliedChanges.forEach((c, i) => {
+    if (c.locked) lockAppliedChange(roundNum, i);
+  });
+  toast(`🔓 Unlocked all — reviewers can revise these lines again`);
 }
 
 function renderConflicts() {
