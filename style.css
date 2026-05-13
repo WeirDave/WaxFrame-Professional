@@ -5314,6 +5314,43 @@ kbd {
   color: var(--accent);
   border: 1px solid var(--accent);
   margin-top: var(--space-10);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+.applied-changes-header-text {
+  flex: 1 1 auto;
+}
+.applied-bulk-btn {
+  font-family: inherit;
+  font-size: var(--fs-11);
+  font-weight: 700;
+  padding: var(--space-4) var(--space-10);
+  background: var(--surface);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.12s;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.applied-bulk-btn:hover {
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 0 8px rgba(255, 165, 0, 0.35);
+}
+.applied-bulk-btn-locked {
+  background: var(--green-dim);
+  color: var(--green);
+  border-color: var(--green);
+}
+.applied-bulk-btn-locked:hover {
+  background: var(--green);
+  color: #0a0c12;
+  box-shadow: 0 0 8px rgba(46, 204, 113, 0.35);
 }
 .applied-changes-blurb {
   font-size: var(--fs-12);
@@ -5321,36 +5358,105 @@ kbd {
   margin-bottom: var(--space-10);
   line-height: 1.5;
 }
+/* v3.39.6 — Applied-changes section restructure. Cards now read as
+   proper cards instead of a wall of text. Key changes:
+   - Header row now hosts a Lock All / Unlock All bulk button on the right
+   - Each card has a left-edge accent bar for visual anchoring
+   - Line-ref styled as a small pill tag (not bold inline)
+   - Attribution moved to its own dim italic line
+   - was:/now: replaced with diff-style ± rows in red/green tints
+   - Locked cards retain green border but lose opacity dimming so they
+     stay readable (you might still want to unlock one) */
 .applied-card {
   background: var(--surface);
   border: 1px solid var(--border2);
+  border-left: 3px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: var(--space-10) var(--space-12);
   margin-bottom: var(--space-8);
-  transition: border-color 0.12s, opacity 0.12s;
+  transition: border-color 0.12s, background 0.12s;
 }
 .applied-card-locked {
-  opacity: 0.65;
   border-color: var(--green);
+  border-left-color: var(--green);
   background: var(--green-dim);
 }
 .applied-card-header {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-8);
-  margin-bottom: var(--space-6);
+  gap: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 .applied-line-ref {
-  font-size: var(--fs-12);
+  font-size: var(--fs-11);
   font-weight: 700;
-  color: var(--text);
-  letter-spacing: 0.02em;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  padding: 2px var(--space-6);
+  border-radius: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
-.applied-from {
+.applied-card-locked .applied-line-ref {
+  color: var(--green);
+  background: transparent;
+  border-color: var(--green);
+}
+.applied-from-line {
   font-size: var(--fs-11);
   color: var(--text-dim);
+  margin-bottom: var(--space-8);
+  letter-spacing: 0.01em;
+}
+.applied-from-line em {
+  color: var(--text);
   font-style: italic;
+  font-weight: 600;
+}
+.applied-diff {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+}
+.applied-diff-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  font-size: var(--fs-12);
+  line-height: 1.5;
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-sm);
+}
+.applied-diff-marker {
+  font-weight: 700;
+  flex: 0 0 auto;
+  font-family: 'Courier New', monospace;
+  font-size: var(--fs-14);
+  line-height: 1.4;
+}
+.applied-diff-text {
+  flex: 1 1 auto;
+}
+.applied-diff-old {
+  background: var(--red-dim);
+  color: var(--text-dim);
+}
+.applied-diff-old .applied-diff-marker {
+  color: var(--red);
+}
+.applied-diff-old .applied-diff-text {
+  text-decoration: line-through;
+  text-decoration-color: var(--red);
+}
+.applied-diff-new {
+  background: var(--green-dim);
+  color: var(--text);
+}
+.applied-diff-new .applied-diff-marker {
+  color: var(--green);
 }
 .applied-repeat-badge {
   font-size: var(--fs-10);
@@ -5379,18 +5485,6 @@ kbd {
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.applied-original,
-.applied-new {
-  font-size: var(--fs-12);
-  line-height: 1.5;
-  margin-top: var(--space-4);
-  color: var(--text);
-}
-.applied-original {
-  color: var(--text-dim);
-  text-decoration: line-through;
-  text-decoration-color: var(--border2);
-}
 .applied-label {
   font-weight: 700;
   color: var(--text);
@@ -5400,7 +5494,7 @@ kbd {
 .applied-actions {
   display: flex;
   gap: var(--space-6);
-  margin-top: var(--space-8);
+  margin-top: var(--space-4);
   justify-content: flex-end;
 }
 .applied-lock-btn {
