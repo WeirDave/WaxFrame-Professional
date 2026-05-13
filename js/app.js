@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260512-006';         // build stamp — update each session
+const BUILD       = '20260512-007';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -12003,6 +12003,16 @@ RULES:
 %%DOCUMENT_END%%
 
 %%CONFLICTS_START%%
+
+DECISION TREE — follow these steps in order for every disagreement you found between reviewers. Do not skip steps. Do not collapse them. Each disagreement reaches exactly ONE outcome — apply, USER DECISION, or BUILDER DECISION — and that outcome is final for that disagreement.
+
+STEP 1 — COUNT reviewers per proposed alternative for the disagreement.
+STEP 2 — IF a strict majority (more than half of reviewers) proposed the SAME alternative → APPLY it to your %%DOCUMENT_START%% block. STOP. Do not emit a USER DECISION for this disagreement. Move to the next disagreement.
+STEP 3 — IF the disagreement is between a reviewer suggestion and a project goal / reference material / explicit user constraint → emit a BUILDER DECISION (see format below). STOP. Move to the next disagreement.
+STEP 4 — OTHERWISE the disagreement is a stylistic / tonal / wording split → emit a USER DECISION (see format below). CURRENT must be the verbatim text as it sits in your %%DOCUMENT_START%% block — that is, the OLD text you have NOT modified. Do not modify the document for this disagreement; the user resolves it after the round. STOP. Move to the next disagreement.
+
+ABSOLUTE RULE: If you reached Step 2 (apply) for a disagreement, you must NOT also emit a USER DECISION for that same disagreement. If you reached Step 4 (USER DECISION), you must NOT also modify that text in the document. One path per disagreement, exclusive. Violating this rule corrupts the user's resolution flow because CURRENT will no longer exist in the document for the user to replace.
+
 For BUILDER DECISION conflicts: quote the affected text, name the specific AIs on each side, state which you chose and why in one to two sentences.
 Format: [BUILDER DECISION] "quoted text" — explanation naming AIs.
 
@@ -12032,6 +12042,13 @@ ANTI-HALLUCINATION RULES — every USER DECISION must satisfy ALL of these or it
 - ATTRIBUTION INTEGRITY: Each OPTION_N's named AI must have proposed that option's exact text (or an unambiguous near-paraphrase) in their response in THIS round. Do not attribute options to AIs whose response was "NO CHANGES NEEDED" or who said nothing about that part of the document. Fabricated attributions are a critical failure.
 - CURRENT MUST BE LIVE: CURRENT must be verbatim text that exists in the document you are emitting in your %%DOCUMENT_START%% block. Before you finalise the conflicts block, perform a substring check: locate CURRENT in your output document. If you cannot find it there, either (a) you have already applied one of the options to the document — in which case do not emit the USER DECISION, or (b) CURRENT is wrong — in which case fix it to match what is actually in your document.
 - DO NOT BOTH APPLY AND FLAG: If you applied a reviewer's suggestion to the document, do not also surface that same change as a USER DECISION. The user resolves USER DECISIONs by replacing CURRENT with their chosen option in the document. If CURRENT is no longer in the document, the resolution mechanism cannot work.
+
+MANDATORY SELF-CHECK before you write %%CONFLICTS_END%%:
+For each USER DECISION you have written, perform this check in your head:
+1. Take the CURRENT text of that USER DECISION.
+2. Search for it as a verbatim substring inside your %%DOCUMENT_START%% block.
+3. IF FOUND → the USER DECISION is valid; keep it.
+4. IF NOT FOUND → you have violated the apply-and-flag rule. Two ways to fix: (a) delete this USER DECISION entirely (because you already applied one of its options), or (b) revert that line in the document back to the original CURRENT text so the user can resolve the disagreement themselves. Pick ONE and do it before writing %%CONFLICTS_END%%.
 
 If there are no conflicts write exactly: NO CONFLICTS
 %%CONFLICTS_END%%
@@ -13151,6 +13168,13 @@ async function runRound() {
       // session that motivated this.
       if (conflicts && Array.isArray(conflicts.userDecisions) && conflicts.userDecisions.length > 0) {
         conflicts.userDecisions = validateUserDecisions(conflicts.userDecisions, newDoc || '', successfulReviews);
+        // v3.39.4 — Carry validator failure reasons into the conflicts object
+        // so the conflicts panel can render a diagnostic banner ("Builder
+        // broke the apply-and-flag rule → swap to Opus") instead of the
+        // generic "could not be parsed, try again" copy.
+        conflicts.validationFailures = Array.isArray(window._lastValidationFailures)
+          ? window._lastValidationFailures.slice()
+          : [];
       }
       // v3.39.0 — Parse APPLIED CHANGES envelope. Builder lists every silent
       // change it made this round; user gets visibility plus per-line lock
@@ -13849,12 +13873,18 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
   }
 
   const cleaned = [];
+  // v3.39.4 — Track WHY decisions get dropped so the conflicts panel can
+  // surface a diagnostic banner instead of the generic "could not be parsed"
+  // message. apply-and-flag violations get a specific call-out + a model
+  // swap recommendation.
+  const failures = [];
   for (const d of userDecisions) {
     // ── CHECK 1: CURRENT must exist in returned doc ──
     const currentText = (d.current || '').trim();
     if (currentText && docLower.length > 0 && !docLower.includes(currentText.toLowerCase())) {
       const preview = currentText.length > 60 ? currentText.slice(0, 60) + '…' : currentText;
       consoleLog(`⚠️ Suppressed USER DECISION — CURRENT "${preview}" not in returned document (Builder hallucination)`, 'warn');
+      failures.push({ reason: 'apply_and_flag', currentPreview: preview });
       continue;
     }
 
@@ -13930,12 +13960,17 @@ function validateUserDecisions(userDecisions, returnedDoc, reviews) {
     if (validatedOptions.length < 2) {
       const qPreview = (d.question || '').slice(0, 70) + ((d.question || '').length > 70 ? '…' : '');
       consoleLog(`⚠️ Suppressed USER DECISION — fewer than 2 verifiable options after attribution check ("${qPreview}")`, 'warn');
+      failures.push({ reason: 'attribution_strip', questionPreview: qPreview });
       continue;
     }
 
     cleaned.push({ ...d, options: validatedOptions });
   }
 
+  // v3.39.4 — Expose dropped-decision reasons to the conflicts panel so
+  // it can render a diagnostic banner (apply-and-flag → swap-to-Opus
+  // recommendation) instead of the generic "could not be parsed" copy.
+  window._lastValidationFailures = failures;
   return cleaned;
 }
 
@@ -14496,9 +14531,33 @@ function renderConflicts() {
       .replace(/\[USER DECISION\]/g,    '<span class="raw-conflict-ud">[USER DECISION]</span>')
       .replace(/\[BUILDER DECISION\]/g, '<span class="raw-conflict-bd">[BUILDER DECISION]</span>');
     if (hasUnparsedUD) {
-      // Parser failed to extract structured decisions — show raw with a warning
+      // v3.39.4 — Diagnostic-aware banner. The validator records WHY each
+      // decision was dropped; the most common cause for prefixed-AI work
+      // sessions has been GPT-4o and Sonnet-3.7-as-Builder violating the
+      // apply-and-flag rule. Instead of the generic "could not be parsed,
+      // try again" (which doesn't tell the user what's wrong or how to
+      // fix it), branch on the failure type and surface a real diagnosis.
+      const failures = Array.isArray(conflicts.validationFailures) ? conflicts.validationFailures : [];
+      const applyAndFlagCount = failures.filter(f => f.reason === 'apply_and_flag').length;
+      const attributionStripCount = failures.filter(f => f.reason === 'attribution_strip').length;
+      const builderName = (() => {
+        if (!latest.builderId) return 'your Builder';
+        const ai = (aiList || []).find(a => a.id === latest.builderId);
+        return ai ? ai.name : 'your Builder';
+      })();
+      let bannerMsg;
+      if (applyAndFlagCount > 0 && attributionStripCount === 0) {
+        bannerMsg = `⚠️ <strong>${applyAndFlagCount} decision${applyAndFlagCount !== 1 ? 's' : ''} dropped — ${esc(builderName)} broke the apply-and-flag rule.</strong> The Builder silently applied changes to lines it also flagged as choices for you. The decisions are unusable because the original text is no longer in the document for you to replace. <strong>Try switching Builder to Claude-4-6-Opus and re-running the round</strong> — Opus follows this rule reliably. Raw output shown below for reference.`;
+      } else if (attributionStripCount > 0 && applyAndFlagCount === 0) {
+        bannerMsg = `⚠️ <strong>${attributionStripCount} decision${attributionStripCount !== 1 ? 's' : ''} dropped — ${esc(builderName)} attributed options to reviewers who didn't actually propose them.</strong> The Builder fabricated reviewer attributions on the conflict block. <strong>Try switching Builder to Claude-4-6-Opus and re-running the round</strong> — Opus attributes accurately. Raw output shown below for reference.`;
+      } else if (applyAndFlagCount > 0 && attributionStripCount > 0) {
+        bannerMsg = `⚠️ <strong>${applyAndFlagCount + attributionStripCount} decisions dropped — ${esc(builderName)} broke multiple Builder rules</strong> (apply-and-flag, fabricated attributions). The decisions are unusable. <strong>Try switching Builder to Claude-4-6-Opus and re-running the round</strong> — Opus follows the rules reliably. Raw output shown below for reference.`;
+      } else {
+        // No structured failures recorded — fall back to original copy
+        bannerMsg = `⚠️ Conflicts detected but could not be parsed — shown below for reference. Try running the round again.`;
+      }
       html = `<div class="conflicts-section-header conflict-repeat-warning">
-          ⚠️ Conflicts detected but could not be parsed — shown below for reference. Try running the round again.
+          ${bannerMsg}
         </div>
         <div class="conflicts-body">${rawHtml}</div>`;
     } else {
