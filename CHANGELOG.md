@@ -1,6 +1,42 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.4
+**Build:** `20260512-007` · **Released:** May 12, 2026
+
+### Builder prompt rewrite + diagnostic banner — apply-and-flag failure visibility
+
+User reported recurring apply-and-flag rule violations from GPT-4o-as-Builder during a work session: the Builder silently applied a reviewer's suggestion to the document while ALSO emitting that same change as a USER DECISION block, leaving CURRENT text that no longer existed in the returned document. The validator correctly caught and suppressed these decisions, but the user-facing banner ("Conflicts detected but could not be parsed — try running the round again") gave no real diagnosis. The fix has two layers — one prompt-side to reduce the violation rate, one UI-side to surface the real failure when it still happens.
+
+### Prompt layer — procedural decision tree + mandatory self-check
+
+The pre-existing ANTI-HALLUCINATION RULES were declarative ("don't apply and flag"). Strong reasoning models (Opus, Sonnet 4.6) follow declarative rules fine. Weaker models (GPT-4o, Sonnet 3.7, Mini, Flash) read the rules but their default "be helpful" instinct overrides them when the rule asks the model to NOT do something it wants to do (apply a suggestion). Two prompt additions target this failure mode:
+
+**DECISION TREE — explicit step ordering at the start of the conflicts block instructions.** Builder is instructed to walk every disagreement through four numbered steps in order: count reviewers per alternative → if strict majority then APPLY and STOP (do not continue) → if constraint conflict then BUILDER DECISION → otherwise USER DECISION with CURRENT showing ORIGINAL text (not the Builder's synthesis). The "STOP" directive in step 2 is the key — it explicitly tells weaker models that reaching the apply outcome terminates processing for that disagreement, no further emission allowed. An "ABSOLUTE RULE" line follows the tree restating one-path-per-disagreement-exclusive.
+
+**MANDATORY SELF-CHECK — substring verification before %%CONFLICTS_END%%.** Builder is instructed to perform a literal substring search for each USER DECISION's CURRENT text inside the %%DOCUMENT_START%% block before finalising. If CURRENT is not found, Builder must EITHER delete the USER DECISION (because it already applied one of the options) OR revert that line in the document (so the user can resolve). Pick one before writing %%CONFLICTS_END%%. This catches violations the decision tree missed and gives the Builder an explicit recovery path.
+
+These additions don't fully fix weak models — Opus and Sonnet 4.6 remain the recommended Builders — but should reduce the violation rate noticeably for GPT-4o and similar.
+
+### UI layer — diagnostic banner with model-swap recommendation
+
+`validateUserDecisions` now records WHY each decision was dropped: `apply_and_flag` (CURRENT not found in returned doc) or `attribution_strip` (no verifiable attributions remain after stripping). Failures are exposed via `window._lastValidationFailures` and persisted into the conflicts object as `conflicts.validationFailures` so the banner can read them on re-render.
+
+`renderConflicts` replaces the generic "could not be parsed, try running the round again" banner with one of four diagnosis-specific messages:
+
+- **Apply-and-flag only:** "⚠️ N decisions dropped — [Builder name] broke the apply-and-flag rule. The Builder silently applied changes to lines it also flagged as choices for you. The decisions are unusable because the original text is no longer in the document for you to replace. **Try switching Builder to Claude-4-6-Opus and re-running the round** — Opus follows this rule reliably."
+- **Attribution strip only:** "⚠️ N decisions dropped — [Builder name] attributed options to reviewers who didn't actually propose them. **Try switching Builder to Claude-4-6-Opus and re-running the round** — Opus attributes accurately."
+- **Mixed:** "⚠️ N decisions dropped — [Builder name] broke multiple Builder rules (apply-and-flag, fabricated attributions). **Try switching Builder to Claude-4-6-Opus and re-running the round** — Opus follows the rules reliably."
+- **Fallback (no recorded failures):** original "could not be parsed, try again" copy preserved as the rare-edge-case bottom.
+
+Builder name resolves from `latest.builderId` against `aiList`, so the message names the specific model the user picked. Recommendation hardcoded to Opus 4.6 because empirically that's the model that follows Builder rules most reliably across all three known violation patterns.
+
+### Files changed
+
+`js/app.js` (BUILDER_INSTRUCTIONS.refine prompt rewrite with decision tree + self-check, validateUserDecisions failure tracking, runRound failure carry-through, renderConflicts diagnostic banner branch), `js/version.js`, `index.html` and 5 helper pages (build stamp + cache-bust sweep).
+
+---
+---
 ## v3.39.3
 **Build:** `20260512-006` · **Released:** May 12, 2026
 
