@@ -1,6 +1,67 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.11
+**Build:** `20260513-003` · **Released:** May 13, 2026
+
+### Template apply flow — confirm modal moved, Quick Start gets its own teaching moment
+
+Two related changes that together make the template apply flow feel less like an obstacle and more like a guide. The old universal "Apply Template — your goal fields will be replaced" confirm modal fired on every template click when goal fields had content. It treated experienced users like first-timers and treated first-timers like they needed permission. Both wrong.
+
+### The overwrite warning moves up one click
+
+The path-picker sub paragraph (the first thing users see when they open the template gallery) gained an explanation of what templates are plus a bolded overwrite warning, in one short paragraph:
+
+> Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. **Applying one overwrites whatever you've already entered.** Pick your starting condition below.
+
+Replaces the old generic "This determines how the template fills in your Project fields and Reference Material" sub. The warning lives at the path-picker (state 1 of the gallery), unskippable, rendered once per gallery open. By the time the user clicks a card on the grid, they've already absorbed the consequence — no per-click confirm needed.
+
+### Universal confirm modal removed
+
+`applyTemplate()` no longer calls `wfConfirm()` when goal fields have content. Card click → template applies. One fewer dialog between intent and action. Mid-session template switching now silently replaces goal fields — which is the actual desired behavior once a user knows how the gallery works.
+
+### Quick Start gets a custom educational modal
+
+Quick Start keeps a confirm modal — but it's a teaching modal, not a warning modal. New title, new copy, new button:
+
+> **A Note on Naming & Versions**
+>
+> Your Project name and Version aren't just housekeeping — they become the filename when you export, and they're how you'll keep track of which round of polish a draft represents. "Recipe - Chocolate Chip Cookies" is searchable in your downloads folder months later. "v1.0" tells you this is your first stable take; bump it to v1.1 when you tighten it, v2.0 when you rewrite it. Quick Start fills both in for you as a working example — replace them with your own conventions on real projects.
+>
+> **[Got it — apply Quick Start]** &nbsp; [Cancel]
+
+The naming/versioning convention is a real WaxFrame skill — every export filename is built from these fields, and version-bumping is how users track drafts across rounds. Quick Start models the convention concretely (`Recipe - Chocolate Chip Cookies` / `v1.0`), and now also explains *why* before pre-filling them. First-impression teaching, not first-impression friction.
+
+### Schema: per-template `confirmModal`
+
+Implemented as an opt-in template field. Any template entry can carry:
+
+```json
+"confirmModal": {
+  "title":   "...",
+  "message": "...",
+  "okText":  "..."
+}
+```
+
+If present, `applyTemplate()` runs `wfConfirm()` with that copy before applying. If absent, the template applies silently. Quick Start is the only template using this today; the schema is open for any future template that needs first-impression teaching or domain-specific guidance.
+
+### Dead code removed
+
+- `_TEMPLATE_GOAL_FIELD_IDS` — the const array of goal field DOM ids. Only used by the now-deleted goal-content check.
+- `_projectGoalFieldsHaveContent()` — the function that gated the old universal confirm. Now unreachable.
+- Stale doc comment on `applyTemplate()` that described the deleted behavior. Rewritten to reflect current flow.
+
+### Files changed
+
+- `js/templates.js` — Quick Start entry gained the `confirmModal` field (title, message, okText)
+- `js/app.js` — gallery state-1 sub paragraph rewritten; old universal confirm block deleted from `applyTemplate()` and replaced with template-driven `tpl.confirmModal` opt-in handler; `_TEMPLATE_GOAL_FIELD_IDS` and `_projectGoalFieldsHaveContent()` removed; doc comment updated
+- `CHANGELOG.md` — this entry
+- `js/version.js` — `APP_VERSION` → `v3.39.11 Pro`
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp, comment-header build stamp, and cache-bust query strings bumped to `20260513-003` / `?v=3.39.11`
+- `README.md` — version badge bumped to 3.39.11
+
+---
 ## v3.39.10
 **Build:** `20260513-002` · **Released:** May 13, 2026
 
