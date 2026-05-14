@@ -1,6 +1,35 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.9
+**Build:** `20260513-001` · **Released:** May 13, 2026
+
+### README screenshot drop — full How-It-Works walkthrough now illustrated
+
+Documentation-only release. No code behavior changes. Bundled as a tagged release so portable / air-gapped users running off downloaded ZIPs get the refreshed README and the complete screenshot set without having to manually pull from `main`.
+
+### What changed
+
+The `screenshots/` folder was rebuilt around the current v3.39.x UI. Four existing dark-mode shots refreshed in place — welcome, setup1 (Worker Bees), setup2 (Builder), and the main work screen now captured on v3.39.8 with the post-3.39.0 conflicts panel layout. Five new dark-mode shots added — setup3 (Project form), setup4 (Reference Material), setup5 (Starting Document), the Builder-building modal mid-round, and the HIVE APPROVED convergence overlay.
+
+`README.md` updated to slot the three new setup shots into How-It-Works steps 3–5, move the work-screen capture from step 6 to step 7 where the USER DECISION panel is the dominant illustration, swap in the Builder-building modal at step 6 to better represent a round in flight, and close both outstanding screenshot TODO placeholders. The conflicts-screenshot TODO is removed entirely since the work-screen capture covers that surface area. The convergence-screenshot TODO is closed by the new `screenshot_convergence_dark.png`.
+
+Light-mode pairs for the four refreshed shots were dropped from the folder during this pass — they were stale relative to the current UI and the README only references the dark-mode paths. Light-mode parity is a future cleanup pass once the dark set is settled.
+
+### Version stamps + cache-bust sweep
+
+All four canonical version stamps incremented (meta build, `APP_VERSION`, `BUILD` constant, `app.js?v=` query). Six-file cache-bust sweep run across `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, and `prompt-editor.html` — each bumped to `style.css?v=3.39.9` and `version.js?v=3.39.9`, with comment-header build stamps re-synced to `20260513-001`.
+
+### Files changed
+
+- `README.md` — version badge bumped, 5 new screenshot blocks slotted in, both TODO placeholders closed
+- `CHANGELOG.md` — this entry
+- `screenshots/` — 4 dark shots refreshed in place, 5 new dark shots added, 4 stale light shots removed
+- `js/version.js` — `APP_VERSION` → `v3.39.9 Pro`
+- `js/app.js` — `BUILD` → `20260513-001`
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp, comment-header build stamp, and cache-bust query strings bumped
+
+---
 ## v3.39.8
 **Build:** `20260512-011` · **Released:** May 12, 2026
 
