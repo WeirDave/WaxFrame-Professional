@@ -1,6 +1,41 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.10
+**Build:** `20260513-002` · **Released:** May 13, 2026
+
+### Quick Start template now pre-fills project name and version
+
+Small but pointed onboarding fix. The Quick Start template — the chocolate-chip-cookie example that first-time users land on — was leaving the Project name and Version fields empty when applied, so new users had no model for what those fields should look like. Quick Start is supposed to be the teaching example. Now it teaches naming/versioning too.
+
+Applying Quick Start now pre-fills:
+- **Project name:** `Recipe - Chocolate Chip Cookies`
+- **Version:** `v1.0`
+
+These are the only two top-level identity fields a template can populate. They sit alongside `id`, `name`, `icon`, and `category` in the template schema (path-agnostic — doesn't matter whether the template is scratch-only or supports both paths). Quick Start is the only template that uses them today; everything else still leaves the user's existing values untouched.
+
+### Implementation
+
+**`js/templates.js`** — two new top-level fields on the `quick-start` entry: `projectName` and `projectVersion`. No other templates touched.
+
+**`js/app.js` `applyTemplate()`** — new pre-fill block placed right after the Length Constraint pre-fill, mirroring that exact pattern: only writes when the template defines the field, leaves existing values alone otherwise. Two `if (tpl.X)` guards.
+
+**`js/app.js` confirm-dialog copy** — the dialog that warns about overwriting Project Goal fields used to say *"Project name and version are not affected."* That stays accurate for every template except Quick Start, so the line is now conditional: when the template defines `projectName` or `projectVersion`, the message reads *"This template will also pre-fill the Project name and version as a naming/versioning example."* Otherwise the original wording is preserved.
+
+### Why this matters
+
+Quick Start's whole purpose is to model a complete WaxFrame run for first-time users. Leaving the most-important-page-in-setup's first two fields blank during that demo was a teaching gap. The pre-fill is small but it puts a real-world naming convention (`Recipe - Chocolate Chip Cookies` / `v1.0`) in front of the user before they configure anything themselves — and the convention transfers cleanly to their next real project.
+
+### Files changed
+
+- `js/templates.js` — `projectName` and `projectVersion` added to the `quick-start` entry
+- `js/app.js` — `applyTemplate()` extended with the pre-fill block and conditional confirm copy
+- `CHANGELOG.md` — this entry
+- `js/version.js` — `APP_VERSION` → `v3.39.10 Pro`
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp, comment-header build stamp, cache-bust query strings bumped
+- `README.md` — version badge bumped to 3.39.10
+
+---
 ## v3.39.9
 **Build:** `20260513-001` · **Released:** May 13, 2026
 
