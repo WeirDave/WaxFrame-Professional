@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260513-003';         // build stamp — update each session
+const BUILD       = '20260513-004';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4045,7 +4045,7 @@ function renderTemplateGalleryBody() {
     body.innerHTML = `
       <div class="template-path-selector">
         <h3 class="template-path-selector-title">Are you starting from scratch, or refining an existing draft?</h3>
-        <p class="template-path-selector-sub">Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. <strong>Applying one overwrites whatever you've already entered.</strong> Pick your starting condition below.</p>
+        <p class="template-path-selector-sub">Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. <strong>Applying one resets the project clean</strong> — goal fields, name, version, reference material, starting document, and any session history are all cleared first. Pick your starting condition below.</p>
         <p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>Starting from scratch</strong> and then click on <strong>⭐ Quick Start</strong> — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</p>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
@@ -4219,6 +4219,19 @@ async function applyTemplate(templateId, path) {
     );
     if (!ok) return;
   }
+
+  // v3.39.12 — Full project reset before applying the template. Reuses
+  // the existing clearProject() routine — same wipe the 🗑 Clear Project
+  // button does — so the template starts from a known-clean slate every
+  // time. Wipes: project name + version, all six Goal fields, length
+  // constraint, reference material, starting document (upload + paste),
+  // work-screen doc + notes + standing notes, IndexedDB session, and
+  // bumps the in-flight round generation token so any pending round
+  // bails cleanly. The gallery's path-picker sub paragraph warns the
+  // user about this scope before they pick a card, so no per-click
+  // confirm is needed here. After the wipe, the field-population
+  // blocks below repopulate from the template definition.
+  await clearProject();
 
   // Map per-path Goal fields → DOM ids. Each entry: [domId, pathContentKey].
   const map = [

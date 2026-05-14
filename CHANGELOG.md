@@ -1,6 +1,53 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.39.12
+**Build:** `20260513-004` · **Released:** May 13, 2026
+
+### Template apply now performs a full project reset
+
+Logical follow-up to v3.39.11. The old per-template apply only overwrote the Project Goal fields plus length constraint plus reference material — leaving stale state in Project name, Version, Starting Document, work-screen notes, and any IndexedDB session history from a prior project. That meant templates partially-replaced what was there instead of giving the hive a truly clean slate. Wrong default.
+
+### Implementation
+
+`applyTemplate()` now calls `await clearProject()` right after the optional `tpl.confirmModal` check passes — same routine the 🗑 Clear Project button on the Project screen has always used. No new wipe logic, no special-case clearing for templates: the existing battle-tested clear routine is reused as-is.
+
+What `clearProject()` wipes:
+
+- Project name and Version fields
+- All six Project Goal fields (document type, audience, outcome, scope, tone, additional instructions)
+- Length constraint mode + limit + min + unit
+- Template hint banner
+- Reference Material (every doc — same as the ✕ Clear All button does)
+- Starting Document state (upload status, paste content, doc-tab back to upload)
+- Work-screen state (working document, notes, standing notes)
+- IndexedDB session store
+- `localStorage` project + session keys
+- Increments `window._projectGen` so any in-flight round bails cleanly at its next checkpoint
+
+After the wipe, the existing field-population blocks repopulate everything fresh from the template definition — goal fields from `pc`, length fields from `pc`, reference material card from `pc.refMaterial`, and project name/version from top-level `tpl.projectName` / `tpl.projectVersion` (v3.39.10).
+
+### Gallery sub paragraph updated to match new scope
+
+The path-picker sub paragraph from v3.39.11 was scoped to "overwrites whatever you've already entered" — accurate for the old goal-fields-only wipe, no longer accurate for the v3.39.12 full reset. Replaced with explicit scope:
+
+> Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. **Applying one resets the project clean** — goal fields, name, version, reference material, starting document, and any session history are all cleared first. Pick your starting condition below.
+
+Bold clause carries the warning at a glance; the list following gives the precise scope for users who want it.
+
+### Cancel still aborts cleanly
+
+Order matters: `tpl.confirmModal` check fires *before* `clearProject()`. Clicking Cancel on Quick Start's naming/versioning modal — or any future template's confirm modal — exits `applyTemplate()` with zero side effects. Nothing is cleared until the user confirms the apply.
+
+### Files changed
+
+- `js/app.js` — `await clearProject()` inserted in `applyTemplate()` right before the field-population blocks; gallery state-1 sub paragraph rewritten to match the new wipe scope
+- `CHANGELOG.md` — this entry
+- `js/version.js` — `APP_VERSION` → `v3.39.12 Pro`
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp, comment-header build stamp, cache-bust query strings bumped to `20260513-004` / `?v=3.39.12`
+- `README.md` — version badge bumped to 3.39.12
+
+---
 ## v3.39.11
 **Build:** `20260513-003` · **Released:** May 13, 2026
 
