@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260513-001';         // build stamp — update each session
+const BUILD       = '20260513-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -4211,9 +4211,17 @@ async function applyTemplate(templateId, path) {
 
   if (_projectGoalFieldsHaveContent()) {
     const pathLabel = (path === 'scratch') ? 'starting from scratch' : 'refining an existing draft';
+    // v3.39.10 — confirm copy is conditional on whether the template
+    // overwrites identity fields. Most templates don't touch projectName
+    // or projectVersion; Quick Start does (as a teaching example).
+    // Wording stays accurate for both cases.
+    const overwritesIdentity = !!(tpl.projectName || tpl.projectVersion);
+    const identityMsg = overwritesIdentity
+      ? 'This template will also pre-fill the Project name and version as a naming/versioning example.'
+      : 'Project name and version are not affected.';
     const ok = await wfConfirm(
       'Apply Template',
-      `Apply the "${tpl.name}" template (${pathLabel})? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters) and inject a Reference Material scaffold. Project name and version are not affected.`,
+      `Apply the "${tpl.name}" template (${pathLabel})? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters) and inject a Reference Material scaffold. ${identityMsg}`,
       { okText: `Apply ${tpl.name}` }
     );
     if (!ok) return;
@@ -4247,6 +4255,24 @@ async function applyTemplate(templateId, path) {
     if (lmEl) lmEl.value = pc.lengthMin   || '';
     if (luEl && pc.lengthUnit) luEl.value = pc.lengthUnit;
     if (typeof setLengthMode === 'function') setLengthMode(pc.lengthMode);
+  }
+
+  // v3.39.10 — Project Name/Version pre-fill from template. Top-level
+  // identity fields (path-agnostic, alongside id/name/icon). Templates
+  // that specify projectName and/or projectVersion get those fields
+  // written; templates without them leave the user's existing values
+  // untouched (matches pre-v3.39.10 behavior). Quick Start is the only
+  // template using this today — it serves as a teaching example of
+  // WaxFrame's naming/versioning convention so first-time users see
+  // "Recipe - Chocolate Chip Cookies" / "v1.0" modeled in their first
+  // session.
+  if (tpl.projectName) {
+    const pnEl = document.getElementById('projectName');
+    if (pnEl) pnEl.value = tpl.projectName;
+  }
+  if (tpl.projectVersion) {
+    const pvEl = document.getElementById('projectVersion');
+    if (pvEl) pvEl.value = tpl.projectVersion;
   }
 
   // v3.37.0 — Reference Material injection. Every applyTemplate call

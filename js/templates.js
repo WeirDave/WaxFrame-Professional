@@ -96,6 +96,8 @@ const WAXFRAME_TEMPLATES = [
     "name": "Quick Start",
     "icon": "⭐",
     "category": "Quick Start",
+    "projectName":    "Recipe - Chocolate Chip Cookies",
+    "projectVersion": "v1.0",
     "description": "A real low-stakes project: the hive writes and refines a chocolate-chip-cookie recipe in a few rounds. Same complete WaxFrame flow as any other document, just with stakes small enough for a comfortable first run.",
     "paths": ["scratch"],
     "pathContent": {
