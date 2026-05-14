@@ -9,7 +9,7 @@
 Multi-AI document refinement in your browser. No server, no account, no install.
 
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/Version-3.39.8-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
+[![Version](https://img.shields.io/badge/Version-3.39.9-orange.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases)
 [![Runs In Browser](https://img.shields.io/badge/Runs_In_Browser-No_Install-green.svg)](https://weirdave.github.io/WaxFrame-Professional/)
 [![Portable](https://img.shields.io/badge/Portable-Air--Gap_Friendly-success.svg)](https://github.com/WeirDave/WaxFrame-Professional/releases/latest)
 [![Privacy](https://img.shields.io/badge/Privacy-Local_First-brightgreen.svg)](#privacy--local-first-design)
@@ -89,6 +89,10 @@ The Builder also acts as your handyman. Write a directive in the **Notes drawer*
 
 ### 3. Define your project
 
+<p align="center">
+  <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 3 — Your Project">
+</p>
+
 The Project screen is the most important page in setup. Every reviewer and the Builder read these six fields on every round — it's their entire understanding of what you're trying to build.
 
 | Field | What it controls |
@@ -104,11 +108,19 @@ Built-in templates cover cover letters, résumés, RFP responses, executive summ
 
 ### 4. Add Reference Material (optional)
 
+<p align="center">
+  <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 4 — Reference Material">
+</p>
+
 Reference Material is source content the hive **consults but never edits** — distinct from the Notes drawer and from your Starting Document. Use it for source recipes, RFP requirements, interview transcripts, style guides, scoring rubrics, prior consensus decisions, or competitor material you want to outflank.
 
 It's the lever behind the biggest convergence-speed gains we've measured. A blog post that took 16 rounds when refined as a Starting Document converged in 4 rounds when the source thesis went into Reference Material instead, with an empty Starting Document — the hive built fresh from the scaffold rather than fighting an existing draft.
 
 ### 5. Provide your starting document
+
+<p align="center">
+  <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 5 — Starting Document">
+</p>
 
 Three modes:
 
@@ -119,7 +131,7 @@ Three modes:
 ### 6. Smoke the hive
 
 <p align="center">
-  <img src="screenshots/screenshot_work_dark.png" width="820" alt="Work screen — the hive running a round">
+  <img src="screenshots/screenshot_building_dark.png" width="820" alt="Work screen — the Builder synthesizing a round">
 </p>
 
 Every reviewer reads the document simultaneously and returns structured suggestions. The Builder evaluates them, merges what makes sense, rewrites the document in full, and produces the next version. The Live Console streams what's happening — which AI is sending, responding, succeeding, or failing — with timestamps and response previews.
@@ -127,13 +139,8 @@ Every reviewer reads the document simultaneously and returns structured suggesti
 ### 7. Resolve conflicts
 
 <p align="center">
-  <em>Screenshot coming — conflicts panel with USER DECISION and Builder-Applied cards.</em>
+  <img src="screenshots/screenshot_work_dark.png" width="820" alt="Work screen — USER DECISION conflict and Builder-Applied changes">
 </p>
-
-<!--
-  TODO: drop `screenshots/screenshot_conflicts_dark.png` (and `_light.png`) into the screenshots folder.
-  Suggested capture: a round with at least one USER DECISION conflict open plus a Builder-Applied card.
--->
 
 When reviewers disagree, WaxFrame surfaces a conflict card instead of silently averaging. You pick one of the options, type your own resolution, bypass if you've already fixed it directly inline, or decline to suppress the conflict entirely. Decisions are applied immediately and locked.
 
@@ -142,13 +149,8 @@ The conflicts panel always shows the current round only — it isn't a project-w
 ### 8. Iterate until convergence
 
 <p align="center">
-  <em>Screenshot coming — unanimous convergence celebration.</em>
+  <img src="screenshots/screenshot_convergence_dark.png" width="820" alt="Hive Approved — majority convergence reached">
 </p>
-
-<!--
-  TODO: drop `screenshots/screenshot_convergence_dark.png` (and `_light.png`) into the screenshots folder.
-  Suggested capture: the "Hive Converged Unanimously" overlay after a full agreement round.
--->
 
 Keep running rounds with **Smoke the Hive** until reviewer disagreement drops and the document stabilizes. There's no forced endpoint — you decide when it's done.
 
