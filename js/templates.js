@@ -98,6 +98,11 @@ const WAXFRAME_TEMPLATES = [
     "category": "Quick Start",
     "projectName":    "Recipe - Chocolate Chip Cookies",
     "projectVersion": "v1.0",
+    "confirmModal": {
+      "title":   "A Note on Naming & Versions",
+      "message": "Your Project name and Version aren't just housekeeping — they become the filename when you export, and they're how you'll keep track of which round of polish a draft represents. \"Recipe - Chocolate Chip Cookies\" is searchable in your downloads folder months later. \"v1.0\" tells you this is your first stable take; bump it to v1.1 when you tighten it, v2.0 when you rewrite it. Quick Start fills both in for you as a working example — replace them with your own conventions on real projects.",
+      "okText":  "Got it — apply Quick Start"
+    },
     "description": "A real low-stakes project: the hive writes and refines a chocolate-chip-cookie recipe in a few rounds. Same complete WaxFrame flow as any other document, just with stakes small enough for a comfortable first run.",
     "paths": ["scratch"],
     "pathContent": {

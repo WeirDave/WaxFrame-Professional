@@ -1394,7 +1394,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260513-002';         // build stamp — update each session
+const BUILD       = '20260513-003';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -3984,11 +3984,6 @@ async function clearProject() {
 //      flow and is conceptually separate from the Project goal.
 // ════════════════════════════════════════════════════════════════════
 
-const _TEMPLATE_GOAL_FIELD_IDS = [
-  'goalDocType', 'goalAudience', 'goalOutcome',
-  'goalScope',   'goalTone',     'goalNotes'
-];
-
 // v3.37.0 — Dual-path templates. Every template declares which paths it
 // supports ('scratch' and/or 'refine'). The modal shows a two-step flow:
 // pick a path first, then pick a template. The path determines which
@@ -4050,7 +4045,7 @@ function renderTemplateGalleryBody() {
     body.innerHTML = `
       <div class="template-path-selector">
         <h3 class="template-path-selector-title">Are you starting from scratch, or refining an existing draft?</h3>
-        <p class="template-path-selector-sub">This determines how the template fills in your Project fields and Reference Material. You can change this any time by re-opening the gallery.</p>
+        <p class="template-path-selector-sub">Each template is a ready-made Project Goal — document type, audience, outcome, scope, and tone — that gives the hive a real brief to work from instead of an empty form. <strong>Applying one overwrites whatever you've already entered.</strong> Pick your starting condition below.</p>
         <p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>Starting from scratch</strong> and then click on <strong>⭐ Quick Start</strong> — a low-stakes chocolate-chip-cookie demo that converges in a few rounds and shows you the whole hive end-to-end before you bring your own document.</p>
         <div class="template-path-grid">
           <button class="template-path-card" onclick="selectTemplatePath('scratch')" type="button">
@@ -4143,15 +4138,6 @@ function renderTemplateGalleryBody() {
   body.innerHTML = pathIndicator + newuserCallout + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
 }
 
-// Check whether any of the six Goal fields currently has content.
-// Trims to ignore whitespace-only values.
-function _projectGoalFieldsHaveContent() {
-  return _TEMPLATE_GOAL_FIELD_IDS.some(id => {
-    const el = document.getElementById(id);
-    return el && el.value && el.value.trim().length > 0;
-  });
-}
-
 // Apply a template by id and path. v3.37.0 dual-path:
 //   - templateId : the template's id (e.g. 'resume')
 //   - path       : 'scratch' or 'refine'; determines which pathContent
@@ -4159,9 +4145,15 @@ function _projectGoalFieldsHaveContent() {
 //                  Material. Falls back to tpl.paths[0] with a console
 //                  warning if the path is missing or unsupported.
 // Behavior:
-//   - Overwrite confirm fires if any Project Goal field has content.
+//   - v3.39.11 — Universal pre-apply confirm removed. The overwrite
+//     warning lives in the gallery's path-picker sub paragraph
+//     (rendered once per gallery open). Templates may opt into a
+//     per-template educational modal via tpl.confirmModal — Quick Start
+//     does this to teach naming/versioning. Cancel aborts the apply.
 //   - Project Goal fields, length fields, and hint banner all read
 //     from pc = tpl.pathContent[path].
+//   - Project name/version pre-fill from top-level tpl.projectName and
+//     tpl.projectVersion (v3.39.10) — only writes when present.
 //   - Reference Material: prior template-sourced cards are swept on
 //     every apply (idempotent — switching templates cleans up after
 //     the previous one). If pc.refMaterial has content, a new card is
@@ -4209,20 +4201,21 @@ async function applyTemplate(templateId, path) {
   const galleryModal = document.getElementById('templateGalleryModal');
   if (galleryModal) galleryModal.classList.remove('active');
 
-  if (_projectGoalFieldsHaveContent()) {
-    const pathLabel = (path === 'scratch') ? 'starting from scratch' : 'refining an existing draft';
-    // v3.39.10 — confirm copy is conditional on whether the template
-    // overwrites identity fields. Most templates don't touch projectName
-    // or projectVersion; Quick Start does (as a teaching example).
-    // Wording stays accurate for both cases.
-    const overwritesIdentity = !!(tpl.projectName || tpl.projectVersion);
-    const identityMsg = overwritesIdentity
-      ? 'This template will also pre-fill the Project name and version as a naming/versioning example.'
-      : 'Project name and version are not affected.';
+  // v3.39.11 — Pre-apply universal confirm removed. The overwrite warning
+  // now lives in the gallery's path-picker sub paragraph (rendered once
+  // per gallery open, before the user picks a path or a template). That
+  // copy makes the consequence clear up front instead of gating every
+  // click with a confirm modal. Per-template educational modals are
+  // still supported via tpl.confirmModal — Quick Start uses it to teach
+  // naming/versioning conventions as a first-impression teaching moment.
+  // Other templates leave confirmModal undefined and apply silently.
+  // Cancel aborts the apply entirely.
+  if (tpl.confirmModal && typeof tpl.confirmModal === 'object') {
+    const cm = tpl.confirmModal;
     const ok = await wfConfirm(
-      'Apply Template',
-      `Apply the "${tpl.name}" template (${pathLabel})? Your current entries in the Project Goal fields will be replaced. Some templates also pre-fill a recommended Length Constraint (e.g. "Hard cap 1 page" for cover letters) and inject a Reference Material scaffold. ${identityMsg}`,
-      { okText: `Apply ${tpl.name}` }
+      cm.title   || 'Apply Template',
+      cm.message || '',
+      { okText: cm.okText || `Apply ${tpl.name}` }
     );
     if (!ok) return;
   }
