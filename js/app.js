@@ -369,99 +369,25 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-007';         // build stamp — update each session
-const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
-const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
-const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
-const LS_SETTINGS = 'waxframe_v2_settings';  // legacy key — migrated on first load
-const LS_LICENSE  = 'waxframe_v2_license';   // license key — persistent
+const BUILD       = '20260516-008';         // build stamp — update each session
+// ── localStorage KEYS (extracted) ──
+// v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
+// LS_LICENSE constants moved to js/storage.js. References in app.js
+// resolve via global lexical environment.
+
 
 // ── CONSOLE ERROR DETAIL STORE ──
 // Keyed by entry ID — stores raw API response data for the error detail modal
 window._consoleErrorData = {};
 
 
-// ── INDEXEDDB SESSION STORAGE ──
-// Session data (history, docText, consoleHTML) lives in IndexedDB — no size limits.
-// localStorage keeps a lightweight 'session exists' flag for fast resume detection.
-const IDB_NAME    = 'waxframe_v2_db';
-const IDB_VERSION = 1;
-const IDB_STORE   = 'session';
-const IDB_KEY     = 'current';
+// ── STORAGE PRIMITIVES (extracted) ──
+// v3.45.0 — IndexedDB session helpers (idbOpen, idbSet, idbGet,
+// idbClear) and checkStorageQuota moved to js/storage.js. Loaded
+// after version.js and before app.js. Function declarations
+// auto-attach to window; bare identifier references in app.js
+// resolve via global scope chain.
 
-let _idb = null; // holds the open IDBDatabase instance
-
-function idbOpen() {
-  return new Promise((resolve, reject) => {
-    if (_idb) { resolve(_idb); return; }
-    const req = indexedDB.open(IDB_NAME, IDB_VERSION);
-    req.onupgradeneeded = e => {
-      const db = e.target.result;
-      if (!db.objectStoreNames.contains(IDB_STORE)) {
-        db.createObjectStore(IDB_STORE);
-      }
-    };
-    req.onsuccess = e => { _idb = e.target.result; resolve(_idb); };
-    req.onerror   = e => reject(e.target.error);
-  });
-}
-
-async function idbSet(value) {
-  const db = await idbOpen();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).put(value, IDB_KEY);
-    tx.oncomplete = () => resolve(true);
-    tx.onerror    = e => reject(e.target.error);
-  });
-}
-
-async function idbGet() {
-  const db = await idbOpen();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readonly');
-    const req = tx.objectStore(IDB_STORE).get(IDB_KEY);
-    req.onsuccess = e => resolve(e.target.result || null);
-    req.onerror   = e => reject(e.target.error);
-  });
-}
-
-async function idbClear() {
-  const db = await idbOpen();
-  return new Promise((resolve, reject) => {
-    const tx = db.transaction(IDB_STORE, 'readwrite');
-    tx.objectStore(IDB_STORE).delete(IDB_KEY);
-    tx.oncomplete = () => resolve(true);
-    tx.onerror    = e => reject(e.target.error);
-  });
-}
-
-async function checkStorageQuota() {
-  if (!navigator.storage?.estimate) return;
-  try {
-    const { usage, quota } = await navigator.storage.estimate();
-    const pct = Math.round((usage / quota) * 100);
-    if (pct >= 80) {
-      consoleLog(`⚠️ Storage is ${pct}% full (${Math.round(usage/1024/1024)}MB of ${Math.round(quota/1024/1024)}MB used). Consider exporting your session to avoid data loss.`, 'warn');
-      // Inject an inline export button into the console
-      const el = document.getElementById('liveConsole');
-      if (el) {
-        const existing = el.querySelector('.quota-warn-btn');
-        if (!existing) {
-          const btn = document.createElement('button');
-          btn.className = 'btn quota-warn-btn';
-          btn.textContent = '💾 Export Transcript Now';
-          btn.onclick = exportTranscript;
-          el.prepend(btn);
-        }
-      }
-    }
-  } catch(e) {
-    // v3.29.2 — was silent. Best-effort; logging so a quiet failure here
-    // (browser API quirk) is at least diagnosable.
-    console.warn('[checkStorageQuota] failed:', e);
-  }
-}
 
 
 const GUMROAD_PRODUCT_ID = 'Iyg5j-ySEnBtA5CKcuVT9A==';
