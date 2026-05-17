@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-011';         // build stamp — update each session
+const BUILD       = '20260516-012';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -734,10 +734,24 @@ function copyGoal() {
 // the project-screen restructure as redundant with the new Clear Project
 // button now positioned in the section header. No remaining call sites.
 
-function openChangeBuilder() {
+function openChangeBuilder(opts) {
+  // v3.49.0 — Optional opts.reason replaces the default modal subtitle;
+  // opts.excludeId filters that AI out of the picker grid. Used by the
+  // builder-disable interception path so the AI being disabled can't be
+  // re-picked as the new builder. Calls without opts (the existing
+  // "Change Builder" button) behave as before.
+  const reasonEl = document.getElementById('changeBuilderReason');
+  if (reasonEl) {
+    reasonEl.textContent = opts?.reason ||
+      'The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity.';
+  }
+  const excludeId = opts?.excludeId || null;
   const grid = document.getElementById('changeBuilderGrid');
   if (grid) {
-    grid.innerHTML = activeAIs.map(ai => {
+    const candidates = excludeId
+      ? activeAIs.filter(a => a.id !== excludeId)
+      : activeAIs;
+    grid.innerHTML = candidates.map(ai => {
       const isSelected = ai.id === builder;
       // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
       // which bypassed the brand-match catalog AND silently hid the icon
@@ -765,6 +779,14 @@ function openChangeBuilder() {
 function closeChangeBuilder() {
   const modal = document.getElementById('changeBuilderModal');
   if (modal) modal.classList.remove('active');
+  // v3.49.0 — If user cancelled the builder-disable flow, drop the
+  // pending disable so the original toggle-off is forgotten. The AI
+  // remains enabled and as the current builder.
+  if (_pendingBuilderDisable) {
+    const name = activeAIs.find(a => a.id === _pendingBuilderDisable)?.name || 'AI';
+    _pendingBuilderDisable = null;
+    if (typeof toast === 'function') toast(`${name} is still your Builder — disable cancelled`);
+  }
 }
 
 function showRoundErrorModal(reason, details) {
@@ -833,10 +855,28 @@ function closeRoundErrorModal() {
 }
 
 function setBuilderFromModal(id) {
+  // v3.49.0 — Capture pending disable BEFORE setBuilder runs, since
+  // setBuilder might trigger renders that touch toggleSessionBee indirectly.
+  const pendingDisableId = _pendingBuilderDisable;
+  _pendingBuilderDisable = null;
+
   setBuilder(id);
   closeChangeBuilder();
   renderBeeStatusGrid();
-  toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
+
+  if (pendingDisableId && pendingDisableId !== id) {
+    // Builder-disable flow: now that builder is reassigned, complete the
+    // original toggle-off. id !== pendingDisableId is guaranteed by the
+    // excludeId filter in openChangeBuilder but checked here defensively.
+    const disabledName = activeAIs.find(a => a.id === pendingDisableId)?.name || 'AI';
+    const newBuilderName = activeAIs.find(a => a.id === id)?.name || 'AI';
+    // Call toggleSessionBee — since builder is now `id` not `pendingDisableId`,
+    // the builder-intercept branch will NOT fire and the disable proceeds.
+    toggleSessionBee(pendingDisableId, false);
+    toast(`👑 Builder changed to ${newBuilderName} — ${disabledName} toggled off`);
+  } else {
+    toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
+  }
 }
 
 // ══════════════════════════════════════
@@ -9200,8 +9240,34 @@ function closeEditHive() {
   document.getElementById('editHiveModal').classList.remove('active');
 }
 
+// v3.49.0 — Pending builder-disable state. Set when the user tries to
+// disable the current builder AI. Holds the id of the AI awaiting
+// disable completion. Cleared when:
+//   • setBuilderFromModal runs (picks a new builder → completes disable)
+//   • closeChangeBuilder runs without a builder change (user cancelled)
+let _pendingBuilderDisable = null;
+
 function toggleSessionBee(id, on) {
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  // v3.49.0 — Builder-disable interception. Prevent the bug where
+  // toggling off the current builder greys the card but leaves the
+  // builder reference pointing at the now-disabled AI, which then
+  // continues building on subsequent rounds with no UI affordance to
+  // re-enable (builder cards render without checkboxes). Route through
+  // the Change Builder modal: user must pick a new builder before the
+  // disable completes. Cancelling the modal leaves the AI enabled.
+  // Returns false when the toggle is deferred to the modal, true when
+  // it completed immediately. Callers (e.g. the slow-responder card
+  // handler) can use this to gate post-action toasts.
+  if (!on && id === builder) {
+    _pendingBuilderDisable = id;
+    const name = activeAIs.find(a => a.id === id)?.name || 'This AI';
+    openChangeBuilder({
+      reason: `${name} is your Builder. Pick a new Builder to continue disabling it. Cancel to keep ${name} as Builder.`,
+      excludeId: id
+    });
+    return false;  // deferred — disable completes inside setBuilderFromModal
+  }
   if (on) {
     window.sessionAIs.add(id);
   } else {
@@ -9218,6 +9284,7 @@ function toggleSessionBee(id, on) {
   // the change. Cheap call — saveSession is async and serialized
   // through _saveSessionChain so back-to-back toggles can't race.
   saveSession();
+  return true;
 }
 
 // v3.32.14 — Durable per-round satisfaction tracking, hardened.
@@ -10136,6 +10203,28 @@ async function runRound() {
   const btn = document.getElementById('runRoundBtn');
 
   if (btn?.classList.contains('running')) return;
+
+  // v3.49.0 — Defensive builder guard. If `builder` points at an AI
+  // that's no longer active (disabled via session toggle, removed from
+  // hive, or any other stale-state cause), auto-reassign to the first
+  // active AI and warn. Pairs with the toggleSessionBee builder-intercept
+  // added in this release: that intercept prevents most paths into this
+  // broken state, but session restore, hive editing, and any future
+  // regression could still drop us here — this is the safety net.
+  // Also recovers users who reach v3.49.0 with the pre-fix bug already
+  // persisted in their session (builder='X' while X is not in sessionAIs).
+  if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
+  if (builder && !window.sessionAIs.has(builder)) {
+    const stale = activeAIs.find(a => a.id === builder)?.name || builder;
+    const fallback = activeAIs.find(a => window.sessionAIs.has(a.id));
+    if (fallback) {
+      setBuilder(fallback.id);
+      renderBeeStatusGrid();
+      saveSession();
+      toast(`⚠ Builder reassigned: ${stale} was disabled — now ${fallback.name}`);
+      consoleLog(`Builder auto-reassigned: ${stale} → ${fallback.name} (stale builder reference detected)`, 'warn');
+    }
+  }
 
   // v3.40.0 — Deprecation watchdog fires fire-and-forget on round start.
   // No await: the round proceeds in parallel. If a deprecated model is

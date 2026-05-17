@@ -1,6 +1,69 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.49.0
+**Build:** `20260516-012` · **Released:** May 16, 2026
+
+### UX bug fix — Disabling the Builder no longer creates an unrecoverable state
+
+#### The bug (from live testing)
+
+Discovered during cover-letter test session. Sequence:
+
+1. Slow-responder card fires for DeepSeek (88s, 95s responses — real DeepSeek slowness, timing fix from v3.40.0 is working correctly)
+2. User clicks "Toggle off this AI"
+3. DeepSeek's hex card greys out visually
+4. **But DeepSeek is also the current Builder** — and `toggleSessionBee` only manipulated the `sessionAIs` Set + the card's CSS classes. It never touched the `builder` global at app.js line 306.
+5. Next round runs → `runRound` reads `builder` → dispatches DeepSeek anyway → DeepSeek re-renders with `is-builder` class (no checkbox in that template variant) → **user has no UI affordance to re-enable**
+
+The card looked disabled, the AI kept building, and there was no way out without going through Change Builder modal first (which the user wouldn't think to do because the bug presents as "disable didn't work").
+
+#### The fix
+
+Three layers:
+
+**Layer 1: `toggleSessionBee` builder-intercept (app.js line 9250)**
+When the user tries to disable the current builder, the function now intercepts:
+- Sets a `_pendingBuilderDisable` state marker
+- Opens the Change Builder modal with a "you must pick a new Builder first" reason message and the AI being disabled excluded from the picker
+- Returns `false` (deferred) instead of completing the toggle
+- The disable completes inside `setBuilderFromModal` after the user picks a new builder
+- Cancelling the modal restores the original state (AI stays enabled, builder unchanged) with a clear cancellation toast
+
+**Layer 2: `openChangeBuilder` extended (app.js line 737)**
+New optional `opts` parameter:
+- `opts.reason` — overrides the default modal subtitle to explain why the user is here
+- `opts.excludeId` — filters that AI out of the picker grid (prevents re-picking the AI being disabled)
+
+Calls without `opts` (the normal "Change Builder" button) behave identically to before.
+
+**Layer 3: Defensive guard in `runRound` (app.js line 10135)**
+Right at the top of every round:
+- If `builder` points at an AI not in `sessionAIs`, auto-reassign to the first active AI
+- Toast a warning + Live Console warn line documenting the stale-builder reassignment
+
+This is the safety net. It catches any future regression, weird session-restore corner cases, and — critically — recovers anyone who hits v3.49.0 with the bug already persisted in their session (`builder='X'` while `X` is not in `sessionAIs`).
+
+#### Additional cleanup
+
+**wf-debug.js disable-ai handler** — was unconditionally toasting "✓ AI toggled off for this session" the moment the slow-responder card's button was clicked. Misleading in the builder case (the AI wasn't actually off yet, the modal was about to open). Now checks `toggleSessionBee`'s return value: toasts only when the disable completed immediately. The modal flow handles its own toasting in the deferred case.
+
+**index.html** — Added `id="changeBuilderReason"` to the modal's subtitle paragraph so `openChangeBuilder` can swap the reason text. No visual change when called without opts.
+
+#### Why this isn't a refactor split
+
+Pure UX bug fix. No code moved between files. v3.49.0 is the first non-refactor release since v3.39.0 — eight refactor releases (v3.40.0 through v3.48.0) interrupted by a real bug that needed shipping.
+
+#### Files changed
+
+- `js/app.js` — `toggleSessionBee` builder-intercept; `openChangeBuilder` opts parameter; `closeChangeBuilder` cancel-handling; `setBuilderFromModal` completes deferred disable; `runRound` defensive guard; `BUILD` constant bumped
+- `js/wf-debug.js` — disable-ai onclick gates toast on completion
+- `index.html` — `changeBuilderReason` id added to modal subtitle; cache-bust sweep
+- `js/version.js` — `APP_VERSION` → `v3.49.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.48.0
 **Build:** `20260516-011` · **Released:** May 16, 2026
 

@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.48.0 — backup+restore complete storage.js)
-Current version:     v3.48.0 Pro / build 20260516-011
+Last updated:        2026-05-16 (post v3.49.0 — UX bug fix: builder-disable deadlock)
+Current version:     v3.49.0 Pro / build 20260516-012
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.49.0   2026-05-16  UX bug fix — disabling the Builder no longer creates an unrecoverable state. Three layers: toggleSessionBee intercepts builder-disable and routes through Change Builder modal; openChangeBuilder accepts reason+excludeId opts; runRound defensive guard auto-reassigns stale builder. Includes recovery for users hitting v3.49.0 with the pre-fix bug already persisted.
 v3.48.0   2026-05-16  app.js split #8: backupSession + importSession complete storage.js (-169 lines; app.js 13,642→13,473, cumulative -17.8%). storage.js now contains the entire WaxFrame state persistence layer in 819 lines. Only callAPI remains as a major split candidate.
 v3.47.0   2026-05-16  app.js split #7: saveHive + saveProject + loadSettings + snapshotReferenceDocs join storage.js (-219 lines; app.js 13,861→13,642, cumulative -16.8%). Only backupSession + restore helpers remain as storage chunks in app.js.
 v3.46.0   2026-05-16  app.js split #6: session persistence (_saveSessionChain + saveSession + loadSession) joins storage.js (-231 lines; app.js 14,092→13,861, cumulative -15.4%)

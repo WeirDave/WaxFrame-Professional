@@ -439,3 +439,41 @@ boundary check was missing. It's now Category 7.
 The deeper lesson — clean release ceremony is not the same
 as clean release. The proof is in the deployment, not the
 pre-flight.
+
+
+═════════════════════════════════════════════════════════════
+FINDING 9 — BUILDER-DISABLE DEADLOCK (UX bug)  [FIXED IN v3.49.0]
+═════════════════════════════════════════════════════════════
+
+Category:    1 (UX bug, real-world impact)
+Reported:    2026-05-16 during cover-letter test session
+Severity:    Medium (creates unrecoverable UI state without page refresh)
+Status:      FIXED in v3.49.0
+
+Symptom:
+  Slow-responder card fires for an AI. User clicks "Toggle off this AI".
+  Card greys out. AI continues to run as Builder. No UI affordance to
+  re-enable (builder hex-cell template renders without a checkbox).
+
+Root cause:
+  toggleSessionBee(id, false) only manipulated sessionAIs + card CSS
+  classes. Never checked or updated the `builder` global. When the
+  disabled AI was the current builder, subsequent rounds still ran it
+  as builder via the stale `builder` reference.
+
+Fix:
+  Three layers in v3.49.0:
+    1. toggleSessionBee intercept — defers builder-disable behind the
+       Change Builder modal; user must pick new builder first.
+    2. openChangeBuilder accepts opts.reason + opts.excludeId for the
+       deferred-disable flow.
+    3. runRound defensive guard — auto-reassigns if builder is not in
+       sessionAIs (recovers stale-state regardless of cause).
+
+Pattern lesson:
+  State changes that depend on cross-state invariants ("X is enabled"
+  implies "X is a valid builder choice") must enforce the invariant at
+  the mutation point, not assume it. The original toggleSessionBee
+  assumed callers wouldn't disable the current builder. The slow-
+  responder card violated that assumption and the bug was inevitable
+  once that path existed.
