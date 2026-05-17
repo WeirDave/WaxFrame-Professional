@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — PLAYBOOK TEST MASTER (v18)
+WAXFRAME — PLAYBOOK TEST MASTER (v24)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-10 (post v3.37.2, T9 Hotel Review measured)
-WaxFrame version:    v3.37.2 Pro and later
+Last updated:        2026-05-16 (post v3.39.12 T4 Butter Chicken run)
+WaxFrame version:    v3.39.12 Pro and later
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Playbook_Test_Master_v18.txt
+Lives:               docs\WaxFrame_Playbook_Test_Master_v24.txt
 
 This is David's project to-do list — strictly the test runs
 that gather convergence data. Companion to:
@@ -18,31 +18,105 @@ Two-document persistence system, per memory rule:
                 + HISTORICAL RUNS (permanent)
   • Backlog Master = code work + ideas + bug-fix list
 
+CHANGES IN v24 (from v23, 2026-05-16):
+  - T4 RECIPE — SECOND MEASURED RUN. Indian Butter Chicken
+    v1.0 on WaxFrame v3.39.12 Pro / build 20260513-004.
+    7-AI hive (6 reviewers — ChatGPT, Claude, Gemini, Grok,
+    Perplexity, Mistral — + DeepSeek as Builder). Reference
+    Material approach using the SCAFFOLD TEMPLATE itself as
+    the only ref doc (306 chars, all empty field labels —
+    effectively scratch with structural hints). 6 rounds,
+    42 min wall-clock. Final 1,199w / 6,923c. Majority at
+    R6 with holdouts present. 3 USER DECISIONS resolved
+    (R2 ×2, R5 ×1). Full forensic detail in HISTORICAL RUNS.
+    T4 entry in TEST UNIVERSE now shows two measured runs
+    (Publix Ref-Mat full-content + Butter Chicken Ref-Mat
+    scaffold-only) — useful comparison data point for how
+    much ref material content actually drives the hive
+    versus the template structure alone.
+  - Two measurement-quality anomalies surfaced from the
+    Butter Chicken DeepDive — logged to Backlog v27 Section 1:
+      • DeepSeek (Builder) elapsed reads 0.8s avg / 1.0s max
+        across 11 captures despite ~50K out tokens per call.
+        Stopwatch bug suspected in the Builder code path.
+      • Claude totalTokens consistently 0 in the DeepDive
+        ring buffer (in: 20,125 / out: 1,577 captured fine).
+        Claude adapter not summing totalTokens.
+
+
+  - RESTRUCTURE — answers "what don't we have data on, and
+    what can I run right now?" at a glance. Replaces:
+      • ALREADY MEASURED quick list
+      • PROJECTS TO RUN NEXT
+      • PENDING TESTS status table
+    ...with a single TEST UNIVERSE section that groups all
+    19 playbooks by category, shows measured-or-open status,
+    and for each open one names the blocker and where it's
+    runnable (work-testable vs. home-time vs. ready now).
+  - RECONCILIATION — three test-master data discrepancies
+    surfaced and fixed:
+      • T9 Hotel Review MEASURED (Melbourne Marriott v1.0,
+        19 rounds, 6-AI hive + DeepSeek Builder, 2026-05-10).
+        Was logged to v18 of this file when v3.37.2 shipped,
+        but file numbering went non-linear (v17 → v19,
+        skipping v18) and v19/v20/v21/v22 were a parallel
+        branch that lost the T9 entry. Restored in v23.
+      • T12 Contractor / Vendor Letter MEASURED (Bay Area
+        First Invoice Concerns v3.0, 12 rounds, 3-AI budget
+        hive — Claude + ChatGPT + Gemini-as-Builder,
+        2026-05-09). Run shipped to document-playbooks.html
+        and CHANGELOG (the Personal & Everyday section was
+        introduced with the Bay Area run as its real-world
+        example) but never made it into this file. Logged
+        in v23.
+      • T8 Restaurant Review playbook page is stale —
+        document-playbooks.html line ~96 still reads
+        "2–4 rounds typical (estimated, not measured)"
+        despite T8 ran (Pearl's Saltwater Grille v2.0,
+        5 rounds, 2026-05-10). Test master tracks the
+        measurement; playbook page never got the update.
+        Flagged in Backlog v26 Section 1.
+  - RUNS COMPLETED tracking table and HISTORICAL RUNS now
+    fully populated for T9 and T12. Same convention as
+    before: tracking table is chronological summary,
+    HISTORICAL RUNS holds the forensic detail.
+
+CHANGES IN v22 (from v21, 2026-05-10):
+  - WaxFrame v3.36.35 shipped — playbook page step
+    labels + Reference Material reroute for scratch-
+    mode review playbooks (see Backlog v20 Recently
+    Shipped). Metadata bump only.
+
+CHANGES IN v21 (from v20, 2026-05-10):
+  - WaxFrame v3.36.34 shipped — convergence callout
+    placement fix on playbook page (see Backlog v19
+    Recently Shipped). T8 data unchanged. Metadata
+    bump only.
+
+CHANGES IN v20 (from v19, 2026-05-10):
+  - T8 RESTAURANT REVIEW MEASURED. Pearl's Saltwater
+    Grille v2.0 (Savannah, GA). Built on v3.36.30 Pro.
+    5 rounds, 14 min wall-clock. 5-AI hive + DeepSeek
+    Builder. REFINE on existing v1.0 draft (no Ref Mat).
+    Final 392w / 2179c (down from 459w original — ~15%
+    tighter). Majority at R6 (4/6 satisfied). 3 USER
+    DECISIONS total (1 in R2, 2 in R4) — all resolved
+    via Builder-Only rounds with locked notes.
+  - T8 entry removed from PROJECTS TO RUN NEXT and
+    PENDING TESTS detail blocks.
+  - HISTORICAL RUNS appended with full data.
+  - RUNS COMPLETED tracking table updated.
+
+CHANGES IN v19 (from v18, 2026-05-10):
+  - WaxFrame v3.36.33 shipped — USER DECISION audible
+    alert wired (see Backlog v18 Recently Shipped).
+    Metadata bump only.
+
 CHANGES IN v18 (from v17, 2026-05-10):
-  - T9 HOTEL REVIEW MEASURED — Melbourne Marriott Hotel
-    v1.0 ran on v3.37.2 Pro (build 20260510-017) using the
-    dual-path scratch workflow shipped in v3.37.0. 6-AI
-    hive (DeepSeek as Builder; ChatGPT/Claude/Gemini/Grok/
-    Perplexity as reviewers). 19 rounds, 166 minutes wall-
-    clock (includes a substantial idle gap between R5 and
-    R7 — true engaged time unknown without per-round
-    tracking, which is still on the backlog). Majority
-    convergence at R18, R19 = builder-only finalize.
-    0 USER DECISIONS surfaced across the entire run —
-    the Hotel Review questionnaire scaffold was complete
-    enough that reviewers didn't need to escalate
-    decisions. Final doc: 400 words / 2,488 chars.
-    First measured data point on the new Reviews
-    category — validates the v3.37.0 dual-path scratch
-    workflow end-to-end (questionnaire scaffold → goal
-    fields populated → hive converged from zero draft).
-  - T9 removed from PROJECTS TO RUN NEXT and from PENDING
-    TESTS open list; added to ALREADY MEASURED and RUNS
-    COMPLETED tracking table.
-  - WaxFrame v3.37.0 (dual-path templates) + v3.37.2
-    (auto-halted sound) shipped between v17 and v18. See
-    Backlog v22/v23 Recently Shipped for details. T9 is
-    the first measured run that exercised both features.
+  - WaxFrame v3.36.32 shipped — project clock parity
+    fix for runBuilderOnly. Future runs will no longer
+    have the engaged-time under-reporting that affected
+    T4 Recipe (Publix). Metadata bump only.
 
 CHANGES IN v17 (from v16, 2026-05-10):
   - WaxFrame v3.36.31 shipped — three audit-driven
@@ -143,10 +217,13 @@ as wall-clock; see Backlog v10 Section 2).
 
   Date        Run                                          Hive  Builder      Rounds  Wall-clock   Engaged†  Final length      Status
   ──────────  ───────────────────────────────────────────  ────  ───────────  ──────  ───────────  ────────  ────────────────  ──────────────
+  2026-05-16  T4 Recipe — Indian Butter Chicken (Ref-Mat) 7     DeepSeek     6       42 min       n/a       1,199w / 6,923c   majority (holdouts)
   2026-05-10  T9 Hotel — Melbourne Marriott v1.0 (scratch) 6     DeepSeek     19      166 min**    n/a       400w / 2,488c     majority (R18)
+  2026-05-10  T8 Restaurant Review — Pearl's Saltwater     6     DeepSeek     5       14 min       n/a       392w / 2,179c     majority (4/6)
   2026-05-10  T7 Blog Post — One-Shot AI v2.0 (Ref-Mat)    6     DeepSeek     4       77 min       n/a       460w / 2,795c     majority (4/6)
   2026-05-10  T2 Exec Summary — Sustainability Report      6     DeepSeek     7       41 min       n/a       142w / 998c       majority (5/6)
   2026-05-10  T4 Recipe — Publix potato salad (Ref-Mat)    6     DeepSeek     4       47 min*      n/a       1,226w / 6,774c   majority (5/6)
+  2026-05-09  T12 Contractor — Bay Area First Invoice v3.0 3     Gem25P       12      ~7 min hive  n/a       624w (-15%)       majority (R12, Claude holdout)
   2026-05-09  T6 LinkedIn About — wireless engineer        3     Cl37S        2       ~3 min       n/a       (length n/a)      majority
   2026-05-09  T5 LinkedIn Post — DFS in defense            3     Cl37S        2       ~1 min       n/a       304w / 1,857c     majority
   2026-05-08  T1 BP — Wellness for Law Firm v1.0           6     Gem25P       11      ~53 min      n/a       857w              majority (5/6)
@@ -161,19 +238,14 @@ as wall-clock; see Backlog v10 Section 2).
   earlier     Blog — One-Shot AI v1.0 (1st measurement)    (5)   (n/a)        16      (n/a)        n/a       (n/a)             majority
   earlier     Presentation — Wi-Fi 7 v3.0                  (5)   (n/a)        8       (n/a)        n/a       (n/a)             majority
 
-* T4 Recipe wall-clock includes a lunch break — engaged time
-  was much lower. This is the case study for the engaged-time
-  tracking enhancement (Backlog v10 Section 2).
-
-** T9 Hotel Review wall-clock includes a substantial idle
-   gap between R5 (7:24 PM) and R7 (8:59 PM). True engaged
-   time is unknown without per-round tracking. Second case
-   study for the engaged-time tracking idea — the Recipe
-   break was lunch; the Hotel gap is whatever David stepped
-   away to do that evening. Either way, both measured runs
-   that exceeded ~70 min of wall-clock had substantial idle
-   gaps, reinforcing the case for engaged-time tracking as
-   a real data-quality issue.
+*  T4 Recipe wall-clock includes a lunch break — engaged time
+   was much lower. This is the case study for the engaged-time
+   tracking enhancement (Backlog v10 Section 2).
+** T9 Hotel Review wall-clock includes a substantial idle gap
+   between R5 and R7 — true engaged time unknown without per-
+   round tracking (same enhancement candidate). Hive processing
+   time (parallel reviewers + Builder, sum of per-round max)
+   is much lower than 166 min.
 
 Older entries are partial — captured before the tracking
 table existed. Backfill from session backups when there's a
@@ -181,74 +253,96 @@ quiet moment. Runs from 2026-05-10 forward fill all columns.
 
 
 ════════════════════════════════════════════════════════════
-ALREADY MEASURED  (also represented in document-playbooks.html)
+TEST UNIVERSE — what's measured, what's open
 ════════════════════════════════════════════════════════════
-DO NOT re-run unless capturing a fresh data point is wanted
-(e.g., to see if a major version's prompt changes shifted the
-convergence behavior, or to add a methodology variation like
-the 2026-05-10 recipe Reference-Material run).
+Every playbook in the app, with measured-or-open status and
+(for open ones) what's blocking the run and where it can be
+done.
 
-  ✔ Quick Start (Cookies)              2 rounds   [SCRATCH]
-  ✔ Cover Letter                       6–10 rounds [REFINE]
-  ✔ Job Description                    21 rounds   (Altura)
-  ✔ Résumé                             11 rounds   (Dana Reyes)
-  ✔ Thank-You Letter                   3 rounds    (Marco Contractor)
-  ✔ Email & Outreach                   3 rounds    (Ferris @ Lightkeeper)
-  ✔ Blog Post v1.0 (1st sample)        16 rounds   (One-Shot AI post, refining a draft)
-  ✔ Blog Post v2.0 (2nd sample)        4 rounds    (One-Shot AI post v2.0, ref-material + buzzword guard, 5-AI, 2026-05-10)
-  ✔ Presentation Outline               8 rounds    (Wi-Fi 7 v3.0)
-  ✔ Business Proposal — Brightwater    5 rounds    (BP v3.0 scaffold, 3-AI, scratch)
-  ✔ Business Proposal — Wellness/Law   11 rounds   (Wellness for Law Firm v1.0, 5-AI, scratch, majority)
-  ✔ Executive Summary                  7 rounds    (Sustainability Report v1.0, 5-AI, REFINE, 2026-05-10, 7 USER DECISIONS)
-  ✔ LinkedIn Profile (About)           2 rounds    (Wireless engineer, 3-AI, 2026-05-09)
-  ✔ LinkedIn Post                      2 rounds    (DFS in defense, 3-AI, posted to live LinkedIn, 2026-05-09)
-  ✔ Recipe (Reference Material)        4 rounds    (Publix potato salad v1.0, 5-AI, scratch+reference, 2026-05-10)
-  ✔ Hotel Review                       19 rounds   (Melbourne Marriott v1.0, 5-AI, scratch dual-path, 2026-05-10, 0 USER DECISIONS, majority at R18)
+  19 playbooks total · 16 measured · 3 open
 
+──── ✔ MEASURED (16 of 19) ─────────────────────────────────
 
-════════════════════════════════════════════════════════════
-PROJECTS TO RUN NEXT  (the to-do list)
-════════════════════════════════════════════════════════════
-Open tests, ranked by lowest setup overhead first. Each one
-will produce convergence data that feeds into 4 surfaces:
-  • document-playbooks.html       (the playbook page in the app)
-  • waxframe-user-manual.html     (measured-data block when
-                                    a new pattern emerges)
-  • js/templates.js               (only if scaffold values
-                                    need refining)
-  • RUNS COMPLETED + HISTORICAL RUNS (always)
+  Quick Start
+    Quick Start (Cookies)               2 rds (scratch, unanimous)
 
-Run order suggestion:
+  Career & Hiring
+    Cover Letter                        6–10 rds (refine)
+    Job Description                     21 rds (Altura)
+    Résumé                              11 rds (Dana Reyes)
+    LinkedIn About                T6    2 rds (3-AI, 2026-05-09)
+    Thank-You Letter                    3 rds (Marco Contractor)
 
-  1. T8  Restaurant Review       — needs real trip data
-  2. T10 Business/Service Review — needs real service experience
-  3. T11 Multi-Platform Rewrite  — feed T8/T9/T10 output as input
-       (T9 Hotel Review output is now available — see Melbourne
-        Marriott run for one source review; T11 ready to run)
-  5. T3  RFP Response            — biggest, defer until issuer-side
-                                    template scaffold conversation
-                                    is settled
+  Business & Sales
+    Business Proposal             T1    5 rds (Brightwater 3-AI)
+                                        11 rds (Wellness/Law 5-AI)
+    Email & Outreach                    3 rds (Ferris @ Lightkeeper)
+    Executive Summary             T2    7 rds (Sustainability v1.0)
 
-After each run, paste convergence data into HISTORICAL RUNS
-at the bottom (date, scenario, hive, rounds, time, final
-length, build). Same turn — don't defer to memory. Also add
-a row to the RUNS COMPLETED tracking table at the top, and
-update the ✔ entry in ALREADY MEASURED.
+  Content & Marketing
+    Blog Post                     T7    16 rds v1.0 / 4 rds v2.0
+                                        (Ref-Mat + buzzword guard)
+    LinkedIn Post                 T5    2 rds (DFS, 3-AI)
+    Presentation Outline                8 rds (Wi-Fi 7 v3.0)
+
+  Personal & Everyday
+    Recipe                        T4    4 rds (Publix, Ref-Mat full-content)
+                                        6 rds (Butter Chicken, Ref-Mat
+                                        scaffold-only, 7-AI, 2026-05-16)
+    Contractor / Vendor Letter    T12   12 rds (Bay Area First Invoice
+                                        Concerns v3.0, 3-AI budget hive,
+                                        2026-05-09)
+
+  Reviews & Recommendations
+    Restaurant Review             T8    5 rds (Pearl's Saltwater, REFINE,
+                                        2026-05-10)  ⚠ playbook page still
+                                        shows "estimated, not measured" —
+                                        Backlog v26 Section 1
+    Hotel Review                  T9    19 rds (Melbourne Marriott v1.0,
+                                        6-AI hive + DeepSeek Builder,
+                                        2026-05-10, 0 USER DECISIONS)
 
 
-════════════════════════════════════════════════════════════
-PENDING TESTS  (status table)
-════════════════════════════════════════════════════════════
-Only open tests below — already-measured tests removed (their
-record lives in ALREADY MEASURED + HISTORICAL RUNS). T-numbers
-are stable IDs (T1/T2/T4/T5/T6/T7 reserved for the measured
-runs; do not renumber).
+──── ☐ OPEN (3 of 19) ──────────────────────────────────────
 
-  ☐ T3  RFP Response            [REFINE]   estimated 20–60+ rounds
-  ☐ T8  Restaurant Review       [SCRATCH]  unblocked v3.36.23 — needs real trip data
-  ✔ T9  Hotel Review            [SCRATCH]  MEASURED v3.37.2 (Melbourne Marriott v1.0, 19 rounds, majority at R18)
-  ☐ T10 Business / Service Rev. [SCRATCH]  unblocked v3.36.23 — needs real service experience
-  ☐ T11 Multi-Platform Rewrite  [REFINE]   unblocked v3.36.23 — feed T8/T9/T10 output as input (T9 output now available)
+  T3   RFP Response               [Business & Sales]
+       Estimate:  20–60+ rounds (rough — not measured)
+       Blocker:   DEFERRED. Issuer-side RFP scaffold conversation
+                  not yet settled. Re-add full setup once template
+                  direction is clear.
+       Where:     Work-testable once unblocked.
+
+  T10  Business / Service Review  [Reviews & Recommendations]
+       Estimate:  not measured
+       Blocker:   Needs real service experience — concrete details
+                  of what was provided, quality, communication, value.
+       Where:     HOME — requires personal service context.
+
+  T11  Multi-Platform Rewrite     [Reviews & Recommendations]
+       Estimate:  not measured
+       Blocker:   Needs T8 / T9 / T10 output as starting document.
+                  T8 (Pearl's Saltwater Grille v2.0) AND T9 (Melbourne
+                  Marriott v1.0) outputs already exist — ready to run
+                  with either as source today.
+       Where:     ANY — work-testable.
+
+
+──── At-a-glance: what can David run RIGHT NOW? ────────────
+
+  T11  with T8 (Pearl's Saltwater) or T9 (Melbourne Marriott)
+       output as the source review — ready today
+
+  T3   blocked on upstream RFP scaffold conversation
+  T10  blocked on real service experience (HOME)
+
+──── After each run ────────────────────────────────────────
+
+  1. Append a HISTORICAL RUNS entry at the bottom (date,
+     scenario, hive, rounds, time, final length, build).
+     Same turn — don't defer to memory.
+  2. Add a row to the RUNS COMPLETED tracking table above.
+  3. Move the T-id from OPEN to ✔ MEASURED in this section.
+  4. The detail block below becomes redundant — remove it.
 
 
 ═════════════════════════════════════════════════════════════
@@ -260,76 +354,6 @@ Current estimate:    20–60+ rounds (estimate, not measured)
 DEFERRED. The detailed setup for this test is parked until
 the issuer-side RFP template scaffold conversation is settled.
 Re-add full setup block when ready to run.
-
-
-═════════════════════════════════════════════════════════════
-T8 · RESTAURANT REVIEW  [SCRATCH]
-═════════════════════════════════════════════════════════════
-Maps to playbook:    Reviews & Recommendations → Restaurant Review
-Current estimate:    not yet measured
-
-PURPOSE: First measured data point on the new Reviews
-category. Spec'd by Kai. Real-world data from David's recent
-trip — fill in below before running.
-
-──── SETUP 3 — YOUR PROJECT ────────────────────────────────
-Project name:            Review — [restaurant name]
-Project version:         v1.0
-Document type:           Restaurant Review
-Target audience:         [readers of the platform you'll post to — Google, Yelp, Tripadvisor, Reddit r/[city], etc.]
-Desired outcome:         [what a reader should know / decide after reading — visit / skip / try a specific dish]
-Scope & constraints:     [include: what you ate, what worked, what didn't, service notes, value for money. exclude: invented details, comparisons to places you didn't visit on this trip]
-Tone & voice:            [honest peer-to-peer, not influencer voice; specific over flowery]
-Length:                  No limit  (template default — set per-platform at run time:
-                         Google Maps: Hard cap · 750–1,200 chars; Yelp: Range · 200–1,500 words;
-                         TripAdvisor: No limit for long-form or Hard cap · 500–900 words)
-Additional instructions: Do not invent dishes, prices, or details. If something wasn't actually on the menu or said by the staff, leave it out. Flag anything you're not 100% sure about so I can verify before posting.
-
-──── SETUP 4 — REFERENCE MATERIAL ──────────────────────────
-Paste the actual experience here — what you ordered, what it
-cost, what the service was like, what the room felt like,
-what the standout moments were (positive or negative).
-Concrete details. The hive will use this as source-of-truth
-and not invent additions.
-
-──── SETUP 5 — STARTING DOCUMENT ──────────────────────────
-Mode: From scratch (leave blank)
-
-
-═════════════════════════════════════════════════════════════
-T9 · HOTEL REVIEW  [SCRATCH]
-═════════════════════════════════════════════════════════════
-Maps to playbook:    Reviews & Recommendations → Hotel Review
-Current estimate:    19 rounds (Melbourne Marriott v1.0,
-                     v3.37.2, 6-AI) — majority at R18,
-                     0 USER DECISIONS, 400w / 2,488c final.
-                     See HISTORICAL RUNS below for the full
-                     record.
-
-PURPOSE: First measured data point on the new Reviews
-category. Spec'd by Kai. Real-world data from David's recent
-trip — fill in below before running.
-
-──── SETUP 3 — YOUR PROJECT ────────────────────────────────
-Project name:            Review — [hotel name]
-Project version:         v1.0
-Document type:           Hotel Review
-Target audience:         [travelers reading the platform you'll post to]
-Desired outcome:         [book / skip / book with caveats — what should the reader do?]
-Scope & constraints:     [include: room, service, location, value, any standout moments. exclude: invented details, comparisons to hotels you didn't visit on this trip]
-Tone & voice:            [practical traveler voice — what worked, what didn't, what to expect]
-Length:                  No limit  (template default — set per-platform at run time:
-                         Google Maps: Hard cap · 750–1,200 chars; TripAdvisor: No limit for long-form;
-                         Booking.com / Hotels.com: Hard cap · 200–600 words typical)
-Additional instructions: Do not invent amenities, room features, or service interactions. If a detail wasn't actually part of your stay, leave it out.
-
-──── SETUP 4 — REFERENCE MATERIAL ──────────────────────────
-Paste the actual stay details — booking details, room type,
-what worked, what didn't, service interactions, location
-notes, value-for-money assessment. Concrete details only.
-
-──── SETUP 5 — STARTING DOCUMENT ──────────────────────────
-Mode: From scratch (leave blank)
 
 
 ═════════════════════════════════════════════════════════════
@@ -403,9 +427,9 @@ Paste the source review text here — the output from T8, T9,
 or T10 (or any other single review you want to multi-platform).
 
 
-════════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 HISTORICAL RUNS  (chronological, permanent — never overwrite)
-════════════════════════════════════════════════════════════
+═════════════════════════════════════════════════════════════
 Add a new entry every time a measured run completes. Pull
 data from the run's transcript and backup. This is the
 canonical data store; ALREADY MEASURED above is the
@@ -416,6 +440,133 @@ NOTE on time data: until engaged-time tracking ships (see
 Backlog v10 Section 2), wall-clock minutes include any idle
 periods (lunch breaks, etc.). Annotate runs where the user
 stepped away mid-session so the data has the right caveat.
+
+
+2026-05-16 · T4 RECIPE — Indian Butter Chicken (Ref-Mat scaffold-only)
+────────────────────────────────────────────────────────────
+  Project:         Recipe — Indian Butter Chicken v1.0
+  Built on:        WaxFrame v3.39.12 Pro / build 20260513-004
+  Hive (7 total):  ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral
+                   (6 reviewers), DeepSeek as Builder
+  Approach:        Reference Material — but with the EMPTY
+                   SCAFFOLD TEMPLATE as the only ref doc.
+                   Effectively scratch with structural hints.
+                   Useful comparison data point against T4 Publix
+                   (2026-05-10) which used a 2,636-char copycat
+                   write-up as full ref content. Same playbook,
+                   same Builder, very different ref-material
+                   density.
+  Reference doc:   1 doc, 306 chars (recipe scaffold template,
+                   all field labels with empty values)
+  Starting doc:    empty
+  Length:          No limit
+  Tone:            "Easy Peasy but tases great and not spicy"
+                   (typo preserved as entered — does not appear
+                   to have affected output quality)
+  Notes (Setup 3): "Do not substitute ingredients without flagging
+                   it as an optional variation. Do not invent
+                   cooking times or techniques — flag anything
+                   uncertain instead of making it up."
+  Rounds:          6
+  Wall-clock:      42 minutes (6:20:31 PM → 6:57:47 PM,
+                                exported 6:58:03 PM)
+  Round wall-time spans (start-to-next-round):
+    R1 Draft  6:20:31 PM →  7:13 to R2     (draft phase)
+    R2 Refine 6:27:44 PM → 11:02 to R3     (2 USER DECISIONS)
+    R3 Refine 6:38:46 PM →  4:55 to R4
+    R4 Refine 6:43:41 PM →  7:23 to R5
+    R5 Refine 6:51:04 PM →  6:43 to R6     (1 USER DECISION)
+    R6 Refine 6:57:47 PM  ★ MAJORITY CONVERGENCE (holdouts present)
+  Final length:    1,199 words / 6,923 characters
+  Word trajectory: R1 1,138 → R2 1,161 → R3 1,185 → R4 1,177
+                   → R5 1,199 → R6 1,199. Net +5%. R5→R6 flat
+                   (only USER DECISION resolution + holdout edits).
+  Convergence:     Majority at R6 — engine triggered with holdouts
+                   present. Specific holdout AIs not surfaced in
+                   the transcript (transcript records the outcome
+                   string only, not the per-AI verdict tally).
+  USER DECISIONS:  3 total across the run, all resolved via
+                   Builder-Only application:
+                   • R2 #1 — Intro wording on line 3, three AI-
+                     proposed variants: "no chili heat" vs
+                     "no added chili heat" (Perplexity) vs others.
+                     "No added chili heat" wording was adopted —
+                     surfaces in R3 doc and persists to final.
+                   • R2 #2 — Marinade time wording on step 1
+                     (food-safety framing): Mistral, Claude.
+                   • R5 — Searing doneness wording on step 2:
+                     ChatGPT, Gemini, Claude variants. ChatGPT
+                     wording adopted ("lightly golden and lightly
+                     browned").
+  AI call rollup:  47 total captures, ~226,398 tokens. Per-AI:
+                                  calls  avg s  max s   in tok  out tok
+                     DeepSeek*    11     0.8    1.0    46,851  50,582
+                     Gemini        6    35.3   62.3    18,352   1,165
+                     Claude        6     8.5   18.2    20,125   1,577
+                     Grok          6     7.4   14.2    17,516     224
+                     Perplexity    6     4.7   15.8    18,331   2,426
+                     ChatGPT       6     4.7   12.5    17,347   1,326
+                     Mistral       6     3.1    9.2    20,480     872
+                   * DeepSeek (Builder) elapsed values are
+                     suspect — see ANOMALIES below.
+  Per-round AI calls: R1=8, R2=8, R3=8, R4=8, R5=8, R6=7
+                     (R6 = the converging round, one fewer call
+                     because the engine triggered before completing
+                     the full reviewer pass).
+  Slow-responder
+   pattern:        Gemini was conspicuously slow — 62.3s max
+                   would trigger the v3.38.0 Slow-AI alerts
+                   threshold (>2× avg AND >avg+15s) on multiple
+                   rounds. With Slow-AI alerts ON (default), the
+                   troubleshooting card would have surfaced; with
+                   the toggle OFF, Auto would have proceeded
+                   uninterrupted. Concrete validation of the
+                   v3.38.0 feature.
+  Anomalies
+   surfaced:       Two measurement-quality issues — fixed in
+                   v3.40.0 (2026-05-16):
+                   1. DeepSeek elapsed reads 0.8s avg / 1.0s max
+                      across 11 captures with ~4.6K out tokens
+                      per call. Root cause (corrected from
+                      initial "stopwatch bug" framing): elapsed
+                      was measured between `await fetch()` and
+                      `await response.json()` — after HEADERS
+                      arrived but BEFORE body was consumed. Not
+                      DeepSeek-specific code, not Builder-
+                      specific code; same bug for every provider.
+                      DeepSeek's CDN flushes headers immediately,
+                      so it was the only provider whose elapsed
+                      value visibly diverged from real generation
+                      time. Other providers happen to flush
+                      headers late so headers-time ≈ total time
+                      and the bug stayed invisible. Fix: moved
+                      elapsed measurement to after response.json()
+                      completes.
+                   2. Claude totalTokens consistently 0 in the
+                      DeepDive ring buffer. In/out captured fine
+                      (20,125 in / 1,577 out). Root cause:
+                      Anthropic Messages API returns
+                      {input_tokens, output_tokens} with no
+                      total_tokens field; the coalesce chain
+                      fell through to null. Fix: precompute
+                      _pt + _ct as locals; when neither provider
+                      total field exists, compute total = in + out
+                      from the locals.
+  Trajectory note: Compared to T4 Publix (same playbook, full ref
+                   content): Publix ran 4 rounds with barely-
+                   moving word counts (convergence work was prose
+                   quality + one bell-pepper question). Butter
+                   Chicken with scaffold-only ref ran 6 rounds
+                   with steady +5% growth and 3 USER DECISIONS —
+                   more iteration needed when the hive is filling
+                   in content versus polishing user-provided
+                   content. Useful signal: ref-material density
+                   correlates with rounds-to-convergence for the
+                   same playbook.
+  Files:           docs\runs\Recipe-Indian-Butter-Chicken-v1_0-r6-20260516-1858-Backup.json
+                   docs\runs\Recipe-Indian-Butter-Chicken-v1_0-r6-20260516-1858-Transcript.txt
+                   docs\runs\Recipe-Indian-Butter-Chicken-v1_0-r6-20260516-1858-DeepDive.json
+                   docs\runs\Recipe-Indian-Butter-Chicken-v1_0.txt
 
 
 2026-05-10 (evening) · T9 HOTEL REVIEW — first measured (dual-path scratch)
@@ -448,17 +599,11 @@ stepped away mid-session so the data has the right caveat.
                                   gap between R5 at 7:24 PM and
                                   R7 at 8:59 PM — true engaged
                                   time unknown without per-round
-                                  tracking; see Backlog v10
-                                  Section 2 for the engaged-time
-                                  tracking idea)
+                                  tracking; see Backlog Section 2
+                                  for the engaged-time tracking
+                                  idea)
   Final length:    400 words / 2,488 characters
   Convergence:     Majority at R18, builder-only finalize at R19
-  Round-by-round:  18 visible OUTCOME entries in transcript
-                   (R1-R18 mixture of Refine + Builder-only,
-                   then R19 builder-only after majority triggered).
-                   Majority convergence: 🏁 R18 — "engine triggered,
-                   holdouts present" (ChatGPT + Claude had final
-                   suggestions; Grok + Gemini + DeepSeek satisfied).
   USER DECISION load: 0 total across the entire run. Notable —
                       the Hotel Review questionnaire scaffold was
                       complete enough that reviewers didn't need
@@ -484,13 +629,61 @@ stepped away mid-session so the data has the right caveat.
                      the run reached majority convergence cleanly
                      rather than halting, the halt sound did NOT
                      fire — confirming the reasonCode !== 'converged'
-                     guard works correctly (convergence path plays
-                     its own scene/fanfare without the halt cue
-                     stacking on top).
+                     guard works correctly.
   Files:           docs\runs\Review-Melbourne-Marriott-Hotel-v1_0-r19-20260510-2146-Backup.json
                    docs\runs\Review-Melbourne-Marriott-Hotel-v1_0-r19-20260510-2146-Transcript.txt
                    docs\runs\Review-Melbourne-Marriott-Hotel-v1_0-r19-20260510-2146-DeepDive.json
                    docs\runs\Review-Melbourne-Marriott-Hotel-v1_0.txt
+  Reconciled:      Originally logged in Playbook_Test_Master_v18.
+                   Fell out of the v19+ chain (file numbering
+                   went non-linear v17→v19, skipping v18).
+                   Restored to test master v23 by re-importing
+                   from v18's HISTORICAL RUNS entry on 2026-05-11.
+
+
+2026-05-10 (afternoon) · T8 RESTAURANT REVIEW
+────────────────────────────────────────────────────────────
+  Project:         Review — Pearl's Saltwater Grille v2.0 (Savannah, GA)
+  Built on:        WaxFrame v3.36.30 Pro / build 20260510-008
+  Hive (6 total):  ChatGPT, Claude, Gemini, Grok, Perplexity (5 reviewers)
+                   DeepSeek as Builder
+  Approach:        REFINE on existing v1.0 draft (Setup 5 = paste-text)
+  Reference doc:   none
+  Length:          Range · 1,500 words  (note: final landed at 392w,
+                   26% of cap. This project predates v3.36.26's
+                   restaurant-review template default-to-none fix —
+                   the new template would have left this No limit
+                   with per-platform guidance baked in.)
+  Tone:            Conversational, detailed, fair, practical, direct.
+                   Preserves reviewer's natural voice.
+  Notes (Setup 3): End with clear bottom line + who restaurant is best
+                   for + any specific warning/recommendation/timing
+                   advice for future visitors.
+  Rounds:          5  (R1 was setup, R2-R6 were work)
+  Wall-clock:      14 minutes  (engaged time accurate — no breaks, no
+                                 convergence-pause-then-Builder-Only
+                                 sequence; v3.36.32 bug did not bite)
+  Final length:    392 words / 2,179 characters
+                   (down from 459w original — ~15% tighter prose
+                   without invasive edits)
+  Convergence:     Majority at R6 (4 of 6 satisfied)
+  Round-by-round:
+    R1 Setup           459 words   Original v1.0 doc pasted
+    R2 Refine          444 words   1 USER DECISION
+    R3 Builder-Only    421 words   applied decision via notes
+    R4 Refine          394 words   2 USER DECISIONS
+    R5 Builder-Only    392 words   applied decisions via notes
+    R6 Refine          392 words   ★ MAJORITY CONVERGENCE (4/6)
+  USER DECISION load: 3 total decision blocks across the run, all
+                      resolved via Builder-Only rounds with locked
+                      notes (the silent-lock pattern from v3.36.27).
+  Pattern note:    Refine → user-decisions → Builder-Only → refine
+                   → user-decisions → Builder-Only → converge is now
+                   the third run today to use this rhythm cleanly
+                   (after T4 recipe, T2 exec summary, T7 blog v2.0).
+  Files:           docs\runs\Review-Pearl-s-Saltwater-Grille-v2_0-r5-20260510-1626-Backup.json
+                   docs\runs\Review-Pearl-s-Saltwater-Grille-v2_0-r5-20260510-1626-Transcript.txt
+                   docs\runs\Review-Pearl-s-Saltwater-Grille-v2_0.txt
 
 
 2026-05-10 (afternoon) · T7 BLOG POST 2nd data point (Reference Material approach)
@@ -594,6 +787,47 @@ stepped away mid-session so the data has the right caveat.
   Files:           docs\runs\Recipe-Publix-Style-Southern-Potato-Salad-v1_0-r4-20260510-1006-Backup.json
                    docs\runs\Recipe-Publix-Style-Southern-Potato-Salad-v1_0-r4-20260510-1007-Transcript.txt
                    docs\runs\Recipe-Publix-Style-Southern-Potato-Salad-v1_0.txt
+
+
+2026-05-09 · T12 CONTRACTOR / VENDOR LETTER — Bay Area First Invoice Concerns
+────────────────────────────────────────────────────────────
+  Project:         Bay Area First Invoice Concerns v3.0
+  Run files:       Bay-Area-First-Invoice-Concerns-v3_0-r12-
+                   20260509-1224-DeepDive.json (and corresponding
+                   Backup / earlier v2.0 r-N files in project)
+  Hive (3 total):  Claude + ChatGPT (paid reviewers)
+                   Gemini-as-Builder (free tier)
+  Approach:        3-AI budget hive — deliberate constraint to
+                   validate the persona David expects most WaxFrame
+                   users to land at (one paid OpenAI seat, one paid
+                   Anthropic seat, free Gemini).
+  Document type:   Contractor / Vendor Letter (Personal & Everyday)
+  Starting doc:    hand-authored draft (REFINE mode)
+  Notes & scope:   first-invoice-concerns scenario — pushing back
+                   on a vendor's initial invoice
+  Rounds:          12
+  Hive processing: ≈7 minutes (sum of per-round max-reviewer +
+                   Builder elapsed — reviewers run parallel, round
+                   wall-time = max(reviewer) + Builder). True wall-
+                   clock is higher and varies with user review time
+                   between rounds.
+  Word trajectory: 735 → 624 words (-15%)
+                   Most aggressive compression in R6-R7 (combined
+                   -60 words). Late rounds 10-11 trimmed under 1%
+                   per round (genuine end of useful iteration).
+  Convergence:     Majority at R12 with Claude as lone holdout.
+  API spend:       Sub-$1 across ChatGPT + Claude (Gemini at zero
+                   cost as both Builder and reviewer).
+  Per-AI behavior: ChatGPT for concision. Claude for semantic
+                   precision and tense recovery. Gemini for sharp
+                   catches when active (mostly NC, but found real
+                   semantic issues like "hand towel holder" vs
+                   "hand towel" that the others missed).
+  Reconciled:      Run shipped to document-playbooks.html as the
+                   Contractor / Vendor Letter real-world example
+                   (see CHANGELOG entry — Personal & Everyday
+                   section introduced with this run). Was never
+                   logged to this file until v23 (2026-05-12).
 
 
 ════════════════════════════════════════════════════════════
