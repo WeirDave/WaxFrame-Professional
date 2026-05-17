@@ -1,6 +1,67 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.40.0
+**Build:** `20260516-001` · **Released:** May 16, 2026
+
+### Deep Dive measurement fixes + deprecation watchdog
+
+Three changes shipping together. Two surgical bugfixes to the Deep Dive forensic capture pipeline (timing and tokens), plus a new background watchdog that detects when a user's saved model is no longer available from the provider's live `/v1/models` list. The watchdog is the headline feature — it closes the gap that lets a deprecated model sit silently in your hive config until a round fails mid-session.
+
+### Bug 1 — elapsed measured before response body consumed
+
+`callAPI()` measured `elapsed` immediately after `await fetch()` returned, then continued on to `await response.json()` to actually read the body. That's the wrong bracket. `await fetch()` resolves when the response *headers* arrive, not when the body finishes streaming. For most providers — OpenAI, Anthropic, Mistral, Grok, Perplexity, Gemini — the server doesn't flush headers until the body is mostly ready, so headers-time ≈ total time. DeepSeek's server flushes headers immediately and streams the body afterward.
+
+Visible symptom: in a 7-AI 6-round Indian Butter Chicken playbook run, DeepSeek's 11 captures all clocked 0.7–1.0 seconds despite generating up to 1,843 words per call. Physically impossible. DeepSeek's elapsed values were time-to-first-byte, not total response time. Same bug across every provider — DeepSeek was just the only one whose CDN exposed it.
+
+Fix: moved the `const elapsed = …` measurement from before the body-read to after `await response.json()` completes. Three lines moved. All providers now report true end-to-end response time.
+
+### Bug 2 — Anthropic totalTokens not computed
+
+The Deep Dive token-coalesce chain looked for `data.usage.total_tokens` (OpenAI) or `data.usageMetadata.totalTokenCount` (Gemini). Anthropic returns `{input_tokens, output_tokens}` with no total field — the coalesce fell through to `null` every time. Same Butter Chicken DeepDive: Claude's six captures showed input 20,125 and output 1,577 summed across the run, but `totalTokens` was 0 for all of them.
+
+Fix: three precomputed locals (`_pt`, `_ct`, `_tt`) extract the trio before the `captureRound` push. When neither provider total field is present, `_tt` is computed as `_pt + _ct` from values already in hand. Totals column never lies again.
+
+### Deprecation watchdog — new feature
+
+Surfaced from the same Butter Chicken run review. A user had `claude-opus-4-20250514` saved in their hive config from months ago. Anthropic deprecated that model. WaxFrame had no way to know — model strings are stored on save and never revalidated. The user found out the way users always find out: a round failed mid-session, error message about model availability, time spent investigating.
+
+The watchdog closes that loop. On three triggers — app load, tab becoming visible, and round start — it live-fetches `/v1/models` for every keyed AI in the hive, compares the saved model against the returned list, and flags any AI whose saved model is no longer available. Flagged AIs get a ⚠ marker on their card in Setup → Worker Bees, and the user gets a toast describing what to fix.
+
+**Why three triggers:** users keep WaxFrame tabs open for days. App-load alone doesn't catch the case of a model being deprecated while the tab sits idle. The `visibilitychange` listener catches every return to the tab. Round-start is a last-mile safety net.
+
+**Cache behavior:** the watchdog uses a new `fetchModelsForProviderLive()` function that bypasses the dropdown cache on read but still writes to it on success. Side effect: every watchdog run silently refreshes the dropdown's model list across the entire hive. The existing 7-day cache TTL becomes a floor, not a ceiling — actual freshness is whenever the user last looked at the tab.
+
+**Cost assumption (documented in three places — inline code comment, this CHANGELOG, Backlog v27 watchlist):** the watchdog runs unthrottled across all three triggers because `/v1/models` calls cost nothing at all six providers as of release — no token charges, no meaningful rate-limit risk at single-user volume. If any provider starts charging for `/v1/models` or imposes a rate limit that single-user activity could approach, this design becomes wrong and needs a throttle reintroduced. The assumption is captured in the function comment so it can't get silently violated by future changes.
+
+**Toast UX — Option C hybrid:**
+- App load: always toast (clean: `✓ Worker Bees ready — model lists refreshed (N checked)` · flagged: `⚠ Worker Bees — N AI(s) have deprecated models (names). Open Setup → Worker Bees to fix.`)
+- Tab return: silent unless flagged
+- Round start: silent unless flagged (fire-and-forget, doesn't block the round)
+
+**What the watchdog deliberately does NOT do:**
+- No auto-replacement of deprecated models — user should know what changed and pick a replacement
+- No silent migration of saved model strings
+- No modal interruption — toast only, plus persistent ⚠ marker on the affected card
+- No throttling (see cost-assumption note)
+- No flag on fetch failure — provider hiccups shouldn't produce false positives; flag fires only when the fetch succeeds AND returns a non-empty list AND the saved model isn't in it
+
+### What this does NOT touch
+
+- `MODEL_LABELS` — vestigial dictionary, no consumers in current code. Left as-is. Adding entries (e.g. `claude-opus-4-7`) would have zero effect because nothing reads the `.tag` or `.note` fields anywhere in the rendering path. Considered for cleanup pass, deferred — out of scope.
+- `MODEL_FALLBACKS` — only used as fallback when live `/v1/models` fetch fails. Adding entries here maintains the exact pattern v3.26.0 demoted away from. Left as-is by design.
+- 7-day model-list cache TTL — left as-is. Watchdog bypasses it; dropdown benefits from watchdog's writes.
+- Recommend pipeline — works as designed.
+
+### Files changed
+
+- `js/app.js` — `callAPI()` body restructured for timing + token fixes. New `fetchModelsForProviderLive()` and `detectDeprecatedModels()` functions added after `getModelsForProvider()`. Three trigger hooks wired: app-load `setTimeout`, `visibilitychange` listener, fire-and-forget call at top of `runRound()`. `⚠` marker added to AI card summary row when `window._deprecatedModelFlags` includes the AI id. `BUILD` constant bumped to `20260516-001`.
+- `style.css` — `.ai-setup-deprecation-flag` rule added next to `.ai-setup-name`, using existing `--accent` / `--accent-dim` tokens.
+- `js/version.js` — `APP_VERSION` → `v3.40.0 Pro`
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp, comment-header build stamp, cache-bust query strings bumped to `20260516-001` / `?v=3.40.0`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.39.12
 **Build:** `20260513-004` · **Released:** May 13, 2026
 
