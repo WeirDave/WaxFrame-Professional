@@ -1,6 +1,86 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.44.0
+**Build:** `20260516-007` · **Released:** May 16, 2026
+
+### app.js split #4 — API provider configs + model discovery to api.js
+
+Fourth refactor pass. Pulled the API provider config map plus the model-discovery helpers out of app.js into new `js/api.js`. App.js drops another 541 lines.
+
+**Important scope note:** this release moves the static data + read-only fetch helpers. `callAPI` itself (the hot path called every round) remains in app.js for now — it'll be its own focused future release after the surrounding subsystem has settled.
+
+### What moved
+
+`js/api.js` is new (599 lines):
+
+- **`window.API_CONFIGS`** — the provider config map (claude, chatgpt, gemini, grok, deepseek, perplexity). Each entry holds endpoint, default model, `headersFn`, `bodyFn`, `extractFn` closures. ~216 lines of provider-specific shapes.
+- **`window.MODEL_FALLBACKS`** — per-provider fallback model lists, used only when `/v1/models` is unreachable. ~49 lines.
+- **`fetchModelsForProvider(provider)`** — live-fetch `/v1/models` with 7-day cache. Dropdown population path. ~117 lines.
+- **`fetchModelsForProviderLive(provider)`** — cache-bypassing variant used by the deprecation watchdog. ~64 lines.
+- **`getModelsForProvider(provider)`** — synchronous fallback lookup. ~31 lines.
+- **`detectDeprecatedModels(trigger)`** — v3.40.0 deprecation watchdog. Three triggers (app load, tab-visible, round-start), compares saved models vs live `/v1/models`, flags missing ones on `window._deprecatedModelFlags`. ~99 lines.
+
+### Cross-script exposure pattern
+
+`API_CONFIGS` and `MODEL_FALLBACKS` are exposed as explicit `window.*` properties — 65 combined external references in app.js means we want no spec-corner-case ambiguity about `const` cross-script visibility. Same pattern as `window._isMuted` (v3.41.0) and `window.WF_DEBUG` (v3.43.0).
+
+The four functions (`fetchModelsForProvider`, `fetchModelsForProviderLive`, `getModelsForProvider`, `detectDeprecatedModels`) auto-attach to window via standard function-declaration hoisting — no explicit window assignment needed.
+
+### Why callAPI stays in app.js (for now)
+
+`callAPI` is a ~370-line function at line ~11500 of app.js. It calls into API_CONFIGS at runtime (now resolves via window scope chain — no code change needed) and depends on a chain of provider-specific response parsers, error classifiers, and timing instrumentation. Extracting it cleanly requires also extracting its helper functions — that's a focused future release.
+
+### External dependencies — runtime safe
+
+api.js calls these app.js helpers at runtime (after both scripts have loaded):
+- `WF_DEBUG.captureFailure(...)` — already on window via wf-debug.js
+- `consoleLog` — Live Console output
+- `window.activeAIs`, `window._deprecatedModelFlags` — state vars
+
+All called from inside function bodies. Node probe loaded all 7 scripts in dependency order; every export resolves cleanly via both `window.X` and bare `X` lookup.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG subsystem)
+v3.44.0:  14,166 lines  (-541, API configs + model discovery)
+```
+
+**Cumulative: -2,223 lines (-13.6%) across four refactor releases.**
+
+### Script load order
+
+```
+version → theme → audio → scenes → wf-debug → api → templates → app
+```
+
+### Still queued
+
+**Future splits:**
+- `callAPI` + its helpers (~400 lines) → into api.js (next refactor candidate, hot path)
+- IndexedDB session storage + backup/restore → `storage.js`
+
+**Audit findings still queued:**
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — API block removed (was lines 58-607); 541-line net reduction; `BUILD` constant bumped
+- `js/api.js` — NEW; 599 lines
+- `index.html` — `<script src="js/api.js?v=3.44.0">` added between wf-debug.js and templates.js; full cache-bust sweep
+- `js/version.js` — `APP_VERSION` → `v3.44.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.43.0
 **Build:** `20260516-006` · **Released:** May 16, 2026
 
