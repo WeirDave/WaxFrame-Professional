@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — what-are-tokens.html
-     Build: 20260516-001
+     Build: 20260516-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260516-001">
+  <meta name="waxframe-build" content="20260516-002">
   <title>WaxFrame — What Are Tokens?</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.40.0">
+  <link rel="stylesheet" href="style.css?v=3.40.1">
 </head>
 <body class="helper-body">
 
@@ -76,6 +76,7 @@
     </div>
   </div>
   <div class="page-header-controls">
+    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
     <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
     <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
     <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
@@ -292,10 +293,10 @@
 </div>
 
 
-<script src="js/theme.js"></script>
-<script src="js/nav-helper.js?v=3.22.6"></script>
-<script src="js/license-helper.js?v=3.22.6"></script>
-<script src="js/version.js?v=3.40.0"></script>
+<script src="js/theme.js?v=3.40.1"></script>
+<script src="js/nav-helper.js?v=3.40.1"></script>
+<script src="js/license-helper.js?v=3.40.1"></script>
+<script src="js/version.js?v=3.40.1"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

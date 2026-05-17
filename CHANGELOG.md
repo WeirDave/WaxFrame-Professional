@@ -1,6 +1,63 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.40.1
+**Build:** `20260516-002` · **Released:** May 16, 2026
+
+### Cross-page toggle parity + full cache-bust sweep
+
+Audit-driven release. After v3.40.0 shipped, an audit pass against the full repo surfaced two real findings — the user-facing one was toggles missing from setup screens, and the maintenance-hygiene one was cache-bust drift across helper scripts. Both are fixed here.
+
+### Setup screens — theme + mute toggles added
+
+The 5 setup screens (Worker Bees, Builder, Project, Reference, Document) each had a `.fs-header` with three sections: left (hamburger + back), center brand (logo), and right (setup-step badge only). The right side carried only the step badge. Work screen and helper pages already had theme + mute toggles in their upper right; setup screens did not. The user-visible result was a forced trip to the welcome screen (or to the work screen) just to change theme during setup.
+
+Each setup screen's `<div class="setup-step-badge">` is now wrapped in a new `<div class="fs-header-right">` that carries the badge plus a mute button plus three theme buttons (light / auto / dark). Order matches the work-topbar pattern. Adds a new `.fs-header-right` CSS rule mirroring `.work-topbar-right`'s flex/gap/alignment values.
+
+### Helper pages — mute toggle added
+
+The 5 helper pages (User Manual, Document Playbooks, What Are Tokens, API Details, Prompt Editor) had theme buttons in their `.page-header-controls` but no mute. No audio fires on helper pages, so the toggle is state-only on those pages — but setting mute there persists via the shared `waxframe_muted` localStorage key, so navigating back to the main app respects the preference.
+
+`theme.js` was the natural home for the helper-page mute machinery — it already serves as the shared cross-page utility script for helper pages, mirroring the `license-helper.js` pattern of "self-contained logic that helper pages can use without loading app.js." Added `_isMuted` state, `toggleMute()`, and a class-targeting `_updateMuteBtn()` that mirrors app.js exactly. State persistence is automatic: the localStorage key is shared between app.js and theme.js so a mute toggle in either context propagates to the other.
+
+### `_updateMuteBtn` widened from id-target to class-target
+
+The pre-v3.40.1 `_updateMuteBtn` looked up `document.getElementById('workMuteBtn')` — a single specific button. Now that there are 6 mute buttons on the main app (1 work + 5 setup), the function uses `document.querySelectorAll('.mute-btn').forEach(...)` so every mute button across the page reflects the same `_isMuted` state in lockstep. Same `.is-muted` class toggle, same icon swap (🔊 ↔ 🔇), same title text — just applied to all instead of one.
+
+### Full cache-bust sweep
+
+Discovered during the audit: `js/theme.js` and `js/api-links.js` had no `?v=` cache-bust at all — meaning if either file ever shipped a broken version, no subsequent fix could invalidate a user's browser cache. Other helper scripts (`nav-helper.js`, `license-helper.js`, `docs-scrollspy.js`, `templates.js`) had stamps frozen at older versions (`?v=3.22.6` and `?v=3.38.11`).
+
+v3.40.1 standardizes: **every script reference in every HTML file now carries `?v=3.40.1`**, regardless of when the underlying file was last touched. This makes the discipline mechanical — bump the release number, bump every cache-bust. No drift possible. Cost: a one-time cache miss for unchanged files on the v3.40.0 → v3.40.1 upgrade. Negligible.
+
+Same sweep applied to:
+- Library scripts in `lib/` (pdf.min, mammoth.browser.min, jszip.min, xlsx.full.min)
+- Comment-header build stamps on line 3 of every HTML file
+- The `meta name="waxframe-build"` tag
+
+### Audit methodology shipped alongside
+
+This release was driven by the new audit methodology document at `docs\WaxFrame_Audit_Methodology_v1.txt`. Six audit categories (cross-page parity, dead references, dead code, behavior consistency, state recovery, configuration drift) with concrete grep patterns and filing rules. First findings report at `docs\WaxFrame_Audit_Findings_2026-05-16.txt`. Going forward, the same methodology will be run on a cadence (post-minor-release or on demand) so cross-page parity gaps and cache-bust drift like this get caught proactively instead of post-hoc.
+
+### Files changed
+
+- `index.html` — 5 `.fs-header-right` wrappers added around each setup-step badge with 4 toggle buttons each
+- `style.css` — `.fs-header-right` rule added mirroring `.work-topbar-right` layout
+- `js/app.js` — `_updateMuteBtn` rewritten to target `.mute-btn` class instead of `#workMuteBtn` id; `BUILD` constant bumped
+- `js/theme.js` — extended with mute state machinery (mirrors app.js exactly) so helper pages have functional mute toggle
+- `js/version.js` — `APP_VERSION` → `v3.40.1 Pro`
+- `index.html` and 5 helper pages — full cache-bust sweep, every `<script src>` `?v=` standardized to `3.40.1`, missing cache-busts added to theme.js and api-links.js; meta build stamps and comment-header build stamps bumped to `20260516-002`
+- `CHANGELOG.md` — this entry
+
+### Audit findings closed by this release
+
+- FINDING 1 (CRITICAL) — Cross-page parity: setup screens missing theme + mute toggles — SHIPPED
+- FINDING 2 (ANNOYING) — `js/api-links.js` no cache-bust — SHIPPED
+- FINDING 3 (COSMETIC) — Helper-script version drift — SHIPPED (standardized to release version)
+- FINDING 4 (ANNOYING) — restaurant-review playbook page stale — NOT addressed (one-line text fix queued for next release)
+- FINDING 5 (COSMETIC) — `MODEL_LABELS` vestigial — NOT addressed (queued)
+
+---
 ## v3.40.0
 **Build:** `20260516-001` · **Released:** May 16, 2026
 
