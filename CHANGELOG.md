@@ -1,6 +1,86 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.48.0
+**Build:** `20260516-011` · **Released:** May 16, 2026
+
+### app.js split #8 — Backup + Restore complete storage.js
+
+Eighth refactor pass. `backupSession` + `importSession` extracted from app.js into the existing `js/storage.js`. App.js drops another 169 lines. **storage.js is now complete** — every line of WaxFrame state persistence lives in one file.
+
+### What moved
+
+Two functions (contiguous block, lines 13268-13443 of v3.47.0 snapshot, 176 lines total):
+
+- **`backupSession()`** — Downloads a JSON snapshot (format v3) containing LS_HIVE + LS_PROJECT + LS_SESSION + IDB_SESSION as a complete time-machine of the user's session. Pre-flushes in-memory state to IDB before reading so the snapshot reflects live UI state. Wired to the "💾 Backup Session" button in the nav menu.
+- **`importSession()`** — Restores a backup file. Replaces localStorage layers + IDB session, then reloads the page to apply. Format-version aware (v2 vs v3). Wired to the "📂 Import Backup" button in the nav menu.
+
+### What this completes
+
+storage.js now contains the entire WaxFrame state persistence layer:
+
+```
+storage.js (v3.48.0 — 819 lines)
+├── window.LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS / LS_LICENSE
+├── IDB_NAME / IDB_VERSION / IDB_STORE / IDB_KEY
+├── idbOpen / idbSet / idbGet / idbClear
+├── checkStorageQuota
+├── _saveSessionChain
+├── saveSession / loadSession
+├── snapshotReferenceDocs
+├── saveHive / saveProject / loadSettings
+└── backupSession / importSession
+```
+
+This is the milestone storage.js was aimed at since v3.45.0. From the original scattered code in app.js, the storage layer is now one cohesive file with clean internal calls and well-defined external interfaces (callers in app.js continue to work via function-declaration global hoisting).
+
+### Cross-script wiring
+
+Both `backupSession` and `importSession` are `function` declarations — auto-attach to window. Critical because both are referenced by HTML inline onclick handlers in `index.html` (nav menu items). HTML inline handlers look up identifiers in the global scope chain, which includes window properties. Works the same way as the v3.43.0 WF_DEBUG handlers and the v3.42.0 scene functions.
+
+### External dependencies — runtime safe
+
+The moved block calls these app.js helpers at runtime: `toast`, `closeNavMenu`, `buildExportName`, `confirm` (native browser — FINDING 6 still queued for migration to wfConfirm). All called inside function bodies, never at module-eval time. Node probe loaded all 8 scripts in dependency order; every export resolves cleanly via both `window.X` and bare `X`.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG)
+v3.44.0:  14,166 lines  (-541, API discovery)
+v3.45.0:  14,092 lines  (-74,  storage primitives)
+v3.46.0:  13,861 lines  (-231, session persistence)
+v3.47.0:  13,642 lines  (-219, settings persistence + snapshotReferenceDocs)
+v3.48.0:  13,473 lines  (-169, backup + restore)
+```
+
+**Cumulative: -2,916 lines (-17.8%) across eight refactor releases.**
+
+storage.js arrived at its final shape at 819 lines.
+
+### Still queued
+
+**Last remaining major split:**
+- `callAPI` + its provider-specific helpers (~400 lines) → join api.js. This is the biggest single subsystem still in app.js and the natural completion of the api.js story. Hot path — every round goes through callAPI — so it'll get its own focused release with full attention.
+
+**Audit findings still queued:**
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls (one of which is in the newly-moved importSession)
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — Backup block removed (was lines 13268-13443); 169-line net reduction; `BUILD` constant bumped
+- `js/storage.js` — Backup block appended; 627 → 819 lines; header updated to reflect completion of the storage layer
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.48.0`; build stamps to `20260516-011`
+- `js/version.js` — `APP_VERSION` → `v3.48.0 Pro`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.47.0
 **Build:** `20260516-010` · **Released:** May 16, 2026
 

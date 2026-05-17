@@ -1,12 +1,15 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260516-010
+//  Build: 20260516-011
 //
-//  Storage primitives + session persistence. Pulled from app.js
-//  in v3.45.0 (primitives) and v3.46.0 (session save/load).
-//  Remaining migrations queued: saveHive + saveProject +
-//  loadSettings (~360 lines), backupSession + restore helpers
-//  (~200 lines). All currently still in app.js.
+//  COMPLETE storage layer. All WaxFrame state persistence lives
+//  here as of v3.48.0:
+//    • Primitives (v3.45.0): LS_* keys, IDB helpers, checkStorageQuota
+//    • Session persistence (v3.46.0): saveSession, loadSession,
+//      _saveSessionChain
+//    • Settings persistence (v3.47.0): saveHive, saveProject,
+//      loadSettings, snapshotReferenceDocs
+//    • Backup + restore (v3.48.0): backupSession, importSession
 //
 //  Contents:
 //    LS_HIVE, LS_PROJECT, LS_SESSION, LS_SETTINGS, LS_LICENSE
@@ -624,4 +627,193 @@ function loadSettings() {
 
     return true;
   } catch(e) { return false; }
+}
+
+
+/* =============================================================
+   BACKUP + RESTORE  (extracted from app.js v3.48.0)
+   Completes storage.js. All WaxFrame state persistence now in one file.
+
+   backupSession — downloads a JSON snapshot of LS_HIVE + LS_PROJECT +
+                   LS_SESSION + IDB_SESSION as a time-machine. Format v3.
+                   Flushes in-memory state to IDB before reading so the
+                   snapshot reflects the live UI state.
+   importSession — restores a backup file. Replaces localStorage layers
+                   and the IDB session; reloads to apply.
+   ============================================================= */
+async function backupSession() {
+  // v3.35.2 — Flush in-memory state to IDB BEFORE reading the
+  // snapshot. Without this, a backup taken while in-memory state
+  // hadn't yet been auto-saved to IDB (e.g. immediately after
+  // filling out the project setup screens, before any round has
+  // run) captured IDB_SESSION: null. Combined with the importSession
+  // bug fixed in this release — which silently skipped the IDB write
+  // when IDB_SESSION was null — the result was that importing a
+  // pre-Round-1 backup left the prior project's Round-N state in
+  // IDB to bleed through after reload. A backup must be a true
+  // time-machine: capture exactly the state at backup time, restore
+  // exactly to that state on import.
+  try { await saveSession(); } catch(e) { console.warn('[backup] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+
+  const hive    = localStorage.getItem(LS_HIVE)    || null;
+  const project = localStorage.getItem(LS_PROJECT) || null;
+  // Legacy localStorage session — almost always null since the IDB migration
+  // ran ages ago. Kept for forward compatibility with any unmigrated browser.
+  const sessionLS = localStorage.getItem(LS_SESSION) || null;
+  // Primary session source: IndexedDB. The session blob (round history, working
+  // document, console HTML, notes, project clock seconds) lives in IDB.
+  let sessionIDB = null;
+  try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
+
+  if (!hive && !project && !sessionLS && !sessionIDB) {
+    toast('⚠️ Nothing to back up'); return;
+  }
+
+  const backup = {
+    _waxframe_backup:         true,
+    _waxframe_backup_version: 4, // v4 = referenceDocs array (v3.24.0+); v3 = LS mirror removed (v3.21.12+); v2 (v3.21.10/11) included LS_SESSION_MIRROR
+    _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
+    _waxframe_backup_ts:      Date.now(),
+    LS_HIVE:           hive,
+    LS_PROJECT:        project,
+    LS_SESSION:        sessionLS,
+    IDB_SESSION:       sessionIDB,    // ← the actual round data
+  };
+  const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
+  // v3.36.13 — Filename pattern aligned with document export, transcript, and
+  // deep-dive. Was: `{trunc40}-{trunc10}-WaxFrame-Backup-{stamp}` which
+  // truncated mid-word on long project names (e.g. "Brightwater" became
+  // "Brightwat") and used a different baseName shape than the other three
+  // artifacts. Now: `{baseName}-r{N}-{stamp}-Backup` — no truncation, same
+  // r-stamp pattern as transcript/deep-dive (so multiple backups from the
+  // same project at different rounds don't collide), and the "WaxFrame-"
+  // prefix is dropped since the `_waxframe_backup: true` field inside the
+  // JSON plus the `-Backup.json` suffix is enough to self-identify.
+  //
+  // We read projectName/projectVersion from the in-memory parsed LS_PROJECT
+  // (above) rather than calling buildExportName() because backupSession can
+  // be triggered from any screen via the nav menu, and buildExportName()
+  // depends on `workProjectName` / `workProjectVersion` DOM elements that
+  // only exist on the work screen. Reading from LS_PROJECT is screen-
+  // independent. The formatting regex mirrors buildExportName's exactly so
+  // the baseName matches what document/transcript/deep-dive produce.
+  const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9._-]/gi, '');
+  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
+  const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
+  // Local-time timestamp: YYYYMMDD-HHmm (matches transcript/deep-dive/build-stamp format)
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Backup`;
+  // Empty-file race fix history:
+  // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
+  //            via setTimeout(..., 1000) to give Chrome's download dispatcher
+  //            time to read the blob before the URL becomes invalid. Worked for
+  //            the ~41 KB Marco Contractor backup that originally surfaced the
+  //            race.
+  // v3.21.21 — Bumped the timeout from 1 second to 30 seconds. The 1-second
+  //            window was generous for tiny backups but not for real sessions:
+  //            a 473 KB RFP-Response backup raced again under v3.21.19,
+  //            producing the same 0-byte + filename(1) symptom. Larger blobs
+  //            take longer for the dispatcher to read, and 1 second was simply
+  //            too tight a margin for any realistic session size. 30 seconds
+  //            is ~30× the worst observed case (a 21-round JD backup at
+  //            642 KB) and gives the dispatcher 15× safety margin even for
+  //            hypothetical 100 MB blobs at slow disk write speeds. Memory
+  //            cost of the deferred revoke is negligible — at most a handful
+  //            of un-revoked blob URLs in any realistic session.
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${filename}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  closeNavMenu();
+  // Confirm what was actually captured so the user knows whether session data
+  // is in the file or only project setup.
+  const sessionMsg = sessionIDB
+    ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
+    : ' (project setup only — no session data)';
+  toast(`💾 Session backed up${sessionMsg}`);
+}
+
+function importSession() {
+  const input    = document.createElement('input');
+  input.type     = 'file';
+  input.accept   = '.json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader   = new FileReader();
+    reader.onload  = async ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
+        // ── Restore localStorage layers ──
+        if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
+        if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+        if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+        // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
+        // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
+        // ── (v3.35.2) IDB write is no longer optional ──
+        // Prior versions skipped the IDB write when data.IDB_SESSION
+        // was null/missing — leaving any prior session in IDB to
+        // bleed through after location.reload(). A backup must be a
+        // true time-machine, including the case where the captured
+        // state was "from-scratch, no rounds run yet". When
+        // IDB_SESSION is null/missing now, we explicitly wipe IDB
+        // (and the session-exists flag) so the reload reads the
+        // captured project setup against an empty session — which is
+        // exactly what was captured.
+        let restoredFromIDB = false;
+        let wipedToScratch  = false;
+        if (data.IDB_SESSION) {
+          try {
+            await idbSet(data.IDB_SESSION);
+            try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(_) {}
+            restoredFromIDB = true;
+          } catch(idbErr) {
+            console.error('[importSession] IDB restore failed:', idbErr);
+            toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
+          }
+        } else {
+          // No session in the backup → captured state was pre-Round-1
+          // (or a v1-format pre-v3.21.10 backup). Treat as explicit
+          // "reset to from-scratch" rather than as "skip the write".
+          try {
+            await idbClear();
+            localStorage.removeItem('waxframe_v2_session_exists');
+            wipedToScratch = true;
+          } catch(clearErr) {
+            console.error('[importSession] IDB clear failed:', clearErr);
+            toast(`⚠️ Project restored but IDB clear failed: ${clearErr.message || clearErr}. Prior session may persist.`, 14000);
+          }
+        }
+        // Diagnostic toast — be explicit about what was captured so users know
+        // whether they're getting full state or just project setup.
+        const v = data._waxframe_backup_version || 1;
+        if (v < 2 && !data.IDB_SESSION) {
+          toast('⚠️ Old backup format (pre-v3.21.10) — only project setup + API keys restored, session reset to fresh. Reloading…', 12000);
+        } else if (restoredFromIDB) {
+          const sh = data.IDB_SESSION?.history?.length || 0;
+          const sd = data.IDB_SESSION?.docText?.length || 0;
+          toast(`✅ Backup restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
+        } else if (wipedToScratch) {
+          toast('✅ Backup restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
+        } else {
+          toast('✅ Project setup restored — reloading…', 6000);
+        }
+        setTimeout(() => location.reload(), 1500);
+      } catch(e) {
+        toast('⚠️ Could not read file — is it a WaxFrame backup?');
+      }
+    };
+    reader.readAsText(file);
+  };
+  closeNavMenu();
+  input.click();
 }
