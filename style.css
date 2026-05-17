@@ -9320,6 +9320,19 @@ kbd {
 }
 .fs-header-left .nav-hamburger:hover span { background: var(--text); }
 
+/* v3.40.1 — fs-header-right: setup-step badge + mute + theme toggles.
+   Cross-page parity sweep — every setup screen now carries the same
+   theme/mute controls as the work topbar. Mirrors the gap/alignment
+   pattern from .work-topbar-right so the visual rhythm is identical
+   across screens. */
+.fs-header-right {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-6);
+  flex-shrink: 0;
+}
+
 /* ── fs-body-single: full-width single-column scrollable body ── */
 .fs-body-single {
   flex: 1;

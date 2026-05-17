@@ -1572,7 +1572,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-001';         // build stamp — update each session
+const BUILD       = '20260516-002';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1711,11 +1711,15 @@ function toggleMute() {
 }
 
 function _updateMuteBtn() {
-  const btn = document.getElementById('workMuteBtn');
-  if (!btn) return;
-  btn.textContent = _isMuted ? '🔇' : '🔊';
-  btn.title       = _isMuted ? 'Unmute sounds' : 'Mute sounds';
-  btn.classList.toggle('is-muted', _isMuted);
+  // v3.40.1 — Update every mute button on the page. The work-topbar has
+  // one (#workMuteBtn), each of the 5 setup screens has one in its
+  // .fs-header-right cluster. All share the .mute-btn class, all reflect
+  // the same _isMuted state.
+  document.querySelectorAll('.mute-btn').forEach(btn => {
+    btn.textContent = _isMuted ? '🔇' : '🔊';
+    btn.title       = _isMuted ? 'Unmute sounds' : 'Mute sounds';
+    btn.classList.toggle('is-muted', _isMuted);
+  });
 }
 
 function initMuteBtn() {
