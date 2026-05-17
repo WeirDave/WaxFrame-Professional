@@ -1,6 +1,26 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.50.1
+**Build:** `20260516-014` · **Released:** May 16, 2026
+
+### Multi-Platform Review template — directive trimmed
+
+Single-line content fix. The v3.50.0 multi-platform-review template shipped with a 1,680-character `refMaterial` directive that worked correctly in production (verified: round 1 of David's test session correctly flagged the missing split and produced three platform sections) but was unnecessarily verbose.
+
+**The bloat was decoration, not content** — bar-of-equals header/footer lines, three indented platform spec blocks with newlines, and a paste-instructions placeholder section. AI consumers don't need visual structure to parse text. They follow plain prose just as reliably and the formatting just burns tokens on every reviewer call every round.
+
+**Trimmed to 698 characters (58% reduction).** Same instructions, just compacted prose. Six AIs × every round = the token savings compound fast on long projects.
+
+### Files changed
+
+- `js/templates.js` — multi-platform-review template `refMaterial` compacted from 1,680 to 698 chars
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.50.1`; build stamps to `20260516-014`
+- `js/version.js` — `APP_VERSION` → `v3.50.1 Pro`
+- `js/app.js` — `BUILD` constant bumped
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.50.0
 **Build:** `20260516-013` · **Released:** May 16, 2026
 
