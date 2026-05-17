@@ -1,6 +1,84 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.43.0
+**Build:** `20260516-006` · **Released:** May 16, 2026
+
+### app.js split #3 — WF_DEBUG subsystem extracted to wf-debug.js
+
+Third pass in the app.js refactor. The entire WF_DEBUG forensics subsystem — the most cross-cutting subsystem remaining in app.js — pulled out to new `js/wf-debug.js`. App.js drops another 662 lines.
+
+### What moved
+
+`js/wf-debug.js` is new (733 lines). It holds the two-layer Troubleshooting + Deep Dive system introduced in v3.28.0:
+
+- **WF_DEBUG object** — ring buffer (200 captures), Deep Dive toggle, classify/showCard/captureRound/captureFailure/log/openViewer methods. ~230 lines.
+- **WF_ERROR_CATALOG** — array of error matcher entries (HTTP-by-status, network, auth, model-not-found, rate-limit, length-exceeded, JSON-parse, builder-failure, slow-responder, import-warnings, etc.). ~260 lines.
+- **WF_GENERIC_ENTRY** — fallback catalog entry when no matcher hits. ~10 lines.
+- **Render helpers** — `renderTroubleshootingCard`, `closeTroubleshootingCard`, `toggleTcDetails`, `tcCopyDetails`. ~170 lines.
+- **DOMContentLoaded hook** for the `wfDeepDiveToggle` button state restoration.
+
+### Cross-script exposure pattern
+
+The v3.42.0 deployment incident left a fresh scar around cross-script reference reliability. For this split, two of the exports needed to be visible from BOTH app.js AND HTML inline onclick handlers:
+
+- `WF_DEBUG.classify` / `captureRound` / `captureFailure` / `showCard` / `deepDiveOn` / `ringBuffer` — 39 references in app.js plus HTML handlers like `onclick="WF_DEBUG.closeViewer()"`
+- `WF_ERROR_CATALOG.find(...)` — 3 references in app.js (IMPORT_WARNINGS lookups in import flows, SLOW_RESPONDER lookup in slow-AI detection)
+
+Spec-wise, top-level `const` in a classic script creates a binding in the global lexical environment that IS visible to other scripts via lexical lookup. But browser inconsistencies and the recent ZIP fiasco argue for explicit, discoverable wiring.
+
+So `WF_DEBUG` and `WF_ERROR_CATALOG` are exposed via `window.WF_DEBUG = {...}` and `window.WF_ERROR_CATALOG = [...]` — same pattern as `window._isMuted` from v3.41.0. App.js's 39+3 references continue to work as bare identifiers because the lookup chain walks the global Object Environment Record and finds them on window. HTML onclick handlers same.
+
+`WF_GENERIC_ENTRY` stays as `const` since it's only referenced from inside wf-debug.js itself (the `return WF_GENERIC_ENTRY` fallback in classify).
+
+### External dependencies — runtime-only, safe
+
+wf-debug.js calls these app.js helpers at runtime: `consoleLog`, `toast`, `copyToClipboard`, plus the `_autoFireChainedRound` / `window._autoMode` / `window._autoChainDeferred` cluster for Auto-mode chain resume in closeTroubleshootingCard. Also reads `APP_VERSION` and `BUILD` (in version.js, loaded before wf-debug.js).
+
+All called from inside function bodies, never at module-eval time. By the time any of these execute at runtime, the entire script chain has loaded. Verified via Node probe loading all six scripts in order — every critical export resolves cleanly via both `window.X` and bare `X`.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG subsystem)
+```
+
+Cumulative: -1,682 lines (-10.3%) across three refactor releases. App.js is now under 15K lines for the first time since the v3.28.x feature buildout.
+
+### Script load order
+
+```
+version → theme → audio → scenes → wf-debug → templates → app
+```
+
+wf-debug.js sits after version.js (uses APP_VERSION/BUILD at runtime) and before app.js (which has 42 internal references to WF_DEBUG that resolve via window scope).
+
+### Still queued
+
+**Future splits, in risk order:**
+1. `callAPI` + provider configs + `fetchModels` (~2,000 lines) → `api.js` — biggest single subsystem still in app.js, hot path
+2. IndexedDB session storage + backup/restore → `storage.js` — foundational
+
+**Audit findings from v3.41.0 / v3.42.1 still queued:**
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — WF_DEBUG block removed (was lines 33-702); 662 lines net reduction; `BUILD` constant bumped
+- `js/wf-debug.js` — NEW; 733 lines with header documenting load order + dependencies + cross-script exposure pattern
+- `index.html` — `<script src="js/wf-debug.js?v=3.43.0">` added between scenes.js and templates.js; full cache-bust sweep
+- `js/version.js` — `APP_VERSION` → `v3.43.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.42.1
 **Build:** `20260516-005` · **Released:** May 16, 2026
 
