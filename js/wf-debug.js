@@ -642,11 +642,18 @@ function renderTroubleshootingCard(entry, ctx) {
       } else if (a.kind === 'disable-ai') {
         // v3.29.0 — toggle off the offending AI for the session via the same
         // mechanism the user has on the bee cards. Requires ctx.aiId.
+        // v3.49.0 — toggleSessionBee now returns a boolean: true when the
+        // disable completed immediately, false when deferred to the
+        // Change Builder modal (because the target AI is the builder).
+        // Only fire the success toast when the disable actually completed —
+        // the modal flow handles its own toasting in the deferred case.
         btn.onclick = () => {
           closeTroubleshootingCard();
           if (ctx.aiId && typeof toggleSessionBee === 'function') {
-            toggleSessionBee(ctx.aiId, false);
-            if (typeof toast === 'function') toast(`✓ ${ctx.aiName || 'AI'} toggled off for this session`);
+            const completed = toggleSessionBee(ctx.aiId, false);
+            if (completed && typeof toast === 'function') {
+              toast(`✓ ${ctx.aiName || 'AI'} toggled off for this session`);
+            }
           }
         };
       } else if (a.kind === 'dismiss') {
