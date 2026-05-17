@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.40.1 — audit-driven cross-page parity + cache-bust sweep)
-Current version:     v3.40.1 Pro / build 20260516-002
+Last updated:        2026-05-16 (post v3.41.0 — app.js split: theme/mute consolidation + audio extraction)
+Current version:     v3.41.0 Pro / build 20260516-003
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.41.0   2026-05-16  app.js split: theme/mute consolidation into theme.js + audio extraction to new audio.js (235 lines moved out, 16,389→16,154)
 v3.40.1   2026-05-16  Audit-driven: cross-page toggle parity (theme+mute on 5 setup screens & helper pages) + full cache-bust sweep + Audit Methodology v1 doc shipped
 v3.40.0   2026-05-16  Deep Dive timing + tokens fixes + deprecation watchdog (3 triggers, unthrottled, /v1/models pricing assumption documented)
 v3.38.13  2026-05-12  README rewrite + docs cleanup (Kai's polish + .dp-rounds-aftermath docs work)

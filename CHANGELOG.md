@@ -1,6 +1,61 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.41.0
+**Build:** `20260516-003` · **Released:** May 16, 2026
+
+### app.js split — theme/mute consolidation + audio extraction
+
+Architectural refactor. v3.40.x audit work surfaced two seams where app.js was doing too much: theme/mute behavior was duplicated between app.js and theme.js (with risk of drift) and the audio subsystem (~250 lines of self-contained Web Audio synthesis) was buried in the middle of app.js with no real coupling to the rest of the file. Both subsystems now live in their own files, app.js drops 235 lines, and the load-order discipline is validated for future splits.
+
+### Split 1 — theme + mute consolidation into `theme.js`
+
+Pre-v3.41 setup: app.js and theme.js both defined `setTheme`, `initTheme`, `toggleMute`, `_updateMuteBtn`, `initMuteBtn`. Both maintained a local `_isMuted` variable. Both read/wrote the same localStorage keys (`waxframe_v2_theme`, `waxframe_muted`), so state stayed in sync, but the two implementations could drift in DOM-update behavior without anyone noticing — and changes had to be made in two places.
+
+v3.41 promotes theme.js to canonical source. The duplicate definitions are removed from app.js entirely. theme.js's mute state was promoted from `let _isMuted` (script-scoped, not visible to other scripts) to `window._isMuted` (true cross-script global). App.js's 12 references to `_isMuted` (all in audio-gating guards: `if (_isMuted) return;`) were retargeted to `window._isMuted`. Same behavior; one definition.
+
+index.html now loads `theme.js` BEFORE `app.js` so `window._isMuted` is initialized by the time app.js code executes. The `initTheme()` and `initMuteBtn()` calls in app.js's `DOMContentLoaded` were removed — theme.js auto-fires both on its own.
+
+### Split 2 — audio extraction into new `js/audio.js`
+
+Lines 1764-1980 of pre-v3.41 app.js held a cohesive subsystem: every `play*` function for the in-app audio cues. Round-complete trill, alert chirps, smoker breath, builder hiss, Rosie beeps, flying-car arrival. ~250 lines, all using Web Audio API synthesis except the one .wav playback at the end. Zero external code dependencies beyond `window._isMuted` (now in theme.js) and standard browser APIs.
+
+Moved verbatim to new `js/audio.js`. Functions auto-attach to window via top-level `function` declarations, so HTML onclick handlers and other scripts call them as global identifiers exactly as before. audio.js loads AFTER theme.js (depends on `window._isMuted`) and BEFORE app.js (app.js calls these from round-end paths and scene orchestrators).
+
+The mute-guard contract documented at the top of audio.js: every direct-audio function MUST start with `if (window._isMuted) return;`. Scene orchestrators (`playUnlockScene`, `playUnanimousScene` — still in app.js) don't need the top-level guard because they delegate to gated per-effect helpers.
+
+### What this validates
+
+v3.41 is the smallest-possible test of the split discipline: two cuts at natural seams, with explicit load-order requirements, and `window.*` used as the cross-script communication channel. Both splits worked clean — zero behavior changes user-visible, all 12 audio guards still gate correctly, theme toggle still propagates across all pages.
+
+This pattern is now ready to apply to the bigger candidates: License Unlock Scene (~512 lines), WF-Debug + ringBuffer + error catalog (~400 lines), the callAPI + provider configs cluster (~2000 lines), the IndexedDB storage layer (~85 lines + backup/restore). Each is its own focused future release.
+
+### Findings deferred to v3.41.1
+
+Audit pass during this release surfaced three new findings, not addressed in v3.41.0 to keep the refactor surgical:
+
+- FINDING 6 (CRITICAL) — Four legacy `confirm()` calls in app.js (lines 2818, 2903, 8041, 8107) that should have been migrated to `wfConfirm()` per the established pattern. Bugs waiting to happen — native browser confirm bypasses WaxFrame styling and the Promise-based wfConfirm API.
+- FINDING 7 (COSMETIC) — One stray `console.log` in `applyTemplate` (line 4265) — should be `consoleLog` for in-app visibility or removed as diagnostic leftover.
+- FINDING 8 (COSMETIC) — Toast wording inconsistency — emoji prefixes inconsistent across `toast()` call sites, casing and punctuation drift.
+
+All queued for v3.41.1.
+
+### Pattern decisions confirmed during audit
+
+- `openAllConsoles` defined in both app.js and `js/api-links.js` — INTENTIONAL. Documented in api-links.js header: the app.js version reads from the live `aiList`, while api-links.js is the standalone version for helper pages that don't load app.js. Same pattern as theme.js + license-helper.js mirroring.
+- `window.*` globals scattered across app.js (`_autoMode`, `_decisionChoices`, etc.) — intentional cross-script state. Could be consolidated into a single `window.WaxFrame.{...}` namespace eventually but no current pain.
+
+### Files changed
+
+- `js/app.js` — 235 lines removed total: theme/mute machinery (Split 1) and audio block (Split 2). 12 `_isMuted` references retargeted to `window._isMuted`. `initTheme()` and `initMuteBtn()` calls removed from DOMContentLoaded. `BUILD` constant bumped.
+- `js/theme.js` — Promoted to canonical source. `window._isMuted` declared explicitly. All theme + mute functions live here. Auto-inits theme on load, auto-fires `_updateMuteBtn` on DOMContentLoaded.
+- `js/audio.js` — NEW FILE. ~250 lines of audio subsystem extracted verbatim from app.js. 8 `play*` functions exposed as window globals.
+- `index.html` — Loads `theme.js` before `app.js`. Loads new `audio.js` between them.
+- `js/version.js` — `APP_VERSION` → `v3.41.0 Pro`
+- `index.html` and 5 helper pages — full cache-bust sweep, every `<script src>` `?v=` standardized to `3.41.0`; meta build stamps and comment-header build stamps bumped to `20260516-003`.
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.40.1
 **Build:** `20260516-002` · **Released:** May 16, 2026
 
