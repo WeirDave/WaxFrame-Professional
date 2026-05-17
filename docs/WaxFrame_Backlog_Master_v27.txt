@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.44.0 — API_CONFIGS + MODEL_FALLBACKS + fetchModels* + detectDeprecatedModels extracted to api.js)
-Current version:     v3.44.0 Pro / build 20260516-007
+Last updated:        2026-05-16 (post v3.45.0 — storage primitives extracted to storage.js)
+Current version:     v3.45.0 Pro / build 20260516-008
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.45.0   2026-05-16  app.js split #5: storage primitives (LS_* constants + IDB helpers + checkStorageQuota) extracted to new storage.js; window.LS_* for cross-script (-74 lines; app.js 14,166→14,092, cumulative -14.0%). saveHive/saveProject/loadSettings/saveSession/loadSession/backup remain in app.js for incremental future migration.
 v3.44.0   2026-05-16  app.js split #4: API_CONFIGS + MODEL_FALLBACKS + fetchModelsForProvider/Live + getModelsForProvider + detectDeprecatedModels extracted to new api.js; window.API_CONFIGS + window.MODEL_FALLBACKS for cross-script (-541 lines; app.js 14,707→14,166, cumulative -13.6%). callAPI remains in app.js for future split.
 v3.43.0   2026-05-16  app.js split #3: WF_DEBUG subsystem (object + WF_ERROR_CATALOG + render helpers) extracted to new wf-debug.js; window.WF_DEBUG + window.WF_ERROR_CATALOG for cross-script access (-662 lines; app.js 15,369→14,707, cumulative -10.3%)
 v3.42.1   2026-05-16  Deployment fix — corrects ZIP packaging error from v3.40.0-v3.42.0 where app.js was placed at archive root instead of js/; cache-busts bumped to ?v=3.42.1 to force fresh download; audit methodology Category 7 added for release artifact verification

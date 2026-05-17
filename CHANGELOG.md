@@ -1,6 +1,99 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.45.0
+**Build:** `20260516-008` · **Released:** May 16, 2026
+
+### app.js split #5 — Storage primitives to storage.js
+
+Fifth refactor pass. Pulled the IndexedDB session-storage primitives and localStorage key constants out of app.js into new `js/storage.js`. The foundation layer for all WaxFrame state persistence.
+
+**Scope is deliberately conservative this release.** Only the primitive layer moved — `idbOpen`, `idbSet`, `idbGet`, `idbClear`, `checkStorageQuota`, and the five `LS_*` constants. The higher-level functions that build on these primitives (`saveHive`, `saveProject`, `loadSettings`, `saveSession`, `loadSession`, `backupSession`, restore helpers) remain in app.js for incremental future migration.
+
+### What moved
+
+`js/storage.js` is new (~140 lines):
+
+- **`window.LS_HIVE`, `window.LS_PROJECT`, `window.LS_SESSION`, `window.LS_SETTINGS`, `window.LS_LICENSE`** — localStorage key constants. Exposed as window properties (not bare `const`) because they have 50 combined references across app.js and need bulletproof cross-script visibility. Same pattern as `window._isMuted`, `window.WF_DEBUG`, `window.API_CONFIGS`.
+- **`IDB_NAME`, `IDB_VERSION`, `IDB_STORE`, `IDB_KEY`** — IndexedDB schema constants. Kept as `const` since they're only referenced inside `idbOpen` within storage.js.
+- **`idbOpen()`** — open/create the WaxFrame IDB database, returns `Promise<IDBDatabase>`.
+- **`idbSet(value)`** — atomically write the session payload under `IDB_KEY`.
+- **`idbGet()`** — read the session payload, returns `Promise<object|null>`.
+- **`idbClear()`** — delete the session payload.
+- **`checkStorageQuota()`** — proactive warning when storage is ≥80% full. Surfaces an inline export button into the Live Console.
+
+### Why this scope
+
+Storage code is scattered across 6+ non-contiguous regions in app.js — `snapshotReferenceDocs`, LS_* constants, IDB section, `checkStorageQuota`, `saveHive`/`saveProject`, `loadSettings`, `_saveSessionChain`/`saveSession`/`loadSession`, `backupSession`. Pulling all of it in one shot would mean 6+ separate boundary determinations, each with its own off-by-one risk. After the v3.42.0 ZIP packaging incident, conservative scope per release is the right tradeoff.
+
+v3.45.0 takes the two cleanest, most cohesive blocks: the LS_* keys and the IDB primitives + checkStorageQuota (essentially the foundation layer). Future releases will migrate the higher-level save/load functions incrementally.
+
+### Cross-script exposure pattern
+
+- LS_* constants → `window.LS_*` properties (heavily referenced from app.js)
+- IDB_* constants → `const` (only used inside storage.js)
+- idb* helpers + checkStorageQuota → `function` declarations (auto-attach to window via standard hoisting)
+
+App.js's bare-identifier references to `LS_HIVE`, `idbGet`, `checkStorageQuota`, etc., continue to work via global scope chain lookup. No code changes needed in app.js.
+
+### External dependencies — runtime only
+
+storage.js calls these app.js helpers at runtime (after both scripts have loaded):
+- `consoleLog` — Live Console output (used by `checkStorageQuota`)
+- `exportTranscript` — wired as the onclick for the quota-warn button
+
+Both called from inside function bodies. Node probe loaded all 8 scripts in dependency order; every export resolves cleanly.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG)
+v3.44.0:  14,166 lines  (-541, API configs + model discovery)
+v3.45.0:  14,092 lines  (-74,  storage primitives)
+```
+
+**Cumulative: -2,297 lines (-14.0%) across five refactor releases.**
+
+v3.45.0 is the smallest reduction of the bunch — deliberate. The next storage releases will move bigger chunks (saveHive/saveProject/loadSettings ≈ 360 lines; saveSession/loadSession ≈ 230 lines; backupSession + restore ≈ 200+ lines).
+
+### Script load order
+
+```
+version → storage → theme → audio → scenes → wf-debug → api → templates → app
+```
+
+storage.js sits second in the chain — right after version.js. The other extraction targets (theme, scenes, etc.) don't depend on storage primitives at module-eval time, so placement is just for logical ordering (foundation comes first).
+
+### Still queued
+
+**Future storage migrations:**
+- `saveHive` + `saveProject` + `loadSettings` (~360 lines) → join storage.js
+- `_saveSessionChain` + `saveSession` + `loadSession` (~230 lines) → join storage.js
+- `backupSession` + restore helpers (~200 lines) → join storage.js
+
+**Other future splits:**
+- `callAPI` + helpers (~400 lines) → join api.js
+
+**Audit findings still queued:**
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — Two blocks removed: LS_* constants (5 lines) + IDB section (54 lines) + checkStorageQuota (26 lines). 74-line net reduction. `BUILD` constant bumped.
+- `js/storage.js` — NEW; ~140 lines
+- `index.html` — `<script src="js/storage.js?v=3.45.0">` added right after version.js; full cache-bust sweep
+- `js/version.js` — `APP_VERSION` → `v3.45.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.44.0
 **Build:** `20260516-007` · **Released:** May 16, 2026
 
