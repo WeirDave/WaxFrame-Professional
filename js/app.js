@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-014';         // build stamp — update each session
+const BUILD       = '20260516-015';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -786,6 +786,20 @@ function closeChangeBuilder() {
     const name = activeAIs.find(a => a.id === _pendingBuilderDisable)?.name || 'AI';
     _pendingBuilderDisable = null;
     if (typeof toast === 'function') toast(`${name} is still your Builder — disable cancelled`);
+  }
+  // v3.51.0 — Resume deferred auto chain. Mirrors the resume hook in
+  // closeTroubleshootingCard. If auto-mode deferred a round because
+  // this modal was open (either because the user was picking a new
+  // builder OR because they cancelled), retry now. The helper
+  // re-checks every gate so this is safe to call unconditionally.
+  if (window._autoChainDeferred && window._autoMode) {
+    const def = window._autoChainDeferred;
+    if (typeof consoleLog === 'function') {
+      consoleLog(`🤖 Auto chain resuming after Change Builder modal closed (deferred: ${def.label || 'unknown'})`, 'info');
+    }
+    if (typeof _autoFireChainedRound === 'function') {
+      _autoFireChainedRound((def.label || 'builder-pick-resume') + '-retry', def.kind || 'round');
+    }
   }
 }
 
@@ -1928,6 +1942,20 @@ function _autoFireChainedRound(label, kind) {
       window._autoChainDeferred = { kind, label, at: Date.now() };
       if (typeof consoleLog === 'function') {
         consoleLog(`🤖 Auto chain deferred (${label}) — troubleshooting card is open`, 'info');
+      }
+      return;
+    }
+    // v3.51.0 — Builder-disable modal gate. Mirrors the troubleshooting-card
+    // gate above. v3.49.0 introduced the builder-disable interception (when
+    // user tries to toggle off the current builder, the Change Builder modal
+    // opens for them to pick a new builder first). But auto-mode kept
+    // chaining rounds underneath, so the round would fire with the old
+    // builder still set while the user was mid-modal. Defer here; the
+    // closeChangeBuilder resume hook fires when the modal closes.
+    if (_pendingBuilderDisable) {
+      window._autoChainDeferred = { kind, label, at: Date.now() };
+      if (typeof consoleLog === 'function') {
+        consoleLog(`🤖 Auto chain deferred (${label}) — waiting for new Builder pick`, 'info');
       }
       return;
     }

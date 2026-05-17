@@ -8098,6 +8098,39 @@ kbd {
   margin: 0 0 18px 0;
   white-space: pre-wrap;
 }
+/* v3.51.0 — Provider message surfaced inline. The actual provider error
+   text (e.g. Gemini's "monthly spending cap exceeded, go to ai.studio/spend")
+   used to hide behind "Show technical details" — users had to expand to
+   discover the real issue. Now rendered between meaning and actions with
+   an accent treatment so it reads as the specific diagnosis vs the generic
+   meaning text above it. */
+.tc-provider-message {
+  background: rgba(255, 200, 80, 0.08);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin: 0 0 18px 0;
+}
+.tc-provider-message-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+.tc-provider-message-text {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tc-provider-message-text a {
+  color: var(--accent);
+  text-decoration: underline;
+}
 .tc-actions {
   display: flex;
   flex-wrap: wrap;

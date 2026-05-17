@@ -622,6 +622,43 @@ function renderTroubleshootingCard(entry, ctx) {
   if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
   if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';
 
+  // v3.51.0 — Surface the actual provider error message inline.
+  // Was buried in the "Show technical details" expand, which meant users had
+  // to discover the real diagnosis (e.g. Gemini's "monthly spending cap
+  // exceeded, go to ai.studio/spend to manage your project spend cap") only
+  // by clicking expand. Now rendered between meaning and actions, with the
+  // RATE_LIMITED:/AUTH_FAILED:/etc. prefix stripped so only the readable
+  // provider text appears. URLs are auto-linkified so users can click
+  // straight through. Hidden when ctx.message is empty.
+  const providerWrap = document.getElementById('tcProviderMessage');
+  const providerText = document.getElementById('tcProviderMessageText');
+  if (providerWrap && providerText) {
+    const raw = (ctx.message || '').trim();
+    // Strip leading classification prefix like "RATE_LIMITED:" or "AUTH_FAILED:"
+    const stripped = raw.replace(/^[A-Z_]+:\s*/, '').trim();
+    if (stripped) {
+      // Linkify URLs so users can click straight to the fix
+      const escaped = stripped
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+      // Linkify URLs so users can click straight to the fix. Trailing
+      // sentence punctuation (period, comma, semicolon, etc.) is not
+      // part of the URL — split it off so the visible link doesn't end
+      // with a stray period when the URL appears at the end of a sentence.
+      const linkified = escaped.replace(/(https?:\/\/[^\s<]+)/g, (m) => {
+        const tailMatch = m.match(/[.,;!?)]+$/);
+        const url       = tailMatch ? m.slice(0, -tailMatch[0].length) : m;
+        const tail      = tailMatch ? tailMatch[0] : '';
+        return `<a href="${url}" target="_blank" rel="noopener">${url}</a>${tail}`;
+      });
+      providerText.innerHTML = linkified;
+      providerWrap.style.display = '';
+    } else {
+      providerWrap.style.display = 'none';
+    }
+  }
+
   // Actions
   if (actionsEl) {
     actionsEl.innerHTML = '';

@@ -1,6 +1,59 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.51.0
+**Build:** `20260516-015` · **Released:** May 16, 2026
+
+### Two queued bugfixes from live testing
+
+Both deferred from v3.50.0. No code moved between files — pure behaviour fixes.
+
+### 1 — Auto-mode now pauses when the Change Builder modal opens
+
+**The bug.** v3.49.0 introduced the builder-disable interception — when the user tries to disable an AI that's also the current builder, the Change Builder modal opens and the user must pick a new builder before the disable completes. That works in manual mode. **But auto-mode kept chaining rounds underneath the modal**, firing the next round with the still-set old builder while the user was mid-pick.
+
+The defensive guard in `runRound` (also from v3.49.0) caught the case where `builder` was no longer in `sessionAIs`. But while the modal was open, the disable was deferred, so the AI was still in `sessionAIs` and the guard didn't fire. Round ran with the AI the user was trying to disable.
+
+**The fix.** Two-layer, mirroring v3.35.1's troubleshooting-card pattern:
+
+- `_autoFireChainedRound` now defers the chain if `_pendingBuilderDisable` is set. Stores the deferred chain in `window._autoChainDeferred` exactly like the troubleshooting-card path does.
+- `closeChangeBuilder` resumes the deferred chain when the modal closes (either pick or cancel paths). Uses the same `_autoFireChainedRound(...)` retry call pattern as `closeTroubleshootingCard`.
+
+Result: auto-mode now pauses cleanly while the user picks a new builder, and resumes immediately when they pick (or when they cancel — in which case the round runs with the original builder, which is what the user wanted by cancelling).
+
+### 2 — Rate-limit modal now surfaces the actual provider error inline
+
+**The bug.** The troubleshooting card showed generic boilerplate meaning text ("{ai} says you are sending too many requests..."). The actual provider error message — which is where the real diagnosis lives — was hidden behind "Show technical details" expand. For example, Gemini's spend-cap error reads:
+
+> "Your project has exceeded its monthly spending cap. Please go to AI Studio at https://ai.studio/spend to manage your project spend cap. Learn more at https://ai.google.dev/gemini-api/docs/billing#project-spend-caps."
+
+That text tells the user EXACTLY where to go and what to do. But it was buried two clicks deep. David's session had him reading the generic meaning text, adding $10 to his Gemini account thinking it was a balance issue, then hitting the same error again — only to discover later via the link that the actual problem was a per-project spend cap separate from account balance. A surfaced inline message would have saved that whole detour.
+
+**The fix.** New element `tcProviderMessage` rendered between the meaning text and the action buttons. When `ctx.message` is populated (it always is for rate-limits, auth failures, credit-low errors, and similar provider-side failures), the modal:
+
+1. Strips the leading classification prefix (`RATE_LIMITED:`, `AUTH_FAILED:`, etc.) so only the readable provider text appears
+2. Linkifies URLs so users can click straight through to the fix page (trailing sentence punctuation correctly handled — no stray periods inside link text)
+3. Renders in an accented block clearly labeled "What the provider actually said:"
+
+When `ctx.message` is empty (rare — happens for some local errors with no provider response), the block hides automatically.
+
+Verified against David's exact Gemini spend-cap error message — both URLs (`ai.studio/spend` and `ai.google.dev/gemini-api/docs/billing#project-spend-caps`) render as clickable links, trailing period correctly excluded from the link target.
+
+### Files changed
+
+- `js/app.js` — `_autoFireChainedRound` defers on `_pendingBuilderDisable`; `closeChangeBuilder` resumes deferred auto chain; `BUILD` constant bumped
+- `js/wf-debug.js` — `renderTroubleshootingCard` populates the new provider-message inline element with prefix-stripped + linkified provider text
+- `index.html` — new `tcProviderMessage` + `tcProviderMessageText` elements added to the troubleshooting card; cache-bust sweep
+- `style.css` — `.tc-provider-message` styles (accent-bordered card with label and monospace text body)
+- `js/version.js` — `APP_VERSION` → `v3.51.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+### Up next
+
+**v3.52** — Combined template work: three new single-platform templates (Trim-to-TripAdvisor, Trim-to-Google-Maps, Rewrite-as-Yelp), retire the combined multi-platform template, AND build the Source Size Check helper that reads the user's Starting Document on Setup-5, compares to the template's target length, and surfaces template-aware recommendations (oversize → "paste source to Reference Material," undersize → "use a from-scratch template first," sized-right → silent). Per David's call — templates + helper ship together because the helper is what makes the templates work correctly across different source sizes.
+
+---
 ## v3.50.1
 **Build:** `20260516-014` · **Released:** May 16, 2026
 
