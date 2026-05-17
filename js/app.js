@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-012';         // build stamp — update each session
+const BUILD       = '20260516-013';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -11819,11 +11819,11 @@ function buildAppliedChangesHTML(latest) {
     : `<button class="applied-bulk-btn" onclick="lockAllAppliedChanges(${latestRound})">🔒 Lock All</button>`;
 
   let html = `<div class="conflicts-section-header applied-changes-header">
-    <span class="applied-changes-header-text">✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} This Round</span>
+    <span class="applied-changes-header-text">✓ Builder Applied ${items.length} Change${items.length !== 1 ? 's' : ''} — Confirm or Keep Revising</span>
     ${bulkBtn}
   </div>
   <div class="applied-changes-blurb">
-    These are silent changes the Builder accepted from individual reviewers — no conflict, just one suggestion that made sense. Lock a line to tell the hive to stop revising it. Once you've locked anything you want locked, click <strong>Smoke the Hive</strong> below to run the next round — the hive will see your locks and leave those lines alone.
+    The Builder already made these decisions for you — accepting individual reviewer suggestions where there was only one. Read each one. If the Builder made the right call, <strong>Lock</strong> it — that tells the hive "yep, you got it right, stop revising." Leave it unlocked and the hive will keep proposing changes to that line in future rounds.
   </div>`;
 
   items.forEach((c, i) => {
@@ -12089,7 +12089,7 @@ function renderConflicts() {
         msg = `No conflicts in Round ${roundNum}. Reviewers and the Builder agreed on the changes this round.<br><br>This panel shows the most recent round only — not project-wide completion. The hive converges when a majority of reviewers stop proposing changes. To keep refining, click <strong>Smoke the Hive</strong> for another full round. If the current draft is good as-is, click <strong>Finish</strong> in the top toolbar to export.`;
       }
     }
-    el.innerHTML = `<div class="conflicts-empty-card">${msg}</div>${buildAppliedChangesHTML(latest)}`;
+    el.innerHTML = buildAppliedChangesHTML(latest) + `<div class="conflicts-empty-card">${msg}</div>`;
     return;
   }
 
@@ -12336,7 +12336,7 @@ function renderConflicts() {
     }
   }
 
-  el.innerHTML = html + buildAppliedChangesHTML(latest);
+  el.innerHTML = buildAppliedChangesHTML(latest) + html;
 }
 
 function selectDecision(decisionIdx, optionIdx, total) {
@@ -13126,8 +13126,23 @@ function buildExportName() {
 }
 
 function exportDocument() {
-  const doc = document.getElementById('workDocument')?.value?.trim();
-  if (!doc) { toast('⚠️ Nothing to export yet'); return; }
+  const docRaw = document.getElementById('workDocument')?.value?.trim();
+  if (!docRaw) { toast('⚠️ Nothing to export yet'); return; }
+
+  // v3.50.0 — Strip any pre-existing WaxFrame footer before appending the
+  // new one. Scenario: user takes an exported document (with footer) and
+  // pastes it as the Starting Document for a new project (common with
+  // the Multi-Platform Review template, which is designed to operate on
+  // a previously-finished review). Without this strip, exporting the
+  // refined document would produce two stacked footers — the original
+  // from the prior export and the new one for this run.
+  //
+  // Footer format is stable: an optional "---" separator (variants accepted
+  // for safety) followed by "Produced by WaxFrame ..." and the URL line.
+  // The regex tolerates leading whitespace, optional separator forms (---,
+  // ━━, em-dashes), and version-string variations.
+  const FOOTER_RE = /\n*(?:[-–—━]{2,}\s*\n)?Produced by WaxFrame v?[\d.]+(?: Pro)? in \d+ rounds? and (?:\d+ minutes?|less than a minute)\.\s*\nweirdave\.github\.io\/WaxFrame-Professional\s*$/i;
+  const doc = docRaw.replace(FOOTER_RE, '').trimEnd();
 
   const totalRounds = round - 1;
   const totalMins   = Math.round(_projClockSeconds / 60);

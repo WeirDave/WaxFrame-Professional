@@ -636,7 +636,12 @@ function renderTroubleshootingCard(entry, ctx) {
         if (!url) { btn.style.display = 'none'; }
         else      { btn.onclick = () => window.open(url, '_blank'); }
       } else if (a.kind === 'retry') {
-        btn.onclick = () => { closeTroubleshootingCard(); if (typeof startRound === 'function') startRound(); };
+        // v3.50.0 — Was calling startRound() which doesn't exist (only
+        // startRoundTimer exists, which is a UI helper, not a round
+        // trigger). The typeof guard silently dropped the click — user
+        // clicked Retry Round and nothing happened. Actual round entry
+        // is runRound() in app.js.
+        btn.onclick = () => { closeTroubleshootingCard(); if (typeof runRound === 'function') runRound(); };
       } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
         btn.onclick = () => { closeTroubleshootingCard(); window[a.handler](); };
       } else if (a.kind === 'disable-ai') {

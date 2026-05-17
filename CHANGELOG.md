@@ -1,6 +1,74 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.50.0
+**Build:** `20260516-013` · **Released:** May 16, 2026
+
+### Five UX fixes from live testing
+
+Bug-fix and UX-polish release driven by David's testing session of the Multi-Platform Review template. Five touchpoints across app.js, wf-debug.js, and templates.js. No code moved between files — pure behaviour and content changes.
+
+### 1 — Retry Round button was silently dead
+
+The troubleshooting card's "Retry Round" button called `startRound()` — a function that doesn't exist in app.js. Only `startRoundTimer` (a UI helper) was defined. The `typeof startRound === 'function'` guard returned false silently, so clicking Retry just closed the modal and did nothing.
+
+**Fix:** `js/wf-debug.js` retry handler now calls `runRound()` which is the actual round-entry function. Confirmed working via Node probe.
+
+### 2 — Conflict panel reordered (Choice C)
+
+When the Conflicts panel had BOTH user-decision conflicts AND Builder-applied changes, the rendered order was:
+1. Conflicts (Your Input Needed)
+2. "Apply My Decisions to Document" green button
+3. Builder Decisions text reference
+4. Builder Applied Changes section (with Lock buttons) ← bottom
+
+Users naturally read top-down, hit the Apply button, and triggered Smoke-the-Hive **before** scrolling to see the Builder-applied changes they could have locked. Order-of-operations problem.
+
+**Fix:** Reordered so Builder Applied Changes appears FIRST (already-decided things you can confirm or release), THEN conflicts (decisions you still need to make), THEN the Apply button at the very bottom. Single-line swap in `renderConflicts` — `buildAppliedChangesHTML(latest) + html` instead of `html + buildAppliedChangesHTML(latest)`.
+
+### 3 — Applied Changes blurb reframed
+
+The previous blurb framed Builder-applied changes as procedural — "these are silent changes, lock them to stop revising." But the user's actual decision is more affirmative: "the Builder already made these decisions for you, do you agree?"
+
+**New header:** "✓ Builder Applied N Changes — Confirm or Keep Revising"
+
+**New blurb:** "The Builder already made these decisions for you — accepting individual reviewer suggestions where there was only one. Read each one. If the Builder made the right call, **Lock** it — that tells the hive 'yep, you got it right, stop revising.' Leave it unlocked and the hive will keep proposing changes to that line in future rounds."
+
+### 4 — Footer-strip on export
+
+When a user takes an exported WaxFrame document (which has a "Produced by WaxFrame v3.X.0 Pro in N rounds and M minutes" footer) and pastes it as the Starting Document for a new project — common workflow with the Multi-Platform Review template — the old footer travels with the source text. On the new project's export, the old footer would still be in the document AND a new footer would get appended, producing two stacked footers.
+
+**Fix:** `exportDocument()` now regex-strips any existing WaxFrame footer from the working document before appending the new byline. The regex tolerates separator variants (`---`, em-dashes, etc.) and version-string variations. Idempotent — exporting twice produces the same final document.
+
+Verified against the real Manly Bikes exported file: 107 chars correctly stripped, 103 chars new byline correctly appended, net change zero on re-export.
+
+### 5 — Multi-Platform Review template now ships with splitting directive in reference doc
+
+The template's `refMaterial` was empty. User had to discover mid-flight that the splitting wasn't happening (Builder produced one big merged review instead of three platform-specific cuts) and manually copy the splitting instructions from the template's `hint` field into Additional Instructions to fix it.
+
+**Fix:** The splitting directive now lives in the template's `refMaterial`. As a reference document, it gets injected into every reviewer's prompt envelope every round, ensuring every AI sees:
+
+> This project takes ONE detailed source review (provided as the Starting Document) and produces THREE platform-ready versions of it... TripAdvisor (500–900 words), Google Maps (750–1,200 characters), Yelp (300–700 words).
+
+If the working document doesn't have all three labeled sections yet, reviewers are instructed to flag that as their primary feedback so the Builder produces the split on the next round.
+
+### Not in this release — acknowledged for v3.51
+
+Two issues surfaced during testing that are deferred to a follow-up release:
+
+- **Auto-mode pause when builder-disable modal is open.** v3.49.0's builder-intercept correctly opens the Change Builder modal when the user tries to disable the current builder, but if auto-mode is chaining rounds, the chain doesn't pause to wait for the user's pick. Defensive guard in runRound catches the stale-builder state on next round, but auto-mode should pause cleanly instead of relying on the safety net.
+- **Rate-limit modal clarity.** The "Gemini — Rate limited by the provider" troubleshooting card shows generic boilerplate and hides the actual provider error message ("Your project has exceeded its monthly spending cap...") behind "Show technical details." That specific text would tell the user exactly where to go (project-level spend cap, not account-level). Modal should surface provider error inline.
+
+### Files changed
+
+- `js/app.js` — renderConflicts section reorder; applied-changes blurb reframing; exportDocument footer-strip regex; `BUILD` constant bumped
+- `js/wf-debug.js` — retry handler now calls `runRound()` not `startRound()`
+- `js/templates.js` — multi-platform-review template `refMaterial` populated with splitting directive (1,680 chars)
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.50.0`; build stamps to `20260516-013`
+- `js/version.js` — `APP_VERSION` → `v3.50.0 Pro`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.49.0
 **Build:** `20260516-012` · **Released:** May 16, 2026
 
