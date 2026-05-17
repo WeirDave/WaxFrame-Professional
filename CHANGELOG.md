@@ -1,6 +1,86 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.46.0
+**Build:** `20260516-009` · **Released:** May 16, 2026
+
+### app.js split #6 — Session persistence joins storage.js
+
+Sixth refactor pass. `_saveSessionChain` + `saveSession` + `loadSession` extracted out of app.js into the existing `js/storage.js`. App.js drops another 231 lines.
+
+### What moved
+
+These three symbols moved verbatim from app.js into the existing `storage.js`, appended after the primitive layer that landed in v3.45.0:
+
+- **`_saveSessionChain`** — Promise chain used by `saveSession` to serialize back-to-back saves so two in flight can't race on the read-check-write guard. Top-level `let` initialized to `Promise.resolve()`.
+- **`saveSession()`** — Persists the full session payload (history, docText, console HTML, notes, standing notes, length-guard override) to IndexedDB via `idbSet`, with a fast-resume flag mirrored to localStorage. Called from 31 sites in app.js.
+- **`loadSession()`** — Async read of the session payload via `idbGet`, restores the work screen state, navigates the user back to where they were. Called from 4 sites in app.js.
+
+### Why this scope
+
+Session save/load is the natural continuation of the v3.45.0 primitives migration. These three functions are the heaviest consumers of the IDB helpers + LS keys that now live in storage.js. Moving them together collapses a real cross-file chatty interface into a within-file private one — `saveSession` calls `idbSet`, `loadSession` calls `idbGet`, and `_saveSessionChain` is a private serialization variable that no other code reads.
+
+### Cross-script wiring
+
+`saveSession` and `loadSession` are `function` declarations — they auto-attach to `window` via standard hoisting. App.js's 31+3 external call sites resolve via global scope chain. No window.* prefix needed.
+
+`_saveSessionChain` is a `let` at top-level — script-scoped lexically. It's only referenced inside `saveSession` itself (and one app.js comment that's documentation, not code). Lexical access from within the storage.js script is fine.
+
+### External dependencies — runtime safe
+
+The block calls these app.js helpers at runtime:
+- `consoleLog` — Live Console output
+- `clearProject` — called by loadSession when session is empty
+- `renderBeeStatusGrid` — UI refresh after load
+- `saveProject` — called by saveSession alongside session save
+- `updateNotesBtnPriority` — UI refresh after restoring notes
+- `WF_DEBUG.setDeepDive` — restores Deep Dive state from session
+
+All called inside function bodies, never at module-eval time. Node probe loaded all 8 scripts in dependency order; every export resolves cleanly via both `window.X` and bare `X`.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG)
+v3.44.0:  14,166 lines  (-541, API discovery)
+v3.45.0:  14,092 lines  (-74,  storage primitives)
+v3.46.0:  13,861 lines  (-231, session persistence)
+```
+
+**Cumulative: -2,528 lines (-15.4%) across six refactor releases.**
+
+storage.js is now 378 lines and growing into its mature shape as the home for all WaxFrame state persistence.
+
+### Still queued — storage migrations
+
+- `saveHive` + `saveProject` + `loadSettings` (~360 lines) → join storage.js (the "settings persistence" layer — three non-contiguous regions, slightly trickier to extract cleanly)
+- `backupSession` + restore helpers (~200 lines) → join storage.js
+- `snapshotReferenceDocs` (~5 lines, helper used by saveSession) → could move with the next storage chunk
+
+### Other future splits
+
+- `callAPI` + helpers (~400 lines) → join api.js (hot path, biggest remaining single subsystem)
+
+### Audit findings still queued
+
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — Session block removed (was lines 2790-3027 in v3.45.0 snapshot); 231-line net reduction; `BUILD` constant bumped
+- `js/storage.js` — Session persistence appended; 140 → 378 lines; build stamp + header comment updated to reflect expanded scope
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.46.0`; build stamps to `20260516-009`
+- `js/version.js` — `APP_VERSION` → `v3.46.0 Pro`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.45.0
 **Build:** `20260516-008` · **Released:** May 16, 2026
 
