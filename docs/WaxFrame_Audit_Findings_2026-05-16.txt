@@ -221,3 +221,125 @@ QUEUED:
 ═════════════════════════════════════════════════════════════
 END OF FILE
 ═════════════════════════════════════════════════════════════
+
+═════════════════════════════════════════════════════════════
+ADDENDUM — SECOND AUDIT PASS (post v3.41.0 refactor)
+═════════════════════════════════════════════════════════════
+
+After v3.41.0 shipped (theme/mute consolidation + audio
+extraction), David requested a second audit pass looking for
+more architectural smells. Three new findings.
+
+──────────────────────────────────────────────────────────
+FINDING 6 — Legacy native confirm() calls in app.js
+            [CRITICAL] — QUEUED for v3.41.1
+──────────────────────────────────────────────────────────
+
+Four spots in app.js still use the browser-native confirm()
+instead of WaxFrame's wfConfirm() Promise-based modal:
+
+  • Line 2818: license removal — "Remove your WaxFrame Pro
+    license key from this browser?..."
+  • Line 2903: home navigation — "Go back to the Home
+    screen? Your session and document are saved..."
+  • Line 8041: (truncated in grep, content unread —
+    investigate during fix)
+  • Line 8107: reference material mid-session —
+    "Adding a new reference document mid-session takes
+    effect on the NEXT round..."
+
+The line 5978 occurrence is INTENTIONAL — it's the fallback
+inside wfConfirm() itself for when the modal markup is
+unavailable. Verified by reading the function body.
+
+Why CRITICAL: native browser confirm() bypasses WaxFrame
+styling, doesn't match the design language anywhere else in
+the app, and varies in appearance across browsers. The
+memory rule explicitly captures: "Browser native confirm()
+dialogs replaced with Promise-based wfConfirm() modal styled
+to WaxFrame design language." These four are leftover
+migrations.
+
+Fix: rewrite each call to use wfConfirm() with appropriate
+title/message/buttons. ~4-line edit per call, plus async/
+await context if not already in an async function.
+
+──────────────────────────────────────────────────────────
+FINDING 7 — Stray console.log in applyTemplate  [COSMETIC]
+            — QUEUED
+──────────────────────────────────────────────────────────
+
+app.js line 4265:
+  console.log(`applyTemplate: RM sweep removed ${swept}
+    template card(s); ...`);
+
+In-app diagnostics should use consoleLog() (which routes
+to the WaxFrame console-overlay output) rather than the
+raw browser console.log. Either migrate to consoleLog or
+remove if no longer needed.
+
+──────────────────────────────────────────────────────────
+FINDING 8 — Toast wording inconsistency  [COSMETIC]
+            — QUEUED
+──────────────────────────────────────────────────────────
+
+Toast messages across app.js vary in formatting:
+
+  • Some use emoji prefix, some don't:
+    "🐢 Slow-AI alerts: on" vs "Buffer is already empty"
+  • Some end with period, some don't
+  • Sentence-case vs Title-Case drift
+  • Emoji choices don't always match severity (✓ for
+    info, ⚠️ for warning, 🛑 for error would be one
+    convention but isn't enforced)
+
+Not a bug — these all display fine — but the inconsistency
+erodes polish. Worth a dedicated pass to define a toast
+wording convention and migrate existing calls.
+
+═════════════════════════════════════════════════════════════
+AUDIT-SKIP LIST ADDITIONS FROM SECOND PASS
+═════════════════════════════════════════════════════════════
+
+  • openAllConsoles defined in both app.js AND
+    js/api-links.js — INTENTIONAL. Same pattern as theme.js
+    + license-helper.js mirroring (helper-page standalone
+    copy of an in-app function). Documented in
+    api-links.js header comment. Do NOT re-flag.
+
+  • Nine window.* globals scattered across app.js
+    (_consoleErrorData at line 1584, _autoMode cluster at
+    3396-3400, _roundUiState/_lastCompletedRoundLabel at
+    10783-10784, _decisionChoices at 13992). Intentional
+    cross-script state. Could be consolidated into a
+    single window.WaxFrame.{...} namespace eventually,
+    but no current pain. Not a bug — architectural
+    smell to consider for a future cleanup release.
+
+═════════════════════════════════════════════════════════════
+SHIPPING SUMMARY (UPDATED)
+═════════════════════════════════════════════════════════════
+
+SHIPPED in v3.40.1:
+  • Finding 1 (CRITICAL — cross-page parity)
+  • Finding 2 (ANNOYING — helper-page mute)
+  • Finding 3 (COSMETIC — cache-bust drift)
+
+SHIPPED in v3.41.0:
+  • Theme/mute consolidation (architectural)
+  • Audio extraction → audio.js (architectural)
+
+QUEUED:
+  • Finding 4 (ANNOYING — restaurant-review text)
+  • Finding 5 (COSMETIC — MODEL_LABELS removal)
+  • Finding 6 (CRITICAL — 4 legacy confirm() calls)
+  • Finding 7 (COSMETIC — stray console.log)
+  • Finding 8 (COSMETIC — toast wording consistency)
+  • Future splits: scenes.js, wf-debug.js, api.js, storage.js
+  • Dead CSS audit
+  • Dead function audit (needs AST tooling)
+  • State recovery audit (David-driven browser)
+
+═════════════════════════════════════════════════════════════
+END OF ADDENDUM
+═════════════════════════════════════════════════════════════

@@ -1,16 +1,17 @@
 // ============================================================
-//  WaxFrame — shared theme + mute utility for helper pages
-//  Build: 20260516-002
-//  Provides setTheme() and toggleMute() to helper pages
-//  (api-details, document-playbooks, prompt-editor, what-are-tokens,
-//   waxframe-user-manual) which don't load app.js. Mirrors the in-app
-//   versions of these functions so state (localStorage-backed) persists
-//   across page navigations between the main app and helper pages.
+//  WaxFrame — shared theme + mute utility
+//  Build: 20260516-003
+//  Single source of truth for theme + mute behavior. Loaded by:
+//    • index.html (main app) — BEFORE app.js
+//    • All 5 helper pages (api-details, document-playbooks,
+//      prompt-editor, what-are-tokens, waxframe-user-manual)
 //
-//  v3.40.1 — mute machinery added so the mute toggle in
-//  .page-header-controls of every helper page works. No audio fires
-//  on helper pages, but setting the state here means the user's mute
-//  preference persists back to the main app on next navigation.
+//  v3.41.0 — Promoted to canonical source. Pre-v3.41 these
+//  functions were duplicated in app.js; that duplication was
+//  removed and app.js now reads window._isMuted from this file.
+//  _isMuted is exposed on window explicitly (not let-declared)
+//  so app.js's audio-gating guards can see the same variable
+//  across script boundaries.
 // ============================================================
 
 // ── THEME ──
@@ -20,32 +21,44 @@ function setTheme(t) {
   document.querySelectorAll('.theme-opt').forEach(b => b.classList.toggle('active', b.dataset.theme === t));
 }
 
-// ── MUTE ──
-// State lives in localStorage('waxframe_muted'). Mirrors app.js's
-// definitions exactly so toggling here is indistinguishable from
-// toggling in the main app.
-let _isMuted = (localStorage.getItem('waxframe_muted') === 'true');
+// ── MUTE STATE ──
+// Exposed on window so other scripts loaded after theme.js can read it.
+// State persists in localStorage('waxframe_muted') so it survives reloads
+// AND propagates between the main app and helper pages.
+window._isMuted = (localStorage.getItem('waxframe_muted') === 'true');
 
 function toggleMute() {
-  _isMuted = !_isMuted;
-  localStorage.setItem('waxframe_muted', _isMuted);
+  window._isMuted = !window._isMuted;
+  localStorage.setItem('waxframe_muted', window._isMuted);
   _updateMuteBtn();
 }
 
 function _updateMuteBtn() {
+  // Update every mute button on the page. On the main app the work-topbar
+  // has one and each of the 5 setup screens has one. On helper pages
+  // there's one in .page-header-controls. All share the .mute-btn class.
   document.querySelectorAll('.mute-btn').forEach(btn => {
-    btn.textContent = _isMuted ? '🔇' : '🔊';
-    btn.title       = _isMuted ? 'Unmute sounds' : 'Mute sounds';
-    btn.classList.toggle('is-muted', _isMuted);
+    btn.textContent = window._isMuted ? '🔇' : '🔊';
+    btn.title       = window._isMuted ? 'Unmute sounds' : 'Mute sounds';
+    btn.classList.toggle('is-muted', window._isMuted);
   });
 }
 
-// ── INIT ──
-// Synchronous IIFE so setTheme reflects saved state by the time the body
+function initMuteBtn() {
+  _updateMuteBtn();
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('waxframe_v2_theme') || 'auto';
+  setTheme(saved);
+}
+
+// ── AUTO-INIT ──
+// Synchronous IIFE so theme reflects saved state by the time the body
 // finishes parsing. setTheme is safe to call before DOMContentLoaded
-// (querySelectorAll returns empty NodeList if .theme-opt doesn't exist
-// yet — harmless). _updateMuteBtn is deferred to DOMContentLoaded since
-// helper pages may not have a guaranteed early-DOM .mute-btn target.
+// (querySelectorAll on a missing element returns empty NodeList).
+// _updateMuteBtn deferred to DOMContentLoaded since the mute buttons
+// don't exist until the body parses.
 (function() {
   const t = localStorage.getItem('waxframe_v2_theme') || 'auto';
   setTheme(t);
