@@ -1,6 +1,72 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.42.1
+**Build:** `20260516-005` · **Released:** May 16, 2026
+
+### Deployment fix — corrects ZIP packaging error from v3.40.0 through v3.42.0
+
+v3.42.0 deployed with `goToScreen is not defined` and `openNavMenu is not defined` errors on the live site. Root cause was a ZIP packaging error on the release artifacts going back four releases — not a code bug in any of them. v3.42.1 ships the identical code as v3.42.0 with the ZIP structure corrected and cache-busts bumped to force a fresh download.
+
+### What actually happened
+
+The ZIP artifacts for v3.40.0 through v3.42.0 placed `app.js` at the **root** of the archive instead of in **`js/`**. When the ZIP was extracted onto the repo folder structure, the new `app.js` landed at `repo-root/app.js` — a location nothing in `index.html` ever references. The real `repo-root/js/app.js` was never overwritten.
+
+The live site's `index.html` references `js/app.js?v=X.Y.Z`. The cache-bust query string forced browsers to re-download the file on every release — but the file at that location was still the **old v3.40.0 build (`20260513-004`)**, frozen since that was the last release where `js/app.js` was correctly deployed.
+
+This means every "successful" release from v3.40.1 through v3.42.0 was actually still running v3.40.0's `app.js` in production, just with progressively newer `theme.js` / `audio.js` / `scenes.js` around it. The release ceremony LOOKED clean (cache-busts bumped, version stamps in index.html, syntax checks all passing) — but the actual `app.js` code never got delivered to users.
+
+### Why it didn't break until v3.42.0
+
+v3.40.1, v3.41.0, and the OLD deployed `app.js` (v3.40.0) coexisted peacefully because:
+
+- v3.40.0 `app.js` declares `let _isMuted = ...` at top-level script scope. v3.41.0's new `theme.js` declares `window._isMuted = ...` — a property on `window`, not a `let`. **Different bindings, no collision.**
+- v3.41.0's new `audio.js` defines `play*` functions. v3.40.0's `app.js` also defines them, but `function` declarations don't error on conflict — the later one just wins.
+
+v3.42.0 broke the truce because **scenes.js declares `let hiveFinishTimer`, `let _unanimousTimers`, `let _unanimousKeyHandler` at top-level script scope** — and v3.40.0's `app.js` declares the **exact same identifiers as `let` at top-level script scope**. Per spec, classic scripts share a global lexical environment, and duplicate `let` declarations in that environment throw `SyntaxError: Identifier already declared`.
+
+The browser hit the duplicate `let` early in `app.js` parsing and stopped. `goToScreen` (defined at line ~2868) never got reached. Click handlers failed with `ReferenceError`.
+
+### What this release ships
+
+Identical code to v3.42.0. Only differences:
+
+- ZIP structure corrected — `app.js` now correctly placed at `js/app.js` inside the archive
+- Cache-busts bumped to `?v=3.42.1` across every script reference in every HTML file, so browsers re-fetch fresh copies even if v3.42.0's broken state is cached
+- Version stamps bumped to v3.42.1 / `20260516-005`
+- Audit methodology updated to add ZIP structure verification as a required pre-release check
+
+### Audit methodology update
+
+Added new finding category to `WaxFrame_Audit_Methodology_v1.txt`:
+
+> **Category: Release artifact verification.** Before any ZIP is delivered, run `unzip -l <zip> | grep app.js` and verify the output shows `js/app.js`, NEVER a bare `app.js` at the archive root. Same check applies to any other JS file that lives under `js/` in the repo. This catches packaging errors before they reach a deployment.
+
+This goes in the release checklist alongside the four canonical version stamps and the cache-bust sweep. Not optional.
+
+### What to smoke-test after deploying v3.42.1
+
+Several releases worth of code is finally hitting production for the first time. The features that LOOKED shipped but never actually ran:
+
+- **v3.40.1** — Theme + mute toggles in upper right of all 5 setup screens (Worker Bees, Builder, Project, Reference, Document)
+- **v3.40.1** — Mute toggle in upper right of all 5 helper pages
+- **v3.41.0** — Theme/mute consolidated into theme.js (toggling on one page should persist to others)
+- **v3.41.0** — Audio extracted to audio.js (all `play*` functions still work)
+- **v3.42.0** — Three celebration scenes from scenes.js (license unlock, hive finish bee fly-in, unanimous convergence). Dev Toolbar buttons can fire each in isolation.
+
+If any of those misbehave, that's a real regression worth investigating. If they all work, the deployment is finally caught up to the code.
+
+### Files changed
+
+- ZIP packaging — `app.js` now correctly placed at `js/app.js`
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.42.1`; meta build stamps + comment-header build stamps to `20260516-005`
+- `js/app.js` — `BUILD` constant bumped
+- `js/version.js` — `APP_VERSION` → `v3.42.1 Pro`
+- `docs/WaxFrame_Audit_Methodology_v1.txt` — Release artifact verification category added
+- `docs/WaxFrame_Audit_Findings_2026-05-16.txt` — Postmortem entry added
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.42.0
 **Build:** `20260516-004` · **Released:** May 16, 2026
 
