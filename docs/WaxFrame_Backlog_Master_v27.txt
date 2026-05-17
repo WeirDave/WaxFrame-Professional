@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.50.1 — multi-platform refMaterial trimmed)
-Current version:     v3.50.1 Pro / build 20260516-014
+Last updated:        2026-05-16 (post v3.51.0 — auto-mode pause + rate-limit modal surfacing)
+Current version:     v3.51.0 Pro / build 20260516-015
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.51.0   2026-05-16  Two queued bugfixes from live testing. (1) Auto-mode now pauses when Change Builder modal opens (mirrors v3.35.1 troubleshooting-card pattern via _autoChainDeferred). (2) Rate-limit / auth-fail / credit-low troubleshooting card now surfaces the actual provider error message inline with linkified URLs — was buried in Show technical details.
 v3.50.1   2026-05-16  Multi-platform review template refMaterial trimmed from 1680 to 698 chars (58% reduction). Decoration removed, content preserved. Token savings compound across all reviewers every round.
 v3.50.0   2026-05-16  Five UX fixes from live testing: (1) Retry Round button now actually retries (was calling nonexistent startRound), (2) Conflict panel reordered — Applied Changes now first then conflicts then Apply, (3) Applied Changes blurb reframed for "Confirm or Keep Revising", (4) exportDocument regex-strips existing footer before appending new one, (5) Multi-platform review template ships with splitting directive in refMaterial.
 v3.49.0   2026-05-16  UX bug fix — disabling the Builder no longer creates an unrecoverable state. Three layers: toggleSessionBee intercepts builder-disable and routes through Change Builder modal; openChangeBuilder accepts reason+excludeId opts; runRound defensive guard auto-reassigns stale builder. Includes recovery for users hitting v3.49.0 with the pre-fix bug already persisted.

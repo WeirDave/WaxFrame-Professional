@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260516-014
+     Build: 20260516-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260516-014">
+  <meta name="waxframe-build" content="20260516-015">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.50.1">
+  <link rel="stylesheet" href="style.css?v=3.51.0">
 </head>
 <body>
 
@@ -1416,6 +1416,10 @@
     <h2 class="finish-modal-title tc-title-row"><span class="tc-icon">🩺</span> <span id="tcTitle">Something went wrong</span></h2>
     <div class="tc-body">
       <p class="tc-meaning" id="tcMeaning"></p>
+      <div class="tc-provider-message" id="tcProviderMessage" style="display:none">
+        <div class="tc-provider-message-label">What the provider actually said:</div>
+        <div class="tc-provider-message-text" id="tcProviderMessageText"></div>
+      </div>
       <div class="tc-actions" id="tcActions"></div>
       <div class="tc-details-wrap" id="tcDetailsWrap">
         <button title="Expand to see full error details" class="tc-details-toggle" type="button" onclick="toggleTcDetails()">
@@ -2204,20 +2208,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.50.1"></script>
-<script src="lib/mammoth.browser.min.js?v=3.50.1"></script>
-<script src="lib/jszip.min.js?v=3.50.1"></script>
-<script src="lib/xlsx.full.min.js?v=3.50.1"></script>
-<script src="js/version.js?v=3.50.1"></script>
-<script src="js/storage.js?v=3.50.1"></script>
-<script src="js/theme.js?v=3.50.1"></script>
-<script src="js/audio.js?v=3.50.1"></script>
-<script src="js/scenes.js?v=3.50.1"></script>
-<script src="js/wf-debug.js?v=3.50.1"></script>
-<script src="js/api.js?v=3.50.1"></script>
-<script src="js/templates.js?v=3.50.1"></script>
-<script src="js/app.js?v=3.50.1"></script>
-<script src="js/api-links.js?v=3.50.1"></script>
+<script src="lib/pdf.min.js?v=3.51.0"></script>
+<script src="lib/mammoth.browser.min.js?v=3.51.0"></script>
+<script src="lib/jszip.min.js?v=3.51.0"></script>
+<script src="lib/xlsx.full.min.js?v=3.51.0"></script>
+<script src="js/version.js?v=3.51.0"></script>
+<script src="js/storage.js?v=3.51.0"></script>
+<script src="js/theme.js?v=3.51.0"></script>
+<script src="js/audio.js?v=3.51.0"></script>
+<script src="js/scenes.js?v=3.51.0"></script>
+<script src="js/wf-debug.js?v=3.51.0"></script>
+<script src="js/api.js?v=3.51.0"></script>
+<script src="js/templates.js?v=3.51.0"></script>
+<script src="js/app.js?v=3.51.0"></script>
+<script src="js/api-links.js?v=3.51.0"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
