@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-015';         // build stamp — update each session
+const BUILD       = '20260516-016';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1217,6 +1217,15 @@ function goToScreen(id) {
       if (clearRow) clearRow.style.display = 'block';
     }
     setTimeout(updateDocRequirements, 0);
+    // v3.52.0 — Render source size check when arriving on Setup 5.
+    // Reset the dismiss flag — re-entry to the screen is a fresh look
+    // (user navigated away and back, so they should see current state).
+    // setTimeout-zero defers until after DOM activation completes so
+    // the helper reads the just-activated screen's state correctly.
+    _sourceSizeCheckDismissed = false;
+    setTimeout(() => {
+      if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
+    }, 0);
   }
   if (id === 'screen-reference') {
     // Re-render reference cards when the user navigates back to Setup 4.
@@ -2618,6 +2627,15 @@ async function applyTemplate(templateId, path) {
   const pathToastLabel = (path === 'scratch') ? 'from scratch' : 'refining';
   const toastTail = (hint.length > 0) ? ' — see the amber banner above for placeholders to fill in' : '';
   toast(`✓ ${tpl.icon || '📋'} ${tpl.name} (${pathToastLabel}) template applied${toastTail}`, hint.length > 0 ? 5500 : 4000);
+
+  // v3.52.0 — Run source size check after template applies. If the
+  // user already had a Starting Document loaded, the new template's
+  // length range may produce a recommendation card immediately. Reset
+  // the dismiss flag — a new template is a fresh comparison and the
+  // user should see the recommendation even if they dismissed a prior
+  // one against a different template.
+  _sourceSizeCheckDismissed = false;
+  if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
 }
 
 // v3.32.1 — Dismiss handler for the template hint banner. Hides the
@@ -5851,6 +5869,11 @@ function switchDocTab(tab) {
   saveProject();
   updateLaunchRequirements();
   saveSettings();
+  // v3.52.0 — Re-check source size on tab change. Different tabs read
+  // from different sources (paste textarea vs docText vs nothing for
+  // scratch), so the same source check can produce different cards
+  // depending on which tab is active.
+  if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
 }
 
 function handleDragOver(e) {
@@ -5906,6 +5929,206 @@ function handlePasteTextInput() {
   updateDocRequirements();
   clearTimeout(pasteTextSaveTimer);
   pasteTextSaveTimer = setTimeout(() => saveProject(), 250);
+  // v3.52.0 — Re-check source size whenever paste content changes.
+  // Cheap operation (word/char counts on a single string), runs after
+  // the existing save debounce work so it never blocks input handling.
+  if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
+}
+
+// ============================================================
+//  v3.52.0 — Source Size Check
+//  Compares the user's Starting Document size against the active
+//  template's length range and surfaces a recommendation card when
+//  the mismatch is large enough to matter:
+//    • source < target*0.7  → undersized warning (would need invention)
+//    • source > target*1.5  → oversized recommend (paste into Ref Material)
+//    • otherwise            → silent (size is appropriate, no card)
+//
+//  Pure logic lives in analyzeSourceSize(); DOM/state plumbing lives in
+//  renderSourceSizeCheck(). Hooks fire from: paste handler, file upload,
+//  applyTemplate completion, switchDocTab, and goToScreen for the doc
+//  screen. The card is template-agnostic — it reads length-mode UI state
+//  directly, so any future template using range mode gets the helper
+//  for free without per-template coupling.
+//
+//  _sourceSizeCheckDismissed: session-level flag preserved across the
+//  many keystroke-driven re-renders. Once the user clicks ✕ the card
+//  stays hidden until the page reloads, the template changes, the
+//  source is cleared, or the screen is left and re-entered — events
+//  that signal the dismiss is no longer relevant to the new state.
+// ============================================================
+let _sourceSizeCheckDismissed = false;
+
+function analyzeSourceSize(text, lengthMode, lengthMin, lengthLimit, lengthUnit) {
+  // No range = no target = no card. (hardcap and target modes have a
+  // single value, not a range; the comparison logic below assumes both
+  // floor and ceiling exist.)
+  if (lengthMode !== 'range') return { status: 'silent' };
+  const min = parseInt(lengthMin, 10);
+  const max = parseInt(lengthLimit, 10);
+  if (!min || !max || min >= max) return { status: 'silent' };
+
+  const trimmed = (text || '').trim();
+  if (!trimmed) return { status: 'silent' };
+
+  // Choose the measurement unit to match the template's target unit.
+  // Words/characters cover the review-template cases; pages and
+  // paragraphs fall through to silent (no clean source-size comparison
+  // for those units — pages depend on font, paragraphs depend on
+  // breaks the user controls).
+  let sourceCount;
+  let sourceUnit;
+  if (lengthUnit === 'words') {
+    sourceCount = trimmed.split(/\s+/).filter(Boolean).length;
+    sourceUnit  = 'words';
+  } else if (lengthUnit === 'characters') {
+    sourceCount = trimmed.length;
+    sourceUnit  = 'characters';
+  } else {
+    return { status: 'silent' };
+  }
+
+  const result = { sourceCount, sourceUnit, targetMin: min, targetMax: max, targetUnit: lengthUnit };
+
+  if (sourceCount < min * 0.7) {
+    result.status  = 'undersized';
+    result.message = `Your source is ${sourceCount} ${sourceUnit}. This template targets ${min}–${max} ${sourceUnit}. The hive would need to invent details to reach the target length, which is bad practice. Consider running this source through a from-scratch review template first (Restaurant / Hotel / Business-Service) to develop fuller content, then return here for the platform-specific cut.`;
+  } else if (sourceCount > max * 1.5) {
+    result.status  = 'oversized';
+    result.message = `Your source is ${sourceCount} ${sourceUnit}. This template targets ${min}–${max} ${sourceUnit} — that's a significant cut. Recommend also pasting the source into Reference Material so reviewers can see what got cut every round and verify factual fidelity.`;
+  } else {
+    result.status = 'silent';
+  }
+  return result;
+}
+
+function renderSourceSizeCheck() {
+  const card = document.getElementById('sourceSizeCheck');
+  if (!card) return;
+
+  // Honor the session dismiss. _sourceSizeCheckDismissed gets reset
+  // by events that change the underlying state meaningfully:
+  // applyTemplate (new template → new target), processFile (new
+  // source → new comparison), screen-document activation (re-entry
+  // counts as a fresh look).
+  if (_sourceSizeCheckDismissed) {
+    card.style.display = 'none';
+    return;
+  }
+
+  // Only render on Setup 5. Other screens get no-op (defensive — the
+  // hooks shouldn't fire elsewhere, but if they do this guard keeps
+  // the card from flashing on unrelated screens).
+  const onDocScreen = document.getElementById('screen-document')?.classList.contains('active');
+  if (!onDocScreen) {
+    card.style.display = 'none';
+    return;
+  }
+
+  // Pick the active source. Upload tab → docText (the extracted file
+  // content, populated by processFile). Paste tab → the textarea value.
+  // Scratch tab → no source to check, hide card.
+  let sourceText = '';
+  if (docTab === 'paste') {
+    sourceText = document.getElementById('pasteText')?.value || '';
+  } else if (docTab === 'upload') {
+    sourceText = (typeof docText === 'string') ? docText : '';
+  } else {
+    // scratch — no source to size-check
+    card.style.display = 'none';
+    return;
+  }
+
+  // Read length-mode UI state. These were populated by applyTemplate
+  // if the user picked a template with a range; otherwise the user
+  // may have set them manually.
+  const lengthMode  = document.getElementById('lengthMode')?.value   || 'none';
+  const lengthMin   = document.getElementById('lengthMin')?.value    || '';
+  const lengthLimit = document.getElementById('lengthLimit')?.value  || '';
+  const lengthUnit  = document.getElementById('lengthUnit')?.value   || '';
+
+  const r = analyzeSourceSize(sourceText, lengthMode, lengthMin, lengthLimit, lengthUnit);
+
+  if (r.status === 'silent') {
+    card.style.display = 'none';
+    card.innerHTML = '';
+    return;
+  }
+
+  // Build the card. Two status variants share most structure — diverge
+  // only on icon, status class, and action button.
+  const isUndersized = r.status === 'undersized';
+  const icon  = isUndersized ? '⚠️' : '📏';
+  const label = isUndersized ? 'Source too small for this template' : 'Source much larger than target';
+  const statusClass = isUndersized ? 'ssc-warning' : 'ssc-recommend';
+
+  // Oversized case gets a one-click copy-to-Reference-Material button.
+  // Undersized case is advisory only — no button — because switching
+  // templates is destructive (resets the whole project) and we don't
+  // want to make that easy from inside a warning card.
+  const actionHTML = isUndersized
+    ? ''
+    : `<button class="btn btn-sm btn-accent" onclick="copySourceToReferenceMaterial()" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
+
+  card.className = 'source-size-check ' + statusClass;
+  card.style.display = '';
+  card.innerHTML = `
+    <div class="ssc-icon">${icon}</div>
+    <div class="ssc-body">
+      <div class="ssc-label">${label}</div>
+      <div class="ssc-message">${r.message}</div>
+      <div class="ssc-counts">
+        Source: <strong>${r.sourceCount} ${r.sourceUnit}</strong>
+        · Target: <strong>${r.targetMin}–${r.targetMax} ${r.targetUnit}</strong>
+      </div>
+      ${actionHTML ? `<div class="ssc-actions">${actionHTML}</div>` : ''}
+    </div>
+    <button class="ssc-dismiss" onclick="dismissSourceSizeCheck()" title="Dismiss this check for the rest of this session">✕</button>
+  `;
+}
+
+function dismissSourceSizeCheck() {
+  _sourceSizeCheckDismissed = true;
+  const card = document.getElementById('sourceSizeCheck');
+  if (card) card.style.display = 'none';
+}
+
+function copySourceToReferenceMaterial() {
+  // Pull the active source from whichever tab is active.
+  let sourceText = '';
+  if (docTab === 'paste') {
+    sourceText = document.getElementById('pasteText')?.value || '';
+  } else if (docTab === 'upload') {
+    sourceText = (typeof docText === 'string') ? docText : '';
+  }
+  sourceText = sourceText.trim();
+  if (!sourceText) {
+    if (typeof toast === 'function') toast('No source content to copy');
+    return;
+  }
+
+  // Add as a Reference Material card with source='user-source-copy' so
+  // it doesn't get swept by future applyTemplate calls (which only
+  // sweep source='template' cards).
+  if (typeof referenceDocs !== 'undefined' && Array.isArray(referenceDocs) &&
+      typeof generateRefDocId === 'function') {
+    referenceDocs.push({
+      id:     generateRefDocId(),
+      name:   'Source review (copied from Starting Document)',
+      text:   sourceText,
+      source: 'user-source-copy'
+    });
+    if (typeof saveProject === 'function') saveProject();
+    if (typeof renderReferenceDocs === 'function') renderReferenceDocs();
+    if (typeof toast === 'function') toast('📚 Source copied to Reference Material');
+    // Hide the card — user took the recommended action, no need to
+    // keep nagging. Will reappear if source size shifts to a new
+    // mismatch.
+    const card = document.getElementById('sourceSizeCheck');
+    if (card) card.style.display = 'none';
+  } else {
+    if (typeof toast === 'function') toast('⚠️ Reference Material system not ready');
+  }
 }
 
 // Clear the Reference Material Paste Text textarea
@@ -5994,6 +6217,12 @@ async function processFile(file) {
     const clearRow = document.getElementById('fileClearRow');
     if (clearRow) clearRow.style.display = 'block';
     updateLaunchRequirements();
+    // v3.52.0 — Run source size check after the file is loaded. docText
+    // is now populated with the extracted content so the helper can
+    // compare against the active template's length range. Reset the
+    // dismiss flag — a new source file is a fresh comparison.
+    _sourceSizeCheckDismissed = false;
+    if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
   } catch(e) {
     console.error('Starting doc extraction failed:', e);
     status.textContent = `❌ Could not read file: ${e.message}`;

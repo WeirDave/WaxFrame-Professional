@@ -1,6 +1,68 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.0
+**Build:** `20260516-016` · **Released:** May 16, 2026
+
+### Three platform-specific review templates + Source Size Check helper
+
+The combined Multi-Platform Review Rewrite template is retired. Three new single-platform templates ship in its place, each with its own length-guard range, focused refMaterial, and per-template hint about when to also paste the source into Reference Material. A new Source Size Check helper measures the user's Starting Document against the active template's length range and surfaces a recommendation card when the mismatch is significant.
+
+### Why the split
+
+The combined template had three problems documented during live testing:
+
+1. **Per-platform length couldn't be enforced** via the length-guard because the setting is single-value — three platforms with three different targets had to share one length directive in prose, which is much less reliable than the actual length-constraint mechanism.
+2. **Convergence signal was muddied** because reviewers were juggling three voice spaces simultaneously. "Five AIs agreed" couldn't be parsed cleanly per-platform.
+3. **Hard floor on source size (~1,200+ words) wasn't enforceable** without per-template setup checks. A short source review would force the hive to fabricate content to fill the TripAdvisor target.
+
+Three focused templates each carry their own length-guard and voice directive. Convergence per platform becomes meaningful. Length is enforced by the actual range mechanism. And the new Source Size Check makes the "is this source the right size for this template" question explicit.
+
+### The three new templates
+
+- **Trim to TripAdvisor** (✈️) — Range 500–900 words. Detailed narrative travel-context tone. refMaterial 537 chars focused entirely on TripAdvisor format and voice. Hint advises pasting source into Reference Material when source is significantly larger than 900 words.
+
+- **Trim to Google Maps** (📍) — Range 750–1,200 characters. Brutal-cut philosophy: lead with the recommendation, keep only the few facts that support it, drop narrative arc entirely. refMaterial 437 chars. Hint strongly recommends pasting source into Reference Material because typical source-to-target ratios are 5–10x — reviewers can't evaluate cuts without seeing the original.
+
+- **Rewrite as Yelp** (💬) — Range 300–700 words. Voice transformation is the main job: same facts, different prose register. Conversational, first-person, personality-forward, no corporate polish. refMaterial 572 chars. Hint recommends source-in-Reference because voice rewrites mask fact drift — facts can slip silently when the prose register changes.
+
+Total template count: 21 (was 19 — three new templates added, one combined template retired).
+
+### Source Size Check helper
+
+A new card appears below the Starting Document area on Setup 5 when the source size doesn't fit the active template's length range. Template-agnostic — reads the length-mode UI state directly, so any future template using range mode gets the helper for free.
+
+**Three states, only two of which render:**
+
+- **Source < 70% of target minimum** → undersized warning card. Tells the user the hive would need to invent details to expand the source, and recommends running through a from-scratch review template first (Restaurant / Hotel / Business-Service) before returning here for the platform-specific cut. Advisory only — no destructive button, because switching templates resets the whole project.
+
+- **Source > 150% of target maximum** → oversized recommend card. Tells the user this is a significant cut and recommends pasting the source into Reference Material so reviewers can see what got cut every round. One-click button copies the Starting Document content into Reference Material as a card.
+
+- **Source within 0.7×min to 1.5×max** → silent. No card. Size is appropriate; the working document still holds enough context for reviewers without needing source-in-Reference.
+
+The card has a dismiss button (✕) that hides it for the rest of the session. The dismiss flag is reset by: template change, new file upload, and re-entry to Setup 5 — events that signal the previous dismiss is no longer relevant to the new state. Within a session, dismissing doesn't trigger re-show on the next keystroke.
+
+**Pure logic in `analyzeSourceSize(text, lengthMode, lengthMin, lengthLimit, lengthUnit)`** — returns `{status: 'silent'|'undersized'|'oversized', ...counts and message}`. DOM/state plumbing in `renderSourceSizeCheck()`. Hooks fire from: paste handler, file upload completion, applyTemplate completion, switchDocTab, and goToScreen on screen-document activation.
+
+### Verified against David's Manly Bikes test source (888 words / 5,389 chars)
+
+- Trim to TripAdvisor (500–900 words): **silent** ✓ (in range)
+- Trim to Google Maps (750–1,200 chars): **oversized** ✓ (5.4× the upper bound — clear recommendation to use Reference Material)
+- Rewrite as Yelp (300–700 words): **silent** ✓ (888 words < 1,050 threshold; voice rewrite hint already in template still tells user to consider Reference Material)
+- Undersized test (150 words for 500–900 range): **undersized** ✓ (warning surfaces correctly)
+- lengthMode='none': **silent** ✓ (no target to compare)
+
+### Files changed
+
+- `js/templates.js` — three new templates (`trim-to-tripadvisor`, `trim-to-google-maps`, `rewrite-as-yelp`); combined `multi-platform-review` template retired with explanatory comment block
+- `js/app.js` — new `analyzeSourceSize` and `renderSourceSizeCheck` helpers; `copySourceToReferenceMaterial` and `dismissSourceSizeCheck`; `_sourceSizeCheckDismissed` session flag; hooks added to `handlePasteTextInput`, `processFile`, `applyTemplate`, `switchDocTab`, and `goToScreen('screen-document')`
+- `index.html` — `#sourceSizeCheck` card slot added below Setup-5 doc tabs, before fs-footer; cache-bust sweep
+- `style.css` — `.source-size-check` card styles with two status variants (`ssc-warning` red/amber, `ssc-recommend` accent) and dismiss button
+- `js/version.js` — `APP_VERSION` → `v3.52.0 Pro`
+- 5 helper HTML files — cache-bust + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.51.0
 **Build:** `20260516-015` · **Released:** May 16, 2026
 
