@@ -1,6 +1,78 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.42.0
+**Build:** `20260516-004` · **Released:** May 16, 2026
+
+### app.js split continues — three celebration scenes extracted to scenes.js
+
+Second pass in the app.js diet. v3.41.0 validated the split discipline with two cuts (theme/mute consolidation + audio extraction). v3.42.0 applies the same pattern at larger scope: three multi-step UI orchestrations — License Unlock Scene, Hive Finish Animation, Unanimous Convergence Scene — moved verbatim to new `js/scenes.js`. App.js drops another 785 lines.
+
+### What moved
+
+`js/scenes.js` is new (862 lines). It holds three conceptually-unified celebration scenes plus their private helpers:
+
+- **License Unlock Scene** — plays when a user enters a valid license key. Bee fly-in + canvas fireworks + anvil drop + metal clang. Web Audio API synthesis throughout. ~440 lines including three private sound helpers (`playMetalClang`, `playAnvilSound`) and a sparks helper (`spawnSparks`).
+
+- **Hive Finish Animation** — bee fly-in overlay shown when the document is exported via the Finish modal. Smoke puffs + count subline ("Unanimous · 6 of 6" or "4 of 6 AIs agree"). ~58 lines. Carries the shared `hiveRand` helper used by both this scene and the Unanimous Scene.
+
+- **Unanimous Convergence Scene** — 12-second sequence played when all AIs unanimously satisfy. Black backdrop fade-in → bee fly-across with Kai's whirr → jet-exhaust fog → image reveal → anvil drop → 3 multicolor fireworks → fade out. Escape or click skips. Canvas-rendered fireworks via `spawnUnanimousFireworks`. ~304 lines including `closeUnanimousScene` cleanup and `playCrackleSound` (private to this scene).
+
+- **Three dev-test helpers** moved with their scenes: `devTestUnanimous`, `devTestFlyInOnly`, `devTestMajorityConverge`. Each is wired to a Dev Toolbar button that plays the scene in isolation for testing.
+
+### What deliberately stayed in app.js
+
+`showLicenseModal`, `hideLicenseModal`, and `updateLicenseBadge` lived inside the same comment block as the License Unlock Scene in app.js but are NOT celebration scenes — they're license-flow UI (modal for entering a key, the badge state updater). They stay in app.js. The Unlock Scene is one part of the license flow; the modal+badge functions are the surrounding UI plumbing.
+
+### Cross-script dependencies — confirmed safe
+
+Scene blocks call several app.js functions at runtime: `toast`, `isLicensed`, `getTrialRoundsUsed`, `saveLicense`, `submitLicenseKey`, `showLicenseManageModal`, plus several `play*` functions in audio.js. All work cleanly because:
+
+- scenes.js loads BEFORE app.js, so when app.js's code later calls scene functions (e.g. `playUnanimousScene()` from a round-end path), the scene functions are globally available.
+- Scene blocks have NO top-level executable code beyond `let` declarations initializing to literal values (`null`, `[]`). Nothing executes at script-parse time. By the time any scene function actually runs at runtime, the entire app has loaded and all the app.js helpers it calls are defined.
+
+Verified by pre-flight grep: 35 candidate "external symbols" in the scene blocks, of which only 5 are real app.js cross-references (the license functions and `toast`). All are runtime-only calls.
+
+### Module-level scene state moves with the scenes
+
+Three module-level state variables move with the scene functions to scenes.js (verified used only inside scene blocks):
+
+- `hiveFinishTimer` — Hive Finish overlay auto-hide timer
+- `_unanimousTimers` — array of timeout handles for the 12-second Unanimous sequence, allows Esc/click to cancel all in flight
+- `_unanimousKeyHandler` — keydown listener for Esc-to-skip
+
+### Cumulative refactor progress
+
+  v3.40.x:  app.js = 16,389 lines
+  v3.41.0:  app.js = 16,154 lines  (-235, theme/mute + audio split)
+  v3.42.0:  app.js = 15,369 lines  (-785, three scenes extracted)
+
+  Cumulative reduction: 1,020 lines (-6.2%) across two releases.
+
+### Still queued
+
+- **WF-Debug + ringBuffer + error catalog** (~400 lines) → `wf-debug.js` — next split candidate (v3.43)
+- **callAPI + provider configs + fetchModels** (~2,000 lines) → `api.js` — biggest single subsystem still in app.js
+- **IndexedDB session storage + backup/restore** → `storage.js` — foundational subsystem
+
+Audit findings from v3.41.0 release also still queued:
+
+- FINDING 4 — restaurant-review playbook page stale text
+- FINDING 5 — MODEL_LABELS vestigial code removal
+- FINDING 6 (CRITICAL) — Four legacy `confirm()` calls in app.js
+- FINDING 7 — Stray `console.log` in applyTemplate
+- FINDING 8 — Toast wording consistency pass
+
+### Files changed
+
+- `js/app.js` — Three scene blocks removed (lines 2275-2714, 10391-10448, 10449-10753 in the v3.41.0 snapshot). Each block replaced with a breadcrumb comment pointing to scenes.js. `BUILD` constant bumped. Net: -785 lines.
+- `js/scenes.js` — NEW FILE. Three scenes extracted verbatim with header documenting external dependencies and load-order requirements.
+- `index.html` — `<script src="js/scenes.js?v=3.42.0">` added between audio.js and templates.js. Full cache-bust sweep to `?v=3.42.0`. Meta build stamp + comment-header build stamp bumped to `20260516-004`.
+- `js/version.js` — `APP_VERSION` → `v3.42.0 Pro`
+- 5 helper HTML files — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.41.0
 **Build:** `20260516-003` · **Released:** May 16, 2026
 

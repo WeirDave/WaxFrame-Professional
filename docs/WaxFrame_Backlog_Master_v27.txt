@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.41.0 — app.js split: theme/mute consolidation + audio extraction)
-Current version:     v3.41.0 Pro / build 20260516-003
+Last updated:        2026-05-16 (post v3.42.0 — three celebration scenes extracted to scenes.js)
+Current version:     v3.42.0 Pro / build 20260516-004
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.42.0   2026-05-16  app.js split #2: three celebration scenes (License Unlock + Hive Finish + Unanimous Convergence) extracted to new scenes.js (-785 lines; app.js 16,154→15,369)
 v3.41.0   2026-05-16  app.js split: theme/mute consolidation into theme.js + audio extraction to new audio.js (235 lines moved out, 16,389→16,154)
 v3.40.1   2026-05-16  Audit-driven: cross-page toggle parity (theme+mute on 5 setup screens & helper pages) + full cache-bust sweep + Audit Methodology v1 doc shipped
 v3.40.0   2026-05-16  Deep Dive timing + tokens fixes + deprecation watchdog (3 triggers, unthrottled, /v1/models pricing assumption documented)
