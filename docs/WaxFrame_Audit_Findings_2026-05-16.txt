@@ -1,0 +1,223 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — AUDIT FINDINGS 2026-05-16
+════════════════════════════════════════════════════════════
+Run by:              Claude (under R David Paine III direction)
+WaxFrame version:    v3.40.0 audited; v3.40.1 closes 3 findings
+Methodology:         docs\WaxFrame_Audit_Methodology_v1.txt
+Lives:               docs\WaxFrame_Audit_Findings_2026-05-16.txt
+
+═════════════════════════════════════════════════════════════
+DIAGNOSIS CORRECTION NOTE
+═════════════════════════════════════════════════════════════
+
+First-pass version of this report (now superseded) framed the
+theme-toggle complaint as a "theme.js cache-bust" issue. That
+was wrong. The cache-bust drift on theme.js is REAL but it
+was NOT the user-facing symptom. David clarified the actual
+complaint: the 5 SETUP SCREENS inside the main app don't have
+theme/mute toggles in their upper right slot at all — full
+cross-page parity gap. This document now reflects the
+corrected diagnosis.
+
+Lesson captured in methodology: audit findings must be
+verified against the actual user-visible symptom, not just
+the most convenient code-level explanation.
+
+═════════════════════════════════════════════════════════════
+EXECUTIVE SUMMARY
+═════════════════════════════════════════════════════════════
+
+First audit pass run after v3.40.0 shipped. After diagnosis
+correction:
+
+  CRITICAL:     1 finding (cross-page parity — toggles missing
+                from setup screens) — SHIPPED v3.40.1
+  ANNOYING:     2 findings — 1 SHIPPED, 1 QUEUED
+  COSMETIC:     2 findings — 1 SHIPPED, 1 QUEUED
+  INTENTIONAL:  3 items added to audit-skip list
+
+═════════════════════════════════════════════════════════════
+FINDING 1 — Cross-page parity: setup screens missing theme +
+            mute toggles  [CRITICAL]  — SHIPPED v3.40.1
+═════════════════════════════════════════════════════════════
+
+VERIFIED ROOT CAUSE: the 5 setup screens (Worker Bees,
+Builder, Project, Reference, Document) use a `.fs-header`
+pattern with three sections: left (hamburger + back), brand
+(logo), and right (only the `.setup-step-badge`). No theme
+toggle, no mute toggle anywhere in the header.
+
+Compare against:
+  • Work screen has them in `.work-topbar-right`
+  • Helper pages have theme (not mute) in `.page-header-controls`
+  • Welcome screen has theme in body (intentional placement,
+    out of scope per David)
+
+User-visible symptom: cannot change theme or toggle mute
+while on setup screens. Forced to navigate to welcome or
+work just to change theme.
+
+FIX SHIPPED v3.40.1:
+  • Wrapped each `.setup-step-badge` in a new
+    `.fs-header-right` div containing the badge plus a mute
+    button plus 3 theme buttons (light/auto/dark). 5 setup
+    screens get identical markup.
+  • Added `.fs-header-right` CSS rule mirroring
+    `.work-topbar-right` layout values (flex/gap/alignment).
+  • `_updateMuteBtn` widened from `#workMuteBtn` id-target
+    to `.mute-btn` class-target so all mute buttons across
+    the page reflect the same state.
+
+──────────────────────────────────────────────────────────
+FINDING 2 — Helper pages missing mute toggle  [ANNOYING]
+            — SHIPPED v3.40.1
+──────────────────────────────────────────────────────────
+
+Helper pages (User Manual, Doc Playbooks, What Are Tokens,
+API Details, Prompt Editor) have theme buttons in
+`.page-header-controls` but no mute. Less critical than
+Finding 1 since no audio fires on helper pages, but the
+inconsistency itself is a parity issue.
+
+FIX SHIPPED v3.40.1:
+  • Added mute button to all 5 helper pages.
+  • Extended `theme.js` with mute state machinery
+    (`_isMuted`, `toggleMute`, class-targeting
+    `_updateMuteBtn`). Helper pages don't load app.js, so
+    theme.js mirrors the app.js definitions — same
+    localStorage key (`waxframe_muted`) so state persists
+    across page navigations.
+  • Pattern matches the existing license-helper.js model
+    ("self-contained mirror of in-app functions for
+    helper pages").
+
+──────────────────────────────────────────────────────────
+FINDING 3 — Cache-bust drift across helper scripts  [COSMETIC]
+            — SHIPPED v3.40.1
+──────────────────────────────────────────────────────────
+
+VERIFIED ROOT CAUSE: helper script cache-bust query strings
+across the 6 HTML files were inconsistent before v3.40.1:
+  • `js/theme.js` and `js/api-links.js`: NO `?v=` at all
+    (cache-bust completely absent — any future broken
+    version would never invalidate user browser caches)
+  • `js/nav-helper.js?v=3.22.6` (frozen at old version)
+  • `js/license-helper.js?v=3.22.6` (frozen at old version)
+  • `js/docs-scrollspy.js?v=3.22.6` (frozen at old version)
+  • `js/templates.js?v=3.38.11` (frozen at old version)
+
+Latent maintenance issue, not directly causing any current
+user-visible bug. But it's a landmine — when one of those
+files gets edited, the cache-bust will need a bump that's
+easy to forget.
+
+FIX SHIPPED v3.40.1:
+  • Standardized: every `<script src>` in every HTML file
+    now carries `?v=3.40.1`. Discipline is now mechanical
+    — every release bumps every cache-bust, no exceptions.
+  • Theme.js and api-links.js cache-busts added
+    (previously absent entirely).
+  • Comment-header build stamps and meta build tags also
+    swept to `20260516-002` across all 6 HTML files.
+
+──────────────────────────────────────────────────────────
+FINDING 4 — restaurant-review playbook page text stale
+            [ANNOYING] — QUEUED for next release
+──────────────────────────────────────────────────────────
+
+document-playbooks.html line 1800 still says:
+  "2–4 rounds typical (estimated, not measured)"
+
+T8 Restaurant Review was measured 2026-05-10 (Pearl's
+Saltwater Grille v2.0, 5 rounds). Playbook Test Master v24
+has the data; page text never got updated.
+
+Fix: rewrite line 1800 to match the format used by the
+other measured playbooks. One-line edit.
+
+NOT SHIPPED in v3.40.1 because it's content (documentation
+copywriting) rather than code parity. Queue for the next
+release that touches helper pages for content reasons.
+
+──────────────────────────────────────────────────────────
+FINDING 5 — MODEL_LABELS dictionary is vestigial dead code
+           [COSMETIC] — QUEUED
+──────────────────────────────────────────────────────────
+
+Per architecture comment at app.js line 5878,
+MODEL_LABELS was demoted to "safety net" in v3.26.0. As of
+v3.40.1, the dictionary has zero consumers — its .tag and
+.note properties are not read anywhere in the rendering
+path. The one reference (line ~15669) accesses by AI id
+rather than model id, so it always returns undefined.
+
+Removal is low-value, low-risk. Queued for a future quiet
+cleanup release. Documented in Backlog v27.
+
+═════════════════════════════════════════════════════════════
+AUDIT-SKIP LIST ADDITIONS
+═════════════════════════════════════════════════════════════
+
+The following were investigated during this audit and
+confirmed intentional. Do NOT re-flag in future audits.
+
+  • document-playbooks.html "estimated, not measured" on
+    T10 business-review (line 2086) and T11 multi-platform-
+    review (line 2179). These are accurate — those tests
+    have not been measured yet.
+
+  • Inline styles in index.html (24 hits): all are either
+    display:none for JS-toggled visibility OR snowflake
+    CSS-variable seeds. Pattern documented previously.
+
+  • _hiveMode / renderHiveModeToggle / setHiveMode — the
+    mode toggle has been parking-lot for removal since the
+    v3.30.x architecture work but remains in code. Whether
+    it stays or goes is a design decision, not an audit
+    finding.
+
+  • Welcome screen theme toggle placement in body (not
+    upper right). David explicitly confirmed welcome screen
+    is out of scope for the cross-page parity sweep — its
+    layout is intentionally different.
+
+═════════════════════════════════════════════════════════════
+CATEGORIES NOT FULLY COVERED THIS PASS
+═════════════════════════════════════════════════════════════
+
+This audit was a first pass. Categories spot-checked but
+not exhaustively covered (queued for future audit passes):
+
+  • Dead CSS audit — would need both lists (classes used
+    vs classes defined) and a diff. Worth its own dedicated
+    pass.
+
+  • Dead function audit — 404 function definitions in
+    app.js. Manual cross-reference is multi-hour. Best
+    done with an AST-walking script.
+
+  • Behavior consistency audit — toast wording, modal
+    patterns, error-card structure — spot-checked only.
+
+  • State recovery audit — not done this pass. Requires
+    browser-based smoke-testing.
+
+═════════════════════════════════════════════════════════════
+SHIPPING SUMMARY
+═════════════════════════════════════════════════════════════
+
+SHIPPED in v3.40.1:
+  • Finding 1 (CRITICAL — cross-page parity)
+  • Finding 2 (ANNOYING — helper-page mute)
+  • Finding 3 (COSMETIC — cache-bust drift)
+
+QUEUED:
+  • Finding 4 (ANNOYING — restaurant-review text fix)
+  • Finding 5 (COSMETIC — MODEL_LABELS removal)
+  • Dead CSS audit (future audit pass)
+  • Dead function audit (future audit pass — needs tooling)
+  • State recovery audit (David-driven, browser-based)
+
+═════════════════════════════════════════════════════════════
+END OF FILE
+═════════════════════════════════════════════════════════════

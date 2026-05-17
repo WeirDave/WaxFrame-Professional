@@ -1,0 +1,286 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — CODE AUDIT METHODOLOGY (v1)
+════════════════════════════════════════════════════════════
+Created:             2026-05-16
+WaxFrame version:    v3.40.0 Pro
+Maintained by:       R David Paine III
+Lives:               docs\WaxFrame_Audit_Methodology_v1.txt
+
+═════════════════════════════════════════════════════════════
+PURPOSE
+═════════════════════════════════════════════════════════════
+
+A repeatable framework for finding dead code, broken
+references, parity gaps, and stragglers in the WaxFrame
+codebase before adding new features. The goal is steady-state
+quality: ship features only when the core is humming.
+
+Run an audit:
+  • Before any new feature work begins
+  • After any major refactor lands
+  • On a quarterly cadence even when nothing else changed
+  • On demand when something feels off
+
+Each audit run produces a findings report (snapshot) that
+either ships fixes immediately or queues items in the
+Backlog Master. The findings report has a date stamp and
+gets archived after items close.
+
+═════════════════════════════════════════════════════════════
+SIX AUDIT CATEGORIES
+═════════════════════════════════════════════════════════════
+
+Each category has a grep pattern, a manual verification
+step, and a filing rule.
+
+──────────────────────────────────────────────────────────
+1. CROSS-PAGE PARITY AUDIT
+──────────────────────────────────────────────────────────
+What it finds: features that work on one page but not
+others. Theme toggle, nav menu, license badge, footer pills.
+
+Grep patterns:
+  • All <script src=> across all HTML files
+    grep -hE '<script src=' index.html waxframe-user-manual.html
+      document-playbooks.html what-are-tokens.html
+      api-details.html prompt-editor.html | sort -u
+  • Same for <link>, inline event handlers, body attrs
+
+Manual step: load each helper page in browser, click every
+toggle / button / link, confirm parity with index.html.
+
+Filing rule: parity mismatches always file as critical or
+annoying — there's no "intentional parity gap" except for
+features that are explicitly only on certain screens (e.g.
+the Round button isn't on helper pages).
+
+──────────────────────────────────────────────────────────
+2. DEAD REFERENCE AUDIT
+──────────────────────────────────────────────────────────
+What it finds: code that points at something that doesn't
+exist. Missing files, undefined functions, ghost CSS
+classes, dead localStorage keys.
+
+Grep patterns:
+  • <script src> exists in HTML — does the file exist?
+    For each script src, curl the URL or check the repo.
+  • <link href> for CSS — same.
+  • CSS classes used in HTML but never defined in style.css
+    Build two lists: classes used (in HTML/JS strings) vs
+    classes defined; the diff is candidates.
+  • Functions called but not defined
+    Hard in JS without AST tooling. Best proxy: smoke-test
+    in browser and check console for ReferenceErrors.
+  • localStorage keys read but never written
+    grep -hE "localStorage\.(getItem|removeItem)\(" app.js
+    against
+    grep -hE "localStorage\.setItem\(" app.js
+
+Manual step: for any candidate, confirm by attempting to
+trigger the code path in browser. A dead reference that's
+never executed is still a bug — it WILL crash if the path
+becomes live.
+
+Filing rule:
+  • Dead reference on a hot code path → CRITICAL
+  • Dead reference on a cold path → ANNOYING
+  • Reference that conditionally executes only on a future
+    feature flag → DOCUMENT AS INTENTIONAL
+
+──────────────────────────────────────────────────────────
+3. DEAD CODE AUDIT
+──────────────────────────────────────────────────────────
+What it finds: code that IS defined but nothing uses.
+MODEL_LABELS is the canonical case. Also: functions never
+called, CSS rules never matched, localStorage keys written
+but never read.
+
+Grep patterns:
+  • For each function name defined in app.js, count refs:
+    grep -c "\bFUNCNAME\b" app.js  + helper JS files + HTML
+    (HTML needed because onclick= handlers reference funcs)
+  • CSS classes defined but never used in HTML/JS strings:
+    Two lists, the diff.
+  • localStorage keys written but never read:
+    Inverse of category 2's pattern.
+  • Const dictionaries with no consumers (the MODEL_LABELS
+    pattern): find every property read of an object name.
+
+Manual step: before declaring code dead, confirm by:
+  • Searching for the symbol in HTML inline handlers
+  • Searching for window.SYMBOL or window['SYMBOL']
+  • Confirming it's not exposed for external integrations
+    (the dev console, the wfSat instrumentation pattern)
+
+Filing rule:
+  • Dead code with risk of being called from another file →
+    leave it, document as vestigial
+  • Dead code that's purely internal → COSMETIC, queue for
+    a low-risk cleanup release
+  • Dead code that's confusing other audits (e.g. shows up
+    as "is this current?") → COSMETIC, priority bump
+
+──────────────────────────────────────────────────────────
+4. BEHAVIOR-CONSISTENCY AUDIT
+──────────────────────────────────────────────────────────
+What it finds: same concept implemented differently in
+different places. Toast wording, modal open/close, error
+card structure, confirm-before-destructive patterns.
+
+Grep patterns:
+  • All toast() calls — compare wording/punctuation style
+    grep -nE "toast\(" app.js
+  • All wfConfirm() / confirm() — should be wfConfirm only
+    grep -nE "\bconfirm\(" app.js  (should be zero,
+    legacy confirm() was replaced)
+  • All modal open/close — pattern should be consistent
+  • Console log conventions — consoleLog() vs console.log()
+
+Manual step: review the candidates as a list, decide which
+is the canonical pattern, file divergences.
+
+Filing rule:
+  • Inconsistency that confuses users (different toast
+    wording for same action) → ANNOYING
+  • Inconsistency that confuses developers (mixed modal
+    patterns) → COSMETIC unless it causes bugs
+  • Inconsistency that's a vestige (legacy browser confirm
+    leftover) → CRITICAL (these are bugs waiting to happen)
+
+──────────────────────────────────────────────────────────
+5. STATE-RECOVERY AUDIT
+──────────────────────────────────────────────────────────
+What it finds: what survives a page reload, what doesn't,
+and where state can get into a bad shape.
+
+Grep patterns:
+  • Every localStorage.setItem — what's the key, what's the
+    schema, is there a migration path if schema changes?
+  • Every IndexedDB write — same question
+  • Every DOMContentLoaded init step — does each restore
+    what it should from storage?
+
+Manual step:
+  • Hard reload the app — does the session restore intact?
+  • Clear localStorage but keep IndexedDB — does it fail
+    gracefully?
+  • Clear IndexedDB but keep localStorage — does the
+    eviction-detect flag work?
+  • Run on a fresh browser profile — first-time experience?
+
+Filing rule:
+  • State loss on reload → CRITICAL
+  • Migration that silently fails → CRITICAL
+  • State that should reset but doesn't → ANNOYING
+  • State that resets but probably shouldn't → ANNOYING
+
+──────────────────────────────────────────────────────────
+6. CONFIGURATION-DRIFT AUDIT
+──────────────────────────────────────────────────────────
+What it finds: version stamps, build constants, comment-
+header build dates, cache-bust query strings — anywhere
+the version metadata diverges across files.
+
+Grep patterns:
+  • The 4 canonical version stamps:
+    1. meta name="waxframe-build" in index.html
+    2. APP_VERSION in version.js
+    3. BUILD constant in app.js
+    4. app.js?v= cache-bust in index.html
+  • 6-file cache-bust sweep:
+    style.css?v=, version.js?v=, app.js?v= across
+    index.html + 5 helper pages
+  • Comment-header "Build:" lines in HTML (line 3 of each)
+  • Cache-bust query strings on EVERY <script src> — any
+    missing is a future cache-staleness landmine
+
+Manual step: a single grep can produce a side-by-side
+comparison. Anything diverging gets fixed in one sweep.
+
+Filing rule:
+  • Any drift → SHIP IMMEDIATELY as part of next release
+
+═════════════════════════════════════════════════════════════
+SEVERITY LEVELS
+═════════════════════════════════════════════════════════════
+
+CRITICAL — User-facing broken behavior. The kind of thing
+that makes a user say "I can't do X". Ship in next release.
+
+ANNOYING — Visible quirks that erode polish. Theme toggle
+not propagating, button label inconsistency. Queue.
+
+COSMETIC — Vestigial code, dead metadata. No user impact
+but rots the codebase over time. Quiet cleanup release.
+
+INTENTIONAL — Looks like a bug but is deliberate, with
+context (e.g. display:none inline styles toggled via JS,
+which are explicitly documented as intentional). Add to
+the audit-skip list so future audits don't re-flag them.
+
+═════════════════════════════════════════════════════════════
+THE AUDIT-SKIP LIST
+═════════════════════════════════════════════════════════════
+
+Audited and confirmed intentional — DO NOT re-flag in
+future audits.
+
+  • Inline style="display:none" attributes (file inputs,
+    banners, modals, dev toolbar, custom AI selects).
+    Toggled via direct JS .style manipulation. Refactor
+    to .is-hidden was tried and caused show/hide
+    regressions.
+  • Inline style="--sx:Xpx;--fall:Ypx" snowflake seeds.
+    CSS-variable injections, intentional.
+  • MODEL_LABELS dictionary in app.js. Vestigial from
+    pre-v3.26.0 architecture. One dead read at line
+    ~15669 (returns undefined, no impact). Removal is a
+    cosmetic cleanup, not urgent.
+  • The "estimated, not measured" wording on
+    document-playbooks.html for T10 business-review and
+    T11 multi-platform-review — these are accurate;
+    those playbooks legitimately have no measured runs
+    yet.
+
+═════════════════════════════════════════════════════════════
+WHAT AN AUDIT REPORT LOOKS LIKE
+═════════════════════════════════════════════════════════════
+
+Each audit produces a dated findings document:
+
+  docs\WaxFrame_Audit_Findings_YYYY-MM-DD.txt
+
+Structure:
+  • Header: date, WaxFrame version audited, who ran it
+  • Per-category findings, each with severity tag
+  • Recommended actions (ship now / queue / document)
+  • Audit-skip list updates (anything new confirmed
+    intentional during the audit)
+
+When a finding ships:
+  • Mark it CLOSED in the findings document
+  • Move to RECENTLY SHIPPED in Backlog Master
+  • CHANGELOG entry on the release that fixes it
+
+═════════════════════════════════════════════════════════════
+TOOL CHAIN
+═════════════════════════════════════════════════════════════
+
+Currently audits are done by hand with grep + browser
+smoke-testing. Possible future automation:
+
+  • A pre-release lint script: configuration-drift audit
+    can be 100% automated. Sanity check before zip.
+  • A dead-code detector: harder; needs AST traversal
+    (acorn-walk in Node) to find functions defined but
+    not referenced. Worth building only if dead code
+    becomes a recurring problem.
+  • Visual regression snapshots: catch CSS deletion
+    sweep regressions. Out of scope for one developer.
+
+The most important tool is the audit DISCIPLINE — running
+the categories before shipping, not after.
+
+═════════════════════════════════════════════════════════════
+END OF FILE
+═════════════════════════════════════════════════════════════
