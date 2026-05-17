@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260516-009
+//  Build: 20260516-010
 //
 //  Storage primitives + session persistence. Pulled from app.js
 //  in v3.45.0 (primitives) and v3.46.0 (session save/load).
@@ -375,4 +375,253 @@ async function loadSession() {
       return true;
     } catch(e2) { return false; }
   }
+}
+
+
+/* =============================================================
+   REFERENCE DOCS SNAPSHOT  (extracted from app.js v3.47.0)
+   Tiny helper used by saveSession for history capture.
+   ============================================================= */
+// Snapshot reference docs for history capture — returns a deep-enough copy
+// so later edits to the live referenceDocs array don't mutate historical entries.
+function snapshotReferenceDocs() {
+  return referenceDocs.map(d => ({ ...d }));
+}
+
+
+/* =============================================================
+   SETTINGS PERSISTENCE — split storage  (extracted v3.47.0)
+   saveHive    — AI list + API keys, persistent across projects
+   saveProject — project name/version/goal/docTab, per project
+   loadSettings — boot-path read of both, with legacy migration
+   ============================================================= */
+// saveHive — AI list + keys — persistent forever
+function saveHive() {
+  const keys = {};
+  const models = {};
+  const customAIConfigs = {};
+  const customAIIds = new Set(
+    aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)).map(a => a.provider)
+  );
+  Object.keys(API_CONFIGS).forEach(id => {
+    if (API_CONFIGS[id]._key) keys[id] = API_CONFIGS[id]._key;
+    if (API_CONFIGS[id].model) models[id] = API_CONFIGS[id].model;
+    if (customAIIds.has(id)) {
+      const { _key, ...rest } = API_CONFIGS[id];
+      customAIConfigs[id] = rest;
+    }
+  });
+  const hive = {
+    activeAIIds:     activeAIs.map(a => a.id),
+    knownDefaultIds: DEFAULT_AIS.map(d => d.id),
+    hiveMode:        _hiveMode,
+    builder,
+    keys,
+    models,
+    customAIs: aiList.filter(a => !DEFAULT_AIS.find(d => d.id === a.id)),
+    customAIConfigs
+  };
+  try { localStorage.setItem(LS_HIVE, JSON.stringify(hive)); } catch(e) { console.warn('[saveHive] write failed:', e); }
+  updateSetupRequirements();
+}
+
+// saveProject — project name/version/goal/docTab — cleared per project
+function saveProject() {
+  const proj = {
+    projectName:    document.getElementById('projectName')?.value    || '',
+    projectVersion: document.getElementById('projectVersion')?.value || '',
+    goalDocType:    document.getElementById('goalDocType')?.value    || '',
+    goalAudience:   document.getElementById('goalAudience')?.value   || '',
+    goalOutcome:    document.getElementById('goalOutcome')?.value    || '',
+    goalScope:      document.getElementById('goalScope')?.value      || '',
+    goalTone:       document.getElementById('goalTone')?.value       || '',
+    goalNotes:      document.getElementById('goalNotes')?.value      || '',
+    exportMask:     document.getElementById('exportMask')?.value     || '',
+    lengthMode:     getLengthMode(),
+    lengthLimit:    document.getElementById('lengthLimit')?.value    || '',
+    lengthMin:      document.getElementById('lengthMin')?.value      || '',
+    lengthUnit:     document.getElementById('lengthUnit')?.value     || 'characters',
+    docTab,
+    pastedDocument: document.getElementById('pasteText')?.value || '',
+    referenceDocs: snapshotReferenceDocs(),
+  };
+  try { localStorage.setItem(LS_PROJECT, JSON.stringify(proj)); } catch(e) { console.warn('[saveProject] write failed:', e); }
+  updateLaunchRequirements();
+  updateMaskPreview();
+}
+
+function loadSettings() {
+  try {
+    // ── Try new split storage first ──
+    const hiveRaw = localStorage.getItem(LS_HIVE);
+    const projRaw = localStorage.getItem(LS_PROJECT);
+
+    // ── Legacy migration: if old key exists, migrate and delete it ──
+    const legacyRaw = localStorage.getItem(LS_SETTINGS);
+    if (legacyRaw && !hiveRaw) {
+      const s = JSON.parse(legacyRaw);
+      // Migrate keys and AI list to LS_HIVE
+      const keys = s.keys || {};
+      const hive = {
+        activeAIIds: s.activeAIIds,
+        knownDefaultIds: s.knownDefaultIds || DEFAULT_AIS.map(d => d.id),
+        builder: s.builder,
+        keys,
+        customAIs: (s.customAIs || []).filter(ai =>
+          // Only keep custom AIs that aren't duplicates of defaults
+          !DEFAULT_AIS.find(d => d.id === ai.id)
+        )
+      };
+      localStorage.setItem(LS_HIVE, JSON.stringify(hive));
+      localStorage.removeItem(LS_SETTINGS);
+    }
+
+    // ── Load hive (AI list + keys) ──
+    const hiveData = localStorage.getItem(LS_HIVE);
+    if (!hiveData) return false;
+    const h = JSON.parse(hiveData);
+
+    aiList = JSON.parse(JSON.stringify(DEFAULT_AIS));
+    // v3.31.0 — hiddenDefaultIds removed. Migrate any existing hidden
+    // defaults back into the visible aiList (one-time, silent). Legacy
+    // hives with hiddenDefaultIds now load with the full default set.
+    // No banner, no toast — by v3.31 the concept of "hidden defaults"
+    // simply doesn't exist anymore; pre-v3.31 users just see all 6
+    // defaults the next time they open the Worker Bees screen.
+    // (No-op today since aiList is already the full DEFAULT_AIS clone;
+    // kept for clarity / documentation of the migration intent.)
+    if (h.customAIs) {
+      h.customAIs.forEach(ai => {
+        if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
+        if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
+          API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
+        }
+        // Functions don't survive JSON — rebuild them if missing
+        const cfg = API_CONFIGS[ai.provider];
+        if (cfg && typeof cfg.headersFn !== 'function') {
+          cfg.headersFn = k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` });
+          cfg.bodyFn    = (m, prompt) => JSON.stringify({ model: m, messages: [{ role: 'user', content: prompt }] });
+          cfg.extractFn = d => d?.choices?.[0]?.message?.content || '';
+        }
+      });
+    }
+    if (h.keys) {
+      Object.keys(h.keys).forEach(id => {
+        if (API_CONFIGS[id]) API_CONFIGS[id]._key = h.keys[id];
+      });
+    }
+    if (h.models) {
+      Object.keys(h.models).forEach(id => {
+        if (API_CONFIGS[id]) {
+          API_CONFIGS[id].model = h.models[id];
+          // Re-sync Gemini endpoint if model was customised
+          if (id === 'gemini' && API_CONFIGS[id].endpointFn) {
+            API_CONFIGS[id].endpoint = API_CONFIGS[id].endpointFn(h.models[id]);
+          }
+        }
+      });
+    }
+    if (h.activeAIIds !== undefined) {
+      activeAIs = h.activeAIIds.map(id => aiList.find(a => a.id === id)).filter(Boolean);
+      DEFAULT_AIS.forEach(d => {
+        if (!h.activeAIIds.includes(d.id)) {
+          const wasKnown = h.knownDefaultIds && h.knownDefaultIds.includes(d.id);
+          if (!wasKnown) activeAIs.push(aiList.find(a => a.id === d.id));
+        }
+      });
+      activeAIs = activeAIs.filter(Boolean);
+    } else {
+      activeAIs = [...aiList];
+    }
+    builder = h.builder || null;
+
+    // v3.31.0 — Hive mode load + first-run auto-detect.
+    // If the hive was saved by v3.31+, h.hiveMode is set and we honor it.
+    // Pre-v3.31 hives don't have it; auto-detect: any custom AI with
+    // _modelsEndpoint → server, otherwise internet. Then writes back so
+    // subsequent loads skip detection.
+    if (h.hiveMode === 'internet' || h.hiveMode === 'server') {
+      _hiveMode = h.hiveMode;
+    } else {
+      const hasServerImport = Object.values(API_CONFIGS).some(c => c && c._modelsEndpoint);
+      _hiveMode = hasServerImport ? 'server' : 'internet';
+      // Persist immediately so the next load doesn't re-detect.
+      try { saveHive(); } catch(e) { /* deferred until later save */ }
+    }
+
+    // ── Load project (name/version/goal/docTab) ──
+    if (projRaw) {
+      const p = JSON.parse(projRaw);
+      if (p.projectName)    { const el = document.getElementById('projectName');    if (el) el.value = p.projectName; }
+      if (p.projectVersion) { const el = document.getElementById('projectVersion'); if (el) el.value = p.projectVersion; }
+      // Load structured goal fields
+      if (p.goalDocType)  { const el = document.getElementById('goalDocType');  if (el) el.value = p.goalDocType; }
+      if (p.goalAudience) { const el = document.getElementById('goalAudience'); if (el) el.value = p.goalAudience; }
+      if (p.goalOutcome)  { const el = document.getElementById('goalOutcome');  if (el) el.value = p.goalOutcome; }
+      if (p.goalScope)    { const el = document.getElementById('goalScope');    if (el) el.value = p.goalScope; }
+      if (p.goalTone)     { const el = document.getElementById('goalTone');     if (el) el.value = p.goalTone; }
+      if (p.goalNotes)    { const el = document.getElementById('goalNotes');    if (el) el.value = p.goalNotes; }
+      // Legacy migration: if old single projectGoal field exists, move to goalNotes
+      if (p.projectGoal && !p.goalDocType && !p.goalAudience && !p.goalOutcome && !p.goalScope && !p.goalTone && !p.goalNotes) {
+        const el = document.getElementById('goalNotes');
+        if (el) el.value = p.projectGoal;
+      }
+      if (p.exportMask)     { const el = document.getElementById('exportMask');     if (el) { el.value = p.exportMask; updateMaskPreview(); } }
+      if (p.lengthLimit)    { const el = document.getElementById('lengthLimit');    if (el) el.value = p.lengthLimit; }
+      if (p.lengthMin)      { const el = document.getElementById('lengthMin');      if (el) el.value = p.lengthMin; }
+      if (p.lengthUnit)     { const el = document.getElementById('lengthUnit');     if (el) el.value = p.lengthUnit; }
+      // v3.33.0 migration: pre-v3.33.0 projects have no lengthMode field. If a
+      // length limit is set without a mode, coerce to 'hardcap' (preserves prior
+      // ceiling-only behavior). Empty limit → 'none'. New projects use the
+      // explicit value.
+      let _restoreMode = p.lengthMode;
+      if (!_restoreMode || !['none','hardcap','target','range'].includes(_restoreMode)) {
+        _restoreMode = (p.lengthLimit && parseInt(p.lengthLimit, 10) > 0) ? 'hardcap' : 'none';
+      }
+      setLengthMode(_restoreMode);
+      if (p.lengthLimit || p.lengthMin || p.lengthUnit) updateLengthConstraintHint();
+      if (p.docTab) docTab = p.docTab;
+      // ── PASTED STARTING DOCUMENT restore (v3.21.14) ──
+      // Mirror of reference material restore: paste textarea content was DOM-only
+      // and lost on refresh until launch. Persisted to LS_PROJECT, restored here.
+      if (typeof p.pastedDocument === 'string') {
+        const pasteTa = document.getElementById('pasteText');
+        if (pasteTa) {
+          pasteTa.value = p.pastedDocument;
+          if (typeof updateProjLineNums === 'function') updateProjLineNums('projPasteNums', pasteTa);
+        }
+      }
+      // ── REFERENCE MATERIAL restore (v3.24.0 — multi-doc with v3-format migration) ──
+      // v4 (v3.24.0+) stores p.referenceDocs as array of {id, name, text, source, filename}.
+      // v3 (v3.21.0–v3.23.4) stored p.referenceMaterial string + p.referenceFilename string.
+      // If we see the old shape we convert it to a single-element array so no data is lost.
+      if (Array.isArray(p.referenceDocs)) {
+        referenceDocs = p.referenceDocs
+          .filter(d => d && typeof d === 'object')
+          .map(d => ({
+            id:       d.id       || generateRefDocId(),
+            name:     d.name     || 'Reference',
+            text:     d.text     || '',
+            source:   d.source === 'upload' ? 'upload' : 'paste',
+            filename: d.filename || null,
+          }));
+      } else if (typeof p.referenceMaterial === 'string' && p.referenceMaterial.trim()) {
+        const isUpload = typeof p.referenceFilename === 'string' && p.referenceFilename.trim();
+        referenceDocs = [{
+          id:       generateRefDocId(),
+          name:     isUpload ? p.referenceFilename : 'Reference 1',
+          text:     p.referenceMaterial,
+          source:   isUpload ? 'upload' : 'paste',
+          filename: isUpload ? p.referenceFilename : null,
+        }];
+      } else {
+        referenceDocs = [];
+      }
+      if (typeof renderReferenceCards === 'function') renderReferenceCards();
+      if (typeof updateRefGrandTotals === 'function') updateRefGrandTotals();
+      updateGoalCounter();
+    }
+
+    return true;
+  } catch(e) { return false; }
 }
