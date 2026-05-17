@@ -1090,6 +1090,184 @@ function getModelsForProvider(provider) {
   return [...new Set(models)];
 }
 
+// v3.40.0 — Live model-list fetch that bypasses the read cache.
+//
+// Identical to fetchModelsForProvider in network behavior, but ignores the
+// localStorage cache on read. Still WRITES to the cache on success, so the
+// dropdown and recommend pipeline get the fresher list as a side benefit
+// every time the watchdog runs. Use this whenever freshness matters more
+// than dropdown render speed (the deprecation watchdog) or when explicitly
+// refreshing on user demand.
+//
+// Mirrors fetchModelsForProvider's provider-specific request shapes so any
+// /v1/models endpoint quirk fix lives in BOTH functions or in a shared
+// helper later. Kept as a near-duplicate for now because the diff is small
+// and the unification refactor is its own concern.
+async function fetchModelsForProviderLive(provider) {
+  if (!MODEL_FILTERS[provider]) return null;
+
+  const cfg = API_CONFIGS[provider];
+  if (!cfg?._key) return null;
+
+  const cacheKey = `waxframe_models_${provider}`;
+
+  try {
+    let models = [];
+
+    if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'perplexity') {
+      const baseUrl = cfg.endpoint.replace(/\/v1\/.*/, '');
+      const resp = await fetch(`${baseUrl}/v1/models`, {
+        headers: cfg.headersFn(cfg._key)
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const filter = MODEL_FILTERS[provider];
+      models = (data?.data || []).map(m => m.id).filter(filter).sort();
+
+    } else if (provider === 'claude') {
+      // Route through the CF Worker proxy for the same CORS reason as
+      // fetchModelsForProvider — see comment block there for full context.
+      const resp = await fetch(`${cfg.endpoint}/v1/models`, {
+        headers: { 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' }
+      });
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      models = (data?.data || []).map(m => m.id).sort().reverse();
+
+    } else if (provider === 'gemini') {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models?key=${cfg._key}&pageSize=100`
+      );
+      if (!resp.ok) return null;
+      const data = await resp.json();
+      const filter = MODEL_FILTERS[provider];
+      models = (data?.models || [])
+        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
+        .map(m => m.name.replace('models/', ''))
+        .filter(filter)
+        .sort().reverse();
+    }
+
+    if (models.length > 0) {
+      models = [...new Set(models)];
+      try { localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models })); }
+      catch(e) { console.warn(`[models-cache-live:${provider}] write failed:`, e); }
+      return models;
+    }
+  } catch(e) {
+    console.warn(`[fetchModelsForProviderLive:${provider}] failed:`, e);
+    if (typeof WF_DEBUG !== 'undefined' && WF_DEBUG.captureFailure) {
+      WF_DEBUG.captureFailure({
+        code: 'MODELS_FETCH_FAILED',
+        provider,
+        message: e?.message || String(e)
+      });
+    }
+  }
+
+  return null;
+}
+
+// v3.40.0 — Deprecation watchdog.
+//
+// Runs on every reasonable trigger (app load, tab-visible, round-start) with
+// NO throttle. Always live-fetches /v1/models for every keyed AI, bypassing
+// the dropdown cache. Compares each AI's saved model against the live list.
+// Saved model missing from live list → flag it.
+//
+// ⚠ COST ASSUMPTION:
+// This design assumes /v1/models is and remains FREE across providers.
+// As of v3.40.0 release date (May 2026): OpenAI, Anthropic, Google (Gemini),
+// xAI (Grok), DeepSeek, and Perplexity all serve /v1/models without token
+// charges and without rate-limit concerns at single-user volume.
+//
+// If ANY provider starts charging for /v1/models, or imposes a rate limit
+// that single-user activity could approach, this design becomes wrong and
+// needs a throttle reintroduced. Likely shape of the fix: per-provider
+// throttle (since one provider charging doesn't justify slowing checks on
+// the others), tracked in localStorage with a configurable cooldown.
+//
+// Why we accepted unthrottled cost: zero token cost + no rate-limit risk +
+// async background work = no user-visible cost. Throttling adds complexity
+// for no current benefit and creates a stale-data window we explicitly
+// want to eliminate (the whole point of this feature).
+//
+// trigger: 'load' | 'visible' | 'round-start' — controls toast behavior.
+//   'load'        → always toast (clean or flagged)
+//   'visible'     → silent unless flagged (no "all good" noise on tab return)
+//   'round-start' → silent unless flagged (no "all good" mid-flow)
+//
+// Stores flagged AI ids on window._deprecatedModelFlags for the AI-card
+// renderer to read. Side effects: refreshes the dropdown model cache for
+// every keyed AI as a free byproduct of every run.
+async function detectDeprecatedModels(trigger = 'load') {
+  // Build the candidate list — all active AIs with a key on a fetchable
+  // provider. Custom AIs without a key but with _modelsEndpoint are
+  // excluded for now (their model lists come from a different code path).
+  const candidates = (window.activeAIs || []).filter(ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    return cfg && cfg._key && MODEL_FILTERS[ai.provider];
+  });
+
+  if (candidates.length === 0) {
+    // Nothing to check — no keyed AIs configured yet. Still toast on load
+    // so the user knows the watchdog exists and ran.
+    if (trigger === 'load') {
+      toast('✓ Worker Bees ready — no models to check yet');
+    }
+    return { checked: 0, flagged: [] };
+  }
+
+  // Fire all checks in parallel — providers don't share endpoints so the
+  // network round-trips overlap fully.
+  const results = await Promise.all(candidates.map(async ai => {
+    const cfg = API_CONFIGS[ai.provider];
+    const savedModel = cfg.model;
+    const liveList = await fetchModelsForProviderLive(ai.provider);
+
+    // Fetch failure → DO NOT flag. Provider hiccups, rate-limit blips, and
+    // CORS misfires should not produce false-positive deprecation warnings.
+    if (!liveList || liveList.length === 0) {
+      return { ai, savedModel, status: 'fetch_failed' };
+    }
+
+    if (liveList.includes(savedModel)) {
+      return { ai, savedModel, status: 'ok' };
+    }
+
+    return { ai, savedModel, status: 'deprecated', liveList };
+  }));
+
+  const flagged = results.filter(r => r.status === 'deprecated');
+  const flaggedIds = flagged.map(r => r.ai.id);
+
+  // Stash flagged ids globally for the AI-card renderer to read.
+  // Always reassign (don't merge) so a model that came back into
+  // availability un-flags itself on the next watchdog run.
+  window._deprecatedModelFlags = new Set(flaggedIds);
+
+  // Re-render the AI cards if the Setup screen is currently showing
+  // Worker Bees — otherwise the ⚠ marker won't appear until the user
+  // navigates back. renderAISetupGrid is no-op when the grid container
+  // isn't in the DOM, so call unconditionally.
+  try {
+    if (typeof renderAISetupGrid === 'function') {
+      renderAISetupGrid();
+    }
+  } catch(e) { /* render is best-effort */ }
+
+  // Toast behavior per trigger.
+  if (flagged.length > 0) {
+    const names = flagged.map(r => r.ai.name).join(', ');
+    toast(`⚠ Worker Bees — ${flagged.length} AI(s) have deprecated models (${names}). Open Setup → Worker Bees to fix.`);
+  } else if (trigger === 'load') {
+    toast(`✓ Worker Bees ready — model lists refreshed (${candidates.length} checked)`);
+  }
+  // 'visible' and 'round-start' triggers stay silent when nothing is flagged.
+
+  return { checked: candidates.length, flagged };
+}
+
 // v3.27.1: unified recommend-cache key resolver. Defaults use the provider
 // name (which equals the id for the built-in 6); customs use the AI's
 // generated id. Lets buildModelSelector and recheckModelForAI share one
@@ -1394,7 +1572,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260513-004';         // build stamp — update each session
+const BUILD       = '20260516-005';         // build stamp — update each session
 const LS_HIVE     = 'waxframe_v2_hive';      // AI list + API keys — persistent across projects
 const LS_PROJECT  = 'waxframe_v2_project';   // project name/version/goal/docTab — per project
 const LS_SESSION  = 'waxframe_v2_session';   // round state — per session
@@ -1524,25 +1702,12 @@ function setFileStatusState(el, state) {
 }
 
 // ── MUTE STATE ──
-let _isMuted = (localStorage.getItem('waxframe_muted') === 'true');
-
-function toggleMute() {
-  _isMuted = !_isMuted;
-  localStorage.setItem('waxframe_muted', _isMuted);
-  _updateMuteBtn();
-}
-
-function _updateMuteBtn() {
-  const btn = document.getElementById('workMuteBtn');
-  if (!btn) return;
-  btn.textContent = _isMuted ? '🔇' : '🔊';
-  btn.title       = _isMuted ? 'Unmute sounds' : 'Mute sounds';
-  btn.classList.toggle('is-muted', _isMuted);
-}
-
-function initMuteBtn() {
-  _updateMuteBtn();
-}
+// v3.41.0 — Moved to js/theme.js as the single source of truth. theme.js
+// is now loaded BEFORE app.js in index.html, so window._isMuted is
+// already initialized from localStorage by the time we reach any of the
+// audio-gating guards below. toggleMute(), _updateMuteBtn(), and
+// initMuteBtn() also live in theme.js — accessed as window globals from
+// HTML onclick handlers.
 
 // ── SLOW-RESPONDER ALERT STATE ──
 // v3.38.0 — User-level preference (not per-project, unlike length guard).
@@ -1596,223 +1761,14 @@ function initSlowResponderIndicator() {
   updateSlowResponderIndicator();
 }
 
-// ── ROUND COMPLETE SOUND ──
-function playRoundCompleteSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
+// ── AUDIO ──
+// v3.41.0 — All play* audio functions extracted to js/audio.js. Loaded
+// after js/theme.js (depends on window._isMuted) and before app.js so
+// the functions are globally available by the time anything here calls
+// them. See audio.js for: playRoundCompleteSound, playAlertSound,
+// playAlertIfUserDecisions, playAutoHaltSound, playSmokerSound,
+// playBuilderSound, playRosieSound, playFlyingCarSound.
 
-    // Trill: square wave with LFO wobble like a hovering bee
-    const trill = ctx.createOscillator();
-    const tg    = ctx.createGain();
-    trill.connect(tg);
-    tg.connect(ctx.destination);
-    trill.type = 'square';
-    trill.frequency.setValueAtTime(200, now);
-    const lfo = ctx.createOscillator();
-    const lg  = ctx.createGain();
-    lfo.frequency.value = 28;
-    lg.gain.value = 40;
-    lfo.connect(lg);
-    lg.connect(trill.frequency);
-    tg.gain.setValueAtTime(0, now);
-    tg.gain.linearRampToValueAtTime(0.07, now + 0.04);
-    tg.gain.setValueAtTime(0.07, now + 0.22);
-    tg.gain.exponentialRampToValueAtTime(0.001, now + 0.32);
-    lfo.start(now);   lfo.stop(now + 0.35);
-    trill.start(now); trill.stop(now + 0.35);
-
-    // Ping: one crisp high sine at the end
-    const ping = ctx.createOscillator();
-    const pg   = ctx.createGain();
-    ping.connect(pg);
-    pg.connect(ctx.destination);
-    ping.type = 'sine';
-    ping.frequency.value = 1046;
-    pg.gain.setValueAtTime(0, now + 0.30);
-    pg.gain.linearRampToValueAtTime(0.15, now + 0.32);
-    pg.gain.exponentialRampToValueAtTime(0.001, now + 0.80);
-    ping.start(now + 0.30);
-    ping.stop(now + 0.85);
-
-    setTimeout(() => ctx.close(), 1200);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// ── SMOKER START SOUND — soft breath of smoke ──
-// ── ALERT / WARNING SOUND — short two-chirp attention tone ──
-// Used when a destructive-action confirmation modal opens (e.g. discard
-// document confirmation in the Finish modal, v3.21.17). Two ascending sine
-// chirps ~80ms each with a 30ms gap between — short enough not to be
-// annoying, distinct enough to make the user actually look at the screen.
-function playAlertSound() {
-  if (_isMuted) return;
-  try {
-    const ctx  = new (window.AudioContext || window.webkitAudioContext)();
-    const now  = ctx.currentTime;
-    const chirp = (startAt, freq) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type  = 'sine';
-      o.frequency.setValueAtTime(freq, startAt);
-      g.gain.setValueAtTime(0, startAt);
-      g.gain.linearRampToValueAtTime(0.18, startAt + 0.012);
-      g.gain.setValueAtTime(0.18, startAt + 0.06);
-      g.gain.exponentialRampToValueAtTime(0.001, startAt + 0.085);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(startAt); o.stop(startAt + 0.09);
-    };
-    chirp(now,         880);
-    chirp(now + 0.11, 1320);
-    setTimeout(() => ctx.close(), 400);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// v3.36.33 — Plays the existing two-chirp alert (playAlertSound) ONLY
-// when the most-recent round produced one or more USER DECISIONs. Called
-// from each round-end path right after renderConflicts() so the audible
-// cue lines up with the visual surfacing of the decision cards. Mute is
-// respected via playAlertSound itself. Uses the same sound as the
-// "discard unexported project" confirm alert — no new audio assets
-// needed; pattern reused across the app for "user action required" cues.
-function playAlertIfUserDecisions() {
-  const last = history.length ? history[history.length - 1] : null;
-  if (last?.conflicts?.userDecisions?.length > 0) playAlertSound();
-}
-
-// v3.37.2 — Closes out P1.6 (auto-halted sound). Fires from _autoHalt()
-// for every halt reason EXCEPT convergence — ascending major-triad
-// arpeggio (C5 → E5 → G5), an "upper" cadence that reads as
-// "your turn, look at the modal" rather than "you failed." Distinct
-// from playAlertSound (ascending two-chirp 880→1320Hz = USER DECISION
-// needs attention) — both ascend, but the alert sound is two fast
-// chirps in the 880Hz+ range; halt sound is three slower tones starting
-// at C5 (523Hz) and topping out at G5 (784Hz). Distinct from
-// playRoundCompleteSound (bee trill + ping = round done, positive).
-// No new .wav asset — pure Web Audio synthesis, same approach as the
-// rest of the audio system. Respects mute per the standard audio rule.
-function playAutoHaltSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    // Each tone: 120ms sustain, 15ms attack ramp, 25ms exp release.
-    // Three sine tones climbing C5 → E5 → G5 — a major-triad arpeggio,
-    // unambiguously upward and positive.
-    const tone = (startAt, freq) => {
-      const o = ctx.createOscillator();
-      const g = ctx.createGain();
-      o.type  = 'sine';
-      o.frequency.setValueAtTime(freq, startAt);
-      g.gain.setValueAtTime(0, startAt);
-      g.gain.linearRampToValueAtTime(0.16, startAt + 0.015);
-      g.gain.setValueAtTime(0.16, startAt + 0.12);
-      g.gain.exponentialRampToValueAtTime(0.001, startAt + 0.145);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(startAt); o.stop(startAt + 0.15);
-    };
-    tone(now,         523);   // C5
-    tone(now + 0.14,  659);   // E5
-    tone(now + 0.28,  784);   // G5
-    setTimeout(() => ctx.close(), 600);
-  } catch (e) { /* audio not supported — fail silently */ }
-}
-
-function playSmokerSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime, dur = 1.6;
-    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
-    const n = ctx.createBufferSource(); n.buffer = buf;
-    const f = ctx.createBiquadFilter(); f.type = 'bandpass';
-    f.frequency.setValueAtTime(400, now);
-    f.frequency.exponentialRampToValueAtTime(200, now + dur);
-    f.Q.value = 2.5;
-    const g = ctx.createGain();
-    g.gain.setValueAtTime(0, now);
-    g.gain.linearRampToValueAtTime(0.10, now + 0.2);
-    g.gain.setValueAtTime(0.10, now + 1.0);
-    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
-    n.connect(f); f.connect(g); g.connect(ctx.destination);
-    n.start(now); n.stop(now + dur);
-    setTimeout(() => ctx.close(), 2000);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// ── BUILDER START SOUND — pneumatic hiss + belt rolling ──
-function playBuilderSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-
-    // Pneumatic hiss
-    const buf1 = ctx.createBuffer(1, ctx.sampleRate * 0.35, ctx.sampleRate);
-    const d1 = buf1.getChannelData(0);
-    for (let i = 0; i < d1.length; i++) d1[i] = (Math.random() * 2 - 1);
-    const n1 = ctx.createBufferSource(); n1.buffer = buf1;
-    const f1 = ctx.createBiquadFilter(); f1.type = 'highpass';
-    f1.frequency.setValueAtTime(1500, now);
-    f1.frequency.exponentialRampToValueAtTime(400, now + 0.3);
-    const g1 = ctx.createGain();
-    g1.gain.setValueAtTime(0, now);
-    g1.gain.linearRampToValueAtTime(0.22, now + 0.02);
-    g1.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-    n1.connect(f1); f1.connect(g1); g1.connect(ctx.destination);
-    n1.start(now); n1.stop(now + 0.37);
-
-    // Belt motor rolling
-    [50, 100, 150].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.type = 'sawtooth'; o.frequency.value = freq;
-      const vol = [0.10, 0.06, 0.03][i];
-      g.gain.setValueAtTime(0, now + 0.3);
-      g.gain.linearRampToValueAtTime(vol, now + 0.5);
-      g.gain.setValueAtTime(vol, now + 1.1);
-      g.gain.exponentialRampToValueAtTime(0.001, now + 1.6);
-      o.connect(g); g.connect(ctx.destination);
-      o.start(now + 0.3); o.stop(now + 1.65);
-    });
-
-    setTimeout(() => ctx.close(), 2000);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// ── ROSIE THE ROBOT — ascending square-wave beeps ──
-function playRosieSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    [440, 660, 880, 1100].forEach((freq, i) => {
-      const o = ctx.createOscillator(), g = ctx.createGain();
-      o.connect(g); g.connect(ctx.destination);
-      o.type = 'square';
-      const t = ctx.currentTime + i * 0.14;
-      o.frequency.setValueAtTime(freq, t);
-      g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(0.18, t + 0.02);
-      g.gain.linearRampToValueAtTime(0, t + 0.12);
-      o.start(t); o.stop(t + 0.15);
-    });
-    setTimeout(() => ctx.close(), 800);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// ── FLYING CAR ARRIVAL — plays Kai's WaxFrame hive-approved fly-in sound ──
-// File lives at sounds/waxframe_hive_approved_flyin.wav. If the file is
-// missing or audio is blocked, fails silently.
-function playFlyingCarSound() {
-  if (_isMuted) return;
-  try {
-    const audio = new Audio('sounds/waxframe_hive_approved_flyin.wav');
-    audio.volume = 0.85;
-    audio.play().catch(() => {});
-  } catch(e) { /* audio not supported — fail silently */ }
-}
 
 let _roundTimerInterval = null;
 let _roundTimerStart    = null;
@@ -2316,445 +2272,11 @@ function attachDevToolbarDrag() {
   });
 }
 
-// ── LICENSE UNLOCK SCENE ──
-function playUnlockScene() {
-  const scene  = document.getElementById('unlockScene');
-  const logo   = document.getElementById('unlockLogo');
-  const canvas = document.getElementById('unlockCanvas');
-  const bee    = document.getElementById('unlockBee');
-  const title  = document.getElementById('unlockTitle');
-  const sub    = document.getElementById('unlockSub');
-  if (!scene || !canvas || !logo) return;
-
-  // ── Shared AudioContext — created and resumed immediately while still in the user gesture stack.
-  // Pre-fetching and decoding the MP3 now means the clang fires synchronously at T+1.6s
-  // with no async fetch delay, which was causing the sound to misfire on first play.
-  // (v3.21.25) Skip the entire audio prep when muted — playMetalClang() guards its own
-  // playback path internally, but creating the AudioContext + fetching/decoding the MP3
-  // is wasted work otherwise. Both args go through to playMetalClang as null; that
-  // function returns at its own _isMuted guard before touching either argument.
-  let sharedAudioCtx = null;
-  let clangBuffer    = null;
-  if (!_isMuted) {
-    sharedAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    sharedAudioCtx.resume();
-    fetch('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3')
-      .then(r => r.arrayBuffer())
-      .then(buf => sharedAudioCtx.decodeAudioData(buf))
-      .then(decoded => { clangBuffer = decoded; })
-      .catch(() => {});
-  }
-
-  // ── Reset — everything hidden, logo pre-scaled for stamp ──
-  logo.src = 'images/Waxframe_logo_v19.png';
-  logo.style.transition = 'none';
-  logo.style.opacity = '0';
-  logo.style.transform = 'scale(1.15)';
-  [title, sub].forEach(el => { if (el) { el.style.opacity = '0'; el.style.transform = 'translateY(12px)'; } });
-  if (bee) { bee.style.opacity = '0'; bee.style.right = '-400px'; bee.style.animation = ''; }
-
-  // Canvas — full screen fixed overlay for drips and smoke
-  const sw = window.innerWidth;
-  const sh = window.innerHeight;
-  canvas.width  = sw;
-  canvas.height = sh;
-  canvas.style.position = 'fixed';
-  canvas.style.inset = '0';
-  canvas.style.width  = sw + 'px';
-  canvas.style.height = sh + 'px';
-  canvas.style.zIndex = '999999';
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, sw, sh);
-
-  // ── Particle state ──
-  const drips    = [];
-  const splats   = [];
-  const smokes   = [];
-  const bigPuffs = [];  // large smoker puffs that fill the screen
-  let dripping   = false;
-  let smokeMode  = 'off';
-  let whiteFill  = 0;   // 0–1, drives the white flash overlay
-  let rafId      = null;
-
-  // Nozzle — calculated from bee's actual screen position when dripping starts
-  let nozzleX = sw * 0.6;
-  let nozzleY = sh * 0.35;
-
-  // ── T+0 — scene visible but transparent, fade to black over 1.5s ──
-  scene.style.transition = 'none';
-  scene.style.opacity = '0';
-  scene.classList.add('active');
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      scene.style.transition = 'opacity 1.5s ease-in';
-      scene.style.opacity = '1';
-    });
-  });
-
-  // ── T+1.6s — metal clang, logo stamps in ──
-  setTimeout(() => {
-    scene.style.transition = 'none'; // lock in black before stamp
-    playMetalClang(sharedAudioCtx, clangBuffer);
-  }, 1600);
-
-  // ── T+1.65s — logo stamps in + recoil + sparks ──
-  setTimeout(() => {
-    logo.style.transition = 'opacity 0.18s ease-out, transform 0.18s cubic-bezier(0.2,0.8,0.3,1.2)';
-    logo.style.opacity = '1';
-    logo.style.transform = 'scale(1.0)';
-    // Recoil — nudge up 10px then settle back
-    setTimeout(() => {
-      logo.style.transition = 'transform 0.08s ease-out';
-      logo.style.transform = 'scale(1.0) translateY(-10px)';
-      setTimeout(() => {
-        logo.style.transition = 'transform 0.25s cubic-bezier(0.3,1.4,0.5,1)';
-        logo.style.transform = 'scale(1.0) translateY(0px)';
-      }, 80);
-    }, 160);
-    // Spark burst
-    spawnSparks(scene);
-  }, 1650);
-
-  // ── T+5.05s — bee flies in ──
-  setTimeout(() => {
-    if (!bee) return;
-    bee.style.transition = 'right 0.7s cubic-bezier(0.2,0.8,0.4,1), opacity 0.3s ease';
-    bee.style.opacity = '1';
-    bee.style.right = 'calc(50% - 485px)';
-  }, 5050);
-
-  // ── T+5.75s — start dripping ──
-  setTimeout(() => {
-    // Calculate nozzle from bee's actual screen position (gun tip is ~30% from left, 55% from top of bee image)
-    if (bee) {
-      const beeRect = bee.getBoundingClientRect();
-      nozzleX = beeRect.left + beeRect.width * 0.3 - 100;
-      nozzleY = beeRect.top  + beeRect.height * 0.55 + 80;
-    }
-    dripping = true;
-    startCanvas();
-  }, 5750);
-
-  // ── T+7.75s — smoker puffs begin blowing across screen ──
-  setTimeout(() => { smokeMode = 'puff'; }, 7750);
-
-  // ── T+9.4s — white flash whiteout (puffs fill enough, now go fully white) ──
-  setTimeout(() => {
-    smokeMode = 'white';
-  }, 9400);
-
-  // ── T+9.8s — swap logo + anvil clang at peak white ──
-  setTimeout(() => {
-    dripping  = false;
-    logo.src  = 'images/Waxframe_Logo_Licensed_v1.png';
-    playAnvilSound(sharedAudioCtx);
-  }, 9800);
-
-  // ── T+10.1s — bee exits during white ──
-  setTimeout(() => {
-    if (!bee) return;
-    bee.style.transition = 'right 0.5s cubic-bezier(0.6,0,0.8,0.4), opacity 0.35s ease';
-    bee.style.right = '-400px';
-    bee.style.opacity = '0';
-  }, 10100);
-
-  // ── T+10.6s — white clears, smoke puffs fade out ──
-  setTimeout(() => { smokeMode = 'clear'; }, 10600);
-
-  // ── T+12.2s — text fades in ──
-  setTimeout(() => {
-    if (title) { title.style.transition = 'opacity 0.5s ease, transform 0.5s ease'; title.style.opacity = '1'; title.style.transform = 'translateY(0)'; }
-    if (sub)   { sub.style.transition   = 'opacity 0.5s ease 0.15s, transform 0.5s ease 0.15s'; sub.style.opacity = '1'; sub.style.transform = 'translateY(0)'; }
-  }, 12200);
-
-  // ── T+16.05s — fade out scene ──
-  setTimeout(() => {
-    scene.style.transition = 'opacity 0.6s ease';
-    scene.style.opacity = '0';
-    if (rafId) cancelAnimationFrame(rafId);
-    setTimeout(() => {
-      scene.classList.remove('active');
-      scene.style.opacity = '';
-      scene.style.transition = '';
-      logo.style.opacity = '';
-      logo.style.transform = '';
-      logo.style.transition = '';
-      ctx.clearRect(0, 0, sw, sh);
-    }, 650);
-  }, 16050);
-
-  // ── Canvas animation loop ──
-  function startCanvas() {
-    let lastDrip = 0;
-    function loop(ts) {
-      ctx.clearRect(0, 0, sw, sh);
-
-      // Spawn new drip
-      if (dripping && ts - lastDrip > 120) {
-        lastDrip = ts;
-        drips.push({
-          x: nozzleX + (Math.random() - 0.5) * 8,
-          y: nozzleY,
-          vy: 1.5 + Math.random() * 2,
-          r: 4 + Math.random() * 3,
-          alpha: 1
-        });
-      }
-
-      // Update + draw drips
-      for (let i = drips.length - 1; i >= 0; i--) {
-        const d = drips[i];
-        d.y += d.vy;
-        d.vy += 0.18; // gravity
-        // Stretch into teardrop
-        ctx.save();
-        ctx.globalAlpha = d.alpha;
-        const grad = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, d.r * 1.5);
-        grad.addColorStop(0, '#ffcc44');
-        grad.addColorStop(0.6, '#c87000');
-        grad.addColorStop(1, 'rgba(180,80,0,0)');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.ellipse(d.x, d.y, d.r * 0.7, d.r * 1.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Splat on logo surface
-        if (d.y > nozzleY + 80) {
-          splats.push({ x: d.x + (Math.random()-0.5)*10, y: d.y, r: d.r * 1.6 + Math.random()*4, alpha: 0.9 });
-          // Spawn smoke puff at splat
-          for (let s = 0; s < 3; s++) {
-            smokes.push({
-              x: d.x + (Math.random()-0.5)*16,
-              y: d.y,
-              vx: (Math.random()-0.5)*0.6,
-              vy: -(0.4 + Math.random()*0.8),
-              r: 8 + Math.random()*12,
-              alpha: 0.5 + Math.random()*0.3,
-              life: 1
-            });
-          }
-          drips.splice(i, 1);
-        }
-      }
-
-      // Draw splats
-      splats.forEach(s => {
-        ctx.save();
-        ctx.globalAlpha = s.alpha * 0.85;
-        const g = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
-        g.addColorStop(0, '#ffaa00');
-        g.addColorStop(0.5, '#c06000');
-        g.addColorStop(1, 'rgba(120,40,0,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      });
-
-      // Update + draw smoke puffs
-      for (let i = smokes.length - 1; i >= 0; i--) {
-        const s = smokes[i];
-        s.x  += s.vx;
-        s.y  += s.vy;
-        s.r  += 0.4;
-        s.life -= 0.008;
-        s.alpha = s.life * 0.55;
-        if (s.life <= 0) { smokes.splice(i, 1); continue; }
-        ctx.save();
-        ctx.globalAlpha = s.alpha;
-        const sg = ctx.createRadialGradient(s.x, s.y, 0, s.x, s.y, s.r);
-        sg.addColorStop(0, 'rgba(160,140,120,0.9)');
-        sg.addColorStop(1, 'rgba(80,70,60,0)');
-        ctx.fillStyle = sg;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // ── Smoker puff system ──
-      // In 'puff' mode: spawn large slow-drifting puffs from nozzle origin that billow
-      // across the screen like a real smoker gun being swept side to side.
-      if (smokeMode === 'puff') {
-        // Spawn a fresh puff every ~3 frames — fast enough to build a thick cloud
-        if (Math.random() < 0.35) {
-          const side = Math.random() < 0.5 ? -1 : 1;
-          // Puffs bloom from logo center — looks like the logo itself is smoldering
-          const angle = Math.random() * Math.PI * 2;
-          const burst = Math.random() * 60;
-          bigPuffs.push({
-            x:     sw * 0.5 + Math.cos(angle) * burst,
-            y:     sh * 0.5 + Math.sin(angle) * burst,
-            vx:    Math.cos(angle) * (0.4 + Math.random() * 0.8),
-            vy:    Math.sin(angle) * (0.4 + Math.random() * 0.8) - 0.5,
-            r:     25 + Math.random() * 55,
-            alpha: 0.55 + Math.random() * 0.3,
-            life:  1,
-            decay: 0.003 + Math.random() * 0.003
-          });
-        }
-      }
-
-      // Draw and age big puffs — present in puff AND clear modes
-      for (let i = bigPuffs.length - 1; i >= 0; i--) {
-        const p = bigPuffs[i];
-        p.x    += p.vx;
-        p.y    += p.vy;
-        p.r    += 1.8;           // expand as they rise
-        p.life -= (smokeMode === 'clear') ? p.decay * 4 : p.decay;
-        p.alpha = p.life * 0.65;
-        if (p.life <= 0) { bigPuffs.splice(i, 1); continue; }
-        ctx.save();
-        ctx.globalAlpha = p.alpha;
-        const pg = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r);
-        pg.addColorStop(0,   'rgba(210,205,195,0.95)');
-        pg.addColorStop(0.4, 'rgba(170,160,145,0.8)');
-        pg.addColorStop(1,   'rgba(90,85,75,0)');
-        ctx.fillStyle = pg;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      // White flash overlay — fades in during 'white', fades out during 'clear'
-      if (smokeMode === 'white') {
-        whiteFill = Math.min(1, whiteFill + 0.045);
-        ctx.save();
-        ctx.globalAlpha = whiteFill;
-        ctx.fillStyle = 'rgb(255,255,255)';
-        ctx.fillRect(0, 0, sw, sh);
-        ctx.restore();
-      } else if (smokeMode === 'clear') {
-        whiteFill = Math.max(0, whiteFill - 0.025);
-        if (whiteFill > 0) {
-          ctx.save();
-          ctx.globalAlpha = whiteFill;
-          ctx.fillStyle = 'rgb(255,255,255)';
-          ctx.fillRect(0, 0, sw, sh);
-          ctx.restore();
-        }
-        if (whiteFill <= 0 && bigPuffs.length === 0) smokeMode = 'off';
-      }
-
-      rafId = requestAnimationFrame(loop);
-    }
-    rafId = requestAnimationFrame(loop);
-  }
-}
-
-function spawnSparks(container) {
-  const count = 40;
-  const cx = window.innerWidth / 2;
-  const cy = window.innerHeight / 2;
-  for (let i = 0; i < count; i++) {
-    const spark = document.createElement('div');
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 120 + Math.random() * 400;
-    const size  = 2 + Math.random() * 4;
-    const dur   = 400 + Math.random() * 600;
-    const dx    = Math.cos(angle) * speed;
-    const dy    = Math.sin(angle) * speed;
-    const hue   = 30 + Math.random() * 30; // gold to orange
-    spark.style.cssText = `
-      position: fixed;
-      left: ${cx}px;
-      top: ${cy}px;
-      width: ${size}px;
-      height: ${size}px;
-      border-radius: 50%;
-      background: hsl(${hue}, 100%, 65%);
-      pointer-events: none;
-      z-index: 999999;
-      transform: translate(-50%, -50%);
-      transition: left ${dur}ms cubic-bezier(0.2,1,0.4,1),
-                  top ${dur}ms cubic-bezier(0.2,1,0.4,1),
-                  opacity ${dur}ms ease-in;
-    `;
-    container.appendChild(spark);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        spark.style.left = (cx + dx) + 'px';
-        spark.style.top  = (cy + dy + (Math.random() * 100)) + 'px';
-        spark.style.opacity = '0';
-      });
-    });
-    setTimeout(() => spark.remove(), dur + 50);
-  }
-}
-
-function playMetalClang(audioCtx, clangBuffer) {
-  if (_isMuted) return;
-  try {
-    if (clangBuffer && audioCtx) {
-      // Buffer already decoded — plays with zero async delay
-      const src  = audioCtx.createBufferSource();
-      const gain = audioCtx.createGain();
-      src.buffer = clangBuffer;
-      gain.gain.setValueAtTime(0.85, audioCtx.currentTime);
-      src.connect(gain);
-      gain.connect(audioCtx.destination);
-      src.start(audioCtx.currentTime);
-    } else {
-      // Fallback: buffer not ready yet (e.g. very fast click), use Audio()
-      if (_isMuted) return;
-      const audio = new Audio('sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.mp3');
-      audio.volume = 0.85;
-      audio.play().catch(() => {});
-    }
-  } catch(e) {}
-}
-
-function playAnvilSound(audioCtx) {
-  if (_isMuted) return;
-  try {
-    const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-
-    // Deep anvil thud — low sine boom
-    const boom = ctx.createOscillator();
-    const boomGain = ctx.createGain();
-    boom.connect(boomGain); boomGain.connect(ctx.destination);
-    boom.type = 'sine';
-    boom.frequency.setValueAtTime(55, ctx.currentTime);
-    boom.frequency.exponentialRampToValueAtTime(28, ctx.currentTime + 0.6);
-    boomGain.gain.setValueAtTime(0.7, ctx.currentTime);
-    boomGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8);
-    boom.start(ctx.currentTime); boom.stop(ctx.currentTime + 0.85);
-
-    // Impact transient — short noise burst
-    const bufSize = Math.floor(ctx.sampleRate * 0.12);
-    const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-    const bd  = buf.getChannelData(0);
-    for (let i = 0; i < bufSize; i++) bd[i] = (Math.random()*2-1) * (1 - i/bufSize);
-    const crack = ctx.createBufferSource();
-    const crackGain = ctx.createGain();
-    const crackFilter = ctx.createBiquadFilter();
-    crackFilter.type = 'bandpass'; crackFilter.frequency.value = 800; crackFilter.Q.value = 0.8;
-    crack.buffer = buf;
-    crack.connect(crackFilter); crackFilter.connect(crackGain); crackGain.connect(ctx.destination);
-    crackGain.gain.setValueAtTime(0.5, ctx.currentTime);
-    crackGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-    crack.start(ctx.currentTime); crack.stop(ctx.currentTime + 0.15);
-
-    // Reverb tail — filtered noise decay
-    const revSize = Math.floor(ctx.sampleRate * 1.2);
-    const revBuf  = ctx.createBuffer(1, revSize, ctx.sampleRate);
-    const rd      = revBuf.getChannelData(0);
-    for (let i = 0; i < revSize; i++) rd[i] = (Math.random()*2-1) * Math.pow(1 - i/revSize, 2);
-    const rev = ctx.createBufferSource();
-    const revGain   = ctx.createGain();
-    const revFilter = ctx.createBiquadFilter();
-    revFilter.type = 'lowpass'; revFilter.frequency.value = 600;
-    rev.buffer = revBuf;
-    rev.connect(revFilter); revFilter.connect(revGain); revGain.connect(ctx.destination);
-    revGain.gain.setValueAtTime(0.18, ctx.currentTime + 0.05);
-    revGain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 1.4);
-    rev.start(ctx.currentTime + 0.05); rev.stop(ctx.currentTime + 1.5);
-
-  } catch(e) {}
-}
+// ── SCENE (extracted) ──
+// v3.42.0 — License Unlock Scene + internal helpers moved to js/scenes.js. Loaded
+// after js/audio.js (depends on play* helpers) and before app.js
+// so all scene functions are globally available by the time app.js
+// code references them.
 
 function showLicenseModal(reason) {
   const modal = document.getElementById('licenseModal');
@@ -4906,6 +4428,9 @@ function buildAISetupRowHTML(ai) {
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
+        ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
+          ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${esc(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
+          : ''}
         <span class="ai-setup-summary-spacer"></span>
         ${actionHTML}
       </div>
@@ -10429,369 +9954,18 @@ async function confirmDiscardAndNew() {
   await clearProject();
   goToScreen('screen-project');
 }
+// ── SCENE (extracted) ──
+// v3.42.0 — Hive Finish Animation moved to js/scenes.js. Loaded
+// after js/audio.js (depends on play* helpers) and before app.js
+// so all scene functions are globally available by the time app.js
+// code references them.
 
-/* =========================================
-   WAXFRAME FINISH ANIMATION — Bee Fly-In
-   ========================================= */
+// ── SCENE (extracted) ──
+// v3.42.0 — Unanimous Convergence Scene + Hive Finish + their helpers moved to js/scenes.js. Loaded
+// after js/audio.js (depends on play* helpers) and before app.js
+// so all scene functions are globally available by the time app.js
+// code references them.
 
-let hiveFinishTimer = null;
-
-function showHiveFinish(options = {}) {
-  const { duration = 4000, smokeBursts = 10, satisfied = null, total = null } = options;
-  const overlay = document.getElementById('hiveFinishOverlay');
-  const smokeWrap = document.getElementById('hiveFinishSmoke');
-  const subEl = document.getElementById('hiveFinishCount');
-  if (!overlay) return;
-  clearTimeout(hiveFinishTimer);
-
-  // Set the count subline — "4 of 6 AIs agree" for majority, "Unanimous · 6 of 6" for full
-  if (subEl) {
-    if (satisfied !== null && total !== null) {
-      subEl.textContent = (satisfied === total)
-        ? `Unanimous · ${satisfied} of ${total}`
-        : `${satisfied} of ${total} AIs agree`;
-      subEl.style.display = 'block';
-    } else {
-      subEl.textContent = '';
-      subEl.style.display = 'none';
-    }
-  }
-
-  if (smokeWrap) {
-    smokeWrap.innerHTML = '';
-    for (let i = 0; i < smokeBursts; i++) {
-      const puff = document.createElement('span');
-      puff.className = 'hive-smoke-particle';
-      puff.style.setProperty('--size', `${hiveRand(30, 80)}px`);
-      puff.style.setProperty('--x', `${hiveRand(-150, 150)}px`);
-      puff.style.setProperty('--y', `${hiveRand(-150, -300)}px`);
-      puff.style.setProperty('--dur', `${hiveRand(1500, 2800)}ms`);
-      puff.style.setProperty('--opacity', (Math.random() * 0.3 + 0.15).toFixed(2));
-      puff.style.left = `calc(50% - 100px + ${hiveRand(-8, 8)}%)`;
-      puff.style.animationDelay = `${hiveRand(0, 600)}ms`;
-      smokeWrap.appendChild(puff);
-    }
-  }
-  overlay.setAttribute('aria-hidden', 'false');
-  overlay.classList.add('is-active');
-  hiveFinishTimer = setTimeout(() => hideHiveFinish(), duration);
-}
-
-function hideHiveFinish() {
-  const overlay = document.getElementById('hiveFinishOverlay');
-  if (!overlay) return;
-  overlay.classList.remove('is-active');
-  overlay.setAttribute('aria-hidden', 'true');
-}
-
-function hiveRand(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-/* =========================================
-   UNANIMOUS CONVERGENCE SCENE
-   Timeline:
-     T+0.0s   scene shown, black backdrop starts fading in (800ms)
-     T+0.8s   worker bee flies left → right across screen (2500ms, linear)
-              + Kai's whirr plays in sync with the flight
-     T+1.05s  fog puffs spawn progressively left → right over 2500ms
-              (bee's jet-exhaust wake — starts early so fog is built up
-              around the bee as it passes)
-     T+3.55s  full fog density reached
-     T+6.0s   fog clears (500ms)
-     T+6.5s   image reveals (900ms zoom) — silent, let the user see it
-     T+6.8s   right after image drops: anvil drop (mortar-launch thump)
-     T+7.8s   1s after anvil: fireworks — 3 multicolor bursts (center → left → right at 0/700/1400ms)
-     T+8.5s   crackle sound matched to burst 2
-     T+9.2s   crackle sound matched to burst 3
-     T+9.2s → T+12s   ~1s of clean image hold (sparks fade through)
-     T+12s    scene fades out (900ms)
-     T+12.9s  scene fully closed
-   Escape or click dismisses early via closeUnanimousScene().
-   ========================================= */
-
-let _unanimousTimers = [];
-let _unanimousKeyHandler = null;
-
-function playUnanimousScene() {
-  const scene     = document.getElementById('unanimousScene');
-  const bee       = document.getElementById('unanimousBee');
-  const fog       = document.getElementById('unanimousFog');
-  const image     = document.getElementById('unanimousImage');
-  const canvas    = document.getElementById('unanimousSparksCanvas');
-  if (!scene || !fog || !image || !canvas || !bee) return;
-
-  // Cancel any previous run
-  closeUnanimousScene(true);
-
-  // Reset state
-  fog.innerHTML = '';
-  fog.classList.remove('is-rising', 'is-clearing');
-  image.classList.remove('is-revealed');
-  image.style.opacity = '0';
-  bee.classList.remove('is-flying');
-  bee.style.opacity = '0';
-  // Force reflow so re-adding is-flying restarts the animation on subsequent plays
-  void bee.offsetWidth;
-  scene.classList.remove('is-closing');
-  scene.setAttribute('aria-hidden', 'false');
-  scene.classList.add('is-active');
-
-  // Size canvas — DPR-aware so sparks render crisply on Retina / high-DPI screens.
-  // We size the backing bitmap at sw*dpr x sh*dpr and the CSS box at sw x sh,
-  // then scale the context so drawing calls still use CSS pixels.
-  const sw = window.innerWidth, sh = window.innerHeight;
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width  = Math.floor(sw * dpr);
-  canvas.height = Math.floor(sh * dpr);
-  canvas.style.width  = sw + 'px';
-  canvas.style.height = sh + 'px';
-  const ctx = canvas.getContext('2d');
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, sw, sh);
-
-  // Escape/click to skip
-  _unanimousKeyHandler = (e) => { if (e.key === 'Escape') closeUnanimousScene(); };
-  document.addEventListener('keydown', _unanimousKeyHandler);
-  scene.addEventListener('click', () => closeUnanimousScene(), { once: true });
-
-  // T+0.8s — worker bee flies left → right + Kai's whirr
-  _unanimousTimers.push(setTimeout(() => {
-    bee.classList.add('is-flying');
-    playFlyingCarSound(); // Kai's whirr
-  }, 800));
-
-  // T+2.05s — bee is halfway; begin progressive left→right fog sweep.
-  // Each puff spawns at a position progressing 0%→100% across the screen
-  // over the next 2500ms, simulating a jet-exhaust wake.
-  const totalPuffs = 28;
-  const sweepStart = 1050;
-  const sweepDuration = 2500;
-  fog.classList.add('is-rising'); // opacity container transitions to full
-  for (let i = 0; i < totalPuffs; i++) {
-    const t = i / (totalPuffs - 1);            // 0..1
-    const spawnDelay = sweepStart + t * sweepDuration;
-    const xPercent = t * 100;                  // left → right
-    _unanimousTimers.push(setTimeout(() => {
-      const puff = document.createElement('span');
-      puff.className = 'unanimous-fog-puff';
-      const size = hiveRand(240, 480);
-      puff.style.setProperty('--size', `${size}px`);
-      puff.style.setProperty('--dx',   `${hiveRand(-140, 140)}px`);
-      puff.style.setProperty('--dy',   `${hiveRand(-220, -60)}px`);
-      puff.style.setProperty('--dur',  `${hiveRand(3200, 4600)}ms`);
-      puff.style.setProperty('--delay', `0ms`);
-      puff.style.setProperty('--opacity', (0.6 + Math.random() * 0.3).toFixed(2));
-      // x tracks the sweep; slight jitter so puffs aren't on a perfect line.
-      // y covers mid-to-lower screen so fog rises through the viewport.
-      puff.style.left = `${xPercent + hiveRand(-4, 4)}%`;
-      puff.style.top  = `${45 + Math.random() * 60}%`;
-      puff.style.marginLeft = `${-size / 2}px`;
-      puff.style.marginTop  = `${-size / 2}px`;
-      fog.appendChild(puff);
-    }, spawnDelay));
-  }
-
-  // T+6.0s — clear fog
-  _unanimousTimers.push(setTimeout(() => {
-    fog.classList.remove('is-rising');
-    fog.classList.add('is-clearing');
-  }, 6000));
-
-  // T+6.5s — image reveals (900ms zoom). No sound yet — let the user see it.
-  _unanimousTimers.push(setTimeout(() => {
-    image.style.opacity = '';
-    image.classList.add('is-revealed');
-  }, 6500));
-
-  // T+6.8s — right after image drops: anvil (mortar-launch thump).
-  _unanimousTimers.push(setTimeout(() => {
-    if (typeof playAnvilSound === 'function') playAnvilSound();
-  }, 6800));
-
-  // T+7.8s — 1 second after anvil: fireworks fire. spawnUnanimousFireworks runs
-  // its default 3-burst multicolor schedule (center → left → right at 0/700/1400ms).
-  _unanimousTimers.push(setTimeout(() => {
-    spawnUnanimousFireworks(canvas);
-  }, 7800));
-
-  // Crackle sounds matched to the second and third bursts (the first burst
-  // is sonically covered by the anvil bang that preceded it).
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 8500));  // burst 2 (7800 + 700)
-  _unanimousTimers.push(setTimeout(() => playCrackleSound(), 9200));  // burst 3 (7800 + 1400)
-
-  // T+12s — ~1s of clean image hold after last burst's sparks fade, then close.
-  _unanimousTimers.push(setTimeout(() => closeUnanimousScene(), 12000));
-}
-
-function closeUnanimousScene(silent = false) {
-  const scene = document.getElementById('unanimousScene');
-  _unanimousTimers.forEach(t => clearTimeout(t));
-  _unanimousTimers = [];
-  if (_unanimousKeyHandler) {
-    document.removeEventListener('keydown', _unanimousKeyHandler);
-    _unanimousKeyHandler = null;
-  }
-  if (!scene) return;
-  if (silent) {
-    scene.classList.remove('is-active', 'is-closing');
-    scene.setAttribute('aria-hidden', 'true');
-    return;
-  }
-  scene.classList.add('is-closing');
-  setTimeout(() => {
-    scene.classList.remove('is-active', 'is-closing');
-    scene.setAttribute('aria-hidden', 'true');
-    const fog = document.getElementById('unanimousFog');
-    if (fog) { fog.innerHTML = ''; fog.classList.remove('is-rising', 'is-clearing'); }
-    const image = document.getElementById('unanimousImage');
-    if (image) { image.classList.remove('is-revealed'); image.style.opacity = '0'; }
-    const bee = document.getElementById('unanimousBee');
-    if (bee) { bee.classList.remove('is-flying'); bee.style.opacity = '0'; }
-  }, 900);
-}
-
-// ── CRACKLE — short burst of high-pitched filtered noise pops ──
-// Simulates the sparkler-star crackle that follows a firework's main burst.
-// Each call produces ~10 rapid pops over ~300ms, bandpass-filtered so they
-// read as the bright snappy crackle of burning sparkle stars rather than thunder.
-function playCrackleSound() {
-  if (_isMuted) return;
-  try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const now = ctx.currentTime;
-    const popCount = 10;
-    for (let i = 0; i < popCount; i++) {
-      const t = now + (i * 0.025) + (Math.random() * 0.02);
-      const popDur = 0.04 + Math.random() * 0.05;
-
-      // Short decaying noise burst
-      const bufSize = Math.floor(ctx.sampleRate * popDur);
-      const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
-      const bd = buf.getChannelData(0);
-      for (let j = 0; j < bufSize; j++) bd[j] = (Math.random() * 2 - 1) * (1 - j / bufSize);
-
-      const src = ctx.createBufferSource();
-      const gain = ctx.createGain();
-      const filter = ctx.createBiquadFilter();
-      filter.type = 'bandpass';
-      filter.frequency.value = 3200 + Math.random() * 3800; // high-pitched snap
-      filter.Q.value = 2.5;
-
-      src.buffer = buf;
-      src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
-
-      const peak = 0.10 + Math.random() * 0.08;
-      gain.gain.setValueAtTime(peak, t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + popDur);
-
-      src.start(t); src.stop(t + popDur);
-    }
-    setTimeout(() => ctx.close(), 800);
-  } catch(e) { /* audio not supported — fail silently */ }
-}
-
-// ── MULTICOLOR FIREWORKS — three multicolored bursts, canvas-rendered for performance ──
-// Canvas is already sized and DPR-scaled by playUnanimousScene(). All coords
-// here are CSS pixels; the transform applied to the context handles the DPR
-// multiply automatically. Runs three sequential bursts (center → left → right)
-// over 1.4s, all with the full rainbow palette at full size — visual variety
-// without fading the individual bursts into invisible gold sparkles.
-function spawnUnanimousFireworks(canvas) {
-  const ctx  = canvas.getContext('2d');
-  const cssW = parseFloat(canvas.style.width)  || canvas.width;
-  const cssH = parseFloat(canvas.style.height) || canvas.height;
-  const hues = [40, 20, 350, 320, 280, 220, 190, 140]; // gold, orange, red, magenta, purple, blue, cyan, green
-
-  const schedule = [
-    { at: 0,    x: cssW * 0.50, y: cssH * 0.50, count: 60 },  // center: main burst
-    { at: 700,  x: cssW * 0.32, y: cssH * 0.44, count: 40 },  // upper-left
-    { at: 1400, x: cssW * 0.68, y: cssH * 0.56, count: 40 },  // lower-right
-  ];
-
-  const particles = [];
-  const startTime = performance.now();
-  const lastBurstAt = schedule.reduce((m, b) => Math.max(m, b.at), 0);
-
-  schedule.forEach(burst => {
-    setTimeout(() => {
-      for (let i = 0; i < burst.count; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 180 + Math.random() * 520;
-        particles.push({
-          x: burst.x, y: burst.y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed,
-          life: 0,
-          maxLife: 900 + Math.random() * 900,
-          size: 2 + Math.random() * 3.5,
-          hue: hues[Math.floor(Math.random() * hues.length)],
-        });
-      }
-    }, burst.at);
-  });
-
-  let last = performance.now();
-  let rafId = null;
-  function loop(now) {
-    const dt = (now - last) / 1000;
-    last = now;
-    ctx.clearRect(0, 0, cssW, cssH);
-    ctx.globalCompositeOperation = 'lighter';
-    let alive = 0;
-    particles.forEach(p => {
-      p.life += dt * 1000;
-      if (p.life >= p.maxLife) return;
-      alive++;
-      p.vy += 380 * dt;   // gravity
-      p.vx *= 0.985;
-      p.vy *= 0.985;
-      p.x  += p.vx * dt;
-      p.y  += p.vy * dt;
-      const lifeRatio = p.life / p.maxLife;
-      const alpha = Math.max(0, 1 - lifeRatio);
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, p.size * (1 - lifeRatio * 0.3), 0, Math.PI * 2);
-      ctx.fillStyle = `hsla(${p.hue}, 100%, 65%, ${alpha})`;
-      ctx.shadowColor = `hsla(${p.hue}, 100%, 65%, ${alpha * 0.9})`;
-      ctx.shadowBlur  = 12;
-      ctx.fill();
-    });
-    ctx.shadowBlur = 0;
-
-    const elapsed = now - startTime;
-    const hasPendingBursts = elapsed < lastBurstAt + 50;
-    if (alive > 0 || hasPendingBursts) {
-      rafId = requestAnimationFrame(loop);
-    } else {
-      ctx.clearRect(0, 0, cssW, cssH);
-    }
-  }
-  rafId = requestAnimationFrame(loop);
-}
-
-// ── DEV TOOLBAR — convergence sequence test helpers ──
-// Mirror the exact parameters used in production so the dev buttons are
-// a faithful preview. Used from the Dev Toolbar only; not wired into any
-// user-facing flow.
-function devTestFlyInOnly() {
-  // Bee fly-in overlay with no audio — for previewing the animation in silence.
-  toast('🐝 Dev: fly-in only (no sound)');
-  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 4, total: 6 });
-}
-
-function devTestMajorityConverge() {
-  // Majority convergence: 4 of 6 agree, 2 still have suggestions.
-  toast('🏁 Dev: majority convergence (4 of 6)');
-  playFlyingCarSound();
-  showHiveFinish({ duration: 3000, smokeBursts: 10, satisfied: 4, total: 6 });
-}
-
-function devTestUnanimous() {
-  // Unanimous: full scene — black → fog → image + fanfare + multicolor fireworks.
-  toast('🏁 Dev: unanimous scene (Esc or click to skip)');
-  playUnanimousScene();
-}
 
 function setPhase(id) {
   phase = id;
@@ -12690,6 +11864,14 @@ async function runRound() {
 
   if (btn?.classList.contains('running')) return;
 
+  // v3.40.0 — Deprecation watchdog fires fire-and-forget on round start.
+  // No await: the round proceeds in parallel. If a deprecated model is
+  // detected after the round has already failed because of it, the toast
+  // arrives slightly late but still gives the user the context to fix it.
+  // The visibilitychange trigger catches most "returned to tab" cases
+  // before this point; round-start exists as a last-mile safety net.
+  detectDeprecatedModels('round-start');
+
   // ── LICENSE CHECK ──
   if (!isLicensed()) {
     const used = getTrialRoundsUsed();
@@ -13559,8 +12741,6 @@ async function callAPI(ai, prompt, notesContext = '') {
     throw fetchErr;
   }
 
-  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
-
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     const msg = err?.error?.message || `HTTP ${response.status}`;
@@ -13601,6 +12781,15 @@ async function callAPI(ai, prompt, notesContext = '') {
   }
 
   const data = await response.json();
+  // v3.39.13 — Measure elapsed AFTER the response body is fully consumed.
+  // `await fetch()` resolves when HEADERS arrive, not when the body finishes
+  // streaming. Most providers don't flush headers until the body is mostly
+  // ready, so headers-time ≈ total time for them. DeepSeek's server flushes
+  // headers immediately, so measuring before response.json() captured only
+  // the time-to-first-byte (~0.8s flat regardless of generation length).
+  // Moving the measurement here makes elapsed reflect actual end-to-end
+  // response time across every provider.
+  const elapsed = ((Date.now() - t0) / 1000).toFixed(1);
   const text = cfg.extractFn(data);
   if (!text) {
     const ctx = {
@@ -13630,11 +12819,15 @@ async function callAPI(ai, prompt, notesContext = '') {
   //   OpenAI:    data.usage.{prompt_tokens, completion_tokens, total_tokens}
   //   Anthropic: data.usage.{input_tokens, output_tokens}            (no total)
   //   Gemini:    data.usageMetadata.{promptTokenCount, candidatesTokenCount, totalTokenCount}   (v3.36.10)
-  // We coalesce all three with || fallbacks. Anthropic backups still
-  // show totalTokens === undefined (no total returned); Gemini backups
-  // populate all three fields starting v3.36.10 — surfaced empirically
-  // when the Bay Area Invoice run came back with totals showing
-  // ChatGPT+Claude only because Gemini's usage was being missed.
+  // We coalesce all three with || fallbacks. v3.39.13 — when neither
+  // provider supplies a total (Anthropic case), compute total = in + out
+  // ourselves so the totalTokens column is never empty when in/out are
+  // populated. Surfaced from the Butter Chicken DeepDive run where
+  // Claude's totalTokens was 0 across all 6 captures while in/out
+  // captured correctly.
+  const _pt = data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || data?.usageMetadata?.promptTokenCount     || null;
+  const _ct = data?.usage?.completion_tokens || data?.usage?.output_tokens || data?.usageMetadata?.candidatesTokenCount || null;
+  const _tt = data?.usage?.total_tokens      || data?.usageMetadata?.totalTokenCount || ((_pt && _ct) ? _pt + _ct : null);
   WF_DEBUG.captureRound({
     aiName:    ai.name,
     provider:  ai.provider,
@@ -13646,9 +12839,9 @@ async function callAPI(ai, prompt, notesContext = '') {
     finishReason: data?.choices?.[0]?.finish_reason || data?.stop_reason || null,
     promptPreview:    typeof prompt === 'string' ? prompt.slice(0, 500) : '',
     promptChars:      typeof prompt === 'string' ? prompt.length : 0,
-    promptTokens:     data?.usage?.prompt_tokens     || data?.usage?.input_tokens  || data?.usageMetadata?.promptTokenCount     || null,
-    completionTokens: data?.usage?.completion_tokens || data?.usage?.output_tokens || data?.usageMetadata?.candidatesTokenCount || null,
-    totalTokens:      data?.usage?.total_tokens      || data?.usageMetadata?.totalTokenCount || null,
+    promptTokens:     _pt,
+    completionTokens: _ct,
+    totalTokens:      _tt,
     responsePreview:  text.slice(0, 1000),
     // v3.36.14 — Authoritative per-API-call notes record. Frozen at
     // prompt-construction time by the caller (runRound / runBuilderOnly).
@@ -15989,24 +15182,14 @@ function clearDocument() {
 }
 
 // ── THEME ──
-const THEME_KEY = 'waxframe_v2_theme';
-
-function setTheme(t) {
-  document.documentElement.setAttribute('data-theme', t);
-  localStorage.setItem(THEME_KEY, t);
-  document.querySelectorAll('.theme-opt').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === t);
-  });
-}
-
-function initTheme() {
-  const saved = localStorage.getItem(THEME_KEY) || 'auto';
-  setTheme(saved);
-}
+// v3.41.0 — Moved to js/theme.js as single source of truth. setTheme and
+// initTheme live there; theme.js auto-inits at module-eval time so the
+// theme attribute is set before the body parses. No initTheme() call
+// needed here.
 
 // ── INIT ──
 document.addEventListener('DOMContentLoaded', async () => {
-  initTheme();
+  // v3.41.0 — initTheme() removed. theme.js auto-inits on load.
   loadSettings(); // always load hive (AI keys) silently
   // v3.30.2 — grandfather in any pre-v3.30 custom AIs that don't have
   // _originalModel captured. Must run AFTER loadSettings so the loaded
@@ -16017,7 +15200,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // caches. New role-suffixed format is incompatible with old cache shape,
   // so we wipe legacy keys to force a clean re-recommend. Silent — no toast.
   migrateRecommendationCachesV33210();
-  initMuteBtn();
+  // v3.41.0 — initMuteBtn() removed. theme.js auto-fires _updateMuteBtn
+  // on DOMContentLoaded; since theme.js loads before app.js, theme.js's
+  // listener fires first when DOMContentLoaded triggers.
 
   // v3.35.2 — restoreAutoModePreference() call removed. Auto-mode no
   // longer persists across reloads; the toggle pill always boots in
@@ -16029,6 +15214,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Deferred to setTimeout so the initial UI paint isn't blocked while we
   // hit external APIs in parallel.
   setTimeout(() => { migrateRecommendOnStartup(); }, 1500);
+
+  // v3.40.0 — Deprecation watchdog. Run on app load (3s deferred so the
+  // initial paint and migrateRecommendOnStartup both have breathing room),
+  // and again every time the tab becomes visible. See detectDeprecatedModels
+  // for the cost-assumption note about why this is unthrottled.
+  setTimeout(() => { detectDeprecatedModels('load'); }, 3000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      detectDeprecatedModels('visible');
+    }
+  });
 
   // Stamp version and build number into UI — APP_VERSION comes from version.js
   document.querySelectorAll('.app-version-stamp').forEach(el => el.textContent = APP_VERSION);

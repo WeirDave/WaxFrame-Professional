@@ -284,3 +284,65 @@ the categories before shipping, not after.
 ═════════════════════════════════════════════════════════════
 END OF FILE
 ═════════════════════════════════════════════════════════════
+
+
+═════════════════════════════════════════════════════════════
+APPENDED 2026-05-16 (post v3.42.1 deployment fix)
+═════════════════════════════════════════════════════════════
+
+CATEGORY 7 — RELEASE ARTIFACT VERIFICATION
+─────────────────────────────────────────────────────────────
+
+Added after the v3.40.0 → v3.42.0 silent-failure incident: a
+ZIP packaging error placed `app.js` at the archive root
+instead of in `js/`. When extracted onto the repo folder,
+the new code went to the wrong location and the live
+`js/app.js` was never updated. Four releases shipped with
+working metadata (cache-bust queries, version stamps,
+syntax checks all clean) but the actual app.js code never
+reached production.
+
+CHECKS REQUIRED BEFORE EVERY ZIP DELIVERY:
+
+  [1] unzip -l <zip> | grep -E "(^|/)app\.js$"
+      Expected output: ONLY "js/app.js" line(s).
+      Any bare "app.js" at root = FAIL. Repackage.
+
+  [2] unzip -l <zip> | grep -E "\.js$" | head
+      Every .js file should appear under js/ (or lib/ for
+      third-party libraries). No bare .js files at archive
+      root.
+
+  [3] unzip -l <zip> | grep "/" | head
+      Confirm directory structure matches the repo layout:
+      js/, lib/, docs/, etc. all present where expected.
+
+  [4] unzip -l <zip> | wc -l
+      Sanity-check the file count against the previous
+      release. A drop of more than 2-3 files is suspicious
+      and warrants inspection.
+
+RATIONALE — WHY THIS NEEDS ITS OWN CATEGORY:
+
+The four canonical version stamps (meta build, APP_VERSION,
+BUILD const, app.js?v= cache-bust) all passed for v3.40.1
+through v3.42.0. The cache-bust discipline worked perfectly.
+Syntax checks passed on every file. The release ceremony
+looked flawless. None of those checks caught that the actual
+app.js file never reached the right path on disk.
+
+Release artifact verification is structurally different from
+code-state verification — it checks the BOUNDARY between
+"code is correct" and "code reaches production." Without it,
+clean code can ship broken because the delivery vehicle is
+broken.
+
+WHEN AN ARTIFACT VERIFICATION FAILS:
+
+  • DO NOT push to GitHub
+  • Repackage and re-verify
+  • If a release has already been pushed with a broken ZIP:
+    ship a patch release (.1 bump) with corrected ZIP and
+    bumped cache-busts. Do not silently re-upload — the
+    cache-bust bump is what forces user browsers to fetch
+    the corrected file.
