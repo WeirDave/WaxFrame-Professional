@@ -343,3 +343,99 @@ QUEUED:
 ═════════════════════════════════════════════════════════════
 END OF ADDENDUM
 ═════════════════════════════════════════════════════════════
+
+
+═════════════════════════════════════════════════════════════
+ADDENDUM 3 — POSTMORTEM: ZIP PACKAGING SILENT FAILURE
+                        (v3.40.0 through v3.42.0)
+═════════════════════════════════════════════════════════════
+
+INCIDENT SUMMARY
+─────────────────
+v3.42.0 deployed and the live site immediately threw
+`goToScreen is not defined` and `openNavMenu is not defined`
+on click handlers. Investigation revealed the deployed
+`js/app.js` was the OLD v3.40.0 build (`20260513-004`),
+unchanged since that release.
+
+ROOT CAUSE
+──────────
+ZIP packaging error in the release artifacts going back to
+v3.40.0. The staging command:
+
+  cp app.js  /tmp/zipstage/
+
+placed `app.js` at the ROOT of the ZIP instead of at
+`/tmp/zipstage/js/`. When extracted onto the repo folder,
+the new code landed at `repo-root/app.js` — a location
+nothing in index.html references. The actual
+`repo-root/js/app.js` was never overwritten.
+
+WHY IT WENT UNDETECTED FROM v3.40.0 THROUGH v3.41.0
+────────────────────────────────────────────────────
+v3.40.0 was the LAST release where `js/app.js` was correctly
+deployed (presumably extracted manually or pushed before the
+ZIP staging script was introduced).
+
+v3.40.1, v3.41.0, and v3.42.0 all shipped with the broken
+ZIP structure, but only v3.42.0 broke the live site. Reasons:
+
+  • v3.40.1 (toggle parity, cache-bust sweep): pure cosmetic
+    code; new HTML toggles didn't depend on any specific
+    app.js state, and the OLD app.js's _updateMuteBtn just
+    found no elements with .mute-btn class (no error).
+
+  • v3.41.0 (theme/mute consolidation, audio extraction):
+    NEW theme.js declared window._isMuted (global property),
+    OLD app.js declared `let _isMuted` (script-level let).
+    DIFFERENT BINDINGS — no collision. Audio play* functions
+    redefined by NEW audio.js, OLD app.js redefined them
+    again on its turn — function declarations don't error on
+    conflict, just overwrite. Lucky coexistence.
+
+  • v3.42.0 (scenes extraction): NEW scenes.js declares
+    `let hiveFinishTimer`, `let _unanimousTimers`,
+    `let _unanimousKeyHandler` at top-level script scope.
+    OLD app.js declares the SAME identifiers as `let` at
+    top-level script scope. Per spec, classic scripts share
+    a global lexical environment; duplicate `let` is a
+    SyntaxError. Browser stopped parsing app.js at the
+    duplicate, never reached `goToScreen` definition.
+
+DETECTION & FIX
+───────────────
+Detected via hash comparison between deployed app.js and
+local app.js. Hashes differed; deployed file's BUILD stamp
+revealed it was v3.40.0 vintage. Confirmed by running both
+files through Node's V8 (V8 powers both Node and Chrome) —
+both parse cleanly in isolation, but the runtime collision
+between OLD app.js and NEW scenes.js happens only in
+browser context where both scripts share the global scope.
+
+Fix shipped as v3.42.1 (identical code, corrected ZIP
+structure, cache-busts bumped to ?v=3.42.1 to force
+fresh download).
+
+PREVENTIVE MEASURE
+──────────────────
+New audit category added: Category 7 — Release Artifact
+Verification. Required pre-delivery checks:
+
+  unzip -l <zip> | grep -E "(^|/)app\.js$"
+  → must show js/app.js only, never bare app.js at root
+
+Plus three companion checks (no bare .js at root, directory
+layout matches repo, file count sanity). See
+WaxFrame_Audit_Methodology_v1.txt Category 7 for details.
+
+LESSON
+──────
+The four canonical version stamps + cache-bust discipline +
+syntax checks all PASSED for v3.40.1, v3.41.0, v3.42.0.
+None of those checks verify the BOUNDARY between
+"code is correct" and "code reaches production." That
+boundary check was missing. It's now Category 7.
+
+The deeper lesson — clean release ceremony is not the same
+as clean release. The proof is in the deployment, not the
+pre-flight.
