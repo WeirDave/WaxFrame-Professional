@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.43.0 — WF_DEBUG subsystem extracted to wf-debug.js)
-Current version:     v3.43.0 Pro / build 20260516-006
+Last updated:        2026-05-16 (post v3.44.0 — API_CONFIGS + MODEL_FALLBACKS + fetchModels* + detectDeprecatedModels extracted to api.js)
+Current version:     v3.44.0 Pro / build 20260516-007
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.44.0   2026-05-16  app.js split #4: API_CONFIGS + MODEL_FALLBACKS + fetchModelsForProvider/Live + getModelsForProvider + detectDeprecatedModels extracted to new api.js; window.API_CONFIGS + window.MODEL_FALLBACKS for cross-script (-541 lines; app.js 14,707→14,166, cumulative -13.6%). callAPI remains in app.js for future split.
 v3.43.0   2026-05-16  app.js split #3: WF_DEBUG subsystem (object + WF_ERROR_CATALOG + render helpers) extracted to new wf-debug.js; window.WF_DEBUG + window.WF_ERROR_CATALOG for cross-script access (-662 lines; app.js 15,369→14,707, cumulative -10.3%)
 v3.42.1   2026-05-16  Deployment fix — corrects ZIP packaging error from v3.40.0-v3.42.0 where app.js was placed at archive root instead of js/; cache-busts bumped to ?v=3.42.1 to force fresh download; audit methodology Category 7 added for release artifact verification
 v3.42.0   2026-05-16  app.js split #2: three celebration scenes (License Unlock + Hive Finish + Unanimous Convergence) extracted to new scenes.js (-785 lines; app.js 16,154→15,369)
