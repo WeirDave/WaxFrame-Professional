@@ -1,6 +1,83 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.47.0
+**Build:** `20260516-010` · **Released:** May 16, 2026
+
+### app.js split #7 — Settings persistence + snapshotReferenceDocs join storage.js
+
+Seventh refactor pass. The settings persistence layer (`saveHive` + `saveProject` + `loadSettings`) plus the tiny `snapshotReferenceDocs` helper extracted from app.js into the existing `js/storage.js`. App.js drops another 219 lines.
+
+This puts all WaxFrame state persistence in one file except backup/restore — that's the last remaining storage chunk for a future release.
+
+### What moved
+
+Four separate blocks moved out of app.js (bottom-up extraction to preserve line numbers during the multi-block removal):
+
+- **`snapshotReferenceDocs`** (3 lines + comment) — tiny helper that deep-copies the reference docs array for history capture. Was at line 362 of app.js. Used by `saveSession` (which already moved in v3.46.0) — having the helper in the same file collapses what was a cross-file call.
+- **`saveHive`** (28 lines + section header + inline doc comment) — persists AI list + API keys + custom AI configs + per-AI models to localStorage under LS_HIVE. 10 external callers. Was at line 1200.
+- **`saveProject`** (23 lines) — persists project name/version/goal fields/docTab to localStorage under LS_PROJECT. 16 external callers. Was at line 1327.
+- **`loadSettings`** (175 lines) — boot-path read of both LS_HIVE and LS_PROJECT, with legacy LS_SETTINGS migration support, fallback handling, and UI hydration. 2 external callers. Was at line 2614.
+
+### Why this scope
+
+Natural continuation of v3.45.0 (storage primitives) and v3.46.0 (session save/load). saveHive/saveProject/loadSettings round out the settings persistence layer — these three functions are the heaviest consumers of the LS_* keys that already live in storage.js, and they pair conceptually with the save/load session functions already there.
+
+`snapshotReferenceDocs` came along because it's a saveSession helper. Moving it now eliminates a needless cross-file call from storage.js back to app.js.
+
+### What remains in app.js (storage land)
+
+Only `backupSession` and the restore helpers (~200 lines, line ~13700+ in current app.js). That's the last storage chunk for a future release.
+
+### Cross-script wiring
+
+All four extracted symbols are `function` declarations — they auto-attach to `window` via standard hoisting. App.js's call sites (10 + 16 + 2 + 9 references combined) continue to work via global scope chain lookup.
+
+### External dependencies — runtime safe
+
+The moved functions call these app.js helpers at runtime: `aiList`, `referenceDocs`, `DEFAULT_AIS`, `renderAISetup`, `renderHiveCount`, `updateProjectRequirements`, `updateDocRequirements`, `currentLicense`, plus various DOM helpers. All called inside function bodies, never at module-eval time. Node probe loaded all 8 scripts in dependency order; every export resolves cleanly via both `window.X` and bare `X`.
+
+### Cumulative refactor progress
+
+```
+v3.40.x:  16,389 lines
+v3.41.0:  16,154 lines  (-235, theme/mute + audio)
+v3.42.0:  15,369 lines  (-785, three scenes)
+v3.43.0:  14,707 lines  (-662, WF_DEBUG)
+v3.44.0:  14,166 lines  (-541, API discovery)
+v3.45.0:  14,092 lines  (-74,  storage primitives)
+v3.46.0:  13,861 lines  (-231, session persistence)
+v3.47.0:  13,642 lines  (-219, settings persistence + snapshotReferenceDocs)
+```
+
+**Cumulative: -2,747 lines (-16.8%) across seven refactor releases.**
+
+storage.js is now 627 lines and nearly complete as the home for WaxFrame state persistence.
+
+### Still queued
+
+**Storage:**
+- `backupSession` + restore helpers (~200 lines) → join storage.js
+
+**Other future splits:**
+- `callAPI` + helpers (~400 lines) → join api.js (hot path, biggest remaining subsystem)
+
+**Audit findings still queued:**
+- FINDING 6 (CRITICAL) — 4 legacy `confirm()` calls
+- FINDING 4 — restaurant-review page text
+- FINDING 7 — Stray console.log
+- FINDING 8 — Toast wording
+- FINDING 5 — MODEL_LABELS removal
+
+### Files changed
+
+- `js/app.js` — Four blocks removed: snapshotReferenceDocs (5 lines), saveHive + section header (31 lines), saveProject (23 lines), loadSettings (175 lines). 219-line net reduction. `BUILD` constant bumped.
+- `js/storage.js` — Four blocks appended; 378 → 627 lines; build stamp updated to `20260516-010`
+- `index.html` and 5 helper pages — cache-bust sweep to `?v=3.47.0`; build stamps to `20260516-010`
+- `js/version.js` — `APP_VERSION` → `v3.47.0 Pro`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.46.0
 **Build:** `20260516-009` · **Released:** May 16, 2026
 
