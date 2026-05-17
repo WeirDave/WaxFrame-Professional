@@ -4640,7 +4640,91 @@ kbd {
   gap: var(--space-6);
   margin-bottom: var(--space-16);
 }
-/* Setup page 1 action buttons — cap at normal btn size regardless of btn-lg class *//* ── Footer ── */
+/* Setup page 1 action buttons — cap at normal btn size regardless of btn-lg class */
+
+/* ============================================================
+   v3.52.0 — Source Size Check card (Setup 5)
+   Compares user's Starting Document size vs active template's
+   length range and surfaces a recommendation card when the
+   mismatch is significant. Two status variants share base
+   structure: ssc-warning (red/amber, source too small) and
+   ssc-recommend (accent, source much larger than target).
+   ============================================================ */
+.source-size-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-12);
+  padding: var(--space-14) var(--space-16);
+  margin: var(--space-12) var(--space-32) 0 var(--space-32);
+  border-radius: 6px;
+  position: relative;
+}
+.source-size-check.ssc-warning {
+  background: rgba(255, 120, 80, 0.08);
+  border: 1px solid rgba(255, 120, 80, 0.35);
+  border-left: 4px solid #ff7850;
+}
+.source-size-check.ssc-recommend {
+  background: rgba(255, 200, 80, 0.07);
+  border: 1px solid rgba(255, 200, 80, 0.3);
+  border-left: 4px solid var(--accent);
+}
+.ssc-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.ssc-body {
+  flex: 1;
+  min-width: 0;
+}
+.ssc-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+.ssc-message {
+  font-size: 0.88rem;
+  line-height: 1.55;
+  color: var(--text2);
+  margin-bottom: 10px;
+}
+.ssc-counts {
+  font-size: 0.82rem;
+  color: var(--text2);
+  font-family: 'Courier New', monospace;
+  margin-bottom: 10px;
+}
+.ssc-counts strong {
+  color: var(--text);
+  font-weight: 700;
+}
+.ssc-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ssc-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--text2);
+  font-size: 1rem;
+  cursor: pointer;
+  padding: 4px 6px;
+  border-radius: 4px;
+  line-height: 1;
+}
+.ssc-dismiss:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+
+/* ── Footer ── */
 .fs-footer {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;

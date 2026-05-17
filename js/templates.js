@@ -894,31 +894,109 @@ const WAXFRAME_TEMPLATES = [
   },
 
   // ============================================================
-  // MULTI-PLATFORM REVIEW REWRITE — refine-only by definition
+  // RETIRED in v3.52.0 — Multi-Platform Review (combined) replaced
+  // by three single-platform templates below. The combined template
+  // had three problems documented in CHANGELOG: (1) per-platform
+  // length couldn't be enforced via the length-guard because the
+  // setting is single-value, (2) convergence signal was muddied
+  // because reviewers were juggling three voice spaces, (3) hard
+  // floor on source size (~1200+ words needed) wasn't enforceable
+  // without per-template setup checks. Three focused templates
+  // each carry their own length-guard and voice directive — see
+  // trim-to-tripadvisor, trim-to-google-maps, rewrite-as-yelp.
+  // ============================================================
+
+  // ============================================================
+  // TRIM TO TRIPADVISOR — refine-only by definition
   // (operates on a source review pasted into Starting Document)
   // ============================================================
   {
-    "id": "multi-platform-review",
-    "name": "Multi-Platform Review Rewrite",
-    "icon": "🔁",
+    "id": "trim-to-tripadvisor",
+    "name": "Trim to TripAdvisor",
+    "icon": "✈️",
     "category": "Reviews & Recommendations",
-    "description": "Turn one detailed review into platform-ready versions for TripAdvisor, Google Maps, and Yelp while preserving the same facts and natural voice.",
+    "description": "Convert a long-form review into a TripAdvisor-ready version: detailed narrative travel-context tone, 500–900 words. Source visible to reviewers every round so factual cuts can be verified.",
     "paths": ["refine"],
     "pathContent": {
       "refine": {
-        "goalDocType": "Multi-platform customer review rewrite",
-        "goalAudience": "Readers on TripAdvisor, Google Maps, and Yelp who are deciding whether to visit, book, hire, or avoid the business being reviewed.",
-        "goalOutcome": "Create three platform-ready versions of the same review: a detailed TripAdvisor version, a shorter practical Google Maps version, and a conversational Yelp version. All three preserve the same facts and final recommendation.",
-        "goalScope": "Use only the facts from the source review I paste into Starting Document. Do not invent dishes, rooms, prices, staff names, amenities, dates, locations, or outcomes. Preserve the reviewer's actual experience and final opinion. Remove repetition where helpful, but do not remove important practical details.",
-        "goalTone": "Natural, conversational, useful, specific, and fair. Preserve the reviewer's voice. Do not make the review sound corporate, fake, overly polished, or AI-generated.",
-        "goalNotes": "Output three clearly labeled sections — TripAdvisor, Google Maps, Yelp. TripAdvisor is the most detailed (500–900 words). Google Maps is concise and skimmable (750–1,200 characters). Yelp is conversational and personality-forward (300–700 words).",
-        "refMaterial": "MULTI-PLATFORM REVIEW SPLITTING DIRECTIVE — read every round. Take the source review (Starting Document) and produce three platform-ready versions, all preserving the same facts and final recommendation: TripAdvisor 500-900 words detailed narrative travel-context; Google Maps 750-1200 characters concise skim-friendly bottom-line-first; Yelp 300-700 words conversational first-person no corporate polish. Every reviewer evaluates all three sections every round. Do not invent details not in the source. Do not let versions drift in factual content. If the working document does not yet contain all three labeled sections, flag that as primary feedback so the Builder produces the split next round.",
-        "lengthMode": "none",
-        "lengthLimit": "",
-        "lengthUnit": "",
+        "goalDocType": "TripAdvisor review",
+        "goalAudience": "TripAdvisor readers deciding whether to visit or book based on detailed travel reviews — they want narrative arc, practical context, and an honest recommendation.",
+        "goalOutcome": "Produce a TripAdvisor-ready review from the source: detailed narrative travel-context tone, 500–900 words, full experience arc from arrival to departure to recommendation.",
+        "goalScope": "Use only the facts from the source review. Preserve the chronological arc: arrival/booking context, the experience, the recommendation. Cut redundancy where helpful, but TripAdvisor readers expect detail — do not over-compress.",
+        "goalTone": "Detailed narrative. Travel-context. Slightly more formal than Yelp, more thorough than Google Maps. Honest. Helpful. Specific.",
+        "goalNotes": "Lead with location and booking context. Cover the experience chronologically. Close with a clear recommendation and who this place is best for. Do not invent details. If a source review appears in Reference Material, verify all facts against it.",
+        "refMaterial": "TRIPADVISOR FORMAT DIRECTIVE — read every round. Produce a TripAdvisor-ready review in 500–900 words. Detailed narrative arc: arrival/booking context → experience chronologically → clear recommendation. Travel-context tone — readers are deciding whether to visit. More detail than a Google Maps review, more structure than a Yelp review. Honest and specific. Do not invent details not in the source. If a source review is provided in Reference Material in addition to the working document, treat it as the source of truth for every fact.",
+        "lengthMode": "range",
+        "lengthLimit": "900",
+        "lengthMin": "500",
+        "lengthUnit": "words",
         "hint": [
-          { "field": "Length Constraint", "text": "Length intentionally left unset — each of the three platform versions has its own target inside the Builder output (TripAdvisor 500–900 words, Google Maps 750–1,200 chars, Yelp 300–700 words). Do not set a single hard cap or it will compress all three." },
-          { "field": "Starting Document", "text": "Use this template AFTER you have a long detailed review (from the Restaurant / Hotel / Business-Service templates). Paste the source review on Setup — Step 5 of 5 — Starting Document; this template's Builder produces the three platform-ready cuts." }
+          { "field": "Starting Document", "text": "Paste your source review on Setup — Step 5 of 5 — Starting Document." },
+          { "field": "Reference Material", "text": "If your source review is significantly longer than 900 words, ALSO paste it into Reference Material. That keeps the original visible to reviewers every round so they can verify facts and evaluate what got cut. If your source is already close to 500–900 words, Reference Material isn't necessary — the working document still holds the same content." }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // TRIM TO GOOGLE MAPS — refine-only by definition
+  // (operates on a source review pasted into Starting Document)
+  // ============================================================
+  {
+    "id": "trim-to-google-maps",
+    "name": "Trim to Google Maps",
+    "icon": "📍",
+    "category": "Reviews & Recommendations",
+    "description": "Convert a long-form review into a Google Maps-ready version: skim-friendly, bottom-line-first, 750–1,200 characters. Source visible to reviewers every round so brutal cuts can be verified against the original.",
+    "paths": ["refine"],
+    "pathContent": {
+      "refine": {
+        "goalDocType": "Google Maps review",
+        "goalAudience": "Google Maps readers scanning quickly for the bottom line — they want the recommendation up front, the key facts that support it, and to leave.",
+        "goalOutcome": "Produce a Google Maps-ready review from the source: skim-friendly, bottom-line-first, 750–1,200 characters. Lead with the recommendation. Keep only the few facts that actually support the verdict.",
+        "goalScope": "Brutal cut. Drop the chronological narrative arc. Lead with the bottom line. Keep only specific details that justify the recommendation. Strip everything else.",
+        "goalTone": "Direct. Practical. Skimmable. First-person fine. No fluff. No marketing-speak. No corporate polish.",
+        "goalNotes": "If the source is 800+ words, expect to cut 70%+ of it. That's the job — Google Maps readers will not read more than 1,200 characters of a review. Do not invent details. If a source review appears in Reference Material, verify all facts against it.",
+        "refMaterial": "GOOGLE MAPS FORMAT DIRECTIVE — read every round. Produce a Google Maps review in 750–1,200 characters total. Lead with the recommendation. Keep only the facts that support it. Drop narrative arc. Direct, skimmable, no fluff. Do not invent details not in the source. If a source review is provided in Reference Material in addition to the working document, treat it as the source of truth for every fact and use it to verify what got cut.",
+        "lengthMode": "range",
+        "lengthLimit": "1200",
+        "lengthMin": "750",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Starting Document", "text": "Paste your source review on Setup — Step 5 of 5 — Starting Document." },
+          { "field": "Reference Material", "text": "Strongly recommend pasting the source review into Reference Material as well. Google Maps cuts are brutal — typical source-to-target ratio is 5–10x. Without the source visible every round, reviewers can't evaluate whether the cuts kept the right facts." }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // REWRITE AS YELP — refine-only by definition
+  // (operates on a source review pasted into Starting Document)
+  // ============================================================
+  {
+    "id": "rewrite-as-yelp",
+    "name": "Rewrite as Yelp",
+    "icon": "💬",
+    "category": "Reviews & Recommendations",
+    "description": "Rewrite a long-form review as a Yelp review: conversational, personality-forward, first-person, 300–700 words. Voice transformation is the main job — same facts, different prose register.",
+    "paths": ["refine"],
+    "pathContent": {
+      "refine": {
+        "goalDocType": "Yelp review",
+        "goalAudience": "Yelp readers — they value real voice, personality, specific lived details. They smell fake reviews and corporate polish from a mile away.",
+        "goalOutcome": "Rewrite the source review as a Yelp review: conversational, personality-forward, first-person, 300–700 words. Same facts, different prose register. Real voice.",
+        "goalScope": "Voice transformation is the main job. Same facts, different rendering. Casual phrasing OK. First-person fine. No corporate polish, no marketing-speak, no AI-generated-blandness.",
+        "goalTone": "Conversational. First-person. Personality-forward. Casual phrasing like 'honestly,' 'tbh,' 'no joke,' 'so,' 'look —' are fine when they fit. Specific lived details over generic praise. Honest tone — Yelp readers reward authenticity.",
+        "goalNotes": "If the source reads corporate or polished, the rewrite must shed that register entirely. Use specific details that feel lived-in. Do not invent details. If a source review appears in Reference Material, verify all facts against it — voice rewrites are the #1 place where facts drift unnoticed.",
+        "refMaterial": "YELP FORMAT DIRECTIVE — read every round. Rewrite the source as a Yelp review in 300–700 words. Conversational, first-person, personality-forward. Voice transformation is the main job — same facts, different prose register. No corporate polish, no marketing-speak. Yelp readers smell fake reviews — use specific lived details. Do not invent details not in the source. If a source review is provided in Reference Material in addition to the working document, treat it as the source of truth for every fact and watch for drift — voice rewrites are where facts slip silently.",
+        "lengthMode": "range",
+        "lengthLimit": "700",
+        "lengthMin": "300",
+        "lengthUnit": "words",
+        "hint": [
+          { "field": "Starting Document", "text": "Paste your source review on Setup — Step 5 of 5 — Starting Document." },
+          { "field": "Reference Material", "text": "Recommend pasting the source review into Reference Material as well. Voice rewrites preserve facts but the new prose register can mask drift — 'he gave us instructions for wet conditions' becoming 'he gave us a free poncho' is invisible without the source for comparison." }
         ]
       }
     }
