@@ -1,6 +1,25 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.3
+**Build:** `20260516-019` · **Released:** May 16, 2026
+
+### Source Size Check card — placed inside the white panel instead of on the honeycomb background
+
+**The visual bug.** David's first successful test of the v3.52.2 helper showed the card rendering OUTSIDE the white Starting Document panel — sitting on the honeycomb-textured screen background, visually disconnected from the Setup-5 content it's supposed to belong to.
+
+**Root cause.** The v3.52.0 HTML placement put the card between `hp-section` close and `fs-body-single` close — structurally outside the white card. Functionally it worked (correct content, correct logic), it just rendered in the wrong place visually.
+
+**The fix.** Moved the card slot INSIDE `hp-section-body` so it nests within the white panel alongside the doc tabs and tab panels. CSS margins also adjusted — the v3.52.0 horizontal `var(--space-32)` margins served to inset the card from screen edges back when it was on the honeycomb background; inside the panel those margins make the card narrower than it should be (the panel already provides padding). New margin: `var(--space-16) 0 0 0` — top spacing only, full panel width.
+
+### Files changed
+
+- `index.html` — `#sourceSizeCheck` div moved into `hp-section-body`, after the doc-tab-panels
+- `style.css` — `.source-size-check` margin reduced (top only, no horizontal)
+- 5 helper HTML files + main + version — cache-bust sweep + build stamps
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.52.2
 **Build:** `20260516-018` · **Released:** May 16, 2026
 
