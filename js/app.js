@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260517-001';         // build stamp — update each session
+const BUILD       = '20260517-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5937,12 +5937,18 @@ function handlePasteTextInput() {
 
 // ============================================================
 //  v3.52.0 — Source Size Check
-//  Compares the user's Starting Document size against the active
-//  template's length range and surfaces a recommendation card when
-//  the mismatch is large enough to matter:
-//    • source < target*0.7  → undersized warning (would need invention)
-//    • source > target*1.5  → oversized recommend (paste into Ref Material)
-//    • otherwise            → silent (size is appropriate, no card)
+//  v3.52.5 — Simplified to oversized-only. The trim templates
+//  (Trim to Google Maps / TripAdvisor / Yelp) exist for one job:
+//  shrink an oversized source down to fit a platform. Source Size
+//  Check is the safety net for that job — if the source exceeds the
+//  template's max, recommend pasting it into Reference Material so
+//  reviewers can see what got cut every round and verify factual
+//  fidelity. Anything else is silent. Future scratch templates with
+//  platform minimums encode those in lengthLimit/lengthMin directly
+//  rather than relying on this helper.
+//
+//    • source > max  → oversized recommend (paste into Ref Material)
+//    • otherwise     → silent
 //
 //  Pure logic lives in analyzeSourceSize(); DOM/state plumbing lives in
 //  renderSourceSizeCheck(). Hooks fire from: paste handler, file upload,
@@ -5990,10 +5996,14 @@ function analyzeSourceSize(text, lengthMode, lengthMin, lengthLimit, lengthUnit)
 
   const result = { sourceCount, sourceUnit, targetMin: min, targetMax: max, targetUnit: lengthUnit };
 
-  if (sourceCount < min * 0.7) {
-    result.status  = 'undersized';
-    result.message = `Your source is ${sourceCount} ${sourceUnit}. This template targets ${min}–${max} ${sourceUnit}. The hive would need to invent details to reach the target length, which is bad practice. Consider running this source through a from-scratch review template first (Restaurant / Hotel / Business-Service) to develop fuller content, then return here for the platform-specific cut.`;
-  } else if (sourceCount > max * 1.5) {
+  if (sourceCount > max) {
+    // v3.52.5 — Source Size Check is now oversized-only. The undersized
+    // branch (source < min * 0.7 → "would need invention") was removed.
+    // For the trim templates that use this helper, no one pastes a too-
+    // small source: the templates exist to refine oversized reviews down,
+    // and a user with a too-small source isn't using the tool for its
+    // purpose. Future scratch templates with platform minimums handle
+    // those constraints in lengthLimit/lengthMin directly, not here.
     result.status  = 'oversized';
     result.message = `Your source is ${sourceCount} ${sourceUnit}. This template targets ${min}–${max} ${sourceUnit} — that's a significant cut. Recommend also pasting the source into Reference Material so reviewers can see what got cut every round and verify factual fidelity.`;
   } else {
@@ -6058,20 +6068,19 @@ function renderSourceSizeCheck() {
     return;
   }
 
-  // Build the card. Two status variants share most structure — diverge
-  // only on icon, status class, and action button.
-  const isUndersized = r.status === 'undersized';
-  const icon  = isUndersized ? '⚠️' : '📏';
-  const label = isUndersized ? 'Source too small for this template' : 'Source much larger than target';
-  const statusClass = isUndersized ? 'ssc-warning' : 'ssc-recommend';
+  // v3.52.5 — Oversized is now the only non-silent status. Previously
+  // this function branched on `r.status === 'undersized'` to swap icon,
+  // label, statusClass, and suppress the action button. With undersize
+  // removed from analyzeSourceSize, all that branching is dead code.
+  const icon  = '📏';
+  const label = 'Source much larger than target';
+  const statusClass = 'ssc-recommend';
 
-  // Oversized case gets a one-click copy-to-Reference-Material button.
-  // Undersized case is advisory only — no button — because switching
-  // templates is destructive (resets the whole project) and we don't
-  // want to make that easy from inside a warning card.
-  const actionHTML = isUndersized
-    ? ''
-    : `<button class="btn btn-sm btn-accent" onclick="copySourceToReferenceMaterial()" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
+  // One-click copy-to-Reference-Material button. The whole point of
+  // surfacing this card is to recommend the user move their oversized
+  // source into Reference Material so reviewers can verify cuts every
+  // round against the original.
+  const actionHTML = `<button class="btn btn-sm btn-accent" onclick="copySourceToReferenceMaterial()" title="Add the Starting Document content as a Reference Material card so reviewers see it every round">📚 Copy to Reference Material</button>`;
 
   card.className = 'source-size-check ' + statusClass;
   card.style.display = '';
