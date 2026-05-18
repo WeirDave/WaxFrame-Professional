@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-019';         // build stamp — update each session
+const BUILD       = '20260517-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -10142,7 +10142,7 @@ async function runBuilderOnly() {
     // v3.36.14 — Pass `notes` (already frozen at top of runBuilderOnly
     // at L11769) as 3rd arg so the deep-dive captureRound entry holds
     // the authoritative Builder-call notes record.
-    const builderResponse = await callAPI(builderAI, prompt, notes);
+    const builderResponse = await callAPI(builderAI, prompt, notes, 'builder');
     const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
     const conflicts = extractConflicts(builderResponse);
     window._lastConflicts = conflicts || null;
@@ -10598,7 +10598,7 @@ async function runRound() {
       // gates USER NOTES injection to the Builder branch only (L11706),
       // so reviewers never see notes — the deep-dive entry honestly
       // records that with an empty notesContext.
-      const response = await callAPI(ai, prompt, '');
+      const response = await callAPI(ai, prompt, '', 'worker');
       window._roundTimings[ai.id] = (Date.now() - t_reviewStart) / 1000;
       const noChanges = /^no changes needed/i.test(response.trim());
       const summary = noChanges ? 'No changes needed ✓' : extractSummary(response);
@@ -10963,7 +10963,7 @@ async function runRound() {
     const bKeyHint = bCfg?._key?.length > 8 ? bCfg._key.slice(0,4) + '••••' + bCfg._key.slice(-4) : '••••';
     consoleLog(`📤 ${builderAI.name} (Builder) — sending request (${builderPrompt.length.toLocaleString()} chars · key: ${bKeyHint})`, 'send');
     try {
-      const builderResponse = await callAPI(builderAI, builderPrompt, _notesAtBuilderCall);
+      const builderResponse = await callAPI(builderAI, builderPrompt, _notesAtBuilderCall, 'builder');
       const newDoc    = stripBuilderEnvelope(extractDocument(builderResponse));
       const conflicts = extractConflicts(builderResponse);
       // Defensive pass: validate USER DECISIONs against returned doc + this
@@ -11323,7 +11323,7 @@ async function runRound() {
 // entry alongside promptPreview and token usage. Reviewer call sites
 // pass '' since they had no notes context. This is the authoritative
 // per-API-call notes record for forensic replay.
-async function callAPI(ai, prompt, notesContext = '') {
+async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg || !cfg._key) throw new Error('No API key');
 
@@ -11451,6 +11451,16 @@ async function callAPI(ai, prompt, notesContext = '') {
   const _ct = data?.usage?.completion_tokens || data?.usage?.output_tokens || data?.usageMetadata?.candidatesTokenCount || null;
   const _tt = data?.usage?.total_tokens      || data?.usageMetadata?.totalTokenCount || ((_pt && _ct) ? _pt + _ct : null);
   WF_DEBUG.captureRound({
+    // v3.52.4 — Round + role attribution for the ring buffer. Without
+    // these, the DeepDive JSON is a flat list with no way to tell which
+    // round each capture belongs to or whether it was a worker review or
+    // Builder synthesis. `round` reads the module-level global (L317);
+    // parallel worker calls all read the same value (correct — same round).
+    // `role` is passed by each callAPI caller: 'worker' from runRound's
+    // reviewer phase, 'builder' from runRound's builder phase and from
+    // runBuilderOnly. Defaults to 'unknown' if a caller omits it.
+    round,
+    role,
     aiName:    ai.name,
     provider:  ai.provider,
     model:     cfg.model,
