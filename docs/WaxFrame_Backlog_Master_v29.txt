@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v29)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-17 (post v3.52.9 — restaurant-review playbook fix; three v3.52.x ships this session)
-Current version:     v3.52.9 Pro / build 20260517-006
+Last updated:        2026-05-17 (post v3.52.11 — restaurant-review playbook FULL treatment after backup re-located; five v3.52.x ships this session)
+Current version:     v3.52.11 Pro / build 20260517-008
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v29.txt
 
@@ -27,9 +27,11 @@ Marker key:
   ⚠     blocked / waiting on something else
 
 CHANGES IN v29 (from v28, 2026-05-17):
-  - THREE RELEASES SHIPPED this session, all clearing
-    items from the Codex read-only audit that surfaced
-    after v28 was written:
+  - FIVE RELEASES SHIPPED this session, all clearing
+    items from Codex read-only audits (JS audit drove
+    v3.52.7-v3.52.8; CSS audit drove v3.52.10; the
+    restaurant-review playbook fix took two attempts —
+    v3.52.9 + corrective v3.52.11):
 
   - SHIPPED v3.52.7 — Codex audit follow-up part 1:
     dead-branch trim from the monolith→split refactor.
@@ -72,12 +74,97 @@ CHANGES IN v29 (from v28, 2026-05-17):
     install-ready).
 
   - SHIPPED v3.52.9 — restaurant-review playbook page
-    fix. document-playbooks.html L1801 replaced the
+    fix (initial attempt — superseded by v3.52.11).
+    document-playbooks.html L1801 replaced the
     "2–4 rounds typical (estimated, not measured)"
-    text with the actual T8 measured data (Pearl's
-    Saltwater Grille v2.0 / 5 rounds / 14 min /
-    392w / 2,179c / majority at R6). Backlog item
-    that had been sitting since v23 — closed.
+    text with measured T8 data. **Shipped with two
+    propagated errors** (see v3.52.11 below for the
+    correction trail). Backlog item that had been
+    sitting since v23 — closed at the second attempt.
+
+  - SHIPPED v3.52.10 — Codex CSS audit follow-up
+    surgical fix. style.css L4533-4536 had four
+    .bee-card.is-* selectors with no declaration block,
+    causing the CSS parser to fold them into the next
+    rule's selector chain. The rule .work-notes-panel
+    .work-panel-header { background: var(--surface2); }
+    was asking for an element nested inside four
+    bee-cards at different states simultaneously — never
+    matched. Four orphan selectors deleted; rule now
+    functional. Brace balance unchanged (2170/2170 —
+    purely subtractive). Also synced style.css build
+    header from 20260510-013 to 20260517-007. Six
+    other CSS audit findings deferred to a focused
+    style.css audit pass (backlog v30 candidate):
+    146 dead selectors, .ssc-warning, .custom-ai-form
+    wrapper, !important review, three duplicate clusters.
+
+  - SHIPPED v3.52.11 — restaurant-review playbook
+    page CORRECTIVE re-ship after the Pearl's Saltwater
+    backup was located. v3.52.9 had two factually wrong
+    claims that traced back to the original backlog
+    v23 Section 1 entry and got propagated forward
+    through every backlog version since (v23 → v29)
+    without anyone re-checking:
+      (1) "majority at Round 6" — actually R5 per the
+          backup's outcome:'majority_convergence' on R5
+      (2) "5-AI hive" — actually 6-AI hive (5 reviewers
+          + DeepSeek Builder; Mistral was the 7th
+          configured but inactive that session)
+    Plus the inherited claim "No project backup file
+    was captured at the time" — also wrong, the backup
+    existed from day one. With backup in hand, the
+    restaurant-review playbook page now has the full
+    hotel-style dp-real-example block: verbatim Setup 3
+    fields from LS_PROJECT, full 459-word v1.0 draft
+    text from history[0].doc, corrected round-by-round
+    detail (5 productive rounds R1/R3/R5 + 2 builder-
+    only R2/R4; majority engine at R5).
+
+  - LESSON LOGGED (for future Claude instances reading
+    this file): when a backlog text claim contradicts
+    the user's known workflow ("I always get backup
+    files"), check the workflow, don't propagate the
+    claim. The v3.52.9 wrong-claim chain started in
+    one chat session and rode through 6 backlog
+    versions because every subsequent edit treated the
+    text as canonical fact instead of questioning it.
+    Backups are the source of truth for measured-run
+    forensics; the backlog Section 1 prose was the
+    summary, not the record.
+
+  - NEW SECTION 6: SECURITY HARDENING. Separate Codex
+    read-only security audit ran 2026-05-17 (same day
+    as JS + CSS audits). Surfaced 8 findings:
+      • HIGH — backups are secret-bearing without
+        labeling/warnings
+      • HIGH — imported backups can restore arbitrary
+        state (LS_HIVE keys, custom endpoints,
+        consoleHTML)
+      • HIGH — Claude API keys route through David's
+        Cloudflare worker (mandated by Anthropic CORS
+        policy); api-details.html "keys never leave
+        your device" claim is technically inaccurate
+        for Claude specifically
+      • MEDIUM/HIGH — stored consoleHTML restored via
+        innerHTML; XSS vector if backup is malicious
+      • MEDIUM — resolveAiIcon interpolates ai.name,
+        ai.icon, cssClass into HTML strings with inline
+        onerror; custom AI names → XSS-adjacent
+      • MEDIUM — Gemini model-list calls use ?key= in
+        query string (generate calls already use header)
+      • MEDIUM — no Content Security Policy declared
+      • LOW — client-side license bypass (architectural,
+        not fix target)
+    David's locked-in approach: keep the full backup
+    USEFUL for customer self-restore (do NOT gut it);
+    add sensitivity labeling + warning modals + a
+    separate support-safe diagnostic export with key
+    redaction. Full plan in Section 6 above. Suggested
+    release order: v3.53.0 small wins, v3.53.1 console
+    HTML hardening, v3.53.2 resolveAiIcon XSS fix,
+    v3.54.0 diagnostic export, v3.6+ CSP. Not shipping
+    in v3.52.11.
 
   - NEW BACKLOG-003 (Section 2): wfConfirm
     accessibility for helper pages. The eighth confirm()
@@ -1301,10 +1388,301 @@ if the assumption breaks.
     If output ever shows a word getting cut, take action.
 
 ═════════════════════════════════════════════════════════════
+6. SECURITY HARDENING  (Codex security audit 2026-05-17)
+═════════════════════════════════════════════════════════════
+
+A separate read-only Codex security audit ran on the same day
+the JS + CSS audits ran. Surfaced eight findings across two
+trust-boundary categories: (a) WaxFrame's claim that "keys
+never leave your device" is technically true only for some
+providers, and (b) backup files are secret-bearing artifacts
+that are not currently labeled or treated as such.
+
+This entire section is a NEW v30 candidate cluster — not
+shipping in v3.52.11 (the playbook-fix release). v3.52.11
+ships first; the security pass becomes its own focused
+release (or series) afterward.
+
+
+───────────────────────────────────────────────────────────
+6.1  Backup security — David's locked-in proposed approach
+───────────────────────────────────────────────────────────
+
+DECISION (David, 2026-05-17): the full backup stays useful
+for customer self-restore. We do NOT gut it. Instead we add
+sensitivity labeling, an optional support-safe diagnostic
+export, and explicit warnings on both export and restore.
+
+[ ] 6.1.A  Backup export — sensitivity labeling
+    SCOPE
+      • Filename suffix: include "-SENSITIVE" in the default
+        download name. Pattern:
+          Project-rN-YYYYMMDD-HHMM-Backup-SENSITIVE.json
+        Today the convention is no SENSITIVE marker; users
+        treat the backup file like a project file rather
+        than a credentials vault.
+      • Pre-export modal/toast warning text (David's draft):
+          "Full backups let you restore this project exactly
+           where you left off. They may include your document
+           text, AI responses, API keys, license key, and
+           debug traces. Store them somewhere private and
+           only share them with people you trust."
+      • Decision (per David): keep the full backup behavior
+        unchanged. Only the labeling + warning change in
+        this sub-item.
+
+    AFFECTED CODE
+      • js/storage.js backupSession() (~L658, L677) —
+        download filename pattern
+      • UI hook for the pre-export modal — likely in app.js
+        wherever Backup Session is triggered
+
+    EFFORT: small. Single small modal + filename change.
+
+[ ] 6.1.B  Restore import — trust warning
+    SCOPE
+      • Pre-import modal warning text (David's draft):
+          "Only restore backups you created or trust. A
+           backup can replace your local project, AI setup,
+           API keys, and session state."
+      • Modal must require explicit confirmation before
+        importSession() runs.
+      • Existing importSession() at js/storage.js L744+L757
+        trusts any JSON with _waxframe_backup flag and
+        writes LS_HIVE, LS_PROJECT, LS_SESSION, IDB_SESSION
+        back into browser storage. Adding the warning is
+        social-engineering mitigation, not a code-level
+        sandbox.
+
+    EFFORT: small. Single modal + 1-line guard.
+
+[ ] 6.1.C  Support-safe diagnostic export — new export mode
+    SCOPE
+    Add a SECOND backup mode alongside the existing full
+    backup. Purpose: customer can send WaxFrame this file
+    for troubleshooting without leaking secrets.
+
+    REDACTS:
+      • API keys for all configured AIs (LS_HIVE.activeAIs[].apiKey)
+      • License key (waxframe_pro_license_key + dev pwd hash)
+      • Custom endpoint bearer tokens (imported server creds)
+      • (Optional) document text in starting doc
+      • (Optional) provider raw responses if they may contain
+        sensitive document content
+
+    KEEPS (these are what diagnostic value requires):
+      • App version + build stamp
+      • Hive structure (provider names, model ids — NOT keys)
+      • Session round history (timing, conflicts, outcomes,
+        errors)
+      • Project goal/setup fields (workflow context)
+      • DeepDive ring buffer entries (error forensics)
+      • Console log entries (already structured via consoleLog
+        path; the consoleHTML innerHTML path is a separate
+        concern — see 6.1.D below)
+
+    UI:
+      • Two clearly-labeled buttons or a mode toggle in the
+        Backup flow:
+          [💾 Full Restore Backup (sensitive)]
+          [🩹 Diagnostic Bundle (safe to share)]
+      • Or one button with a checkbox "Redact API keys for
+        sharing" — TBD UX.
+      • Filename pattern for diagnostic:
+          Project-rN-YYYYMMDD-HHMM-Diagnostic-Safe.json
+
+    NOT YET DECIDED: should the diagnostic bundle remain
+    importable for full restore? David's note (paraphrased):
+    "Diagnostic bundle may not fully restore/run without
+    re-entering keys." Default = diagnostic can be imported
+    but user is re-prompted for keys post-import.
+
+    EFFORT: medium. New buildDiagnosticBundle() function
+    sibling to backupSession(); new modal/UI; ~150-300 lines.
+
+[ ] 6.1.D  consoleHTML restore — sanitize, do not innerHTML
+    SCOPE
+    Codex finding #4: js/storage.js stores raw consoleHTML
+    and restores via consoleEl.innerHTML = s.consoleHTML at
+    L151, L341, L376. The normal consoleLog() path (app.js
+    L583) uses textContent which is safe. But session restore
+    bypasses that path and re-injects whatever HTML was
+    stored at backup time.
+
+    THREAT: if a malicious backup gets imported (see 6.1.B
+    warning) or a project file lands with crafted HTML in
+    its consoleHTML field, the innerHTML restore becomes a
+    stored-XSS vector.
+
+    TWO FIX OPTIONS (David's preferred: sanitize on restore)
+      Option A (sanitize): on restore, parse consoleHTML
+        through a strict whitelist (allow only <span>, <a>
+        with specific classes; strip <script>, on* handlers,
+        javascript: URLs, etc.). Preserves backup format
+        backward-compatibility.
+      Option B (migrate): change backup format to store
+        STRUCTURED console entries (array of {type, text,
+        timestamp, level, ...}) instead of rendered HTML.
+        Restore rebuilds DOM via consoleLog() per entry.
+        Backward-compatible v3/v4 format negotiation.
+
+    EFFORT: small (Option A) to medium (Option B). David's
+    preferred is Option A as the immediate fix; Option B as
+    a future migration if structured entries earn their keep.
+
+
+───────────────────────────────────────────────────────────
+6.2  Other audit findings — triaged
+───────────────────────────────────────────────────────────
+
+[ ] 6.2.A  Claude API key proxy — documentation update
+    Codex finding #1: Claude API keys, prompts, and vision
+    document images route through
+    https://waxframe-claude-proxy.weirdave.workers.dev
+    (David's Cloudflare worker), NOT directly to Anthropic.
+    This is necessary because Anthropic does not currently
+    support browser CORS for /v1/messages.
+
+    WHAT'S TECHNICALLY TRUE: Claude API keys DO leave the
+    user's browser (they go to David's Cloudflare worker,
+    which then forwards them to Anthropic). The worker
+    doesn't persist keys but does see them in-flight.
+
+    WHAT THE DOCS CURRENTLY SAY (api-details.html "Your
+    keys never leave your device" card, expanded in v3.52.8):
+    "Keys are stored in your browser only. They go directly
+     from your browser to each AI provider."
+    The "directly from your browser to each AI provider"
+    claim is FALSE for Claude specifically.
+
+    FIX REQUIRED: update the api-details.html disclosure
+    card to acknowledge the Claude proxy. Suggested text:
+    "Most providers (OpenAI, Gemini, Grok, Perplexity,
+     DeepSeek) accept direct browser-to-provider requests.
+     Anthropic's API does not support browser CORS, so
+     Claude traffic routes through a Cloudflare Worker
+     operated by WaxFrame's developer
+     (waxframe-claude-proxy.weirdave.workers.dev). The
+     worker does not log or persist API keys or prompt
+     content, but it sees them in-flight. The worker code
+     is auditable at [LINK TO REPO if public]."
+
+    EFFORT: small. One-paragraph doc edit; needs David's
+    approval on exact wording (and decision on whether to
+    publish the worker source).
+
+[ ] 6.2.B  resolveAiIcon HTML interpolation — XSS fix
+    Codex finding #5: js/app.js L9338 + L9370 interpolates
+    ai.name, ai.icon, and cssClass directly into HTML
+    strings including inline onerror handlers. Custom AIs
+    and imported AIs can carry arbitrary names/icons.
+
+    THREAT: a malicious imported AI config with crafted
+    ai.name = '"><img src=x onerror=alert(1)>' would inject
+    executable code into the rendered DOM.
+
+    FIX: replace string interpolation with DOM API
+    construction (createElement + setAttribute + textContent
+    + addEventListener for the onerror behavior). Standard
+    safe-rendering pattern matching the rest of the
+    conflict/review renderer which already uses esc().
+
+    EFFORT: small. Two call sites, ~30 lines.
+
+[ ] 6.2.C  Gemini API keys in query strings — header fix
+    Codex finding #6: js/api.js L339 + L442 (and the model-
+    list paths at app.js L4789 + L4845) use ?key=API_KEY
+    in query strings for Gemini model-listing calls. The
+    generate calls already use the x-goog-api-key header
+    correctly.
+
+    THREAT: query-string secrets leak into browser history,
+    server logs, proxy logs, screenshots, diagnostics.
+    Lower-severity than headers because the model-list path
+    is less frequently called than generate, but trivially
+    fixable.
+
+    FIX: move the API key from query string to
+    x-goog-api-key header for the model-list endpoint,
+    matching the existing generate-call pattern.
+
+    EFFORT: trivial. ~4 lines across 2-4 sites.
+
+[ ] 6.2.D  Content Security Policy — long-term hardening
+    Codex finding #7: no CSP declared. The app uses inline
+    onclick handlers starting from the first screen, which
+    would make a strict CSP harder to roll out but
+    correspondingly more valuable.
+
+    WHY VALUABLE: with API keys in localStorage, a CSP that
+    blocks inline scripts and restricts script sources is
+    a meaningful blast-radius reducer if any XSS does land.
+
+    WHY HARD: rolling out a strict CSP requires migrating
+    every inline onclick="…" handler to addEventListener
+    bindings. Easily 200+ handler sites across index.html
+    and the helper pages.
+
+    APPROACH (when prioritized): incremental migration.
+    Pick one screen, migrate its onclicks to JS-side
+    delegation, ship. Repeat. Once all onclicks are gone,
+    add the CSP meta tag and verify nothing breaks.
+
+    EFFORT: large. v3.6+ candidate, not v3.52.x.
+
+[—] 6.2.E  Client-side license enforcement — not actionable
+    Codex finding #8: isLicensed() trusts a localStorage
+    flag and the dev password hash is shipped client-side.
+
+    NOT A FIX TARGET: this is the architectural reality of
+    being a static-site app with no backend. Server-side
+    license validation would require a backend, which would
+    change the entire deployment model. License enforcement
+    is a business control and a courtesy gate, not a
+    security boundary. The Gumroad license-verify endpoint
+    we DO call (api.gumroad.com/v2/licenses/verify) is the
+    real validation point; clients that bypass it locally
+    are bypassing the courtesy gate, not a real authorization
+    boundary.
+
+    KEEP IN MIND, NOT ACTIONABLE.
+
+
+───────────────────────────────────────────────────────────
+6.3  Suggested release order
+───────────────────────────────────────────────────────────
+
+If we ship all this incrementally rather than as one big
+release, the natural sequence is:
+
+  v3.53.0  (small, fast wins)
+           6.1.A  backup filename + warning modal
+           6.1.B  restore warning modal
+           6.2.A  api-details Claude proxy disclosure
+           6.2.C  Gemini API key → header
+
+  v3.53.1  (consoleHTML hardening)
+           6.1.D  Option A — sanitize on restore
+
+  v3.53.2  (XSS fix)
+           6.2.B  resolveAiIcon safe DOM construction
+
+  v3.54.0  (Support-safe diagnostic export — own focused release)
+           6.1.C  full feature
+
+  v3.6+    (CSP rollout — long-term, multi-release)
+           6.2.D
+
+This is a SUGGESTED order — David's call on actual sequencing.
+
+
+═════════════════════════════════════════════════════════════
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
-v3.52.9   2026-05-17  Restaurant-review playbook page convergence text updated to measured T8 data. document-playbooks.html line 1801 — was "2–4 rounds typical (estimated, not measured)" since v23 (about 7 versions ago), now reads "≈14 minutes · 5 rounds (measured 2026-05-10) — refining an existing v1.0 draft… Pearl's Saltwater Grille v2.0 … 392w / 2,179c … majority at R6 (4/6 satisfied) … 3 USER DECISIONS". Wording template matched to hotel-review post-measurement convergence line for tonal consistency. Source data: playbook v25 CHANGES IN v20. Two more stale "estimated, not measured" stragglers surfaced during the fix (L2087 business-review T10; L2180 multi-platform T11) — both now in Section 1.
+v3.52.11  2026-05-17  Restaurant-review playbook page — proper hotel-style treatment + two corrections from v3.52.9. v3.52.9 shipped with two factually wrong claims that traced back to backlog v23 Section 1 (where the bug was first logged) and propagated forward through v24-v29 without re-checking: (1) "majority at Round 6" — actually R5 per the backup's outcome:'majority_convergence' on R5; (2) "5-AI hive" — actually 6-AI hive (5 reviewers + DeepSeek Builder; Mistral was configured but inactive). Pearl's Saltwater Grille backup file located and uploaded the same evening; full dp-real-example block now in place with verbatim Setup 3 fields, full 459-word v1.0 draft, and corrected round-by-round detail. Lesson logged in release notes: when a backlog text claim contradicts the user's known workflow ("I always get backup files"), check the workflow, don't propagate the claim. v3.52.10 (CSS audit surgical fix) shipped earlier the same evening — unrelated to this correction. NOTE: the v3.52.9 entry below carries the original (wrong) text for historical accuracy; the corrected facts live here in v3.52.11 + in document-playbooks.html.
+v3.52.10  2026-05-17  CSS audit surgical fix. Codex read-only style.css audit found four .bee-card.is-* selectors with no declaration block at L4533-4536, causing the CSS parser to fold them into the next rule's selector chain — .work-notes-panel .work-panel-header { background: var(--surface2); } was asking for an element nested inside four bee-cards at different states simultaneously and never matched. Four orphan selectors deleted; rule now functional. Brace balance unchanged (2170/2170 — purely subtractive). Also synced style.css build header from 20260510-013 to 20260517-007. Other 6 audit findings (146 dead selectors, .ssc-warning, .custom-ai-form wrapper, !important review, duplicate clusters) deferred to a focused style.css audit pass in backlog v30. First ZIP this session to include style.css.
+v3.52.9   2026-05-17  ⚠ SUPERSEDED BY v3.52.11 — see above. Restaurant-review playbook page convergence text updated to measured T8 data. document-playbooks.html line 1801 — was "2–4 rounds typical (estimated, not measured)" since v23 (about 7 versions ago). v3.52.9 wording said "majority at R6 (4/6 satisfied)" and "5-AI hive + DeepSeek Builder" — BOTH WRONG, corrected in v3.52.11. Source data: playbook v25 CHANGES IN v20 (which itself contained the propagated errors). Two more stale "estimated, not measured" stragglers surfaced during the fix (L2087 business-review T10; L2180 multi-platform T11) — both now in Section 1.
 v3.52.8   2026-05-17  Codex audit follow-up part 2. Seven native confirm() dialogs migrated to wfConfirm in js/app.js (confirmRemoveLicense, confirmGoHome, processFile, processRefFile, startSession ×2, clearDocument). Three of the seven enclosing functions were sync and are now async — verified safe (all callers are HTML onclick handlers, browsers don't await onclick return values). 133 target="_blank" links across 6 HTML files now carry rel="noopener noreferrer" for security and process isolation. Two JS window.open calls (api-links.js openAllConsoles + wf-debug.js troubleshooting card buttons) got the equivalent 'noopener,noreferrer' feature parameter. Stray console.log standardized to consoleLog. API keys-in-localStorage security disclosure paragraph added to api-details.html. license-helper.js confirm deferred to BACKLOG-003 (helper pages don't load app.js so wfConfirm isn't reachable). First complete ZIP this session — earlier v3.52.4/5/6/7 ZIPs were missing audio.js, scenes.js, wf-debug.js (GitHub Pages served them from prior commits so nothing broke, but the ZIPs weren't clean-install-ready).
 v3.52.7   2026-05-17  Codex audit follow-up part 1: dead-branch trim from the monolith→split refactor. README badge bumped from stale 3.39.12 to v3.52.7. User manual provider table caught up to runtime defaults (Gemini gemini-2.5-pro-preview-03-25 → gemini-2.5-flash; Grok grok-3 → grok-4-fast-non-reasoning). MODEL_LABELS dictionary removed from js/api.js — was demoted to "safety net" in v3.26.4 but had no real consumers since, and the one runtime reference at app.js L13535 was broken-shaped (lookup by AI id against a dictionary keyed by model ids, always returned undefined). Fallback simplified to match the reviewer block at L13547. Four dead helpers removed: loadScript, saveProjectGoalFromModal, openAllBilling, _clockInterval. Net ~75 lines of dead code trimmed across app.js, api.js, api-links.js. MODEL_FALLBACKS preserved as active safety net.
 

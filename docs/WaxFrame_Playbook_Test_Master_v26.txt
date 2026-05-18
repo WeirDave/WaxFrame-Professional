@@ -1,7 +1,7 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — PLAYBOOK TEST MASTER (v26)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-17 (3 Manly Bikes platform-template runs logged + T8 playbook page fix shipped v3.52.9)
+Last updated:        2026-05-17 (3 Manly Bikes runs logged + T8 playbook page corrective ship v3.52.11 — see amendment in CHANGES below)
 WaxFrame version:    v3.39.12 Pro and later
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Playbook_Test_Master_v26.txt
@@ -19,6 +19,40 @@ Two-document persistence system, per memory rule:
   • Backlog Master = code work + ideas + bug-fix list
 
 CHANGES IN v26 (from v25, 2026-05-17):
+  - AMENDMENT (post-v3.52.11): The v3.52.9 entry under
+    T8 PLAYBOOK PAGE FIX section below shipped with two
+    wrong claims that traced back to the original backlog
+    v23 Section 1 entry. The corrected facts shipped in
+    v3.52.11 once the Pearl's Saltwater backup was re-
+    located:
+      (1) "5-AI hive" — should be 6-AI hive (5 reviewers
+          + DeepSeek Builder; Mistral was the 7th
+          configured but inactive that session). The T8
+          HISTORICAL RUN entry below already correctly
+          said "Hive (6 total)" — only the v3.52.9
+          document-playbooks.html wording was wrong.
+      (2) "Majority at R6 (4/6 satisfied)" — under the
+          user-facing round-counter convention (R1 =
+          first work round, no R0/setup), this is
+          actually R5. The internal forensic convention
+          in this file's T8 HISTORICAL RUN entry below
+          uses R1=setup → R6=convergence, which is
+          self-consistent. The two numbering conventions
+          differ by 1; both reach the same reality.
+          document-playbooks.html now uses the user-
+          facing convention (R5) to match what users see
+          in WaxFrame's UI; this file keeps its R1=setup
+          convention for cross-historical-entry
+          consistency.
+    LESSON: when a backlog text claim contradicts the
+    user's known workflow ("I always get backup files"),
+    check the backup, don't propagate the claim. The
+    wrong-claim chain rode through 6 backlog versions
+    (v23→v29) because every edit treated the prose
+    summary as canonical instead of cross-checking
+    against the backup. Backups are the source of truth
+    for forensics; backlog prose is the index.
+
   - THREE PLATFORM-TEMPLATE MEASURED RUNS logged from
     the May 17 live-test session. All used Manly Bikes
     v1.0 (888w / 5,389c source review of e-bike rental
