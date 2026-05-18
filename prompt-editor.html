@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — prompt-editor.html
-     Build: 20260517-004
+     Build: 20260517-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-004">
+  <meta name="waxframe-build" content="20260517-005">
   <title>WaxFrame — Prompt Editor</title>
   <link rel="icon" type="image/png" href="images/favicon.png">
-  <link rel="stylesheet" href="style.css?v=3.52.7">
+  <link rel="stylesheet" href="style.css?v=3.52.8">
 </head>
 <body class="helper-body">
 
@@ -37,10 +37,10 @@
 
   <div class="nav-body">
     <div class="nav-section-label">Documentation</div>
-    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
@@ -48,15 +48,15 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
-    <a class="nav-item" href="index.html" target="_blank" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
-    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -260,9 +260,9 @@
     <p class="about-modal-subtitle">About</p>
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
-      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="link-accent">Read license →</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -283,7 +283,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -519,10 +519,10 @@ If multiple models are roughly equivalent flagships, prefer the most recently re
 
   loadPrompts();
 </script>
-<script src="js/theme.js?v=3.52.7"></script>
-<script src="js/nav-helper.js?v=3.52.7"></script>
-<script src="js/license-helper.js?v=3.52.7"></script>
-<script src="js/version.js?v=3.52.7"></script>
+<script src="js/theme.js?v=3.52.8"></script>
+<script src="js/nav-helper.js?v=3.52.8"></script>
+<script src="js/license-helper.js?v=3.52.8"></script>
+<script src="js/version.js?v=3.52.8"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

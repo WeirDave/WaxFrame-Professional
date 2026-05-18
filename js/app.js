@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260517-004';         // build stamp — update each session
+const BUILD       = '20260517-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1156,8 +1156,16 @@ function replaceLicenseKey() {
   showLicenseModal('');
 }
 
-function confirmRemoveLicense() {
-  if (!confirm('Remove your WaxFrame Pro license key from this browser?\n\nYou will revert to the free trial. If your trial is already used up, you will need to enter a license key to keep running rounds.')) return;
+async function confirmRemoveLicense() {
+  // v3.52.8 — native confirm() → wfConfirm() migration. Function made
+  // async (only called from HTML onclick handlers across 6 surfaces;
+  // browsers don't await onclick return values, so async is safe).
+  const ok = await wfConfirm(
+    'Remove license key?',
+    'Remove your WaxFrame Pro license key from this browser?\n\nYou will revert to the free trial. If your trial is already used up, you will need to enter a license key to keep running rounds.',
+    { okText: 'Remove Key', destructive: true }
+  );
+  if (!ok) return;
   clearLicense();
   hideLicenseManageModal();
   updateLicenseBadge();
@@ -1248,10 +1256,17 @@ function closeNavMenu() {
   document.getElementById('navBackdrop')?.classList.remove('open');
 }
 
-function confirmGoHome() {
+async function confirmGoHome() {
+  // v3.52.8 — native confirm() → wfConfirm() migration. Function made
+  // async (called only from index.html nav-menu onclick; browsers don't
+  // await onclick return values, so async is safe).
   // Warn if there's an active session with rounds completed or a document loaded
   if (history.length > 0 || docText) {
-    if (!confirm('Go back to the Home screen? Your session and document are saved — you can return to it by clicking Pro and navigating back to the work screen.')) return;
+    const ok = await wfConfirm(
+      'Go back to Home?',
+      'Go back to the Home screen? Your session and document are saved — you can return to it by clicking Pro and navigating back to the work screen.'
+    );
+    if (!ok) return;
   }
   goToScreen('screen-welcome');
 }
@@ -2581,7 +2596,9 @@ async function applyTemplate(templateId, path) {
     if (typeof renderReferenceCards === 'function')   renderReferenceCards();
     if (typeof updateRefGrandTotals === 'function')   updateRefGrandTotals();
     if (swept > 0 || pc.refMaterial) {
-      console.log(`applyTemplate: RM sweep removed ${swept} template card(s); ${pc.refMaterial ? 'added 1 new card' : 'no new card injected (refMaterial empty)'}`);
+      // v3.52.8 — was raw console.log; standardized to consoleLog wrapper
+      // for consistency with surrounding logging surfaces.
+      consoleLog(`applyTemplate: RM sweep removed ${swept} template card(s); ${pc.refMaterial ? 'added 1 new card' : 'no new card injected (refMaterial empty)'}`);
     }
   }
 
@@ -6187,8 +6204,11 @@ async function processFile(file) {
   // Skip on Setup 5 — user is still in setup, not an active session
   const onSetupScreen = document.getElementById('screen-document')?.classList.contains('active');
   if (!onSetupScreen && (history.length > 0 || docText)) {
-    const proceed = confirm(
-      `⚠️ You have an active session with a working document.\n\nLoading a new file will replace your current document. This cannot be undone.\n\nIf you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.\n\nProceed and replace the document?`
+    // v3.52.8 — native confirm() → wfConfirm()
+    const proceed = await wfConfirm(
+      '⚠️ Replace working document?',
+      `You have an active session with a working document.\n\nLoading a new file will replace your current document. This cannot be undone.\n\nIf you want to refine this file instead, consider clearing your working document first and pasting the text in, then continuing from there.\n\nProceed and replace the document?`,
+      { okText: 'Replace document', destructive: true }
     );
     if (!proceed) return;
   }
@@ -6272,7 +6292,11 @@ async function processRefFile(file) {
   // educates users about which round will see the new doc.
   const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
   if (!onSetupScreen && history.length > 0) {
-    const proceed = confirm(`Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`);
+    // v3.52.8 — native confirm() → wfConfirm()
+    const proceed = await wfConfirm(
+      'Add reference doc mid-session?',
+      `Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`
+    );
     if (!proceed) return;
   }
 
@@ -8058,7 +8082,13 @@ async function startSession() {
 
   // Guard #1: if an active session exists in memory, warn before overwriting it
   if (history.length > 0 || (docText && round > 1)) {
-    if (!confirm(`You have an active session (${round - 1} round${round - 1 !== 1 ? 's' : ''} completed). Launching again will clear your current document and round history. Continue?`)) return;
+    // v3.52.8 — native confirm() → wfConfirm()
+    const ok = await wfConfirm(
+      'Launch over active session?',
+      `You have an active session (${round - 1} round${round - 1 !== 1 ? 's' : ''} completed). Launching again will clear your current document and round history. Continue?`,
+      { okText: 'Launch new session', destructive: true }
+    );
+    if (!ok) return;
   }
 
   // ── Pre-launch storage verify ──
@@ -8096,11 +8126,14 @@ async function startSession() {
         // Same project name (or stored name unavailable) — likely a real load failure.
         const sh = storedSession.history?.length || 0;
         const sd = storedSession.docText?.length || 0;
-        const proceed = confirm(
-          `⚠️ A saved session exists in browser storage (${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document) but did NOT load into memory on this page load. ` +
+        // v3.52.8 — native confirm() → wfConfirm()
+        const proceed = await wfConfirm(
+          '⚠️ Saved session did not load',
+          `A saved session exists in browser storage (${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document) but did NOT load into memory on this page load. ` +
           `This usually means a load race or a transient IDB read failure.\n\n` +
           `Click Cancel to keep the saved session intact and reload the page to retry the load.\n` +
-          `Click OK to discard the saved session and start fresh.`
+          `Click "Discard and start fresh" to discard the saved session and start fresh.`,
+          { okText: 'Discard and start fresh', destructive: true }
         );
         if (!proceed) return;
         try { await idbClear(); } catch(e) { /* ignore */ }
@@ -13693,8 +13726,16 @@ function copyDocument() {
   copyToClipboard(document.getElementById('workDocument')?.value, 'Document');
 }
 
-function clearDocument() {
-  if (!confirm('Clear the working document?')) return;
+async function clearDocument() {
+  // v3.52.8 — native confirm() → wfConfirm() migration. Function made
+  // async (called only from index.html "✕ Clear" button onclick; browsers
+  // don't await onclick return values, so async is safe).
+  const ok = await wfConfirm(
+    'Clear working document?',
+    'Clear the working document?',
+    { okText: 'Clear', destructive: true }
+  );
+  if (!ok) return;
   const docTa = document.getElementById('workDocument');
   if (docTa) { docTa.value = ''; updateLineNumbers(); }
   docText = '';

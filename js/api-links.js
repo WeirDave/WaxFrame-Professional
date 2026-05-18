@@ -15,7 +15,10 @@ function openAllConsoles() {
   ];
   var opened = 0;
   consoles.forEach(function(url) {
-    var w = window.open(url, '_blank');
+    // v3.52.8 — noopener feature added per audit. Prevents opened tabs
+    // from accessing window.opener (security) and lets browser fully
+    // isolate processes (performance).
+    var w = window.open(url, '_blank', 'noopener,noreferrer');
     if (w) opened++;
   });
   return { total: consoles.length, opened: opened };
