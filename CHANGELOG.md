@@ -1,6 +1,64 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.2
+**Build:** `20260516-018` · **Released:** May 16, 2026
+
+### Source Size Check bug — helper was always silent + export verb dynamic
+
+Two fixes bundled. v3.52.1's export-verb change ships together with the Source Size Check bugfix David hit on first live test of v3.52.0.
+
+### Bugfix — Source Size Check was always silent
+
+**The bug.** David picked the Trim to Google Maps template, uploaded his 5,389-character Manly Bikes review on Setup 5, and expected the oversized recommend card to appear (5,389 chars vs 750–1,200 target = 4.5× the upper bound). Nothing happened.
+
+**Root cause.** `renderSourceSizeCheck` was reading `document.getElementById('lengthMode')?.value` to determine the active length mode — but there is no element with `id="lengthMode"` in the DOM. The length mode lives in the active `.length-mode-pill` element's dataset, accessed via `getLengthMode()`. My v3.52.0 implementation was reading the wrong place, always getting empty, treating it as 'none', and returning silent.
+
+**The fix.** Replaced the broken read with `getLengthMode()` — the canonical helper used everywhere else in the codebase. The other three fields (`lengthMin`, `lengthLimit`, `lengthUnit`) ARE real inputs and were correct in the original implementation — only `lengthMode` was reading the wrong source.
+
+Verified: with the fix in place, uploading the Manly Bikes source against Trim to Google Maps correctly surfaces the oversized recommend card. The Copy to Reference Material button works as designed.
+
+**Lesson for future audits.** The bug was caught immediately on live test because David is the audit. But it could have been caught earlier via a "does every template's lengthMode actually propagate to the DOM by the time renderSourceSizeCheck reads it" check. Added to mental audit checklist: when reading template-applied state from the DOM, verify the element ID actually exists and the read pattern matches how the rest of the codebase reads the same data.
+
+### Export byline — Crafted vs Refined (from v3.52.1)
+
+The exported document footer used to say "Produced by WaxFrame..." for every session regardless of starting state. David's framing: a producer in film just contributes money, which isn't what the hive does. The hive either CRAFTS a document from nothing (scratch path) or REFINES an existing draft (upload/paste paths) — two different operations that deserve two different verbs.
+
+Both export sites (document and transcript) now pick the verb based on `docTab`:
+- `docTab === 'scratch'` → "Crafted by WaxFrame..."
+- `docTab === 'upload'` or `'paste'` → "Refined by WaxFrame..."
+
+The v3.50.0 footer-strip regex was updated to match all three verbs: `(Produced|Crafted|Refined) by WaxFrame...`. Documents exported pre-v3.52.2 with "Produced by..." still get their footer stripped cleanly when re-exported. No legacy doc breaks.
+
+### Files changed
+
+- `js/app.js` — `renderSourceSizeCheck` now uses `getLengthMode()` instead of broken element read; both footer-write sites use dynamic verb via `docTab`; `FOOTER_RE` updated to match all three verbs
+- All HTML files — cache-bust + build stamps
+- `js/version.js` — `APP_VERSION` → `v3.52.2 Pro`
+- `CHANGELOG.md` — this entry
+
+---
+## v3.52.1
+**Build:** `20260516-017` · **Released:** May 16, 2026
+
+### Export byline — dynamic verb matches what the hive actually did
+
+The exported document footer used to say "Produced by WaxFrame..." for every session regardless of starting state. David's framing: a producer in film just contributes money, which isn't what the hive does. The hive either CRAFTS a document from nothing (scratch path) or REFINES an existing draft (upload/paste paths) — two different operations that deserve two different verbs.
+
+**The change.** Both export sites (document export and transcript export) now pick the verb based on `docTab` at session start:
+- `docTab === 'scratch'` → "Crafted by WaxFrame..."
+- `docTab === 'upload'` or `'paste'` → "Refined by WaxFrame..."
+
+**The strip regex.** The v3.50.0 footer-strip regex (used when re-exporting a doc that already has a footer from a prior export) was updated to match all three verbs: `(Produced|Crafted|Refined) by WaxFrame...`. This preserves backward compatibility — docs exported pre-v3.52.1 with "Produced by..." still get their footer stripped cleanly when re-exported.
+
+### Files changed
+
+- `js/app.js` — both footer-write sites use dynamic verb via `docTab`; `FOOTER_RE` updated to match all three verbs
+- `index.html` and 5 helper pages — cache-bust sweep + build stamps
+- `js/version.js` — `APP_VERSION` → `v3.52.1 Pro`
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.52.0
 **Build:** `20260516-016` · **Released:** May 16, 2026
 
