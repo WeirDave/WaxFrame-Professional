@@ -1,6 +1,54 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.6
+**Build:** `20260517-003` · **Released:** May 17, 2026
+
+### Cumulative session bundle — cost-awareness sweep, DDV Save Backup, three small polish fixes
+
+A cumulative release rolling up everything staged during the May 17 live-test session. Bundles cost-awareness documentation, a Deep Dive Capture Viewer convenience, three small polish fixes surfaced during the Yelp template's first live runs, and one Change Builder modal tweak.
+
+### Gemini paid-tier caveat sweep — 7 surfaces updated
+
+David burned $2 in one Gemini-as-Builder session that was expected to be free, prompted by paid-tier billing routes activating once a credit card had been added to Google AI Studio. Documentation across the product was overconfident about Gemini being "completely free." Caveats added at every surface where the free claim appeared:
+
+- **Welcome screen** (`index.html`): "Gemini has a generous free API tier (without billing enabled on your Google AI Studio account)" + heads-up that once billing is on, Gemini can charge per token — with a direct link to the AI Studio usage page.
+- **api-details.html Gemini setup card**: Replaced "Gemini is completely free — no credit card required" with the billing-enabled caveat and Builder-amplifier explanation.
+- **api-details.html Gemini reviewer tip**: "When Gemini stays on its free tier… keep it as a Reviewer rather than the Builder" if billing is on.
+- **waxframe-user-manual.html cost section**: Full follow-up paragraph titled "Gemini paid-tier caveat" — explains the AI Studio billing toggle, the Builder-as-cost-amplifier mechanism, and the practical recommendation.
+- **what-are-tokens.html**: New card "Gemini's free tier vs. paid tier — read this if you've added a credit card" with the full mental model.
+- **README.md Builder section**: Blockquote callout summarizing the gotcha.
+- **Change Builder modal** (`index.html`): "Cost note: the Builder reads project setup, reference material, the full working document, and every reviewer's suggestions every round — switching to a premium model here can raise per-round cost significantly."
+
+The unifying message: Gemini is free *only* while AI Studio billing is disabled. Once billing is enabled, the same model can route through paid-tier paths. The Builder role is the cost amplifier because it reads everything every round.
+
+### New "💾 Save Backup" button in the Deep Dive Capture Viewer
+
+David's testing workflow involves grabbing the DeepDive JSON for every run we analyze together. He requested a parallel one-click Backup-as-File button right next to it so he doesn't have to switch screens. The existing "💾 Save as File" button was renamed to "💾 Save DeepDive" for symmetry, and a new "💾 Save Backup" button was added that calls the existing `backupSession()` from `js/storage.js` directly. Both files now grab-able from the floating Dev Toolbar in two clicks without leaving the viewer.
+
+### Three small polish fixes
+
+**Unit-aware upload banner.** When a user uploads a file on Setup 5 and the active template uses word-mode (Rewrite as Yelp, Trim to TripAdvisor), the success banner now displays the word count instead of character count. Word-mode templates measure their constraint in words; the headline number should match. Character-mode templates (Trim to Google Maps) continue to display characters. Falls back to characters when no template is loaded yet.
+
+**Source Size Check card message reworded.** The v3.52.5 "Source much larger than target" card said "that's a significant cut" — accurate at 4.5× overages (Google Maps + Manly), overstated at 1.27× overages (Yelp + Manly). New copy describes the overage factually and the recommendation cleanly: "Your source is X words, over the X–X word target. Recommend also pasting the source into Reference Material so reviewers can see what got cut every round and verify factual fidelity." Accurate across the whole range of possible overages.
+
+**Dead `ssc-actions` ternary collapsed.** Straggler from the v3.52.5 redesign — `renderSourceSizeCheck` had a `${actionHTML ? '<div class="ssc-actions">…</div>' : ''}` ternary that was a true defensive guard when `actionHTML` could be empty (the old undersized branch). With undersized removed and `actionHTML` always a constant button string, the ternary always evaluated true. Collapsed to the direct `<div class="ssc-actions">${actionHTML}</div>`.
+
+### Files changed
+
+- `index.html` — Welcome cost paragraph caveat, Change Builder modal cost note, Deep Dive Capture Viewer "Save Backup" button + "Save DeepDive" rename, build meta + cache-bust strings
+- `api-details.html` — Gemini setup card rewrite (line 139), Gemini reviewer tip update (line 454), build comment + meta + cache-bust strings
+- `waxframe-user-manual.html` — "Gemini paid-tier caveat" paragraph added after the existing cost section, build comment + meta + cache-bust strings
+- `what-are-tokens.html` — Existing bottom-line softened, new "Gemini free tier vs paid tier" card added, build comment + meta + cache-bust strings
+- `document-playbooks.html` — Build comment + meta + cache-bust strings (no content changes)
+- `prompt-editor.html` — Build comment + meta + cache-bust strings (no content changes)
+- `README.md` — Gemini paid-tier blockquote callout added to Builder section
+- `js/app.js` — Unit-aware upload banner (lines 6224+), SSC card message rewording, dead ternary collapse, BUILD bumped to `20260517-003`
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.6 Pro`
+- `CHANGELOG.md` — this entry
+
+
+---
 ## v3.52.5
 **Build:** `20260517-002` · **Released:** May 17, 2026
 

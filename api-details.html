@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260517-002
+     Build: 20260517-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-002">
+  <meta name="waxframe-build" content="20260517-003">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.5">
+  <link rel="stylesheet" href="style.css?v=3.52.6">
 </head>
 <body class="helper-body">
 
@@ -136,7 +136,7 @@
         </ol>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Gemini is completely free — no credit card required. A generous number of requests per day at no cost. Most WaxFrame sessions stay within the free limit easily.</p></div>
+          <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank">Google AI Studio usage page</a> during longer runs.</p></div>
         </div>
       </div>
     </div>
@@ -451,7 +451,7 @@
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>Gemini + DeepSeek is the minimum viable paid hive — two AIs, one free, total cost often under a cent per round for short documents.</p></div>
+        <div class="wf-tip-body"><p>Gemini + DeepSeek is the minimum viable paid hive — two AIs, one free, total cost often under a cent per round for short documents <em>when Gemini stays on its free tier</em>. If you've enabled billing on your Google AI Studio account, Gemini can start billing per token — keep it as a Reviewer rather than the Builder in that case, since Builders read everything every round and amplify cost.</p></div>
       </div>
     </div>
   </div>
@@ -661,11 +661,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.52.5"></script>
-<script src="js/nav-helper.js?v=3.52.5"></script>
-<script src="js/license-helper.js?v=3.52.5"></script>
-<script src="js/api-links.js?v=3.52.5"></script>
-<script src="js/version.js?v=3.52.5"></script>
+<script src="js/theme.js?v=3.52.6"></script>
+<script src="js/nav-helper.js?v=3.52.6"></script>
+<script src="js/license-helper.js?v=3.52.6"></script>
+<script src="js/api-links.js?v=3.52.6"></script>
+<script src="js/version.js?v=3.52.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260517-002';         // build stamp — update each session
+const BUILD       = '20260517-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -6005,7 +6005,13 @@ function analyzeSourceSize(text, lengthMode, lengthMin, lengthLimit, lengthUnit)
     // purpose. Future scratch templates with platform minimums handle
     // those constraints in lengthLimit/lengthMin directly, not here.
     result.status  = 'oversized';
-    result.message = `Your source is ${sourceCount} ${sourceUnit}. This template targets ${min}–${max} ${sourceUnit} — that's a significant cut. Recommend also pasting the source into Reference Material so reviewers can see what got cut every round and verify factual fidelity.`;
+    // v3.52.6 — Message reworded to drop the editorial "that's a
+    // significant cut" judgment, which read accurately at 5x overages
+    // (Google Maps + Manly = 4.5x over) but felt overstated at small
+    // ones (Yelp + Manly = 1.27x over). New copy describes the overage
+    // factually and the recommendation cleanly, accurate across the
+    // whole range of possible overages.
+    result.message = `Your source is ${sourceCount} ${sourceUnit}, over the ${min}–${max} ${sourceUnit} target. Recommend also pasting the source into Reference Material so reviewers can see what got cut every round and verify factual fidelity.`;
   } else {
     result.status = 'silent';
   }
@@ -6093,7 +6099,7 @@ function renderSourceSizeCheck() {
         Source: <strong>${r.sourceCount} ${r.sourceUnit}</strong>
         · Target: <strong>${r.targetMin}–${r.targetMax} ${r.targetUnit}</strong>
       </div>
-      ${actionHTML ? `<div class="ssc-actions">${actionHTML}</div>` : ''}
+      <div class="ssc-actions">${actionHTML}</div>
     </div>
     <button class="ssc-dismiss" onclick="dismissSourceSizeCheck()" title="Dismiss this check for the rest of this session">✕</button>
   `;
@@ -6222,7 +6228,20 @@ async function processFile(file) {
         WF_DEBUG.showCard(entry, { filename: file.name, warnings });
       }
     } else {
-      status.textContent = `✅ ${docText.length.toLocaleString()} characters extracted from ${file.name}`;
+      // v3.52.6 — Banner unit matches the active template's lengthUnit.
+      // Word-mode templates (Yelp, TripAdvisor) want the headline number
+      // to be word count, since that's the constraint they'll be measured
+      // against. Falls back to characters when no template is loaded yet
+      // or when the template uses character mode (Google Maps).
+      const tplUnit = document.getElementById('lengthUnit')?.value || '';
+      let countDisplay;
+      if (tplUnit === 'words') {
+        const wc = (docText || '').trim().split(/\s+/).filter(Boolean).length;
+        countDisplay = `${wc.toLocaleString()} words`;
+      } else {
+        countDisplay = `${docText.length.toLocaleString()} characters`;
+      }
+      status.textContent = `✅ ${countDisplay} extracted from ${file.name}`;
       setFileStatusState(status, 'success');
     }
 
