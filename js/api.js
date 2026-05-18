@@ -229,42 +229,15 @@ Object.keys(API_CONFIGS).forEach(p => {
     API_CONFIGS[p]._originalModel = API_CONFIGS[p].model;
   }
 });
-// Label lookup for known model IDs — shown in the model selector dropdown
-// Maintained here so adding a new model label never requires touching UI code
-// v3.26.4: MODEL_LABELS no longer carries "Recommended" tags — the live
-// recommend pipeline decides what's recommended now, and buildModelSelector
-// renders a ✨ marker dynamically next to whichever model the cached
-// recommendation picked. Static labels are pure descriptors.
-const MODEL_LABELS = {
-  // OpenAI
-  'gpt-4.1':        { tag: 'Fast',                     note: 'Strong instruction following, low cost' },
-  'gpt-4.1-mini':   { tag: 'Budget',                   note: 'Faster, cheaper, good for reviewers' },
-  'gpt-5.4':        { tag: 'Latest · Most Capable',    note: 'Best quality, higher cost' },
-  'gpt-5.4-mini':   { tag: 'Fast · Capable',           note: 'GPT-5 class at lower cost' },
-  // Anthropic
-  'claude-sonnet-4-6': { tag: 'Balanced',              note: 'Best balance of quality and cost' },
-  'claude-opus-4-6':   { tag: 'Most Capable',          note: 'Highest quality, higher cost' },
-  'claude-haiku-4-5':  { tag: 'Budget · Fast',         note: 'Fastest, most affordable' },
-  // Gemini
-  'gemini-2.5-flash':  { tag: 'Balanced',              note: 'Best balance, free tier available' },
-  'gemini-2.5-pro':    { tag: 'Most Capable',          note: 'Higher quality, may cost more' },
-  // Grok
-  'grok-4-fast-non-reasoning': { tag: 'Fast',                   note: 'Strong speed/quality balance, low cost' },
-  'grok-4-fast-reasoning':     { tag: 'Reasoning · Fast',       note: 'Adds reasoning for complex tasks' },
-  'grok-4':                    { tag: 'Flagship',               note: 'Full flagship model' },
-  'grok-4.20-0309-non-reasoning': { tag: 'Latest · Fast',       note: 'Newest generation, no reasoning' },
-  'grok-4.20-0309-reasoning':  { tag: 'Latest · Reasoning',     note: 'Newest generation with reasoning' },
-  'grok-3':                    { tag: 'Previous',               note: 'Previous generation' },
-  'grok-3-mini':               { tag: 'Budget',                 note: 'Lighter, faster, cheaper' },
-  // DeepSeek
-  'deepseek-chat':     { tag: 'Budget',                note: 'Best value Builder, very low cost' },
-  // Perplexity
-  'sonar-pro':              { tag: 'Balanced',         note: 'Strong factual review' },
-  'sonar-reasoning-pro':    { tag: 'Reasoning',        note: 'Deep reasoning with web search' },
-  'sonar-reasoning':        { tag: 'Reasoning · Fast', note: 'Lighter reasoning with search' },
-  'sonar-deep-research':    { tag: 'Research',         note: 'Long-form research reports' },
-  'sonar':                  { tag: 'Budget',           note: 'Lighter, faster, cheaper' },
-};
+// v3.52.7 — MODEL_LABELS dictionary removed. Was keyed by model id with
+// curated tag/note descriptors ("Fast", "Balanced", "Most Capable" etc.),
+// originally a source-of-truth for the model selector. v3.26.4 demoted it
+// to a "safety net" alongside MODEL_FALLBACKS, but in practice nothing
+// consumed it after the delegate-to-provider architecture shipped — the
+// one runtime reference (in exportTranscript at app.js L13535) was
+// broken-shaped (looked up by AI id against a model-id-keyed dictionary,
+// always returned undefined). MODEL_FALLBACKS below remains as the active
+// safety net for provider model lists when /v1/models fetch fails.
 
 // Static fallback model lists per provider — used when dynamic fetch fails or is offline
 window.MODEL_FALLBACKS = {

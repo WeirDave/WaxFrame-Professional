@@ -1,6 +1,59 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.7
+**Build:** `20260517-004` · **Released:** May 17, 2026
+
+### Codex audit follow-up — dead branch trim (monolith→split residue)
+
+A focused cleanup release prompted by a read-only audit (Codex) that surfaced six items, all small, all related to dead code left behind by the v3.41 → v3.48 monolith→split refactor. None of these were user-visible bugs — they were drift accumulated during the architectural cleanup.
+
+### What got pruned
+
+**README version badge.** Was `Version-3.39.12` (stale by ~13 releases). Now `Version-v3.52.7`. Visible immediately when anyone lands on the GitHub repo page.
+
+**User manual provider table.** Two model-name corrections — the table had drifted from runtime defaults:
+- Gemini: `gemini-2.5-pro-preview-03-25` → `gemini-2.5-flash` (matches `api.js` L116 and README)
+- Grok: `grok-3` → `grok-4-fast-non-reasoning` (matches `api.js` L116 and README)
+
+The runtime defaults in `js/api.js` are the source of truth; this catches the user manual back up.
+
+**MODEL_LABELS dictionary removal.** The big one. `MODEL_LABELS` was defined in `js/api.js` (~30 entries, keyed by model id) and originally served the model selector dropdown. v3.26.4 demoted it to a "safety net" alongside `MODEL_FALLBACKS` when the delegate-to-provider architecture shipped. In practice nothing has consumed it since — the one runtime reference (in `exportTranscript` at app.js L13535) was broken-shaped: `MODEL_LABELS[builderAI.id]` looked up `builderAI.id` (e.g. `'claude'`, `'gemini'` — AI ids) against a dictionary keyed by model ids (e.g. `'claude-sonnet-4-6'`, `'gemini-2.5-flash'`). Always returned `undefined`. The fallback chain collapsed to `''` every time. User-visible behavior unchanged because the broken lookup was already silently no-op.
+
+The fix: simplify the L13535 fallback to `builderAI.model || ''` (matches the reviewer block at L13547 which has always used that pattern), then delete the `MODEL_LABELS` dictionary from `api.js` entirely. `MODEL_FALLBACKS` stays — it's actively used as the provider-model-list safety net when `/v1/models` fetches fail.
+
+**Four dead helpers removed:**
+- `loadScript()` (js/app.js) — comment said "retained for any future on-demand needs," parked since v3.36.x with zero callers. All libraries are boot-loaded via index.html.
+- `saveProjectGoalFromModal()` (js/app.js) — declared as a stub "to avoid stale HTML onclick references throwing errors." Audit confirmed zero HTML onclick references across all helper pages and index.html, so the defensive stub served no purpose.
+- `openAllBilling()` (js/api-links.js) — companion to `openAllConsoles()`, never wired to any UI surface. Confirmed zero callers across helper pages and main app.
+- `_clockInterval` (js/app.js) — declared as `// reserved for future use` but never wired to anything in 30+ releases.
+
+Net `js/app.js` size: ~25 lines smaller. Net `js/api.js` size: ~35 lines smaller. Net `js/api-links.js` size: ~17 lines smaller.
+
+### What did NOT change
+
+`MODEL_FALLBACKS` is preserved — it's actively consumed as the provider-model-list safety net when the `/v1/models` fetch fails. Only `MODEL_LABELS` (the descriptor dictionary) was removed.
+
+The Codex audit also surfaced items deferred to future releases:
+- Native `confirm()` → `wfConfirm()` migration (7-8 sites). Mechanical but tedious; deserves its own focused release.
+- `noopener noreferrer` sweep on external `target="_blank"` links. Bundle with the future style.css audit pass since it touches HTML.
+- `.ssc-warning` and `.save-bar` orphaned CSS — already in backlog v28 Section 3 awaiting the focused style.css audit pass.
+- Stray `console.log` at app.js:2583 — known from prior audits.
+- API keys stored in localStorage without explicit disclosure — documentation item; bundle with any future doc release.
+
+### Files changed
+
+- `README.md` — version badge bumped
+- `waxframe-user-manual.html` — provider table Gemini + Grok rows + build comment + meta + cache-bust strings
+- `js/api.js` — `MODEL_LABELS` dictionary removed
+- `js/app.js` — `loadScript`, `saveProjectGoalFromModal`, `_clockInterval` removed; `MODEL_LABELS` fallback simplified at L13530; BUILD bumped to `20260517-004`
+- `js/api-links.js` — `openAllBilling` removed
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.7 Pro`
+- `index.html` + 4 other HTML helper pages — build meta + cache-bust strings (`?v=3.52.7`)
+- `CHANGELOG.md` — this entry
+
+
+---
 ## v3.52.6
 **Build:** `20260517-003` · **Released:** May 17, 2026
 

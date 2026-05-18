@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260517-003';         // build stamp — update each session
+const BUILD       = '20260517-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -493,7 +493,8 @@ function initSlowResponderIndicator() {
 
 let _roundTimerInterval = null;
 let _roundTimerStart    = null;
-let _clockInterval      = null; // reserved for future use
+// v3.52.7 — _clockInterval removed (was declared "reserved for future
+// use" but never wired to anything in 30+ releases).
 
 function startRoundTimer(btn, baseLabel) {
   _roundTimerStart = Date.now();
@@ -7456,15 +7457,10 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   throw new Error(`Provider ${visionCfg.provider} does not have a vision integration`);
 }
 
-// loadScript retained for any future on-demand needs but is no longer
-// called by the extractors — all libs are boot-loaded via index.html.
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const s = document.createElement('script');
-    s.src = src; s.onload = resolve; s.onerror = reject;
-    document.head.appendChild(s);
-  });
-}
+// v3.52.7 — loadScript helper removed. Was retained "for future on-demand
+// needs" but all libraries are boot-loaded via index.html, no current
+// caller existed, and the function had been parked since v3.36.x. Audited
+// across /js and /*.html — zero references outside this comment.
 
 function showReExtractBanner() {
   const sourceType = localStorage.getItem('waxframe_v2_source_type') || '';
@@ -8453,11 +8449,10 @@ function editGoalFromModal() {
   goToScreen('screen-project');
 }
 
-// saveProjectGoalFromModal — no longer used (goal editing happens on screen-project)
-// kept as a stub to avoid any stale HTML onclick references throwing errors
-function saveProjectGoalFromModal() {
-  document.getElementById('projectGoalModal')?.classList.remove('active');
-}
+// v3.52.7 — saveProjectGoalFromModal stub removed. Was kept "to avoid any
+// stale HTML onclick references throwing errors." Audit confirmed zero
+// HTML onclick references across all helper pages and index.html, so the
+// defensive stub serves no purpose.
 
 function showFinishModal() {
   const modal = document.getElementById('finishModal');
@@ -13532,7 +13527,13 @@ function exportTranscript() {
     ? (activeAIs.find(a => a.id === builder) || { id: builder, name: builder, model: '?' })
     : null;
   if (builderAI) {
-    const builderModel = builderAI.model || (typeof MODEL_LABELS !== 'undefined' && MODEL_LABELS[builderAI.id]) || '';
+    // v3.52.7 — Simplified from `builderAI.model || MODEL_LABELS[builderAI.id] || ''`.
+    // The MODEL_LABELS fallback was broken-shaped: MODEL_LABELS is keyed
+    // by model id (e.g. 'gemini-2.5-flash'), but `builderAI.id` is the
+    // AI id (e.g. 'gemini'), so the lookup always returned undefined.
+    // Removed the dead branch; matches the reviewer block below (L13547)
+    // which has always used the bare `a.model || ''` pattern.
+    const builderModel = builderAI.model || '';
     out += `Builder: ${builderAI.name}${builderModel ? ` (model: ${builderModel})` : ''}\n`;
   } else {
     out += `Builder: (not set)\n`;

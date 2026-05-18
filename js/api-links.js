@@ -21,19 +21,7 @@ function openAllConsoles() {
   return { total: consoles.length, opened: opened };
 }
 
-function openAllBilling() {
-  const billing = [
-    'https://platform.openai.com/settings/organization/billing/overview',
-    'https://console.anthropic.com/settings/billing',
-    'https://platform.deepseek.com/top_up',
-    'https://aistudio.google.com/apikey',
-    'https://console.x.ai',
-    'https://console.perplexity.ai'
-  ];
-  var opened = 0;
-  billing.forEach(function(url) {
-    var w = window.open(url, '_blank');
-    if (w) opened++;
-  });
-  return { total: billing.length, opened: opened };
-}
+// v3.52.7 — openAllBilling helper removed. Companion to openAllConsoles
+// above; was never wired to any UI surface. Confirmed zero callers across
+// helper pages and main app before removal. If a bulk-billing-pages opener
+// is wanted later, the canonical billing URLs are in this file's history.
