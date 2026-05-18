@@ -1,6 +1,65 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.10
+**Build:** `20260517-007` · **Released:** May 17, 2026
+
+### CSS audit — surgical fix for malformed .bee-card block + build header sync
+
+A targeted micro-release from a read-only Codex CSS audit (independent from the JS audit that drove v3.52.7 + v3.52.8). The full style.css cleanup pass (146 dead selector candidates Codex surfaced) stays parked in backlog as its own dedicated future release — this ship is only the one finding that had real behavioral impact.
+
+### The bug
+
+`style.css` around line 4533 had four `.bee-card.is-*` selectors with no declaration block following them, then a blank line, then `.work-notes-panel .work-panel-header { background: var(--surface2); }`. CSS parsers don't ignore stranded selectors — they fold them into the next rule's selector chain. The browser was effectively reading:
+
+```css
+.bee-card.is-working .bee-card.is-done .bee-card.is-error .bee-card.is-builder .work-notes-panel .work-panel-header {
+  background: var(--surface2);
+}
+```
+
+That's asking for a `.work-panel-header` element nested inside `.work-notes-panel` nested inside four bee-cards at different states simultaneously — an impossible DOM structure. The rule silently never matched. **The work notes panel header background was never getting `var(--surface2)`** for the entire time this regression existed.
+
+Whether anyone visually noticed depends on what fallback or inherited background was masking it. The rule is now functional regardless.
+
+### The fix
+
+Pure subtraction: the four orphan selector lines deleted, leaving the `.work-notes-panel .work-panel-header` rule free to match its actual target. Each bee-card state class above (`.is-builder`, `.is-active`, `.is-inactive`, `.is-working`, `.is-done`, `.is-error`) already has its own complete rule at lines 4525–4530, so the orphans contributed nothing. Likely residue of a comma-list whose shared declaration block got deleted at some point and the selectors didn't follow.
+
+A multi-line comment marks the surgery site for future grep.
+
+### Also fixed
+
+The `style.css` build header was stamped `Build: 20260510-013` — about a week stale. HTML cache-busts have been current the whole time so behavior was fine, but source inspection was misleading. Now synced to `20260517-007`.
+
+### What did NOT change
+
+The other six Codex findings are deferred to a focused style.css audit pass, not bundled here:
+
+- **146 dead selector candidates** — biggest clusters are legacy welcome cards, old setup-card primitives, old API intro/save-bar/helper intro classes, removed AI controls, and old project-goal layout. Needs the careful audit profile per the project rule about CSS edits.
+- **.ssc-warning orphan** — already known, in backlog Section 3.
+- **.custom-ai-form wrapper styles** — current markup uses `.custom-ai-form-row` inside `.custom-ai-modal`, but `.custom-ai-form` wrapper styles linger. Modal rendering risk if removed without verifying.
+- **44 !important occurrences** — Codex confirmed mostly legitimate (print mode, reduced motion, mobile overlays, `.is-hidden`). Not actionable.
+- **Duplicate selector clusters** — three areas worth review: import-server state selectors at ~L3946, builder scene selectors at ~L2368 + L5966, legacy setup selectors at ~L9498.
+
+All going into backlog v30 as the focused style.css audit pass.
+
+### Verification
+
+- Brace balance pre-fix: 2170 opens / 2170 closes (already balanced — orphan selectors had no braces).
+- Brace balance post-fix: 2170 opens / 2170 closes (unchanged — purely subtractive).
+- The `.work-notes-panel .work-panel-header` rule now stands alone and matches its actual target.
+
+### Files changed
+
+- `style.css` — four orphan `.bee-card.is-*` selectors deleted at L4533–4536; comment placed at site; build header synced
+- 6 HTML files — `style.css?v=3.52.10` cache-bust string bumped + build meta + comment stamps
+- `js/app.js` — BUILD bumped to `20260517-007`
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.10 Pro`
+- `CHANGELOG.md` — this entry
+
+
+---
 ## v3.52.9
 **Build:** `20260517-006` · **Released:** May 17, 2026
 
