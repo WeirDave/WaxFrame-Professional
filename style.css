@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260510-013
+   Build: 20260517-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4529,10 +4529,12 @@ kbd {
 .bee-card.is-done    { border-color: var(--green); background: var(--green-dim); }
 .bee-card.is-error   { border-color: var(--red); background: var(--red-dim); }
 
-.bee-card.is-working 
-.bee-card.is-done    
-.bee-card.is-error   
-.bee-card.is-builder 
+/* v3.52.10 — Four orphan .bee-card.is-* selectors removed from here.
+   They had no declaration block, so the CSS parser consumed the next
+   rule's selector into an impossible descendant chain — making the
+   .work-notes-panel .work-panel-header rule below never match. Likely
+   residue of a comma-list whose shared declaration block was deleted
+   at some point. Surfaced by Codex CSS audit 2026-05-17. */
 
 .work-notes-panel .work-panel-header {
   background: var(--surface2);
