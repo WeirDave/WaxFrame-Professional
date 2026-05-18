@@ -1,6 +1,48 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.9
+**Build:** `20260517-006` · **Released:** May 17, 2026
+
+### Restaurant Review playbook — replace stale "estimated" convergence with measured T8 data
+
+A single-edit doc fix that's been sitting in the bug-fix list since backlog v23 (about 7 versions). The restaurant-review playbook page in `document-playbooks.html` was still saying "2–4 rounds typical (estimated, not measured)" despite T8 (Pearl's Saltwater Grille v2.0) having been measured on 2026-05-10. The test master had the measured row; the playbook page never got the corresponding update during the v3.36 → v3.38 batch.
+
+### What changed
+
+One paragraph in `document-playbooks.html` (line 1801, restaurant-review section's Convergence field). Old text:
+
+> 2–4 rounds typical (estimated, not measured). Round 1 usually creates structure and fills in the review. Round 2 improves flow, fairness, and usefulness. Additional rounds are useful for shortening, platform-specific versions, or tone adjustment.
+
+New text:
+
+> ≈14 minutes · 5 rounds (measured 2026-05-10) — refining an existing v1.0 draft of a restaurant review (Pearl's Saltwater Grille v2.0, Savannah, GA) with no Reference Material attached. 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity as reviewers; DeepSeek as Builder). Final 392 words / 2,179 characters — down from 459 words in the original draft, roughly 15% tighter. Majority convergence at Round 6 (4 of 6 satisfied) with 3 USER DECISIONS surfaced and resolved via Builder-Only rounds (1 in R2, 2 in R4) with locked notes.
+
+Source: playbook v25 CHANGES IN v20 (T8 measured entry). Wording template matched to hotel-review's post-measurement convergence line for tonal consistency.
+
+### What did NOT change
+
+The dp-real-example block treatment that hotel-review got in v3.37.2 was NOT added here. The T8 run was a REFINE on an existing draft, the backup file was never captured at the time, and the full Setup-1-through-5 field values aren't reconstructible without fabrication. The convergence-line update is what the backlog actually requested.
+
+### Two more stale "estimated, not measured" stragglers surfaced during the fix
+
+While locating the restaurant-review line, `grep` surfaced two other playbook pages with the same stale wording:
+
+- **`document-playbooks.html` L2087** — business-review playbook
+- **`document-playbooks.html` L2180** — multi-platform review playbook (whose template was retired in v3.50.1/v3.52.0)
+
+These are NOT addressed in this release — they're new bug-fix-list items going into backlog v29 Section 1. The business-review one needs a real measured run before it can be updated. The multi-platform one is more architectural: its underlying template was retired three releases ago, so the playbook page itself probably needs a broader treatment (redirect to the three single-platform playbooks, or delete entirely).
+
+### Files changed
+
+- `document-playbooks.html` — restaurant-review Convergence field replaced; build comment + meta + cache-bust strings
+- 5 other HTML files — build comment + meta + cache-bust strings only
+- `js/app.js` — BUILD bumped to `20260517-006`
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.9 Pro`
+- `CHANGELOG.md` — this entry
+
+
+---
 ## v3.52.8
 **Build:** `20260517-005` · **Released:** May 17, 2026
 
