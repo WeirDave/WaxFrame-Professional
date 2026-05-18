@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260517-007
+     Build: 20260517-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-007">
+  <meta name="waxframe-build" content="20260517-008">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.10">
+  <link rel="stylesheet" href="style.css?v=3.52.11">
 </head>
 <body class="helper-body">
 
@@ -1798,8 +1798,57 @@ Who is this restaurant best for:
 
       <div class="dp-field">
         <div class="dp-field-label">Convergence</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈14 minutes · 5 rounds (measured 2026-05-10) — refining an existing v1.0 draft of a restaurant review (Pearl's Saltwater Grille v2.0, Savannah, GA) with no Reference Material attached. 5-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity as reviewers; DeepSeek as Builder). Final 392 words / 2,179 characters — down from 459 words in the original draft, roughly 15% tighter. Majority convergence at Round 6 (4 of 6 satisfied) with 3 USER DECISIONS surfaced and resolved via Builder-Only rounds (1 in R2, 2 in R4) with locked notes.</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈14 minutes · 5 rounds (measured 2026-05-10) — refining an existing v1.0 draft of a restaurant review (Pearl's Saltwater Grille v2.0, Savannah, GA) with no Reference Material attached. 6-AI hive (ChatGPT, Claude, Gemini, Grok, Perplexity as reviewers; DeepSeek as Builder). Final 392 words / 2,179 characters — down from 459 words in the original draft, 14.6% tighter. Majority convergence at Round 5 with 3 USER DECISIONS surfaced and resolved across two Builder-Only rounds (1 conflict from R1 resolved in R2; 2 conflicts from R3 resolved in R4).</div></div>
       </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-real-example">
+        <div class="dp-real-example-hdr">Real-world example — Restaurant review that took 5 rounds (REFINE on existing draft)</div>
+        <div class="dp-real-example-sub">Run these exact values yourself to reproduce the convergence behavior documented above. Use the values literally on a first run to learn the rhythm; on later runs, swap the specifics for your own restaurant.</div>
+        <table>
+          <tr><td class="dp-table-field">Project name</td><td>Review - Pearl's Saltwater Grille</td></tr>
+          <tr><td class="dp-table-field">Version</td><td>v2.0</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>Restaurant review</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>People deciding whether this restaurant is worth visiting. They want practical details about food, service, atmosphere, value, and logistics, not vague praise or complaints.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Create a useful, honest review that explains what the experience was actually like, what was ordered, what was good, what was disappointing, whether the price made sense, and whether I would return.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Include visit context, food and drinks ordered, pricing if known, service, atmosphere, cleanliness, parking or location notes, standout items, disappointments, and final recommendation. Do not invent dishes, prices, staff names, dates, or facts that were not provided.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Conversational, detailed, fair, practical, and direct. Preserve the reviewer's natural voice. Honest criticism is fine, but avoid making it sound like a rant unless the source material genuinely supports that tone.</td></tr>
+          <tr><td class="dp-table-field">Additional instructions</td><td>End with a clear bottom line: whether I would return, who this restaurant is best for, and any specific warning, recommendation, or timing advice for future visitors.</td></tr>
+          <tr><td class="dp-table-field">Length Constraint</td><td>Range — 200 to 1,500 words</td></tr>
+          <tr><td class="dp-table-field">Starting Document</td><td>Upload (or paste) the v1.0 draft below into Setup 5 — Starting Document</td></tr>
+        </table>
+
+        <div class="dp-scratch-note">
+          <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
+          <table>
+            <tr><td class="dp-table-field">Desired outcome</td><td>Generate a complete restaurant review from the details I provide in Reference Material (Setup 4). Organize the review around visit context, food and drinks, service, atmosphere, value, and final recommendation.</td></tr>
+            <tr><td class="dp-table-field">Additional instructions</td><td>If important details are missing, do not invent them. Focus on the details provided and flag missing items only if needed.</td></tr>
+          </table>
+        </div>
+
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>Paste this as the starting document (the v1.0 draft refined in the run above):</strong></div>
+<pre>Savannah, GA
+
+" A romantic dining establishment directly on the water"
+
+I made reservations at this location online for Saturday 8:30 PM through the OpenTable app. In the notes I asked for a booth. When I arrived I was told that a table was not quite yet ready and I could head to the bar. We did so and just as we were ordering a drink we were told that the table was ready. It would seem that this location does not have any booths but we were seated right by the window on a four top.
+
+For entrées we ordered the shrimp and grits and stuffed fish with crab. I had glanced over a few reviews so I ordered a cup of she crab soup to try it out because all of the reviews rave about it. It did not disappoint! Additionally we were brought out a basket of hush puppies that were perfectly golden brown and served up with an herb butter that was delicious. Truthfully, these were the best hush puppies I've had in years. The flavor was perfect and they were not dry at all. For a little variety I even dunked them in to the soup. I really couldn't stop eating them and there were quite a few in the basket.
+
+Our entrées came really quickly. My fish was perfectly prepared and not only was it stuffed with crab but there was additional crab next to the Rice that easily amounted to quite a few ounces of crab I was pretty impressed. The only change I made to the dish was scrapping the asparagus in lieu of the mixed vegetables, including zucchini, squash, and carrots.
+
+The shrimp and grits contained decent sized shrimp wrapped with bacon and an occasional bit of andouille sausage. The grits were creamy and delicious as well.
+
+Although I was relatively stuffed I ordered the peach cobbler. I must preface by saying that I truly love desserts and this did not disappoint! It was served warm in a special ramekin with crumbly cobbler and whole peach slices. Ice cream was served on the side which was perfect topped with whipped cream. Needless to say I made room!
+
+As for the ambience, the restaurant is of medium noise level the tables are not really isolated all that much although there is some separation and each table does have a candle on it which is a nice touch of course. Just before we received our entrée, we were able to go out onto the deck and take some really nice pictures even though the sun had already gone down.
+
+If am ever in the area again I will definitely revisit this fine restaurant.
+</pre>
+        <div class="dp-real-example-sub dp-real-example-sub--mid"><strong>What this run produced:</strong> 392 words / 2,179 characters · majority convergence at Round 5 · 3 USER DECISIONS surfaced and resolved via two Builder-Only rounds (R2, R4) · 6-AI hive (DeepSeek as Builder; ChatGPT, Claude, Gemini, Grok, Perplexity as reviewers) on WaxFrame v3.36.30 Pro · 14:07 wall-clock.
+        </div>
+      </div>
+
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
@@ -2281,11 +2330,11 @@ Who should use them and who should avoid them:
 </div>
 
 
-<script src="js/theme.js?v=3.52.10"></script>
-<script src="js/nav-helper.js?v=3.52.10"></script>
-<script src="js/license-helper.js?v=3.52.10"></script>
-<script src="js/version.js?v=3.52.10"></script>
-<script src="js/docs-scrollspy.js?v=3.52.10"></script>
+<script src="js/theme.js?v=3.52.11"></script>
+<script src="js/nav-helper.js?v=3.52.11"></script>
+<script src="js/license-helper.js?v=3.52.11"></script>
+<script src="js/version.js?v=3.52.11"></script>
+<script src="js/docs-scrollspy.js?v=3.52.11"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

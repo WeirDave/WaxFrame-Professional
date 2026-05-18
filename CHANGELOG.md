@@ -1,6 +1,66 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.11
+**Build:** `20260517-008` · **Released:** May 17, 2026
+
+### Restaurant Review playbook — proper hotel-style treatment + correction of two errors from v3.52.9
+
+A do-over of v3.52.9 once the Pearl's Saltwater Grille v2.0 backup file was located. v3.52.9 shipped with two factually wrong claims that traced back to the original backlog v23 Section 1 entry where the bug was first logged — and got propagated forward through every backlog version since. The backup told the truth.
+
+### Two corrections from v3.52.9
+
+**Correction 1 — "Majority at Round 6" was wrong; correct is Round 5.** The convergence engine fired at R5 with `outcome: 'majority_convergence'` in the backup, not R6. R6 was the next-round counter increment, not where convergence happened.
+
+**Correction 2 — "5-AI hive + DeepSeek Builder" was wrong; correct is 6-AI total hive.** The `sessionAIs` array in the backup confirms six active AIs that session: ChatGPT, Claude, DeepSeek (Builder), Gemini, Grok, Perplexity. Mistral was the 7th configured AI in the hive but inactive for this specific run. Wording now says "6-AI hive" with the 5 reviewers + 1 Builder breakdown explicit.
+
+### New: full `dp-real-example` block matching hotel-review's v3.37.2 treatment
+
+The original backlog v23 entry claimed *"No project backup file was captured at the time"* — which v3.52.9 inherited and which was the reason given for skipping the hotel-style `dp-real-example` block. The claim was wrong. David always gets backup files. The Pearl's Saltwater backup existed from day one; it just hadn't been re-uploaded to the chat thread that wrote the v3.52.9 release.
+
+With the actual backup in hand, the restaurant-review playbook now has the same treatment hotel-review got in v3.37.2:
+
+- **Convergence one-liner** — corrected to R5 / 6-AI hive / 14.6% trim ratio
+- **`dp-real-example` block** with all Setup 1–5 field values verbatim from the backup:
+  - Project name: "Review - Pearl's Saltwater Grille" v2.0
+  - Document type: Restaurant review
+  - Target audience / Desired outcome / Scope / Tone / Additional instructions — all pulled directly from `LS_PROJECT.goal*` fields in the backup
+  - Length: range mode, 200–1,500 words (from `lengthMode`/`lengthMin`/`lengthLimit`)
+  - Starting Document: upload path (from `docTab: 'upload'`)
+- **"Starting from scratch?" sub-block** for users wanting to run the same template from the scratch path
+- **Full v1.0 draft text** (459 words) in a `<pre>` block — pulled from `history[0].doc` and cleaned of internal backslash-escape artifacts. Users can paste this verbatim to reproduce the exact run.
+- **"What this run produced" summary line** with all the verified facts
+
+### Round-by-round forensic detail (preserved from the backup for future reference)
+
+The backup's `history` array shows the exact session flow that the backlog had only approximated:
+
+| Round | Phase | Reviewers | Conflicts | Resolved decisions | Doc after | Outcome |
+|---|---|---|---|---|---|---|
+| R0 | setup | — | 0 | 0 | 459w / 2,494c | (original upload) |
+| R1 | refine | 6 | 3 | 0 | 444w / 2,415c | continuing |
+| R2 | builder-only | 0 | 0 | 1 | 421w / 2,300c | builder_only_complete |
+| R3 | refine | 6 | 3 | 1 cumulative | 394w / 2,185c | continuing |
+| R4 | builder-only | 0 | 0 | 3 cumulative | 392w / 2,179c | builder_only_complete |
+| R5 | refine | 6 | 4 | 3 | 392w / 2,179c | **majority_convergence** |
+
+Project clock: 847 seconds = 14:07. App version at run: v3.36.30 Pro. The "3 USER DECISIONS total — 1 in R2, 2 in R4" detail tracks: R1's 3 conflicts produced 1 USER DECISION (resolved in R2 Builder-Only); R3's 3 conflicts produced 2 USER DECISIONS (both resolved in R4 Builder-Only).
+
+### Why this matters beyond Pearl's Saltwater
+
+The original backlog claim "No project backup file was captured at the time" was inherited from one chat session and propagated through backlog v23 → v24 → v25 → v26 → v27 → v28 → v29 → v3.52.9 release notes without anyone re-checking. The lesson — captured here for future Claude instances: when a backlog text claim contradicts the user's known workflow ("I always get backup files"), check the workflow, don't propagate the claim. The v3.52.9 release had to be effectively done twice because of this drift.
+
+### Files changed
+
+- **`document-playbooks.html`** — restaurant-review convergence line corrected (R5, 6-AI, 14.6%); new `dp-real-example` block inserted after; cache-bust + build meta
+- **`style.css`** — Build header bumped to `20260517-008` (synced with the rest)
+- **`js/app.js`** — `BUILD` bumped to `20260517-008`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.52.11 Pro`
+- **5 other HTML files** — cache-bust + build meta only (no content changes)
+- **`CHANGELOG.md`** — this entry
+
+
+---
 ## v3.52.10
 **Build:** `20260517-007` · **Released:** May 17, 2026
 
