@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260517-002
+     Build: 20260517-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-002">
+  <meta name="waxframe-build" content="20260517-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.5">
+  <link rel="stylesheet" href="style.css?v=3.52.6">
 </head>
 <body>
 
@@ -93,7 +93,7 @@
             <h1 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
             <p class="hp-section-sub">Each AI in your hive acts as a <strong>reviewer</strong> — it reads your document and suggests improvements each round.</p>
             <p class="hp-section-sub"><strong>Set up at least two AIs to continue. Three or more is recommended</strong> — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.</p>
-            <p class="hp-section-sub"><strong>On cost:</strong> Gemini's API is currently free — pair it with one paid provider for about $5 in one-time credits and you'll have the two AIs needed to continue. The paid providers (ChatGPT, Claude, DeepSeek, xAI, Perplexity) charge per usage with one-time credits starting around $5 each — not subscriptions. A recommended 3-AI hive runs about $10 in one-time credits; loading all six providers is about $30 total, not the $120+/month an equivalent stack of consumer subscriptions would cost.</p>
+            <p class="hp-section-sub"><strong>On cost:</strong> Gemini has a generous free API tier (without billing enabled on your Google AI Studio account) — pair it with one paid provider for about $5 in one-time credits and you'll have the two AIs needed to continue. The paid providers (ChatGPT, Claude, DeepSeek, xAI, Perplexity) charge per usage with one-time credits starting around $5 each — not subscriptions. A recommended 3-AI hive runs about $10 in one-time credits; loading all six providers is about $30 total, not the $120+/month an equivalent stack of consumer subscriptions would cost. <strong>Heads up:</strong> once you enable billing on your Google AI Studio account, Gemini can start charging per token — watch your <a href="https://aistudio.google.com/usage" target="_blank">AI Studio usage page</a> during longer runs, especially with Gemini as Builder.</p>
             <p class="hp-section-sub">Click any AI card below to set it up. For the full guide, tap the <strong>ⓘ</strong> next to the heading above.</p>
           </div>
         </div>
@@ -1297,7 +1297,7 @@
 <div class="finish-modal-overlay" id="changeBuilderModal" onclick="if(event.target===this)closeChangeBuilder()">
   <div class="finish-modal change-builder-modal">
     <h2 class="finish-modal-title"><img src="images/WaxFrame_Builder_v3.png" class="modal-title-bee" alt="" onerror="this.style.display='none'"> Change Builder</h2>
-    <p class="finish-modal-msg" id="changeBuilderReason">The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity.</p>
+    <p class="finish-modal-msg" id="changeBuilderReason">The Builder rewrites the document each round. Choose an AI with a paid API key and enough token capacity. <strong>Cost note:</strong> the Builder reads project setup, reference material, the full working document, and every reviewer's suggestions every round — switching to a premium model here can raise per-round cost significantly. If you've enabled billing on Google AI Studio, Gemini-as-Builder bills per token.</p>
     <div class="builder-pick-grid" id="changeBuilderGrid"></div>
     <button title="Cancel without changing the Builder" class="finish-modal-cancel" onclick="closeChangeBuilder()">← Cancel</button>
   </div>
@@ -1477,7 +1477,8 @@
       <div class="ddv-actions">
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.testViewer()" title="Inject 6 fake captures so you can preview the populated viewer in both themes">🌱 Seed sample</button>
         <button title="Copy the debug buffer as JSON" class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.saveViewer()" title="Download the capture buffer as a JSON file. Best for full-session captures or archival.">💾 Save as File</button>
+        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.saveViewer()" title="Download the capture buffer as a JSON file. Best for full-session captures or archival.">💾 Save DeepDive</button>
+        <button class="tc-action-btn" type="button" onclick="backupSession()" title="Download a full session backup (project goal, hive, document, round history) as JSON. Same as the Backup Session option in the nav menu — available here so you can grab both DeepDive and Backup files without leaving the viewer.">💾 Save Backup</button>
         <button title="Clear the debug buffer" class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
         <button title="Refresh the debug view" class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
       </div>
@@ -2217,20 +2218,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.52.5"></script>
-<script src="lib/mammoth.browser.min.js?v=3.52.5"></script>
-<script src="lib/jszip.min.js?v=3.52.5"></script>
-<script src="lib/xlsx.full.min.js?v=3.52.5"></script>
-<script src="js/version.js?v=3.52.5"></script>
-<script src="js/storage.js?v=3.52.5"></script>
-<script src="js/theme.js?v=3.52.5"></script>
-<script src="js/audio.js?v=3.52.5"></script>
-<script src="js/scenes.js?v=3.52.5"></script>
-<script src="js/wf-debug.js?v=3.52.5"></script>
-<script src="js/api.js?v=3.52.5"></script>
-<script src="js/templates.js?v=3.52.5"></script>
-<script src="js/app.js?v=3.52.5"></script>
-<script src="js/api-links.js?v=3.52.5"></script>
+<script src="lib/pdf.min.js?v=3.52.6"></script>
+<script src="lib/mammoth.browser.min.js?v=3.52.6"></script>
+<script src="lib/jszip.min.js?v=3.52.6"></script>
+<script src="lib/xlsx.full.min.js?v=3.52.6"></script>
+<script src="js/version.js?v=3.52.6"></script>
+<script src="js/storage.js?v=3.52.6"></script>
+<script src="js/theme.js?v=3.52.6"></script>
+<script src="js/audio.js?v=3.52.6"></script>
+<script src="js/scenes.js?v=3.52.6"></script>
+<script src="js/wf-debug.js?v=3.52.6"></script>
+<script src="js/api.js?v=3.52.6"></script>
+<script src="js/templates.js?v=3.52.6"></script>
+<script src="js/app.js?v=3.52.6"></script>
+<script src="js/api-links.js?v=3.52.6"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

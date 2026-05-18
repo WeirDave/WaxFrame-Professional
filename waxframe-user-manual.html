@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260517-002
+     Build: 20260517-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-002">
+  <meta name="waxframe-build" content="20260517-003">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.5">
+  <link rel="stylesheet" href="style.css?v=3.52.6">
 </head>
 <body class="helper-body">
 
@@ -306,6 +306,7 @@
       <div class="wh-block-title">On cost — APIs are not subscriptions</div>
       <p>WaxFrame talks to each AI through its <strong>API</strong>, not through the consumer chat product you might already pay a monthly fee for. This matters for cost: APIs charge per usage in one-time credits, not as a recurring subscription. You pay only for the tokens you actually send and receive — typically a fraction of a cent per round per reviewer.</p>
       <p><strong>Gemini's API is currently free</strong> within Google's published rate limits. This makes Gemini a useful free reviewer to anchor your hive, and it's why <strong>Gemini-as-Builder</strong> is a common starting configuration. The other five default providers — ChatGPT (OpenAI), Claude (Anthropic), DeepSeek, xAI (Grok), Perplexity — each require a one-time minimum API credit purchase, typically <strong>starting at $5</strong>. Once loaded, the credit stays in your account and only depletes as you actually use the API; an unused credit doesn't expire monthly the way an unused subscription month does.</p>
+      <p><strong>Gemini paid-tier caveat.</strong> Gemini's free tier applies only while your Google AI Studio account has <em>billing disabled</em>. The moment you add a credit card and enable billing — even if you intended to stay on the free tier — Gemini requests can route through paid-tier paths and charge per token. The Builder role amplifies this because it reads project setup, reference material, the full working document, and every reviewer's suggestions every round, then writes the document back out. A multi-round session with paid-tier Gemini as Builder on a long document with reference material attached can chew through a few dollars unexpectedly. For casual use, keep billing off on AI Studio. If billing is on, check the <a href="https://aistudio.google.com/usage" target="_blank">AI Studio usage page</a> after longer runs, and consider keeping Gemini as a Reviewer (lighter token load) rather than the Builder.</p>
       <p>Practical cost ladder:</p>
       <ul>
         <li><strong>Cheapest entry point:</strong> Gemini (free) + one paid provider with the minimum $5 credit = 2-AI hive, about <strong>$5 in one-time credits</strong>. Meets the WaxFrame minimum to continue and runs an entire document refinement session.</li>
@@ -1861,11 +1862,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.52.5"></script>
-<script src="js/nav-helper.js?v=3.52.5"></script>
-<script src="js/license-helper.js?v=3.52.5"></script>
-<script src="js/version.js?v=3.52.5"></script>
-<script src="js/docs-scrollspy.js?v=3.52.5"></script>
+<script src="js/theme.js?v=3.52.6"></script>
+<script src="js/nav-helper.js?v=3.52.6"></script>
+<script src="js/license-helper.js?v=3.52.6"></script>
+<script src="js/version.js?v=3.52.6"></script>
+<script src="js/docs-scrollspy.js?v=3.52.6"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
