@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260517-004
+     Build: 20260517-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-004">
+  <meta name="waxframe-build" content="20260517-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.7">
+  <link rel="stylesheet" href="style.css?v=3.52.8">
 </head>
 <body>
 
@@ -93,7 +93,7 @@
             <h1 class="hp-section-title">Your Worker Bees <button class="goal-info-btn" onclick="document.getElementById('infoBeesModal').classList.add('active')" title="About Worker Bees"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
             <p class="hp-section-sub">Each AI in your hive acts as a <strong>reviewer</strong> — it reads your document and suggests improvements each round.</p>
             <p class="hp-section-sub"><strong>Set up at least two AIs to continue. Three or more is recommended</strong> — with three or more reviewers the hive can resolve disagreements on its own; with only two, you'll occasionally have to break a tie yourself.</p>
-            <p class="hp-section-sub"><strong>On cost:</strong> Gemini has a generous free API tier (without billing enabled on your Google AI Studio account) — pair it with one paid provider for about $5 in one-time credits and you'll have the two AIs needed to continue. The paid providers (ChatGPT, Claude, DeepSeek, xAI, Perplexity) charge per usage with one-time credits starting around $5 each — not subscriptions. A recommended 3-AI hive runs about $10 in one-time credits; loading all six providers is about $30 total, not the $120+/month an equivalent stack of consumer subscriptions would cost. <strong>Heads up:</strong> once you enable billing on your Google AI Studio account, Gemini can start charging per token — watch your <a href="https://aistudio.google.com/usage" target="_blank">AI Studio usage page</a> during longer runs, especially with Gemini as Builder.</p>
+            <p class="hp-section-sub"><strong>On cost:</strong> Gemini has a generous free API tier (without billing enabled on your Google AI Studio account) — pair it with one paid provider for about $5 in one-time credits and you'll have the two AIs needed to continue. The paid providers (ChatGPT, Claude, DeepSeek, xAI, Perplexity) charge per usage with one-time credits starting around $5 each — not subscriptions. A recommended 3-AI hive runs about $10 in one-time credits; loading all six providers is about $30 total, not the $120+/month an equivalent stack of consumer subscriptions would cost. <strong>Heads up:</strong> once you enable billing on your Google AI Studio account, Gemini can start charging per token — watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer">AI Studio usage page</a> during longer runs, especially with Gemini as Builder.</p>
             <p class="hp-section-sub">Click any AI card below to set it up. For the full guide, tap the <strong>ⓘ</strong> next to the heading above.</p>
           </div>
         </div>
@@ -159,7 +159,7 @@
           </div>
         </div>
         <div class="hp-section-body">
-          <p class="gold-tip-card"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" class="link-accent">Learn about tokens and how to save money →</a></p>
+          <p class="gold-tip-card"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Learn about tokens and how to save money →</a></p>
           <div class="builder-pick-grid-large" id="builderPickGrid"></div>
         </div>
       </div>
@@ -894,8 +894,8 @@
       </div>
       <div class="custom-ai-field-wrap custom-ai-field-wrap--keylinkwrap">
         <label>&nbsp;</label>
-        <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" style="display:none;">Get your API key →</a>
-        <a id="customAIProviderHelpLink" class="custom-ai-key-link custom-ai-provider-help-link" href="#" target="_blank" style="display:none;">📖 Provider docs →</a>
+        <a id="customAIKeyLink" class="custom-ai-key-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">Get your API key →</a>
+        <a id="customAIProviderHelpLink" class="custom-ai-key-link custom-ai-provider-help-link" href="#" target="_blank" rel="noopener noreferrer" style="display:none;">📖 Provider docs →</a>
       </div>
     </div>
     <div class="custom-ai-form-row">
@@ -1273,7 +1273,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button title="Submit your license key to unlock WaxFrame Pro" class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
     <button title="Close without entering a license — continue using the free trial" class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -1588,7 +1588,7 @@
         <span class="goal-info-desc">Hard rules that must survive every round — things the AIs must always or never do. <em>Do not add new sections. Never change the numbers in the cost table. Always use Oxford commas.</em></span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> The goal works the same way whether you are uploading a file, pasting text, or starting from scratch. The AIs have nothing else to work from — no internet access, no knowledge of your organisation, no understanding of what you want unless you put it here.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('goalInfoModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1692,27 +1692,27 @@
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>Provider billing &amp; console links</strong> — open the right one for whichever AI is failing.</p>
       <div class="goal-info-row">
         <span class="info-label">Anthropic</span>
-        <span class="goal-info-desc"><a href="https://console.anthropic.com/settings/billing" target="_blank" class="link-accent">console.anthropic.com → Billing ↗</a></span>
+        <span class="goal-info-desc"><a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer" class="link-accent">console.anthropic.com → Billing ↗</a></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">OpenAI</span>
-        <span class="goal-info-desc"><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" class="link-accent">platform.openai.com → Billing ↗</a></span>
+        <span class="goal-info-desc"><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="link-accent">platform.openai.com → Billing ↗</a></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Google (Gemini)</span>
-        <span class="goal-info-desc"><a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-accent">aistudio.google.com → API key ↗</a></span>
+        <span class="goal-info-desc"><a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="link-accent">aistudio.google.com → API key ↗</a></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">DeepSeek</span>
-        <span class="goal-info-desc"><a href="https://platform.deepseek.com/top_up" target="_blank" class="link-accent">platform.deepseek.com → Top Up ↗</a></span>
+        <span class="goal-info-desc"><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="link-accent">platform.deepseek.com → Top Up ↗</a></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">xAI (Grok)</span>
-        <span class="goal-info-desc"><a href="https://console.x.ai/billing" target="_blank" class="link-accent">console.x.ai → Billing ↗</a></span>
+        <span class="goal-info-desc"><a href="https://console.x.ai/billing" target="_blank" rel="noopener noreferrer" class="link-accent">console.x.ai → Billing ↗</a></span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Perplexity</span>
-        <span class="goal-info-desc"><a href="https://console.perplexity.ai" target="_blank" class="link-accent">console.perplexity.ai → Billing ↗</a></span>
+        <span class="goal-info-desc"><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent">console.perplexity.ai → Billing ↗</a></span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Custom AIs added via <strong>Add Custom AI</strong> or <strong>Import from Model Server</strong> won't appear above — only the 6 default providers have known billing URLs. For custom endpoints, billing/permissions are handled wherever you got the endpoint from.</p>
     </div>
@@ -1737,7 +1737,7 @@
       </div>
     </div>
     <div class="custom-ai-form-footer">
-      <a id="cedBillingLink" class="link-accent is-hidden" href="#" target="_blank"></a>
+      <a id="cedBillingLink" class="link-accent is-hidden" href="#" target="_blank" rel="noopener noreferrer"></a>
       <button title="Close this error detail" class="btn" onclick="document.getElementById('consoleErrorDetailModal').classList.remove('active')">← Close</button>
     </div>
   </div>
@@ -1817,7 +1817,7 @@
         <span class="goal-info-desc">Two ways to steer mid-stream: <strong>Notes</strong> are per-round directives (e.g., "lock the company name spelling exactly as written"). <strong>Reference Material</strong> is source-of-truth content the hive consults but never edits (job descriptions, style guides, prior drafts). Both are injected directly into every reviewer and Builder prompt for the round.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Quoting exact contested text in Notes is more reliable than citing line numbers — line numbers shift as the document evolves.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html" target="_blank" class="link-accent">Read the full guide in the user manual ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoWelcomeHowModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1924,8 +1924,8 @@
         <span class="info-label">CORS errors</span>
         <span class="goal-info-desc">CORS is a browser security rule that decides whether a webpage running at <code>weirdave.github.io</code> is allowed to read responses from a given API endpoint. The 6 default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity) all whitelist browser clients, so you'll never see CORS errors with default keys. You'll see them with <strong>custom endpoints</strong> — Open WebUI / Ollama / internal gateways like Alfredo — when the gateway operator hasn't added <code>Access-Control-Allow-Origin</code> for browser callers. The fix is on the gateway side, not on WaxFrame's side. Click the ⓘ on Test All Keys for the full troubleshooting reference.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step1" target="_blank" class="link-accent">Read the full guide in the user manual — Step 1: Set Up Your Worker Bees ↗</a></p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step1" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 1: Set Up Your Worker Bees ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoBeesModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1954,8 +1954,8 @@
         <span class="info-label">Can I change it later?</span>
         <span class="goal-info-desc">Yes — you can change your Builder at any time from the Work screen using the Change Builder button. You are not locked in.</span>
       </div>
-      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> See <a href="what-are-tokens.html" target="_blank" class="link-accent">What Are Tokens? ↗</a> for a full breakdown of token costs across providers and how to keep your usage costs low.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step2" target="_blank" class="link-accent">Read the full guide in the user manual — Step 2: Choose Your Builder ↗</a></p>
+      <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> See <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a> for a full breakdown of token costs across providers and how to keep your usage costs low.</p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step2" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 2: Choose Your Builder ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoBuilderModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1970,7 +1970,7 @@
       <p>This is the live version of your document. Every round, the Builder rewrites it in full based on reviewer suggestions. You can edit it directly at any time between rounds — the AIs reference line numbers, so the numbering updates automatically as you make changes.</p>
       <div class="goal-info-row"><span class="info-label">Editing directly</span><span class="goal-info-desc">Click anywhere in the document and type. The hive will see your changes in the next round.</span></div>
       <div class="goal-info-row"><span class="info-label">Line numbers</span><span class="goal-info-desc">AIs reference line numbers in their suggestions so the Builder can locate changes precisely. Don't worry about the numbers — they update automatically.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoDocModal').classList.remove('active')">Got it →</button>
   </div>
@@ -1992,7 +1992,7 @@
       <div class="goal-info-row"><span class="info-label">Words</span><span class="goal-info-desc">Counted by whitespace separation. Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs.</span></div>
       <div class="goal-info-row"><span class="info-label">Paragraphs</span><span class="goal-info-desc">Counted as blocks of text separated by blank lines. Headings and bullet lists count as paragraphs if they're separated by blank lines.</span></div>
       <div class="goal-info-row"><span class="info-label">Pages</span><span class="goal-info-desc">Approximated using 600 words per single-spaced 12pt page (industry-standard typewriter math — Word's default and what most word processors round to). 1 page ≈ 600 words, 2 pages ≈ 1200 words, 5 pages ≈ 3000 words. WaxFrame cannot measure pages directly — actual page count depends on font, margins, and line spacing. For firm limits, aim slightly under.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step3" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 3: Define Your Project ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoLengthModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2009,7 +2009,7 @@
       <div class="goal-info-row"><span class="info-label">User Decision</span><span class="goal-info-desc">The Builder found competing suggestions and needs you to choose. Pick one of the AI-generated options, type your own resolution, bypass if you've already fixed it directly, or decline to suppress it entirely. Your decision is applied immediately and locked.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder Decision</span><span class="goal-info-desc">The Builder made a judgment call on your behalf. Review what it chose. If you disagree, select a different option or type your own and hit Apply.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Click the <strong>Current:</strong> label on any conflict card to jump directly to that line in the working document.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step9" target="_blank" class="link-accent">Read the full guide in the user manual — Step 9: Review Results and Resolve Conflicts ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step9" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 9: Review Results and Resolve Conflicts ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConflictsModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2024,7 +2024,7 @@
       <div class="goal-info-row"><span class="info-label">Round entries</span><span class="goal-info-desc">Each round starts with a divider showing the round number and phase. Sending, response, success, and error entries follow for each AI.</span></div>
       <div class="goal-info-row"><span class="info-label">Errors</span><span class="goal-info-desc">API errors, rate limits, and connection failures appear in red with the HTTP status code and a plain-English explanation.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Use the Copy button to grab the full console log for troubleshooting.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoConsoleModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2039,7 +2039,7 @@
       <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
       <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds. In a full round it reads all reviewer suggestions and rewrites the document. Between rounds it also acts as your <strong>handyman</strong> — give it a directive in the Notes drawer (<em>"rewrite the first paragraph"</em>, <em>"stop saying 'refine'"</em>) and click <strong>Send to Builder</strong> to make a targeted change without running the full hive. Then Smoke the Hive to see if the reviewers agree. The Builder uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
       <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoHiveModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2055,7 +2055,7 @@
       <div class="goal-info-row"><span class="info-label">{version}</span><span class="goal-info-desc">Replaced with your project version number. If no version is set, defaults to "v1".</span></div>
       <div class="goal-info-row"><span class="info-label">Example</span><span class="goal-info-desc">A mask of <code>{name}_final_{version}</code> with project name "My Report" and version "v2" produces <code>My_Report_final_v2.txt</code>.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Leave the mask blank to use the default format: ProjectName_version.txt</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step11" target="_blank" class="link-accent">Read the full guide in the user manual — Step 11: Export and Finish ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step11" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 11: Export and Finish ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoExportMaskModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2071,7 +2071,7 @@
       <div class="goal-info-row"><span class="info-label">Paste Text</span><span class="goal-info-desc">Click inside the editor that appears and paste your text directly.</span></div>
       <div class="goal-info-row"><span class="info-label">Start from Scratch</span><span class="goal-info-desc">No further action needed — the hive will generate a first draft from your project goal.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> <strong>PDF tip:</strong> PDF extraction works best with digitally-created documents. Heavily designed or scanned PDFs may extract poorly — try Paste Text if that happens.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step5" target="_blank" class="link-accent">Read the full guide in the user manual — Step 5: Provide Your Starting Document ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step5" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 5: Provide Your Starting Document ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoUploadModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2092,7 +2092,7 @@
       <div class="goal-info-row"><span class="info-label">📋 Copy</span><span class="goal-info-desc">Copies the current Notes text to your clipboard. Useful if you want to reuse a complex instruction in a later round.</span></div>
       <div class="goal-info-row"><span class="info-label">✕ Clear</span><span class="goal-info-desc">Wipes the Notes field. Does not undo — use with intent.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Quoting the exact text from the document is more reliable than citing line numbers — line numbers shift as the document evolves, but exact text is stable.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step10" target="_blank" class="link-accent">Read the full guide in the user manual — Step 10: Run More Rounds ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step10" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 10: Run More Rounds ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoNotesModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2113,7 +2113,7 @@
       <div class="goal-info-row"><span class="info-label">Multiple documents supported</span><span class="goal-info-desc">Add as many references as you need — paste your own text or upload files. Each one is independently named, reorderable, and removable. The hive sees them in array order with labeled section headers so AIs can cite specific documents by name.</span></div>
       <div class="goal-info-row"><span class="info-label">Token cost reality</span><span class="goal-info-desc">Reference material is sent to every reviewer every round. A 5,000-character RFP roughly doubles your prompt size, which roughly doubles per-round cost. Pick a cost-conscious Builder when reference material is large.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is most important. The hive cannot read what you do not paste — but it also costs you money for every token.</p>
-      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
+      <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoReferenceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2127,7 +2127,7 @@
     <div class="goal-info-body">
       <p>The token count shown is an estimate based on <code>characters / 4</code>, which is the standard rule of thumb for English text in OpenAI-family tokenizers. Real tokenizers vary by model, language, and content type.</p>
       <p>Use this number to gauge cost order of magnitude — a 5,000-character reference doc is roughly 1,250 tokens per request, sent to every reviewer every round. A 6-bee hive running 4 rounds = 30,000 tokens just for reference material, before any document or response content.</p>
-      <p class="goal-info-manual-link"><a href="what-are-tokens.html" target="_blank" class="link-accent">Read more about tokens and costs ↗</a></p>
+      <p class="goal-info-manual-link"><a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read more about tokens and costs ↗</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('infoTokenCostModal').classList.remove('active')">Got it →</button>
   </div>
@@ -2218,20 +2218,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.52.7"></script>
-<script src="lib/mammoth.browser.min.js?v=3.52.7"></script>
-<script src="lib/jszip.min.js?v=3.52.7"></script>
-<script src="lib/xlsx.full.min.js?v=3.52.7"></script>
-<script src="js/version.js?v=3.52.7"></script>
-<script src="js/storage.js?v=3.52.7"></script>
-<script src="js/theme.js?v=3.52.7"></script>
-<script src="js/audio.js?v=3.52.7"></script>
-<script src="js/scenes.js?v=3.52.7"></script>
-<script src="js/wf-debug.js?v=3.52.7"></script>
-<script src="js/api.js?v=3.52.7"></script>
-<script src="js/templates.js?v=3.52.7"></script>
-<script src="js/app.js?v=3.52.7"></script>
-<script src="js/api-links.js?v=3.52.7"></script>
+<script src="lib/pdf.min.js?v=3.52.8"></script>
+<script src="lib/mammoth.browser.min.js?v=3.52.8"></script>
+<script src="lib/jszip.min.js?v=3.52.8"></script>
+<script src="lib/xlsx.full.min.js?v=3.52.8"></script>
+<script src="js/version.js?v=3.52.8"></script>
+<script src="js/storage.js?v=3.52.8"></script>
+<script src="js/theme.js?v=3.52.8"></script>
+<script src="js/audio.js?v=3.52.8"></script>
+<script src="js/scenes.js?v=3.52.8"></script>
+<script src="js/wf-debug.js?v=3.52.8"></script>
+<script src="js/api.js?v=3.52.8"></script>
+<script src="js/templates.js?v=3.52.8"></script>
+<script src="js/app.js?v=3.52.8"></script>
+<script src="js/api-links.js?v=3.52.8"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2253,7 +2253,7 @@
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></span></div>
       <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution.</span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -2292,7 +2292,7 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
     <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
     <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
@@ -2300,14 +2300,14 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Documentation</div>
-    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
     <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
     <div class="nav-dev-section" id="navDevSection">
       <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>

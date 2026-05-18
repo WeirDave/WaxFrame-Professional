@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260517-004
+     Build: 20260517-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-004">
+  <meta name="waxframe-build" content="20260517-005">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.7">
+  <link rel="stylesheet" href="style.css?v=3.52.8">
 </head>
 <body class="helper-body">
 
@@ -39,10 +39,10 @@
 
   <div class="nav-body">
     <div class="nav-section-label">Documentation</div>
-    <a class="nav-item" href="api-details.html" target="_blank" onclick="closeNavMenu()">🔑 API Key Guide</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" onclick="closeNavMenu()">📖 User Manual</a>
-    <a class="nav-item" href="what-are-tokens.html" target="_blank" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
@@ -50,15 +50,15 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Create Something</div>
-    <a class="nav-item" href="index.html" target="_blank" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Support</div>
-    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
-    <a class="nav-item" href="prompt-editor.html" target="_blank" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+    <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
   </div>
 </div>
 
@@ -109,12 +109,13 @@
     <div class="wf-card is-accent">
       <h2 class="wf-card-title">What is an API key?</h2>
       <p>In Pro mode, WaxFrame sends your prompts directly to each AI and fills in the responses automatically — no copy/paste, no tab switching. An API key is a private password that lets WaxFrame talk to each AI on your behalf.</p>
-      <p>Without API keys you can use <a href="https://weirdave.github.io/WaxFrame-Free/" target="_blank" class="link-accent">WaxFrame Free</a> — the same hive workflow, but you copy and paste prompts manually between WaxFrame and each AI's web interface. API keys are only needed for the fully automated Pro experience.</p>
+      <p>Without API keys you can use <a href="https://weirdave.github.io/WaxFrame-Free/" target="_blank" rel="noopener noreferrer" class="link-accent">WaxFrame Free</a> — the same hive workflow, but you copy and paste prompts manually between WaxFrame and each AI's web interface. API keys are only needed for the fully automated Pro experience.</p>
     </div>
 
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys never leave your device</h3>
       <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. WaxFrame has no server — your keys are never shared with any third party.</p>
+      <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
       <p>WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
     </div>
 
@@ -130,13 +131,13 @@
           <span class="model-note">Google's fast multimodal model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
+          <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
           <li>Click <strong>Create API Key</strong> and copy the key shown.</li>
           <li>Paste it into the Gemini field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank">Google AI Studio usage page</a> during longer runs.</p></div>
+          <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer">Google AI Studio usage page</a> during longer runs.</p></div>
         </div>
       </div>
     </div>
@@ -153,13 +154,13 @@
           <span class="model-note">DeepSeek's flagship model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank">platform.deepseek.com/api_keys</a> and sign up.</li>
+          <li>Go to <a href="https://platform.deepseek.com/api_keys" target="_blank" rel="noopener noreferrer">platform.deepseek.com/api_keys</a> and sign up.</li>
           <li>Click <strong>Create new API key</strong> and copy it.</li>
           <li>Paste it into the DeepSeek field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</p></div>
+          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</p></div>
         </div>
       </div>
     </div>
@@ -183,14 +184,14 @@
           <span class="model-note">OpenAI's flagship model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank">platform.openai.com/api-keys</a> and sign in.</li>
+          <li>Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer">platform.openai.com/api-keys</a> and sign in.</li>
           <li>Click <strong>Create new secret key</strong>, give it a name, click Create.</li>
           <li>Copy the key immediately — it is shown only once.</li>
           <li>Paste it into the ChatGPT field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing).</p></div>
+          <div class="wf-tip-body"><p>Your ChatGPT subscription does NOT include API access — the API is completely separate and pay-as-you-go. Go to <a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer">platform.openai.com → Billing</a> and add credit ($5–$10 gets you plenty of testing).</p></div>
         </div>
       </div>
     </div>
@@ -207,14 +208,14 @@
           <span class="model-note">Anthropic's capable everyday model</span>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank">console.anthropic.com/settings/keys</a> and sign in.</li>
+          <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com/settings/keys</a> and sign in.</li>
           <li>Click <strong>Create Key</strong>, give it a name (e.g. "WaxFrame"), click Create.</li>
           <li>Copy the key immediately — shown only once.</li>
           <li>Paste it into the Claude field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank">console.anthropic.com → Billing</a> and add credit (~$5 minimum). You are only charged for what you use.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance. Go to <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">console.anthropic.com → Billing</a> and add credit (~$5 minimum). You are only charged for what you use.</p></div>
         </div>
       </div>
     </div>
@@ -230,13 +231,13 @@
           <span class="model-label">Model:</span><code>grok-4</code>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.x.ai" target="_blank">console.x.ai</a> and sign in with your X account.</li>
+          <li>Go to <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer">console.x.ai</a> and sign in with your X account.</li>
           <li>Navigate to <strong>API Keys</strong> and generate a new key.</li>
           <li>Paste it into the Grok field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.x.ai/billing" target="_blank">console.x.ai → Billing</a>. API availability may vary — check the console for current status.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.x.ai/billing" target="_blank" rel="noopener noreferrer">console.x.ai → Billing</a>. API availability may vary — check the console for current status.</p></div>
         </div>
       </div>
     </div>
@@ -252,13 +253,13 @@
           <span class="model-label">Model:</span><code>sonar-pro</code>
         </div>
         <ol class="steps">
-          <li>Go to <a href="https://console.perplexity.ai" target="_blank">console.perplexity.ai</a> and sign in.</li>
+          <li>Go to <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer">console.perplexity.ai</a> and sign in.</li>
           <li>Click <strong>Generate</strong> under API Keys and copy the key.</li>
           <li>Paste it into the Perplexity field in WaxFrame and press Enter.</li>
         </ol>
         <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.perplexity.ai" target="_blank">console.perplexity.ai → Billing → Add Credits</a>.</p></div>
+          <div class="wf-tip-body"><p>Requires credit balance — add at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer">console.perplexity.ai → Billing → Add Credits</a>.</p></div>
         </div>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -582,7 +583,7 @@
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">Read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -618,9 +619,9 @@
     <p class="about-modal-subtitle">About</p>
     <div class="goal-info-body">
       <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
-      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" class="link-accent">Read license →</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
       <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
       <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
@@ -641,7 +642,7 @@
     <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
     <div class="license-modal-error" id="licenseKeyError"></div>
     <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
-    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank">Don't have a key? Buy WaxFrame Pro →</a>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
     <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
   </div>
 </div>
@@ -661,11 +662,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.52.7"></script>
-<script src="js/nav-helper.js?v=3.52.7"></script>
-<script src="js/license-helper.js?v=3.52.7"></script>
-<script src="js/api-links.js?v=3.52.7"></script>
-<script src="js/version.js?v=3.52.7"></script>
+<script src="js/theme.js?v=3.52.8"></script>
+<script src="js/nav-helper.js?v=3.52.8"></script>
+<script src="js/license-helper.js?v=3.52.8"></script>
+<script src="js/api-links.js?v=3.52.8"></script>
+<script src="js/version.js?v=3.52.8"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

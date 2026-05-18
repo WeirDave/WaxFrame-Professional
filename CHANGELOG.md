@@ -1,6 +1,65 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.8
+**Build:** `20260517-005` · **Released:** May 17, 2026
+
+### Codex audit follow-up part 2 — confirm migration, noopener sweep, console.log standardization, security disclosure
+
+Second pass on the Codex audit. v3.52.7 handled the dead-code trim; this release handles the remaining mechanical items that were safe to bundle. The CSS audit pass (`.ssc-warning`, `.save-bar`) remains separately scoped per the project rule about style.css edits carrying their own audit profile.
+
+### Seven `confirm()` → `wfConfirm()` migrations in app.js
+
+The styled `wfConfirm()` async modal has existed since v3.21 but seven destructive flows in `js/app.js` were still using blocking native `confirm()` dialogs. All seven migrated to use `wfConfirm` with appropriate `destructive: true` flags where the action is irreversible (remove license, replace document, launch over active session, discard stored session, clear working document). Three of the seven enclosing functions were sync-only (`confirmRemoveLicense`, `confirmGoHome`, `clearDocument`) and are now async — verified that all callers are HTML `onclick` handlers (browsers don't await onclick return values, so the async conversion is safe). The other four already lived inside async functions (`processFile`, `processRefFile`, `startSession`×2) — direct migration.
+
+### One confirm deferred — `license-helper.js`
+
+The `confirm()` at `js/license-helper.js:158` (Remove Key button on helper pages) was NOT migrated. Helper pages (`waxframe-user-manual.html`, `api-details.html`, `what-are-tokens.html`, `document-playbooks.html`, `prompt-editor.html`) don't load `js/app.js`, so `wfConfirm` isn't reachable from them. Porting `wfConfirm` to a shared helper module is a bigger architectural decision than this audit-trim release should absorb. Backlog v29 candidate.
+
+### noopener noreferrer sweep — 133 HTML links + 2 JS window.open calls
+
+Every `target="_blank"` link in the six HTML surfaces now carries explicit `rel="noopener noreferrer"`. Security: the opened tab can no longer access `window.opener` (prevents reverse-tabnabbing attacks). Performance: the browser can fully isolate processes for the opened tab. Counts by file:
+
+| File | Links updated |
+|---|---|
+| `index.html` | 35 |
+| `api-details.html` | 25 |
+| `waxframe-user-manual.html` | 30 |
+| `document-playbooks.html` | 13 |
+| `what-are-tokens.html` | 19 |
+| `prompt-editor.html` | 11 |
+| **Total** | **133** |
+
+Plus two JavaScript `window.open()` calls — `openAllConsoles()` in `js/api-links.js` and the troubleshooting-card link handlers in `js/wf-debug.js` — now pass `'noopener,noreferrer'` as the features parameter. Functionally equivalent to the HTML `rel` attribute for window.open.
+
+### Stray `console.log` standardized to `consoleLog`
+
+The one remaining raw `console.log` in `js/app.js` (in `applyTemplate` after the Reference Material sweep) standardized to `consoleLog` — the project's standard wrapper used by every other logging surface. Cosmetic consistency, no behavior change.
+
+### Security disclosure — API keys in localStorage
+
+The api-details.html "Your keys never leave your device" card was already accurate but didn't explicitly state where the keys live or what the threat model is. Expanded with a new paragraph clarifying:
+
+- Keys live in `localStorage` (per-browser-profile, per-machine)
+- They are NOT encrypted at rest
+- Any code or extension with `localStorage` access in this browser profile can read them
+- Same threat model as any browser-stored credential
+- For shared/untrusted devices: separate browser profile or clear data when finished
+
+This was a low-priority Codex item but matters for users running WaxFrame on shared hardware (Anduril contractors, library machines, etc.).
+
+### Files changed
+
+- `js/app.js` — 7 `confirm()` migrations, raw `console.log` → `consoleLog`, BUILD bumped to `20260517-005`
+- `js/api-links.js` — `window.open` noopener feature
+- `js/wf-debug.js` — 2 `window.open` noopener features (troubleshooting card link buttons)
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.8 Pro`
+- 6 HTML files — 133 `target="_blank"` links got `rel="noopener noreferrer"` + cache-bust strings + build stamps
+- `api-details.html` — additional paragraph in the "keys never leave your device" card (security disclosure)
+- `CHANGELOG.md` — this entry
+
+
+---
 ## v3.52.7
 **Build:** `20260517-004` · **Released:** May 17, 2026
 

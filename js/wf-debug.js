@@ -667,11 +667,12 @@ function renderTroubleshootingCard(entry, ctx) {
       btn.className = 'tc-action-btn';
       btn.textContent = a.label;
       if (a.kind === 'link' && a.href) {
-        btn.onclick = () => { window.open(a.href, '_blank'); };
+        // v3.52.8 — noopener feature added (audit follow-up)
+        btn.onclick = () => { window.open(a.href, '_blank', 'noopener,noreferrer'); };
       } else if (a.kind === 'console-link') {
         const url = ctx?.aiConsoleUrl || null;
         if (!url) { btn.style.display = 'none'; }
-        else      { btn.onclick = () => window.open(url, '_blank'); }
+        else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
       } else if (a.kind === 'retry') {
         // v3.50.0 — Was calling startRound() which doesn't exist (only
         // startRoundTimer exists, which is a UI helper, not a round
