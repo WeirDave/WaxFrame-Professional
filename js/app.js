@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260516-016';         // build stamp — update each session
+const BUILD       = '20260516-018';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -6039,10 +6039,13 @@ function renderSourceSizeCheck() {
     return;
   }
 
-  // Read length-mode UI state. These were populated by applyTemplate
-  // if the user picked a template with a range; otherwise the user
-  // may have set them manually.
-  const lengthMode  = document.getElementById('lengthMode')?.value   || 'none';
+  // Read length-mode UI state. v3.52.0 had a bug here — it read
+  // document.getElementById('lengthMode')?.value but no such element
+  // exists. Mode lives in the .length-mode-pill.is-active dataset,
+  // accessed via getLengthMode(). The other three fields (lengthMin,
+  // lengthLimit, lengthUnit) are real inputs and were correct.
+  // v3.52.2 fix.
+  const lengthMode  = (typeof getLengthMode === 'function') ? getLengthMode() : 'none';
   const lengthMin   = document.getElementById('lengthMin')?.value    || '';
   const lengthLimit = document.getElementById('lengthLimit')?.value  || '';
   const lengthUnit  = document.getElementById('lengthUnit')?.value   || '';
@@ -13394,17 +13397,26 @@ function exportDocument() {
   // refined document would produce two stacked footers — the original
   // from the prior export and the new one for this run.
   //
+  // v3.52.1 — Dynamic verb: "Crafted" for scratch-path sessions (hive
+  // built the doc from a goal alone), "Refined" for upload/paste paths
+  // (hive improved an existing draft). docTab is the most reliable
+  // signal — saved on every tab switch, persists across reloads. The
+  // strip regex below accepts all three verbs (legacy "Produced" plus
+  // new "Crafted"/"Refined") so old exported docs still get their
+  // footer stripped cleanly on re-export.
+  //
   // Footer format is stable: an optional "---" separator (variants accepted
-  // for safety) followed by "Produced by WaxFrame ..." and the URL line.
-  // The regex tolerates leading whitespace, optional separator forms (---,
-  // ━━, em-dashes), and version-string variations.
-  const FOOTER_RE = /\n*(?:[-–—━]{2,}\s*\n)?Produced by WaxFrame v?[\d.]+(?: Pro)? in \d+ rounds? and (?:\d+ minutes?|less than a minute)\.\s*\nweirdave\.github\.io\/WaxFrame-Professional\s*$/i;
+  // for safety) followed by "(Produced|Crafted|Refined) by WaxFrame ..."
+  // and the URL line. The regex tolerates leading whitespace, optional
+  // separator forms (---, ━━, em-dashes), and version-string variations.
+  const FOOTER_RE = /\n*(?:[-–—━]{2,}\s*\n)?(?:Produced|Crafted|Refined) by WaxFrame v?[\d.]+(?: Pro)? in \d+ rounds? and (?:\d+ minutes?|less than a minute)\.\s*\nweirdave\.github\.io\/WaxFrame-Professional\s*$/i;
   const doc = docRaw.replace(FOOTER_RE, '').trimEnd();
 
   const totalRounds = round - 1;
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
-  const byline      = `\n\n---\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
+  const verb        = (docTab === 'scratch') ? 'Crafted' : 'Refined';
+  const byline      = `\n\n---\n${verb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
 
   const out      = doc + byline;
   const filename = buildExportName();
@@ -13585,7 +13597,11 @@ function exportTranscript() {
         break;
       }
     }
-    out += `${sep}\nProduced by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\n`;
+    // v3.52.1 — Dynamic verb matches exportDocument's logic. Scratch
+    // = "Crafted", upload/paste = "Refined". Same rationale as the
+    // document-export site.
+    const transcriptVerb = (docTab === 'scratch') ? 'Crafted' : 'Refined';
+    out += `${sep}\n${transcriptVerb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\n`;
     if (finalOutcome) out += `Final outcome: ${finalOutcome}\n`;
     out += `weirdave.github.io/WaxFrame-Professional\n`;
   }
