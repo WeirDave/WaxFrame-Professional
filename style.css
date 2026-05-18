@@ -4655,7 +4655,13 @@ kbd {
   align-items: flex-start;
   gap: var(--space-12);
   padding: var(--space-14) var(--space-16);
-  margin: var(--space-12) var(--space-32) 0 var(--space-32);
+  /* v3.52.3 — Margins reduced from var(--space-12) var(--space-32) 0 var(--space-32).
+     v3.52.0 placed this card OUTSIDE the white hp-section-body panel (on the
+     honeycomb background), where the 32px horizontal margins served to inset
+     it from the screen edges. v3.52.3 moves it INSIDE the panel which already
+     provides its own padding — no horizontal margin needed, and a top margin
+     keeps the card spaced from the doc-tab content above. */
+  margin: var(--space-16) 0 0 0;
   border-radius: 6px;
   position: relative;
 }

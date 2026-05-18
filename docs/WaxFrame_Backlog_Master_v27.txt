@@ -1,8 +1,8 @@
 ════════════════════════════════════════════════════════════
 WAXFRAME — MASTER BACKLOG (v27)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-16 (post v3.52.2 — Source Size Check bugfix + verb dynamic)
-Current version:     v3.52.2 Pro / build 20260516-018
+Last updated:        2026-05-16 (post v3.52.3 — Source Size Check card placement fix)
+Current version:     v3.52.3 Pro / build 20260516-019
 Maintained by:       R David Paine III
 Lives:               docs\WaxFrame_Backlog_Master_v27.txt
 
@@ -841,6 +841,7 @@ if the assumption breaks.
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
 
+v3.52.3   2026-05-16  CSS placement fix. v3.52.2 helper functions correctly but card was rendering on the honeycomb screen background instead of inside the white Setup-5 panel. Moved #sourceSizeCheck div from outside hp-section into hp-section-body. Margin reduced from 32px horizontal to 0 (panel already pads).
 v3.52.2   2026-05-16  Two-fix bundle. (1) Source Size Check bugfix — renderSourceSizeCheck was reading document.getElementById(lengthMode) which does not exist (mode lives in pill dataset, read via getLengthMode()). Always returned silent. Now uses getLengthMode() and fires correctly. Caught by David on first live test of Trim to Google Maps against the Manly Bikes source. (2) Export byline verb dynamic — Crafted by WaxFrame for scratch path, Refined by WaxFrame for upload/paste path. FOOTER_RE matches all three verbs (Produced|Crafted|Refined) for backward compatibility.
 v3.52.1   2026-05-16  Export byline verb is dynamic: "Crafted by WaxFrame" for scratch-path sessions, "Refined by WaxFrame" for upload/paste paths. FOOTER_RE updated to match all three verbs (Produced|Crafted|Refined) so pre-v3.52.1 docs still strip cleanly on re-export.
 v3.52.0   2026-05-16  Three platform-specific review templates (Trim to TripAdvisor, Trim to Google Maps, Rewrite as Yelp) replace retired combined Multi-Platform Review Rewrite. Each ships with focused length-guard range, refMaterial, and per-template source-in-Reference recommendation. New Source Size Check helper (analyzeSourceSize / renderSourceSizeCheck in app.js) compares Starting Document vs active template length range and surfaces an undersized warning or oversized recommend card. Template-agnostic — any range-mode template gets the helper for free.
