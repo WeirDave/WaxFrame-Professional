@@ -1,6 +1,33 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.4
+**Build:** `20260517-001` · **Released:** May 17, 2026
+
+### DeepDive ring buffer — round + role attribution
+
+**The gap.** The DeepDive JSON's `ringBuffer` captures rich forensic detail per API call (timing, tokens, prompt + response previews, finish reason, notes), but never recorded **which round** the capture belongs to or **what role** the AI was playing (worker review vs. Builder synthesis). Without those two fields, the ring buffer is a flat list — analysis scripts have to infer round structure from transcript timestamps and infer role from output length heuristics. Surfaced during the Manly Bikes v1.0 / v2.0 comparison analysis where round-by-round breakdowns showed `R?` and `?` columns instead of real attribution.
+
+**The fix.** Five surgical edits to `js/app.js`, all additive:
+
+1. `callAPI` signature — new optional `role` parameter, defaults to `'unknown'`
+2. `WF_DEBUG.captureRound({...})` payload — adds `round` (read from the module-level `round` global at L317) and `role` as the first two fields
+3. `runBuilderOnly` call site (L10145) — passes `'builder'`
+4. `runRound` reviewer call site (L10601) — passes `'worker'`
+5. `runRound` Builder call site (L10966) — passes `'builder'`
+
+**Why it's safe.** Backward-compatible signature change (default value), additive captures (no field removed), and `round` is read at the same closure scope where the rest of `callAPI` already executes. Parallel worker calls (`Promise.all` in `runRound`) all read the same `round` value — that is correct, they belong to the same round.
+
+**Downstream.** Future DeepDive analysis can now group captures by round, separate worker reviews from Builder syntheses, and compute per-round / per-role statistics without inference. Old DeepDive JSONs simply lack the two fields; the schema change is forward-only.
+
+### Files changed
+
+- `js/app.js` — 5 surgical edits to `callAPI` and its three call sites + version stamp
+- `js/version.js` — bumped to `v3.52.4 Pro`
+- 6 HTML files — cache-bust query strings (`?v=3.52.4`) + build stamps (`20260517-001`)
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.52.3
 **Build:** `20260516-019` · **Released:** May 16, 2026
 
