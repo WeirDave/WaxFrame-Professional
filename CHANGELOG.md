@@ -1,6 +1,37 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.52.5
+**Build:** `20260517-002` · **Released:** May 17, 2026
+
+### Source Size Check — oversized-only, no multipliers
+
+**The miss.** First live test of the Rewrite-as-Yelp template surfaced a UX gap. David pasted the v1.0 Manly Bikes converged document (888 words / 5,389 chars) into Setup 5 expecting the oversized recommend card to appear so he could move the source to Reference Material. Nothing happened. The same source on Trim-to-Google-Maps the day before had fired the card correctly. The inconsistency was the tell.
+
+**Root cause.** `analyzeSourceSize` was checking `sourceCount > max * 1.5` — a 50% silent zone above the template's max ceiling. Originally calibrated against the Google Maps brutal-cut case (5,389 chars vs. 1,200 ceiling = 4.5× over, easily fires), it silently missed the tighter word-mode templates. Yelp's 700-word ceiling vs. an 888-word source is only 1.27× over — meaningful trim territory, but well below the old 1,050-word trigger.
+
+**The redesign.** David's framing: the three trim templates exist for one job — shrink an oversized source down to fit a platform. The Source Size Check is the safety net for that job. Any time the source exceeds the template's max, the user benefits from the Copy-to-Reference-Material recommendation. There's no engineering reason to second-guess whether the overage is "big enough" — the user can see the character count below the textarea, the platform can see the source is over, the recommendation is always useful.
+
+**The fix.** Two surgical changes to `js/app.js`:
+
+1. **Oversized trigger simplified.** `sourceCount > max * 1.5` → `sourceCount > max`. Any overage fires the card. Yelp's 888-word source against the 700-word ceiling now triggers correctly (888 > 700).
+
+2. **Undersized branch removed entirely.** The original v3.52.0 design fired a warning when `sourceCount < min * 0.7` ("the hive would need to invent details"). Removed. The trim templates exist to refine oversized reviews — a user with a too-small source isn't using the tool for its purpose. Future scratch templates with platform minimums will encode those constraints in `lengthLimit` / `lengthMin` directly, not via a separate validator.
+
+`analyzeSourceSize` now returns one of two states: `oversized` (source > max) or `silent` (everything else). Two paths instead of three.
+
+**Straggler reconciliation.** `renderSourceSizeCheck` previously branched on `r.status === 'undersized'` to swap icon (⚠️ vs. 📏), label ("Source too small" vs. "Source much larger than target"), CSS class (`ssc-warning` vs. `ssc-recommend`), and suppress the Copy-to-Reference-Material button. All four branches collapsed to constants since undersized is no longer a possible status. CSS class `ssc-warning` in `style.css` is now unused but left in place (cosmetic — flag for a future style.css audit pass).
+
+**Case-matrix verification.** All ten expected behaviors confirmed: Yelp+888 fires, Yelp at exactly 700 stays silent, Yelp at 701 fires, Yelp tiny source (50 words) no longer warns, Google+5389 fires, in-range cases silent, empty source silent.
+
+### Files changed
+
+- `js/app.js` — `analyzeSourceSize` simplified to oversized-only, `renderSourceSizeCheck` dead branches stripped, header comments updated, BUILD bumped to `20260517-002`
+- `js/version.js` — `APP_VERSION` bumped to `v3.52.5 Pro`
+- 6 HTML files — cache-bust strings (`?v=3.52.5`) + build stamps (`20260517-002`)
+- `CHANGELOG.md` — this entry
+
+---
 ## v3.52.4
 **Build:** `20260517-001` · **Released:** May 17, 2026
 
