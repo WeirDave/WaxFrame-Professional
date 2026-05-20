@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260520-002
+     Build: 20260520-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260520-002">
+  <meta name="waxframe-build" content="20260520-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.55.2">
+  <link rel="stylesheet" href="style.css?v=3.55.3">
 </head>
 <body>
 
@@ -745,6 +745,17 @@
         <button class="slow-responder-indicator" id="slowResponderIndicator" onclick="toggleSlowResponder()" title="Slow-AI alerts are on — click to suppress for hands-off Auto runs">
           <span class="slow-responder-indicator-icon">🐢</span>
           <span class="slow-responder-indicator-label">Slow alerts: on</span>
+        </button>
+        <!-- v3.55.3 — Autosave pill. Mirrors the Slow-AI alerts pill: always
+             visible, click to toggle, .is-off flips visual state. User-level
+             preference persisted globally via localStorage
+             waxframe_autosave_enabled. ON = saveSession() persists to
+             IndexedDB every round (resume-where-you-left-off). OFF = automatic
+             per-round write skipped; manual Backup/Diagnostic still force a
+             save. The gate lives in storage.js saveSession(). -->
+        <button class="autosave-indicator" id="autosaveIndicator" onclick="toggleAutosave()" title="Autosave is on — your session is saved every round so you can resume. Click to turn off.">
+          <span class="autosave-indicator-icon">💾</span>
+          <span class="autosave-indicator-label">Autosave: on</span>
         </button>
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button title="Open the About panel — credits, build info, and license details" class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
@@ -2225,20 +2236,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.55.2"></script>
-<script src="lib/mammoth.browser.min.js?v=3.55.2"></script>
-<script src="lib/jszip.min.js?v=3.55.2"></script>
-<script src="lib/xlsx.full.min.js?v=3.55.2"></script>
-<script src="js/version.js?v=3.55.2"></script>
-<script src="js/storage.js?v=3.55.2"></script>
-<script src="js/theme.js?v=3.55.2"></script>
-<script src="js/audio.js?v=3.55.2"></script>
-<script src="js/scenes.js?v=3.55.2"></script>
-<script src="js/wf-debug.js?v=3.55.2"></script>
-<script src="js/api.js?v=3.55.2"></script>
-<script src="js/templates.js?v=3.55.2"></script>
-<script src="js/app.js?v=3.55.2"></script>
-<script src="js/api-links.js?v=3.55.2"></script>
+<script src="lib/pdf.min.js?v=3.55.3"></script>
+<script src="lib/mammoth.browser.min.js?v=3.55.3"></script>
+<script src="lib/jszip.min.js?v=3.55.3"></script>
+<script src="lib/xlsx.full.min.js?v=3.55.3"></script>
+<script src="js/version.js?v=3.55.3"></script>
+<script src="js/storage.js?v=3.55.3"></script>
+<script src="js/theme.js?v=3.55.3"></script>
+<script src="js/audio.js?v=3.55.3"></script>
+<script src="js/scenes.js?v=3.55.3"></script>
+<script src="js/wf-debug.js?v=3.55.3"></script>
+<script src="js/api.js?v=3.55.3"></script>
+<script src="js/templates.js?v=3.55.3"></script>
+<script src="js/app.js?v=3.55.3"></script>
+<script src="js/api-links.js?v=3.55.3"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

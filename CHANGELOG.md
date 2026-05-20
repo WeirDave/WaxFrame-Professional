@@ -1,6 +1,41 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.3
+**Build:** `20260520-003` · **Released:** May 20, 2026
+
+### Autosave pill + backup filename revert
+
+Two related session-persistence changes.
+
+### Backup filename — reverted to the legacy format
+
+The backup filename was restored to the format used before v3.36.13: `{Project}-{version}-WaxFrame-Backup-{YYYYMMDD}-{HHmm}.json`. Three differences from the interim format: the `WaxFrame-Backup` literal is back, the `-r{N}` round number is gone, and version dots become dashes (`v3.0` → `v3-0`). The `-SENSITIVE` suffix added in v3.53.0 is also gone — the pre-export confirmation already informs the user the file contains keys. (The Diagnostic Bundle keeps its own `-Diagnostic-Safe` filename; other export artifacts — transcript, deep-dive, document — are unchanged and so no longer share the backup's shape.)
+
+### Autosave pill — toggle per-round saving from the work screen
+
+WaxFrame already saves the full session to IndexedDB every round — that is how reload-restore works. This release surfaces that as a user-controllable **Autosave** pill in the work-screen footer, mirroring the Slow-AI alerts pill (green when on, amber when off, click to toggle, preference persisted globally in `localStorage`).
+
+- **On (default):** `saveSession()` persists to IndexedDB every round, so the user can close the tab, reboot, and pick up exactly where they left off — same document, same round, same revisions.
+- **Off:** the automatic per-round write is skipped (privacy / "don't keep my work and keys sitting in this browser"). Manual **Backup** and **Diagnostic Bundle** still force a save, so they always capture current state regardless of the toggle.
+
+The gate lives in `saveSession()` and reads the `localStorage` flag directly. Default is ON, so existing behavior is unchanged for everyone unless they deliberately turn autosave off — the gate is inert on the default path.
+
+This is the first piece of the larger autosave/Settings work. Still to come (separate releases): a Settings page housing Auto-mode options and the autosave frequency control, and a consent modal offered after project setup.
+
+### Files changed
+
+- **`js/storage.js`** — backup filename reverted to legacy format; `saveSession(opts)` gains the autosave gate; Backup and Diagnostic force a save
+- **`js/app.js`** — autosave pill state, `toggleAutosave()`, `updateAutosaveIndicator()`, `initAutosaveIndicator()`; indicator synced on work-screen entry; `BUILD` bumped to `20260520-003`
+- **`index.html`** — autosave pill added to the work-screen footer cluster; cache-bust + build meta
+- **`style.css`** — `.autosave-indicator` styling (mirrors the slow-responder pill); cache-bust
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.3 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v38.txt`** — autosave pill logged as shipped; P1.3 decisions from this session recorded; Settings page + consent modal logged as the remaining autosave/Auto work
+
+
+---
 ## v3.55.2
 **Build:** `20260520-002` · **Released:** May 20, 2026
 
