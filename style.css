@@ -126,6 +126,28 @@ input, textarea, select { font-family: inherit; }
   --space-32:  32px;
   --space-40:  40px;
   --space-48:  48px;
+
+  /* ── MODAL WIDTH SCALE (added v3.55.1) ───────────────────────
+     One canonical set of modal widths so sizing is uniform
+     instead of 17 one-off values. Named to mirror the --fs-*
+     convention (sm / base / lg / xl / 2xl). Sized against the
+     1366px supported floor: the overlay adds --space-24 padding
+     each side, so usable width on the floor is ~1318px — every
+     tier below stays within that, and the modal's own width:100%
+     constrains it on smaller screens regardless of the cap.
+       sm   confirms, gates, license, edit-hive
+       base errors, finish, length guard, sheet picker
+       lg   builder / custom-AI setup, troubleshooting
+       xl   the ⓘ info / explainer family (wide-and-short)
+       2xl  big data panels (test-keys, gallery, history)
+     Adoption is incremental — info family + Project Goal are
+     wired now; the rest migrate in the UX-003 uniformity sweep
+     (see backlog). */
+  --modal-w-sm:   420px;
+  --modal-w-base: 640px;
+  --modal-w-lg:   900px;
+  --modal-w-xl:  1200px;
+  --modal-w-2xl: 1320px;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -4163,7 +4185,7 @@ kbd {
 .goal-info-btn-img { width: 28px; height: 28px; display: block; flex-shrink: 0; opacity: 0.9; }
 .goal-info-btn:hover { opacity: 1; }
 .finish-modal.goal-info-modal {
-  max-width: 900px;
+  max-width: var(--modal-w-xl); /* v3.55.1 — was 900px; widened to 1200 for wide-and-short reading */
   max-height: 92vh;
   text-align: left;
   overflow-y: auto;
@@ -8600,7 +8622,7 @@ kbd {
 /* ── Finish modal extras ── */
 .finish-history-row        { display: flex; gap: var(--space-8); align-items: center; }
 
-.finish-modal-goal         { max-width: 900px; text-align: left; }
+.finish-modal-goal         { max-width: var(--modal-w-lg); text-align: left; } /* v3.55.1 — token-wired (still 900px) */
 .finish-modal-title-goal   { margin-bottom: var(--space-6); }
 .finish-modal-cancel-accent { border-color: var(--accent); color: var(--accent); }
 
