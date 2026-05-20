@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — document-playbooks.html
-     Build: 20260519-004
+     Build: 20260519-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260519-004">
+  <meta name="waxframe-build" content="20260519-005">
   <title>WaxFrame — Document Playbooks</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.54.0">
+  <link rel="stylesheet" href="style.css?v=3.55.0">
 </head>
 <body class="helper-body">
 
@@ -139,7 +139,9 @@
         <a href="#restaurant-review"   class="doc-sidebar-link">🍽️ Restaurant Review</a>
         <a href="#hotel-review"        class="doc-sidebar-link">🏨 Hotel Review</a>
         <a href="#business-review"     class="doc-sidebar-link">🧾 Business / Service Review</a>
-        <a href="#multi-platform-review" class="doc-sidebar-link">🔁 Multi-Platform Rewrite</a>
+        <a href="#trim-to-tripadvisor" class="doc-sidebar-link">✈️ Trim to TripAdvisor</a>
+        <a href="#trim-to-google-maps" class="doc-sidebar-link">📍 Trim to Google Maps</a>
+        <a href="#rewrite-as-yelp"     class="doc-sidebar-link">💬 Rewrite as Yelp</a>
       </div>
     </aside>
 
@@ -2158,75 +2160,54 @@ Who should use them and who should avoid them:
     </div>
   </div>
 
-  <div class="dp-playbook" id="multi-platform-review">
+  <div class="dp-playbook" id="trim-to-tripadvisor">
     <div class="dp-playbook-header">
-      <div class="dp-playbook-icon">🔁</div>
+      <div class="dp-playbook-icon">✈️</div>
       <div>
-        <div class="dp-playbook-title">Multi-Platform Review Rewrite</div>
-        <div class="dp-playbook-desc">Turn one detailed review into platform-ready versions for TripAdvisor, Google Maps, and Yelp while preserving the same facts and natural voice.</div>
+        <div class="dp-playbook-title">Trim to TripAdvisor</div>
+        <div class="dp-playbook-desc">Convert a long-form review into a TripAdvisor-ready version: detailed narrative travel-context tone, 500–900 words. The source stays visible to reviewers every round so factual cuts can be verified against the original.</div>
       </div>
     </div>
     <div class="dp-playbook-body">
 
+      <p class="dp-tight-p">This is a <strong>refine-only</strong> template. It works on a review you already have — typically the output of the Restaurant, Hotel, or Business / Service playbook. You paste that source review in, and the hive shapes it into a TripAdvisor-format version. There is no "from scratch" path: write the review first with one of the review playbooks, then bring it here.</p>
+
       <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
-      <p class="dp-section-sub">Fill in each field on the Project screen. Fields marked * are required to continue.</p>
+      <p class="dp-section-sub">These fields are pre-filled by the template. Listed here so you know what the hive is working toward.</p>
 
       <table class="dp-table">
-        <thead><tr><th>Field</th><th>What to enter</th></tr></thead>
+        <thead><tr><th>Field</th><th>What the template sets</th></tr></thead>
         <tbody>
-          <tr><td class="dp-table-field">Document type *</td><td>Multi-platform customer review rewrite</td></tr>
-          <tr><td class="dp-table-field">Target audience *</td><td>Readers on TripAdvisor, Google Maps, and Yelp who are deciding whether to visit, book, hire, or avoid the business being reviewed.</td></tr>
-          <tr><td class="dp-table-field">Desired outcome *</td><td>Create three platform-ready versions of the same review: a detailed TripAdvisor version, a shorter practical Google Maps version, and a conversational Yelp version. All three preserve the same facts and final recommendation.</td></tr>
-          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Use only the facts from the source review. Do not invent dishes, rooms, prices, staff names, amenities, dates, locations, or outcomes. Preserve the reviewer's actual experience and final opinion. Remove repetition where helpful, but do not remove important practical details.</td></tr>
-          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Natural, conversational, useful, specific, and fair. Preserve the reviewer's voice. Do not make the review sound corporate, fake, overly polished, or AI-generated.</td></tr>
-          <tr><td class="dp-table-field">Additional instructions</td><td>Output three clearly labeled sections — TripAdvisor, Google Maps, Yelp. TripAdvisor most detailed. Google Maps concise and skimmable. Yelp conversational and personality-forward.</td></tr>
-          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td><strong>Leave blank.</strong> Each platform version has its own internal target (TripAdvisor 500–900 words, Google Maps 750–1,200 chars, Yelp 300–700 words). Setting a single hard cap will compress all three.</td></tr>
+          <tr><td class="dp-table-field">Document type</td><td>TripAdvisor review</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>TripAdvisor readers deciding whether to visit or book based on detailed travel reviews — they want narrative arc, practical context, and an honest recommendation.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Produce a TripAdvisor-ready review from the source: detailed narrative travel-context tone, 500–900 words, full experience arc from arrival to departure to recommendation.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Use only the facts from the source review. Preserve the chronological arc: arrival/booking context, the experience, the recommendation. Cut redundancy where helpful, but TripAdvisor readers expect detail — do not over-compress.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Detailed narrative. Travel-context. Slightly more formal than Yelp, more thorough than Google Maps. Honest. Helpful. Specific.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td><strong>Range · 500–900 · Words</strong> (pre-set). TripAdvisor rewards detail — this is the longest of the three platform formats.</td></tr>
         </tbody>
       </table>
 
-      <div class="dp-scratch-note">
-        <div class="dp-scratch-note-hdr">Starting from scratch? Change these fields:</div>
-        <table>
-          <tr><td class="dp-table-field">Desired outcome</td><td>Using the raw review details I provide in Notes, generate three platform-ready review versions for TripAdvisor, Google Maps, and Yelp.</td></tr>
-          <tr><td class="dp-table-field">Additional instructions</td><td>If the source material is thin, keep each version appropriately short instead of padding with invented details.</td></tr>
-        </table>
-      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <p class="dp-tight-p">If your source review is significantly longer than 900 words, <strong>also paste it into Reference Material.</strong> That keeps the original visible to reviewers every round so they can verify facts and judge what got cut. If your source is already close to 500–900 words, Reference Material isn't necessary — the working document holds the same content. Reference Material persists across every round and is never altered by the hive; it's the right home for the source of truth.</p>
 
       <div class="dp-field-divider"></div>
 
       <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
-      <div class="dp-s4-pair">
-        <div class="dp-s4-item">
-          <div class="dp-s4-label">Refining a draft (recommended)</div>
-          Go to Setup 5 — Starting Document. Click <strong>Paste Text</strong> and paste your existing long-form review (typically the output of the Restaurant / Hotel / Business-Service playbook). The Builder produces the three platform-ready cuts from it.
-        </div>
-        <div class="dp-s4-item">
-          <div class="dp-s4-label dp-s4-label--scratch">Starting from scratch</div>
-          Go to Setup 5 — Starting Document. Click <strong>Start from Scratch</strong> and leave the text box empty. Before Round 1, open the Notes drawer and paste the raw review details. The Builder will produce three versions in one pass.
-        </div>
-      </div>
+      <p class="dp-tight-p">Go to Setup 5 — Starting Document. Click <strong>Paste Text</strong> and paste your existing long-form review. The hive trims and reshapes it into the TripAdvisor format.</p>
 
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
-        <div class="dp-field-label">Platform guidance</div>
-        <div class="dp-field-value">
-          <strong>TripAdvisor</strong> — longest, most detailed. Best for restaurants, hotels, travel experiences, attractions. Sections covering context, service, food/room/experience, logistics, value, bottom line. Travel logistics matter (parking, location, room, view, nearby attractions, reservation, wait time).<br><br>
-          <strong>Google Maps</strong> — medium-short and skimmable. Strong opening sentence. Practical details only. Best/worst points quickly. End with clear recommendation. Avoid long storytelling.<br><br>
-          <strong>Yelp</strong> — conversational and personality-forward. Preserves quirks, humor, narrative flow. Good for restaurants, local businesses, service experiences. Should still be specific and useful, not just clever.
-        </div>
-      </div>
-      <div class="dp-field-divider"></div>
-
-      <div class="dp-field">
-        <div class="dp-field-label">All three versions should preserve</div>
-        <div class="dp-field-value">Same facts · same recommendation · same major positives · same major negatives · same value judgment · same natural reviewer voice · no invented details · platform-appropriate length and pacing.</div>
+        <div class="dp-field-label">What a TripAdvisor version keeps</div>
+        <div class="dp-field-value">Location and booking context up front · the experience told chronologically (arrival → during → departure) · practical travel logistics (parking, location, room/table, view, reservation, wait time) · what worked and what didn't · a clear closing recommendation and who the place is best for. More detail than Google Maps, more structure than Yelp.</div>
       </div>
       <div class="dp-field-divider"></div>
 
       <div class="dp-field">
         <div class="dp-field-label">Convergence</div>
-        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>2–3 rounds typical (estimated, not measured). Round 1 creates the three versions. Round 2 tightens platform fit and removes repetition. Round 3 is useful if versions need to be shorter, warmer, harsher, or closer to the original voice.</div></div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>2–4 rounds typical (estimated, not yet measured as a standalone run). Round 1 reshapes the source into the narrative arc and trims to range. Round 2 tightens travel-context detail and pacing. Additional rounds help if the version needs to be warmer, more specific on logistics, or closer to the original voice. A standalone Trim to TripAdvisor measurement is pending — the only TripAdvisor data on file came from the retired combined Multi-Platform template, so it isn't quoted here.</div></div>
       </div>
       <div class="dp-field-divider"></div>
 
@@ -2234,17 +2215,161 @@ Who should use them and who should avoid them:
         <div class="dp-field-label">Best AIs For</div>
         <div class="dp-field-value">
           <div class="dp-tags">
-            <span class="dp-tag dp-tag-blue">Claude — preserving natural voice across versions</span>
-            <span class="dp-tag dp-tag-amber">ChatGPT — strong platform formatting and concise Google Maps version</span>
-            <span class="dp-tag dp-tag-green">Gemini — checking completeness and consistency across all versions</span>
-            <span class="dp-tag dp-tag-purple">Grok — useful for Yelp tone and punchier bottom lines</span>
+            <span class="dp-tag dp-tag-blue">Claude — preserving narrative voice while trimming</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — chronological structure and clean pacing</span>
+            <span class="dp-tag dp-tag-green">Gemini — completeness check against the source, logistics detail</span>
+            <span class="dp-tag dp-tag-purple">Grok — punchier recommendation close</span>
           </div>
         </div>
       </div>
 
       <div class="wf-tip">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
-          <div class="wf-tip-body"><p>This is probably the most useful review workflow for WaxFrame. Write one messy, detailed review once (using the Restaurant / Hotel / Business-Service playbook), then run that through this template to get platform-ready versions without losing the facts or sounding like generic review spam.</p></div>
+          <div class="wf-tip-body"><p>Write your full, messy review once with the Restaurant / Hotel / Business-Service playbook, then run it through Trim to TripAdvisor. You get a platform-ready version without re-writing from scratch or losing the facts — and the source stays in Reference Material so nothing drifts.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="trim-to-google-maps">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">📍</div>
+      <div>
+        <div class="dp-playbook-title">Trim to Google Maps</div>
+        <div class="dp-playbook-desc">Convert a long-form review into a Google Maps-ready version: skim-friendly, bottom-line-first, 750–1,200 characters. The source stays visible to reviewers every round so the brutal cuts can be verified against the original.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <p class="dp-tight-p">This is a <strong>refine-only</strong> template. It works on a review you already have. Google Maps cuts are aggressive — typical source-to-target ratio is 5–10×, so the source belongs in Reference Material where reviewers can check that the cuts kept the right facts. There is no "from scratch" path here.</p>
+
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
+      <p class="dp-section-sub">These fields are pre-filled by the template. Listed here so you know what the hive is working toward.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What the template sets</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type</td><td>Google Maps review</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Google Maps readers scanning quickly for the bottom line — they want the recommendation up front, the key facts that support it, and to leave.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Produce a Google Maps-ready review: skim-friendly, bottom-line-first, 750–1,200 characters. Lead with the recommendation. Keep only the few facts that actually support the verdict.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Brutal cut. Drop the chronological narrative arc. Lead with the bottom line. Keep only specific details that justify the recommendation. Strip everything else.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Direct. Practical. Skimmable. First-person fine. No fluff, no marketing-speak, no corporate polish.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td><strong>Range · 750–1,200 · Characters</strong> (pre-set). Note that's <em>characters</em>, not words — Google Maps reviews are short.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <p class="dp-tight-p"><strong>Strongly recommended:</strong> paste the source review into Reference Material as well. Google Maps cuts are brutal — a typical 800+ word source loses 70%+ of its content. Without the source visible every round, reviewers can't evaluate whether the cuts kept the right facts. Reference Material persists across every round and is never altered by the hive.</p>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <p class="dp-tight-p">Go to Setup 5 — Starting Document. Click <strong>Paste Text</strong> and paste your existing review. If it's well over 1,200 characters, the Source Size Check will fire an oversized recommend card on paste — that's expected. Move the long source into Reference Material and let the working document hold the trimmed version as it forms.</p>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">What a Google Maps version keeps</div>
+        <div class="dp-field-value">The recommendation in the first sentence · two or three specific facts that justify it · one practical tip a future visitor needs · a clean verdict close. Everything else gets cut. If a reader can't get the bottom line in five seconds, the version isn't done.</div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈23 minutes · 5 rounds (measured 2026-05-17, Manly Bikes Google v1.0). REFINE mode on an 888-word / 5,389-character source review, with the source moved into Reference Material after the oversized card fired. 7-AI hive (ChatGPT, Claude, Mistral, Grok, DeepSeek, Perplexity as reviewers; Gemini as Builder). DeepSeek dropped at R2 via the slow-responder card. R3 was the real debate round; R4 was Builder-Only — all six reviewers voted no changes, the textbook convergence signal — and R5 confirmed unanimous no-changes and locked. Final document 155 words / 1,003 characters (mid-range), a 5.37× trim. Zero USER DECISIONS.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-amber">ChatGPT — concise, skimmable structure</span>
+            <span class="dp-tag dp-tag-blue">Claude — keeping the right facts through a brutal cut</span>
+            <span class="dp-tag dp-tag-green">Gemini — verifying cuts against the source in Reference Material</span>
+            <span class="dp-tag dp-tag-purple">Grok — punchy bottom-line-first opener</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>The measured run trimmed an 888-word review to 1,003 characters in 5 rounds — that's the job. Don't fight the aggressiveness; Google Maps readers genuinely won't read more than ~1,200 characters. Keep the source in Reference Material so the hive cuts hard <em>and</em> safely.</p></div>
+        </div>
+
+    <a href="#top" class="dp-back-top">↑ Back to top</a>
+    </div>
+  </div>
+
+  <div class="dp-playbook" id="rewrite-as-yelp">
+    <div class="dp-playbook-header">
+      <div class="dp-playbook-icon">💬</div>
+      <div>
+        <div class="dp-playbook-title">Rewrite as Yelp</div>
+        <div class="dp-playbook-desc">Rewrite a long-form review as a Yelp review: conversational, personality-forward, first-person, 300–700 words. Voice transformation is the main job — same facts, different prose register.</div>
+      </div>
+    </div>
+    <div class="dp-playbook-body">
+
+      <p class="dp-tight-p">This is a <strong>refine-only</strong> template. It works on a review you already have. Unlike the trim templates, the main job here isn't cutting length — it's <strong>voice transformation</strong>: same facts, rewritten into a real Yelp register. There is no "from scratch" path here.</p>
+
+      <div class="dp-section-hdr">Setup — Step 3 of 5 — Your Project screen</div>
+      <p class="dp-section-sub">These fields are pre-filled by the template. Listed here so you know what the hive is working toward.</p>
+
+      <table class="dp-table">
+        <thead><tr><th>Field</th><th>What the template sets</th></tr></thead>
+        <tbody>
+          <tr><td class="dp-table-field">Document type</td><td>Yelp review</td></tr>
+          <tr><td class="dp-table-field">Target audience</td><td>Yelp readers — they value real voice, personality, specific lived details. They smell fake reviews and corporate polish from a mile away.</td></tr>
+          <tr><td class="dp-table-field">Desired outcome</td><td>Rewrite the source review as a Yelp review: conversational, personality-forward, first-person, 300–700 words. Same facts, different prose register. Real voice.</td></tr>
+          <tr><td class="dp-table-field">Scope &amp; constraints</td><td>Voice transformation is the main job. Same facts, different rendering. Casual phrasing OK. First-person fine. No corporate polish, no marketing-speak, no AI-generated blandness.</td></tr>
+          <tr><td class="dp-table-field">Tone &amp; voice</td><td>Conversational, first-person, personality-forward. Casual phrasing ("honestly," "tbh," "look —") is fine when it fits. Specific lived details over generic praise. Yelp readers reward authenticity.</td></tr>
+          <tr><td class="dp-table-field dp-table-field--lc">Length Constraint<br><span class="dp-field-sub-note">(field below the goal fields)</span></td><td><strong>Range · 300–700 · Words</strong> (pre-set). Mid-length — enough room for voice to breathe without rambling.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr">Setup — Step 4 of 5 — Reference Material</div>
+      <p class="dp-tight-p"><strong>Recommended:</strong> paste the source review into Reference Material. Voice rewrites preserve facts, but the new prose register can mask drift — <em>"he gave us instructions for wet conditions"</em> quietly becoming <em>"he gave us a free poncho"</em> is invisible without the source for comparison. Reference Material keeps the original visible to reviewers every round so they can catch silent fact-slip while the voice changes.</p>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-section-hdr dp-section-hdr--s4">Setup — Step 5 of 5 — Starting Document screen <span class="dp-section-hdr-note">(the next screen after Reference Material)</span></div>
+      <p class="dp-tight-p">Go to Setup 5 — Starting Document. Click <strong>Paste Text</strong> and paste your existing review. If it's over the 700-word ceiling, the Source Size Check will fire an oversized recommend card on paste — move the long source into Reference Material and let the working document hold the Yelp rewrite as it forms.</p>
+
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">What a Yelp version keeps</div>
+        <div class="dp-field-value">A conversational first-person opener · the reviewer's actual personality and quirks · specific lived details (the small ones that prove it's real) · honest highs and lows · a recommendation that sounds like a person, not a brand. The facts don't change — the register does.</div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Convergence</div>
+        <div class="dp-field-value"><div class="dp-rounds"><div class="dp-rounds-dot"></div>≈21 minutes · 8 rounds (measured 2026-05-17, Manly Bikes Yelp v1.0). REFINE mode on the same 888-word source (1.27× over the 700-word ceiling, so the Source Size Check fired on paste). 7-AI hive (ChatGPT, Claude, Mistral, Grok, DeepSeek, Perplexity as reviewers; Gemini as Builder), DeepSeek dropped at R2 via the slow-responder card. Majority convergence triggered at R8 with holdouts present. Final document 542 words / 3,142 characters — 60% of the 300–700 word range, the sweet spot. Round times descended steadily (7.6 → 2.4 → 4.9 → 1.2 → 3.3 → 0.9 → 0.7 → 0.5 min) as no-changes votes accumulated — healthy convergence. Zero USER DECISIONS. Voice rewrites take more rounds than trims because reviewers iterate on register, not just length.</div></div>
+      </div>
+      <div class="dp-field-divider"></div>
+
+      <div class="dp-field">
+        <div class="dp-field-label">Best AIs For</div>
+        <div class="dp-field-value">
+          <div class="dp-tags">
+            <span class="dp-tag dp-tag-purple">Grok — natural Yelp voice and personality</span>
+            <span class="dp-tag dp-tag-blue">Claude — authentic first-person register without losing facts</span>
+            <span class="dp-tag dp-tag-green">Gemini — fact-drift detection against the source</span>
+            <span class="dp-tag dp-tag-amber">ChatGPT — keeping the rewrite specific instead of generically chatty</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡"></span>
+          <div class="wf-tip-body"><p>The measured run landed at 60% of the Yelp range versus the retired combined template's 10% — same source, dramatically better positioning. The single-platform template gives voice room to breathe instead of squeezing it out under length pressure. If the rewrite reads corporate, smoke another round — the register usually loosens up by R3–R4.</p></div>
         </div>
 
     <a href="#top" class="dp-back-top">↑ Back to top</a>
@@ -2330,11 +2455,11 @@ Who should use them and who should avoid them:
 </div>
 
 
-<script src="js/theme.js?v=3.54.0"></script>
-<script src="js/nav-helper.js?v=3.54.0"></script>
-<script src="js/license-helper.js?v=3.54.0"></script>
-<script src="js/version.js?v=3.54.0"></script>
-<script src="js/docs-scrollspy.js?v=3.54.0"></script>
+<script src="js/theme.js?v=3.55.0"></script>
+<script src="js/nav-helper.js?v=3.55.0"></script>
+<script src="js/license-helper.js?v=3.55.0"></script>
+<script src="js/version.js?v=3.55.0"></script>
+<script src="js/docs-scrollspy.js?v=3.55.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

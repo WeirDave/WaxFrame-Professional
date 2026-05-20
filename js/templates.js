@@ -20,11 +20,13 @@
 //                tightens, and restructures it without
 //                rewriting wholesale
 //
-//  Most templates support both paths. Two single-path templates:
-//    - quick-start          paths: ["scratch"]   (the from-scratch
-//                                                 onboarding demo)
-//    - multi-platform-review paths: ["refine"]   (requires a
-//                                                 source review)
+//  Most templates support both paths. Single-path templates:
+//    - quick-start            paths: ["scratch"]  (the from-scratch
+//                                                  onboarding demo)
+//    - trim-to-tripadvisor    paths: ["refine"]   ┐ the three platform
+//    - trim-to-google-maps    paths: ["refine"]   │ review templates —
+//    - rewrite-as-yelp        paths: ["refine"]   ┘ all reshape an
+//                                                  existing source review
 //
 //  Path-agnostic identity fields live at the top level:
 //    id              — unique slug (used as DOM ids and keys)
