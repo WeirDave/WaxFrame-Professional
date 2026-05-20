@@ -1,6 +1,38 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.2
+**Build:** `20260520-002` · **Released:** May 20, 2026
+
+### Modal id naming consistency — info/explainer family
+
+Housekeeping rename so the info-modal element ids follow one consistent scheme (`info` + concept, matching the modal's title) instead of the accreted mix that built up release by release. The principle: read the id, know what content it opens. No behavior change, no visual change — purely the underlying element ids.
+
+A full reference audit confirmed every info/explainer modal is toggled only by inline `onclick` in `index.html` with zero JavaScript, CSS, or cross-page references — so the rename is fully contained to one file and carries no wiring risk. The action/flow modals (finish, license, custom-AI, change-builder, etc.) are JS-wired and were reviewed separately: their names already read clearly by function, so they were deliberately left unchanged rather than churned.
+
+### Renames (5)
+
+| Old id | New id | Reason |
+|---|---|---|
+| `goalInfoModal` | `infoGoalModal` | broke the `info*` sibling pattern |
+| `infoUploadModal` | `infoStartingDocModal` | stale "upload" — it opens the Starting Document explainer |
+| `infoDocModal` | `infoWorkingDocModal` | ambiguous against Starting Document; opens Working Document |
+| `infoWelcomeHowModal` | `infoHowItWorksModal` | dropped the inconsistent "Welcome" segment |
+| `infoWelcomeMenuModal` | `infoMenuModal` | dropped the inconsistent "Welcome" segment |
+
+The other 11 info modals (`infoBeesModal`, `infoBuilderModal`, `infoReferenceModal`, `infoLengthModal`, `infoHiveModal`, `infoConflictsModal`, `infoConsoleModal`, `infoNotesModal`, `infoTokenCostModal`, `infoExportMaskModal`, `infoTroubleshootingModal`) already matched the scheme and were left as-is. After this release every info modal reads `info` + its concept, and the id matches the title it opens.
+
+### Files changed
+
+- **`index.html`** — five modal ids renamed (15 references total — each modal's overlay div, opener, and close handler); cache-bust + build meta
+- **`js/app.js`** — `BUILD` bumped to `20260520-002`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.2 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v37.txt`** — UX-004 (modal id naming) logged and marked done for the info family; action-modal decision recorded
+
+
+---
 ## v3.55.1
 **Build:** `20260520-001` · **Released:** May 20, 2026
 
