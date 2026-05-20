@@ -1,6 +1,51 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.1
+**Build:** `20260520-001` · **Released:** May 20, 2026
+
+### Setup UX polish — declutter Worker Bees + modal width scale
+
+Two presentation changes addressing the "wall of text" feedback from the live v3.55.0 review. No behavior changes.
+
+### Worker Bees setup screen — cost detail moved into the ⓘ modal
+
+The Setup 1 (Worker Bees) intro panel had four paragraphs, one of which was a dense "On cost:" wall of pricing prose dumped inline. Most users scanning the setup screen don't need the full cost breakdown every time, and the ⓘ button it pointed to didn't actually contain cost info — so the wall had nowhere else to live.
+
+Fixed by moving cost into the ⓘ modal (`infoBeesModal`) as a structured **"What it costs"** row, right after the API keys row — one tap away, formatted as a labeled row instead of a wall, with the Gemini billing-enabled per-token warning and the AI Studio usage link preserved (that warning is a real money guardrail). The setup screen now keeps only scannable essentials: what a reviewer is, the 2-vs-3+ guidance, and a pointer line noting that cost, keys, and the full guide all live behind the ⓘ.
+
+This is the three-tier information pattern from backlog UX-002: scannable inline → ⓘ modal → full user-manual guide, each one tap from the last.
+
+### Modal width scale — uniform sizing tokens, info family widened to 1200px
+
+WaxFrame had 17 one-off modal widths that accumulated rather than being chosen. Added a canonical width scale to the CSS token system, named to mirror the existing `--fs-*` convention:
+
+- `--modal-w-sm` — 420px
+- `--modal-w-base` — 640px
+- `--modal-w-lg` — 900px
+- `--modal-w-xl` — 1200px
+- `--modal-w-2xl` — 1320px
+
+Sized against the 1366px supported floor: the overlay adds 24px padding each side, so usable width on the floor is ~1318px; every tier stays within that, and each modal's own `width: 100%` constrains it on smaller screens regardless of the cap.
+
+**Wired now:**
+- The 16 ⓘ info/explainer modals (all share `.goal-info-modal`) widened from 900px to `--modal-w-xl` (1200px) — "wide-and-short" instead of "tall-and-long," which reads better for their structured content. On the 1366px floor a 1200px modal leaves ~118px of slack, so no clipping.
+- The Project Goal modal (`.finish-modal-goal`) token-wired to `--modal-w-lg` (still 900px — zero visual change, just adopting the system).
+
+**Deferred:** the full uniformity sweep — migrating all remaining modals to the scale — is logged as backlog UX-003 for a deliberate pass with per-screen visual smoke-testing, since snapping the mid-tier one-offs (520 / 540 / 600 / 640 / 700 / 720 / 760) to shared values is a real visual change that deserves its own review.
+
+### Files changed
+
+- **`index.html`** — Worker Bees intro panel trimmed; "What it costs" row added to `infoBeesModal`; cache-bust + build meta
+- **`style.css`** — modal width token scale added to `:root`; info family wired to `--modal-w-xl`; Project Goal wired to `--modal-w-lg`; cache-bust
+- **`js/app.js`** — `BUILD` bumped to `20260520-001`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.1 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v36.txt`** — UX-002 marked first-cut shipped (Worker Bees screen); new UX-003 (modal width uniformity sweep) added; UX-001 / UX-002 captures from v35 finally land in the repo
+
+
+---
 ## v3.55.0
 **Build:** `20260519-005` · **Released:** May 19, 2026
 

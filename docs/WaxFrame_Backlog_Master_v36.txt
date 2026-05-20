@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — MASTER BACKLOG (v30)
+WAXFRAME — MASTER BACKLOG (v36)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-19 (post v3.53.0 — security audit follow-up part 1: backup sensitivity labeling + restore trust warning + Claude proxy disclosure + Gemini key → header)
-Current version:     v3.53.0 Pro / build 20260519-001
+Last updated:        2026-05-20 (post v3.55.1 — Worker Bees cost-declutter (UX-002 first cut) + modal width token scale; UX-003 modal uniformity sweep added; v35 captures UX-001/UX-002 now landing in the repo via this release)
+Current version:     v3.55.1 Pro / build 20260520-001
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Backlog_Master_v30.txt
+Lives:               docs\WaxFrame_Backlog_Master_v35.txt
 
 This file is the single source of truth for code work, feature
 ideas, and bugs in WaxFrame. Companion to:
@@ -26,7 +26,320 @@ Marker key:
   ☐     low priority
   ⚠     blocked / waiting on something else
 
-CHANGES IN v30 (from v29, 2026-05-19):
+CHANGES IN v36 (from v35, 2026-05-20):
+  - SHIPPED v3.55.1 — Setup UX polish (first build of
+    2026-05-20). Two presentation changes, no behavior
+    change. ALSO lands the v35 idea-captures (UX-001 /
+    UX-002) in the repo for the first time — they were
+    on David's hard drive only until this release.
+
+    UX-002 FIRST CUT SHIPPED (Worker Bees screen only):
+    Setup 1 "On cost" wall-of-text paragraph removed from
+    the intro panel; cost relocated into the infoBeesModal
+    (ⓘ) as a structured "What it costs" row after the API
+    keys row. Gemini billing-enabled per-token warning +
+    AI Studio usage link preserved. Setup screen now 3
+    scannable paragraphs + a pointer noting cost/keys/full
+    guide live behind the ⓘ. The three-tier pattern
+    (inline → ⓘ modal → user manual) realized for the
+    Worker Bees screen. REMAINING UX-002: the other four
+    setup screens (Builder, Project, Reference Material,
+    Starting Document) may have the same density issue —
+    setup-wide sweep still open.
+
+    MODAL WIDTH TOKEN SCALE (new, partial adoption):
+    Added --modal-w-sm/base/lg/xl/2xl (420/640/900/1200/
+    1320) to style.css :root, mirroring the --fs-* naming
+    convention. Sized against the 1366 floor (overlay pads
+    24px each side → ~1318 usable; width:100% constrains
+    on smaller screens). WIRED NOW: the 16 ⓘ info/explainer
+    modals (.goal-info-modal) widened 900→1200 (xl) for
+    wide-and-short reading per David's request; Project
+    Goal modal token-wired to lg (still 900, zero visual
+    change). This is an EXPERIMENT — David wanted to see
+    the 1200 width live; one-token tweak if it's not right.
+
+    NAMING NOTE: original proposed scale was sm/md/lg/xl/
+    full — David flagged it as less logical than it should
+    be. Corrected to mirror the existing --fs-* scale
+    (sm/base/lg/xl/2xl) rather than invent a parallel one
+    with a mismatched "full". Lesson: reuse the established
+    token-naming convention, don't fork it.
+
+[ ] UX-003 — Modal width uniformity sweep (full adoption
+    of the --modal-w-* scale)
+    NEW v36 (2026-05-20). The token scale shipped in
+    v3.55.1 but only the info family + Project Goal are
+    wired. 17 one-off modal widths still exist. This item
+    is the deliberate full migration.
+
+    PROPOSED MAPPING (each modal → nearest tier; values to
+    confirm during the pass):
+      sm  (420): wf-confirm (480→), license (440→), dev-pw
+                 (320→ maybe keep — gate is intentionally
+                 tiny), edit-hive (360→ maybe keep),
+                 auto-halt (480→), min-screen, mobile-overlay
+      base(640): round-error (520→), length-guard (540→),
+                 sheet-picker (640 ✓), finish (600→),
+                 troubleshooting-card (600→), ref-confirm
+                 (520→), discard-confirm (520→), deep-dive
+                 (600→)
+      lg  (900): custom-ai (760→), change-builder (760→),
+                 icon-picker (720→), console-error-detail
+                 (700→), goal-info-modal already xl now,
+                 finish-modal-goal (900 ✓ wired)
+      xl (1200): info/explainer family ✓ wired in v3.55.1
+      2xl(1320): test-keys (1400→), template-gallery
+                 (1280→), hist-modal (1000→), hist-doc-inner
+                 (1100→)
+
+    IMPORTANT: snapping mid-tier one-offs to shared values
+    is a REAL visual change (e.g. 520→640, 600→640). Some
+    intentionally-tiny modals (dev-pw 320, edit-hive 360)
+    may be deliberate exceptions worth keeping — flag each
+    before snapping. REQUIRES per-screen visual smoke-test
+    of every affected modal before push. Do NOT batch-grep-
+    replace blind — that's the CSS-sweep failure mode.
+
+    EFFORT: medium. ~15-20 modal class width declarations,
+    mostly one-line each, but the testing surface is the
+    cost (every modal needs an eyeball at the 1366 floor).
+    Pairs naturally with any future modal visual refresh.
+
+
+  - SHIPPED v3.55.0 — Review playbook completion. Fifth
+    release this session. Finishes the v3.50.1/v3.52.0
+    template transition (combined Multi-Platform split
+    into three focused templates that had shipped without
+    playbook pages).
+
+    THREE NEW PLAYBOOK PAGES in document-playbooks.html
+    (+ sidebar links) under Reviews & Recommendations:
+      • Trim to TripAdvisor (✈️) — 500–900w, refine-only.
+        Convergence: ESTIMATED (no standalone measured
+        run — only the retired combined template's
+        sub-section data exists, deliberately NOT quoted
+        per the convergence-data rule). Standalone
+        measurement now the top open test task (see
+        Playbook Test Master v27).
+      • Trim to Google Maps (📍) — 750–1,200 chars,
+        refine-only. Convergence: MEASURED — Manly Bikes
+        Google v1.0, 5 rds / ≈23 min / R4 Builder-Only /
+        155w / 1,003c / 5.37× trim.
+      • Rewrite as Yelp (💬) — 300–700w, refine-only.
+        Convergence: MEASURED — Manly Bikes Yelp v1.0,
+        8 rds / ≈21 min / R8 majority / 542w / 3,142c /
+        1.64× trim.
+
+    MULTI-PLATFORM ORPHAN RETIRED (closes Section 1 bug):
+      • Deleted #multi-platform-review playbook page +
+        sidebar link from document-playbooks.html.
+      • Updated waxframe-user-manual.html template table.
+      • Reconciled 2 app.js comments + 1 templates.js
+        header comment that named the old template.
+      • KEPT the templates.js RETIRED explainer comment
+        block (L899+) — documents the why + points to the
+        three replacements; useful, not a straggler.
+
+    CLAUDE PROXY LINK (closes Section 6.2.A follow-up):
+      • api-details.html worker URL
+        waxframe-claude-proxy.weirdave.workers.dev now a
+        clickable link to the live endpoint, with a note
+        that opening it directly returns an API error
+        (expects API requests). NO separate public source
+        repo exists — David confirmed it's just deployed
+        on Cloudflare — so the live endpoint is what's
+        linked. 6.2.A follow-up RESOLVED.
+
+    DOC HYGIENE: Playbook Test Master bumped v26→v27 —
+    stale "none have playbook pages yet" notes corrected;
+    standalone Trim to TripAdvisor logged as the next open
+    measurement task.
+
+    DESIGN-DATA INTEGRITY NOTE: per the convergence-data
+    rule and the v3.52.9/v3.52.11 lesson (don't propagate
+    estimated-as-measured), TripAdvisor's page is
+    explicitly honest that its number is NOT measured. Two
+    of three pages cite real runs; the third says so
+    plainly.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5–#10). FIVE releases this
+    session (v3.53.0 / .1 / .2 / v3.54.0 / v3.55.0).
+    Security audit fully cleared except long-term CSP
+    (6.2.D) + wider-XSS-sweep (6.2.F). P1.3 Phase 2 still
+    blocked on the four design decisions from v29.
+
+
+  - SHIPPED v3.54.0 — Diagnostic Bundle support-safe
+    export (Section 6.1.C). Fourth release this session.
+    Clears the last FEATURE item from the 2026-05-17
+    Codex security audit — only the long-term v3.6+ CSP
+    rollout remains.
+
+    DESIGN DECISIONS (David's calls, 2026-05-19):
+      • UX: two separate menu items, not one+checkbox.
+        Backup Session + Import Backup stay in Tools;
+        new "🩹 Diagnostic Bundle" added to the Advanced
+        section (below Prompt Editor, above Dev Tools).
+      • Redaction: per-export checkbox. Keys / license /
+        bearer tokens ALWAYS stripped. Document text + AI
+        responses kept by DEFAULT (support needs them to
+        debug); checkbox "Also redact document text and
+        AI responses" (default unchecked) strips them for
+        privacy-conscious users.
+      • Importability: EXPORT-ONLY. Diagnostic is not a
+        restore path. Its only job is leaving the user's
+        machine for support. Backup Session remains the
+        pause/resume tool.
+
+    IMPLEMENTATION:
+      • js/storage.js: diagnosticSession() +
+        _redactHiveKeys() (always-on credential strip:
+        blanks hive.keys map, deep-walks customAIs /
+        customAIConfigs for token-shaped fields via
+        _redactSecretsDeep regex) + _redactSessionContent()
+        (optional content strip, keeps round structure /
+        timing / outcomes / counts, redacts doc / responses
+        / reference material / directives).
+      • File carries _waxframe_diagnostic:true and NOT
+        _waxframe_backup:true. importSession() gains a
+        guard that rejects diagnostic files with a
+        friendly "export-only, use Backup" message before
+        the generic not-a-backup path.
+      • Filename: {baseName}-r{N}-{stamp}-Diagnostic-Safe.json
+      • wfConfirm extended: optional opts.checkbox =
+        {label, checked}. When passed, modal shows a
+        checkbox row and resolves {ok, checked} instead
+        of a bare boolean. Backward-compatible — existing
+        boolean callers unchanged. New wfConfirmCheckRow /
+        wfConfirmCheck / wfConfirmCheckLabel elements in
+        index.html (hidden via audited inline display:none);
+        .wf-confirm-check-row CSS rule added near the
+        existing wfConfirm modal styles (far from the 80ch
+        rule — verified untouched).
+
+    NOTE: style.css touched this release (first since
+    v3.52.10) — .wf-confirm-check-row added. Cache-bust
+    on style.css?v= bumped across all 6 HTML files.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5–#10). FOUR releases this
+    session (v3.53.0 / v3.53.1 / v3.53.2 / v3.54.0), all
+    security-audit follow-ups. Codex audit now effectively
+    closed except the long-term CSP rollout (6.2.D) and
+    the new wider-XSS-sweep follow-up (6.2.F). P1.3 still
+    parked at Phase 1 partial — Phase 2 behavioral work
+    still blocked on the four open design decisions
+    logged in v29.
+
+
+  - SHIPPED v3.53.2 — Security audit follow-up part 3:
+    resolveAiIcon XSS fix (Section 6.2.B). Third focused
+    micro-release this session — clears the last
+    meaningful XSS sink from the 2026-05-17 Codex
+    security audit. After this ship only the long-term
+    items remain (v3.54.0 Diagnostic Bundle, v3.6+ CSP).
+
+    APPROACH: four hardening changes on js/app.js
+    resolveAiIcon + supporting helpers.
+      1. Number() coercion on size.
+      2. escapeHtml() on ai.name and cssClass for every
+         attribute they land in (alt, class, data-*).
+      3. URL scheme validation on ai.icon — only
+         http(s)://, data:image/, and relative images/
+         paths pass; javascript:, vbscript:, file:, ftp:,
+         and protocol-relative URLs drop to letter avatar.
+      4. Inline onerror handler no longer interpolates
+         ANY user data. Now calls fixed-string
+         resolveAiIconFallback(this) — zero interpolation
+         — and that handler reads name/class/size from
+         escaped data-* attributes. The XSS-sink data
+         path is broken at every step.
+
+    makeAiAvatarHTML got same escapeHtml(cssClass) +
+    Number(size) treatment. makeAiAvatar (DOM-Element
+    version, already used createElement + textContent)
+    got Number(size) coercion as defense in depth.
+
+    Section 6.3 release order — v3.53.2 line marked
+    shipped. Next in queue: v3.54.0 (Diagnostic Bundle
+    export — Section 6.1.C, separate focused release).
+    v3.6+ (CSP rollout) remains long-term parked.
+
+    NEW BACKLOG ITEM 6.2.F (added below): wider XSS
+    sweep — other places in the codebase still
+    interpolate ai.name and ai.id raw into HTML
+    templates (Change Builder modal grid, possibly
+    others). Out of scope for Codex 6.2.B but earned
+    a follow-up sweep candidate slot for a future
+    release.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10). Three security
+    releases this session, P1.3 still parked at Phase 1
+    partial — Phase 2 main behavioral work still
+    blocked on the four open design decisions logged
+    in v29.
+
+
+  - SHIPPED v3.53.1 — Security audit follow-up part 2:
+    consoleHTML sanitize on restore (Section 6.1.D Option A,
+    David's preferred). Focused micro-release on top of
+    v3.53.0 same evening — closes the XSS vector that
+    existed on session restore from any backup file
+    (including v3.53.0 backups, since the format didn't
+    change). Two restore sites in js/storage.js (loadSession
+    main IDB path + localStorage fallback path) now run
+    stored consoleHTML through a new sanitizeConsoleHTML
+    helper before innerHTML assignment.
+
+    APPROACH (Option A per backlog v30 6.1.D):
+      1. DOMParser parses raw HTML into a DETACHED
+         HTMLDocument. <script>, <img onerror>, etc. do NOT
+         fire during detached-document parsing.
+      2. Walk the parsed tree and rebuild in the live
+         document via createElement + textContent matching
+         a strict per-tag schema mirroring consoleLog's
+         output.
+      3. Anything outside the schema dropped silently.
+
+    SCHEMA: Top-level requires <div class="console-entry
+    [console-{info|warn|error|success}]">. Children limited
+    to:
+      • <span> — class console-time or no class; text only
+      • <a> — class console-link; href must be http(s)://;
+        target=_blank, rel=noopener canonical-set; all other
+        attrs stripped including any onclick
+      • <button class="console-err-arrow"> — title length-
+        bounded; onclick must match strict regex
+        /^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$/
+        otherwise stripped (button renders inert)
+
+    Any other tag dropped. Closed-list trade-off favoring
+    security over feature drift — future consoleLog
+    additions must update the sanitizer or restored
+    sessions silently strip new content.
+
+    BACKWARD COMPATIBLE: no backup format change. All
+    existing backups restore through the sanitizer
+    unchanged — legitimate consoleHTML passes through
+    because the schema mirrors what consoleLog actually
+    produces. Pre-existing limitation preserved:
+    legitimate <a class="console-link"> elements lose
+    their click handler on restore (the handler was a
+    JS-side property, not a serialized attribute) and
+    rely on the href fallback. Already true before this
+    release.
+
+    Section 6.3 release order — v3.53.1 line marked
+    shipped. Next in queue is v3.53.2 (resolveAiIcon
+    safe DOM construction — Section 6.2.B).
+
+    REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10).
+
+
   - SHIPPED v3.53.0 — Security audit follow-up part 1
     (small wins). Four lowest-risk findings from the
     2026-05-17 Codex security audit cleared in one
@@ -286,22 +599,20 @@ CHANGES IN v30 (from v29, 2026-05-19):
       • document-playbooks.html L2180 — multi-platform
         review playbook still shows estimate. This
         template was RETIRED in v3.50.1 / v3.52.0.
-        Page needs broader treatment: redirect to the
-        three new platform playbooks (Trim to
-        TripAdvisor / Trim to Google Maps / Rewrite as
-        Yelp), or delete entirely. Architectural
-        decision pending.
+        ✅ RESOLVED v3.55.0 — David's call: delete
+        entirely. Orphaned page + sidebar link removed;
+        three replacement playbook pages added in the
+        same release.
 
-  - NEW SECTION 2 ITEM: write playbook pages for the
+  - SECTION 2 ITEM: write playbook pages for the
     three replacement platform templates (Trim to
     TripAdvisor / Trim to Google Maps / Rewrite as
-    Yelp). All three shipped as TEMPLATES in v3.52.0
-    but have no corresponding playbook pages in
-    document-playbooks.html. Two of three now have
-    measured runs from the May 17 session (Manly Bikes
-    Google v1.0, Manly Bikes Yelp v1.0) — those runs
-    could anchor the new playbook pages whenever they
-    get written. Playbook v26 has the forensic data.
+    Yelp). ✅ DONE v3.55.0 (2026-05-19). All three
+    pages added to document-playbooks.html with sidebar
+    links. Google Maps + Yelp cite measured Manly Bikes
+    runs; TripAdvisor honestly marked estimated (no
+    standalone run yet — now the top open measurement
+    task per Playbook Test Master v27).
 
   - REMOVED from Section 1: restaurant-review
     "estimated, not measured" item — shipped in v3.52.9.
@@ -988,37 +1299,181 @@ fixed that turn: append to this list same turn.
     treatment as v3.52.9 — convergence block
     replaced with measured data.
 
-[ ] multi-platform-review playbook page still shows
-    "2–3 rounds typical (estimated, not measured)"
+[x] multi-platform-review playbook page — RESOLVED v3.55.0
     --------------------------------------------------
     SURFACED: 2026-05-17 during v3.52.9 fix work.
-    document-playbooks.html line 2180 inside the
-    multi-platform-review section. Different from
-    the other two stragglers — the underlying
-    Multi-Platform Review Rewrite TEMPLATE was
-    retired in v3.50.1 / v3.52.0. The playbook page
-    itself is now orphaned.
-    Treatment options (decision pending):
-      • Redirect the multi-platform playbook page
-        to the three new platform playbooks (Trim
-        to TripAdvisor / Trim to Google Maps /
-        Rewrite as Yelp) — but those don't exist
-        yet, so this is blocked on the Section 2
-        playbook-page-writing item.
-      • Delete the multi-platform playbook page
-        entirely; the template is gone, so the
-        playbook documentation has no live target.
-      • Update with the Manly Bikes v2.0 historical
-        run as a "RETIRED template — preserved
-        for reference" section.
-    David's call. Sitting until then.
+    Orphaned playbook page (template retired v3.50.1 /
+    v3.52.0). David's call (2026-05-19): DELETE entirely.
+    Page + sidebar link removed from document-playbooks.html;
+    the three replacement playbook pages (Trim to
+    TripAdvisor / Trim to Google Maps / Rewrite as Yelp)
+    shipped in the same release, so the documentation now
+    points at live templates. See Recently Shipped.
 
 
 ═════════════════════════════════════════════════════════════
 2. OTHER OPEN WORK
 ═════════════════════════════════════════════════════════════
 
-[ ] BACKLOG-003 — wfConfirm accessibility for helper pages
+[ ] UX-001 — Declutter the Setup 1 "On cost" paragraph;
+    relocate cost detail to api-details.html per-provider cards
+    NEW v35 (2026-05-19 — surfaced by David reviewing the live
+    v3.55.0 Setup 1 / Worker Bees screen).
+
+    PROBLEM
+    The "On cost:" paragraph is jammed into the Worker Bees
+    intro panel on Setup — Step 1 of 5. It's a dense wall of
+    pricing prose (Gemini free tier, paid-provider one-time
+    credits, ~$10 for a 3-AI hive, ~$30 for all six, billing-
+    enabled-Gemini warning, AI Studio usage link) crammed
+    above the AI cards. Crowded. Most users scanning the setup
+    screen don't need the full cost breakdown inline every
+    time.
+
+    DIRECTION (David's call, leaning settled)
+    Don't build a brand-new modal. Instead use the EXISTING
+    api-details.html page — which is currently underused /
+    buried and reached via the "API Key Guide" button right
+    there on Setup 1. That page already has a per-provider
+    card for each AI (ChatGPT, Claude, Gemini, Grok, DeepSeek,
+    Perplexity, etc.). Put the cost detail THERE, in each
+    provider's own card — provider-specific pricing, free-tier
+    notes, billing caveats, where to load credits — so the
+    cost info lives next to the key-setup info for that exact
+    provider.
+
+    Then Setup 1's intro panel keeps only a short pointer:
+    e.g. "Curious about cost? See the API Key Guide →"
+    (linking to api-details.html), replacing the long inline
+    paragraph. Decision still open whether to ALSO keep a
+    1-2 sentence cost teaser inline vs. pure pointer.
+
+    WHY THIS APPROACH
+      • Declutters Setup 1 (the actual complaint).
+      • Gives the buried api-details.html page a real reason
+        to exist / be visited.
+      • Co-locates cost with keys per-provider — the natural
+        place a user thinks about both at once.
+      • Avoids a new modal + its HTML/CSS/JS surface.
+
+    SCOPE
+      • api-details.html — add a cost block to each provider
+        card (content lift from the current Setup 1 paragraph,
+        split per-provider + expanded where useful). The
+        Gemini billing/paid-tier caveat already lives in
+        several places (v3.52.6 sweep) — reuse/consolidate,
+        don't duplicate.
+      • index.html — replace the long "On cost" paragraph in
+        the Worker Bees intro with the short pointer link.
+      • Keep the existing "Heads up: billing-enabled Gemini
+        can charge per token" warning reachable — it's a real
+        money-loss guardrail (David burned $2 once); make sure
+        it survives the move, ideally on the Gemini card.
+
+    EFFORT: medium. Mostly content relocation + one index.html
+    paragraph swap. No JS logic. Low risk. Could pair with a
+    future api-details.html polish pass.
+
+    NOTE: alternative considered + set aside — a dedicated
+    "Want to learn about cost? click here" modal. Rejected in
+    favor of the api-details.html per-card approach above
+    (less surface, better information architecture). Captured
+    so the path isn't re-litigated.
+
+[~] UX-002 — Setup-screen information density / "wall of text"
+    problem — move deep reference into linked docs, keep
+    inline copy scannable
+    FIRST CUT SHIPPED v3.55.1 (2026-05-20) — Worker Bees
+    screen only: cost paragraph moved into the ⓘ modal, 3
+    scannable inline paragraphs remain. REMAINING: same
+    treatment for the other four setup screens (Builder,
+    Project, Reference Material, Starting Document) — likely
+    the same density issue. Keeping this item OPEN for the
+    setup-wide sweep.
+    NEW v35 (2026-05-19 — David, reviewing the live v3.55.0
+    Setup 1 / Worker Bees screen). This is the UMBRELLA
+    principle; UX-001 (cost detail) is one concrete instance
+    of it.
+
+    THE PROBLEM (David's words, paraphrased)
+    "We have so much information — it's a lot to read. The
+    information (ⓘ) button is supposed to be quick and easy
+    and it's chock full of shit. We need to give all this
+    info, but it feels weird to make people read a book to
+    get it. Nobody's going to take the time to read a wall
+    of text."
+
+    The tension is real and legitimate: WaxFrame genuinely
+    HAS a lot of necessary setup information (what a Worker
+    Bee is, why 2 vs 3+ AIs, cost model, key setup, provider
+    differences, builder role, etc.). But cramming all of it
+    inline on Setup 1 — plus stuffing the ⓘ button with the
+    long-form version — defeats the "quick and easy" promise
+    of the ⓘ button and produces a wall of text most users
+    will skip entirely. Unread information is the same as no
+    information.
+
+    THE DIRECTION (David's leaning idea — exploratory, not
+    locked)
+    Link a DEDICATED "Worker Bees" subsection of the user
+    manual (waxframe-user-manual.html) that covers everything
+    setup-related in full. Then:
+      • The Setup 1 intro panel keeps only the essential,
+        scannable copy — what a Worker Bee is, the 2-vs-3+
+        line, and a clear "Full setup guide →" link to the
+        manual subsection.
+      • The ⓘ button points to (or scrolls to) that same
+        manual subsection rather than dumping the whole
+        explanation in a cramped tooltip/modal.
+      • Deep per-provider detail (cost, key steps, model
+        choice) lives in api-details.html per the UX-001
+        plan.
+
+    Net effect: three tiers of information depth —
+      1. Inline on the setup screen = the minimum to act.
+      2. ⓘ button / "Full guide" link = the complete
+         Worker Bees explainer, in the manual.
+      3. api-details.html per-provider cards = provider-
+         specific key + cost detail.
+    Each tier is one click from the last. Nobody is forced
+    to read the book to start, but the book is right there
+    for anyone who wants it.
+
+    OPEN DESIGN QUESTIONS (for when this is picked up)
+      • Does the ⓘ button OPEN the manual in a new tab,
+        scroll an in-page panel, or show a short modal that
+        itself links onward? (David's instinct: link to the
+        manual subsection, not another inline dump.)
+      • Which copy is "tier 1 essential" vs. "tier 2 full
+        guide"? Needs a content pass deciding the minimum
+        viable inline text per setup screen.
+      • Is this Worker-Bees-only, or does the same three-tier
+        treatment apply to the other setup screens (Builder,
+        Project, Reference Material, Starting Document)? They
+        likely have the same density issue. Could be a
+        setup-wide IA pass rather than a one-screen fix.
+      • Does the user manual already HAVE a Worker Bees
+        subsection to link, or does one need to be written /
+        carved out? (Audit waxframe-user-manual.html first.)
+
+    RELATIONSHIP TO UX-001
+    UX-001 (cost → api-details per-provider cards) is the
+    cost-specific slice of this same principle and can ship
+    independently or together. If both are done together,
+    the Setup 1 "On cost" paragraph collapses into the same
+    "Full setup guide →" / "API Key Guide →" pointers rather
+    than two separate inline blocks.
+
+    EFFORT: medium-to-large depending on scope. A Worker-Bees-
+    only version is medium (one manual subsection + trim Setup
+    1 + repoint the ⓘ button). A setup-wide IA pass across all
+    five setup screens is large. Mostly content + linking, low
+    code risk, but it touches index.html setup copy and the
+    manual — flag a visual smoke-test of every setup screen
+    after trimming, since the intro panels carry layout.
+
+
+
     NEW v29 (2026-05-17 — deferred from v3.52.8 Codex audit
     cleanup).
 
@@ -1521,79 +1976,26 @@ export, and explicit warnings on both export and restore.
     importSession() async + pre-import wfConfirm trust
     warning. See Recently Shipped + CHANGELOG.
 
-[ ] 6.1.C  Support-safe diagnostic export — new export mode
-    SCOPE
-    Add a SECOND backup mode alongside the existing full
-    backup. Purpose: customer can send WaxFrame this file
-    for troubleshooting without leaking secrets.
+[ ] 6.1.C — SHIPPED v3.54.0 (2026-05-19)
+    Support-safe diagnostic export. New diagnosticSession()
+    in js/storage.js — keys/license/tokens always stripped,
+    document text + AI responses kept by default with a
+    per-export checkbox to redact them. Export-only
+    (_waxframe_diagnostic flag; importSession rejects with
+    friendly message). New Advanced-section nav item.
+    wfConfirm extended for optional checkbox. See Recently
+    Shipped + CHANGELOG.
 
-    REDACTS:
-      • API keys for all configured AIs (LS_HIVE.activeAIs[].apiKey)
-      • License key (waxframe_pro_license_key + dev pwd hash)
-      • Custom endpoint bearer tokens (imported server creds)
-      • (Optional) document text in starting doc
-      • (Optional) provider raw responses if they may contain
-        sensitive document content
-
-    KEEPS (these are what diagnostic value requires):
-      • App version + build stamp
-      • Hive structure (provider names, model ids — NOT keys)
-      • Session round history (timing, conflicts, outcomes,
-        errors)
-      • Project goal/setup fields (workflow context)
-      • DeepDive ring buffer entries (error forensics)
-      • Console log entries (already structured via consoleLog
-        path; the consoleHTML innerHTML path is a separate
-        concern — see 6.1.D below)
-
-    UI:
-      • Two clearly-labeled buttons or a mode toggle in the
-        Backup flow:
-          [💾 Full Restore Backup (sensitive)]
-          [🩹 Diagnostic Bundle (safe to share)]
-      • Or one button with a checkbox "Redact API keys for
-        sharing" — TBD UX.
-      • Filename pattern for diagnostic:
-          Project-rN-YYYYMMDD-HHMM-Diagnostic-Safe.json
-
-    NOT YET DECIDED: should the diagnostic bundle remain
-    importable for full restore? David's note (paraphrased):
-    "Diagnostic bundle may not fully restore/run without
-    re-entering keys." Default = diagnostic can be imported
-    but user is re-prompted for keys post-import.
-
-    EFFORT: medium. New buildDiagnosticBundle() function
-    sibling to backupSession(); new modal/UI; ~150-300 lines.
-
-[ ] 6.1.D  consoleHTML restore — sanitize, do not innerHTML
-    SCOPE
-    Codex finding #4: js/storage.js stores raw consoleHTML
-    and restores via consoleEl.innerHTML = s.consoleHTML at
-    L151, L341, L376. The normal consoleLog() path (app.js
-    L583) uses textContent which is safe. But session restore
-    bypasses that path and re-injects whatever HTML was
-    stored at backup time.
-
-    THREAT: if a malicious backup gets imported (see 6.1.B
-    warning) or a project file lands with crafted HTML in
-    its consoleHTML field, the innerHTML restore becomes a
-    stored-XSS vector.
-
-    TWO FIX OPTIONS (David's preferred: sanitize on restore)
-      Option A (sanitize): on restore, parse consoleHTML
-        through a strict whitelist (allow only <span>, <a>
-        with specific classes; strip <script>, on* handlers,
-        javascript: URLs, etc.). Preserves backup format
-        backward-compatibility.
-      Option B (migrate): change backup format to store
-        STRUCTURED console entries (array of {type, text,
-        timestamp, level, ...}) instead of rendered HTML.
-        Restore rebuilds DOM via consoleLog() per entry.
-        Backward-compatible v3/v4 format negotiation.
-
-    EFFORT: small (Option A) to medium (Option B). David's
-    preferred is Option A as the immediate fix; Option B as
-    a future migration if structured entries earn their keep.
+[ ] 6.1.D — SHIPPED v3.53.1 (2026-05-19)
+    consoleHTML sanitize on restore — Option A (David's
+    preferred). sanitizeConsoleHTML helper added to
+    js/storage.js; both loadSession restore sites (main
+    IDB + localStorage fallback) now run stored
+    consoleHTML through it before innerHTML assignment.
+    See Recently Shipped + CHANGELOG. Option B (migrate
+    to structured entries) remains a future possibility
+    if structured entries earn their keep beyond
+    security — not currently scheduled.
 
 
 ───────────────────────────────────────────────────────────
@@ -1607,23 +2009,15 @@ export, and explicit warnings on both export and restore.
     source repo is public — if so, add a one-line link
     to the disclosure paragraph. See v30 CHANGES block.
 
-[ ] 6.2.B  resolveAiIcon HTML interpolation — XSS fix
-    Codex finding #5: js/app.js L9338 + L9370 interpolates
-    ai.name, ai.icon, and cssClass directly into HTML
-    strings including inline onerror handlers. Custom AIs
-    and imported AIs can carry arbitrary names/icons.
-
-    THREAT: a malicious imported AI config with crafted
-    ai.name = '"><img src=x onerror=alert(1)>' would inject
-    executable code into the rendered DOM.
-
-    FIX: replace string interpolation with DOM API
-    construction (createElement + setAttribute + textContent
-    + addEventListener for the onerror behavior). Standard
-    safe-rendering pattern matching the rest of the
-    conflict/review renderer which already uses esc().
-
-    EFFORT: small. Two call sites, ~30 lines.
+[ ] 6.2.B — SHIPPED v3.53.2 (2026-05-19)
+    resolveAiIcon XSS fix. Codex audit finding #5
+    cleared. escapeHtml + URL scheme validation +
+    inline onerror no longer interpolates user data
+    (calls fixed-string resolveAiIconFallback(this)
+    instead, which reads name/class/size from escaped
+    data-* attributes). makeAiAvatar + makeAiAvatarHTML
+    got matching defense-in-depth coercion. See
+    Recently Shipped + CHANGELOG.
 
 [ ] 6.2.C — SHIPPED v3.53.0 (2026-05-19)
     Gemini API keys moved from query string to
@@ -1670,6 +2064,48 @@ export, and explicit warnings on both export and restore.
 
     KEEP IN MIND, NOT ACTIONABLE.
 
+[ ] 6.2.F  Wider XSS sweep — other unsafe interpolations
+    NEW IN v32 (2026-05-19). v3.53.2 closed the
+    resolveAiIcon chain but the wider codebase still has
+    other places where ai.name and ai.id get interpolated
+    raw into HTML templates without escaping.
+
+    KNOWN SITES (audit needed for completeness):
+      • js/app.js Change Builder modal grid (~L767-773):
+        title="${esc(ai.name)}" is escaped, but
+        onclick="setBuilderFromModal('${ai.id}')" and the
+        bare ${ai.name} in <span class="builder-pick-name">
+        are NOT.
+      • Likely others in the changeBuilderReason flow,
+        hive setup, and ai-setup screens.
+
+    THREAT: same shape as 6.2.B — a malicious imported
+    AI config with a crafted ai.id (containing ') or
+    ai.name (containing < or ") could escape attribute
+    or JS-literal context and execute arbitrary code.
+    Lower realistic likelihood than 6.2.B was — the
+    icon path was rendered everywhere, these others
+    are rendered in narrower flows — but the same
+    underlying threat model.
+
+    APPROACH: full-file grep for ${ai.name} and
+    ${ai.id} in template strings; for each site decide
+    between esc() (text context), escapeHtml()
+    (attribute context), or escaping plus JS-safe
+    encoding (inline JS in onclick handlers — best
+    eliminated entirely via data-* + addEventListener
+    or fixed-string onclick handler that reads
+    dataset, matching the v3.53.2 resolveAiIconFallback
+    pattern).
+
+    Worth doing in conjunction with the v3.6+ CSP
+    rollout — eliminating inline onclicks is one of
+    the CSP prereqs, and this sweep is the right
+    moment to do both at once for the touched sites.
+
+    EFFORT: medium. Probably 10-20 sites, ~100-200
+    lines total once the audit pass is complete.
+
 
 ───────────────────────────────────────────────────────────
 6.3  Suggested release order
@@ -1684,14 +2120,14 @@ release, the natural sequence is:
            [x] 6.2.A  api-details Claude proxy disclosure
            [x] 6.2.C  Gemini API key → header
 
-  v3.53.1  (consoleHTML hardening — NEXT)
-           6.1.D  Option A — sanitize on restore
+  v3.53.1  SHIPPED 2026-05-19 — consoleHTML hardening
+           [x] 6.1.D  Option A — sanitize on restore
 
-  v3.53.2  (XSS fix)
-           6.2.B  resolveAiIcon safe DOM construction
+  v3.53.2  SHIPPED 2026-05-19 — XSS fix
+           [x] 6.2.B  resolveAiIcon safe DOM construction
 
-  v3.54.0  (Support-safe diagnostic export — own focused release)
-           6.1.C  full feature
+  v3.54.0  SHIPPED 2026-05-19 — Diagnostic Bundle
+           [x] 6.1.C  support-safe diagnostic export
 
   v3.6+    (CSP rollout — long-term, multi-release)
            6.2.D
@@ -1702,6 +2138,14 @@ This is a SUGGESTED order — David's call on actual sequencing.
 ═════════════════════════════════════════════════════════════
 RECENTLY SHIPPED (most-recent first)
 ═════════════════════════════════════════════════════════════
+
+v3.55.0   2026-05-19  Review playbook completion — three platform pages + multi-platform retirement + Claude proxy link. Fifth release this session. Finishes the v3.50.1/v3.52.0 template transition. THREE NEW PLAYBOOK PAGES in document-playbooks.html (+ sidebar links) under Reviews & Recommendations: Trim to TripAdvisor (✈️, 500–900w, refine-only), Trim to Google Maps (📍, 750–1,200c, refine-only), Rewrite as Yelp (💬, 300–700w, refine-only). Each documents pre-filled Setup fields, Reference-Material strategy, Setup 5 paste flow, what each platform keeps, Best AIs, and convergence. CONVERGENCE DATA INTEGRITY: Google Maps cites measured Manly Bikes Google v1.0 (5 rds / ≈23 min / R4 Builder-Only / 155w / 1,003c / 5.37× trim); Yelp cites measured Manly Bikes Yelp v1.0 (8 rds / ≈21 min / R8 majority / 542w / 3,142c / 1.64× trim); TripAdvisor honestly marked "estimated, not yet measured" — the only TripAdvisor data on file came from the retired combined template's sub-section, deliberately NOT quoted as standalone (per the convergence-data rule + v3.52.9/11 lesson about not propagating estimated-as-measured). MULTI-PLATFORM ORPHAN RETIRED (closes two Section 1 bug items): deleted #multi-platform-review playbook page + sidebar link from document-playbooks.html; updated waxframe-user-manual.html template table; reconciled 2 app.js comments + 1 templates.js header comment naming the old template; KEPT the templates.js RETIRED explainer block (documents the why). CLAUDE PROXY LINK (closes 6.2.A follow-up): api-details.html worker URL now clickable to the live endpoint with a note that direct browser visits return an API error; no separate public source repo (David confirmed it's just deployed on Cloudflare), so the live endpoint is what's linked. DOC HYGIENE: Playbook Test Master bumped v26→v27, stale "no playbook pages yet" notes corrected, standalone Trim to TripAdvisor logged as next open measurement task. div balance on document-playbooks.html even (808/808, was 759/759 — increase is 3 pages replacing 1); no inline-CSS violations (caught + fixed an opacity inline style mid-edit, swapped to semantic <em>). FIVE releases this session: v3.53.0 / v3.53.1 / v3.53.2 / v3.54.0 / v3.55.0.
+
+v3.54.0   2026-05-19  Diagnostic Bundle — support-safe export mode (Section 6.1.C). Fourth release this session. New export mode alongside Backup Session: where Backup is for the user (full-fidelity pause/resume, keys included, importable), the Diagnostic Bundle is for support — user hits a bug, exports this, sends it in. Export-only by design. ALWAYS STRIPPED: API keys, license key, saved credentials (deep regex walk of customAIs/customAIConfigs for token-shaped fields; hive.keys map values blanked to [REDACTED] while keeping which providers were configured). KEPT BY DEFAULT: document text + AI responses (support needs them to reproduce). OPTIONAL CHECKBOX "Also redact document text and AI responses" (default unchecked) strips content too — doc text, reference material, round directives, AI response bodies, conflicts, applied changes, resolved decisions become [REDACTED — N chars/items] markers while round timing/outcomes/builder-ids/response-ai-ids/lengths/error-reasons are preserved. EXPORT-ONLY: file carries _waxframe_diagnostic:true and NOT _waxframe_backup:true; importSession rejects diagnostic files with friendly "export-only, use a Backup file" message. UI: new "🩹 Diagnostic Bundle" nav item in Advanced section (below Prompt Editor, above Dev Tools); Backup + Import stay in Tools. Filename {baseName}-r{N}-{stamp}-Diagnostic-Safe.json. wfConfirm extended with optional opts.checkbox={label,checked} returning {ok,checked} instead of bare boolean — backward-compatible, existing boolean callers unchanged. New wfConfirmCheckRow elements in index.html (audited inline display:none); .wf-confirm-check-row CSS added near wfConfirm modal styles (80ch rule verified untouched). style.css touched (first since v3.52.10) — cache-bust bumped on style.css?v= across all 6 HTML files. Brace balance preserved on app.js (3426/3426), storage.js (268/268), style.css (2172/2172); node --check passes on app.js + storage.js. Codex security audit now effectively closed except long-term CSP rollout (6.2.D) and new wider-XSS-sweep follow-up (6.2.F). FOUR security releases this session: v3.53.0 small wins, v3.53.1 consoleHTML sanitize, v3.53.2 resolveAiIcon XSS, v3.54.0 Diagnostic Bundle.
+
+v3.53.2   2026-05-19  Security audit follow-up part 3 — resolveAiIcon XSS fix (Section 6.2.B). Third focused micro-release of the day. Closes the last meaningful XSS sink from the 2026-05-17 Codex security audit — js/app.js resolveAiIcon previously interpolated user-controlled ai.name, ai.icon, and cssClass raw into HTML strings including inside an inline onerror= JS string literal, which would have let a malicious imported AI config (ai.name = `'"><img src=x onerror=alert(1)>`) execute attacker code on every render with full localStorage access (API keys, license key). FOUR HARDENING CHANGES: (1) Number() coercion on size — was raw template interpolation, a string size could poison every attribute it landed in. (2) escapeHtml() on ai.name and cssClass for every attribute they land in (alt, class, data-*) — handles & < > " '. (3) URL scheme validation on ai.icon — only http(s)://, data:image/, and relative images/ paths pass; javascript:, vbscript:, file:, ftp:, and protocol-relative //evil.com URLs drop through to the letter-avatar fallback. The existing google.com/s2/favicons filter (left over from v3.29.10) stays in place. (4) Inline onerror handler no longer interpolates ANY user data — calls fixed-string resolveAiIconFallback(this) with zero interpolation. New handler reads name/class/size from data-* attributes (which are HTML-escaped at write time and round-trip cleanly through DOM dataset API) then passes them to makeAiAvatar's DOM-API construction path (createElement + textContent + style.cssText). XSS-sink data path broken at every step. makeAiAvatarHTML got matching escapeHtml(cssClass) + Number(size) treatment. makeAiAvatar (DOM-Element version, already used createElement + textContent) got Number(size) coercion as defense in depth. NEW BACKLOG ITEM 6.2.F added for the wider XSS sweep — other places in the codebase still interpolate ai.name and ai.id raw into HTML templates (Change Builder modal grid at app.js L767-773 is the named example). Out of scope for the Codex 6.2.B finding which targeted resolveAiIcon specifically. Brace balance preserved on app.js (3415/3415); node --check passes. Three security releases shipped this session (v3.53.0 small wins, v3.53.1 consoleHTML, v3.53.2 resolveAiIcon).
+
+v3.53.1   2026-05-19  Security audit follow-up part 2 — consoleHTML sanitize on restore (Section 6.1.D Option A, David's preferred). Focused micro-release on top of v3.53.0 same evening. Closes the XSS vector that existed on session restore from any backup file (including v3.53.0 backups, since the format itself didn't change between releases). New sanitizeConsoleHTML helper in js/storage.js (~150 lines including comments + schema constants). Both restore sites in loadSession (main IDB-backed path L505 + localStorage fallback path L540) now run stored consoleHTML through the sanitizer before innerHTML assignment. APPROACH: DOMParser parses raw HTML into a DETACHED HTMLDocument (so <script>/img-onerror/etc. don't fire during parsing), then walk the parsed tree and rebuild in the live document via createElement + textContent matching a strict per-tag schema mirroring consoleLog's output. SCHEMA: top-level requires div.console-entry; child <span> allowed with class=console-time or no class (text only); child <a> requires href to start with http(s):// (blocks javascript:/data:/vbscript:/file: and protocol-relative URLs), all attrs except class/href/target/rel stripped including any onclick; child <button.console-err-arrow> only keeps title (length-bounded) and onclick if it matches strict regex /^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$/ — any other onclick stripped leaving button inert. Anything else dropped silently (closed-list trade-off favoring security over feature drift — future consoleLog additions must update the sanitizer or restored sessions silently strip new content). Backward-compatible: every existing backup including v3.53.0 backups restores through the new sanitizer unchanged. Brace balance preserved; node --check passes on storage.js. Next in queue: v3.53.2 (resolveAiIcon safe DOM construction — Section 6.2.B).
 
 v3.53.0   2026-05-19  Security audit follow-up part 1 — small wins bundle. Four lowest-risk findings from the 2026-05-17 Codex security audit cleared in one ship. (1) backupSession() pre-export wfConfirm + "-SENSITIVE" filename suffix — pattern is now {baseName}-r{N}-{stamp}-Backup-SENSITIVE.json so the credential-bearing nature of the file is obvious in Downloads folders, email attachments, and Slack DMs. (2) importSession() converted to async + pre-import wfConfirm trust warning fires BEFORE the file picker opens — blocks silent state replacement from malicious files. Function signature change verified safe (both call sites are HTML onclick handlers). (3) Claude proxy disclosure rewrite on api-details.html: green wf-card title softened from "Your keys never leave your device" to "Your keys live in your browser"; new "**One exception — Claude.**" paragraph names waxframe-claude-proxy.weirdave.workers.dev explicitly and acknowledges the worker sees keys/prompts in-flight while forwarding (does not log or persist). Open Source modal "No Server" entry renamed "No Backend" + tip text updated. All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) remain direct browser-to-provider — original claim accurate for them. Worker repo link DEFERRED pending David's confirm on public vs private source-repo status. (4) Gemini API keys moved from query string to x-goog-api-key header at four model-list call sites (js/api.js fetchModelsForProvider + fetchModelsForProviderLive; js/app.js fetchModelsFromEndpoint Google branch + custom-AI add modal Google branch). Generate endpoint already used the header via API_CONFIGS.gemini.headersFn. Query-string secrets leak into browser history, server logs, screenshots — header doesn't. Brace balance preserved on all three JS files; node --check passes on all four edited JS files; zero remaining ?key=${} patterns in js/. Larger findings stay queued for v3.53.1 (consoleHTML sanitize on restore — Section 6.1.D Option A), v3.53.2 (resolveAiIcon safe DOM — Section 6.2.B), v3.54.0 (Diagnostic Bundle — Section 6.1.C), v3.6+ (CSP rollout — Section 6.2.D).
 
