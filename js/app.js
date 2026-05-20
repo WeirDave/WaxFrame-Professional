@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260519-003';         // build stamp — update each session
+const BUILD       = '20260519-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3909,6 +3909,7 @@ function getCachedRecommendation(cacheId) {
 // or with options:
 //   if (await wfConfirm('Title', 'Body', { okText: 'Remove', destructive: true })) ...
 let _wfConfirmResolve = null;
+let _wfConfirmCheckboxMode = false;  // v3.54.0 — when true, resolve {ok, checked}
 
 function wfConfirm(title, message, opts = {}) {
   return new Promise(resolve => {
@@ -3918,7 +3919,30 @@ function wfConfirm(title, message, opts = {}) {
     const msgEl   = document.getElementById('wfConfirmMsg');
     const okBtn   = document.getElementById('wfConfirmOkBtn');
     const cancelBtn = document.getElementById('wfConfirmCancelBtn');
-    if (!modal) { resolve(window.confirm(message || title)); return; }
+    // v3.54.0 — optional checkbox row. When opts.checkbox = {label, checked}
+    // is passed, show the row and switch this call into "checkbox mode" —
+    // wfConfirmOk/Cancel then resolve an object { ok, checked } instead of
+    // a bare boolean. Existing callers that don't pass opts.checkbox keep
+    // the boolean contract unchanged (backward-compatible).
+    const checkRow  = document.getElementById('wfConfirmCheckRow');
+    const checkBox  = document.getElementById('wfConfirmCheck');
+    const checkLbl  = document.getElementById('wfConfirmCheckLabel');
+    _wfConfirmCheckboxMode = !!opts.checkbox;
+    if (checkRow && checkBox) {
+      if (opts.checkbox) {
+        if (checkLbl) checkLbl.textContent = opts.checkbox.label || '';
+        checkBox.checked = !!opts.checkbox.checked;
+        checkRow.style.display = '';
+      } else {
+        checkRow.style.display = 'none';
+        checkBox.checked = false;
+      }
+    }
+    if (!modal) {
+      const ok = window.confirm(message || title);
+      resolve(opts.checkbox ? { ok, checked: false } : ok);
+      return;
+    }
     if (titleEl) titleEl.textContent = title || 'Confirm';
     if (msgEl)   msgEl.textContent   = message || '';
     if (okBtn) {
@@ -3933,13 +3957,26 @@ function wfConfirm(title, message, opts = {}) {
 function wfConfirmOk() {
   const modal = document.getElementById('wfConfirmModal');
   if (modal) modal.classList.remove('active');
-  if (_wfConfirmResolve) { _wfConfirmResolve(true); _wfConfirmResolve = null; }
+  if (_wfConfirmResolve) {
+    if (_wfConfirmCheckboxMode) {
+      const checkBox = document.getElementById('wfConfirmCheck');
+      _wfConfirmResolve({ ok: true, checked: !!(checkBox && checkBox.checked) });
+    } else {
+      _wfConfirmResolve(true);
+    }
+    _wfConfirmResolve = null;
+  }
+  _wfConfirmCheckboxMode = false;
 }
 
 function wfConfirmCancel() {
   const modal = document.getElementById('wfConfirmModal');
   if (modal) modal.classList.remove('active');
-  if (_wfConfirmResolve) { _wfConfirmResolve(false); _wfConfirmResolve = null; }
+  if (_wfConfirmResolve) {
+    _wfConfirmResolve(_wfConfirmCheckboxMode ? { ok: false, checked: false } : false);
+    _wfConfirmResolve = null;
+  }
+  _wfConfirmCheckboxMode = false;
 }
 
 // ════════════════════════════════════════════════════════════════════

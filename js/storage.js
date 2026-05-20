@@ -923,6 +923,204 @@ async function backupSession() {
   toast(`💾 Session backed up${sessionMsg}`);
 }
 
+
+/* =============================================================
+   v3.54.0 — DIAGNOSTIC BUNDLE (export-only, support-safe)
+   ─────────────────────────────────────────────────────────────
+   A SECOND export mode alongside backupSession(), with a
+   different purpose:
+
+     • backupSession  → for the USER. Full-fidelity pause/resume
+                        snapshot including API keys. Importable.
+     • diagnosticSession → for SUPPORT (the developer). The user
+                        hits a bug, exports this, and sends it in.
+                        Export-only — it has no reason to round-
+                        trip. API keys / license / bearer tokens
+                        are ALWAYS stripped so a user never emails
+                        their credentials. Document text and AI
+                        responses are kept by default (support
+                        needs them to debug) but a per-export
+                        checkbox lets a privacy-conscious user
+                        redact them too.
+
+   Clears Codex security audit (2026-05-17) finding 6.1.C.
+
+   The file carries `_waxframe_diagnostic: true` and deliberately
+   does NOT carry `_waxframe_backup: true`, so importSession()
+   rejects it with a friendly "this is a diagnostic bundle, not
+   a backup" message rather than loading a keyless half-state.
+   ============================================================= */
+
+// Always-on redaction: strip every credential from the LS_HIVE blob.
+// Returns a JSON string (or null). API keys live in hive.keys (a map of
+// id → key string). Custom AIs may also carry endpoint auth in headers
+// or token-shaped fields, so we walk those too. Defensive: anything
+// that looks like a secret (key/token/secret/authorization/bearer/
+// password) gets blanked regardless of nesting depth.
+const _DIAG_SECRET_KEY_RE = /(api[-_]?key|^key$|_key|token|secret|authorization|bearer|password|passwd|pwd|credential)/i;
+
+function _redactSecretsDeep(value) {
+  if (Array.isArray(value)) return value.map(_redactSecretsDeep);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (_DIAG_SECRET_KEY_RE.test(k) && (typeof v === 'string' || v == null)) {
+        out[k] = v ? '[REDACTED]' : v;
+      } else {
+        out[k] = _redactSecretsDeep(v);
+      }
+    }
+    return out;
+  }
+  return value;
+}
+
+function _redactHiveKeys(hiveStr) {
+  if (!hiveStr) return hiveStr;
+  let hive;
+  try { hive = JSON.parse(hiveStr); } catch(e) { return null; }
+  // Primary target: the keys map (id → apiKey string). Replace each
+  // present key with a redaction marker so support can still see WHICH
+  // providers had keys configured (a useful diagnostic) without the
+  // values.
+  if (hive.keys && typeof hive.keys === 'object') {
+    for (const id of Object.keys(hive.keys)) {
+      if (hive.keys[id]) hive.keys[id] = '[REDACTED]';
+    }
+  }
+  // Secondary: walk customAIs / customAIConfigs for any nested secrets
+  // (endpoint bearer tokens, etc.). customAIConfigs already strips _key
+  // at save time, but headers/auth fields could still carry tokens.
+  if (Array.isArray(hive.customAIs))      hive.customAIs      = _redactSecretsDeep(hive.customAIs);
+  if (hive.customAIConfigs)               hive.customAIConfigs = _redactSecretsDeep(hive.customAIConfigs);
+  return JSON.stringify(hive);
+}
+
+// Optional content redaction (only when the user checks the box).
+// Strips document text, AI response bodies, reference material, and
+// round directives — keeps round timing, outcomes, conflict COUNTS,
+// builder ids, response AI ids + lengths, and error reasons. Support
+// still sees the timeline and the shape of what happened, just not the
+// content. Operates on a deep clone so the live session is untouched.
+function _redactSessionContent(session) {
+  if (!session || typeof session !== 'object') return session;
+  const s = JSON.parse(JSON.stringify(session));
+  const mark = (str) => typeof str === 'string'
+    ? `[REDACTED — ${str.length.toLocaleString()} chars]`
+    : str;
+
+  if (typeof s.docText === 'string') s.docText = mark(s.docText);
+  if (Array.isArray(s.referenceDocs)) {
+    s.referenceDocs = s.referenceDocs.map(d => ({
+      ...d,
+      text:    typeof d.text === 'string' ? mark(d.text) : d.text,
+      content: typeof d.content === 'string' ? mark(d.content) : d.content
+    }));
+  }
+  if (typeof s.notes === 'string')         s.notes = mark(s.notes);
+  if (typeof s.standingNotes === 'string') s.standingNotes = mark(s.standingNotes);
+
+  if (Array.isArray(s.history)) {
+    s.history = s.history.map(h => {
+      const r = { ...h };
+      if (typeof r.doc === 'string') r.doc = mark(r.doc);
+      if (typeof r.notes === 'string') r.notes = mark(r.notes);
+      if (typeof r.standingNotes === 'string') r.standingNotes = mark(r.standingNotes);
+      // responses: keep the AI ids (which AIs answered) and lengths,
+      // redact the body text.
+      if (r.responses && typeof r.responses === 'object') {
+        const red = {};
+        for (const [aiId, txt] of Object.entries(r.responses)) {
+          red[aiId] = mark(txt);
+        }
+        r.responses = red;
+      }
+      // conflicts / appliedChanges / resolvedDecisions can quote document
+      // text — redact wholesale but keep the COUNT so support sees how
+      // many there were.
+      if (Array.isArray(r.conflicts))      r.conflicts      = `[REDACTED — ${r.conflicts.length} conflicts]`;
+      else if (r.conflicts)                r.conflicts      = '[REDACTED]';
+      if (Array.isArray(r.appliedChanges)) r.appliedChanges = `[REDACTED — ${r.appliedChanges.length} changes]`;
+      if (Array.isArray(r.resolvedDecisions)) r.resolvedDecisions = `[REDACTED — ${r.resolvedDecisions.length} decisions]`;
+      if (Array.isArray(r.referenceMaterialAtRound)) r.referenceMaterialAtRound = `[REDACTED — ${r.referenceMaterialAtRound.length} ref docs]`;
+      return r;
+    });
+  }
+  // consoleHTML is kept as-is — entries are short status lines, not
+  // document content. (And it restores through sanitizeConsoleHTML on
+  // the off chance it's ever loaded.)
+  return s;
+}
+
+async function diagnosticSession() {
+  // Modal carries a checkbox: "Also redact document text and AI
+  // responses". DEFAULT UNCHECKED — support needs the content to debug,
+  // and the user is intentionally sending the file in for that purpose.
+  // wfConfirm with opts.checkbox returns { ok, checked } instead of a
+  // bare boolean (backward-compatible — only the object shape when a
+  // checkbox is requested).
+  const res = await wfConfirm(
+    'Diagnostic bundle',
+    "This creates a support-safe file you can send when something goes wrong. Your API keys, license key, and any saved credentials are ALWAYS removed. Document text and AI responses are included by default so support can reproduce the issue — tick the box below to strip those too if your content is sensitive.\n\nThis file is for sharing with support. It cannot be imported to restore a session — use Backup Session for that.",
+    { okText: 'Download diagnostic', checkbox: { label: 'Also redact document text and AI responses', checked: false } }
+  );
+  if (!res || !res.ok) { closeNavMenu(); return; }
+  const redactContent = !!res.checked;
+
+  try { await saveSession(); } catch(e) { console.warn('[diagnostic] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+
+  const hiveRaw    = localStorage.getItem(LS_HIVE)    || null;
+  const project    = localStorage.getItem(LS_PROJECT) || null;
+  let sessionIDB = null;
+  try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
+
+  if (!hiveRaw && !project && !sessionIDB) {
+    toast('⚠️ Nothing to export'); return;
+  }
+
+  // Always strip credentials from the hive. Never include LS_SESSION
+  // (legacy) or LS_LICENSE in a diagnostic bundle at all.
+  const hiveRedacted = _redactHiveKeys(hiveRaw);
+  let sessionOut = sessionIDB;
+  if (redactContent && sessionIDB) sessionOut = _redactSessionContent(sessionIDB);
+
+  const bundle = {
+    _waxframe_diagnostic:      true,    // NOT _waxframe_backup — import rejects this
+    _waxframe_diagnostic_version: 1,
+    _waxframe_app_version:     typeof APP_VERSION === 'string' ? APP_VERSION : '',
+    _waxframe_build:           (typeof BUILD === 'string' ? BUILD : ''),
+    _waxframe_diagnostic_ts:   Date.now(),
+    _waxframe_content_redacted: redactContent,
+    LS_HIVE:    hiveRedacted,   // credentials stripped
+    LS_PROJECT: project,        // project setup — workflow context, no secrets
+    IDB_SESSION: sessionOut,    // session data (content kept or redacted per checkbox)
+  };
+
+  const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
+  const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9._-]/gi, '');
+  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
+  const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  // Filename pattern mirrors backup but with the -Diagnostic-Safe suffix
+  // so the two are never confused in a Downloads folder.
+  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Diagnostic-Safe`;
+
+  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${filename}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  closeNavMenu();
+  toast(`🩹 Diagnostic bundle exported — keys removed${redactContent ? ', content redacted' : ''}`);
+}
+
 async function importSession() {
   // v3.53.0 — Pre-import trust warning. A backup file can overwrite local
   // project, hive setup, API keys, license key, and session state. Codex
@@ -950,6 +1148,15 @@ async function importSession() {
     reader.onload  = async ev => {
       try {
         const data = JSON.parse(ev.target.result);
+        // v3.54.0 — friendly rejection for diagnostic bundles. These are
+        // export-only support files; they carry _waxframe_diagnostic and
+        // deliberately omit _waxframe_backup, with credentials stripped.
+        // Catch them before the generic "not a valid backup" message so
+        // the user understands WHY it won't import.
+        if (data._waxframe_diagnostic && !data._waxframe_backup) {
+          toast('⚠️ This is a Diagnostic Bundle (export-only, for sending to support). It can\'t restore a session — use a Backup file for that.', 9000);
+          return;
+        }
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
         // ── Restore localStorage layers ──
         if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
