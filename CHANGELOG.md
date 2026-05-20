@@ -1,6 +1,54 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.53.1
+**Build:** `20260519-002` · **Released:** May 19, 2026
+
+### Security hardening — consoleHTML sanitize on restore
+
+The next finding from the read-only Codex security audit (2026-05-17), shipped as a focused micro-release on top of v3.53.0. Closes the XSS vector that existed on session restore from any backup file — including v3.53.0 backups, since the format itself didn't change.
+
+### Threat closed
+
+`js/storage.js` `loadSession()` restores the live-console rendered HTML via `consoleEl.innerHTML = s.consoleHTML` at two sites: the main IndexedDB-backed path and the localStorage fallback path. The normal `consoleLog()` in `app.js` builds entries via `createElement` + `textContent` (safe), but session restore bypasses that path and re-injects whatever HTML was stored at backup time. A malicious backup file — or a v3.53.0 backup tampered with in transit — could carry crafted HTML in its `consoleHTML` field (`<script>`, `<img onerror>`, `on*` handlers, `javascript:` URLs) that fires during innerHTML assignment.
+
+v3.53.0 added a trust-warning modal before `importSession()` runs, but that's social-engineering mitigation, not a code-level sandbox. This release adds the sandbox.
+
+### Approach — parse detached, rebuild from schema
+
+The new `sanitizeConsoleHTML(rawHTML)` helper in `storage.js`:
+
+1. **Parses in a detached document.** `DOMParser` parses the stored HTML into a separate `HTMLDocument` object. Side-effecting tags — `<script>`, `<img onerror>`, etc. — do not fire during parsing of a detached document.
+2. **Walks the resulting tree and rebuilds in the live document** via `createElement` + `textContent` matching a strict per-tag schema mirroring `consoleLog`'s output.
+3. **Drops anything outside the schema** silently — unknown tags, `javascript:`/`data:` URLs in hrefs, `on*` handlers except the strict `openConsoleErrorDetail` pattern.
+
+### Schema enforced
+
+Top-level: only `<div class="console-entry [console-{info|warn|error|success}]">` survives. The base `console-entry` class is required as an anchor.
+
+Inside each entry, three child types pass through:
+
+- **`<span>`** — class limited to `console-time` or no class (matches the timestamp span and the message span). `textContent` only.
+- **`<a>`** — class limited to `console-link`. `href` must start with `http://` or `https://`; `javascript:`, `data:`, `vbscript:`, `file:`, and protocol-relative `//evil.com` URLs are rejected. `target` and `rel` set to the canonical values; all other attributes stripped.
+- **`<button class="console-err-arrow">`** — only the `title` attribute (length-bounded to 100 chars) and an `onclick` matching the strict regex `^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$` survive. Any other `onclick` leaves the button rendered but inert, which is the right failure mode for a tampered backup — you can still see the entry, you just can't expand it.
+
+Any other tag — `<script>`, `<iframe>`, `<img>`, anything new — is dropped. This is a closed-list trade-off: if future `consoleLog` additions need a new tag, the sanitizer must be updated, or restored sessions will silently strip the new content. Security over feature drift.
+
+### Backward compatibility
+
+No backup format change. Every existing backup file (including v3.53.0 backups) restores through the new sanitizer unchanged — legitimate console HTML passes through cleanly because the schema mirrors what `consoleLog` actually produces. Pre-existing limitation preserved: legitimate `<a class="console-link">` elements lose their click handler on restore (the handler was a JS-side property, not a serialized attribute) and rely on the `href` fallback. That was already true before this release.
+
+### Files changed
+
+- **`js/storage.js`** — new `sanitizeConsoleHTML` helper (~150 lines including comments) + two restore-site call updates
+- **`js/app.js`** — `BUILD` bumped to `20260519-002`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.53.1 Pro`
+- **6 HTML files** — cache-bust + build meta only (no content changes)
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v31.txt`** — Section 6.1.D marked shipped; Recently Shipped updated
+
+
+---
 ## v3.53.0
 **Build:** `20260519-001` · **Released:** May 19, 2026
 
