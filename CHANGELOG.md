@@ -1,6 +1,49 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.54.0
+**Build:** `20260519-004` · **Released:** May 19, 2026
+
+### Diagnostic Bundle — support-safe export mode
+
+A new export mode alongside the existing Backup Session, clearing the last feature item from the Codex security audit (2026-05-17). Where Backup Session is for the *user* (full-fidelity pause/resume, keys included, importable), the Diagnostic Bundle is for *support*: the user hits a bug, exports this file, and sends it in. It's export-only by design — its only job is leaving the user's machine and landing in support's inbox.
+
+After this ship, the only remaining audit item is the long-term `v3.6+` CSP rollout.
+
+### What it does
+
+**Always stripped** — API keys, license key, and any saved credentials (endpoint bearer tokens in custom-server configs). A user can never accidentally email their secrets. The hive's provider list and model ids are kept (with each key value replaced by `[REDACTED]`) so support can still see *which* providers were configured.
+
+**Kept by default** — document text and AI responses. Support needs the content to reproduce the issue, and the user is intentionally sending the file in for exactly that purpose.
+
+**Optional content redaction** — a checkbox in the export modal, *Also redact document text and AI responses*, lets a privacy-conscious user strip the content too. When ticked, document text, reference material, round directives, AI response bodies, conflicts, applied changes, and resolved decisions are replaced with `[REDACTED — N chars]` / `[REDACTED — N items]` markers. Round timing, outcomes, builder ids, the AI ids that responded, response lengths, and error reasons are preserved — support still sees the timeline and shape of what happened, just not the content.
+
+### Export-only — cannot be imported
+
+The diagnostic file carries `_waxframe_diagnostic: true` and deliberately does **not** carry the `_waxframe_backup: true` flag that Import Backup looks for. If a user tries to import a diagnostic bundle, Import rejects it with a friendly message — *"This is a Diagnostic Bundle (export-only, for sending to support). It can't restore a session — use a Backup file for that."* — instead of silently loading a keyless half-state. Backup Session remains the tool for pause/resume.
+
+### UI
+
+- New nav-menu entry **🩹 Diagnostic Bundle** in the Advanced section, below Prompt Editor and above Dev Tools. Backup Session and Import Backup stay where they are in Tools — the two flows are deliberately separate.
+- Filename pattern: `{baseName}-r{N}-{stamp}-Diagnostic-Safe.json` — the `-Diagnostic-Safe` suffix keeps it visually distinct from `-Backup-SENSITIVE.json` in a Downloads folder.
+
+### wfConfirm gains an optional checkbox
+
+To support the redaction toggle, `wfConfirm` now accepts an optional `opts.checkbox = { label, checked }`. When passed, the modal shows a checkbox row and resolves with `{ ok, checked }` instead of a bare boolean. Existing callers that don't pass a checkbox keep the boolean contract unchanged — fully backward-compatible. The checkbox row is hidden by default and only shown when requested.
+
+### Files changed
+
+- **`js/storage.js`** — new `diagnosticSession()` + `_redactHiveKeys()` + `_redactSessionContent()` + `_redactSecretsDeep()` helpers (~140 lines); `importSession` gains the diagnostic-file rejection guard
+- **`js/app.js`** — `wfConfirm` / `wfConfirmOk` / `wfConfirmCancel` extended for optional-checkbox support; `BUILD` bumped to `20260519-004`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.54.0 Pro`
+- **`index.html`** — checkbox row added to the wfConfirm modal; Diagnostic Bundle nav item added to Advanced section; cache-bust + build meta
+- **`style.css`** — `.wf-confirm-check-row` styling (new rule, near the existing wfConfirm modal styles — nowhere near the 80ch working-column rule); cache-bust
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v33.txt`** — Section 6.1.C marked shipped; Recently Shipped updated
+
+
+---
 ## v3.53.2
 **Build:** `20260519-003` · **Released:** May 19, 2026
 
