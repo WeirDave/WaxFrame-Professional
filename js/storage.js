@@ -642,6 +642,20 @@ function loadSettings() {
                    and the IDB session; reloads to apply.
    ============================================================= */
 async function backupSession() {
+  // v3.53.0 — Pre-export sensitivity warning. Backups bundle API keys,
+  // license key, document text, AI responses, and debug traces. The
+  // wfConfirm modal makes that explicit so users don't treat the file
+  // like a benign project export. Cancel exits without writing anything.
+  // wfConfirm is defined in app.js — at call time (button click) that
+  // script has loaded, so the runtime reference resolves cleanly even
+  // though storage.js parses first.
+  const proceed = await wfConfirm(
+    'Sensitive backup',
+    "Full backups let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
+    { okText: 'Download backup' }
+  );
+  if (!proceed) { closeNavMenu(); return; }
+
   // v3.35.2 — Flush in-memory state to IDB BEFORE reading the
   // snapshot. Without this, a backup taken while in-memory state
   // hadn't yet been auto-saved to IDB (e.g. immediately after
@@ -705,7 +719,7 @@ async function backupSession() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Backup`;
+  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Backup-SENSITIVE`;
   // Empty-file race fix history:
   // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
   //            via setTimeout(..., 1000) to give Chrome's download dispatcher
@@ -741,7 +755,23 @@ async function backupSession() {
   toast(`💾 Session backed up${sessionMsg}`);
 }
 
-function importSession() {
+async function importSession() {
+  // v3.53.0 — Pre-import trust warning. A backup file can overwrite local
+  // project, hive setup, API keys, license key, and session state. Codex
+  // security audit (2026-05-17) flagged this as a social-engineering
+  // vector — a malicious backup imported by a trusting user replaces
+  // their entire app state. wfConfirm makes the trust decision explicit
+  // before any storage writes happen. The pre-existing
+  // `_waxframe_backup: true` magic-flag check stays as a format guard
+  // inside the file reader — this modal is the human gate that runs
+  // before the file picker even opens.
+  const proceed = await wfConfirm(
+    'Restore from backup',
+    "Only restore backups you created or trust. A backup can replace your local project, AI setup, API keys, and session state.",
+    { okText: 'Choose file' }
+  );
+  if (!proceed) { closeNavMenu(); return; }
+
   const input    = document.createElement('input');
   input.type     = 'file';
   input.accept   = '.json';

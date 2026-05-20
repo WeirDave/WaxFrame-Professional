@@ -1,6 +1,79 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.53.0
+**Build:** `20260519-001` · **Released:** May 19, 2026
+
+### Security hardening — Codex audit follow-up part 1
+
+A bundled small-wins release clearing the four lowest-risk findings from the read-only Codex security audit run on 2026-05-17 (same audit cycle that produced the JS findings in v3.52.7 and the CSS findings in v3.52.10). Nothing here changes app behavior; the changes are warning modals, filename labeling, an honest disclosure update, and one query-string-to-header refactor for Gemini.
+
+Larger findings from the same audit — `consoleHTML` sanitization on restore, `resolveAiIcon` safe DOM construction, and the support-safe Diagnostic Bundle export — stay queued for v3.53.1, v3.53.2, and v3.54.0 respectively. CSP rollout (v3.6+) remains long-term parked.
+
+### Backup files now label themselves sensitive
+
+The backup export from the nav menu (and from the Deep Dive viewer "Save Backup" button) gains two changes:
+
+1. **Pre-export confirmation modal.** A `wfConfirm` warning fires before any file is written:
+
+   > "Full backups let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust."
+
+   Cancel exits cleanly with no download.
+
+2. **Filename suffix.** The download is now named `{baseName}-r{N}-{stamp}-Backup-SENSITIVE.json` instead of `{baseName}-r{N}-{stamp}-Backup.json`. The `-SENSITIVE` marker makes the credential-bearing nature of the file obvious in Downloads folders, email attachments, and Slack DMs — places users were treating these files as regular project artifacts because nothing in the name said otherwise.
+
+   Old backups already on disk keep their existing names; the format inside the file is unchanged, so existing backups still import normally.
+
+### Restore from backup now requires explicit trust
+
+`importSession` was previously a one-click flow: nav menu → file picker → silent replace of `LS_HIVE`, `LS_PROJECT`, `LS_SESSION`, and `IDB_SESSION`. A malicious backup file (sent by someone the user trusted, or pulled from a forum/Discord) could replace the user's API keys, license key, and entire session state with no chance to think first.
+
+The fix: `wfConfirm` modal fires before the file picker even opens.
+
+> "Only restore backups you created or trust. A backup can replace your local project, AI setup, API keys, and session state."
+
+Function signature changed from `function importSession()` to `async function importSession()`. Both call sites (nav menu, no other callers) are HTML `onclick` handlers that already tolerate async, so no caller code changed.
+
+### Claude proxy disclosure — honesty update on api-details.html
+
+The "Your keys never leave your device" green card on api-details.html was technically wrong for Claude specifically. Anthropic's API does not currently support browser CORS, so Claude traffic routes through `waxframe-claude-proxy.weirdave.workers.dev` — a Cloudflare Worker operated by WaxFrame's developer. The worker forwards requests straight through to Anthropic without logging or persisting keys or prompts, but it does see them in-flight while forwarding.
+
+All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) connect directly browser-to-provider with no intermediary — the original disclosure was accurate for them.
+
+Three text surfaces updated to reflect this honestly:
+
+- The green card title changed from "Your keys never leave your device" to "Your keys live in your browser"
+- A new "**One exception — Claude.**" paragraph added explaining the proxy
+- The Open Source & Privacy modal "No Server" entry renamed to "No Backend" and its tip text updated to point to the API setup page for the full disclosure
+
+The localStorage threat-model paragraph (browser profile, not encrypted at rest, etc.) was already accurate and unchanged.
+
+### Gemini API keys — query string to header
+
+Four call sites that hit Google's `/v1beta/models` endpoint were sending the API key as `?key=API_KEY` in the URL query string:
+
+- `js/api.js` — `fetchModelsForProvider` (~L337)
+- `js/api.js` — `fetchModelsForProviderLive` (~L440)
+- `js/app.js` — `fetchModelsFromEndpoint` Google branch (~L4789)
+- `js/app.js` — custom-AI add modal "Fetch Models" Google branch (~L4845)
+
+Query-string secrets leak into browser history, server access logs, proxy logs, screenshots, and diagnostic exports. The Gemini generate endpoint (`:generateContent`) already used the `x-goog-api-key` header correctly via `headersFn` in `API_CONFIGS.gemini` — the model-list paths were outliers from before that pattern was established.
+
+All four sites now send the key in the `x-goog-api-key` header, matching the generate-call pattern. Google's `/v1beta/models` endpoint accepts the same header.
+
+### Files changed
+
+- **`js/storage.js`** — `backupSession` adds wfConfirm + `-SENSITIVE` filename suffix; `importSession` becomes async + adds wfConfirm
+- **`js/api.js`** — Gemini model-list calls at two sites: key moved from query string to `x-goog-api-key` header
+- **`js/app.js`** — `BUILD` bumped to `20260519-001`; Gemini model-list calls at two sites: same header conversion
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.53.0 Pro`
+- **`api-details.html`** — green disclosure card rewritten for honesty about Claude proxy; Open Source modal copy updated; cache-bust + build meta
+- **`index.html`** — cache-bust sweep (12 sites) + build meta
+- **4 other HTML files** (waxframe-user-manual, document-playbooks, what-are-tokens, prompt-editor) — cache-bust + build meta only (no content changes)
+- **`CHANGELOG.md`** — this entry
+
+
+---
 ## v3.52.11
 **Build:** `20260517-008` · **Released:** May 17, 2026
 

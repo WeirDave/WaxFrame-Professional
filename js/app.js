@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260517-008';         // build stamp — update each session
+const BUILD       = '20260519-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4786,8 +4786,12 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
     modelsEndpoint = 'https://api.anthropic.com/v1/models';
     headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
   } else if (format === 'google') {
-    modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`;
-    headers = {};
+    // v3.53.0 — API key moved from query string to header. Generate calls
+    // already used 'x-goog-api-key' (see api.js headersFn); model-list path
+    // was the outlier. Query-string secrets leak into browser history,
+    // server logs, and screenshots — header doesn't.
+    modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`;
+    headers = { 'x-goog-api-key': key };
   } else {
     // v3.27.4: prefer the explicit modelsEndpoint stored on the AI config
     // (set by Import Server flow). Falls back to deriving `${base}/v1/models`
@@ -4842,8 +4846,10 @@ async function fetchCustomAIModels() {
       modelsEndpoint = 'https://api.anthropic.com/v1/models';
       headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
     } else if (format === 'google') {
-      modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?key=${key}&pageSize=100`;
-      headers = {};
+      // v3.53.0 — API key moved from query string to header (see comment
+      // in fetchModelsFromEndpoint above).
+      modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`;
+      headers = { 'x-goog-api-key': key };
     } else {
       const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
       modelsEndpoint = `${base}/v1/models`;
