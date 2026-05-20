@@ -1,6 +1,38 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.4
+**Build:** `20260520-004` · **Released:** May 20, 2026
+
+### Settings page — new full-page screen, starting with Auto Mode
+
+Adds the long-planned **Settings** screen — the home for preferences and the configurable Auto-mode options that the "Auto really means Auto" (P1.3) work depends on. Opens from a new **⚙ Settings** item in the hamburger menu; a full-page screen mirroring the setup screens (own header, Back/Done buttons), reached from anywhere and returning you to where you came from.
+
+### Auto Mode section
+
+Four controls, all persisted to `localStorage` (per-machine, per-browser) and saved on change:
+
+- **Backup Builder** — a dropdown of your hive AIs (or "None"). When wired, if your Builder errors or goes slow during Auto, WaxFrame promotes this AI so the run continues instead of stopping. Lists every configured AI except the current Builder; falls back to "None" automatically if a previously-chosen AI is no longer in the hive.
+- **Never disable the Builder** — a toggle to keep the Builder in the run even when it's slow or erroring.
+- **Failure-streak limit** — how many consecutive failed rounds before Auto pauses and asks (default 2; a clean round resets the count).
+- **Slow-responder threshold** — the multiplier (×round-average) and consecutive-round count that flag a reviewer as slow (defaults 3× / 2 rounds).
+
+### Scope note
+
+This release ships the **page, the controls, and the persistence**. The Auto-mode *behavior* that consumes these values (backup-Builder promotion, the configurable streak limit, the tunable slow threshold) is wired in the P1.3 "Auto really means Auto" work — these settings are read by public getters (`getAutoBackupBuilder()`, `getAutoStreakLimit()`, etc.) that the behavioral code will call. Storing them now is harmless; nothing consumes them until that lands. The autosave-frequency control and the first-run gate (routing to Settings the first time Auto is enabled) are also still to come.
+
+### Files changed
+
+- **`index.html`** — new `screen-settings` full-page screen with the Auto Mode section; `⚙ Settings` nav-menu item; cache-bust + build meta
+- **`js/app.js`** — Settings logic: `openSettings()` / `closeSettings()` (returns to the prior screen), `renderSettings()` (populates the Backup Builder dropdown from the live hive + syncs all controls), five save handlers, five public getters, `goToScreen` hook; `BUILD` bumped to `20260520-004`
+- **`style.css`** — Settings screen styling: section cards, rows, pure-CSS toggle switch, select + number inputs (all token-based; 80ch work-column rule untouched); cache-bust
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.4 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v39.txt`** — Settings page logged as shipped (UI + persistence); behavioral wiring + autosave frequency + first-run gate noted as remaining
+
+
+---
 ## v3.55.3
 **Build:** `20260520-003` · **Released:** May 20, 2026
 
