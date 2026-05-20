@@ -1,6 +1,52 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.53.2
+**Build:** `20260519-003` · **Released:** May 19, 2026
+
+### Security hardening — resolveAiIcon XSS fix
+
+The third focused micro-release of the day, clearing the last meaningful XSS vector from the read-only Codex security audit (2026-05-17). After this ship, only the long-term hardening items remain: `v3.54.0` Diagnostic Bundle export and the `v3.6+` CSP rollout (which requires migrating every inline `onclick` in the codebase to `addEventListener` and is a multi-release project, not a single ship).
+
+### Threat closed
+
+`js/app.js` `resolveAiIcon` and `makeAiAvatarHTML` interpolated user-controlled data (`ai.name`, `ai.icon`, `cssClass`) raw into HTML strings at two return paths each. The worst sink was the inline `onerror` attribute on the returned `<img>` tag:
+
+```js
+onerror="this.replaceWith(makeAiAvatar('${ai.name}',${sz},'${cssClass}'))"
+```
+
+An imported AI config with `ai.name = '"><img src=x onerror=alert(1)>'` would inject executable code on every render — and the inline onerror's nested JS-string context meant even careful HTML escaping wouldn't fully cover it (double-context: JS literal inside HTML attribute).
+
+Custom AIs and imported AI server configs are the primary user-input sources here. A user pasting a malicious server config from a forum or Discord would silently execute attacker code in their session, with full access to localStorage (API keys, license key).
+
+### Approach — escape + URL-scheme-validate + remove user data from JS context
+
+Four hardening changes to `resolveAiIcon`:
+
+1. **`Number()` coercion on `size`.** Previously a raw template interpolation; a string `size` could poison every attribute it landed in.
+2. **`escapeHtml()` on `ai.name` and `cssClass`** for every attribute they land in (`alt`, `class`, `data-*`). Handles `& < > " '`.
+3. **URL scheme validation on `ai.icon`.** Only `http(s)://`, `data:image/`, and relative `images/` paths pass. `javascript:`, `vbscript:`, `file:`, `ftp:`, and protocol-relative `//evil.com` URLs drop through to the letter-avatar fallback. The existing `google.com/s2/favicons` filter (left over from the v3.29.10 favicon-proxy migration) stays in place.
+4. **Inline `onerror` no longer interpolates ANY user data.** It calls a fixed string handler `resolveAiIconFallback(this)` — zero interpolation. The handler reads `name`/`class`/`size` from `data-*` attributes on the failing `<img>` (which are HTML-escaped at write time and round-trip cleanly through the DOM dataset API). Browsers decode HTML entities on attribute read, so `dataset.aiName` returns the original raw string, which is then passed to `makeAiAvatar`'s DOM-API construction path (`createElement` + `textContent` + `style.cssText`). The XSS-sink data path is broken at every step.
+
+`makeAiAvatarHTML` got the same `escapeHtml(cssClass)` + `Number(size)` treatment. The color comes from a hardcoded 10-entry palette (`avatarColor`) and the letter is constrained by `firstAlnumChar`'s regex to one alphanumeric character or "?", so those two are inherently safe.
+
+`makeAiAvatar` (the DOM-Element version, already used `createElement` + `textContent`) gets `Number(size)` coercion as defense in depth against malicious size values poisoning the generated `cssText`.
+
+### What this doesn't fix
+
+This release closes the `resolveAiIcon` chain specifically. The wider codebase still has other places where `ai.name` and `ai.id` get interpolated into HTML templates without escaping — for example, the Change Builder modal grid (`changeBuilderReason` template at app.js ~L767). Those are out of scope for the Codex audit's specific 6.2.B finding but added to the backlog as a follow-up sweep candidate for a future release.
+
+### Files changed
+
+- **`js/app.js`** — `resolveAiIcon`, `makeAiAvatar`, `makeAiAvatarHTML` refactored (~30 lines net new code including comments and the new `resolveAiIconFallback` handler); `BUILD` bumped to `20260519-003`
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.53.2 Pro`
+- **6 HTML files** — cache-bust + build meta only (no content changes)
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v32.txt`** — Section 6.2.B marked shipped; new backlog item for the wider XSS sweep added under Section 6.2; Recently Shipped updated
+
+
+---
 ## v3.53.1
 **Build:** `20260519-002` · **Released:** May 19, 2026
 

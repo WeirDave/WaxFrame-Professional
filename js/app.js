@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260519-002';         // build stamp — update each session
+const BUILD       = '20260519-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -9342,7 +9342,31 @@ function buildBulkSelectToolbarHTML() {
 // Resolve the best icon for an AI — local image if name matches a known provider,
 // colored initial avatar as fallback when the real icon would be a broken globe.
 function resolveAiIcon(ai, cssClass, size) {
-  const sz = size || 20;
+  // v3.53.2 — XSS hardening. Codex security audit (2026-05-17) finding
+  // #5 flagged this function and makeAiAvatarHTML below as the two
+  // remaining sites in app.js where user-controlled data (ai.name,
+  // ai.icon, ai.id, cssClass) was interpolated raw into HTML strings,
+  // including inside inline onerror= JS string literals. A custom or
+  // imported AI config with ai.name = `'"><img src=x onerror=alert(1)>`
+  // would inject executable code on every render.
+  //
+  // Hardening done here:
+  //   1. Numeric coercion on size (was raw template interpolation).
+  //   2. escapeHtml() on ai.name and cssClass for every attribute they
+  //      land in (alt, class, data-*) — handles & < > " '.
+  //   3. URL scheme validation on ai.icon — only http(s)://, data:image/,
+  //      or relative images/ paths pass; javascript:, vbscript:, file:,
+  //      and other schemes drop through to the letter-avatar fallback.
+  //   4. The inline onerror handler no longer interpolates ANY user
+  //      data into the JS string literal — it calls
+  //      resolveAiIconFallback(this) with the original name/class/size
+  //      carried via escaped data-* attributes. The previous shape
+  //      ("onerror='...makeAiAvatar(\"${ai.name}\",...)'") was the
+  //      actual XSS sink; user data inside JS-inside-HTML is a
+  //      double-context that simple HTML escaping doesn't fully cover.
+  const sz = Number(size) || 20;
+  const safeName  = escapeHtml(ai.name || '');
+  const safeClass = escapeHtml(cssClass || '');
   const name = (ai.name || '').toLowerCase();
   const model = (ai.id || '').toLowerCase();
   const combined = name + ' ' + model;
@@ -9371,34 +9395,82 @@ function resolveAiIcon(ai, cssClass, size) {
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
   ];
 
+  // Shared builder for the safe <img> tag. `src` is the only call-site
+  // input — internal callers pass hardcoded entry.src; the user-icon
+  // branch passes ai.icon AFTER scheme validation. Both go through
+  // escapeHtml as defense in depth.
+  const buildIconImg = (src) =>
+    `<img src="${escapeHtml(src)}" class="${safeClass}" width="${sz}" height="${sz}" alt="${safeName}"` +
+    ` data-ai-name="${safeName}" data-ai-class="${safeClass}" data-ai-size="${sz}"` +
+    ` onerror="resolveAiIconFallback(this)">`;
+
   for (const entry of known) {
     if (entry.keys.some(k => combined.includes(k))) {
-      return `<img src="${entry.src}" class="${cssClass}" width="${sz}" height="${sz}" onerror="this.replaceWith(makeAiAvatar('${ai.name}',${sz},'${cssClass}'))" alt="${ai.name}">`;
+      return buildIconImg(entry.src);
     }
   }
 
-  // No known match — check if the AI already has a non-globe icon URL we should try
-  if (ai.icon && !ai.icon.includes('google.com/s2/favicons')) {
-    return `<img src="${ai.icon}" class="${cssClass}" width="${sz}" height="${sz}" onerror="this.replaceWith(makeAiAvatar('${ai.name}',${sz},'${cssClass}'))" alt="${ai.name}">`;
+  // No known match — check if the AI already has a non-globe icon URL we should try.
+  // v3.53.2 — validate the URL scheme before accepting. Three accepted shapes:
+  //   • http://… or https://…  (external icon hosts)
+  //   • data:image/…            (inline data URLs from wfIconUpload)
+  //   • images/…                (local hardcoded paths — internal only)
+  // Anything else (javascript:, vbscript:, file:, ftp:, protocol-relative
+  // //evil.com, etc.) drops through to the letter-avatar fallback.
+  if (ai.icon && !ai.icon.includes('google.com/s2/favicons') &&
+      /^(https?:\/\/|data:image\/|images\/)/.test(ai.icon)) {
+    return buildIconImg(ai.icon);
   }
 
   // Fallback: colored initial avatar
   return makeAiAvatarHTML(ai.name, sz, cssClass);
 }
 
+// v3.53.2 — onerror landing function for resolveAiIcon's <img> tag.
+// The previous shape inlined ai.name/cssClass/size into the onerror
+// JS string literal, which was the XSS sink. Now the onerror is the
+// fixed string "resolveAiIconFallback(this)" — zero interpolation —
+// and this function reads the original values from the img's
+// data-* attributes (which are HTML-escaped at write time). Browsers
+// decode HTML entities on attribute read, so dataset.aiName returns
+// the original raw string, which is then passed to makeAiAvatar's
+// DOM-API construction path. The XSS-sink data path is broken at
+// every step.
+function resolveAiIconFallback(img) {
+  if (!img || !img.dataset) return;
+  const name = img.dataset.aiName || '';
+  const size = Number(img.dataset.aiSize) || 20;
+  const cssClass = img.dataset.aiClass || '';
+  img.replaceWith(makeAiAvatar(name, size, cssClass));
+}
+
 function makeAiAvatar(name, size, cssClass) {
+  // v3.53.2 — numeric coercion on size; otherwise unchanged.
+  // This function already used DOM-API construction (createElement +
+  // textContent + style.cssText), so it was the safest of the icon
+  // helpers — but a malicious size value could still poison the
+  // generated cssText. Number() coercion makes that impossible.
+  const sz = Number(size) || 20;
   const el = document.createElement('span');
   el.className = (cssClass || 'hex-icon-avatar') + ' hex-icon-avatar';
-  el.style.cssText = `width:${size}px;height:${size}px;background:${avatarColor(name)};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(size*0.55)}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;`;
+  el.style.cssText = `width:${sz}px;height:${sz}px;background:${avatarColor(name)};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${Math.round(sz*0.55)}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;`;
   el.textContent = firstAlnumChar(name);
   return el;
 }
 
 function makeAiAvatarHTML(name, size, cssClass) {
+  // v3.53.2 — same hardening rationale as resolveAiIcon above.
+  // cssClass was interpolated raw into class="" and indirectly via
+  // the inline style — escape it. Size and font-size coerced to
+  // Number. Color comes from a hardcoded 10-entry palette (avatarColor)
+  // and letter is constrained by firstAlnumChar's regex to one
+  // alphanumeric char or "?", so those two are inherently safe.
+  const sz = Number(size) || 20;
+  const fs = Math.round(sz * 0.55);
   const color = avatarColor(name);
   const letter = firstAlnumChar(name);
-  const fs = Math.round(size * 0.55);
-  return `<span class="${cssClass || 'hex-icon-avatar'} hex-icon-avatar" style="width:${size}px;height:${size}px;background:${color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;">${letter}</span>`;
+  const safeClass = escapeHtml(cssClass || 'hex-icon-avatar');
+  return `<span class="${safeClass} hex-icon-avatar" style="width:${sz}px;height:${sz}px;background:${color};border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:${fs}px;font-weight:800;color:#fff;text-transform:uppercase;flex-shrink:0;">${letter}</span>`;
 }
 
 // v3.32.15 — Avatar letter pickup. Skips non-alphanumeric leading characters
