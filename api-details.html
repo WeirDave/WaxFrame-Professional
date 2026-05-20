@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260517-008
+     Build: 20260519-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260517-008">
+  <meta name="waxframe-build" content="20260519-001">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.52.11">
+  <link rel="stylesheet" href="style.css?v=3.53.0">
 </head>
 <body class="helper-body">
 
@@ -113,10 +113,11 @@
     </div>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">Your keys never leave your device</h3>
-      <p>Keys are stored in your browser only. They go directly from your browser to each AI provider. WaxFrame has no server — your keys are never shared with any third party.</p>
+      <h3 class="wf-card-title">Your keys live in your browser</h3>
+      <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
+      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <code>waxframe-claude-proxy.weirdave.workers.dev</code>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
-      <p>WaxFrame — open source, no server, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
+      <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
     </div>
 
     <div class="ai-card">
@@ -576,14 +577,14 @@
     <div class="goal-info-body">
       <p>WaxFrame is fully open source under the AGPL-3.0 license. Every line of code is public and auditable.</p>
       <div class="goal-info-row">
-        <span class="goal-info-phase draft">No Server</span>
-        <span class="goal-info-desc">WaxFrame has no backend. Everything runs in your browser. Your documents, API keys, and session data never leave your machine.</span>
+        <span class="goal-info-phase draft">No Backend</span>
+        <span class="goal-info-desc">WaxFrame has no database or app server. Everything runs in your browser. Your documents and session data live in your browser only — they never sit on a WaxFrame server because there isn't one.</span>
       </div>
       <div class="goal-info-row">
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -662,11 +663,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.52.11"></script>
-<script src="js/nav-helper.js?v=3.52.11"></script>
-<script src="js/license-helper.js?v=3.52.11"></script>
-<script src="js/api-links.js?v=3.52.11"></script>
-<script src="js/version.js?v=3.52.11"></script>
+<script src="js/theme.js?v=3.53.0"></script>
+<script src="js/nav-helper.js?v=3.53.0"></script>
+<script src="js/license-helper.js?v=3.53.0"></script>
+<script src="js/api-links.js?v=3.53.0"></script>
+<script src="js/version.js?v=3.53.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

@@ -335,8 +335,13 @@ async function fetchModelsForProvider(provider) {
       models = (data?.data || []).map(m => m.id).sort().reverse(); // newest first
 
     } else if (provider === 'gemini') {
+      // v3.53.0 — API key moved from query string to header. Generate calls
+      // already used 'x-goog-api-key' (see headersFn above); model-list path
+      // was the outlier. Query-string secrets leak into browser history,
+      // server logs, and screenshots — header doesn't.
       const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${cfg._key}&pageSize=100`
+        `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`,
+        { headers: { 'x-goog-api-key': cfg._key } }
       );
       if (!resp.ok) return null;
       const data = await resp.json();
@@ -438,8 +443,11 @@ async function fetchModelsForProviderLive(provider) {
       models = (data?.data || []).map(m => m.id).sort().reverse();
 
     } else if (provider === 'gemini') {
+      // v3.53.0 — API key moved from query string to header (see comment
+      // in fetchModelsForProvider above).
       const resp = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models?key=${cfg._key}&pageSize=100`
+        `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`,
+        { headers: { 'x-goog-api-key': cfg._key } }
       );
       if (!resp.ok) return null;
       const data = await resp.json();
