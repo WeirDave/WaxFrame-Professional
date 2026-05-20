@@ -249,6 +249,170 @@ function saveSession() {
   saveProject(); // keep project fields in sync (synchronous, doesn't need to be in the chain)
 }
 
+/* =============================================================
+   v3.53.1 — CONSOLE HTML SANITIZER
+   ─────────────────────────────────────────────────────────────
+   Codex security audit (2026-05-17) finding #4: storage.js
+   restores raw consoleHTML via innerHTML at two sites in
+   loadSession (main path + localStorage fallback). The live
+   consoleLog() in app.js builds entries via createElement +
+   textContent — safe — but session restore bypasses that path
+   and injects whatever HTML was stored at backup time.
+
+   Threat: a malicious backup file (or a backup tampered with
+   in transit) could carry crafted HTML in its consoleHTML
+   field — <script>, <img onerror>, on* handlers, javascript:
+   URLs — that fires during innerHTML assignment on the next
+   restore. Backup format v3.53.0 added a trust-warning modal
+   before importSession runs, but that's social-engineering
+   mitigation, not a code-level sandbox. This sanitizer is
+   the code-level sandbox.
+
+   Approach (v29 backlog Option A, David's preferred):
+     1. Parse the stored HTML in a DETACHED document so any
+        side-effecting tags (script, img with onerror, etc.)
+        do not fire during parsing.
+     2. Walk the resulting tree and rebuild in the live
+        document via createElement + textContent matching a
+        strict per-tag schema mirroring consoleLog's output.
+     3. Anything outside the schema is dropped silently —
+        unknown tags, javascript:/data: URLs, on* handlers
+        except the strict openConsoleErrorDetail pattern.
+
+   Backward-compatible: pre-v3.53.1 backups restore through
+   the same sanitizer with no format change required.
+   ============================================================= */
+
+const _CONSOLE_ENTRY_CLASSES = new Set([
+  'console-entry',
+  'console-info',
+  'console-warn',
+  'console-error',
+  'console-success'
+]);
+
+// Strict pattern matching the legitimate onclick consoleLog generates:
+//   "openConsoleErrorDetail('cle_<ms-timestamp>_<base36-suffix>')"
+// Any other onclick string is dropped, leaving the button inert.
+const _CONSOLE_ARROW_ONCLICK_RE = /^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$/;
+
+function sanitizeConsoleHTML(rawHTML) {
+  if (!rawHTML || typeof rawHTML !== 'string') return '';
+  // Parse in a detached HTMLDocument. <script>/img-onerror/etc. do NOT
+  // execute during DOMParser parsing of a detached document.
+  let detached;
+  try {
+    detached = new DOMParser().parseFromString(
+      `<!DOCTYPE html><body><div id="r">${rawHTML}</div>`,
+      'text/html'
+    );
+  } catch(e) {
+    console.warn('[sanitizeConsoleHTML] parse failed, dropping all console HTML:', e);
+    return '';
+  }
+  const root = detached.getElementById('r');
+  if (!root) return '';
+
+  // Rebuild in the live document. createElement + textContent only —
+  // never innerHTML on anything derived from the parsed tree.
+  const out = document.createElement('div');
+  for (const child of Array.from(root.children)) {
+    const safe = _sanitizeConsoleEntry(child);
+    if (safe) out.appendChild(safe);
+  }
+  return out.innerHTML;
+}
+
+// Top-level: only <div class="console-entry [console-{info|warn|error|success}]"> survives.
+function _sanitizeConsoleEntry(node) {
+  if (!node || node.tagName?.toLowerCase() !== 'div') return null;
+
+  const rawCls = (node.getAttribute('class') || '').split(/\s+/);
+  const safeCls = rawCls.filter(c => _CONSOLE_ENTRY_CLASSES.has(c));
+  // Require the base "console-entry" class to anchor this as a legitimate entry.
+  if (!safeCls.includes('console-entry')) return null;
+
+  const out = document.createElement('div');
+  out.className = safeCls.join(' ');
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === 3 /* TEXT_NODE */) {
+      // Text directly inside the entry div — rare in legitimate output
+      // (consoleLog wraps everything in spans) but harmless. Preserve.
+      out.appendChild(document.createTextNode(child.textContent));
+    } else if (child.nodeType === 1 /* ELEMENT_NODE */) {
+      const safe = _sanitizeConsoleChild(child);
+      if (safe) out.appendChild(safe);
+    }
+    // All other node types (comments, CDATA, etc.) — dropped.
+  }
+  return out;
+}
+
+// Per-tag schema for children of a console-entry div.
+function _sanitizeConsoleChild(node) {
+  const tag = node.tagName?.toLowerCase();
+
+  // <span class="console-time">timestamp</span> or <span>message</span>
+  if (tag === 'span') {
+    const out = document.createElement('span');
+    if (node.getAttribute('class') === 'console-time') out.className = 'console-time';
+    out.textContent = node.textContent; // textContent escapes any < > & in the source
+    return out;
+  }
+
+  // <a class="console-link" href="https?://..." target="_blank" rel="noopener">label</a>
+  if (tag === 'a') {
+    const href = node.getAttribute('href') || '';
+    // Only http(s):// — blocks javascript:, data:, vbscript:, file:, and
+    // protocol-relative (//evil.com) URLs. The href is the only thing that
+    // matters on restore since the legitimate onclick is a JS-side property
+    // (not an attribute) and is not serialized to innerHTML output anyway.
+    if (!/^https?:\/\//i.test(href)) return null;
+    const out = document.createElement('a');
+    if (node.getAttribute('class') === 'console-link') out.className = 'console-link';
+    out.href = href;
+    out.target = '_blank';
+    out.rel = 'noopener';
+    out.textContent = node.textContent;
+    // Deliberately do NOT copy any attribute outside this whitelist —
+    // including onclick. A malicious backup could carry onclick as an
+    // attribute (consoleLog itself doesn't, but the attacker doesn't
+    // know that). Stripping all unlisted attrs blocks that vector.
+    return out;
+  }
+
+  // <button class="console-err-arrow" title="Show raw response"
+  //         onclick="openConsoleErrorDetail('cle_xxx_yyy')">→</button>
+  if (tag === 'button') {
+    if (node.getAttribute('class') !== 'console-err-arrow') return null;
+    const out = document.createElement('button');
+    out.className = 'console-err-arrow';
+    const title = node.getAttribute('title');
+    if (title) out.title = String(title).slice(0, 100); // bound the length
+    // Strict whitelist on onclick. Any other onclick string leaves the
+    // button rendered but inert — which is the right failure mode for
+    // a tampered backup (you can still SEE the entry, you just can't
+    // expand it). Legitimate restored entries reconnect their data via
+    // the cle_xxx_yyy id pattern, but window._consoleErrorData is rebuilt
+    // from scratch each session — the data isn't persisted, so even
+    // legitimate arrow buttons on restored entries hit a no-op handler.
+    // That's a pre-existing limitation, not something this sanitizer
+    // introduced.
+    const onclick = node.getAttribute('onclick') || '';
+    if (_CONSOLE_ARROW_ONCLICK_RE.test(onclick)) {
+      out.setAttribute('onclick', onclick);
+    }
+    out.textContent = '→';
+    return out;
+  }
+
+  // Any other tag — drop. Defense in depth: even if someone adds a new
+  // legitimate tag to consoleLog later, restored sessions will silently
+  // strip it until this sanitizer is updated. That's an explicit
+  // closed-list trade-off favoring security over feature drift.
+  return null;
+}
+
 async function loadSession() {
   // Eviction detection: if the session_exists flag is set in localStorage
   // but no actual data is recoverable, the browser silently evicted our
@@ -336,9 +500,11 @@ async function loadSession() {
     // Restore console HTML synchronously — inline with the rest of state
     // restore so there is no async gap between load and render during which
     // the DOM's default console HTML could be captured by an errant saveSession.
+    // v3.53.1 — sanitizeConsoleHTML strips anything outside the strict
+    // schema mirroring consoleLog's output. Backup-borne XSS vector closed.
     if (s.consoleHTML) {
       const consoleEl = document.getElementById('liveConsole');
-      if (consoleEl) consoleEl.innerHTML = s.consoleHTML;
+      if (consoleEl) consoleEl.innerHTML = sanitizeConsoleHTML(s.consoleHTML);
     }
     return true;
   } catch(e) {
@@ -370,10 +536,12 @@ async function loadSession() {
         WF_DEBUG.lastFailure = s.lastFailure;
       }
       if (docText && phase === 'draft' && round > 1) phase = 'refine';
-      // Restore console HTML in the fallback path too (see main path)
+      // Restore console HTML in the fallback path too (see main path).
+      // v3.53.1 — sanitizer applies here too; both restore paths share
+      // the same threat surface.
       if (s.consoleHTML) {
         const consoleEl = document.getElementById('liveConsole');
-        if (consoleEl) consoleEl.innerHTML = s.consoleHTML;
+        if (consoleEl) consoleEl.innerHTML = sanitizeConsoleHTML(s.consoleHTML);
       }
       return true;
     } catch(e2) { return false; }
