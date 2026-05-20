@@ -146,7 +146,16 @@ async function checkStorageQuota() {
 // in flight can't race on the read-check-write guard inside.
 let _saveSessionChain = Promise.resolve();
 
-function saveSession() {
+function saveSession(opts = {}) {
+  // v3.55.3 — Autosave gate. The per-round IndexedDB write IS the autosave
+  // mechanism (this is how reload-restore works). When the user turns autosave
+  // OFF via the work-screen pill, skip the automatic write. Explicit user
+  // actions (Backup, Diagnostic) pass { force: true } so they always capture
+  // current state regardless of the toggle. Read localStorage directly —
+  // storage.js loads before app.js, so we can't depend on app.js's
+  // _autosaveEnabled at parse time. Default = ON (key absent or anything but
+  // 'false'), so existing behavior is unchanged unless the user opts out.
+  if (!opts.force && localStorage.getItem('waxframe_autosave_enabled') === 'false') return;
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
   const notesEl = document.getElementById('workNotes');
@@ -835,7 +844,7 @@ async function backupSession() {
   // IDB to bleed through after reload. A backup must be a true
   // time-machine: capture exactly the state at backup time, restore
   // exactly to that state on import.
-  try { await saveSession(); } catch(e) { console.warn('[backup] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+  try { await saveSession({ force: true }); } catch(e) { console.warn('[backup] saveSession flush failed, proceeding with whatever is in IDB:', e); }
 
   const hive    = localStorage.getItem(LS_HIVE)    || null;
   const project = localStorage.getItem(LS_PROJECT) || null;
@@ -880,14 +889,21 @@ async function backupSession() {
   // independent. The formatting regex mirrors buildExportName's exactly so
   // the baseName matches what document/transcript/deep-dive produce.
   const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9._-]/gi, '');
+  // v3.55.x — Version: ALL non-alphanumerics → dashes (so "v3.0" → "v3-0"),
+  // matching the legacy filename format. (The prior regex kept dots, giving
+  // "v3.0".)
+  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
-  const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
   // Local-time timestamp: YYYYMMDD-HHmm (matches transcript/deep-dive/build-stamp format)
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Backup-SENSITIVE`;
+  // v3.55.x — Reverted to the legacy format David's existing backups use:
+  // `{name}-{version}-WaxFrame-Backup-{stamp}`. The v3.36.13 change (which
+  // dropped the "WaxFrame-" prefix, added a -r{N} round number, and moved the
+  // stamp before "-Backup") is undone — the timestamp already prevents
+  // same-project collisions, and David wants the old shape back.
+  const filename = `${baseName}-WaxFrame-Backup-${stamp}`;
   // Empty-file race fix history:
   // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
   //            via setTimeout(..., 1000) to give Chrome's download dispatcher
@@ -1067,7 +1083,7 @@ async function diagnosticSession() {
   if (!res || !res.ok) { closeNavMenu(); return; }
   const redactContent = !!res.checked;
 
-  try { await saveSession(); } catch(e) { console.warn('[diagnostic] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+  try { await saveSession({ force: true }); } catch(e) { console.warn('[diagnostic] saveSession flush failed, proceeding with whatever is in IDB:', e); }
 
   const hiveRaw    = localStorage.getItem(LS_HIVE)    || null;
   const project    = localStorage.getItem(LS_PROJECT) || null;

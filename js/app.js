@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-002';         // build stamp — update each session
+const BUILD       = '20260520-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -480,6 +480,55 @@ function updateSlowResponderIndicator() {
 
 function initSlowResponderIndicator() {
   updateSlowResponderIndicator();
+}
+
+// ── AUTOSAVE PILL (v3.55.3) ──
+// Work-screen footer pill mirroring the Slow-AI alerts pill. User-level
+// preference persisted globally via localStorage 'waxframe_autosave_enabled'.
+// Autosave IS the per-round IndexedDB session write (how reload-restore
+// works). When ON (default), saveSession() persists every round so the user
+// can pick up where they left off. When OFF, the automatic write is skipped
+// (privacy / "don't keep my work + keys in this browser") — but manual Backup
+// and Diagnostic still force a save so they always capture current state.
+// The gate itself lives in storage.js saveSession(); this just drives the
+// flag + pill. Default = ON (key absent or anything but 'false').
+let _autosaveEnabled =
+  (localStorage.getItem('waxframe_autosave_enabled') !== 'false');
+
+function toggleAutosave() {
+  _autosaveEnabled = !_autosaveEnabled;
+  localStorage.setItem('waxframe_autosave_enabled', _autosaveEnabled);
+  updateAutosaveIndicator();
+  if (_autosaveEnabled) {
+    consoleLog('💾 Autosave on — your session saves to this browser every round, so you can pick up where you left off.', 'info');
+    toast('💾 Autosave: on', 3000);
+    // Flush current state immediately so turning it back on captures now.
+    saveSession();
+  } else {
+    consoleLog('💾 Autosave off — automatic per-round saving is paused. Use Backup to keep a copy you can restore or move.', 'info');
+    toast('💾 Autosave: off', 3000);
+  }
+}
+
+// Mirrors updateSlowResponderIndicator() — flips .is-off class + label + title.
+// Defensive: short-circuits if the indicator element is not in DOM yet.
+function updateAutosaveIndicator() {
+  const el = document.getElementById('autosaveIndicator');
+  if (!el) return;
+  const labelEl = el.querySelector('.autosave-indicator-label');
+  if (_autosaveEnabled) {
+    el.classList.remove('is-off');
+    el.title = 'Autosave is on — your session is saved every round so you can resume. Click to turn off.';
+    if (labelEl) labelEl.textContent = 'Autosave: on';
+  } else {
+    el.classList.add('is-off');
+    el.title = 'Autosave is off — automatic saving is paused. Click to turn on.';
+    if (labelEl) labelEl.textContent = 'Autosave: off';
+  }
+}
+
+function initAutosaveIndicator() {
+  updateAutosaveIndicator();
 }
 
 // ── AUDIO ──
@@ -8310,6 +8359,8 @@ function initWorkScreen(isNewSession = false) {
   // topbar mounts. Call here to sync class + label + title on the live
   // element. (No project-persistence path needed — preference is global.)
   updateSlowResponderIndicator();
+  // v3.55.3 — Same defensive-init pattern for the autosave pill.
+  updateAutosaveIndicator();
   setStatus('Standing by — Smoke the Hive to begin');
 
   // Keep line numbers filled on resize
