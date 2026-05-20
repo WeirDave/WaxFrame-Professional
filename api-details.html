@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260519-004
+     Build: 20260519-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260519-004">
+  <meta name="waxframe-build" content="20260519-005">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.54.0">
+  <link rel="stylesheet" href="style.css?v=3.55.0">
 </head>
 <body class="helper-body">
 
@@ -115,7 +115,8 @@
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys live in your browser</h3>
       <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
-      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <code>waxframe-claude-proxy.weirdave.workers.dev</code>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
+      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
+
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
       <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
     </div>
@@ -663,11 +664,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.54.0"></script>
-<script src="js/nav-helper.js?v=3.54.0"></script>
-<script src="js/license-helper.js?v=3.54.0"></script>
-<script src="js/api-links.js?v=3.54.0"></script>
-<script src="js/version.js?v=3.54.0"></script>
+<script src="js/theme.js?v=3.55.0"></script>
+<script src="js/nav-helper.js?v=3.55.0"></script>
+<script src="js/license-helper.js?v=3.55.0"></script>
+<script src="js/api-links.js?v=3.55.0"></script>
+<script src="js/version.js?v=3.55.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

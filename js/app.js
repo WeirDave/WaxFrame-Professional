@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260519-004';         // build stamp — update each session
+const BUILD       = '20260519-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -2313,8 +2313,9 @@ function resetTemplatePath() {
 //      Starting from scratch / Refining an existing draft)
 //   2. _selectedTemplatePath set → show category-grouped template grid,
 //      filtered to templates supporting the selected path. Quick Start
-//      shows only in scratch mode (paths: ['scratch']); Multi-Platform
-//      Rewrite shows only in refine mode (paths: ['refine']).
+//      shows only in scratch mode (paths: ['scratch']); the platform
+//      review templates (Trim to TripAdvisor / Google Maps, Rewrite as
+//      Yelp) show only in refine mode (paths: ['refine']).
 //
 // v3.38.1 — Path-aware newuser callouts. The modal header previously
 // carried a static "New to WaxFrame? Start with ⭐ Quick Start below"
@@ -13573,10 +13574,11 @@ function exportDocument() {
   // v3.50.0 — Strip any pre-existing WaxFrame footer before appending the
   // new one. Scenario: user takes an exported document (with footer) and
   // pastes it as the Starting Document for a new project (common with
-  // the Multi-Platform Review template, which is designed to operate on
-  // a previously-finished review). Without this strip, exporting the
-  // refined document would produce two stacked footers — the original
-  // from the prior export and the new one for this run.
+  // the platform review templates — Trim to TripAdvisor / Google Maps,
+  // Rewrite as Yelp — which are designed to operate on a previously-
+  // finished review). Without this strip, exporting the refined document
+  // would produce two stacked footers — the original from the prior
+  // export and the new one for this run.
   //
   // v3.52.1 — Dynamic verb: "Crafted" for scratch-path sessions (hive
   // built the doc from a goal alone), "Refined" for upload/paste paths

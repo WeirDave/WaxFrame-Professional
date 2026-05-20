@@ -1,6 +1,52 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.0
+**Build:** `20260519-005` · **Released:** May 19, 2026
+
+### Review playbook completion — three platform pages, multi-platform retired
+
+Finishes the template transition started in v3.50.1 / v3.52.0. When the combined Multi-Platform Review template was split into three focused templates (Trim to TripAdvisor, Trim to Google Maps, Rewrite as Yelp), the three replacements shipped without playbook pages and the old combined page was left orphaned. This release writes the three pages, retires the orphan, and reconciles every straggler reference.
+
+### Three new playbook pages
+
+Added to `document-playbooks.html` under Reviews & Recommendations, with matching sidebar links:
+
+- **✈️ Trim to TripAdvisor** — 500–900 words, detailed narrative travel-context. Refine-only.
+- **📍 Trim to Google Maps** — 750–1,200 characters, skim-friendly bottom-line-first. Refine-only.
+- **💬 Rewrite as Yelp** — 300–700 words, conversational voice transformation. Refine-only.
+
+Each page documents the template's pre-filled Setup fields, the Reference-Material strategy (keep the source visible so the hive can verify cuts/voice against the original), the Setup 5 paste flow, what each platform version keeps, the Best AIs, and a convergence block.
+
+**Convergence data is honest about what's measured.** Google Maps and Yelp cite real measured runs from the 2026-05-17 Manly Bikes session — Google Maps: 5 rounds / ≈23 min / R4 Builder-Only convergence / 155 words / 1,003 chars / 5.37× trim; Yelp: 8 rounds / ≈21 min / R8 majority / 542 words / 3,142 chars / 1.64× trim. TripAdvisor shows "estimated, not yet measured as a standalone run" — the only TripAdvisor data on file came from the retired combined template's sub-section, which is not a valid standalone measurement, so it is deliberately not quoted as if it were.
+
+### Multi-Platform Review — orphan retired
+
+The template itself was already gone from `templates.js` (retired in v3.50.1 / v3.52.0; only the explanatory comment block remains, which is kept as useful documentation of the decision). This release removes the stragglers:
+
+- Deleted the orphaned `#multi-platform-review` playbook page and its sidebar link from `document-playbooks.html`
+- Updated the `waxframe-user-manual.html` template table to list the three platform templates instead of the retired one
+- Reconciled two `js/app.js` comments and one `js/templates.js` header comment that referenced the old template by name
+
+### Claude proxy disclosure — worker URL now linked
+
+The Claude proxy disclosure on `api-details.html` (added in v3.53.0) named the Cloudflare Worker but didn't link it. The worker URL `waxframe-claude-proxy.weirdave.workers.dev` is now a clickable link to the live endpoint, with a note that opening it directly returns an API error (it expects API requests, not browser visits) — there is no separate public source repo, so the live endpoint is what's linked.
+
+### Files changed
+
+- **`document-playbooks.html`** — three new playbook pages; multi-platform page + sidebar link removed; sidebar gains three platform links; cache-bust + build meta
+- **`waxframe-user-manual.html`** — template table updated; cache-bust + build meta
+- **`api-details.html`** — Claude proxy worker URL linked; cache-bust + build meta
+- **`js/app.js`** — two comment references reconciled; `BUILD` bumped to `20260519-005`
+- **`js/templates.js`** — header comment updated (single-path template examples)
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.0 Pro`
+- **3 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v34.txt`** — Section 2 playbook-pages item marked done; multi-platform Section 1 bug closed; Recently Shipped updated
+- **`docs/WaxFrame_Playbook_Test_Master_v27.txt`** — stale "no playbook pages yet" notes updated; standalone Trim to TripAdvisor measurement logged as the next open measurement task
+
+
+---
 ## v3.54.0
 **Build:** `20260519-004` · **Released:** May 19, 2026
 
