@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260520-003
+     Build: 20260520-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260520-003">
+  <meta name="waxframe-build" content="20260520-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.55.3">
+  <link rel="stylesheet" href="style.css?v=3.55.4">
 </head>
 <body>
 
@@ -760,6 +760,108 @@
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button title="Open the About panel — credits, build info, and license details" class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SCREEN — SETTINGS  (v3.55.4)
+     Full-page preferences screen, opened from the hamburger menu.
+     Starts with the Auto Mode section. All controls persist to
+     localStorage (per-machine, per-browser) and save on change.
+     ============================================================ -->
+<div class="screen" id="screen-settings">
+  <div class="fullscreen-layout">
+    <div class="fs-header">
+      <div class="fs-header-left">
+        <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+        <button class="btn" title="Go back to where you were" onclick="closeSettings()">← Back</button>
+      </div>
+      <div class="fs-header-brand">
+        <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="fs-logo">
+        <div>
+          <div class="fs-logo-name">WaxFrame</div>
+          <div class="fs-logo-tag">Many minds, one refined result.</div>
+          <span class="app-version-stamp"></span>
+        </div>
+      </div>
+      <div class="fs-header-right">
+        <div class="setup-step-badge">Settings</div>
+        <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+        <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto (follows OS)">⚙️</button>
+        <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+      </div>
+    </div>
+
+    <div class="fs-body-single">
+      <div class="hp-section">
+        <div class="hp-section-header honeycomb-header">
+          <img src="images/WaxFrame_Worker_Bee_v2.png" class="hp-section-bee" alt="">
+          <div class="hp-section-title-block">
+            <h1 class="hp-section-title">Settings</h1>
+            <p class="hp-section-sub">Your preferences are saved in this browser and apply to every project on this machine. Changes save automatically.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+          <div class="settings-section">
+            <h2 class="settings-section-title">⚡ Auto Mode</h2>
+            <p class="settings-section-desc">How the hive behaves during hands-off Auto runs. These only take effect while Auto is on.</p>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Backup Builder</span>
+                <span class="settings-row-help">If your Builder errors out or goes slow during an Auto run, WaxFrame promotes this AI to Builder so the run continues instead of stopping. Choose "None" to have Auto pause and ask you instead.</span>
+              </div>
+              <select class="settings-select" id="setAutoBackupBuilder" onchange="saveAutoBackupBuilder(this.value)">
+                <option value="">None — pause and ask me</option>
+              </select>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Never disable the Builder</span>
+                <span class="settings-row-help">Keep the Builder in the run even if it's slow or throwing errors. Waiting on the Builder is usually better than losing it mid-run — turn this on if your Builder is reliable but occasionally slow.</span>
+              </div>
+              <label class="settings-toggle" title="Toggle">
+                <input type="checkbox" id="setAutoNeverDisableBuilder" onchange="saveAutoNeverDisableBuilder(this.checked)">
+                <span class="settings-toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Failure-streak limit</span>
+                <span class="settings-row-help">How many rounds in a row can fail before Auto pauses and asks you what to do. A single clean round resets the count, so an early blip won't halt a healthy run later.</span>
+              </div>
+              <input type="number" min="1" max="10" step="1" class="settings-number" id="setAutoStreakLimit" onchange="saveAutoStreakLimit(this.value)">
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Slow-responder threshold</span>
+                <span class="settings-row-help">A reviewer is flagged "slow" when it takes longer than this multiple of the round average, for this many rounds in a row. During Auto, slow reviewers are auto-disabled so the run keeps moving (you're notified by a toast).</span>
+              </div>
+              <div class="settings-inline-controls">
+                <input type="number" min="2" max="10" step="0.5" class="settings-number" id="setAutoSlowMult" onchange="saveAutoSlowMult(this.value)">
+                <span class="settings-inline-text">× avg, for</span>
+                <input type="number" min="1" max="5" step="1" class="settings-number" id="setAutoSlowRounds" onchange="saveAutoSlowRounds(this.value)">
+                <span class="settings-inline-text">rounds</span>
+              </div>
+            </div>
+          </div>
+
+          <p class="settings-foot-note">More sections (autosave frequency, and more) are on the way. Behavioral wiring for these Auto options ships alongside the "Auto really means Auto" work.</p>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="fs-footer">
+      <div class="fs-footer-spacer"></div>
+      <div class="settings-saved-note">✓ Settings save automatically</div>
+      <button class="btn btn-lg btn-cta" title="Return to where you were" onclick="closeSettings()">← Done</button>
     </div>
   </div>
 </div>
@@ -2236,20 +2338,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.55.3"></script>
-<script src="lib/mammoth.browser.min.js?v=3.55.3"></script>
-<script src="lib/jszip.min.js?v=3.55.3"></script>
-<script src="lib/xlsx.full.min.js?v=3.55.3"></script>
-<script src="js/version.js?v=3.55.3"></script>
-<script src="js/storage.js?v=3.55.3"></script>
-<script src="js/theme.js?v=3.55.3"></script>
-<script src="js/audio.js?v=3.55.3"></script>
-<script src="js/scenes.js?v=3.55.3"></script>
-<script src="js/wf-debug.js?v=3.55.3"></script>
-<script src="js/api.js?v=3.55.3"></script>
-<script src="js/templates.js?v=3.55.3"></script>
-<script src="js/app.js?v=3.55.3"></script>
-<script src="js/api-links.js?v=3.55.3"></script>
+<script src="lib/pdf.min.js?v=3.55.4"></script>
+<script src="lib/mammoth.browser.min.js?v=3.55.4"></script>
+<script src="lib/jszip.min.js?v=3.55.4"></script>
+<script src="lib/xlsx.full.min.js?v=3.55.4"></script>
+<script src="js/version.js?v=3.55.4"></script>
+<script src="js/storage.js?v=3.55.4"></script>
+<script src="js/theme.js?v=3.55.4"></script>
+<script src="js/audio.js?v=3.55.4"></script>
+<script src="js/scenes.js?v=3.55.4"></script>
+<script src="js/wf-debug.js?v=3.55.4"></script>
+<script src="js/api.js?v=3.55.4"></script>
+<script src="js/templates.js?v=3.55.4"></script>
+<script src="js/app.js?v=3.55.4"></script>
+<script src="js/api-links.js?v=3.55.4"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2307,6 +2409,7 @@
     <button title="Open Setup 4 — Reference Material" class="nav-item" onclick="closeNavMenu();goToScreen('screen-reference')">· Setup 4 — Reference Material</button>
     <button title="Open Setup 5 — Starting Document" class="nav-item" onclick="closeNavMenu();goToScreen('screen-document')">· Setup 5 — Starting Document</button>
     <button title="Return to the Working Console (the main work screen)" class="nav-item" onclick="closeNavMenu();goToScreen('screen-work')">· Working Console</button>
+    <button title="Open Settings — preferences and Auto-mode options" class="nav-item" onclick="closeNavMenu();openSettings()">⚙ Settings</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>

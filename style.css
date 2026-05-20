@@ -7084,6 +7084,155 @@ kbd {
 }
 
 /* ══════════════════════════════════════
+   SETTINGS SCREEN (v3.55.4)
+══════════════════════════════════════ */
+.settings-section {
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  background: var(--surface2, rgba(255,255,255,0.02));
+  padding: var(--space-24) var(--space-28);
+  margin-bottom: var(--space-20);
+}
+.settings-section-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 800;
+  color: var(--text);
+  margin: 0 0 var(--space-4);
+}
+.settings-section-desc {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  margin: 0 0 var(--space-20);
+}
+.settings-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-24);
+  padding: var(--space-16) 0;
+  border-top: 1px solid var(--border2);
+}
+.settings-row:first-of-type {
+  border-top: 0;
+  padding-top: 0;
+}
+.settings-row-label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 60ch;
+}
+.settings-row-name {
+  font-size: var(--fs-base);
+  font-weight: 700;
+  color: var(--text);
+}
+.settings-row-help {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+.settings-control,
+.settings-select,
+.settings-number {
+  flex-shrink: 0;
+}
+.settings-select {
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md, 10px);
+  padding: var(--space-8) var(--space-12);
+  min-width: 220px;
+  cursor: pointer;
+}
+.settings-number {
+  font-family: var(--font-mono, 'Courier New', monospace);
+  font-size: var(--fs-base);
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md, 10px);
+  padding: var(--space-8) var(--space-10);
+  width: 72px;
+  text-align: center;
+}
+.settings-select:focus,
+.settings-number:focus {
+  outline: none;
+  border-color: var(--accent, #f4b400);
+  box-shadow: 0 0 0 2px var(--accent-dim);
+}
+.settings-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  flex-shrink: 0;
+}
+.settings-inline-text {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+/* Toggle switch — pure CSS, hidden checkbox drives the slider */
+.settings-toggle {
+  position: relative;
+  display: inline-block;
+  width: 46px;
+  height: 26px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+.settings-toggle input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.settings-toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 26px;
+  transition: all 0.18s;
+}
+.settings-toggle-slider::before {
+  content: "";
+  position: absolute;
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all 0.18s;
+}
+.settings-toggle input:checked + .settings-toggle-slider {
+  background: var(--green-dim);
+  border-color: var(--green);
+}
+.settings-toggle input:checked + .settings-toggle-slider::before {
+  transform: translate(20px, -50%);
+  background: var(--green);
+}
+.settings-foot-note {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  font-style: italic;
+  margin: var(--space-8) 0 0;
+}
+.settings-saved-note {
+  font-size: var(--fs-sm);
+  color: var(--green);
+  font-weight: 700;
+}
+
+/* ══════════════════════════════════════
    LICENSE BADGE + MODAL
 ══════════════════════════════════════ */
 

@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-003';         // build stamp — update each session
+const BUILD       = '20260520-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -529,6 +529,105 @@ function updateAutosaveIndicator() {
 
 function initAutosaveIndicator() {
   updateAutosaveIndicator();
+}
+
+// ── SETTINGS SCREEN (v3.55.4) ──
+// Full-page preferences screen, opened from the hamburger menu. Starts with
+// the Auto Mode section. All values persist to localStorage (per-machine).
+// These settings are STORED here now; the Auto-mode behavior that consumes
+// them (backup-Builder promotion, configurable streak limit, slow threshold)
+// is wired in the "Auto really means Auto" P1.3 work. Reading them early is
+// harmless — nothing consumes them until that lands.
+const AUTO_SETTINGS = {
+  backupBuilder:      { key: 'waxframe_auto_backup_builder',        def: ''   },
+  neverDisableBuilder:{ key: 'waxframe_auto_never_disable_builder', def: 'false' },
+  streakLimit:        { key: 'waxframe_auto_failure_streak_limit',  def: '2'  },
+  slowMult:           { key: 'waxframe_auto_slow_multiplier',       def: '3'  },
+  slowRounds:         { key: 'waxframe_auto_slow_rounds',           def: '2'  },
+};
+
+// Public getters other code (the P1.3 wiring) will read. Defensive parsing so
+// a corrupted localStorage value can't break a run.
+function getAutoBackupBuilder()      { return localStorage.getItem(AUTO_SETTINGS.backupBuilder.key) || ''; }
+function getAutoNeverDisableBuilder(){ return localStorage.getItem(AUTO_SETTINGS.neverDisableBuilder.key) === 'true'; }
+function getAutoStreakLimit()        { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.streakLimit.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
+function getAutoSlowMultiplier()     { const n = parseFloat(localStorage.getItem(AUTO_SETTINGS.slowMult.key));  return Number.isFinite(n) && n >= 2 ? n : 3; }
+function getAutoSlowRounds()         { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.slowRounds.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
+
+let _settingsReturnScreen = 'screen-welcome';
+
+function openSettings() {
+  const active = document.querySelector('.screen.active');
+  _settingsReturnScreen = (active && active.id && active.id !== 'screen-settings') ? active.id : 'screen-welcome';
+  goToScreen('screen-settings');
+}
+
+function closeSettings() {
+  goToScreen(_settingsReturnScreen || 'screen-welcome');
+}
+
+// Populate the Backup Builder dropdown from the live hive and sync every
+// control to its stored value. Called from goToScreen when entering the
+// Settings screen, so it always reflects the current hive + saved prefs.
+function renderSettings() {
+  // Backup Builder dropdown — list every configured AI except the current
+  // Builder (a backup that IS the builder is meaningless). Falls back to the
+  // full list if no builder is set yet.
+  const sel = document.getElementById('setAutoBackupBuilder');
+  if (sel) {
+    const saved = getAutoBackupBuilder();
+    const eligible = (Array.isArray(activeAIs) ? activeAIs : []).filter(a => a.id !== builder);
+    sel.innerHTML = '<option value="">None — pause and ask me</option>' +
+      eligible.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+    // Restore the saved choice only if that AI is still in the hive; otherwise
+    // fall back to None so we never point at a removed AI.
+    sel.value = eligible.some(a => a.id === saved) ? saved : '';
+    if (sel.value !== saved) localStorage.setItem(AUTO_SETTINGS.backupBuilder.key, sel.value);
+  }
+  const toggle = document.getElementById('setAutoNeverDisableBuilder');
+  if (toggle) toggle.checked = getAutoNeverDisableBuilder();
+  const streak = document.getElementById('setAutoStreakLimit');
+  if (streak) streak.value = getAutoStreakLimit();
+  const sMult = document.getElementById('setAutoSlowMult');
+  if (sMult) sMult.value = getAutoSlowMultiplier();
+  const sRounds = document.getElementById('setAutoSlowRounds');
+  if (sRounds) sRounds.value = getAutoSlowRounds();
+}
+
+// Save handlers — each fires on the control's change event, persists to
+// localStorage, and gives a light toast so the save is visible.
+function saveAutoBackupBuilder(val) {
+  localStorage.setItem(AUTO_SETTINGS.backupBuilder.key, val || '');
+  const name = (activeAIs.find(a => a.id === val) || {}).name;
+  toast(val ? `⚡ Backup Builder set to ${name}` : '⚡ Backup Builder: none (Auto will pause and ask)', 3000);
+}
+function saveAutoNeverDisableBuilder(checked) {
+  localStorage.setItem(AUTO_SETTINGS.neverDisableBuilder.key, checked ? 'true' : 'false');
+  toast(checked ? '⚡ Builder will never be auto-disabled' : '⚡ Builder can be auto-disabled if it fails', 3000);
+}
+function saveAutoStreakLimit(val) {
+  let n = parseInt(val, 10);
+  if (!Number.isFinite(n) || n < 1) n = 1;
+  if (n > 10) n = 10;
+  localStorage.setItem(AUTO_SETTINGS.streakLimit.key, String(n));
+  const el = document.getElementById('setAutoStreakLimit'); if (el) el.value = n;
+  toast(`⚡ Failure-streak limit: ${n}`, 2500);
+}
+function saveAutoSlowMult(val) {
+  let n = parseFloat(val);
+  if (!Number.isFinite(n) || n < 2) n = 2;
+  if (n > 10) n = 10;
+  localStorage.setItem(AUTO_SETTINGS.slowMult.key, String(n));
+  const el = document.getElementById('setAutoSlowMult'); if (el) el.value = n;
+  toast(`⚡ Slow threshold: ${n}× round average`, 2500);
+}
+function saveAutoSlowRounds(val) {
+  let n = parseInt(val, 10);
+  if (!Number.isFinite(n) || n < 1) n = 1;
+  if (n > 5) n = 5;
+  localStorage.setItem(AUTO_SETTINGS.slowRounds.key, String(n));
+  const el = document.getElementById('setAutoSlowRounds'); if (el) el.value = n;
+  toast(`⚡ Slow threshold: ${n} round${n === 1 ? '' : 's'} in a row`, 2500);
 }
 
 // ── AUDIO ──
@@ -1259,6 +1358,9 @@ function goToScreen(id) {
     // Navigating back to work screen mid-session — restore doc and UI state
     // isNewSession = false preserves the console and conflicts panel
     initWorkScreen();
+  }
+  if (id === 'screen-settings') {
+    renderSettings();
   }
   if (id === 'screen-document') {
     switchDocTab(docTab);
