@@ -6612,6 +6612,23 @@ kbd {
   border-color: rgba(220, 70, 70, 0.8);
   color: #ffaaaa;
 }
+/* v3.54.0 — optional checkbox row in wfConfirm (used by Diagnostic Bundle) */
+.wf-confirm-check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-8);
+  text-align: left;
+  margin-top: var(--space-16);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1.4;
+}
+.wf-confirm-check-row input[type="checkbox"] {
+  margin-top: 2px;
+  flex-shrink: 0;
+  cursor: pointer;
+}
 
 /* v3.32.18 — Length guard modal. Inherits .finish-modal sizing. The
    trajectory rows are a small key/value table-style block that gives the
