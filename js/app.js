@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-007';         // build stamp — update each session
+const BUILD       = '20260520-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1903,6 +1903,57 @@ window._autoCeilingTarget = null;    // halt-at round number
 window._autoSatisfiedHist = [];      // sliding window of "S/T" strings
 window._autoFailureStreak = 0;       // consecutive builder failures
 window._autoChainPending  = false;   // debounce — round just kicked off
+// P1.3 #9 (v3.56.1) — at-convergence length reroll state.
+window._autoLengthRerollCount  = 0;     // builder-only rerolls fired this convergence cycle
+window._autoLengthRerollActive = false; // true while a length-reroll cycle is in flight
+window._autoLengthDirective    = '';    // synthetic one-build Builder trim/expand directive
+
+// P1.3 #9 (v3.56.1) — Build the synthetic one-build Builder directive telling
+// the Builder to trim (over) or expand (under) the converged document back
+// into the length constraint. Injected into runBuilderOnly's prompt via
+// window._autoLengthDirective; never touches the user's Notes field.
+function _autoBuildLengthDirective(cstat) {
+  const sep = '─'.repeat(60);
+  if (cstat.status === 'over') {
+    const overBy = Math.max(0, cstat.actual - cstat.limitNum);
+    return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${overBy} ${cstat.unitName} OVER the limit of ${cstat.limitName}. Trim the document so it fits within the limit. Preserve all key content, structure, and meaning — remove redundancy and tighten prose, cutting only the least essential material. Do not introduce new ideas or sections. Return the complete trimmed document.`;
+  }
+  const underBy = Math.max(0, cstat.floorNum - cstat.actual);
+  return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${underBy} ${cstat.unitName} UNDER the floor of ${cstat.floorNum} ${cstat.unitName}. Expand the document so it reaches at least the floor. Add substantive, relevant content consistent with the document's purpose and existing material — do not pad with filler or repetition. Return the complete expanded document.`;
+}
+
+// P1.3 #9 (v3.56.1) — At-convergence length reroll (Auto only). Called from
+// both convergence sites and from runBuilderOnly's post-build re-check when the
+// hive has converged but the document is out of range. Fires one more
+// builder-only round with a trim/expand directive, or — once
+// getAutoRerollAttempts() is spent — halts. Always returns true (the Auto
+// branch took over the flow); callers must return immediately afterward.
+function _autoConvergenceLengthReroll(cstat) {
+  // Stop the in-flight round's UI before we reroll or halt.
+  const _runBtn = document.getElementById('runRoundBtn');
+  _runBtn?.classList.remove('running');
+  if (_runBtn) { const _l = _runBtn.querySelector('.shake-wide-label'); if (_l) _l.textContent = 'Smoke the Hive'; }
+  if (typeof stopRoundTimer === 'function') stopRoundTimer();
+  if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
+  if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+
+  const _verb = cstat.status === 'over' ? 'trim' : 'expand';
+  const _max  = getAutoRerollAttempts();
+  if (window._autoLengthRerollCount < _max) {
+    window._autoLengthRerollCount++;
+    window._autoLengthRerollActive = true;
+    window._autoLengthDirective    = _autoBuildLengthDirective(cstat);
+    consoleLog(`📏 Auto: converged at ${cstat.actual} ${cstat.unitName} — ${cstat.status} the ${cstat.status === 'over' ? 'limit' : 'floor'}. Sending back to the Builder to ${_verb} (attempt ${window._autoLengthRerollCount}/${_max})`, 'warn');
+    toast(`📏 Converged ${cstat.status === 'over' ? 'over' : 'under'} length — Builder ${_verb} ${window._autoLengthRerollCount}/${_max}`, 5000);
+    setStatus(`📏 Length ${_verb} — sending the document back to the Builder…`);
+    _autoFireChainedRound('length-reroll', 'length-reroll');
+  } else {
+    window._autoLengthRerollActive = false;
+    window._autoLengthDirective    = '';
+    _autoHalt('length-reroll-exhausted', `The Builder couldn't bring the document into range after ${_max} attempt${_max === 1 ? '' : 's'} (still ${cstat.status} the ${cstat.status === 'over' ? 'limit' : 'floor'}: ${cstat.actual} ${cstat.unitName}). Edit the document and re-run, or accept it as-is.`);
+  }
+  return true;
+}
 
 // v3.35.2 — saveAutoModePreference() and restoreAutoModePreference()
 // removed. Auto-mode is per-project state, not a user preference.
@@ -1922,6 +1973,9 @@ function toggleAutoMode() {
     window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
+    window._autoLengthRerollCount  = 0;
+    window._autoLengthRerollActive = false;
+    window._autoLengthDirective    = '';
     if (typeof consoleLog === 'function') {
       const left = Math.max(0, window._autoCeilingTarget - r);
       consoleLog(`🚀 Auto mode ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)`, 'info');
@@ -1947,6 +2001,9 @@ function toggleAutoMode() {
     window._autoCeilingTarget = null;
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
+    window._autoLengthRerollCount  = 0;
+    window._autoLengthRerollActive = false;
+    window._autoLengthDirective    = '';
     // v3.35.1 — Clear any deferred chain so it can't resurrect later.
     window._autoChainDeferred = null;
   }
@@ -2172,6 +2229,9 @@ function _autoFireChainedRound(label, kind) {
     window._autoChainDeferred = null;
     if (kind === 'apply-decisions') {
       if (typeof applyDecisions === 'function') applyDecisions();
+    } else if (kind === 'length-reroll') {
+      // P1.3 #9 (v3.56.1) — at-convergence length correction: builder-only.
+      if (typeof runBuilderOnly === 'function') runBuilderOnly();
     } else {
       if (typeof runRound === 'function') runRound();
     }
@@ -2393,6 +2453,9 @@ async function clearProject() {
   window._autoFailureStreak = 0;
   window._autoChainDeferred = null;
   window._autoChainPending  = false;
+  window._autoLengthRerollCount  = 0;
+  window._autoLengthRerollActive = false;
+  window._autoLengthDirective    = '';
 
   // v3.35.2 — Per-bee satisfaction + DOM state wipe. Without this, a
   // satisfied reviewer (e.g. Gemini's ★ + NO CHANGES NEEDED pill)
@@ -10489,6 +10552,12 @@ async function runBuilderOnly() {
     prompt += refBlock;
   }
   prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
+  // P1.3 #9 (v3.56.1) — inject the synthetic trim/expand directive for an
+  // at-convergence length reroll. Separate from the user's Notes; never
+  // written to the workNotes field, cleared once the reroll cycle resolves.
+  if (window._autoMode && window._autoLengthRerollActive && window._autoLengthDirective) {
+    prompt += `${window._autoLengthDirective}\n\n`;
+  }
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
   prompt += `${sep}\n⚠️ BUILDER: produce the complete updated document\n${sep}\n\n`;
   const builderKey = phase === 'draft' ? 'builder_draft' : 'builder_refine';
@@ -10766,11 +10835,38 @@ async function runBuilderOnly() {
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
-    // v3.35.0 — Auto Mode: builder-only success. No reviewers ran this
-    // round, so satisfied/total are zero and the stall window does not
-    // advance for this entry. Pass outcome 'builder-only' so the chain
-    // logic skips stall tracking but still ticks ceiling + chains.
-    _autoMaybeChainNextRound({ outcome: 'builder-only' });
+    // P1.3 #9 (v3.56.1) — length-reroll re-check. If this builder-only round
+    // was an at-convergence length reroll, re-evaluate against the constraint:
+    // in range -> done (converge + Auto OFF + Finish); still out & attempts
+    // left -> reroll again; attempts spent -> halt. Skips the normal chain.
+    if (window._autoMode && window._autoLengthRerollActive) {
+      const cstat2 = getLengthStatus(docText);
+      if (!cstat2 || cstat2.status === 'ok') {
+        window._autoLengthRerollActive = false;
+        window._autoLengthRerollCount  = 0;
+        window._autoLengthDirective    = '';
+        window._autoMode               = false;
+        window._autoCeilingTarget      = null;
+        window._autoSatisfiedHist      = [];
+        window._autoFailureStreak      = 0;
+        window._autoChainDeferred      = null;
+        updateAutoToggleUI();
+        const _sz = cstat2 ? `${cstat2.actual} ${cstat2.unitName}` : 'within range';
+        consoleLog(`📏 Length corrected after reroll — document is now within range (${_sz}). Converged; Auto OFF.`, 'success');
+        toast(`📏 Length corrected — document is within range. Done.`, 5000);
+        setStatus(`🏁 Converged — length corrected (${_sz})`);
+        if (typeof playRoundCompleteSound === 'function') { try { playRoundCompleteSound(); } catch (e) {} }
+        setTimeout(() => { if (typeof showFinishModal === 'function') showFinishModal(); }, 500);
+      } else {
+        _autoConvergenceLengthReroll(cstat2);
+      }
+    } else {
+      // v3.35.0 — Auto Mode: builder-only success. No reviewers ran this
+      // round, so satisfied/total are zero and the stall window does not
+      // advance for this entry. Pass outcome 'builder-only' so the chain
+      // logic skips stall tracking but still ticks ceiling + chains.
+      _autoMaybeChainNextRound({ outcome: 'builder-only' });
+    }
   } else {
     // v3.32.17 — Abandonment check (failed-round path). Same rationale
     // as the success path above — don't write phantom failed-round
@@ -10835,6 +10931,13 @@ async function runRound() {
   const btn = document.getElementById('runRoundBtn');
 
   if (btn?.classList.contains('running')) return;
+
+  // P1.3 #9 (v3.56.1) — a full round is never a length reroll; abandon any
+  // pending reroll state so a stale directive/counter can't leak in. (A reroll
+  // runs via runBuilderOnly, never here — so an in-flight cycle is preserved.)
+  window._autoLengthRerollCount  = 0;
+  window._autoLengthRerollActive = false;
+  window._autoLengthDirective    = '';
 
   // v3.49.0 — Defensive builder guard. If `builder` points at an AI
   // that's no longer active (disabled via session toggle, removed from
@@ -11076,6 +11179,11 @@ async function runRound() {
     if (!window._lengthGuardOverride) {
       const cstat = getLengthStatus(docText);
       if (cstat && cstat.status !== 'ok') {
+        // P1.3 #9 (v3.56.1) — Auto: don't prompt. Send the converged document
+        // back to the Builder to trim/expand (builder-only), up to
+        // getAutoRerollAttempts() times, then auto-halt. Interactive mode keeps
+        // the modal below untouched.
+        if (window._autoMode) { _autoConvergenceLengthReroll(cstat); return; }
         const choice = await lengthGuardPrompt({
           kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
           actual: cstat.actual,
@@ -11197,6 +11305,9 @@ async function runRound() {
     if (!window._lengthGuardOverride) {
       const cstat = getLengthStatus(docText);
       if (cstat && cstat.status !== 'ok') {
+        // P1.3 #9 (v3.56.1) — Auto: send back to the Builder to trim/expand
+        // (builder-only) instead of prompting. See unanimous path above.
+        if (window._autoMode) { _autoConvergenceLengthReroll(cstat); return; }
         const choice = await lengthGuardPrompt({
           kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
           actual: cstat.actual,
