@@ -9291,6 +9291,55 @@ kbd {
 }
 .nav-dev-section { display: none; }
 .nav-dev-section.active { display: block; }
+
+/* v3.55.5 — Pinned upgrade CTA footer (non-licensed users only).
+   Sits below the scrolling .nav-body as a flex sibling, so it stays
+   put at the bottom of the panel. Hidden via inline display:none set
+   by updateLicenseBadge() when a valid license is present. */
+.nav-panel-footer {
+  flex-shrink: 0;
+  padding: var(--space-12) var(--space-16) 0;
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--border2);
+}
+.nav-buy-cta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-14);
+  border-radius: var(--radius-md, 14px);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  text-decoration: none;
+  transition: all 0.14s;
+}
+.nav-buy-cta:hover {
+  background: var(--accent);
+  box-shadow: 0 0 14px rgba(245,166,35,0.45);
+}
+.nav-buy-cta-icon {
+  font-size: var(--fs-lg);
+  flex-shrink: 0;
+}
+.nav-buy-cta-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.nav-buy-cta-title {
+  font-family: var(--font-display);
+  font-size: var(--fs-base);
+  font-weight: 800;
+  color: var(--accent);
+}
+.nav-buy-cta-sub {
+  font-size: var(--fs-xs, 11px);
+  color: var(--text-dim);
+}
+.nav-buy-cta:hover .nav-buy-cta-title,
+.nav-buy-cta:hover .nav-buy-cta-sub {
+  color: #0a0c12;
+}
 .nav-item-exit-dev {
   color: var(--danger, #c0392b);
   opacity: 0.6;

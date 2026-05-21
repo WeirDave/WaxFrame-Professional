@@ -1,0 +1,2432 @@
+════════════════════════════════════════════════════════════
+WAXFRAME — MASTER BACKLOG (v40)
+════════════════════════════════════════════════════════════
+Last updated:        2026-05-21 (post v3.55.5 — Buy-a-License CTA relocated to pinned license-gated nav footer)
+Current version:     v3.55.5 Pro / build 20260520-005
+Maintained by:       R David Paine III
+Lives:               docs\WaxFrame_Backlog_Master_v35.txt
+
+This file is the single source of truth for code work, feature
+ideas, and bugs in WaxFrame. Companion to:
+
+  docs\WaxFrame_Playbook_Test_Master_vN.txt
+    — David's project to-do list (test runs to gather data)
+
+Two-document persistence system, per memory rule:
+  • This file = code work + ideas + bug-fix list (non-historical)
+                + Recently Shipped (history)
+  • Test Master = ALREADY MEASURED + PENDING TESTS + HISTORICAL
+                  RUNS (permanent)
+
+Marker key:
+  [ ]   open
+  [-]   in progress / partial
+  [x]   done (move to RECENTLY SHIPPED)
+  ★     high priority
+  ☐     low priority
+  ⚠     blocked / waiting on something else
+
+CHANGES IN v40 (from v39, 2026-05-20/21):
+  - SHIPPED v3.55.5 — Buy-a-License CTA relocation. Moved the
+    purchase link OUT of the Tools menu group (where it was
+    misfiled among utilities) into its own pinned footer at the
+    bottom of the nav panel (id navBuyFooter), OUTSIDE the
+    scrolling .nav-body so it's always visible. Gated on license
+    state: updateLicenseBadge() sets navBuyFooter.style.display =
+    isLicensed() ? 'none' : '' — shown to trial users, hidden once
+    a valid license is active, re-shown if removed. Same
+    isLicensed() check that drives the license badge, runs on load
+    + every license change, nav closed-until-opened so no flash.
+    COPY FIX: "Upgrade to WaxFrame Pro" -> "Buy a License" (no Pro
+    tier exists; trial and licensed are the same program, license
+    just unlocks unlimited rounds). Menu explainer updated to match
+    + describe new placement. License-modal "buy a key" link
+    unchanged. CSS .nav-panel-footer + .nav-buy-cta (token-based).
+    PROCESS NOTE: this build was interrupted mid-session (~12h gap)
+    after only the Tools-removal step landed; footer + gating + copy
+    completed on resume. Lesson reinforced: a partial edit left
+    un-shipped is a half-broken state — finish or revert, never park.
+
+CHANGES IN v39 (from v38, 2026-05-20):
+  - SHIPPED v3.55.4 — Settings page (the unblock for P1.3).
+    New full-page screen-settings (mirrors setup-screen
+    layout: fs-header / fs-body-single / fs-footer), opened
+    via "⚙ Settings" in the hamburger menu (Navigation
+    section, after Working Console). openSettings() remembers
+    the prior screen; closeSettings()/Back returns to it.
+    renderSettings() runs on goToScreen entry.
+
+    AUTO MODE SECTION — four controls, persisted to
+    localStorage, save-on-change, with public getters for the
+    P1.3 wiring to consume later:
+      • Backup Builder — <select> of activeAIs minus the
+        current builder (+ "None"). Self-heals to None if the
+        saved AI left the hive.
+        key waxframe_auto_backup_builder · getAutoBackupBuilder()
+      • Never disable the Builder — toggle.
+        key waxframe_auto_never_disable_builder ·
+        getAutoNeverDisableBuilder()
+      • Failure-streak limit — number, default 2, clamp 1–10.
+        key waxframe_auto_failure_streak_limit ·
+        getAutoStreakLimit()
+      • Slow-responder threshold — multiplier (default 3,
+        clamp 2–10) + consecutive rounds (default 2, clamp
+        1–5).
+        keys waxframe_auto_slow_multiplier /
+        waxframe_auto_slow_rounds · getAutoSlowMultiplier() /
+        getAutoSlowRounds()
+
+    SCOPE: this shipped the PAGE + CONTROLS + PERSISTENCE
+    only. The Auto-mode BEHAVIOR that reads these (backup-
+    Builder promotion #10, configurable streak limit #7,
+    tunable slow threshold #6) is the P1.3 wiring — not yet
+    done. Getters exist so that wiring is a clean read.
+
+    STILL REMAINING in the autosave/Settings epic:
+      • Wire P1.3 #5–#10 behavior to consume the getters
+        (this is the big one — see P1.3 below; needs the
+        loop-guard number for #9 still).
+      • Autosave frequency control in Settings (every round /
+        every N) — autosave currently saves every round.
+      • Consent modal after project setup (turn on autosave /
+        just make one backup / no thanks).
+      • First-run gate: enabling Auto the first time routes to
+        Settings→Auto (autoConfigured flag); no per-run popup.
+      • Pending from David: bless the #9 length-guard loop-
+        guard number ("try twice" proposed) + confirm both
+        over AND under handled (trim/expand).
+
+CHANGES IN v38 (from v37, 2026-05-20):
+  - SHIPPED v3.55.3 — Autosave pill + backup filename revert.
+    BACKUP FILENAME: reverted to the legacy format David's
+    existing files use — {Project}-{version}-WaxFrame-Backup-
+    {YYYYMMDD}-{HHmm}.json. Verified byte-for-byte against three
+    real backup filenames David pasted. Differences undone from
+    the v3.36.13 interim format: restored "WaxFrame-Backup"
+    literal, dropped -r{N} round number, version dots->dashes
+    (v3.0 -> v3-0), dropped the v3.53.0 -SENSITIVE suffix. NOTE:
+    transcript/deep-dive/document-export still use the interim
+    {name}-r{N}-{stamp}-{Type} shape, so the backup no longer
+    matches them — David aware, only asked for backups. Diagnostic
+    keeps -Diagnostic-Safe.
+    AUTOSAVE PILL: work-screen footer pill mirroring the Slow-AI
+    alerts pill (green on / amber off / localStorage
+    waxframe_autosave_enabled / default ON). KEY FINDING: autosave
+    already existed — saveSession() writes the full session to
+    IndexedDB every round unconditionally (that's how reload-
+    restore works). The pill GATES that existing write rather than
+    adding new saving. saveSession(opts) early-returns when
+    autosave is off UNLESS opts.force; Backup + Diagnostic pass
+    {force:true} so they always capture current state. Gate reads
+    localStorage directly (storage.js loads before app.js).
+    Default ON => inert on the normal path, zero regression unless
+    toggled. First piece of the autosave/Settings epic.
+
+  - P1.3 DESIGN DECISIONS — LOCKED THIS SESSION (2026-05-20).
+    Walked through the four open items with David:
+      #1 Auto-disable notification → TOAST + console line. APPROVED.
+      #2 Builder promotion when Builder dies → David REJECTED the
+         alphabetical/hive-order heuristic (hive IS alphabetical,
+         so no real signal). NEW DESIGN: user picks a "Backup
+         Builder" up front + a "Never disable the Builder" toggle.
+         REQUIRES the Settings panel (doesn't exist yet).
+      #3 Streak counter resets on clean round. APPROVED. The streak
+         LIMIT becomes a configurable auto-round option in Settings
+         (not hardcoded 2).
+      #4 Length-guard call-site classification — settled by reading
+         the code: L10461 + L11275 = mid-round (#8 auto-keep, no
+         modal); L10879 (unanimous) + L11000 (majority) = at-
+         convergence (#9). BEHAVIOR REVISED BY DAVID: at-convergence
+         over/under should NOT halt — instead TOAST+console ("converged
+         at X, over your Y limit — sending back to the Builder to
+         trim") then AUTO-RUN another round with the Builder
+         instructed to bring it into range. Over→trim, Under→expand.
+         LOOP GUARD (Claude proposed, David to bless): try twice,
+         then fall back to auto-halt so it can't infinite-loop
+         convergence→trim→convergence and burn credits. DAVID HAS
+         NOT YET given the final loop-guard number — defaulting to
+         "twice" pending confirmation.
+
+  - SETTINGS PAGE — now a hard prerequisite for finishing P1.3
+    (see new epic below). Decided: full-paged screen, opens from
+    the hamburger menu (the only menu), starts with the "Auto"
+    section. First-run gate: enabling Auto the first time routes
+    the user to Settings→Auto to set params (autoConfigured
+    localStorage flag); once configured, Auto just runs — NO
+    per-run confirm popup (Claude recommended against it; the flag
+    is the gate; toasts give in-context feedback when events
+    occur). Future Auto options must default sensibly and NOT
+    re-gate existing configured users.
+
+  - AUTOSAVE/SETTINGS EPIC — remaining pieces after the v3.55.3
+    pill: (a) Settings page itself (full screen, hamburger entry,
+    Auto section); (b) consent modal offered after project setup
+    (Turn on autosave / Just make one backup now / No thanks) —
+    one-time, covers the "contains your keys" heads-up; (c)
+    autosave frequency control in Settings (every round / every N);
+    (d) wire P1.3's configurable bits (backup Builder, never-disable
+    toggle, streak limit, slow threshold) into the Auto section.
+    AUTOSAVE STORAGE = IndexedDB (resume); manual Backup file
+    remains the portable/off-machine copy (also used for sending
+    Claude a session to troubleshoot, or re-running a project with
+    a different hive).
+
+CHANGES IN v37 (from v36, 2026-05-20):
+  - SHIPPED v3.55.2 — Modal id naming consistency
+    (info/explainer family). UX-004. Renamed 5 info-modal
+    element ids to the consistent info+concept scheme so the
+    id matches the title it opens:
+      goalInfoModal        -> infoGoalModal
+      infoUploadModal      -> infoStartingDocModal
+      infoDocModal         -> infoWorkingDocModal
+      infoWelcomeHowModal  -> infoHowItWorksModal
+      infoWelcomeMenuModal -> infoMenuModal
+    Reference audit first confirmed all info modals are
+    inline-onclick-only in index.html (app.js:0, otherJS:0,
+    css:0, otherHTML:0) so the rename was fully contained to
+    one file with zero wiring risk. Verified zero old-id refs
+    remain + each new id appears 3x (overlay div + opener +
+    close handler) + each modal's open/close trio intact.
+    The other 11 info modals already matched the scheme.
+    DECISION: action/flow modals (finish, license, custom-AI,
+    change-builder, import-server, etc.) were reviewed and
+    LEFT UNCHANGED — they're JS-wired (higher rename risk) AND
+    already read clearly by function. Renaming clear,
+    JS-wired names would be pure churn + regression risk for
+    no benefit. Documented so it's a deliberate call, not an
+    oversight.
+
+  - SHIPPED v3.55.1 — Setup UX polish (first build of
+    2026-05-20). Two presentation changes, no behavior
+    change. ALSO lands the v35 idea-captures (UX-001 /
+    UX-002) in the repo for the first time — they were
+    on David's hard drive only until this release.
+  - SHIPPED v3.55.1 — Setup UX polish (first build of
+    2026-05-20). Two presentation changes, no behavior
+    change. ALSO lands the v35 idea-captures (UX-001 /
+    UX-002) in the repo for the first time — they were
+    on David's hard drive only until this release.
+
+    UX-002 FIRST CUT SHIPPED (Worker Bees screen only):
+    Setup 1 "On cost" wall-of-text paragraph removed from
+    the intro panel; cost relocated into the infoBeesModal
+    (ⓘ) as a structured "What it costs" row after the API
+    keys row. Gemini billing-enabled per-token warning +
+    AI Studio usage link preserved. Setup screen now 3
+    scannable paragraphs + a pointer noting cost/keys/full
+    guide live behind the ⓘ. The three-tier pattern
+    (inline → ⓘ modal → user manual) realized for the
+    Worker Bees screen. REMAINING UX-002: the other four
+    setup screens (Builder, Project, Reference Material,
+    Starting Document) may have the same density issue —
+    setup-wide sweep still open.
+
+    MODAL WIDTH TOKEN SCALE (new, partial adoption):
+    Added --modal-w-sm/base/lg/xl/2xl (420/640/900/1200/
+    1320) to style.css :root, mirroring the --fs-* naming
+    convention. Sized against the 1366 floor (overlay pads
+    24px each side → ~1318 usable; width:100% constrains
+    on smaller screens). WIRED NOW: the 16 ⓘ info/explainer
+    modals (.goal-info-modal) widened 900→1200 (xl) for
+    wide-and-short reading per David's request; Project
+    Goal modal token-wired to lg (still 900, zero visual
+    change). This is an EXPERIMENT — David wanted to see
+    the 1200 width live; one-token tweak if it's not right.
+
+    NAMING NOTE: original proposed scale was sm/md/lg/xl/
+    full — David flagged it as less logical than it should
+    be. Corrected to mirror the existing --fs-* scale
+    (sm/base/lg/xl/2xl) rather than invent a parallel one
+    with a mismatched "full". Lesson: reuse the established
+    token-naming convention, don't fork it.
+
+[ ] UX-003 — Modal width uniformity sweep (full adoption
+    of the --modal-w-* scale)
+    NEW v36 (2026-05-20). The token scale shipped in
+    v3.55.1 but only the info family + Project Goal are
+    wired. 17 one-off modal widths still exist. This item
+    is the deliberate full migration.
+
+    PROPOSED MAPPING (each modal → nearest tier; values to
+    confirm during the pass):
+      sm  (420): wf-confirm (480→), license (440→), dev-pw
+                 (320→ maybe keep — gate is intentionally
+                 tiny), edit-hive (360→ maybe keep),
+                 auto-halt (480→), min-screen, mobile-overlay
+      base(640): round-error (520→), length-guard (540→),
+                 sheet-picker (640 ✓), finish (600→),
+                 troubleshooting-card (600→), ref-confirm
+                 (520→), discard-confirm (520→), deep-dive
+                 (600→)
+      lg  (900): custom-ai (760→), change-builder (760→),
+                 icon-picker (720→), console-error-detail
+                 (700→), goal-info-modal already xl now,
+                 finish-modal-goal (900 ✓ wired)
+      xl (1200): info/explainer family ✓ wired in v3.55.1
+      2xl(1320): test-keys (1400→), template-gallery
+                 (1280→), hist-modal (1000→), hist-doc-inner
+                 (1100→)
+
+    IMPORTANT: snapping mid-tier one-offs to shared values
+    is a REAL visual change (e.g. 520→640, 600→640). Some
+    intentionally-tiny modals (dev-pw 320, edit-hive 360)
+    may be deliberate exceptions worth keeping — flag each
+    before snapping. REQUIRES per-screen visual smoke-test
+    of every affected modal before push. Do NOT batch-grep-
+    replace blind — that's the CSS-sweep failure mode.
+
+    EFFORT: medium. ~15-20 modal class width declarations,
+    mostly one-line each, but the testing surface is the
+    cost (every modal needs an eyeball at the 1366 floor).
+    Pairs naturally with any future modal visual refresh.
+
+
+  - SHIPPED v3.55.0 — Review playbook completion. Fifth
+    release this session. Finishes the v3.50.1/v3.52.0
+    template transition (combined Multi-Platform split
+    into three focused templates that had shipped without
+    playbook pages).
+
+    THREE NEW PLAYBOOK PAGES in document-playbooks.html
+    (+ sidebar links) under Reviews & Recommendations:
+      • Trim to TripAdvisor (✈️) — 500–900w, refine-only.
+        Convergence: ESTIMATED (no standalone measured
+        run — only the retired combined template's
+        sub-section data exists, deliberately NOT quoted
+        per the convergence-data rule). Standalone
+        measurement now the top open test task (see
+        Playbook Test Master v27).
+      • Trim to Google Maps (📍) — 750–1,200 chars,
+        refine-only. Convergence: MEASURED — Manly Bikes
+        Google v1.0, 5 rds / ≈23 min / R4 Builder-Only /
+        155w / 1,003c / 5.37× trim.
+      • Rewrite as Yelp (💬) — 300–700w, refine-only.
+        Convergence: MEASURED — Manly Bikes Yelp v1.0,
+        8 rds / ≈21 min / R8 majority / 542w / 3,142c /
+        1.64× trim.
+
+    MULTI-PLATFORM ORPHAN RETIRED (closes Section 1 bug):
+      • Deleted #multi-platform-review playbook page +
+        sidebar link from document-playbooks.html.
+      • Updated waxframe-user-manual.html template table.
+      • Reconciled 2 app.js comments + 1 templates.js
+        header comment that named the old template.
+      • KEPT the templates.js RETIRED explainer comment
+        block (L899+) — documents the why + points to the
+        three replacements; useful, not a straggler.
+
+    CLAUDE PROXY LINK (closes Section 6.2.A follow-up):
+      • api-details.html worker URL
+        waxframe-claude-proxy.weirdave.workers.dev now a
+        clickable link to the live endpoint, with a note
+        that opening it directly returns an API error
+        (expects API requests). NO separate public source
+        repo exists — David confirmed it's just deployed
+        on Cloudflare — so the live endpoint is what's
+        linked. 6.2.A follow-up RESOLVED.
+
+    DOC HYGIENE: Playbook Test Master bumped v26→v27 —
+    stale "none have playbook pages yet" notes corrected;
+    standalone Trim to TripAdvisor logged as the next open
+    measurement task.
+
+    DESIGN-DATA INTEGRITY NOTE: per the convergence-data
+    rule and the v3.52.9/v3.52.11 lesson (don't propagate
+    estimated-as-measured), TripAdvisor's page is
+    explicitly honest that its number is NOT measured. Two
+    of three pages cite real runs; the third says so
+    plainly.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5–#10). FIVE releases this
+    session (v3.53.0 / .1 / .2 / v3.54.0 / v3.55.0).
+    Security audit fully cleared except long-term CSP
+    (6.2.D) + wider-XSS-sweep (6.2.F). P1.3 Phase 2 still
+    blocked on the four design decisions from v29.
+
+
+  - SHIPPED v3.54.0 — Diagnostic Bundle support-safe
+    export (Section 6.1.C). Fourth release this session.
+    Clears the last FEATURE item from the 2026-05-17
+    Codex security audit — only the long-term v3.6+ CSP
+    rollout remains.
+
+    DESIGN DECISIONS (David's calls, 2026-05-19):
+      • UX: two separate menu items, not one+checkbox.
+        Backup Session + Import Backup stay in Tools;
+        new "🩹 Diagnostic Bundle" added to the Advanced
+        section (below Prompt Editor, above Dev Tools).
+      • Redaction: per-export checkbox. Keys / license /
+        bearer tokens ALWAYS stripped. Document text + AI
+        responses kept by DEFAULT (support needs them to
+        debug); checkbox "Also redact document text and
+        AI responses" (default unchecked) strips them for
+        privacy-conscious users.
+      • Importability: EXPORT-ONLY. Diagnostic is not a
+        restore path. Its only job is leaving the user's
+        machine for support. Backup Session remains the
+        pause/resume tool.
+
+    IMPLEMENTATION:
+      • js/storage.js: diagnosticSession() +
+        _redactHiveKeys() (always-on credential strip:
+        blanks hive.keys map, deep-walks customAIs /
+        customAIConfigs for token-shaped fields via
+        _redactSecretsDeep regex) + _redactSessionContent()
+        (optional content strip, keeps round structure /
+        timing / outcomes / counts, redacts doc / responses
+        / reference material / directives).
+      • File carries _waxframe_diagnostic:true and NOT
+        _waxframe_backup:true. importSession() gains a
+        guard that rejects diagnostic files with a
+        friendly "export-only, use Backup" message before
+        the generic not-a-backup path.
+      • Filename: {baseName}-r{N}-{stamp}-Diagnostic-Safe.json
+      • wfConfirm extended: optional opts.checkbox =
+        {label, checked}. When passed, modal shows a
+        checkbox row and resolves {ok, checked} instead
+        of a bare boolean. Backward-compatible — existing
+        boolean callers unchanged. New wfConfirmCheckRow /
+        wfConfirmCheck / wfConfirmCheckLabel elements in
+        index.html (hidden via audited inline display:none);
+        .wf-confirm-check-row CSS rule added near the
+        existing wfConfirm modal styles (far from the 80ch
+        rule — verified untouched).
+
+    NOTE: style.css touched this release (first since
+    v3.52.10) — .wf-confirm-check-row added. Cache-bust
+    on style.css?v= bumped across all 6 HTML files.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5–#10). FOUR releases this
+    session (v3.53.0 / v3.53.1 / v3.53.2 / v3.54.0), all
+    security-audit follow-ups. Codex audit now effectively
+    closed except the long-term CSP rollout (6.2.D) and
+    the new wider-XSS-sweep follow-up (6.2.F). P1.3 still
+    parked at Phase 1 partial — Phase 2 behavioral work
+    still blocked on the four open design decisions
+    logged in v29.
+
+
+  - SHIPPED v3.53.2 — Security audit follow-up part 3:
+    resolveAiIcon XSS fix (Section 6.2.B). Third focused
+    micro-release this session — clears the last
+    meaningful XSS sink from the 2026-05-17 Codex
+    security audit. After this ship only the long-term
+    items remain (v3.54.0 Diagnostic Bundle, v3.6+ CSP).
+
+    APPROACH: four hardening changes on js/app.js
+    resolveAiIcon + supporting helpers.
+      1. Number() coercion on size.
+      2. escapeHtml() on ai.name and cssClass for every
+         attribute they land in (alt, class, data-*).
+      3. URL scheme validation on ai.icon — only
+         http(s)://, data:image/, and relative images/
+         paths pass; javascript:, vbscript:, file:, ftp:,
+         and protocol-relative URLs drop to letter avatar.
+      4. Inline onerror handler no longer interpolates
+         ANY user data. Now calls fixed-string
+         resolveAiIconFallback(this) — zero interpolation
+         — and that handler reads name/class/size from
+         escaped data-* attributes. The XSS-sink data
+         path is broken at every step.
+
+    makeAiAvatarHTML got same escapeHtml(cssClass) +
+    Number(size) treatment. makeAiAvatar (DOM-Element
+    version, already used createElement + textContent)
+    got Number(size) coercion as defense in depth.
+
+    Section 6.3 release order — v3.53.2 line marked
+    shipped. Next in queue: v3.54.0 (Diagnostic Bundle
+    export — Section 6.1.C, separate focused release).
+    v3.6+ (CSP rollout) remains long-term parked.
+
+    NEW BACKLOG ITEM 6.2.F (added below): wider XSS
+    sweep — other places in the codebase still
+    interpolate ai.name and ai.id raw into HTML
+    templates (Change Builder modal grid, possibly
+    others). Out of scope for Codex 6.2.B but earned
+    a follow-up sweep candidate slot for a future
+    release.
+
+    REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10). Three security
+    releases this session, P1.3 still parked at Phase 1
+    partial — Phase 2 main behavioral work still
+    blocked on the four open design decisions logged
+    in v29.
+
+
+  - SHIPPED v3.53.1 — Security audit follow-up part 2:
+    consoleHTML sanitize on restore (Section 6.1.D Option A,
+    David's preferred). Focused micro-release on top of
+    v3.53.0 same evening — closes the XSS vector that
+    existed on session restore from any backup file
+    (including v3.53.0 backups, since the format didn't
+    change). Two restore sites in js/storage.js (loadSession
+    main IDB path + localStorage fallback path) now run
+    stored consoleHTML through a new sanitizeConsoleHTML
+    helper before innerHTML assignment.
+
+    APPROACH (Option A per backlog v30 6.1.D):
+      1. DOMParser parses raw HTML into a DETACHED
+         HTMLDocument. <script>, <img onerror>, etc. do NOT
+         fire during detached-document parsing.
+      2. Walk the parsed tree and rebuild in the live
+         document via createElement + textContent matching
+         a strict per-tag schema mirroring consoleLog's
+         output.
+      3. Anything outside the schema dropped silently.
+
+    SCHEMA: Top-level requires <div class="console-entry
+    [console-{info|warn|error|success}]">. Children limited
+    to:
+      • <span> — class console-time or no class; text only
+      • <a> — class console-link; href must be http(s)://;
+        target=_blank, rel=noopener canonical-set; all other
+        attrs stripped including any onclick
+      • <button class="console-err-arrow"> — title length-
+        bounded; onclick must match strict regex
+        /^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$/
+        otherwise stripped (button renders inert)
+
+    Any other tag dropped. Closed-list trade-off favoring
+    security over feature drift — future consoleLog
+    additions must update the sanitizer or restored
+    sessions silently strip new content.
+
+    BACKWARD COMPATIBLE: no backup format change. All
+    existing backups restore through the sanitizer
+    unchanged — legitimate consoleHTML passes through
+    because the schema mirrors what consoleLog actually
+    produces. Pre-existing limitation preserved:
+    legitimate <a class="console-link"> elements lose
+    their click handler on restore (the handler was a
+    JS-side property, not a serialized attribute) and
+    rely on the href fallback. Already true before this
+    release.
+
+    Section 6.3 release order — v3.53.1 line marked
+    shipped. Next in queue is v3.53.2 (resolveAiIcon
+    safe DOM construction — Section 6.2.B).
+
+    REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10).
+
+
+  - SHIPPED v3.53.0 — Security audit follow-up part 1
+    (small wins). Four lowest-risk findings from the
+    2026-05-17 Codex security audit cleared in one
+    bundled release. Nothing changes app behavior — the
+    changes are warning modals, filename labeling, an
+    honest disclosure update, and one query-string →
+    header refactor. Larger findings stay queued for
+    v3.53.1 (consoleHTML sanitize), v3.53.2 (resolveAiIcon
+    safe DOM), v3.54.0 (Diagnostic Bundle), v3.6+ (CSP).
+
+    Section 6.1.A SHIPPED — backupSession() pre-export
+    wfConfirm + download filename now includes
+    "-SENSITIVE" suffix. Pattern:
+      {baseName}-r{N}-{stamp}-Backup-SENSITIVE.json
+    Modal copy is David's locked draft from backlog v29:
+      "Full backups let you restore this project exactly
+       where you left off. They may include your document
+       text, AI responses, API keys, license key, and
+       debug traces. Store them somewhere private and
+       only share them with people you trust."
+    Cancel exits cleanly with no file written and no
+    saveSession() flush wasted. The "Nothing to back up"
+    toast guard happens after the confirm — edge case
+    only.
+
+    Section 6.1.B SHIPPED — importSession() now async +
+    pre-import wfConfirm. Modal opens BEFORE the file
+    picker so users can cancel without dealing with the
+    OS file dialog. Modal copy:
+      "Only restore backups you created or trust. A
+       backup can replace your local project, AI setup,
+       API keys, and session state."
+    Function signature change (function → async function)
+    is safe — both call sites are HTML onclick handlers
+    in index.html (nav menu + nowhere else), no other
+    callers. The format guard (_waxframe_backup: true
+    magic flag) inside the reader stays unchanged; this
+    modal is the HUMAN gate that runs before any storage
+    writes.
+
+    Section 6.2.A SHIPPED — Claude proxy disclosure
+    rewrite on api-details.html. Three surfaces updated
+    for honesty about the
+    waxframe-claude-proxy.weirdave.workers.dev forwarder:
+      • Green wf-card title changed from "Your keys never
+        leave your device" to "Your keys live in your
+        browser"
+      • New paragraph: "**One exception — Claude.**"
+        explaining the worker exists because Anthropic's
+        API doesn't support browser CORS; worker doesn't
+        log or persist keys/prompts but sees them
+        in-flight while forwarding
+      • Open Source & Privacy modal: "No Server" entry
+        renamed "No Backend"; tip copy updated to point
+        to the API setup page for full disclosure
+    All other providers (OpenAI, Gemini, Grok, Perplexity,
+    DeepSeek) remain direct browser-to-provider — the
+    original "directly to each AI provider" claim was
+    accurate for them and stays.
+
+    DEFERRED FROM SHIPPED CHANGE: backlog v29 Section
+    6.2.A draft text mentioned "the worker code is
+    auditable at [LINK TO REPO if public]." This line
+    was OMITTED from the v3.53.0 ship since David's
+    Cloudflare Worker source-repo status is unconfirmed
+    (public vs private). Either:
+      (a) David confirms the worker source is in a
+          public repo → add a one-line link to the
+          disclosure paragraph
+      (b) David confirms it's not public → no further
+          action needed, the disclosure already names
+          the worker URL explicitly which is the key
+          honesty piece
+    Captured here so it's not lost.
+
+    Section 6.2.C SHIPPED — Gemini API keys moved from
+    query string to x-goog-api-key header at four sites:
+      js/api.js fetchModelsForProvider (~L337)
+      js/api.js fetchModelsForProviderLive (~L440)
+      js/app.js fetchModelsFromEndpoint Google branch
+        (~L4789)
+      js/app.js custom-AI add modal Google branch
+        (~L4845)
+    All four previously used ?key=${cfg._key}&pageSize=100
+    in the URL. Google's /v1beta/models endpoint accepts
+    the same x-goog-api-key header the generate endpoint
+    already uses (per API_CONFIGS.gemini.headersFn at
+    js/api.js L120). Query-string secrets leak into
+    browser history, server access logs, proxy logs,
+    screenshots, and diagnostic exports — header doesn't.
+
+    Section 6.3 release order — v3.53.0 line marked
+    shipped. Next in queue is v3.53.1 (consoleHTML
+    sanitize on restore — Section 6.1.D Option A,
+    David's preferred approach).
+
+    REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10).
+
+
+  - FIVE RELEASES SHIPPED this session, all clearing
+    items from Codex read-only audits (JS audit drove
+    v3.52.7-v3.52.8; CSS audit drove v3.52.10; the
+    restaurant-review playbook fix took two attempts —
+    v3.52.9 + corrective v3.52.11):
+
+  - SHIPPED v3.52.7 — Codex audit follow-up part 1:
+    dead-branch trim from the monolith→split refactor.
+    README badge bumped from stale 3.39.12 to v3.52.7.
+    User manual provider table caught up to runtime
+    defaults (Gemini gemini-2.5-flash; Grok grok-4-fast-
+    non-reasoning). MODEL_LABELS dictionary removed
+    from js/api.js — was demoted to "safety net" in
+    v3.26.4 but had no real consumers since, and the
+    one runtime reference at js/app.js L13535 was
+    broken-shaped (lookup by AI id against a dictionary
+    keyed by model ids, always returned undefined).
+    Fallback simplified to match the reviewer block at
+    L13547. Four dead helpers removed: loadScript,
+    saveProjectGoalFromModal, openAllBilling,
+    _clockInterval. Net ~75 lines of dead code trimmed
+    across app.js, api.js, api-links.js. MODEL_FALLBACKS
+    preserved as active safety net.
+
+  - SHIPPED v3.52.8 — Codex audit follow-up part 2:
+    seven native confirm() dialogs migrated to wfConfirm
+    in js/app.js (confirmRemoveLicense, confirmGoHome,
+    processFile, processRefFile, startSession ×2,
+    clearDocument). Three of the seven enclosing
+    functions were sync and are now async — verified
+    safe because every caller is an HTML onclick
+    handler. 133 target="_blank" links across 6 HTML
+    files now carry rel="noopener noreferrer" for
+    security (reverse-tabnabbing prevention) and
+    process isolation. Two JS window.open calls
+    (api-links.js + wf-debug.js) got the equivalent
+    noopener feature. Stray console.log standardized
+    to consoleLog. API keys-in-localStorage security
+    disclosure paragraph added to api-details.html.
+    ALSO: this was the first complete ZIP this
+    session — prior v3.52.4/5/6/7 ZIPs were missing
+    audio.js, scenes.js, and wf-debug.js (nothing
+    broke because GitHub Pages served them from prior
+    commits, but the ZIPs themselves weren't clean-
+    install-ready).
+
+  - SHIPPED v3.52.9 — restaurant-review playbook page
+    fix (initial attempt — superseded by v3.52.11).
+    document-playbooks.html L1801 replaced the
+    "2–4 rounds typical (estimated, not measured)"
+    text with measured T8 data. **Shipped with two
+    propagated errors** (see v3.52.11 below for the
+    correction trail). Backlog item that had been
+    sitting since v23 — closed at the second attempt.
+
+  - SHIPPED v3.52.10 — Codex CSS audit follow-up
+    surgical fix. style.css L4533-4536 had four
+    .bee-card.is-* selectors with no declaration block,
+    causing the CSS parser to fold them into the next
+    rule's selector chain. The rule .work-notes-panel
+    .work-panel-header { background: var(--surface2); }
+    was asking for an element nested inside four
+    bee-cards at different states simultaneously — never
+    matched. Four orphan selectors deleted; rule now
+    functional. Brace balance unchanged (2170/2170 —
+    purely subtractive). Also synced style.css build
+    header from 20260510-013 to 20260517-007. Six
+    other CSS audit findings deferred to a focused
+    style.css audit pass (backlog v30 candidate):
+    146 dead selectors, .ssc-warning, .custom-ai-form
+    wrapper, !important review, three duplicate clusters.
+
+  - SHIPPED v3.52.11 — restaurant-review playbook
+    page CORRECTIVE re-ship after the Pearl's Saltwater
+    backup was located. v3.52.9 had two factually wrong
+    claims that traced back to the original backlog
+    v23 Section 1 entry and got propagated forward
+    through every backlog version since (v23 → v29)
+    without anyone re-checking:
+      (1) "majority at Round 6" — actually R5 per the
+          backup's outcome:'majority_convergence' on R5
+      (2) "5-AI hive" — actually 6-AI hive (5 reviewers
+          + DeepSeek Builder; Mistral was the 7th
+          configured but inactive that session)
+    Plus the inherited claim "No project backup file
+    was captured at the time" — also wrong, the backup
+    existed from day one. With backup in hand, the
+    restaurant-review playbook page now has the full
+    hotel-style dp-real-example block: verbatim Setup 3
+    fields from LS_PROJECT, full 459-word v1.0 draft
+    text from history[0].doc, corrected round-by-round
+    detail (5 productive rounds R1/R3/R5 + 2 builder-
+    only R2/R4; majority engine at R5).
+
+  - LESSON LOGGED (for future Claude instances reading
+    this file): when a backlog text claim contradicts
+    the user's known workflow ("I always get backup
+    files"), check the workflow, don't propagate the
+    claim. The v3.52.9 wrong-claim chain started in
+    one chat session and rode through 6 backlog
+    versions because every subsequent edit treated the
+    text as canonical fact instead of questioning it.
+    Backups are the source of truth for measured-run
+    forensics; the backlog Section 1 prose was the
+    summary, not the record.
+
+  - NEW SECTION 6: SECURITY HARDENING. Separate Codex
+    read-only security audit ran 2026-05-17 (same day
+    as JS + CSS audits). Surfaced 8 findings:
+      • HIGH — backups are secret-bearing without
+        labeling/warnings
+      • HIGH — imported backups can restore arbitrary
+        state (LS_HIVE keys, custom endpoints,
+        consoleHTML)
+      • HIGH — Claude API keys route through David's
+        Cloudflare worker (mandated by Anthropic CORS
+        policy); api-details.html "keys never leave
+        your device" claim is technically inaccurate
+        for Claude specifically
+      • MEDIUM/HIGH — stored consoleHTML restored via
+        innerHTML; XSS vector if backup is malicious
+      • MEDIUM — resolveAiIcon interpolates ai.name,
+        ai.icon, cssClass into HTML strings with inline
+        onerror; custom AI names → XSS-adjacent
+      • MEDIUM — Gemini model-list calls use ?key= in
+        query string (generate calls already use header)
+      • MEDIUM — no Content Security Policy declared
+      • LOW — client-side license bypass (architectural,
+        not fix target)
+    David's locked-in approach: keep the full backup
+    USEFUL for customer self-restore (do NOT gut it);
+    add sensitivity labeling + warning modals + a
+    separate support-safe diagnostic export with key
+    redaction. Full plan in Section 6 above. Suggested
+    release order: v3.53.0 small wins, v3.53.1 console
+    HTML hardening, v3.53.2 resolveAiIcon XSS fix,
+    v3.54.0 diagnostic export, v3.6+ CSP. Not shipping
+    in v3.52.11.
+
+  - NEW BACKLOG-003 (Section 2): wfConfirm
+    accessibility for helper pages. The eighth confirm()
+    Codex flagged (js/license-helper.js:158, Remove
+    Key button on helper pages) was NOT migrated in
+    v3.52.8 because helper pages don't load js/app.js,
+    so wfConfirm isn't reachable. Three paths to fix:
+    shared module split, lightweight standalone modal
+    in license-helper.js, or leave as native. Locked
+    spec in Section 2.
+
+  - NEW SECTION 1 BUG ITEMS (surfaced during v3.52.9
+    fix work):
+      • document-playbooks.html L2087 — business-
+        review playbook still shows "2–4 rounds
+        typical (estimated, not measured)". Cannot
+        fix without a measured T10 run; T10 is blocked
+        on real service experience (HOME).
+      • document-playbooks.html L2180 — multi-platform
+        review playbook still shows estimate. This
+        template was RETIRED in v3.50.1 / v3.52.0.
+        ✅ RESOLVED v3.55.0 — David's call: delete
+        entirely. Orphaned page + sidebar link removed;
+        three replacement playbook pages added in the
+        same release.
+
+  - SECTION 2 ITEM: write playbook pages for the
+    three replacement platform templates (Trim to
+    TripAdvisor / Trim to Google Maps / Rewrite as
+    Yelp). ✅ DONE v3.55.0 (2026-05-19). All three
+    pages added to document-playbooks.html with sidebar
+    links. Google Maps + Yelp cite measured Manly Bikes
+    runs; TripAdvisor honestly marked estimated (no
+    standalone run yet — now the top open measurement
+    task per Playbook Test Master v27).
+
+  - REMOVED from Section 1: restaurant-review
+    "estimated, not measured" item — shipped in v3.52.9.
+
+  - REMOVED from "items shipped this session"
+    descriptions: MODEL_LABELS removal, dead helpers,
+    most confirm() migrations — all shipped in v3.52.7
+    or v3.52.8 and now in Recently Shipped.
+
+  - STILL DEFERRED (no change since v28): CSS audit
+    pass (.ssc-warning + .save-bar). Per project rule
+    style.css edits carry their own audit profile and
+    stay separately scoped. Section 3 entry preserved.
+
+  - REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5-#10).
+
+CHANGES IN v28 (from v27, 2026-05-17):
+  - SHIPPED v3.52.4 — DeepDive ring buffer captures now include
+    round and role fields. callAPI signature gains role param
+    (default 'unknown'); WF_DEBUG.captureRound payload prepends
+    round (read from module-level global at L317) and role as
+    first fields; three call sites pass 'builder'/'worker'/
+    'builder' from runBuilderOnly (L10145), runRound reviewer
+    phase (L10601), runRound builder phase (L10966). Backward-
+    compatible — old captures simply lack the new fields. Live-
+    confirmed same release in the Manly Bikes Yelp v1.0 run:
+    56 captures grouped cleanly by R1-R8 and worker/builder,
+    making round-by-round forensics trivial without parsing
+    transcripts for round boundaries.
+    
+  - SHIPPED v3.52.5 — Source Size Check redesigned to oversized-
+    only after first live test of Rewrite-as-Yelp surfaced a
+    UX gap. David pasted the v1.0 Manly Bikes converged document
+    (888 words / 5,389 chars) into Setup 5 expecting the
+    oversized card; nothing happened. The same source on
+    Trim-to-Google-Maps the day before had fired the card
+    correctly. Root cause: analyzeSourceSize checked sourceCount
+    > max * 1.5 — a 50% silent zone above max calibrated against
+    the Google Maps brutal-cut case (5,389 vs 1,200 = 4.5x).
+    Yelp's 700-word ceiling vs 888-word source is only 1.27x
+    over, sitting in the silent zone. Redesign per David's
+    principle "over is over" — collapse three branches to two:
+    source > max fires, everything else silent. Undersized
+    branch (source < min*0.7 "would need invention") removed
+    entirely: trim templates exist for oversized sources only;
+    future scratch templates with platform minimums encode
+    constraints in lengthLimit/lengthMin directly, not via this
+    helper. Straggler reconciliation: renderSourceSizeCheck dead
+    branching (icon/label/statusClass/actionHTML) collapsed to
+    constants.
+    
+  - SHIPPED v3.52.6 — Cumulative session bundle rolling up
+    everything staged during the May 17 live-test session.
+    Three workstreams in one release:
+    (1) Gemini paid-tier caveat sweep at 7 surfaces (welcome
+        screen, api-details Gemini setup card, api-details
+        Gemini reviewer tip, user manual cost section, what-are-
+        tokens new card, README Builder section, Change Builder
+        modal). Triggered by David burning $2 in a single
+        Gemini-as-Builder session expecting it to stay free —
+        paid-tier billing routes activated silently after a
+        credit card was added to Google AI Studio. Canonical
+        message: Gemini is free ONLY while AI Studio billing
+        is disabled; the Builder role amplifies cost because
+        it reads project setup + reference material + full
+        working document + every reviewer's suggestions every
+        round.
+    (2) New "💾 Save Backup" button in the Deep Dive Capture
+        Viewer next to the renamed "💾 Save DeepDive" button.
+        Calls existing backupSession() from storage.js — no new
+        logic needed, just a UX convenience so David can grab
+        DeepDive + Backup in two clicks from the floating Dev
+        Toolbar without leaving the viewer.
+    (3) Three small polish fixes: unit-aware upload banner
+        (shows words for word-mode templates), SSC card message
+        reworded to drop "significant cut" editorial phrasing
+        (overstated at small overages), dead ssc-actions ternary
+        collapsed. Plus Change Builder modal cost-mindfulness
+        note added to changeBuilderReason text.
+    
+  - NEW IDEA captured (Section 2): Change Builder modal —
+    two-stage pick (vendor → model). Current modal commits Builder
+    identity on single click and inherits whatever model was
+    previously set, which is typically the Reviewer-recommended
+    model from "Recommend Models for All" — not the Builder-
+    recommended one. Per-role recommendation cache infrastructure
+    already exists (waxframe_recommend_default-${provider}-builder
+    and getBuilderRecommendation helper at app.js L92); just not
+    being consumed by setBuilderFromModal at L871. Full spec in
+    Section 2. v3.53 candidate.
+    
+  - NEW IDEA captured (Section 3): style.css audit pass for
+    dead-class cleanup. v3.52.5's removal of the undersized
+    status orphaned .ssc-warning in style.css. Per project rule
+    "reconcile all straggler code," this should be cleaned —
+    but per project rule "CSS edits carry their own audit
+    profile," not bundled with feature work. Standalone CSS-
+    audit session item.
+    
+  - NEW WATCHLIST entry added (Section 5): Word-boundary
+    truncation in char-mode trim templates. Theoretical — LLMs
+    generate token-by-token with word-aligned tokens, so they
+    essentially never truncate mid-character. Not pre-engineering.
+    Trigger for action: if observed in any live Google Maps run.
+    
+  - REJECTED IDEAS (recorded so they don't re-surface):
+    (a) Template-name header on output document. David proposed
+        emitting a header line on output identifying the platform
+        ("Trim to TripAdvisor" as line 1) so customers can
+        distinguish which file is for which platform. Dropped:
+        implementation required either accepting that length-
+        guard would fire ~20 chars over the cap on tight Google
+        Maps runs, OR adding JS-side length-counting logic to
+        strip the header before measuring. David's call: "if
+        you think this is going to be a pain in the butt
+        because of those titles then just leave the stupid
+        thing off."
+    (b) Multiplier-based Source Size Check thresholds (1.5×, 1.2×).
+        Claude proposed multiplier thresholds twice when the
+        Yelp case missed. David rejected: "I don't understand
+        why you're doing math on overages... if my hard high
+        limit on Google is 800 characters and I paste a document
+        that's 1000 then it's fucking over." Final v3.52.5
+        design: source > max fires, no multiplier. Locked.
+    (c) In-app Gemini-cost warning UI Tiers 2 and 3 (Kai's
+        suggestion). Tier 2 = inline tooltip when Gemini is
+        selected as Builder; Tier 3 = pre-run token-cost
+        estimator. David's call: "I don't really like any of
+        the three LOL other than maybe the lowest effort."
+        Shipped Tier 1 (doc sweep) only. Tiers 2 and 3 are NOT
+        backlogged — considered and declined.
+    
+  - REMAINING OPEN P1: still just P1.3 (Auto really means Auto
+    behavioral group #5-#10).
+
+CHANGES IN v27 (from v26, 2026-05-16):
+  - SHIPPED v3.40.0 with three concerns bundled:
+    Two measurement-quality fixes surfaced from T4 Butter Chicken
+    run, plus a new deprecation watchdog feature surfaced from the
+    same review (David's saved Claude model had been deprecated
+    silently). Full forensic detail in Playbook Test Master v24
+    HISTORICAL RUNS, full implementation detail in CHANGELOG v3.40.0.
+
+  - Original bug-1 diagnosis was WRONG and is corrected here for
+    the record. Initial framing: "stopwatch bug in the Builder
+    code path." Actual root cause discovered during fix work:
+    elapsed was measured between `await fetch()` and
+    `await response.json()` — i.e. after HEADERS arrived but
+    BEFORE body was consumed. Not Builder-specific. DeepSeek's
+    server flushes headers immediately; other providers don't.
+    Same one-line-moved fix applies to all providers, not just
+    DeepSeek. Important pattern: forensic diagnoses based on
+    "which AI has the anomalous data" can mislead about WHERE
+    the bug lives — always check the shared code path first.
+
+  - New WATCHLIST entry added (Section 4): /v1/models pricing
+    across providers. The v3.40.0 deprecation watchdog runs
+    unthrottled on the assumption that /v1/models is free
+    everywhere. If that ever changes, watchdog needs a throttle.
+
+CHANGES IN v26 (from v25, 2026-05-12):
+  - v3.38.13 shipped — docs-only release: README rewrite +
+    backlog Recently Shipped cleanup + test master TEST
+    UNIVERSE restructure with T9/T12 reconciliation. No
+    code changes (CSS fix shipped in v3.38.12). See
+    CHANGELOG.
+  - Recently Shipped entries v3.36.23 → v3.38.0 trimmed
+    back to brief one-line marker format. They had drifted
+    into duplicate-CHANGELOG verbosity (15–44 lines each);
+    full record stays in CHANGELOG.md. Backlog is forward-
+    looking: P1 + ideas + bug-fix list, with Recently
+    Shipped as a pointer, not a record.
+  - Section 1 BUG-FIX LIST updated — restaurant-review
+    playbook page still shows "estimated, not measured"
+    despite T8 ran 2026-05-10. See Section 1.
+
+CHANGES IN v25 (from v24, 2026-05-11):
+  - v3.38.12 SHIPPED — .dp-rounds layout fix. The
+    document-playbooks.html Recipe / BP / Blog Post /
+    Exec Summary Rounds fields had collapsed into narrow
+    1-word vertical columns because .dp-rounds was
+    display: inline-flex (built for the single-line pill
+    pattern in v3.30.x) and the multi-paragraph playbooks
+    were stuffing <strong> subheaders + <br><br> blocks
+    into it. Per Flexbox spec each <strong>, <br>, and
+    text-run between them became its own flex item; with
+    flex-shrink: 1 + min-width: auto they each collapsed
+    to one-word width. Fixed by flipping .dp-rounds to
+    display: block and .dp-rounds-dot to inline-block
+    with vertical-align: middle. Short single-line
+    playbooks visually unchanged.
+  - Bug never made it into Section 1 BUG-FIX LIST —
+    discovered and shipped same session. CHANGELOG +
+    Recently Shipped capture the history.
+  - REMAINING OPEN P1: still just P1.3 (Auto really
+    means Auto behavioral group #5–#10).
+
+CHANGES IN v24 (from v23, 2026-05-11):
+  - v3.38.0 SHIPPED — Slow-AI alerts toggle (Phase 1 of
+    Settings architecture). New 🐢 footer pill alongside
+    Length Guard; default ON; click toggles. When OFF,
+    SLOW_RESPONDER troubleshooting card surfacing is gated
+    so the Auto-Mode chain gate doesn't block on slow AIs
+    during hands-off long runs (the DeepSeek-weekend pain
+    point). Detection + console log run unconditionally —
+    only the user-facing card is suppressed, so diagnostic
+    info stays available. User-level preference (global)
+    via localStorage waxframe_slow_responder_enabled,
+    distinct from Length Guard which is per-project. Amber
+    off-state (not red like Length Guard) because this is
+    a workflow preference, not a safety override.
+  - Phase 2 of Settings architecture (nav-menu Settings
+    surface bundling Length Guard + Slow Alerts + future
+    toggleable features) parked. Footer-pill UX is proven
+    and the v3.38.0 ship validates the pattern; Phase 2
+    waits until there are 3+ togglable features in hand
+    rather than designing the bundle around 2.
+  - REMAINING OPEN P1: still just P1.3 (Auto really means
+    Auto behavioral group #5-#10).
+
+CHANGES IN v23 (from v22, 2026-05-10):
+  - v3.37.2 SHIPPED — Auto-halted sound. Closes out the
+    second half of P1.6. Ascending major-triad arpeggio
+    (C5 → E5 → G5) — an "upper" cadence that reads as
+    "your turn, look at the modal" rather than "you failed."
+    Distinct from playAlertSound (ascending two-chirp
+    880→1320Hz = USER DECISION needs attention — both
+    ascend, but alert is two fast chirps in the 880Hz+
+    range; halt is three slower tones starting at C5 and
+    topping out at G5) and playRoundCompleteSound (bee
+    trill + ping = round done, positive). No new .wav
+    asset — pure Web Audio synthesis. Wired into _autoHalt
+    with reasonCode guard: fires for ceiling/stall/
+    failure-streak/decision-tie, SKIPPED on converged (the
+    unanimous-convergence path already plays its own
+    fanfare elsewhere — stacking the halt sound on top
+    would muddy that moment). Auditioned six candidates
+    via interactive widget in chat; David picked Option A
+    after hearing them in the context of the full WaxFrame
+    audio family.
+  - P1.5 (Storage-clean indicator pill) DROPPED — the
+    underlying orphan-key problem is structurally fixed by
+    v3.30.2's removeAI sweep. A passive indicator solves a
+    problem that no longer exists; sits green forever for
+    properly-maintained installs and adds visual noise. If
+    orphan-key problems surface in the wild later, revisit.
+  - P1.6 (Audible alerts) CLOSED. Half shipped in v3.36.33
+    (USER DECISION alert reusing playAlertSound, no new
+    assets needed). Second half (auto-halted sound) shipped
+    in v3.37.2 — also no .wav, pure synthesis. Removed
+    Kai-blocked status; no asset dependency remained.
+  - P1.1 audit removed from open items — completed 2026-05-10
+    (all three passes shipped, see Recently Shipped entries
+    for v3.36.13 / v3.36.14 / v3.36.15).
+  - REMAINING OPEN P1: only P1.3 (Auto really means Auto
+    behavioral group, items #5–#10). Multi-touchpoint
+    behavioral overhaul — checkpoint protocol applies.
+
+CHANGES IN v22 (from v21, 2026-05-10):
+  - v3.37.0 SHIPPED — Dual-path templates. Every template
+    in the gallery now declares which starting condition it
+    supports: "scratch" (user has no draft; hive creates one)
+    or "refine" (user has a draft; hive polishes it). 17 of
+    19 templates support both paths. Two single-path:
+    Quick Start (scratch only — the onboarding demo) and
+    Multi-Platform Review Rewrite (refine only — operates
+    on a source review).
+    Modal flow: open gallery → pick "Starting from scratch"
+    or "Refining an existing draft" → category grid filters
+    to templates supporting that path → click a template →
+    Project Goal fields populate from the per-path content,
+    and (scratch only, by default) a Reference Material card
+    is injected with a questionnaire scaffold. Refine paths
+    inject no RM card; instead the hint banner points the
+    user to paste their existing draft into Starting Document.
+    schema (templates.js):
+      Top-level path-agnostic identity fields:
+        id, name, icon, category, description, paths,
+        pathContent
+      pathContent[path] holds per-path fields:
+        goalDocType, goalAudience, goalOutcome, goalScope,
+        goalTone, goalNotes, refMaterial, hint, lengthMode,
+        lengthLimit, lengthMin, lengthUnit
+    Retired field: suggestedNotes. Content that previously
+    lived in suggestedNotes is now routed to Reference
+    Material as a card on apply (scratch path), tagged
+    source: 'template' + templateOriginId. Subsequent
+    applyTemplate calls sweep prior template-sourced cards
+    so the RM panel stays clean and idempotent (switching
+    templates cleans up after the previous one).
+    routing (applyTemplate):
+      Signature changed: applyTemplate(templateId, path).
+      Resolves with fallback (warn + default to first
+      supported path) if caller passes invalid path. Reads
+      all per-path content from tpl.pathContent[path].
+      RM sweep filters d.source !== 'template'; manually
+      added cards (source: 'paste' or 'file') are preserved.
+      Hint banner title now includes path suffix
+      ("starting from scratch" / "refining an existing
+      draft") so the user can see at a glance which path
+      was applied.
+
+CHANGES IN v21 (from v20, 2026-05-10):
+  - v3.36.36 shipped — Convergence section copy rewrite +
+    anchor jump-to fix. Three text blocks rewritten on the
+    document-playbooks "How to read the convergence numbers"
+    section (Unanimous + Majority + closing paragraph) in
+    David's voice — returns agency to the user as the final
+    arbiter, removes pejorative framing of holdouts ("nice-
+    to-haves the majority sees as fine-as-is"). Section H2 +
+    sidebar entry de-emojified. CSS fix: scroll-margin-top
+    116px added to .hp-section-title so sidebar links
+    targeting #cat-convergence and #cat-at-work land on the
+    section header instead of disappearing under the page
+    header. Both anchors fixed by one rule.
+  - v3.37.0 candidate (dual-path templates) STILL PENDING.
+    Schema design partially scoped in fresh session:
+    paths array per template (['scratch'], ['refine'], or
+    ['scratch','refine']), pathContent object keyed by path
+    name, refMaterial field per path (replaces suggestedNotes
+    for scratch — content routes to Reference Material as a
+    questionnaire card via addReferenceDoc()). RM cards
+    injected by templates get tagged source:'template' and
+    swept on subsequent template application. Quick Start
+    classified as ['scratch'] only (the from-scratch demo);
+    Multi-Platform Rewrite classified as ['refine'] only.
+    17 others are ['scratch','refine']. Build paused at
+    Phase A; resume in next fresh session.
+
+CHANGES IN v20 (from v19, 2026-05-10):
+  - v3.36.35 shipped — Playbook page Step labeling
+    everywhere ("Setup — Step N of 5" pattern, 38
+    replacements). New Step 4 (Reference Material)
+    section on all 3 review playbooks with copy-
+    pasteable detail checklist. Scratch-mode advice
+    rerouted from Notes to Reference Material — the
+    architecturally correct channel for persistent
+    factual scaffolds.
+  - NEW v3.37.0 CANDIDATE — dual-path templates.
+    Architectural feature: every template gets a path
+    selector ("Starting from scratch" vs "Refining
+    existing draft") at top of modal. Content routes
+    to different channels per path. Resume case tests
+    it: scratch → Ref Material checklist; refine →
+    existing resume → Starting Document. Captured
+    fully below; will be built in a fresh session.
+  - NEW SEPARATE AUDIT NEEDED — six other playbooks
+    (JD, Thank-You, Outreach, Blog Post, Presentation,
+    Résumé) likely have the same Notes-vs-Reference-
+    Material miscategorization v3.36.35 fixed for the
+    3 reviews. Not bundled into v3.36.35 to keep it
+    focused.
+
+CHANGES IN v19 (from v18, 2026-05-10):
+  - v3.36.34 shipped — convergence-numbers callout
+    moved out of the page header on document-playbooks
+    and rebuilt as a proper section between Running at
+    Work and Career & Hiring. Sidebar entry added under
+    "Read first" with anchor #cat-convergence. Audited
+    the other 4 v3.36.31 additions — all correctly
+    placed inside existing sections that already have
+    sidebar entries. Pattern lesson reinforced:
+    substantive content gets a section + nav entry;
+    augmentations to existing sections live inline.
+
+CHANGES IN v18 (from v17, 2026-05-10):
+  - v3.36.33 shipped — USER DECISION audible alert
+    wired. Reuses the existing playAlertSound (two-
+    chirp Web Audio synth used by the discard-unexported
+    confirm modal). No new .wav assets needed, no Kai
+    blocker for this part. Auto-halt sounds remain
+    blocked on Kai for branded .wav files.
+
+CHANGES IN v17 (from v16, 2026-05-10):
+  - v3.36.32 shipped — project clock parity fix.
+    runBuilderOnly was missing the projectClockStart()
+    call that runRound has. Result: Builder-Only rounds
+    didn't resume the project clock if it was paused,
+    so the transcript Session duration and backup
+    projClockSeconds under-reported by the Builder-Only
+    round duration. THIS WAS the root cause of the
+    engaged-time discrepancy on T4 Recipe (Publix). The
+    broader engaged-time-tracking feature idea (auto-
+    idle detection etc.) is now optional — the consistency
+    bug is fixed.
+
+CHANGES IN v16 (from v15, 2026-05-10):
+  - v3.36.31 shipped — three audit-driven teaching
+    callouts placed and shipped:
+    1. Project-setup specificity → User Manual Step 3 tail
+    2. Convergence-principle → User Manual Step 9 tail +
+       Playbook page intro
+    3. Model-diversity guidance → User Manual Step 1 tail +
+       infoBeesModal (ⓘ on bees screen)
+    All three placement-decision items REMOVED from
+    Section 2 — they shipped this release. Closes out the
+    audit-driven open work from Pass 2 (cross-surface
+    audit). Captured in Recently Shipped + CHANGELOG.
+
+CHANGES IN v15 (from v14, 2026-05-10):
+  - v3.36.30 shipped — .btn-accent base text color
+    changed from #0a0c12 (dark) to #ffffff (white) to
+    match .footer-btn-smoke's light-theme rule. Every
+    primary CTA in the app now has consistent resting
+    text color: white-on-amber. Tail-end of the v3.36.29
+    consistency pass. Same fix-the-class-not-the-
+    overrides pattern.
+
+CHANGES IN v14 (from v13, 2026-05-10):
+  - v3.36.29 shipped — global Smoke-style hover applied
+    to all .btn-accent buttons across the app, plus the
+    upstream flattening rule for .work-topbar .btn scoped
+    with :not(.btn-accent). v3.36.28's local override
+    block removed (redundant). Every primary CTA in the
+    UI now hovers with the same lit-to-clear-with-glow
+    visual language. Reuses existing class, no new
+    infrastructure. Pattern: when a class isn't doing
+    what it should, fix the class — don't build parallel
+    rules around it.
+
+CHANGES IN v13 (from v12, 2026-05-10):
+  - v3.36.28 shipped — Finish button always-lit
+    correction. v3.36.27's state-dependent approach was
+    wrong per spec; Finish is the user's exit/wrap-up
+    action and is always available, like Smoke-the-Hive
+    is always the next action. Reverted setFinishReady
+    infrastructure (helper + 5 callsites + CSS rule),
+    replaced with a static .btn-accent on the HTML and
+    theme-aware CSS overrides for light/auto themes.
+    No JS state machinery; just CSS specificity. Silent
+    multi-decision lock from v3.36.27 unchanged (that
+    part landed correctly).
+
+CHANGES IN v12 (from v11, 2026-05-10):
+  - v3.36.27 shipped — bundled UX clarity release. Two
+    bugs fixed:
+    1. Finish button visual hierarchy restored. Button is
+       now neutral by default and lights up amber when
+       convergence is reached. JS toggle on .is-ready
+       class; CSS uses #finishBtn specificity to beat the
+       work-topbar .btn theme overrides. Hooks: setStatus
+       Standing-by entry (restores from history if last
+       outcome was convergence), reviewer round start,
+       builder-only round start, unanimous convergence,
+       majority convergence.
+    2. Multi-USER-DECISION silent lock. lockConflictToNotes
+       no longer opens the Notes modal or steals focus —
+       the lock action just silently appends the "Lock
+       this line..." sentence to the Notes textarea. Toast
+       simplified to "🔒 Locked" (was misleading
+       "run Send to Builder to apply"). User mental model:
+       click lock → it's locked, no further interaction
+       needed. The picked option on the conflict card
+       remains in _decisionChoices and gets sent to
+       Builder when the green Apply Decisions button is
+       clicked, exactly as before.
+  - BOTH bug entries REMOVED from Section 1 (non-historical
+    per the bug-list rule).
+  - P1.4 (test master voice rewrite) deprioritized to "non-
+    item if we don't have stuff left to test" — keep the
+    polished voice while T8/T9/T10/T11 are still queued.
+
+CHANGES IN v11 (from v10, 2026-05-10):
+  - v3.36.25 shipped (post-v10): T2 Executive Summary +
+    T7 Blog Post v2.0 measured, both playbooks updated
+    with measured-data convergence sections.
+  - v3.36.26 shipped (post-v10): four Review templates
+    (restaurant, hotel, business, multi-platform) now
+    default to lengthMode "none" instead of pre-loading
+    a word count. Length is arbitrary based on platform —
+    hint text rewritten to lead with platform-specific
+    guidance (Google Maps chars, TripAdvisor long-form,
+    Yelp range, etc.)
+  - DOCS-IN-ZIP CONVENTION confirmed: backlog and test
+    master ship inside the release ZIP under docs/, never
+    delivered standalone. Standalone doc deliveries from
+    earlier today were redundant — going forward, only ZIP
+    + release notes (2 outputs per release) are delivered.
+
+CHANGES IN v10 (from v9, 2026-05-10):
+  - TWO NEW BUGS captured to Section 1 from the T2 Executive
+    Summary run:
+      • Multi-USER-DECISION + Lock-via-Notes ordering is unclear
+      • Finish button visual hierarchy is lost — looks identical
+        to Reference + Notes buttons in the work toolbar; user
+        muscle-memoried into clicking Manual instead and started
+        a new round when the doc was actually ready to finish
+  - Both surfaced from the Executive Summary run that took 7
+    rounds (above 3–5 estimate) — a 7-round run gives more
+    surface area for UX bugs to appear than a 2-round run.
+
+CHANGES IN v9 (from v8, 2026-05-10):
+  - NEW idea captured: Engaged-time tracking for runs (Section
+    2). Wall-clock time is misleading when the user steps away
+    mid-session (lunch break, dinner). The "47 minutes" the
+    Publix recipe run shows is wall-clock; actual engaged time
+    was much lower because David ate lunch in the middle.
+    Surfaces a measurement-quality issue for HISTORICAL RUNS
+    data — times currently logged are not comparable across
+    runs because they conflate engaged work and idle time.
+
+CHANGES IN v8 (from v7, 2026-05-10):
+  - P1.1 Functional Audit COMPLETE — all three passes shipped:
+      Pass 1 (function-level static analysis, 397 functions
+      classified, 3 dead identified)
+      Pass 2 (cross-surface consistency: templates ↔ playbooks
+      ↔ manual ↔ gospel docs reconciled)
+      Pass 3 (side-effect mapping: 96 pure functions, 6 multi-
+      effect orchestrators, all heuristic flags scanned)
+    Moved to RECENTLY SHIPPED.
+  - Three releases shipped 2026-05-10: v3.36.22 (LinkedIn About
+    template+playbook), v3.36.23 (audit-driven cleanup), v3.36.24
+    (recipe playbook 3rd data point). All in RECENTLY SHIPPED.
+  - NEW SECTION 1: Bug-fix list (non-historical) — currently
+    empty. This section gets things added as they're noticed
+    and removed as they're fixed. Per memory rule #28.
+  - Three audit-surfaced placement decisions added to "Other
+    open items": project-setup specificity callout home,
+    convergence-principle callout home, model-diversity
+    guidance home. These were findings from Pass 2 that don't
+    have a home in user-facing surfaces yet.
+  - WaxFrame Free parity list updated with v3.36.21–v3.36.24
+    items.
+
+═════════════════════════════════════════════════════════════
+0. PRIORITY 1 (do these next)
+═════════════════════════════════════════════════════════════
+
+[-] ★ P1.3  v3.36.0 — "Auto really means Auto" behavioral
+    group  (#5–#10 from session discussion 2026-05-09)
+
+    Real-world pain trail validating this work: 53-minute
+    Business Proposal session 2026-05-08 → 2026-05-09. 18
+    rounds. Two AIs manually disabled mid-session (DeepSeek
+    slow, Mistral 429). Claude credit-low fired on rounds
+    8/9/10 with no auto-recovery. Auto turned itself OFF
+    twice mid-session (12:05:14, 12:06:11) because errors
+    flipped the toggle when Auto should have soldiered on.
+
+    [ ] #5  Per-AI 5xx during Auto → auto-disable bee +
+            toast notification, suppress troubleshooting
+            card, continue round with surviving AIs
+    [ ] #6  Slow-responder during Auto → same auto-disable
+            pattern as #5. Threshold: more than 3x round
+            average for two consecutive rounds. Toast
+            tells the user which AI was disabled.
+    [ ] #7  Suppress showRoundErrorModal in Auto. Increment
+            _autoFailureStreak instead. At streak limit
+            (currently 2), trigger _autoHalt('failure-
+            streak') to surface the auto-halt modal. Reset
+            counter on any clean round so an early blip
+            doesn't halt 5 rounds later.
+    [ ] #8  lengthGuardPrompt mid-round in Auto returns
+            'keep' automatically + log delta to console.
+            No modal interruption.
+    [ ] #9  lengthGuardPrompt AT convergence in Auto →
+            trigger _autoHalt('length-at-convergence')
+            with copy explaining the convergence is a
+            length violation and asking the user to choose.
+    [ ] #10 Builder auto-disabled by #5/#6 → promote first
+            eligible reviewer alphabetically. If no
+            eligible AI remains, _autoHalt('no-builder-
+            available'). Open question whether alphabetical
+            is the right heuristic — alternative is
+            user-configurable preference order.
+
+    Phase 1 (the small, low-risk part):
+      [x] "Interactive" → "Auto OFF" / "Manual" label
+          rationalization across UI surfaces — SHIPPED
+          via v3.36.14 (Interactive→Manual cascade) and
+          v3.36.16 (three-pill codification + two-state
+          Manual/Auto label flip).
+      [ ] DELETE "Stop here" button in auto-halt modal —
+          STILL OPEN. Confusing relative to Resume + Switch.
+      [ ] DELETE autoHaltStop function in app.js — STILL
+          OPEN. Verify no straggler call sites before
+          removal.
+      [ ] Auto-halt modal copy sweep — STILL OPEN. Check
+          modal title and reason text against the new
+          Manual/Auto vocabulary.
+
+    DESIGN-DISCUSSION ITEMS still open from session:
+      • Phase 2 silent auto-disable: should be a TOAST not
+        just console line — user away in another tab needs
+        to see WHY half their hive vanished
+      • Builder alphabetical promotion in #10 — opinionated.
+        Alternatives: user-configurable preference order,
+        or prompt user
+      • #7 streak counter — confirm reset on successful
+        round (otherwise early blip halts later)
+      • Mid-round vs at-convergence length-guard call site
+        discrimination (#8 vs #9) — need to inspect each
+        of the 4 lengthGuardPrompt call sites to know which
+        is which before coding
+
+    PROTOCOL: this is a multi-touchpoint behavioral
+    overhaul. Per memory entry #6, commit current state
+    via GitHub Desktop as checkpoint BEFORE any code
+    changes. Do not start unless the working tree is clean.
+
+[ ] ☐ P1.4  Playbook test master — rewrite all pending
+    tests in David's voice  (DEPRIORITIZED v12 — non-item
+    while T8/T9/T10/T11 are still in the test queue; only
+    revisit if/when the queue empties)
+
+    PROBLEM: T2–T11 in WaxFrame_Playbook_Test_Master_vN.txt
+    are written in a polished, slightly verbose,
+    AI-comma-spliced style ("Reading on tablet between
+    meetings — needs to skim and still get the value prop
+    in 60 seconds"). The current text is fine but doesn't
+    sound like David, and he's noted the prompts can blow
+    up the runs with too much loaded into each setup field.
+
+    WHAT TO DO:
+      • Tone shift to David's voice — direct, peer-to-peer,
+        no marketing-style sentence construction
+      • Trim each test's setup fields. The current Target
+        Audience / Desired Outcome / Scope / Tone fields
+        are routinely 4–7 sentences. Aim for 1–3 short
+        sentences each that actually sound like notes
+        someone would write to themselves.
+      • Goal Notes field similarly — the current voice is
+        a polished editor's note. The real voice is
+        whatever's quickest to type while thinking
+        "what's the actual ask here."
+      • DO NOT touch the ALREADY MEASURED entries at the
+        top — those are historical reference data.
+      • DO NOT touch the Reference Material payloads
+        wholesale — those are technical content blobs
+        that may legitimately need the verbosity (e.g.
+        T6's identity-stack notes).
+      • DO touch: Project Name, Document Type, Target
+        Audience, Desired Outcome, Scope, Tone, Length
+        Limit/Unit, Goal Notes — all the Setup 3 fields
+        that get pasted into the live app.
+
+    APPROACH: Pull the file open, rewrite T2–T11 setup
+    sections, ship the updated file. Not a code change —
+    pure content rewrite. Probably 90 minutes of focused
+    editing. Defer to a fresh head.
+
+[ ] ★ P1.5  Storage-clean indicator pill — DROPPED v23
+    (2026-05-10). Underlying orphan-key problem
+    structurally fixed by v3.30.2's removeAI sweep — a
+    passive indicator solves a non-problem and sits green
+    forever for healthy installs. Re-open only if orphan
+    keys reappear in the wild.
+
+[x] ⚠ P1.6  Audible alerts — CLOSED v23 (2026-05-10).
+    Half 1 (USER DECISION alert) shipped v3.36.33 reusing
+    playAlertSound — no new asset needed. Half 2
+    (auto-halted cadence) shipped v3.37.2 — playAutoHaltSound,
+    ascending major-triad arpeggio (C5 → E5 → G5), pure
+    Web Audio synthesis, no .wav asset.
+    Kai-blocked status removed; no asset dependency remained.
+
+
+═════════════════════════════════════════════════════════════
+1. BUG-FIX LIST  (non-historical — items removed when fixed)
+═════════════════════════════════════════════════════════════
+
+This section is for bugs noticed during sessions that don't
+get fixed immediately because we're scope-disciplined on
+something else. Items here ARE NOT historical — once fixed,
+they're removed entirely (the fact they existed is captured
+in CHANGELOG.md and Recently Shipped, not here).
+
+When David surfaces a bug mid-conversation that doesn't get
+fixed that turn: append to this list same turn.
+
+[ ] business-review playbook page still shows
+    "2–4 rounds typical (estimated, not measured)"
+    --------------------------------------------------
+    SURFACED: 2026-05-17 during v3.52.9 fix work.
+    document-playbooks.html line 2087 inside the
+    business-review section. Wording matches the
+    restaurant-review bug pattern that v3.52.9
+    cleared, but business-review (T10) is still
+    open in TEST UNIVERSE — no measured run exists
+    yet. T10 is blocked on real service experience
+    (HOME) per playbook v26 TEST UNIVERSE.
+    Fix-when: after T10 has a measured run. Same
+    treatment as v3.52.9 — convergence block
+    replaced with measured data.
+
+[x] multi-platform-review playbook page — RESOLVED v3.55.0
+    --------------------------------------------------
+    SURFACED: 2026-05-17 during v3.52.9 fix work.
+    Orphaned playbook page (template retired v3.50.1 /
+    v3.52.0). David's call (2026-05-19): DELETE entirely.
+    Page + sidebar link removed from document-playbooks.html;
+    the three replacement playbook pages (Trim to
+    TripAdvisor / Trim to Google Maps / Rewrite as Yelp)
+    shipped in the same release, so the documentation now
+    points at live templates. See Recently Shipped.
+
+
+═════════════════════════════════════════════════════════════
+2. OTHER OPEN WORK
+═════════════════════════════════════════════════════════════
+
+[ ] UX-001 — Declutter the Setup 1 "On cost" paragraph;
+    relocate cost detail to api-details.html per-provider cards
+    NEW v35 (2026-05-19 — surfaced by David reviewing the live
+    v3.55.0 Setup 1 / Worker Bees screen).
+
+    PROBLEM
+    The "On cost:" paragraph is jammed into the Worker Bees
+    intro panel on Setup — Step 1 of 5. It's a dense wall of
+    pricing prose (Gemini free tier, paid-provider one-time
+    credits, ~$10 for a 3-AI hive, ~$30 for all six, billing-
+    enabled-Gemini warning, AI Studio usage link) crammed
+    above the AI cards. Crowded. Most users scanning the setup
+    screen don't need the full cost breakdown inline every
+    time.
+
+    DIRECTION (David's call, leaning settled)
+    Don't build a brand-new modal. Instead use the EXISTING
+    api-details.html page — which is currently underused /
+    buried and reached via the "API Key Guide" button right
+    there on Setup 1. That page already has a per-provider
+    card for each AI (ChatGPT, Claude, Gemini, Grok, DeepSeek,
+    Perplexity, etc.). Put the cost detail THERE, in each
+    provider's own card — provider-specific pricing, free-tier
+    notes, billing caveats, where to load credits — so the
+    cost info lives next to the key-setup info for that exact
+    provider.
+
+    Then Setup 1's intro panel keeps only a short pointer:
+    e.g. "Curious about cost? See the API Key Guide →"
+    (linking to api-details.html), replacing the long inline
+    paragraph. Decision still open whether to ALSO keep a
+    1-2 sentence cost teaser inline vs. pure pointer.
+
+    WHY THIS APPROACH
+      • Declutters Setup 1 (the actual complaint).
+      • Gives the buried api-details.html page a real reason
+        to exist / be visited.
+      • Co-locates cost with keys per-provider — the natural
+        place a user thinks about both at once.
+      • Avoids a new modal + its HTML/CSS/JS surface.
+
+    SCOPE
+      • api-details.html — add a cost block to each provider
+        card (content lift from the current Setup 1 paragraph,
+        split per-provider + expanded where useful). The
+        Gemini billing/paid-tier caveat already lives in
+        several places (v3.52.6 sweep) — reuse/consolidate,
+        don't duplicate.
+      • index.html — replace the long "On cost" paragraph in
+        the Worker Bees intro with the short pointer link.
+      • Keep the existing "Heads up: billing-enabled Gemini
+        can charge per token" warning reachable — it's a real
+        money-loss guardrail (David burned $2 once); make sure
+        it survives the move, ideally on the Gemini card.
+
+    EFFORT: medium. Mostly content relocation + one index.html
+    paragraph swap. No JS logic. Low risk. Could pair with a
+    future api-details.html polish pass.
+
+    NOTE: alternative considered + set aside — a dedicated
+    "Want to learn about cost? click here" modal. Rejected in
+    favor of the api-details.html per-card approach above
+    (less surface, better information architecture). Captured
+    so the path isn't re-litigated.
+
+[~] UX-002 — Setup-screen information density / "wall of text"
+    problem — move deep reference into linked docs, keep
+    inline copy scannable
+    FIRST CUT SHIPPED v3.55.1 (2026-05-20) — Worker Bees
+    screen only: cost paragraph moved into the ⓘ modal, 3
+    scannable inline paragraphs remain. REMAINING: same
+    treatment for the other four setup screens (Builder,
+    Project, Reference Material, Starting Document) — likely
+    the same density issue. Keeping this item OPEN for the
+    setup-wide sweep.
+    NEW v35 (2026-05-19 — David, reviewing the live v3.55.0
+    Setup 1 / Worker Bees screen). This is the UMBRELLA
+    principle; UX-001 (cost detail) is one concrete instance
+    of it.
+
+    THE PROBLEM (David's words, paraphrased)
+    "We have so much information — it's a lot to read. The
+    information (ⓘ) button is supposed to be quick and easy
+    and it's chock full of shit. We need to give all this
+    info, but it feels weird to make people read a book to
+    get it. Nobody's going to take the time to read a wall
+    of text."
+
+    The tension is real and legitimate: WaxFrame genuinely
+    HAS a lot of necessary setup information (what a Worker
+    Bee is, why 2 vs 3+ AIs, cost model, key setup, provider
+    differences, builder role, etc.). But cramming all of it
+    inline on Setup 1 — plus stuffing the ⓘ button with the
+    long-form version — defeats the "quick and easy" promise
+    of the ⓘ button and produces a wall of text most users
+    will skip entirely. Unread information is the same as no
+    information.
+
+    THE DIRECTION (David's leaning idea — exploratory, not
+    locked)
+    Link a DEDICATED "Worker Bees" subsection of the user
+    manual (waxframe-user-manual.html) that covers everything
+    setup-related in full. Then:
+      • The Setup 1 intro panel keeps only the essential,
+        scannable copy — what a Worker Bee is, the 2-vs-3+
+        line, and a clear "Full setup guide →" link to the
+        manual subsection.
+      • The ⓘ button points to (or scrolls to) that same
+        manual subsection rather than dumping the whole
+        explanation in a cramped tooltip/modal.
+      • Deep per-provider detail (cost, key steps, model
+        choice) lives in api-details.html per the UX-001
+        plan.
+
+    Net effect: three tiers of information depth —
+      1. Inline on the setup screen = the minimum to act.
+      2. ⓘ button / "Full guide" link = the complete
+         Worker Bees explainer, in the manual.
+      3. api-details.html per-provider cards = provider-
+         specific key + cost detail.
+    Each tier is one click from the last. Nobody is forced
+    to read the book to start, but the book is right there
+    for anyone who wants it.
+
+    OPEN DESIGN QUESTIONS (for when this is picked up)
+      • Does the ⓘ button OPEN the manual in a new tab,
+        scroll an in-page panel, or show a short modal that
+        itself links onward? (David's instinct: link to the
+        manual subsection, not another inline dump.)
+      • Which copy is "tier 1 essential" vs. "tier 2 full
+        guide"? Needs a content pass deciding the minimum
+        viable inline text per setup screen.
+      • Is this Worker-Bees-only, or does the same three-tier
+        treatment apply to the other setup screens (Builder,
+        Project, Reference Material, Starting Document)? They
+        likely have the same density issue. Could be a
+        setup-wide IA pass rather than a one-screen fix.
+      • Does the user manual already HAVE a Worker Bees
+        subsection to link, or does one need to be written /
+        carved out? (Audit waxframe-user-manual.html first.)
+
+    RELATIONSHIP TO UX-001
+    UX-001 (cost → api-details per-provider cards) is the
+    cost-specific slice of this same principle and can ship
+    independently or together. If both are done together,
+    the Setup 1 "On cost" paragraph collapses into the same
+    "Full setup guide →" / "API Key Guide →" pointers rather
+    than two separate inline blocks.
+
+    EFFORT: medium-to-large depending on scope. A Worker-Bees-
+    only version is medium (one manual subsection + trim Setup
+    1 + repoint the ⓘ button). A setup-wide IA pass across all
+    five setup screens is large. Mostly content + linking, low
+    code risk, but it touches index.html setup copy and the
+    manual — flag a visual smoke-test of every setup screen
+    after trimming, since the intro panels carry layout.
+
+
+
+    NEW v29 (2026-05-17 — deferred from v3.52.8 Codex audit
+    cleanup).
+
+    PROBLEM
+    The v3.52.8 release migrated 7 of 8 native confirm()
+    dialogs to wfConfirm. The eighth (js/license-helper.js
+    L158, Remove Key button on helper pages) wasn't migrated
+    because helper pages (waxframe-user-manual.html,
+    api-details.html, what-are-tokens.html, document-
+    playbooks.html, prompt-editor.html) don't load js/app.js
+    — so wfConfirm isn't reachable from those pages.
+
+    AFFECTED FLOWS
+    Only the Remove Key flow on helper pages currently. But
+    this gap means any future helper-page feature needing a
+    confirm dialog hits the same wall.
+
+    THREE PATHS (architectural decision pending)
+    Option A — Shared module split. Extract wfConfirm (plus
+        the supporting modal HTML/CSS or styling rules) into
+        a new shared module loaded by BOTH js/app.js and the
+        five helper pages. Architecturally correct; the
+        natural home for any cross-surface utility code.
+        Cost: requires deciding what ELSE should live in the
+        shared module. Could become its own refactor.
+    Option B — Lightweight standalone modal in license-helper.js.
+        Build a minimal Promise-based confirm equivalent
+        directly in license-helper.js with inline CSS. Self-
+        contained; doesn't force the shared-module decision.
+        Cost: code duplication; styling drift risk between
+        the main wfConfirm and the helper-page version.
+    Option C — Status quo. Leave native confirm on helper
+        pages. Only impacts the Remove Key flow. Cost: zero
+        engineering; ongoing visual inconsistency with the
+        main app's modal aesthetic.
+
+    DAVID'S CALL
+    Pending. No urgency — the Remove Key flow works fine
+    with native confirm, just doesn't match WaxFrame's
+    visual language on the helper pages where it appears.
+
+[ ] Playbook pages for the three replacement platform templates
+    NEW v29 (2026-05-17 — surfaced during playbook v26 work).
+
+    PROBLEM
+    The three single-platform review templates that
+    replaced the retired combined Multi-Platform Review
+    Rewrite shipped in v3.52.0 but never got corresponding
+    playbook pages in document-playbooks.html:
+      • Trim to TripAdvisor
+      • Trim to Google Maps
+      • Rewrite as Yelp
+    Users see them in the template gallery but find no
+    documentation when they click through to the playbook
+    page hub.
+
+    DATA AVAILABLE
+    Two of three already have measured runs from the May 17
+    Manly Bikes session (full forensic detail in playbook
+    v26 HISTORICAL RUNS):
+      • Trim to Google Maps — Manly Bikes Google v1.0,
+        5 rounds / 23 min, 155w / 1,003c (56% of range),
+        v3.52.3 Pro
+      • Rewrite as Yelp — Manly Bikes Yelp v1.0,
+        8 rounds / 21 min, 542w / 3,142c (60% of range),
+        v3.52.5 Pro
+    Trim to TripAdvisor — not yet measured standalone.
+    The combined-template Manly Bikes v2.0 run produced
+    a TripAdvisor sub-section (510w) but that's the
+    deprecated combined output, not the new standalone
+    template — different convergence behavior expected.
+
+    SCOPE
+    Three new <div class="dp-playbook"> sections in
+    document-playbooks.html under "Reviews & Recommendations",
+    each matching the structure of the existing restaurant-
+    review and hotel-review playbooks. Each should include
+    convergence data, when-to-use guidance, and (for the
+    two measured templates) a .dp-real-example block with
+    the Manly Bikes run values. Sidebar entries added under
+    Reviews & Recommendations category.
+
+    BLOCKED ON: nothing — could be done any time. Worth
+    timing with a TripAdvisor measurement run if possible
+    so all three pages launch with measured data.
+
+[ ] Change Builder modal — two-stage pick (vendor → model)
+    Current modal commits Builder identity on single click and
+    inherits whatever model was previously set for that vendor —
+    typically the REVIEWER-recommended model, not the Builder-
+    recommended one. Result: switching Builder to Gemini
+    silently sticks with the Reviewer-class model instead of
+    the Builder-class one the recommendation engine already
+    picked.
+
+    GOOD NEWS — INFRASTRUCTURE ALREADY EXISTS
+    recommendModelsForAll at app.js L3171 stores per-role
+    caches:
+      • waxframe_recommend_default-${provider}-reviewer
+      • waxframe_recommend_default-${provider}-builder
+    Plus the helper getBuilderRecommendation(aiId) at app.js
+    L92. The data is built; just not being consumed by
+    setBuilderFromModal.
+
+    DESIGN (locked with David 2026-05-17)
+    Two-stage modal flow:
+      1. Vendor grid (existing) selects rather than commits
+         on click
+      2. New model dropdown appears below grid — single
+         dropdown reused for whichever vendor was selected
+      3. Dropdown pre-selects the Builder-recommended model
+         from getBuilderRecommendation(id); falls back to
+         current model if no Builder rec exists
+      4. New Confirm button commits both vendor and chosen
+         model
+      5. Cancel preserves prior state (vendor unchanged,
+         model unchanged)
+
+    IMPLEMENTATION EDGES TO RESOLVE AT BUILD TIME
+      (a) Models source — waxframe_models_${id} localStorage
+          cache from prior "Recommend Models for All" /
+          "Refresh Models". If empty for a vendor:
+            (a-i)   show only current model as the lone
+                    dropdown option
+            (a-ii)  auto-trigger fetch with spinner when
+                    vendor is selected
+            (a-iii) inline "Refresh models for this vendor"
+                    link in dropdown area
+          David's preferred: (a-iii) — explicit user action,
+          no surprise async.
+      (b) Power-user double-click escape hatch — should
+          double-click on a vendor card commit immediately
+          with Builder-recommended model, bypassing dropdown?
+          Open question for build time.
+      (c) Dropdown state isolation — selection must not leak
+          into actual model setting until Confirm fires.
+          Cancel discards.
+
+    ESTIMATED EFFORT
+    ~80–150 lines: new modal HTML, dropdown population
+    logic, two-stage commit handler, styling within existing
+    modal aesthetic. v3.53 candidate — meaningful enough to
+    deserve its own focused release.
+
+[ ] Hive Profiles / saved AI configurations    → 3-phase
+    A profile is a saved snapshot of activeAIIds plus
+    optionally builder. Dropdown at top of Worker Bee
+    screen:
+       Profile: [Work Laptop ▾] · Save current as new… · Manage…
+    Server-aware: warn instead of silently failing on
+    round-start when a profile references AIs from an
+    unreachable server (work VPN dropped, home firewall,
+    air-gap). Auto-detect via Models endpoint ping.
+    UNREACHABLE-SERVER WARNING TEMPLATE:
+      "This profile uses 3 bees from Alfredo
+       (oui.ai.usgw1.aws.anduril.dev) — currently
+       unreachable. Switch profile?"
+    Export/import as JSON. API keys redacted on export
+    and re-prompted on import.
+    EXPORT FORMAT — TWO OPTIONS:
+      • Bundled inside Backup format v3 (existing pipe)
+      • Standalone .waxprofile files (purpose-built,
+        share single profile between machines without
+        full backup overhead)
+    Phase 1: trash cans → permanent checkboxes, mode
+    toggle removed.
+    Phase 2: saved Hive Profiles.
+    Phase 3: Sources view formalizing servers as first-
+    class entities.
+
+[ ] Sources / Servers view                     ⚠ blocked
+    Companion to Hive Profiles (Phase 3). Soft split:
+    Worker Bee screen stays the unified "what to use"
+    view. New Sources view handles server-level concerns:
+    add/edit/remove a server, endpoint pair, API key,
+    connectivity test, see which bees came from it.
+    Imported Groups becomes "Sources" — earns its keep
+    because it's no longer redundant with the bee list,
+    it's the parent of bees from that source.
+    Export/import maps cleanly: export a Source plus the
+    Profiles that reference it. Import a Source on a new
+    machine and the Profiles light up.
+    DESIGN NOTE: AIs without a Source are direct-API
+    customs — the Sources view doesn't need to account
+    for every AI, only the ones that came from a server.
+    BLOCKED ON: Hive Profiles Phase 1+2 shipping first.
+
+[ ] ☐ Engaged-time tracking for runs  (NEW v9 — DOWNGRADED v17:
+        the consistency bug was the Builder-Only project clock
+        parity issue, fixed in v3.36.32. The broader feature
+        below — auto-idle detection, manual pause UX — is now
+        optional enhancement, not a bug fix)
+    NEW from session 2026-05-10. Wall-clock session time is
+    misleading because it includes idle periods when the user
+    stepped away (lunch break, dinner, distracted by other
+    work). The Publix potato salad recipe run shows "47 min"
+    wall-clock; actual engaged time was a fraction of that.
+
+    PROBLEM IT CAUSES: HISTORICAL RUNS times aren't comparable
+    across runs. Two 4-round runs that both show "30 min" might
+    actually have very different engaged times. This degrades
+    the value of the time-component of measurement data.
+
+    DESIGN OPTIONS:
+      Option A (manual pause): add a Pause button next to the
+      Auto/Manual control. User clicks before stepping away,
+      clicks again on return. Simple, reliable, requires user
+      discipline. The existing Auto-pause-on-Notes-open guard
+      from v3.36.17 is a similar pattern — extend it.
+
+      Option B (auto-detect idle): track last user-interaction
+      timestamp (keystroke, click, scroll). If idle > N minutes
+      (configurable, e.g., 5 min default), pause the round
+      timer. Resume on next interaction. Smart but heuristic.
+
+      Option C (both): manual pause for known breaks, auto-
+      detect for forgotten ones. Best UX but most code.
+
+    WHAT IT TOUCHES:
+      • Round timer (currently wall-clock-based)
+      • Console log timestamps (also wall-clock — these are
+        good as-is for forensic purposes; engaged-time is a
+        separate metric)
+      • Transcript export "Session duration" line — should
+        report both wall-clock AND engaged time for clarity
+      • HISTORICAL RUNS rows in test master — going forward
+        should record both metrics
+      • Round badge / topbar elapsed display — show engaged
+        time, not wall-clock
+
+    NOT a blocker for current work — runs already in the wild
+    have wall-clock data, that's what we have, we move on.
+    Going forward, capturing engaged time would make the data
+    more meaningful.
+
+    PRIORITY: high but not P1 — affects measurement quality,
+    not blocking any release. Lift when there's a quiet
+    session with no other surgical work to do.
+
+[ ] Builder selection heuristic
+    Companion finding to project-setup specificity.
+    Empirical pattern: same hive, Cl37S as Builder
+    converged cleanly on multiple docs (Blog v1.0,
+    LinkedIn post), Gem25P as Builder failed to converge
+    on equivalent prose. Likely cause: Gem25P's Builder
+    output invites more reviewer dissent.
+
+    Worth documenting as a "Builder selection" guide
+    in the user manual once we have more data points
+    across doc types.
+
+    PARTIAL DATA from v3.36.x session: Brightwater BP
+    v3.0 with Gemini-as-Builder converged in 5 rounds /
+    ≈10 min (3-AI hive). 2-AI run on same scaffold took
+    11 rounds / ≈16 min due to tied USER DECISION at
+    Round 5. v3.36.24 Recipe run with DeepSeek-as-Builder
+    converged in 4 rounds with a 5-AI hive on Reference
+    Material approach.
+
+    NOT yet ready for placement — still gathering data
+    across doc types. Stays in backlog as "future doc
+    write-up" until enough data accumulates.
+
+[ ] Backlog file maintenance (this file)
+    Keep this file updated. Treat it as the
+    authoritative backlog. Punch lists in chat sessions
+    feed back into this file before the chat ends.
+    SESSION RULE: when Claude pulls items from memory or
+    backlog into a conversation, Claude cites the source
+    explicitly ("from your master backlog Section 0
+    PRIORITY 1") rather than treating them as shared
+    context. Master backlog file is the contract — if
+    something isn't in it, it's not real.
+
+
+═════════════════════════════════════════════════════════════
+3. CSS CLEANUP (parked work)
+═════════════════════════════════════════════════════════════
+
+[ ] style.css audit pass — dead-class cleanup (post-v3.52.5)
+    NEW v28 (2026-05-17).
+    
+    CONTEXT
+    v3.52.5 removed the undersized status from analyzeSourceSize
+    (Source Size Check redesigned to oversized-only). The CSS
+    class .ssc-warning that was used for the undersized variant
+    is now unreferenced in HTML and JS but remains in style.css.
+    Per the project rule "reconcile all straggler code when
+    removing functions or snippets," this should be cleaned —
+    but per the project rule "before any CSS edit that could
+    touch the work screen, audit diff for selectors on doc
+    column width or work-main grid; if in doubt, ask first,"
+    CSS edits carry their own audit profile and shouldn't be
+    batched with feature work.
+
+    SCOPE
+    Standalone focused style.css audit session. Look for:
+      • .ssc-warning (known dead — added v3.52.0, orphaned
+        v3.52.5)
+      • Other classes orphaned by previous removals
+      • Selectors that match nothing in current HTML/JS
+
+    HARD CONSTRAINT
+    DO NOT touch the working document column 80ch rule (load-
+    bearing, hard-won per project memory — described as a
+    "fire-the-AI-level mistake" if broken). Visual smoke-test
+    every screen after any deletion.
+
+[ ] Second !important cleanup pass
+    ~18 state-override instances parked from prior pass:
+      • .convergence-card
+      • .decision-opt-btn.selected.*
+      • .decision-card.bypassed
+      • .hist-resp-tab.active
+    Surface proactively during future CSS work — e.g.,
+    if touching any of those selectors for unrelated
+    reasons, take the !important pass at the same time
+    rather than ship-and-defer-again.
+
+
+═════════════════════════════════════════════════════════════
+4. WAXFRAME FREE EDITION
+═════════════════════════════════════════════════════════════
+
+[ ] Audit Pro changes deferred from Free
+    Some Pro releases deliberately don't land in Free
+    immediately (license-dependent code, Pro-only
+    features). Maintain a separate list of "applies to
+    Free" items per release so Free doesn't drift too
+    far from Pro on shared functionality.
+    LOCAL PATH: C:\Users\weird\Dropbox\Websites\WaxFrame-Free
+    LIVE: weirdave.github.io/WaxFrame-Free/
+
+    PARITY CANDIDATES from v3.52.x run (NEW v28+v29):
+      • v3.52.0 Three platform-specific review templates
+        (Trim to TripAdvisor, Trim to Google Maps, Rewrite
+        as Yelp) — replaces retired combined Multi-Platform
+        template
+      • v3.52.0+ Source Size Check helper (analyzeSourceSize
+        / renderSourceSizeCheck — bug-fixed v3.52.2,
+        positioned v3.52.3, redesigned v3.52.5)
+      • v3.52.5 Source Size Check oversized-only redesign
+      • v3.52.6 Gemini paid-tier caveats — applies to Free
+        too since Free users may also use Gemini via their
+        own API key (Free's paste-back flow doesn't change
+        the underlying provider billing situation, but the
+        caveat docs apply equally)
+      • v3.52.7 (NEW v29) MODEL_LABELS removal — applies if
+        Free has the same dead dictionary; verify before
+        porting. Dead-helper removal (loadScript,
+        saveProjectGoalFromModal, openAllBilling,
+        _clockInterval) — same check.
+      • v3.52.8 (NEW v29) confirm() → wfConfirm() migration
+        on 7 sites. Free may have a different subset of
+        these functions; check before porting. noopener
+        sweep on target="_blank" — universally applicable
+        regardless of Free vs Pro feature parity.
+      • v3.52.9 (NEW v29) restaurant-review playbook page
+        measured-data update — applies if Free has the
+        same playbook page (Free's document-playbooks
+        surface may or may not exist).
+
+    PARITY CANDIDATES from v3.35.x run:
+      • v3.35.4 Worker Bee card link always-visible (UX)
+      • v3.35.4 CREDIT_LOW troubleshooting card (UX)
+      • v3.35.4 Notes priority swap on drawer open (UX)
+      • v3.35.5 console error link click handler (bug fix)
+      • v3.35.6 sessionAIs carryover hotfix (bug fix —
+        critical for any Free user who toggles bees mid-
+        round)
+
+    PARITY CANDIDATES from v3.36.x run:
+      • v3.36.14 Interactive→Manual label cascade (UX)
+      • v3.36.14 Notes forensics — _notesAtBuilderCall
+        freeze pattern (forensic improvement)
+      • v3.36.14 length-guard logging + length templates
+        Trim/Expand/Match (UX, length discipline)
+      • v3.36.15 length-guard always-visible toggle (UX)
+      • v3.36.15 convergence skips auto-halt modal (UX)
+      • v3.36.15 round counter state machine (UX)
+      • v3.36.15 trajectory-bypass log (forensic)
+      • v3.36.16 three-pill color system (UX)
+      • v3.36.16 Auto label flip back to two-state (UX)
+      • v3.36.16 Auto button repositioning (UX)
+      • v3.36.17 Notes drawer sticky/one-shot split — IF
+        Free ships Notes at all (verify before porting)
+      • v3.36.17 Auto-pause-on-Notes-open guard (UX)
+      • v3.36.18 Notes + Reference button toggle (UX)
+      • v3.36.20 length-guard pill height parity (visual)
+      • v3.36.21 sessionAIs in transcript export (bug fix)
+
+    PARITY CANDIDATES from 2026-05-10 (v3.36.22–24):
+      • v3.36.22 LinkedIn About template + playbook
+      • v3.36.23 dead-feature chain cleanup (code hygiene)
+      • v3.36.23 sidebar gap closure for linkedin-post
+        and contractor-letter
+      • v3.36.23 RFP rename + 4 review templates and
+        playbooks (Reviews & Recommendations category)
+      • v3.36.23 user-manual measured-data block refresh
+      • v3.36.24 recipe playbook 3rd data point +
+        Reference Material methodology callout
+
+    BACKLOG GAP: v3.35.7 through v3.36.13 not enumerated
+    (session records weren't loaded). Backfill from
+    GitHub Desktop history when there's a quiet moment.
+
+    DEV-ONLY (Pro-only, do not port to Free):
+      • Dev Toolbar reorganizations (Pro-only feature)
+      • [wfSat] diagnostic instrumentation (now removed
+        anyway)
+
+
+═════════════════════════════════════════════════════════════
+5. WATCHLIST  (assumptions to monitor — fix-if-broken)
+═════════════════════════════════════════════════════════════
+
+External assumptions WaxFrame depends on. Not work items —
+things to check periodically (e.g. quarterly) and respond to
+if the assumption breaks.
+
+[ ] /v1/models endpoint pricing across providers
+    --------------------------------------------------
+    ADDED: 2026-05-16, v3.40.0 deprecation watchdog ship.
+    ASSUMPTION: every provider's /v1/models endpoint is
+    free (no token charges) and has rate limits high
+    enough that single-user activity can't approach them.
+    PROVIDERS COVERED: OpenAI, Anthropic, Gemini, xAI
+    (Grok), DeepSeek, Perplexity.
+    CONSEQUENCE IF BROKEN: the v3.40.0 deprecation
+    watchdog runs unthrottled across three triggers
+    (app load, tab-visible, round-start). If any
+    provider starts charging for /v1/models or imposes
+    a meaningful rate limit, the watchdog needs a
+    throttle reintroduced — per-provider, since one
+    provider's policy change doesn't justify slowing
+    everyone down.
+    LIKELY FIX SHAPE: localStorage-tracked cooldown
+    per provider, configurable interval. The detection
+    logic and toast UX don't change — only the trigger
+    gating.
+    HOW TO CHECK: skim provider pricing pages for
+    "Models API" or "/v1/models" line items. As of
+    v3.40.0 release, none of the six providers charge
+    for this call.
+
+[ ] Word-boundary truncation in char-mode trim templates
+    --------------------------------------------------
+    ADDED: 2026-05-17 (v28, post-Yelp template live
+    testing).
+    SCENARIO: The Trim to Google Maps template targets
+    750–1,200 chars. In theory, an AI could end its
+    output exactly at the char ceiling and truncate
+    mid-word.
+    CURRENT POSITION: Not pre-engineering. LLMs generate
+    token-by-token, and tokens align to word boundaries
+    (or at worst sub-word syllable boundaries) — they
+    essentially never truncate mid-character. AIs manage
+    the char target as a soft cliff at sentence/phrase
+    breaks, sometimes overshooting by a few chars rather
+    than cutting cleanly.
+    TRIGGER FOR ACTION: If mid-word truncation is
+    observed in any live Google Maps run, the one-line
+    fix is adding to the Google Maps template's
+    refMaterial directive: "End at sentence or word
+    boundaries — never mid-word."
+    HOW TO CHECK: review live Google Maps trim runs.
+    If output ever shows a word getting cut, take action.
+
+═════════════════════════════════════════════════════════════
+6. SECURITY HARDENING  (Codex security audit 2026-05-17)
+═════════════════════════════════════════════════════════════
+
+A separate read-only Codex security audit ran on the same day
+the JS + CSS audits ran. Surfaced eight findings across two
+trust-boundary categories: (a) WaxFrame's claim that "keys
+never leave your device" is technically true only for some
+providers, and (b) backup files are secret-bearing artifacts
+that are not currently labeled or treated as such.
+
+This entire section is a NEW v30 candidate cluster — not
+shipping in v3.52.11 (the playbook-fix release). v3.52.11
+ships first; the security pass becomes its own focused
+release (or series) afterward.
+
+
+───────────────────────────────────────────────────────────
+6.1  Backup security — David's locked-in proposed approach
+───────────────────────────────────────────────────────────
+
+DECISION (David, 2026-05-17): the full backup stays useful
+for customer self-restore. We do NOT gut it. Instead we add
+sensitivity labeling, an optional support-safe diagnostic
+export, and explicit warnings on both export and restore.
+
+[ ] 6.1.A — SHIPPED v3.53.0 (2026-05-19)
+    backupSession() pre-export wfConfirm + "-SENSITIVE"
+    filename suffix. See Recently Shipped + CHANGELOG.
+
+[ ] 6.1.B — SHIPPED v3.53.0 (2026-05-19)
+    importSession() async + pre-import wfConfirm trust
+    warning. See Recently Shipped + CHANGELOG.
+
+[ ] 6.1.C — SHIPPED v3.54.0 (2026-05-19)
+    Support-safe diagnostic export. New diagnosticSession()
+    in js/storage.js — keys/license/tokens always stripped,
+    document text + AI responses kept by default with a
+    per-export checkbox to redact them. Export-only
+    (_waxframe_diagnostic flag; importSession rejects with
+    friendly message). New Advanced-section nav item.
+    wfConfirm extended for optional checkbox. See Recently
+    Shipped + CHANGELOG.
+
+[ ] 6.1.D — SHIPPED v3.53.1 (2026-05-19)
+    consoleHTML sanitize on restore — Option A (David's
+    preferred). sanitizeConsoleHTML helper added to
+    js/storage.js; both loadSession restore sites (main
+    IDB + localStorage fallback) now run stored
+    consoleHTML through it before innerHTML assignment.
+    See Recently Shipped + CHANGELOG. Option B (migrate
+    to structured entries) remains a future possibility
+    if structured entries earn their keep beyond
+    security — not currently scheduled.
+
+
+───────────────────────────────────────────────────────────
+6.2  Other audit findings — triaged
+───────────────────────────────────────────────────────────
+
+[ ] 6.2.A — SHIPPED v3.53.0 (2026-05-19)
+    Claude proxy disclosure rewrite on api-details.html
+    (green card + Open Source modal). One follow-up
+    item: David's call on whether the Cloudflare Worker
+    source repo is public — if so, add a one-line link
+    to the disclosure paragraph. See v30 CHANGES block.
+
+[ ] 6.2.B — SHIPPED v3.53.2 (2026-05-19)
+    resolveAiIcon XSS fix. Codex audit finding #5
+    cleared. escapeHtml + URL scheme validation +
+    inline onerror no longer interpolates user data
+    (calls fixed-string resolveAiIconFallback(this)
+    instead, which reads name/class/size from escaped
+    data-* attributes). makeAiAvatar + makeAiAvatarHTML
+    got matching defense-in-depth coercion. See
+    Recently Shipped + CHANGELOG.
+
+[ ] 6.2.C — SHIPPED v3.53.0 (2026-05-19)
+    Gemini API keys moved from query string to
+    x-goog-api-key header at four model-list call sites
+    (js/api.js × 2, js/app.js × 2). See Recently Shipped
+    + CHANGELOG.
+
+[ ] 6.2.D  Content Security Policy — long-term hardening
+    Codex finding #7: no CSP declared. The app uses inline
+    onclick handlers starting from the first screen, which
+    would make a strict CSP harder to roll out but
+    correspondingly more valuable.
+
+    WHY VALUABLE: with API keys in localStorage, a CSP that
+    blocks inline scripts and restricts script sources is
+    a meaningful blast-radius reducer if any XSS does land.
+
+    WHY HARD: rolling out a strict CSP requires migrating
+    every inline onclick="…" handler to addEventListener
+    bindings. Easily 200+ handler sites across index.html
+    and the helper pages.
+
+    APPROACH (when prioritized): incremental migration.
+    Pick one screen, migrate its onclicks to JS-side
+    delegation, ship. Repeat. Once all onclicks are gone,
+    add the CSP meta tag and verify nothing breaks.
+
+    EFFORT: large. v3.6+ candidate, not v3.52.x.
+
+[—] 6.2.E  Client-side license enforcement — not actionable
+    Codex finding #8: isLicensed() trusts a localStorage
+    flag and the dev password hash is shipped client-side.
+
+    NOT A FIX TARGET: this is the architectural reality of
+    being a static-site app with no backend. Server-side
+    license validation would require a backend, which would
+    change the entire deployment model. License enforcement
+    is a business control and a courtesy gate, not a
+    security boundary. The Gumroad license-verify endpoint
+    we DO call (api.gumroad.com/v2/licenses/verify) is the
+    real validation point; clients that bypass it locally
+    are bypassing the courtesy gate, not a real authorization
+    boundary.
+
+    KEEP IN MIND, NOT ACTIONABLE.
+
+[ ] 6.2.F  Wider XSS sweep — other unsafe interpolations
+    NEW IN v32 (2026-05-19). v3.53.2 closed the
+    resolveAiIcon chain but the wider codebase still has
+    other places where ai.name and ai.id get interpolated
+    raw into HTML templates without escaping.
+
+    KNOWN SITES (audit needed for completeness):
+      • js/app.js Change Builder modal grid (~L767-773):
+        title="${esc(ai.name)}" is escaped, but
+        onclick="setBuilderFromModal('${ai.id}')" and the
+        bare ${ai.name} in <span class="builder-pick-name">
+        are NOT.
+      • Likely others in the changeBuilderReason flow,
+        hive setup, and ai-setup screens.
+
+    THREAT: same shape as 6.2.B — a malicious imported
+    AI config with a crafted ai.id (containing ') or
+    ai.name (containing < or ") could escape attribute
+    or JS-literal context and execute arbitrary code.
+    Lower realistic likelihood than 6.2.B was — the
+    icon path was rendered everywhere, these others
+    are rendered in narrower flows — but the same
+    underlying threat model.
+
+    APPROACH: full-file grep for ${ai.name} and
+    ${ai.id} in template strings; for each site decide
+    between esc() (text context), escapeHtml()
+    (attribute context), or escaping plus JS-safe
+    encoding (inline JS in onclick handlers — best
+    eliminated entirely via data-* + addEventListener
+    or fixed-string onclick handler that reads
+    dataset, matching the v3.53.2 resolveAiIconFallback
+    pattern).
+
+    Worth doing in conjunction with the v3.6+ CSP
+    rollout — eliminating inline onclicks is one of
+    the CSP prereqs, and this sweep is the right
+    moment to do both at once for the touched sites.
+
+    EFFORT: medium. Probably 10-20 sites, ~100-200
+    lines total once the audit pass is complete.
+
+
+───────────────────────────────────────────────────────────
+6.3  Suggested release order
+───────────────────────────────────────────────────────────
+
+If we ship all this incrementally rather than as one big
+release, the natural sequence is:
+
+  v3.53.0  SHIPPED 2026-05-19 — small wins bundle
+           [x] 6.1.A  backup filename + warning modal
+           [x] 6.1.B  restore warning modal
+           [x] 6.2.A  api-details Claude proxy disclosure
+           [x] 6.2.C  Gemini API key → header
+
+  v3.53.1  SHIPPED 2026-05-19 — consoleHTML hardening
+           [x] 6.1.D  Option A — sanitize on restore
+
+  v3.53.2  SHIPPED 2026-05-19 — XSS fix
+           [x] 6.2.B  resolveAiIcon safe DOM construction
+
+  v3.54.0  SHIPPED 2026-05-19 — Diagnostic Bundle
+           [x] 6.1.C  support-safe diagnostic export
+
+  v3.6+    (CSP rollout — long-term, multi-release)
+           6.2.D
+
+This is a SUGGESTED order — David's call on actual sequencing.
+
+
+═════════════════════════════════════════════════════════════
+RECENTLY SHIPPED (most-recent first)
+═════════════════════════════════════════════════════════════
+
+v3.55.0   2026-05-19  Review playbook completion — three platform pages + multi-platform retirement + Claude proxy link. Fifth release this session. Finishes the v3.50.1/v3.52.0 template transition. THREE NEW PLAYBOOK PAGES in document-playbooks.html (+ sidebar links) under Reviews & Recommendations: Trim to TripAdvisor (✈️, 500–900w, refine-only), Trim to Google Maps (📍, 750–1,200c, refine-only), Rewrite as Yelp (💬, 300–700w, refine-only). Each documents pre-filled Setup fields, Reference-Material strategy, Setup 5 paste flow, what each platform keeps, Best AIs, and convergence. CONVERGENCE DATA INTEGRITY: Google Maps cites measured Manly Bikes Google v1.0 (5 rds / ≈23 min / R4 Builder-Only / 155w / 1,003c / 5.37× trim); Yelp cites measured Manly Bikes Yelp v1.0 (8 rds / ≈21 min / R8 majority / 542w / 3,142c / 1.64× trim); TripAdvisor honestly marked "estimated, not yet measured" — the only TripAdvisor data on file came from the retired combined template's sub-section, deliberately NOT quoted as standalone (per the convergence-data rule + v3.52.9/11 lesson about not propagating estimated-as-measured). MULTI-PLATFORM ORPHAN RETIRED (closes two Section 1 bug items): deleted #multi-platform-review playbook page + sidebar link from document-playbooks.html; updated waxframe-user-manual.html template table; reconciled 2 app.js comments + 1 templates.js header comment naming the old template; KEPT the templates.js RETIRED explainer block (documents the why). CLAUDE PROXY LINK (closes 6.2.A follow-up): api-details.html worker URL now clickable to the live endpoint with a note that direct browser visits return an API error; no separate public source repo (David confirmed it's just deployed on Cloudflare), so the live endpoint is what's linked. DOC HYGIENE: Playbook Test Master bumped v26→v27, stale "no playbook pages yet" notes corrected, standalone Trim to TripAdvisor logged as next open measurement task. div balance on document-playbooks.html even (808/808, was 759/759 — increase is 3 pages replacing 1); no inline-CSS violations (caught + fixed an opacity inline style mid-edit, swapped to semantic <em>). FIVE releases this session: v3.53.0 / v3.53.1 / v3.53.2 / v3.54.0 / v3.55.0.
+
+v3.54.0   2026-05-19  Diagnostic Bundle — support-safe export mode (Section 6.1.C). Fourth release this session. New export mode alongside Backup Session: where Backup is for the user (full-fidelity pause/resume, keys included, importable), the Diagnostic Bundle is for support — user hits a bug, exports this, sends it in. Export-only by design. ALWAYS STRIPPED: API keys, license key, saved credentials (deep regex walk of customAIs/customAIConfigs for token-shaped fields; hive.keys map values blanked to [REDACTED] while keeping which providers were configured). KEPT BY DEFAULT: document text + AI responses (support needs them to reproduce). OPTIONAL CHECKBOX "Also redact document text and AI responses" (default unchecked) strips content too — doc text, reference material, round directives, AI response bodies, conflicts, applied changes, resolved decisions become [REDACTED — N chars/items] markers while round timing/outcomes/builder-ids/response-ai-ids/lengths/error-reasons are preserved. EXPORT-ONLY: file carries _waxframe_diagnostic:true and NOT _waxframe_backup:true; importSession rejects diagnostic files with friendly "export-only, use a Backup file" message. UI: new "🩹 Diagnostic Bundle" nav item in Advanced section (below Prompt Editor, above Dev Tools); Backup + Import stay in Tools. Filename {baseName}-r{N}-{stamp}-Diagnostic-Safe.json. wfConfirm extended with optional opts.checkbox={label,checked} returning {ok,checked} instead of bare boolean — backward-compatible, existing boolean callers unchanged. New wfConfirmCheckRow elements in index.html (audited inline display:none); .wf-confirm-check-row CSS added near wfConfirm modal styles (80ch rule verified untouched). style.css touched (first since v3.52.10) — cache-bust bumped on style.css?v= across all 6 HTML files. Brace balance preserved on app.js (3426/3426), storage.js (268/268), style.css (2172/2172); node --check passes on app.js + storage.js. Codex security audit now effectively closed except long-term CSP rollout (6.2.D) and new wider-XSS-sweep follow-up (6.2.F). FOUR security releases this session: v3.53.0 small wins, v3.53.1 consoleHTML sanitize, v3.53.2 resolveAiIcon XSS, v3.54.0 Diagnostic Bundle.
+
+v3.53.2   2026-05-19  Security audit follow-up part 3 — resolveAiIcon XSS fix (Section 6.2.B). Third focused micro-release of the day. Closes the last meaningful XSS sink from the 2026-05-17 Codex security audit — js/app.js resolveAiIcon previously interpolated user-controlled ai.name, ai.icon, and cssClass raw into HTML strings including inside an inline onerror= JS string literal, which would have let a malicious imported AI config (ai.name = `'"><img src=x onerror=alert(1)>`) execute attacker code on every render with full localStorage access (API keys, license key). FOUR HARDENING CHANGES: (1) Number() coercion on size — was raw template interpolation, a string size could poison every attribute it landed in. (2) escapeHtml() on ai.name and cssClass for every attribute they land in (alt, class, data-*) — handles & < > " '. (3) URL scheme validation on ai.icon — only http(s)://, data:image/, and relative images/ paths pass; javascript:, vbscript:, file:, ftp:, and protocol-relative //evil.com URLs drop through to the letter-avatar fallback. The existing google.com/s2/favicons filter (left over from v3.29.10) stays in place. (4) Inline onerror handler no longer interpolates ANY user data — calls fixed-string resolveAiIconFallback(this) with zero interpolation. New handler reads name/class/size from data-* attributes (which are HTML-escaped at write time and round-trip cleanly through DOM dataset API) then passes them to makeAiAvatar's DOM-API construction path (createElement + textContent + style.cssText). XSS-sink data path broken at every step. makeAiAvatarHTML got matching escapeHtml(cssClass) + Number(size) treatment. makeAiAvatar (DOM-Element version, already used createElement + textContent) got Number(size) coercion as defense in depth. NEW BACKLOG ITEM 6.2.F added for the wider XSS sweep — other places in the codebase still interpolate ai.name and ai.id raw into HTML templates (Change Builder modal grid at app.js L767-773 is the named example). Out of scope for the Codex 6.2.B finding which targeted resolveAiIcon specifically. Brace balance preserved on app.js (3415/3415); node --check passes. Three security releases shipped this session (v3.53.0 small wins, v3.53.1 consoleHTML, v3.53.2 resolveAiIcon).
+
+v3.53.1   2026-05-19  Security audit follow-up part 2 — consoleHTML sanitize on restore (Section 6.1.D Option A, David's preferred). Focused micro-release on top of v3.53.0 same evening. Closes the XSS vector that existed on session restore from any backup file (including v3.53.0 backups, since the format itself didn't change between releases). New sanitizeConsoleHTML helper in js/storage.js (~150 lines including comments + schema constants). Both restore sites in loadSession (main IDB-backed path L505 + localStorage fallback path L540) now run stored consoleHTML through the sanitizer before innerHTML assignment. APPROACH: DOMParser parses raw HTML into a DETACHED HTMLDocument (so <script>/img-onerror/etc. don't fire during parsing), then walk the parsed tree and rebuild in the live document via createElement + textContent matching a strict per-tag schema mirroring consoleLog's output. SCHEMA: top-level requires div.console-entry; child <span> allowed with class=console-time or no class (text only); child <a> requires href to start with http(s):// (blocks javascript:/data:/vbscript:/file: and protocol-relative URLs), all attrs except class/href/target/rel stripped including any onclick; child <button.console-err-arrow> only keeps title (length-bounded) and onclick if it matches strict regex /^openConsoleErrorDetail\('cle_\d+_[a-z0-9]+'\)$/ — any other onclick stripped leaving button inert. Anything else dropped silently (closed-list trade-off favoring security over feature drift — future consoleLog additions must update the sanitizer or restored sessions silently strip new content). Backward-compatible: every existing backup including v3.53.0 backups restores through the new sanitizer unchanged. Brace balance preserved; node --check passes on storage.js. Next in queue: v3.53.2 (resolveAiIcon safe DOM construction — Section 6.2.B).
+
+v3.53.0   2026-05-19  Security audit follow-up part 1 — small wins bundle. Four lowest-risk findings from the 2026-05-17 Codex security audit cleared in one ship. (1) backupSession() pre-export wfConfirm + "-SENSITIVE" filename suffix — pattern is now {baseName}-r{N}-{stamp}-Backup-SENSITIVE.json so the credential-bearing nature of the file is obvious in Downloads folders, email attachments, and Slack DMs. (2) importSession() converted to async + pre-import wfConfirm trust warning fires BEFORE the file picker opens — blocks silent state replacement from malicious files. Function signature change verified safe (both call sites are HTML onclick handlers). (3) Claude proxy disclosure rewrite on api-details.html: green wf-card title softened from "Your keys never leave your device" to "Your keys live in your browser"; new "**One exception — Claude.**" paragraph names waxframe-claude-proxy.weirdave.workers.dev explicitly and acknowledges the worker sees keys/prompts in-flight while forwarding (does not log or persist). Open Source modal "No Server" entry renamed "No Backend" + tip text updated. All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) remain direct browser-to-provider — original claim accurate for them. Worker repo link DEFERRED pending David's confirm on public vs private source-repo status. (4) Gemini API keys moved from query string to x-goog-api-key header at four model-list call sites (js/api.js fetchModelsForProvider + fetchModelsForProviderLive; js/app.js fetchModelsFromEndpoint Google branch + custom-AI add modal Google branch). Generate endpoint already used the header via API_CONFIGS.gemini.headersFn. Query-string secrets leak into browser history, server logs, screenshots — header doesn't. Brace balance preserved on all three JS files; node --check passes on all four edited JS files; zero remaining ?key=${} patterns in js/. Larger findings stay queued for v3.53.1 (consoleHTML sanitize on restore — Section 6.1.D Option A), v3.53.2 (resolveAiIcon safe DOM — Section 6.2.B), v3.54.0 (Diagnostic Bundle — Section 6.1.C), v3.6+ (CSP rollout — Section 6.2.D).
+
+v3.52.11  2026-05-17  Restaurant-review playbook page — proper hotel-style treatment + two corrections from v3.52.9. v3.52.9 shipped with two factually wrong claims that traced back to backlog v23 Section 1 (where the bug was first logged) and propagated forward through v24-v29 without re-checking: (1) "majority at Round 6" — actually R5 per the backup's outcome:'majority_convergence' on R5; (2) "5-AI hive" — actually 6-AI hive (5 reviewers + DeepSeek Builder; Mistral was configured but inactive). Pearl's Saltwater Grille backup file located and uploaded the same evening; full dp-real-example block now in place with verbatim Setup 3 fields, full 459-word v1.0 draft, and corrected round-by-round detail. Lesson logged in release notes: when a backlog text claim contradicts the user's known workflow ("I always get backup files"), check the workflow, don't propagate the claim. v3.52.10 (CSS audit surgical fix) shipped earlier the same evening — unrelated to this correction. NOTE: the v3.52.9 entry below carries the original (wrong) text for historical accuracy; the corrected facts live here in v3.52.11 + in document-playbooks.html.
+v3.52.10  2026-05-17  CSS audit surgical fix. Codex read-only style.css audit found four .bee-card.is-* selectors with no declaration block at L4533-4536, causing the CSS parser to fold them into the next rule's selector chain — .work-notes-panel .work-panel-header { background: var(--surface2); } was asking for an element nested inside four bee-cards at different states simultaneously and never matched. Four orphan selectors deleted; rule now functional. Brace balance unchanged (2170/2170 — purely subtractive). Also synced style.css build header from 20260510-013 to 20260517-007. Other 6 audit findings (146 dead selectors, .ssc-warning, .custom-ai-form wrapper, !important review, duplicate clusters) deferred to a focused style.css audit pass in backlog v30. First ZIP this session to include style.css.
+v3.52.9   2026-05-17  ⚠ SUPERSEDED BY v3.52.11 — see above. Restaurant-review playbook page convergence text updated to measured T8 data. document-playbooks.html line 1801 — was "2–4 rounds typical (estimated, not measured)" since v23 (about 7 versions ago). v3.52.9 wording said "majority at R6 (4/6 satisfied)" and "5-AI hive + DeepSeek Builder" — BOTH WRONG, corrected in v3.52.11. Source data: playbook v25 CHANGES IN v20 (which itself contained the propagated errors). Two more stale "estimated, not measured" stragglers surfaced during the fix (L2087 business-review T10; L2180 multi-platform T11) — both now in Section 1.
+v3.52.8   2026-05-17  Codex audit follow-up part 2. Seven native confirm() dialogs migrated to wfConfirm in js/app.js (confirmRemoveLicense, confirmGoHome, processFile, processRefFile, startSession ×2, clearDocument). Three of the seven enclosing functions were sync and are now async — verified safe (all callers are HTML onclick handlers, browsers don't await onclick return values). 133 target="_blank" links across 6 HTML files now carry rel="noopener noreferrer" for security and process isolation. Two JS window.open calls (api-links.js openAllConsoles + wf-debug.js troubleshooting card buttons) got the equivalent 'noopener,noreferrer' feature parameter. Stray console.log standardized to consoleLog. API keys-in-localStorage security disclosure paragraph added to api-details.html. license-helper.js confirm deferred to BACKLOG-003 (helper pages don't load app.js so wfConfirm isn't reachable). First complete ZIP this session — earlier v3.52.4/5/6/7 ZIPs were missing audio.js, scenes.js, wf-debug.js (GitHub Pages served them from prior commits so nothing broke, but the ZIPs weren't clean-install-ready).
+v3.52.7   2026-05-17  Codex audit follow-up part 1: dead-branch trim from the monolith→split refactor. README badge bumped from stale 3.39.12 to v3.52.7. User manual provider table caught up to runtime defaults (Gemini gemini-2.5-pro-preview-03-25 → gemini-2.5-flash; Grok grok-3 → grok-4-fast-non-reasoning). MODEL_LABELS dictionary removed from js/api.js — was demoted to "safety net" in v3.26.4 but had no real consumers since, and the one runtime reference at app.js L13535 was broken-shaped (lookup by AI id against a dictionary keyed by model ids, always returned undefined). Fallback simplified to match the reviewer block at L13547. Four dead helpers removed: loadScript, saveProjectGoalFromModal, openAllBilling, _clockInterval. Net ~75 lines of dead code trimmed across app.js, api.js, api-links.js. MODEL_FALLBACKS preserved as active safety net.
+
+v3.52.6   2026-05-17  Cumulative session bundle. (1) Gemini paid-tier caveat sweep at 7 surfaces (welcome screen, api-details Gemini setup card, api-details Gemini reviewer tip, user manual cost section, what-are-tokens new "Gemini free tier vs paid tier" card, README Builder section, Change Builder modal) — canonical message: Gemini is free only while Google AI Studio billing is disabled; the Builder role amplifies cost because it reads everything every round. Triggered by David burning $2 in a single Gemini-as-Builder session expecting it to stay free. (2) New "💾 Save Backup" button in Deep Dive Capture Viewer next to renamed "💾 Save DeepDive" — calls existing backupSession() so DDV + Backup grabbable in two clicks from floating Dev Toolbar. (3) Three polish fixes: unit-aware upload banner (words for word-mode templates), SSC card message reworded to drop "significant cut" editorial phrasing, dead ssc-actions ternary collapsed. Change Builder modal gets cost-mindfulness note added to changeBuilderReason.
+v3.52.5   2026-05-17  Source Size Check redesigned to oversized-only after first live test of Rewrite-as-Yelp template surfaced UX gap (888-word source at 1.27x over the 700-word Yelp ceiling sat in old 1.5x silent zone). analyzeSourceSize simplified from three branches to two: source > max fires oversized recommend card, otherwise silent. Undersized branch (source < min*0.7 "would need invention") removed entirely — trim templates exist for oversized sources only; future scratch templates with platform minimums encode constraints in lengthLimit/lengthMin directly. Straggler reconciliation: renderSourceSizeCheck dead branching (icon/label/statusClass/actionHTML) collapsed to constants. ssc-warning CSS class in style.css now unreferenced (left in place; flagged for future style.css audit pass in Section 3).
+v3.52.4   2026-05-17  DeepDive ring buffer captures now include round and role fields. callAPI signature gains optional role param (default 'unknown'); WF_DEBUG.captureRound payload prepends round (read from module-level global at L317) and role as first fields; three call sites pass 'builder'/'worker'/'builder' from runBuilderOnly (L10145), runRound reviewer phase (L10601), runRound builder phase (L10966). Backward-compatible — old captures simply lack the new fields. Live-confirmed in Manly Bikes Yelp v1.0 run (same release): 56 captures grouped cleanly by R1-R8 and worker/builder.
+v3.52.3   2026-05-16  CSS placement fix. v3.52.2 helper functions correctly but card was rendering on the honeycomb screen background instead of inside the white Setup-5 panel. Moved #sourceSizeCheck div from outside hp-section into hp-section-body. Margin reduced from 32px horizontal to 0 (panel already pads).
+v3.52.2   2026-05-16  Two-fix bundle. (1) Source Size Check bugfix — renderSourceSizeCheck was reading document.getElementById(lengthMode) which does not exist (mode lives in pill dataset, read via getLengthMode()). Always returned silent. Now uses getLengthMode() and fires correctly. Caught by David on first live test of Trim to Google Maps against the Manly Bikes source. (2) Export byline verb dynamic — Crafted by WaxFrame for scratch path, Refined by WaxFrame for upload/paste path. FOOTER_RE matches all three verbs (Produced|Crafted|Refined) for backward compatibility.
+v3.52.1   2026-05-16  Export byline verb is dynamic: "Crafted by WaxFrame" for scratch-path sessions, "Refined by WaxFrame" for upload/paste paths. FOOTER_RE updated to match all three verbs (Produced|Crafted|Refined) so pre-v3.52.1 docs still strip cleanly on re-export.
+v3.52.0   2026-05-16  Three platform-specific review templates (Trim to TripAdvisor, Trim to Google Maps, Rewrite as Yelp) replace retired combined Multi-Platform Review Rewrite. Each ships with focused length-guard range, refMaterial, and per-template source-in-Reference recommendation. New Source Size Check helper (analyzeSourceSize / renderSourceSizeCheck in app.js) compares Starting Document vs active template length range and surfaces an undersized warning or oversized recommend card. Template-agnostic — any range-mode template gets the helper for free.
+v3.51.0   2026-05-16  Two queued bugfixes from live testing. (1) Auto-mode now pauses when Change Builder modal opens (mirrors v3.35.1 troubleshooting-card pattern via _autoChainDeferred). (2) Rate-limit / auth-fail / credit-low troubleshooting card now surfaces the actual provider error message inline with linkified URLs — was buried in Show technical details.
+v3.50.1   2026-05-16  Multi-platform review template refMaterial trimmed from 1680 to 698 chars (58% reduction). Decoration removed, content preserved. Token savings compound across all reviewers every round.
+v3.50.0   2026-05-16  Five UX fixes from live testing: (1) Retry Round button now actually retries (was calling nonexistent startRound), (2) Conflict panel reordered — Applied Changes now first then conflicts then Apply, (3) Applied Changes blurb reframed for "Confirm or Keep Revising", (4) exportDocument regex-strips existing footer before appending new one, (5) Multi-platform review template ships with splitting directive in refMaterial.
+v3.49.0   2026-05-16  UX bug fix — disabling the Builder no longer creates an unrecoverable state. Three layers: toggleSessionBee intercepts builder-disable and routes through Change Builder modal; openChangeBuilder accepts reason+excludeId opts; runRound defensive guard auto-reassigns stale builder. Includes recovery for users hitting v3.49.0 with the pre-fix bug already persisted.
+v3.48.0   2026-05-16  app.js split #8: backupSession + importSession complete storage.js (-169 lines; app.js 13,642→13,473, cumulative -17.8%). storage.js now contains the entire WaxFrame state persistence layer in 819 lines. Only callAPI remains as a major split candidate.
+v3.47.0   2026-05-16  app.js split #7: saveHive + saveProject + loadSettings + snapshotReferenceDocs join storage.js (-219 lines; app.js 13,861→13,642, cumulative -16.8%). Only backupSession + restore helpers remain as storage chunks in app.js.
+v3.46.0   2026-05-16  app.js split #6: session persistence (_saveSessionChain + saveSession + loadSession) joins storage.js (-231 lines; app.js 14,092→13,861, cumulative -15.4%)
+v3.45.0   2026-05-16  app.js split #5: storage primitives (LS_* constants + IDB helpers + checkStorageQuota) extracted to new storage.js; window.LS_* for cross-script (-74 lines; app.js 14,166→14,092, cumulative -14.0%). saveHive/saveProject/loadSettings/saveSession/loadSession/backup remain in app.js for incremental future migration.
+v3.44.0   2026-05-16  app.js split #4: API_CONFIGS + MODEL_FALLBACKS + fetchModelsForProvider/Live + getModelsForProvider + detectDeprecatedModels extracted to new api.js; window.API_CONFIGS + window.MODEL_FALLBACKS for cross-script (-541 lines; app.js 14,707→14,166, cumulative -13.6%). callAPI remains in app.js for future split.
+v3.43.0   2026-05-16  app.js split #3: WF_DEBUG subsystem (object + WF_ERROR_CATALOG + render helpers) extracted to new wf-debug.js; window.WF_DEBUG + window.WF_ERROR_CATALOG for cross-script access (-662 lines; app.js 15,369→14,707, cumulative -10.3%)
+v3.42.1   2026-05-16  Deployment fix — corrects ZIP packaging error from v3.40.0-v3.42.0 where app.js was placed at archive root instead of js/; cache-busts bumped to ?v=3.42.1 to force fresh download; audit methodology Category 7 added for release artifact verification
+v3.42.0   2026-05-16  app.js split #2: three celebration scenes (License Unlock + Hive Finish + Unanimous Convergence) extracted to new scenes.js (-785 lines; app.js 16,154→15,369)
+v3.41.0   2026-05-16  app.js split: theme/mute consolidation into theme.js + audio extraction to new audio.js (235 lines moved out, 16,389→16,154)
+v3.40.1   2026-05-16  Audit-driven: cross-page toggle parity (theme+mute on 5 setup screens & helper pages) + full cache-bust sweep + Audit Methodology v1 doc shipped
+v3.40.0   2026-05-16  Deep Dive timing + tokens fixes + deprecation watchdog (3 triggers, unthrottled, /v1/models pricing assumption documented)
+v3.38.13  2026-05-12  README rewrite + docs cleanup (Kai's polish + .dp-rounds-aftermath docs work)
+v3.38.12  2026-05-11  .dp-rounds layout fix — playbook Rounds fields render as prose
+v3.38.0   2026-05-11  Slow-AI alerts toggle (Phase 1 of Settings)
+v3.37.2   2026-05-10  Auto-halted sound — closes out P1.6
+v3.37.0   2026-05-10  Dual-path templates
+v3.36.36  2026-05-10  Convergence section copy rewrite + anchor jump-to fix
+v3.36.35  2026-05-10  Playbook page — step labels + Reference Material as right channel for scratch-mode review facts
+v3.36.34  2026-05-10  Convergence-numbers callout: proper section + sidebar entry
+v3.36.33  2026-05-10  USER DECISION audible alert wired (existing playAlertSound)
+v3.36.32  2026-05-10  Project clock parity — Builder-Only rounds now tick the clock
+v3.36.31  2026-05-10  Three audit-driven teaching callouts shipped (Pass 2 placement decisions)
+v3.36.30  2026-05-10  Primary CTA rest text: white (matches Smoke)
+v3.36.29  2026-05-10  Global Smoke-style hover on .btn-accent
+v3.36.28  2026-05-10  Finish button always-lit (correction to v3.36.27)
+v3.36.27  2026-05-10  UX clarity: Finish button + silent multi-decision lock
+v3.36.26  2026-05-10  Review templates length-mode fix
+v3.36.25  2026-05-10  T2 Exec Summary + T7 Blog Post v2.0 measured; docs bundled in ZIP
+v3.36.24  2026-05-10  Recipe playbook — 3rd data point + Reference Material methodology
+v3.36.23  2026-05-10  Audit-driven cleanup release
+
+v3.36.22  2026-05-09  LinkedIn About template + playbook
+                      NEW DOCUMENT TYPE: linkedin-about.
+                      • Template in templates.js (Career & Hiring
+                        category, between Resume and Thank-You)
+                      • Playbook in document-playbooks.html with
+                        sidebar link
+                      • Real-world example: 1,163-char identity
+                        scaffold for wireless engineer profile
+                      • Buzzword guard in goalNotes
+                      • 11-file ZIP (templates.js touched)
+
+v3.36.21  2026-05-09  sessionAIs in transcript export fix
+                      exportTranscript() HIVE COMPOSITION header
+                      was reading activeAIs (full configured
+                      hive) instead of sessionAIs (per-session
+                      toggle Set). Real-world: user with 3 of 7
+                      AIs toggled got "Reviewers (6 of 7 total)"
+                      lying.
+
+v3.36.20  2026-05-09  Length-guard pill height parity
+v3.36.19  2026-05-09  Length-guard pill height parity (initial)
+v3.36.18  2026-05-09  Notes + Reference button toggle
+v3.36.17  2026-05-09  Notes drawer split + Auto-pause on Notes
+                      open
+v3.36.16  2026-05-09  Three-pill color system codified
+                      (red/amber/green) + Auto button
+                      repositioning + label flip
+v3.36.15  2026-05-09  Length-guard always-visible toggle +
+                      convergence skips auto-halt modal +
+                      round counter state machine +
+                      trajectory-bypass log
+v3.36.14  2026-05-09  Interactive→Manual label cascade +
+                      length-guard logging + length templates
+                      (Trim/Expand/Match) + Notes forensics
+                      (_notesAtBuilderCall freeze pattern)
+
+P1.1 AUDIT (three passes, completed 2026-05-10):
+  • Pass 1 — Functional audit
+    docs\WaxFrame_Functional_Audit_P1-1.md (599 lines)
+    397 functions classified. 3 confirmed DEAD (shipped in
+    v3.36.23). 128 PRODUCTION, 124 LOW-USE, 99 SINGLE-CALL,
+    43 INLINE-CANDIDATE.
+  • Pass 2 — Cross-surface consistency
+    docs\WaxFrame_Cross_Surface_Audit_P1-1_Pass2.md (225 lines)
+    Templates ↔ playbooks ↔ manual ↔ gospel docs reconciled.
+    19 templates, 18 playbooks, 12 measured rows in test
+    master, 3 → 6 in user manual block (refreshed in v3.36.23).
+    Surfaced 3 placement-decision items now in this backlog
+    Section 2.
+  • Pass 3 — Side-effect mapping
+    docs\WaxFrame_Side_Effect_Audit_P1-1_Pass3.md (766 lines)
+    96 pure functions (24%), 6 multi-effect orchestrators (2%).
+    Heuristic flags scanned — all false positives, no code
+    bugs surfaced.
+
+
+════════════════════════════════════════════════════════════
+END OF FILE
+════════════════════════════════════════════════════════════

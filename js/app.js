@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-004';         // build stamp — update each session
+const BUILD       = '20260520-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1256,6 +1256,13 @@ async function submitLicenseKey() {
 }
 
 function updateLicenseBadge() {
+  // v3.55.5 — Keep the pinned Buy footer in sync with license state:
+  // visible for non-licensed (trial) users, hidden once a valid license is
+  // present. This runs on load and after every license change, and the nav
+  // panel is closed until opened, so there's no flash.
+  const buyFooter = document.getElementById('navBuyFooter');
+  if (buyFooter) buyFooter.style.display = isLicensed() ? 'none' : '';
+
   const badge = document.getElementById('licenseBadge');
   if (!badge) return;
   if (isLicensed()) {
