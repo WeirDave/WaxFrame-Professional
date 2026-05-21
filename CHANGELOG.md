@@ -1,6 +1,33 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.1
+**Build:** `20260520-008` · **Released:** May 21, 2026
+
+### Auto really means Auto — P1.3 #9: at-convergence length reroll
+
+Second behavioral release in the P1.3 group. When a hands-off **Auto** run reaches convergence (unanimous or majority) but the document is **out of the length constraint**, WaxFrame no longer pops the convergence length-guard modal and stops. Instead it sends the converged document **back to the Builder** with a one-build trim/expand directive and runs another pass — bounded by your **reround-attempts** setting (Settings → Auto Mode, default 2), then it auto-halts so it can't loop and burn credits.
+
+**Builder-only reroll** — the reroll is a single Builder call, not a full 6-AI round. The reviewers have already agreed on the content; the only job left is length, so there's no reason to re-run the whole hive.
+
+Flow per convergence:
+- **Over the limit** → Builder is told to trim to fit (preserve content, cut redundancy).
+- **Under the floor** → Builder is told to expand to reach the floor (substantive content, no filler).
+- **Back in range** → converge, Auto OFF, Finish modal. Done.
+- **Still out after the last attempt** → Auto halts with a clear reason; document stays as-is for you to edit or accept.
+
+**Interactive mode is unchanged** — outside Auto, the convergence length-guard modal still appears with the full Block / Accept / Continue-anyway choice. The synthetic directive is injected only into the reroll's Builder prompt and never touches your Notes field.
+
+### Files changed
+
+- **`js/app.js`** — new `window._autoLengthRerollCount` / `_autoLengthRerollActive` / `_autoLengthDirective` state; `_autoBuildLengthDirective()` + `_autoConvergenceLengthReroll()` helpers; both convergence sites intercept in Auto before the modal; `runBuilderOnly` injects the directive and runs the post-build length re-check (done / reroll / halt); `length-reroll` chain kind added to `_autoFireChainedRound`; reroll state reset on Auto engage/disengage, `clearProject`, and round start; new `length-reroll-exhausted` halt reason. `BUILD` → `20260520-008`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.1 Pro`
+- **`index.html` + `style.css` + 5 helper HTML** — cache-bust + build stamp only (no markup/rule change; 80ch work-column rule untouched)
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v43.txt`** — #9 moved to Recently Shipped; #5/#6/#7 → v3.56.2, #10 → v3.56.3
+
+
+---
 ## v3.56.0
 **Build:** `20260520-007` · **Released:** May 21, 2026
 
