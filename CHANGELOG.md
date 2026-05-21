@@ -1,6 +1,30 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.6
+**Build:** `20260520-006` · **Released:** May 21, 2026
+
+### Settings → Auto Mode: reround attempts control + Reset to defaults
+
+Completes the Auto Mode settings UI with the two remaining controls.
+
+- **Length-guard reround attempts** — number (default 2, range 1–5). When the hive converges but the result is over or under your length limit, Auto sends the document back to the Builder to trim or expand, then runs another round; this is how many times it will try before giving up and asking you. A clean in-range result stops the loop early. (This is the loop guard that prevents an unbounded converge → trim → converge cycle from quietly burning credits — now user-tunable rather than hardcoded.)
+- **Reset to defaults** — a button that restores every Auto Mode option to its built-in default (Backup Builder: none · Never disable Builder: off · Failure-streak limit: 2 · Slow threshold: 3× / 2 rounds · Reround attempts: 2), behind a confirmation. The escape hatch for when settings have been fiddled into a corner.
+
+As with the rest of the Auto section, these persist to `localStorage` and are exposed to the behavioral wiring via a getter (`getAutoRerollAttempts()`). The Auto behavior that consumes all of these settings is the next piece of work.
+
+### Files changed
+
+- **`index.html`** — reround-attempts row + Reset-to-defaults action row in the Auto Mode section; cache-bust + build meta
+- **`js/app.js`** — `rerollAttempts` added to `AUTO_SETTINGS` with `getAutoRerollAttempts()`, `saveAutoRerollAttempts()`, and `resetAutoSettings()`; reround control synced in `renderSettings()`; `BUILD` bumped to `20260520-006`
+- **`style.css`** — `.settings-row-actions` + `.settings-reset-btn` styling; cache-bust
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.6 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v41.txt`** — reround control + reset button logged as shipped; Auto Mode settings UI now complete
+
+
+---
 ## v3.55.5
 **Build:** `20260520-005` · **Released:** May 20, 2026
 

@@ -7231,6 +7231,13 @@ kbd {
   color: var(--green);
   font-weight: 700;
 }
+.settings-row-actions {
+  align-items: center;
+}
+.settings-reset-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
 
 /* ══════════════════════════════════════
    LICENSE BADGE + MODAL
