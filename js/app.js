@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-009';         // build stamp — update each session
+const BUILD       = '20260520-010';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -2283,6 +2283,10 @@ function autoHaltResume() {
   // Reset stall + failure tracking, extend ceiling.
   window._autoSatisfiedHist = [];
   window._autoFailureStreak = 0;
+  // P1.3 #9 (v3.56.3) — Resume grants a fresh length-reroll budget.
+  window._autoLengthRerollCount  = 0;
+  window._autoLengthRerollActive = false;
+  window._autoLengthDirective    = '';
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
   if (typeof consoleLog === 'function') {
@@ -10841,31 +10845,23 @@ async function runBuilderOnly() {
     saveSession();
     if (!isLicensed()) { incrementTrialRound(); updateLicenseBadge(); }
     toast(`✅ Round ${round - 1} complete — Builder applied your instructions`);
-    // P1.3 #9 (v3.56.1) — length-reroll re-check. If this builder-only round
-    // was an at-convergence length reroll, re-evaluate against the constraint:
-    // in range -> done (converge + Auto OFF + Finish); still out & attempts
-    // left -> reroll again; attempts spent -> halt. Skips the normal chain.
+    // P1.3 #9 (v3.56.3) — ARCHITECTURE FIX: one Builder length nudge, then hand
+    // the corrected draft back to the HIVE — never grind the Builder solo. The
+    // earlier solo re-check loop let one AI rewrite/pad the document with no
+    // reviewer ever vetting it (the 47→373→265→344 oscillation). Now the single
+    // nudge is applied, the directive is consumed, and a full round runs so the
+    // reviewers vet the new content and converge. The convergence length-check
+    // re-arms #9 if it's still out of range — bounded by getAutoRerollAttempts()
+    // then halt — but each "attempt" is now a nudge-then-hive cycle, not a solo
+    // Builder pass. NOTE: the reroll count is NOT reset here; it must persist
+    // across the hive round to stay bounded (cleared on in-range convergence).
     if (window._autoMode && window._autoLengthRerollActive) {
-      const cstat2 = getLengthStatus(docText);
-      if (!cstat2 || cstat2.status === 'ok') {
-        window._autoLengthRerollActive = false;
-        window._autoLengthRerollCount  = 0;
-        window._autoLengthDirective    = '';
-        window._autoMode               = false;
-        window._autoCeilingTarget      = null;
-        window._autoSatisfiedHist      = [];
-        window._autoFailureStreak      = 0;
-        window._autoChainDeferred      = null;
-        updateAutoToggleUI();
-        const _sz = cstat2 ? `${cstat2.actual} ${cstat2.unitName}` : 'within range';
-        consoleLog(`📏 Length corrected after reroll — document is now within range (${_sz}). Converged; Auto OFF.`, 'success');
-        toast(`📏 Length corrected — document is within range. Done.`, 5000);
-        setStatus(`🏁 Converged — length corrected (${_sz})`);
-        if (typeof playRoundCompleteSound === 'function') { try { playRoundCompleteSound(); } catch (e) {} }
-        setTimeout(() => { if (typeof showFinishModal === 'function') showFinishModal(); }, 500);
-      } else {
-        _autoConvergenceLengthReroll(cstat2);
-      }
+      window._autoLengthRerollActive = false;
+      window._autoLengthDirective    = '';   // consumed — this build only
+      const _szRH = getLengthStatus(docText);
+      consoleLog(`📏 Length nudge applied (${_szRH ? `${_szRH.actual} ${_szRH.unitName}` : '?'}) — re-entering the hive to vet the change`, 'info');
+      setStatus(`📏 Length nudge applied — running the hive on the new draft…`);
+      _autoFireChainedRound('length-rehive', 'round');
     } else {
       // v3.35.0 — Auto Mode: builder-only success. No reviewers ran this
       // round, so satisfied/total are zero and the stall window does not
@@ -10938,12 +10934,11 @@ async function runRound() {
 
   if (btn?.classList.contains('running')) return;
 
-  // P1.3 #9 (v3.56.1) — a full round is never a length reroll; abandon any
-  // pending reroll state so a stale directive/counter can't leak in. (A reroll
-  // runs via runBuilderOnly, never here — so an in-flight cycle is preserved.)
-  window._autoLengthRerollCount  = 0;
-  window._autoLengthRerollActive = false;
-  window._autoLengthDirective    = '';
+  // P1.3 #9 (v3.56.3) — the reroll count is intentionally NOT reset here. A full
+  // round is now part of the length-correction cycle (one Builder nudge, then
+  // re-enter the hive), so the count must survive across rounds to stay bounded
+  // by getAutoRerollAttempts(). It clears on in-range convergence, Auto toggle,
+  // clearProject, and Auto-halt Resume instead.
 
   // v3.49.0 — Defensive builder guard. If `builder` points at an AI
   // that's no longer active (disabled via session toggle, removed from
@@ -11221,6 +11216,13 @@ async function runRound() {
       }
     }
 
+    // P1.3 #9 (v3.56.3) — reached the celebration = converged in range (or the
+    // guard was overridden). Clear length-reroll state so the next out-of-range
+    // convergence starts a fresh, fully-budgeted cycle.
+    window._autoLengthRerollCount  = 0;
+    window._autoLengthRerollActive = false;
+    window._autoLengthDirective    = '';
+
     history.push({
       round, phase,
       projectName:    document.getElementById('projectName')?.value.trim()    || '',
@@ -11343,6 +11345,13 @@ async function runRound() {
         }
       }
     }
+
+    // P1.3 #9 (v3.56.3) — reached the celebration = converged in range (or the
+    // guard was overridden). Clear length-reroll state so the next out-of-range
+    // convergence starts a fresh, fully-budgeted cycle.
+    window._autoLengthRerollCount  = 0;
+    window._autoLengthRerollActive = false;
+    window._autoLengthDirective    = '';
 
     history.push({
       round, phase,
