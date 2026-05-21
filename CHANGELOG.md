@@ -1,6 +1,27 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.3
+**Build:** `20260520-010` · **Released:** May 21, 2026
+
+### P1.3 #9 architecture fix — length correction re-enters the hive
+
+v3.56.2 made the at-convergence reroll *run*, but it ran the **Builder alone, repeatedly** — one AI rewrote/padded the document to chase the length while no reviewer ever vetted the change (observed as a 47 → 373 → 265 → 344 word oscillation before halting). That defeats the point of the hive: the final document contained content the six reviewers never saw.
+
+This release corrects the flow to: **one Builder length nudge → re-enter the hive.** After the single trim/expand pass, a full review round runs so the reviewers vet the changed content and converge on it. The convergence length-check re-arms #9 only if the result is still out of range, bounded by `getAutoRerollAttempts()` then halt — but each "attempt" is now a *nudge-then-hive* cycle, not a solo Builder grind. The reroll counter now persists across the hive round (it clears on in-range convergence, Auto toggle, `clearProject`, and Auto-halt Resume) so the bound holds.
+
+**Still open (tracked, not done):** #9 uses the existing exact floor/ceiling check, which is stricter than "close enough." The **tolerance band** — soft floor for Target mode, coherence-over-count, don't-pad-to-hit-the-number — is specified in backlog v45 and remains outstanding. #9 is architecturally correct as of this release but **not feature-complete**.
+
+### Files changed
+
+- **`js/app.js`** — `runBuilderOnly` length-reroll path now applies one nudge then chains a full hive round (`length-rehive`) instead of looping the Builder; reroll count no longer reset at `runRound` top (must survive the hive round); reroll state cleared at both in-range convergence sites and on `autoHaltResume`. `BUILD` → `20260520-010`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.3 Pro`
+- **`index.html`, `style.css`, 5 helper HTML** — cache-bust + build stamp only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v45.txt`** — #9 status: **OPEN** (architecture fixed, tolerance band outstanding); full tolerance spec + the four length modes + open questions captured
+
+
+---
 ## v3.56.2
 **Build:** `20260520-009` · **Released:** May 21, 2026
 
