@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-008';         // build stamp — update each session
+const BUILD       = '20260520-009';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -10473,7 +10473,12 @@ async function runBuilderOnly() {
   if (btn?.disabled) return;
 
   const notes = document.getElementById('workNotes')?.value.trim() || '';
-  if (!notes) {
+  // P1.3 #9 (v3.56.2) — an at-convergence length reroll drives the Builder via
+  // a synthetic directive (window._autoLengthDirective), NOT the Notes field,
+  // so an empty Notes box is expected here and must not bail. A manual
+  // Builder-Only with no note still requires one.
+  const _lengthReroll = !!(window._autoMode && window._autoLengthRerollActive && window._autoLengthDirective);
+  if (!notes && !_lengthReroll) {
     toast('⚠️ Add a note first — tell the Builder what to change');
     return;
   }
@@ -10519,7 +10524,8 @@ async function runBuilderOnly() {
   setStatus(`🔨 Sending directly to ${builderAI.name}…`);
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   if (standingNotes) consoleLog(`📌 Standing notes: ${standingNotes}`, 'info');
-  consoleLog(`🎯 This-round notes: ${notes}`, 'info');
+  if (notes) consoleLog(`🎯 This-round notes: ${notes}`, 'info');
+  if (_lengthReroll) consoleLog(`📏 Auto length-correction directive active for this build (attempt ${window._autoLengthRerollCount}/${getAutoRerollAttempts()})`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
   // v3.36.15 — Round-counter state machine entry. Live "Round N" stays
   // up while the round is in flight; the next round-end site flips
@@ -10551,11 +10557,11 @@ async function runBuilderOnly() {
   if (refBlock) {
     prompt += refBlock;
   }
-  prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
+  if (notes) prompt += `USER INSTRUCTIONS FOR THIS BUILD:\n${sep}\n${notes}\n\n`;
   // P1.3 #9 (v3.56.1) — inject the synthetic trim/expand directive for an
   // at-convergence length reroll. Separate from the user's Notes; never
   // written to the workNotes field, cleared once the reroll cycle resolves.
-  if (window._autoMode && window._autoLengthRerollActive && window._autoLengthDirective) {
+  if (_lengthReroll) {
     prompt += `${window._autoLengthDirective}\n\n`;
   }
   prompt += `CURRENT DOCUMENT (line numbers for reference):\n${sep}\n${numberedDoc}\n\n`;
