@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-005';         // build stamp — update each session
+const BUILD       = '20260520-006';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -544,6 +544,7 @@ const AUTO_SETTINGS = {
   streakLimit:        { key: 'waxframe_auto_failure_streak_limit',  def: '2'  },
   slowMult:           { key: 'waxframe_auto_slow_multiplier',       def: '3'  },
   slowRounds:         { key: 'waxframe_auto_slow_rounds',           def: '2'  },
+  rerollAttempts:     { key: 'waxframe_auto_reroll_attempts',       def: '2'  },
 };
 
 // Public getters other code (the P1.3 wiring) will read. Defensive parsing so
@@ -553,6 +554,7 @@ function getAutoNeverDisableBuilder(){ return localStorage.getItem(AUTO_SETTINGS
 function getAutoStreakLimit()        { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.streakLimit.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
 function getAutoSlowMultiplier()     { const n = parseFloat(localStorage.getItem(AUTO_SETTINGS.slowMult.key));  return Number.isFinite(n) && n >= 2 ? n : 3; }
 function getAutoSlowRounds()         { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.slowRounds.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
+function getAutoRerollAttempts()     { const n = parseInt(localStorage.getItem(AUTO_SETTINGS.rerollAttempts.key), 10); return Number.isFinite(n) && n >= 1 ? n : 2; }
 
 let _settingsReturnScreen = 'screen-welcome';
 
@@ -592,6 +594,8 @@ function renderSettings() {
   if (sMult) sMult.value = getAutoSlowMultiplier();
   const sRounds = document.getElementById('setAutoSlowRounds');
   if (sRounds) sRounds.value = getAutoSlowRounds();
+  const reroll = document.getElementById('setAutoRerollAttempts');
+  if (reroll) reroll.value = getAutoRerollAttempts();
 }
 
 // Save handlers — each fires on the control's change event, persists to
@@ -628,6 +632,29 @@ function saveAutoSlowRounds(val) {
   localStorage.setItem(AUTO_SETTINGS.slowRounds.key, String(n));
   const el = document.getElementById('setAutoSlowRounds'); if (el) el.value = n;
   toast(`⚡ Slow threshold: ${n} round${n === 1 ? '' : 's'} in a row`, 2500);
+}
+function saveAutoRerollAttempts(val) {
+  let n = parseInt(val, 10);
+  if (!Number.isFinite(n) || n < 1) n = 1;
+  if (n > 5) n = 5;
+  localStorage.setItem(AUTO_SETTINGS.rerollAttempts.key, String(n));
+  const el = document.getElementById('setAutoRerollAttempts'); if (el) el.value = n;
+  toast(`⚡ Length-guard reround attempts: ${n}`, 2500);
+}
+
+// Restore every Auto Mode setting to its built-in default, then re-sync the
+// controls so the UI reflects the reset immediately.
+async function resetAutoSettings() {
+  const ok = await wfConfirm(
+    'Reset Auto settings',
+    'Reset all Auto Mode settings to their defaults? This restores Backup Builder (none), Never disable Builder (off), Failure-streak limit (2), Slow threshold (3× / 2 rounds), and Reround attempts (2).',
+    { okText: 'Reset to defaults', cancelText: 'Cancel' }
+  );
+  if (!ok) return;
+  Object.values(AUTO_SETTINGS).forEach(s => localStorage.setItem(s.key, s.def));
+  renderSettings();
+  toast('↺ Auto settings reset to defaults', 3000);
+  consoleLog('↺ Auto Mode settings reset to defaults.', 'info');
 }
 
 // ── AUDIO ──
