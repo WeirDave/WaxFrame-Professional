@@ -1,6 +1,32 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.55.5
+**Build:** `20260520-005` · **Released:** May 20, 2026
+
+### Buy-a-License CTA — relocated to a pinned, license-gated footer
+
+The "Buy WaxFrame Pro" link was misfiled in the **Tools** menu group — a conversion action sitting among utilities (Round History, Backup, Import), where it read as out of place and was easy to miss. It now lives in its own pinned footer at the bottom of the navigation panel, outside the scrolling area so it's always visible, and it's gated on license state.
+
+- **Trial (non-licensed) users** see a distinct **🛒 Buy a License** button pinned at the bottom of the menu, linking to Gumroad.
+- **Licensed users** don't see it at all — `updateLicenseBadge()` hides the footer the moment a valid license is present, and shows it again if the license is removed. The same `isLicensed()` check that drives the license badge drives this, so the two never disagree.
+
+Copy was corrected from "Upgrade to WaxFrame Pro" to **"Buy a License"** — there's no separate Pro tier; the trial and the licensed product are the same program, and a one-time license simply unlocks unlimited rounds. The menu explainer was updated to match and to describe the new placement.
+
+The "Buy a key" link inside the License modal is unchanged.
+
+### Files changed
+
+- **`index.html`** — removed the Buy link from the Tools group; added the pinned `navBuyFooter` CTA as a flex sibling below the scrolling nav body; corrected the menu explainer copy + placement description; cache-bust + build meta
+- **`js/app.js`** — `updateLicenseBadge()` now shows/hides `navBuyFooter` based on `isLicensed()`; `BUILD` bumped to `20260520-005`
+- **`style.css`** — `.nav-panel-footer` + `.nav-buy-cta` styling (token-based accent treatment; 80ch work-column rule untouched); cache-bust
+- **`js/version.js`** — `APP_VERSION` bumped to `v3.55.5 Pro`
+- **5 other HTML files** — cache-bust + build meta only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v40.txt`** — Buy CTA relocation logged as shipped
+
+
+---
 ## v3.55.4
 **Build:** `20260520-004` · **Released:** May 20, 2026
 
