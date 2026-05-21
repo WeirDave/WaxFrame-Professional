@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260520-004
+     Build: 20260520-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260520-004">
+  <meta name="waxframe-build" content="20260520-005">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.55.4">
+  <link rel="stylesheet" href="style.css?v=3.55.5">
 </head>
 <body>
 
@@ -1947,6 +1947,11 @@
     <div class="goal-info-body">
       <p>The Menu is the navigation drawer you'll find at the top-left of every screen. The top section jumps you between setup screens and the Working Console; below that, four grouped sections hold tools, documentation, and advanced features. None of it is required to run a round, but most of it earns its place once you've used the app for a while.</p>
 
+      <div class="goal-info-row">
+        <span class="info-label">🛒 Buy a License</span>
+        <span class="goal-info-desc">A pinned button at the bottom of the menu, shown while you're on the free trial. Buys a WaxFrame license key via Gumroad — every installation includes three free trial rounds, and a one-time license unlocks unlimited rounds. Once your license is active, this button disappears. Opens in a new tab.</span>
+      </div>
+
       <p><strong>Navigation</strong></p>
       <div class="goal-info-row">
         <span class="info-label">Home + Setup 1–5 + Working Console</span>
@@ -1954,10 +1959,6 @@
       </div>
 
       <p><strong>Tools</strong></p>
-      <div class="goal-info-row">
-        <span class="info-label">🛒 Buy WaxFrame Pro</span>
-        <span class="goal-info-desc">Purchase a WaxFrame Professional license key via Gumroad. Every new installation includes three free trial rounds; after that, a one-time license unlocks unlimited rounds. Opens in a new tab.</span>
-      </div>
       <div class="goal-info-row">
         <span class="info-label">⏱ Round History</span>
         <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
@@ -2338,20 +2339,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.55.4"></script>
-<script src="lib/mammoth.browser.min.js?v=3.55.4"></script>
-<script src="lib/jszip.min.js?v=3.55.4"></script>
-<script src="lib/xlsx.full.min.js?v=3.55.4"></script>
-<script src="js/version.js?v=3.55.4"></script>
-<script src="js/storage.js?v=3.55.4"></script>
-<script src="js/theme.js?v=3.55.4"></script>
-<script src="js/audio.js?v=3.55.4"></script>
-<script src="js/scenes.js?v=3.55.4"></script>
-<script src="js/wf-debug.js?v=3.55.4"></script>
-<script src="js/api.js?v=3.55.4"></script>
-<script src="js/templates.js?v=3.55.4"></script>
-<script src="js/app.js?v=3.55.4"></script>
-<script src="js/api-links.js?v=3.55.4"></script>
+<script src="lib/pdf.min.js?v=3.55.5"></script>
+<script src="lib/mammoth.browser.min.js?v=3.55.5"></script>
+<script src="lib/jszip.min.js?v=3.55.5"></script>
+<script src="lib/xlsx.full.min.js?v=3.55.5"></script>
+<script src="js/version.js?v=3.55.5"></script>
+<script src="js/storage.js?v=3.55.5"></script>
+<script src="js/theme.js?v=3.55.5"></script>
+<script src="js/audio.js?v=3.55.5"></script>
+<script src="js/scenes.js?v=3.55.5"></script>
+<script src="js/wf-debug.js?v=3.55.5"></script>
+<script src="js/api.js?v=3.55.5"></script>
+<script src="js/templates.js?v=3.55.5"></script>
+<script src="js/app.js?v=3.55.5"></script>
+<script src="js/api-links.js?v=3.55.5"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2413,7 +2414,6 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
     <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
     <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
@@ -2434,6 +2434,20 @@
     <div class="nav-dev-section" id="navDevSection">
       <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
     </div>
+  </div>
+  <!-- v3.55.5 — Pinned upgrade CTA. Sits OUTSIDE .nav-body (which scrolls),
+       so it's always visible at the bottom of the panel. Shown only to
+       non-licensed users; updateLicenseBadge() hides it once a valid license
+       is present. Its own distinct slot — not in the Navigation wayfinding
+       list, not buried in Tools. -->
+  <div class="nav-panel-footer" id="navBuyFooter">
+    <a class="nav-buy-cta" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()" title="Buy a license to unlock unlimited rounds">
+      <span class="nav-buy-cta-icon">🛒</span>
+      <span class="nav-buy-cta-text">
+        <span class="nav-buy-cta-title">Buy a License</span>
+        <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
+      </span>
+    </a>
   </div>
 </div>
 
