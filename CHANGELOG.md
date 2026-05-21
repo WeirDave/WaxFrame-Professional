@@ -1,6 +1,29 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.2
+**Build:** `20260520-009` · **Released:** May 21, 2026
+
+### Fix — P1.3 #9 reroll never reached the Builder
+
+v3.56.1's at-convergence length reroll intercepted correctly (the `📏 Auto: converged … sending back to the Builder` console line fired), but the Builder never ran and the run parked on the convergence screen.
+
+**Root cause:** the reroll routes through `runBuilderOnly`, which was built as a manual "Builder, apply my note" action and bails at the top if the Notes field is empty (`⚠️ Add a note first`). During an Auto reroll the Notes box is empty by design — the trim/expand instruction rides in the synthetic directive, not Notes — so the guard silently aborted the round before the directive was ever applied.
+
+**Fix:** `runBuilderOnly` now recognizes an active length reroll (`window._autoLengthRerollActive` + a directive present) and skips the empty-Notes guard for that case only. A manual Builder-Only with no note still requires one. The `USER INSTRUCTIONS FOR THIS BUILD` block and its console line are now emitted only when real Notes exist; a new console line confirms the length-correction directive is active with the attempt counter.
+
+With this in place the full #9 loop runs: converge out of range → builder-only trim/expand → re-check → in range (Auto OFF + Finish) / reroll again / halt after `getAutoRerollAttempts()`.
+
+### Files changed
+
+- **`js/app.js`** — `runBuilderOnly` entry guard now allows an active length reroll through with empty Notes; conditional `USER INSTRUCTIONS` block + console lines; directive injection keyed to the reroll flag. `BUILD` → `20260520-009`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.2 Pro`
+- **`index.html`, `style.css`, 5 helper HTML** — cache-bust + build stamp only
+- **`CHANGELOG.md`** — this entry
+- **`docs/WaxFrame_Backlog_Master_v44.txt`** — #9 fix logged; parking-lot adds (dev-toolbar Force-reroll button; "Save" not "Download" copy; slow-responder reword + bench/ask setting)
+
+
+---
 ## v3.56.1
 **Build:** `20260520-008` · **Released:** May 21, 2026
 
