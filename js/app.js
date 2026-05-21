@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-006';         // build stamp — update each session
+const BUILD       = '20260520-007';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -10645,14 +10645,27 @@ async function runBuilderOnly() {
         } else {
           floorLabel = `${floorNum} ${unitName}`;
         }
-        const choice = await lengthGuardPrompt({
-          kind: bloatFail ? 'over' : 'under',
-          actual, prevActual,
-          limitNum: bloatFail ? limitNum : floorNum,
-          unitName,
-          limitName: bloatFail ? limitName : floorLabel,
-          builderName: builderAI.name
-        });
+        // P1.3 #8 (v3.56.0) — mid-round length over/under during an Auto run:
+        // auto-keep without the modal so the chain isn't interrupted. The
+        // round's output is accepted and the run continues. Interactive mode
+        // still shows the prompt. The at-convergence guard (#9) is a separate
+        // path (the convergence_over/_under sites); this only covers the
+        // per-round bloat/undersized gate.
+        let choice;
+        if (window._autoMode) {
+          choice = 'keep';
+          consoleLog(`🤖 Auto kept the round despite ${bloatFail ? 'length overrun' : 'undersized output'} (${actual} ${unitName}) — no modal in Auto Mode`, 'warn');
+          toast(`🤖 Auto kept the round (length ${bloatFail ? 'over target' : 'under floor'})`, 3000);
+        } else {
+          choice = await lengthGuardPrompt({
+            kind: bloatFail ? 'over' : 'under',
+            actual, prevActual,
+            limitNum: bloatFail ? limitNum : floorNum,
+            unitName,
+            limitName: bloatFail ? limitName : floorLabel,
+            builderName: builderAI.name
+          });
+        }
         if (choice === 'keep') {
           _userKept = true;
           const wasUnder = undersizedFail;
@@ -11459,14 +11472,23 @@ async function runRound() {
         // round path.
         let _userKept = false;
         if ((bloatFail || undersizedFail) && gateConstrained) {
-          const choice = await lengthGuardPrompt({
-            kind: bloatFail ? 'over' : 'under',
-            actual, prevActual,
-            limitNum: bloatFail ? limitNum : floorNum,
-            unitName,
-            limitName: bloatFail ? limitName : lengthFloorLabel(floorNum, unitName, _lcGate.mode),
-            builderName: builderAI.name
-          });
+          // P1.3 #8 (v3.56.0) — mid-round length over/under during an Auto
+          // run: auto-keep without the modal (see site A for full rationale).
+          let choice;
+          if (window._autoMode) {
+            choice = 'keep';
+            consoleLog(`🤖 Auto kept the round despite ${bloatFail ? 'length overrun' : 'undersized output'} (${actual} ${unitName}) — no modal in Auto Mode`, 'warn');
+            toast(`🤖 Auto kept the round (length ${bloatFail ? 'over target' : 'under floor'})`, 3000);
+          } else {
+            choice = await lengthGuardPrompt({
+              kind: bloatFail ? 'over' : 'under',
+              actual, prevActual,
+              limitNum: bloatFail ? limitNum : floorNum,
+              unitName,
+              limitName: bloatFail ? limitName : lengthFloorLabel(floorNum, unitName, _lcGate.mode),
+              builderName: builderAI.name
+            });
+          }
           if (choice === 'keep') {
             _userKept = true;
             const wasUnder = undersizedFail;

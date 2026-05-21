@@ -1,6 +1,28 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.0
+**Build:** `20260520-007` · **Released:** May 21, 2026
+
+### Auto really means Auto — P1.3 #8: mid-round length guard no longer interrupts Auto
+
+First behavioral release in the P1.3 group. During a hands-off **Auto** run, a mid-round length over/under no longer pops the length-guard modal and stalls the chain. The round's output is auto-kept and the run continues, with a console line and a brief toast so the event is still visible. **Interactive mode is unchanged** — the modal still appears so you can choose Discard / Keep / Continue anyway.
+
+This covers only the **per-round** bloat/undersized gate (the two mid-round call sites). The **at-convergence** length guard (#9 — converged-but-out-of-range → send back to the Builder to trim/expand and auto-run another round) is intentionally **not** in this release; it's a separate auto-reroll pathway shipping in v3.56.1.
+
+The length-guard override flag, the footer pill, and all interactive behavior are untouched. No change to the convergence flow in this release.
+
+### Files changed
+
+- **`js/app.js`** — both mid-round `lengthGuardPrompt` call sites now branch on `window._autoMode`: in Auto, synthesize `keep` (console + toast) instead of awaiting the modal; interactive path unchanged. `BUILD` → `20260520-007`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.0 Pro`
+- **`index.html`** — build meta + cache-bust (no markup change)
+- **`style.css`** — cache-bust + build header (no rule change)
+- **5 helper HTML files** — cache-bust + build meta only
+- **`docs/WaxFrame_Backlog_Master_v42.txt`** — #8 moved to Recently Shipped; #9 re-scoped to v3.56.1 with the technical reason (needs Builder-directive injection + reroll-counter lifecycle)
+
+
+---
 ## v3.55.6
 **Build:** `20260520-006` · **Released:** May 21, 2026
 
