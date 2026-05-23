@@ -1,6 +1,25 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.8
+**Build:** `20260523-005` · **Released:** May 23, 2026
+
+### Fix — Sensitive-backup confirm hidden behind the Deep Dive capture viewer
+
+The **Save Backup** button inside the Deep Dive capture viewer fires `backupSession()`, which opens the "Sensitive backup" confirm dialog. The confirm was rendering *behind* the capture viewer, so it looked like the button did nothing — the action fired, but the confirm was invisible and unclickable until the viewer was closed.
+
+Root cause was a z-index tie: both `#wfConfirmModal` and the capture viewer (`.ddv-overlay`) inherit `z-index: 99999` from `.finish-modal-overlay`, and with equal z-index the later element in the DOM wins the stack. The capture viewer is declared after the confirm, so it always painted on top. Fixed by giving `#wfConfirmModal` a dedicated top-of-stack z-index (`1000000`) — a blocking confirm dialog should never be obscured by any modal, regardless of which one launched it.
+
+### Files changed
+
+- **`style.css`** — `#wfConfirmModal { z-index: 1000000; }`; build stamp → `20260523-005`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.8`
+- **`js/app.js`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+> This release also carries everything from v3.56.7 (the Project Summary modal rework). Deploying v3.56.8 supersedes v3.56.7 — you can skip the v3.56.7 zip.
+
+---
 ## v3.56.7
 **Build:** `20260523-004` · **Released:** May 23, 2026
 
