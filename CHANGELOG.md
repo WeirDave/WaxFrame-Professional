@@ -1,6 +1,35 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.7
+**Build:** `20260523-004` · **Released:** May 23, 2026
+
+### Project Summary modal — replaces the stale Project Goal viewer
+
+Clicking the project name on the work screen opened a "Project Goal" modal that predated the length-mode system and the 5-screen setup. It showed the goal fields plus a character count and a "What AIs receive in Refine rounds" preview — both leftovers from the old 300-character goal-truncation behavior. The preview was also inaccurate: it built its text with the sentence-aware `truncateGoalForRefine`, while the real prompt path hard-cuts the goal with `substring(0, 300) + '…'` (and sends the full goal in the draft phase). It told you something that no longer happens.
+
+Reworked into an honest **Project Summary**:
+
+- Shows the filled goal fields (unchanged) **plus** the **Length** target in plain language ("Target — about 300 words" / "Hard cap — 2,000 characters max" / "Range — 200–400 words" / "No length limit") from `getLengthConstraint()`, and **Reference material** ("2 sources: …" or "None").
+- Removed the stale character-count line and the "What AIs receive in Refine rounds" preview entirely (and the now-orphaned `updateProjectGoalModalPreview` function + refine-preview markup).
+- Title → "Project Summary"; buttons clarified ("Copy Goal", "Edit on Project Screen"); work-header tooltip → "Click to view project summary".
+- Stays a read-only glance that doesn't tear down the work screen mid-run; the Edit button is the deliberate path to the full Project screen.
+
+### Fix — work-header project-info element had a duplicate `class` attribute
+
+The clickable project-name element carried two separate `class=` attributes, so the browser silently dropped the second (`work-project-info-clickable`) and its styling never applied. Merged into one.
+
+### Files changed
+
+- **`js/app.js`** — `showProjectGoalModal` rebuilt as a summary (goal + length + reference); `updateProjectGoalModalPreview` removed. `BUILD` → `20260523-004`
+- **`index.html`** — modal retitled/relabeled, char-count + refine-preview markup removed, duplicate-class fix on the work-header project-info; cache-bust `?v=3.56.7`
+- **`style.css`** — build stamp
+- **`js/version.js`** — `APP_VERSION` → `v3.56.7 Pro`
+- **`CHANGELOG.md`** — this entry
+
+> Note: the Setup 3 (Project screen) goal preview panel uses the same stale `truncateGoalForRefine` framing ("first N chars sent to refine rounds, trimmed to nearest sentence"). It's a separate surface and was left untouched in this release — flagged for follow-up.
+
+---
 ## v3.56.6
 **Build:** `20260523-003` · **Released:** May 23, 2026
 

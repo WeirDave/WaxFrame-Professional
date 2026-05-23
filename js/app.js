@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-003
+//  Build: 20260523-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-003';         // build stamp — update each session
+const BUILD       = '20260523-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -8771,29 +8771,26 @@ function renderWorkPhaseBar() {
 function showProjectGoalModal() {
   const modal = document.getElementById('projectGoalModal');
   if (!modal) return;
-  const goal    = assembleProjectGoal();
   const name    = document.getElementById('projectName')?.value.trim()    || '';
   const version = document.getElementById('projectVersion')?.value.trim() || '';
   const metaEl   = document.getElementById('projectGoalModalMeta');
   const nameEl   = document.getElementById('projectGoalModalName');
   const fieldsEl = document.getElementById('projectGoalModalFields');
   if (nameEl) nameEl.textContent = [name, version].filter(Boolean).join(' · ');
-  if (metaEl) {
-    metaEl.textContent = goal.length > 300
-      ? `${goal.length} characters — exceeds 300-character Refine limit`
-      : `${goal.length} characters`;
-  }
+  // v3.56.7 — meta char-count removed. It only ever supported the old
+  // 300-char goal-truncation concept (the "Refine limit" preview), which no
+  // longer reflects how the goal is sent. The modal is now a project SUMMARY:
+  // goal fields + length target + reference material.
+  if (metaEl) metaEl.textContent = '';
   if (fieldsEl) {
-    // Pull the six structured field values directly from the form, so the
-    // modal mirrors the Setup 3 (Project) screen layout instead of dumping
-    // a flat assembled-text blob with embedded labels.
+    // Goal fields — mirror the six structured Setup 3 fields (filled only).
     const docType  = (document.getElementById('goalDocType')?.value  || '').trim();
     const audience = (document.getElementById('goalAudience')?.value || '').trim();
     const outcome  = (document.getElementById('goalOutcome')?.value  || '').trim();
     const scope    = (document.getElementById('goalScope')?.value    || '').trim();
     const tone     = (document.getElementById('goalTone')?.value     || '').trim();
     const notes    = (document.getElementById('goalNotes')?.value    || '').trim();
-    const rows = [
+    const goalRows = [
       ['Document type',     docType],
       ['Target audience',   audience],
       ['Desired outcome',   outcome],
@@ -8801,43 +8798,46 @@ function showProjectGoalModal() {
       ['Tone & voice',      tone],
       ['Additional instructions', notes],
     ].filter(([, v]) => v);
+
+    // v3.56.7 — Length target, in plain language, from the active constraint.
+    const _len = (typeof getLengthConstraint === 'function') ? getLengthConstraint() : null;
+    let lengthText;
+    if (!_len) {
+      lengthText = 'No length limit';
+    } else {
+      const u = (typeof unitLabel === 'function') ? unitLabel(_len.unit, _len.limit) : _len.unit;
+      if (_len.mode === 'hardcap')     lengthText = `Hard cap — ${_len.limit} ${u} max`;
+      else if (_len.mode === 'target') lengthText = `Target — about ${_len.limit} ${u}`;
+      else if (_len.mode === 'range')  lengthText = `Range — ${_len.min}–${_len.limit} ${u}`;
+      else                             lengthText = 'No length limit';
+    }
+
+    // v3.56.7 — Reference material the hive consults (Setup 4).
+    const _refDocs = (typeof referenceDocs !== 'undefined' ? referenceDocs : [])
+      .filter(d => (d.text || '').trim());
+    const refText = _refDocs.length
+      ? `${_refDocs.length} source${_refDocs.length === 1 ? '' : 's'}: ${_refDocs.map(d => d.name).join(', ')}`
+      : 'None';
+
+    // Length + Reference always show (they're project attributes, not optional
+    // goal fields) so the summary is honest even when one is unset.
+    const rows = [
+      ...goalRows,
+      ['Length', lengthText],
+      ['Reference material', refText],
+    ];
+
     const esc = s => String(s)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-    if (rows.length === 0) {
-      fieldsEl.innerHTML = '<div class="goal-modal-empty">No goal fields filled in yet — open the Project screen to add them.</div>';
-    } else {
-      fieldsEl.innerHTML = rows.map(([label, value], i) => `
-        <div class="dp-field">
-          <div class="dp-field-label">${esc(label)}</div>
-          <div class="dp-field-value">${esc(value).replace(/\n/g, '<br>')}</div>
-        </div>${i < rows.length - 1 ? '<div class="dp-field-divider"></div>' : ''}
-      `).join('');
-    }
+    fieldsEl.innerHTML = rows.map(([label, value], i) => `
+      <div class="dp-field">
+        <div class="dp-field-label">${esc(label)}</div>
+        <div class="dp-field-value">${esc(value).replace(/\n/g, '<br>')}</div>
+      </div>${i < rows.length - 1 ? '<div class="dp-field-divider"></div>' : ''}
+    `).join('');
   }
-  updateProjectGoalModalPreview();
   modal.classList.add('active');
-}
-
-function updateProjectGoalModalPreview() {
-  const goal = assembleProjectGoal();
-  const refineWrap = document.getElementById('projectGoalModalRefineWrap');
-  const refineText = document.getElementById('projectGoalModalRefineText');
-  const metaEl     = document.getElementById('projectGoalModalMeta');
-  const truncated  = goal.length > 300;
-  if (metaEl) {
-    metaEl.textContent = truncated
-      ? `${goal.length} characters — exceeds 300-character Refine limit`
-      : `${goal.length} characters`;
-  }
-  if (refineWrap && refineText) {
-    if (truncated) {
-      refineText.textContent = truncateGoalForRefine(goal);
-      refineWrap.style.display = 'block';
-    } else {
-      refineWrap.style.display = 'none';
-    }
-  }
 }
 
 function editGoalFromModal() {
