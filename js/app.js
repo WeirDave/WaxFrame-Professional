@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-001
+//  Build: 20260523-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-001';         // build stamp — update each session
+const BUILD       = '20260523-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -13008,9 +13008,35 @@ function renderConflicts() {
     return;
   }
 
-  // Reset choices when new conflicts arrive
-  window._decisionChoices = {};
+  // v3.56.5 — Only reset picks when the conflict SET genuinely changes (new
+  // round / different decisions). This previously wiped _decisionChoices on
+  // EVERY render — so locking one decision (which re-renders the panel) erased
+  // your picks on the others AND dropped the locked decision out of the
+  // apply-count, permanently disabling "Apply My Decisions". Guard the wipe with
+  // a fingerprint of the current userDecisions.
+  const _udFP = JSON.stringify((conflicts.userDecisions || [])
+    .map(d => `${d.current || ''}|${d.question || ''}`));
+  if (window._lastConflictFP !== _udFP) {
+    window._decisionChoices = {};
+    window._lastConflictFP  = _udFP;
+  }
+  window._decisionChoices    = window._decisionChoices || {};
   window._conflictCurrentTexts = {};
+
+  // v3.56.5 — Re-hydrate locked decisions into _decisionChoices so a lock stays
+  // counted (Apply lights up) and highlighted across re-renders. The lock lives
+  // in _resolvedDecisions ({original, chosen}); map chosen → option index, else
+  // treat as a custom override.
+  (conflicts.userDecisions || []).forEach((d, di) => {
+    if (window._decisionChoices[di] != null) return; // a pick this render wins
+    const cur  = (d.current || '').trim();
+    const lock = (window._resolvedDecisions || []).find(rd => (rd.original || '').trim() === cur);
+    if (!lock) return;
+    const oi = (d.options || []).findIndex(o => (o.text || '') === lock.chosen);
+    window._decisionChoices[di] = (oi >= 0)
+      ? { type: 'option', idx: oi }
+      : { type: 'custom', text: lock.chosen || (d.current || '') };
+  });
 
   let html = '';
 
@@ -13157,6 +13183,39 @@ function renderConflicts() {
   }
 
   el.innerHTML = buildAppliedChangesHTML(latest) + html;
+  hydrateDecisionSelections();
+}
+
+// v3.56.5 — After renderConflicts redraws the panel, re-apply the visual state
+// of every resolved decision: highlight the chosen option, open the custom box
+// if it was a custom answer, mark the card resolved, and re-light the Apply
+// button. innerHTML rebuilds the DOM fresh each render, so without this the
+// selected highlight is lost (the card went green but the picked option looked
+// blank — the locked-but-unhighlighted bug) and the Apply gate never recomputes.
+function hydrateDecisionSelections() {
+  const latest    = history.length > 0 ? history[history.length - 1] : null;
+  const decisions = latest?.conflicts?.userDecisions || [];
+  const total     = decisions.length;
+  if (!total) return;
+  Object.keys(window._decisionChoices || {}).forEach(di => {
+    const choice = window._decisionChoices[di];
+    const card   = document.getElementById(`dcard-${di}`);
+    if (!card || !choice) return;
+    card.querySelectorAll('.decision-opt-btn').forEach(b => b.classList.remove('selected'));
+    if (choice.type === 'option') {
+      document.getElementById(`dopt-${di}-${choice.idx}`)?.classList.add('selected');
+    } else if (choice.type === 'custom') {
+      document.getElementById(`dopt-${di}-custom`)?.classList.add('selected');
+      const wrap = document.getElementById(`dcustom-${di}`);
+      const ta   = document.getElementById(`dcustom-ta-${di}`);
+      if (wrap) wrap.style.display = 'block';
+      if (ta && choice.text) { ta.value = choice.text; ta.dataset.userEdited = '1'; }
+    } else if (choice.type === 'bypass') {
+      document.getElementById(`dopt-${di}-bypass`)?.classList.add('selected');
+    }
+    card.classList.add('resolved');
+  });
+  checkAllDecisionsMade(total);
 }
 
 function selectDecision(decisionIdx, optionIdx, total) {
@@ -13318,8 +13377,14 @@ function applyDecisions() {
       chosenText = d.current || ''; // lock current text as-is
     }
     if (d.current && chosenText) {
-      window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
-      localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
+      // v3.56.5 — Don't double-push a decision already locked via
+      // lockConflictDecision (now re-hydrated into _decisionChoices).
+      const _alreadyResolved = window._resolvedDecisions.some(rd =>
+        (rd.original || '').trim() === d.current.trim());
+      if (!_alreadyResolved) {
+        window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
+        localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
+      }
       // Mark as suppressed in conflict ledger
       const fp = fingerprintConflict(d);
       const entry = window._conflictLedger.find(e => e.fingerprint === fp);
