@@ -1,6 +1,41 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.5
+**Build:** `20260523-002` · **Released:** May 23, 2026
+
+### Fix — conflicts decision panel: locking destroyed picks and dead-locked the Apply button
+
+The USER DECISION resolution flow was broken end-to-end. Root cause: `renderConflicts()` ran `window._decisionChoices = {}` on **every** redraw (the comment said "when new conflicts arrive," but it fired on every render). Locking a decision triggers a redraw, so the wipe cascaded into three visible failures:
+
+- **Locking one decision erased your picks on the others** — the redraw wiped the choice store.
+- **A locked decision's chosen option wasn't highlighted** — the card turned green but the selected option looked blank, because the redraw never re-applied the highlight.
+- **Apply My Decisions stayed permanently disabled even with all decisions locked** — locks live in `_resolvedDecisions`, a different store than the one the Apply gate counts (`_decisionChoices`), which had just been wiped to empty. `0 of N` never satisfied the gate.
+
+Fixes, as one coherent pass through the section:
+
+- The pick store is only reset when the conflict **set** genuinely changes (fingerprinted on each decision's current text + question), not on every redraw — so locking/unlocking within a round preserves your other picks.
+- Locked decisions are re-hydrated into the pick store on render (chosen text mapped back to its option, or treated as custom), so a lock stays both **counted** and **highlighted** across redraws.
+- A new post-render pass re-applies the selected highlight, re-opens the custom box where used, marks resolved cards, and recomputes the Apply button state every render.
+- `applyDecisions` no longer double-pushes a decision that was already locked.
+
+Net: pick → lock each decision, your picks hold, the locked choice stays highlighted, and once every decision is handled the Apply button lights and sends to the Builder.
+
+### Copy — backup confirm button
+
+The "Sensitive backup" confirm dialog's button reads **"Save to Backup"** (was "Download backup").
+
+### Files changed
+
+- **`js/app.js`** — `renderConflicts` fingerprint-guarded reset + locked-decision re-hydration; new `hydrateDecisionSelections()` called after render; `applyDecisions` duplicate-resolve guard. `BUILD` → `20260523-002`
+- **`js/storage.js`** — backup confirm `okText` → `'Save to Backup'`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.5 Pro`
+- **`index.html`, `style.css`, 5 helper HTML** — cache-bust `?v=3.56.5` + build stamp only
+- **`CHANGELOG.md`** — this entry
+
+> Note: this release's zip ships the **complete** file set (all 13 `js/` files). The v3.56.4 zip was missing 8 unchanged JS files — harmless on an extract-over-repo deploy, but the zip is now whole.
+
+---
 ## v3.56.4
 **Build:** `20260523-001` · **Released:** May 23, 2026
 
