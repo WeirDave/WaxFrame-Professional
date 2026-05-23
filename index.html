@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260523-003
+     Build: 20260523-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260523-003">
+  <meta name="waxframe-build" content="20260523-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.6">
+  <link rel="stylesheet" href="style.css?v=3.56.7">
 </head>
 <body>
 
@@ -568,7 +568,7 @@
         <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation">
           <span></span><span></span><span></span>
         </button>
-        <div class="work-project-info" onclick="showProjectGoalModal()" title="Click to view project goal" class="work-project-info-clickable">
+        <div class="work-project-info work-project-info-clickable" onclick="showProjectGoalModal()" title="Click to view project summary">
           <span class="work-project-name" id="workProjectName">Project</span>
           <span class="work-project-version" id="workProjectVersion"></span>
           <span class="work-start-mode" id="workStartMode"></span>
@@ -1679,19 +1679,15 @@
 <!-- PROJECT GOAL VIEWER MODAL -->
 <div class="finish-modal-overlay" id="projectGoalModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal finish-modal-goal">
-    <h2 class="finish-modal-title finish-modal-title-goal">📋 Project Goal</h2>
+    <h2 class="finish-modal-title finish-modal-title-goal">📋 Project Summary</h2>
     <div class="goal-modal-name" id="projectGoalModalName"></div>
     <div class="goal-modal-meta" id="projectGoalModalMeta"></div>
-    <div class="goal-modal-label">Assembled goal <span class="goal-modal-label-note">(read-only — edit fields on the Project screen)</span></div>
+    <div class="goal-modal-label">Project setup <span class="goal-modal-label-note">(read-only — edit on the Project screen)</span></div>
     <div id="projectGoalModalFields" class="goal-modal-fields"></div>
-    <div id="projectGoalModalRefineWrap" style="display:none;" class="goal-modal-refine-wrap">
-      <div class="goal-modal-refine-label">What AIs receive in Refine rounds</div>
-      <div id="projectGoalModalRefineText" class="goal-modal-refine-text"></div>
-    </div>
     <div class="goal-modal-footer">
-      <button title="Close the Project Goal viewer" class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
-      <button title="Copy the full assembled project goal to clipboard" class="finish-modal-cancel" onclick="copyGoal()">📋 Copy</button>
-      <button title="Jump back to Setup 3 to edit your project goal" class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit Goal</button>
+      <button title="Close the Project Summary viewer" class="finish-modal-cancel" onclick="document.getElementById('projectGoalModal').classList.remove('active')">← Close</button>
+      <button title="Copy the full assembled project goal to clipboard" class="finish-modal-cancel" onclick="copyGoal()">📋 Copy Goal</button>
+      <button title="Jump back to the Project screen to edit your setup" class="finish-modal-cancel finish-modal-cancel-accent" onclick="editGoalFromModal()">✏️ Edit on Project Screen</button>
     </div>
   </div>
 </div>
@@ -2364,20 +2360,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.6"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.6"></script>
-<script src="lib/jszip.min.js?v=3.56.6"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.6"></script>
-<script src="js/version.js?v=3.56.6"></script>
-<script src="js/storage.js?v=3.56.6"></script>
-<script src="js/theme.js?v=3.56.6"></script>
-<script src="js/audio.js?v=3.56.6"></script>
-<script src="js/scenes.js?v=3.56.6"></script>
-<script src="js/wf-debug.js?v=3.56.6"></script>
-<script src="js/api.js?v=3.56.6"></script>
-<script src="js/templates.js?v=3.56.6"></script>
-<script src="js/app.js?v=3.56.6"></script>
-<script src="js/api-links.js?v=3.56.6"></script>
+<script src="lib/pdf.min.js?v=3.56.7"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.7"></script>
+<script src="lib/jszip.min.js?v=3.56.7"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.7"></script>
+<script src="js/version.js?v=3.56.7"></script>
+<script src="js/storage.js?v=3.56.7"></script>
+<script src="js/theme.js?v=3.56.7"></script>
+<script src="js/audio.js?v=3.56.7"></script>
+<script src="js/scenes.js?v=3.56.7"></script>
+<script src="js/wf-debug.js?v=3.56.7"></script>
+<script src="js/api.js?v=3.56.7"></script>
+<script src="js/templates.js?v=3.56.7"></script>
+<script src="js/app.js?v=3.56.7"></script>
+<script src="js/api-links.js?v=3.56.7"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
