@@ -363,6 +363,7 @@ window.WF_ERROR_CATALOG = [
     meaning: '{ai} says you are sending too many requests, or you have hit a usage quota. WaxFrame skipped {ai} for the round and continued with the others. The next round usually works after 30–60 seconds. Click Open provider console to check your usage dashboard or upgrade your plan; click Disable this AI for the session if the limit looks exhausted and you would rather keep going without {ai}. The console-link button auto-hides for custom AIs that did not have an API console URL configured at Add Custom AI time.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Open provider docs', kind: 'docs-link' },
       { label: 'Retry round', kind: 'retry' },
       { label: 'Disable this AI for the session', kind: 'disable-ai' }
     ]
@@ -401,6 +402,7 @@ window.WF_ERROR_CATALOG = [
     meaning: '{ai} rejected the request because your account balance with this provider is too low or billing has failed. WaxFrame skipped {ai} for the round and continued with the others. Click the button below to open the {ai} provider console — most providers put their billing/credit-add page one click away from the API console.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Open provider docs', kind: 'docs-link' },
       { label: 'Retry round', kind: 'retry' },
       { label: 'Disable this AI for the session', kind: 'disable-ai' }
     ]
@@ -415,6 +417,7 @@ window.WF_ERROR_CATALOG = [
     meaning: '{ai} rejected the API key. Common causes: the key was deleted or rotated in the {ai} provider console, billing failed and the account is suspended, or the key was copied with extra whitespace. Re-test the key on Worker Bees → Test All Keys.',
     actions: [
       { label: 'Open provider console', kind: 'console-link' },
+      { label: 'Open provider docs', kind: 'docs-link' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -671,6 +674,13 @@ function renderTroubleshootingCard(entry, ctx) {
         btn.onclick = () => { window.open(a.href, '_blank', 'noopener,noreferrer'); };
       } else if (a.kind === 'console-link') {
         const url = ctx?.aiConsoleUrl || null;
+        if (!url) { btn.style.display = 'none'; }
+        else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
+      } else if (a.kind === 'docs-link') {
+        // v3.56.6 — provider documentation link; reads ctx.aiDocsUrl
+        // (ai.apiDocs). Auto-hides when the AI has no docs URL on file,
+        // same graceful behavior as the console-link button.
+        const url = ctx?.aiDocsUrl || null;
         if (!url) { btn.style.display = 'none'; }
         else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
       } else if (a.kind === 'retry') {

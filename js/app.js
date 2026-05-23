@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-002
+//  Build: 20260523-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-002';         // build stamp — update each session
+const BUILD       = '20260523-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3860,6 +3860,11 @@ function showAddCustomAI() {
   if (quickAdd)   quickAdd.value  = '';
   if (keyLink)    keyLink.style.display = 'none';
   if (helpLink)   helpLink.style.display = 'none';
+  // v3.56.6 — clear the API Console / Docs URL fields and their userTyped flags
+  const consoleInput = document.getElementById('customAIConsoleUrl');
+  if (consoleInput) { consoleInput.value = ''; delete consoleInput.dataset.userTyped; }
+  const docsInput = document.getElementById('customAIDocsUrl');
+  if (docsInput)    { docsInput.value = '';    delete docsInput.dataset.userTyped; }
   resetModelField();
   populateQuickAddOptions();
   updateChooseModelLink();
@@ -5050,12 +5055,24 @@ function applyQuickAdd(value) {
   if (!value) {
     if (keyLink)  keyLink.style.display = 'none';
     if (helpLink) helpLink.style.display = 'none';
+    const consoleInput = document.getElementById('customAIConsoleUrl');
+    if (consoleInput && !consoleInput.dataset.userTyped) consoleInput.value = '';
+    const docsInput = document.getElementById('customAIDocsUrl');
+    if (docsInput && !docsInput.dataset.userTyped) docsInput.value = '';
     updateChooseModelLink();
     return;
   }
 
   const preset = QUICK_ADD_PROVIDERS[value];
   if (!preset) { updateChooseModelLink(); return; }
+
+  // v3.56.6 — pre-fill API Console URL + Docs URL from the preset (the
+  // troubleshooting card reads ai.apiConsole / ai.apiDocs). Don't clobber a
+  // value the user typed themselves.
+  const consoleInput = document.getElementById('customAIConsoleUrl');
+  if (consoleInput && !consoleInput.dataset.userTyped) consoleInput.value = preset.keyLink || '';
+  const docsInput = document.getElementById('customAIDocsUrl');
+  if (docsInput && !docsInput.dataset.userTyped) docsInput.value = preset.chooseModelLink || '';
 
   if (urlInput)  { urlInput.value = preset.url; }
   if (fmtSelect) fmtSelect.value = preset.format;
@@ -5344,6 +5361,18 @@ function addCustomAI() {
   // when a user adds a custom AI without picking an icon.
   const icon   = previewIcon || GENERIC_ICON_PATH;
   const ai     = { id, name, url, icon, provider: id };
+
+  // v3.56.6 — API Console URL (billing/usage) + Docs URL. Manual field wins;
+  // otherwise fall back to a matched Quick Add preset (keyLink = console,
+  // chooseModelLink = docs). apiConsole powers the troubleshooting card's
+  // "Open provider console" button; apiDocs powers "Open provider docs".
+  const _preset      = (typeof getActivePreset === 'function') ? getActivePreset(url) : null;
+  const _consoleVal  = (document.getElementById('customAIConsoleUrl')?.value || '').trim();
+  const _docsVal     = (document.getElementById('customAIDocsUrl')?.value || '').trim();
+  const _apiConsole  = _consoleVal || _preset?.keyLink || '';
+  const _apiDocs     = _docsVal    || _preset?.chooseModelLink || '';
+  if (_apiConsole) ai.apiConsole = _apiConsole;
+  if (_apiDocs)    ai.apiDocs    = _apiDocs;
 
   // Build API config based on selected format
   const baseConfigs = {
@@ -11897,6 +11926,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       aiName:        ai.name,
       provider:      ai.provider,
       aiConsoleUrl:  ai.apiConsole || null,
+      aiDocsUrl:     ai.apiDocs || null,
       isCustomEndpoint,
       message:       fetchErr.message,
       raw:           null
@@ -11926,6 +11956,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       aiName:       ai.name,
       provider:     ai.provider,
       aiConsoleUrl: ai.apiConsole || null,
+      aiDocsUrl:    ai.apiDocs || null,
       isCustomEndpoint,
       status:       response.status,
       message:      msg,
@@ -11968,6 +11999,7 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       aiName:       ai.name,
       provider:     ai.provider,
       aiConsoleUrl: ai.apiConsole || null,
+      aiDocsUrl:    ai.apiDocs || null,
       isCustomEndpoint,
       status:       response.status,
       message:      'Empty response',

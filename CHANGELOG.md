@@ -1,6 +1,34 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.6
+**Build:** `20260523-003` · **Released:** May 23, 2026
+
+### Custom Worker Bee — API Console + Docs URLs, and they reach the troubleshooting card
+
+The rate-limit / credit / auth troubleshooting card has always offered an "Open provider console" button, but it only ever worked for the six built-in providers. Known Quick Add providers (Mistral, Together, Cohere) *already carried* their console URL (`keyLink`) and docs URL (`chooseModelLink`) — the modal even displays them — but neither was ever copied onto the AI, so the card had nothing to open. Custom/manual AIs had no way to supply one at all (the field the card's copy referenced was never built).
+
+This release closes both gaps and adds the docs link:
+
+- **Add Custom Worker Bee** gains two optional fields — **API Console URL** (billing/usage) and **Docs URL** (provider documentation). Picking a Quick Add provider auto-fills both from the preset; manual entries can type their own. A value you type is never clobbered by a later preset selection.
+- On save, `apiConsole` and `apiDocs` are persisted on the AI (manual field wins, else the matched preset's `keyLink` / `chooseModelLink`).
+- The troubleshooting card now also offers **"Open provider docs"** alongside "Open provider console" — so on a rate limit you can jump straight to that provider's rate-limit rules, not just their billing page. Both buttons auto-hide when the AI has no URL on file (same graceful behavior).
+- Mistral, Together, and Cohere now light up both buttons with zero manual entry, because their URLs were already in the presets — just unwired until now.
+
+### UI — Add Custom Worker Bee info button
+
+The header info button was a far-right circle (its own `.custom-ai-info-btn` rule with `margin-left:auto`) using a plain glyph — inconsistent with every other info button in the app. It's now inline next to the title using the standard `.goal-info-btn` + `WaxFrame_InfoButton_v1.png`, and the dead single-use CSS rule was removed.
+
+### Files changed
+
+- **`js/app.js`** — `addCustomAI` captures console/docs URLs (preset fallback via `getActivePreset`); `applyQuickAdd` pre-fills both, respecting user-typed values; `showAddCustomAI` resets them; all three troubleshooting-card context builders pass `aiDocsUrl`. `BUILD` → `20260523-003`
+- **`js/wf-debug.js`** — `docs-link` action added to RATE_LIMITED / CREDIT_LOW / AUTH_FAILED; render handler reads `ctx.aiDocsUrl`
+- **`index.html`** — two new optional fields in Add Custom Worker Bee; info button moved inline + reclassed; cache-bust `?v=3.56.6`
+- **`style.css`** — removed dead `.custom-ai-info-btn` rules; build stamp
+- **`js/version.js`** — `APP_VERSION` → `v3.56.6 Pro`
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.5
 **Build:** `20260523-002` · **Released:** May 23, 2026
 
