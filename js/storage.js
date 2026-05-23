@@ -829,7 +829,7 @@ async function backupSession() {
   const proceed = await wfConfirm(
     'Sensitive backup',
     "Full backups let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
-    { okText: 'Download backup' }
+    { okText: 'Save to Backup' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
