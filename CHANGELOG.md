@@ -1,6 +1,35 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.4
+**Build:** `20260523-001` · **Released:** May 23, 2026
+
+### P1.3 #9 — TARGET tolerance band ("close is close enough")
+
+#9's length check used an exact floor/ceiling against the user's number, so a TARGET of 300 treated 299 as *under* and 302 as *over* — both fired a correction (or, in interactive mode, the convergence modal). That's a math answer to a human problem. "300 words" colloquially means *about* 300; a couple sentences short still reads as 300 and should pass.
+
+TARGET mode now accepts within an asymmetric tolerance band off two named constants: `TARGET_TOLERANCE_UNDER` (0.10 — accept down to 90% of the target) and `TARGET_TOLERANCE_OVER` (0.05 — accept up to 105%). Generous under (a short-but-coherent doc is correct), tighter over (overshoot can drift toward a real cap). The band is an internal *acceptance* threshold — once a correction actually fires, the directive still aims at the real target, not the band edge, and user-facing modals/labels show the user's target (300), never the soft floor (270). Hardcoded for now; a user setting is tracked in the backlog.
+
+**HARD CAP and RANGE are unchanged.** A hard cap is a real wall (over is over) and a range is human-set (respect the chosen bounds) — for those modes `ceilNum === limitNum`, so every comparison is byte-for-byte identical to v3.56.3.
+
+### HARD CAP — end on a complete sentence
+
+The over-correction directive now instructs the Builder to **end on a complete sentence at or under the limit, never mid-sentence** — if the natural ending would breach the cap, end at the last complete sentence that fits, and finishing a sentence or two short is correct and expected. This lifts the proven `truncateGoalForRefine` principle into the output path. It stays a *directive* (the hive still vets the result) — no deterministic JS truncation of the converged document, so the v3.56.3 "hive is the authority" architecture holds.
+
+### Reconciled across both gate sites
+
+The band is applied consistently at the at-convergence check (`getLengthStatus`) **and** both copies of the trajectory-aware mid-round gate (`runRound` + the `runBuilderOnly` mirror), so mid-round and convergence agree on "in range." The duplicate inline floor-label block was folded into the shared `lengthFloorLabel` helper, now target-aware.
+
+**Still tracked, not built:** the tolerance % as a user setting (Settings panel), and over-vs-under asymmetry as a tunable. Reviewer-directive length steering (telling the hive "aim ~N, coherence first") is deliberately deferred to protect the verified hive behavior.
+
+### Files changed
+
+- **`js/app.js`** — new `TARGET_TOLERANCE_UNDER` / `TARGET_TOLERANCE_OVER` constants; `getLengthStatus` adds a soft band + `ceilNum` for TARGET (hardcap/range strict); `_autoBuildLengthDirective` adds the complete-sentence clause (over) and aims the expand at the real target (under); both mid-round gate copies use the band; `lengthFloorLabel` made target-aware and the inline duplicate removed; modals/labels surface the target in TARGET-under. `BUILD` → `20260523-001`; stale comment-header build stamp `20260508-002` → `20260523-001`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.4 Pro`
+- **`index.html`, 5 helper HTML** — cache-bust `?v=3.56.4` + build stamp only (80ch work-column rule untouched)
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.3
 **Build:** `20260520-010` · **Released:** May 21, 2026
 
