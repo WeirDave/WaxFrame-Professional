@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260523-002
+     Build: 20260523-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260523-002">
+  <meta name="waxframe-build" content="20260523-003">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.5">
+  <link rel="stylesheet" href="style.css?v=3.56.6">
 </head>
 <body>
 
@@ -1003,10 +1003,9 @@
     <div class="custom-ai-modal-hdr">
       <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="custom-ai-modal-bee">
       <div>
-        <div class="custom-ai-modal-title">Add a Custom Worker Bee</div>
+        <div class="custom-ai-modal-title">Add a Custom Worker Bee <button type="button" class="goal-info-btn" onclick="showCustomAIInfoModal()" title="What goes in each field?" aria-label="What goes in each field?"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></div>
         <div class="custom-ai-modal-sub">Connect any OpenAI-compatible, Anthropic, or Google endpoint</div>
       </div>
-      <button type="button" class="custom-ai-info-btn" onclick="showCustomAIInfoModal()" title="What goes in each field?" aria-label="What goes in each field?">ⓘ</button>
     </div>
     <div class="custom-ai-form-row custom-ai-quickadd-row">
       <div class="custom-ai-field-wrap">
@@ -1051,6 +1050,16 @@
           <input type="password" id="customAIKey" placeholder="Paste key if required" oninput="resetModelField()">
           <button class="ai-eye-btn" type="button" onclick="toggleCustomAIKeyVis()" title="Show/hide key">👁</button>
         </div>
+      </div>
+    </div>
+    <div class="custom-ai-form-row">
+      <div class="custom-ai-field-wrap">
+        <label>API Console URL <span class="field-optional">(optional · billing/usage page, used by error troubleshooting)</span></label>
+        <input type="text" id="customAIConsoleUrl" placeholder="e.g. https://console.provider.com/api-keys" oninput="this.dataset.userTyped='true'">
+      </div>
+      <div class="custom-ai-field-wrap">
+        <label>Docs URL <span class="field-optional">(optional · provider docs, offered on errors)</span></label>
+        <input type="text" id="customAIDocsUrl" placeholder="e.g. https://docs.provider.com" oninput="this.dataset.userTyped='true'">
       </div>
     </div>
     <div class="custom-ai-form-row custom-ai-model-row">
@@ -2355,20 +2364,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.5"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.5"></script>
-<script src="lib/jszip.min.js?v=3.56.5"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.5"></script>
-<script src="js/version.js?v=3.56.5"></script>
-<script src="js/storage.js?v=3.56.5"></script>
-<script src="js/theme.js?v=3.56.5"></script>
-<script src="js/audio.js?v=3.56.5"></script>
-<script src="js/scenes.js?v=3.56.5"></script>
-<script src="js/wf-debug.js?v=3.56.5"></script>
-<script src="js/api.js?v=3.56.5"></script>
-<script src="js/templates.js?v=3.56.5"></script>
-<script src="js/app.js?v=3.56.5"></script>
-<script src="js/api-links.js?v=3.56.5"></script>
+<script src="lib/pdf.min.js?v=3.56.6"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.6"></script>
+<script src="lib/jszip.min.js?v=3.56.6"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.6"></script>
+<script src="js/version.js?v=3.56.6"></script>
+<script src="js/storage.js?v=3.56.6"></script>
+<script src="js/theme.js?v=3.56.6"></script>
+<script src="js/audio.js?v=3.56.6"></script>
+<script src="js/scenes.js?v=3.56.6"></script>
+<script src="js/wf-debug.js?v=3.56.6"></script>
+<script src="js/api.js?v=3.56.6"></script>
+<script src="js/templates.js?v=3.56.6"></script>
+<script src="js/app.js?v=3.56.6"></script>
+<script src="js/api-links.js?v=3.56.6"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
