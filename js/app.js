@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260508-002
+//  Build: 20260523-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260520-010';         // build stamp — update each session
+const BUILD       = '20260523-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1583,6 +1583,20 @@ const WORDS_PER_PAGE      = 600;
 const WORDS_PER_PARAGRAPH = 125; // fallback estimate for hint display only — bloat gate direct-counts paragraphs
 const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 
+// v3.56.4 — TARGET-mode tolerance band (#9). Target is a single number where
+// the TOOL supplies the tolerance: "300 words" colloquially means "about 300."
+// The convergence/round length check now accepts within a band instead of
+// demanding an exact hit (the old floor = limit rule over-nudged on trivial
+// misses — e.g. 299 read as "under", 302 fired the interactive modal). The band
+// is asymmetric by design: generous on the UNDER side (a couple sentences short
+// of "about N" still reads as N — the teacher 2-page case), tighter on the OVER
+// side (overshoot can drift toward a real cap). HARD CAP and RANGE are NOT
+// affected — a hard cap is a real wall (over is over, end on a complete
+// sentence under it) and a range is human-set (respect the chosen bounds).
+// Hardcoded for now; a user setting is tracked in the backlog, not built here.
+const TARGET_TOLERANCE_UNDER = 0.10; // accept down to 90% of the target
+const TARGET_TOLERANCE_OVER  = 0.05; // accept up to 105% of the target
+
 // v3.33.0 — Length mode overhaul (#8). Replaced the implicit
 // LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 with explicit user-opted
 // modes: 'none' | 'hardcap' | 'target' | 'range'. Convergence-under
@@ -1601,8 +1615,13 @@ const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 
 // v3.33.0 — Mode-aware floor label for length-guard prompt UI. Same logic
 // regardless of which intercept is firing (round-end or convergence-time).
-function lengthFloorLabel(floorNum, unitName, mode) {
-  if (mode === 'target')      return `${floorNum} ${unitName} (target)`;
+// v3.56.4 — Target mode now surfaces the user's TARGET (targetNum), not the
+// internal soft-band floor (#9). The band is an acceptance threshold the tool
+// supplies; the user only ever set the target, so that's the number to show.
+// targetNum is ignored for range/hardcap. Callers that don't pass it fall back
+// to floorNum (back-compat).
+function lengthFloorLabel(floorNum, unitName, mode, targetNum) {
+  if (mode === 'target')      return `${targetNum != null ? targetNum : floorNum} ${unitName} (target)`;
   if (mode === 'range')       return `${floorNum} ${unitName} (range minimum)`;
   return `${floorNum} ${unitName}`;
 }
@@ -1710,19 +1729,30 @@ function getLengthStatus(text) {
     : `${c.limit} ${unitLabel(c.unit, c.limit)}`;
   // Floor depends on mode:
   //   • hardcap / none — no floor (status never 'under')
-  //   • target          — floor = limit (Builder told to hit N exactly; trajectory-aware
-  //                       at the round level, exact-match at convergence)
-  //   • range           — floor = min
+  //   • target          — soft tolerance band (#9, v3.56.4): floor = limit·(1−UNDER),
+  //                       ceiling = limit·(1+OVER). "About N", not exactly N.
+  //   • range           — floor = min (human-set), ceiling = max (human-set)
+  // Floor + ceiling depend on mode:
+  //   • hardcap / none — no floor (status never 'under'); ceiling is the exact
+  //                      limit (a real wall — over is over)
+  //   • range          — floor = min, ceiling = limit (both human-set; respect them)
+  //   • target         — TOOL-supplied tolerance band around the single number
+  //                      (#9, v3.56.4). "About N", not exactly N: generous under,
+  //                      tighter over. Stops the exact-match over-nudge on trivial
+  //                      misses (e.g. 299 / 302 vs 300). The directive still aims
+  //                      the correction at the real target (limitNum), not the band edge.
   let floorNum = 0;
+  let ceilNum  = limitNum;
   if (c.mode === 'target') {
-    floorNum = limitNum;
+    floorNum = Math.round(limitNum * (1 - TARGET_TOLERANCE_UNDER));
+    ceilNum  = Math.round(limitNum * (1 + TARGET_TOLERANCE_OVER));
   } else if (c.mode === 'range' && c.min) {
     floorNum = c.unit === 'pages' ? (c.wordMin || c.min) : c.min;
   }
   let status = 'ok';
-  if (actual > limitNum)                       status = 'over';
+  if (actual > ceilNum)                        status = 'over';
   else if (floorNum > 0 && actual < floorNum)  status = 'under';
-  return { status, actual, limitNum, floorNum, unitName, limitName, mode: c.mode };
+  return { status, actual, limitNum, floorNum, ceilNum, unitName, limitName, mode: c.mode };
 }
 
 // v3.33.0 — Mode picker click handler. Updates active pill, toggles the min
@@ -1916,10 +1946,16 @@ function _autoBuildLengthDirective(cstat) {
   const sep = '─'.repeat(60);
   if (cstat.status === 'over') {
     const overBy = Math.max(0, cstat.actual - cstat.limitNum);
-    return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${overBy} ${cstat.unitName} OVER the limit of ${cstat.limitName}. Trim the document so it fits within the limit. Preserve all key content, structure, and meaning — remove redundancy and tighten prose, cutting only the least essential material. Do not introduce new ideas or sections. Return the complete trimmed document.`;
+    return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${overBy} ${cstat.unitName} OVER the limit of ${cstat.limitName}. Trim the document so it fits within the limit. End on a COMPLETE SENTENCE at or under the limit — never end mid-sentence. If the natural ending would push past the limit, end at the last complete sentence that fits; finishing a sentence or two short of the limit is correct and expected. Preserve all key content, structure, and meaning — remove redundancy and tighten prose, cutting only the least essential material. Do not introduce new ideas or sections. Return the complete trimmed document.`;
   }
-  const underBy = Math.max(0, cstat.floorNum - cstat.actual);
-  return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${underBy} ${cstat.unitName} UNDER the floor of ${cstat.floorNum} ${cstat.unitName}. Expand the document so it reaches at least the floor. Add substantive, relevant content consistent with the document's purpose and existing material — do not pad with filler or repetition. Return the complete expanded document.`;
+  // Under: aim the expansion at the REAL target in target mode (the band floor is
+  // only an acceptance threshold; once we're correcting, reach for N, not 0.9·N).
+  // In range mode the floor IS the user's min — reaching it is the goal.
+  const underGoal  = (cstat.mode === 'target') ? cstat.limitNum : cstat.floorNum;
+  const underLabel = (cstat.mode === 'target') ? 'target' : 'floor';
+  const reachPhrase = (cstat.mode === 'target') ? 'approximately the target' : 'at least the floor';
+  const underBy = Math.max(0, underGoal - cstat.actual);
+  return `LENGTH CORRECTION (this build only):\n${sep}\nThe reviewers have already converged on the content. The document is currently ${cstat.actual} ${cstat.unitName}, which is ${underBy} ${cstat.unitName} UNDER the ${underLabel} of ${underGoal} ${cstat.unitName}. Expand the document so it reaches ${reachPhrase}. Add substantive, relevant content consistent with the document's purpose and existing material — do not pad with filler or repetition. Return the complete expanded document.`;
 }
 
 // P1.3 #9 (v3.56.1) — At-convergence length reroll (Auto only). Called from
@@ -10616,10 +10652,16 @@ async function runBuilderOnly() {
         prevActual = countInUnit(docText, _lcGate.unit);
         limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
         // v3.33.0 — Floor is mode-driven. Hardcap has no floor (undersized
-        // branch never fires). Target floor = limit (Builder told to hit N
-        // exactly; trajectory-aware logic still applies). Range floor = min.
+        // branch never fires). Range floor = min.
+        // v3.56.4 — Target floor/ceiling now use the TARGET tolerance band
+        // (#9), mirroring getLengthStatus so mid-round and at-convergence agree
+        // on "in range." Was floor = limit (exact), which nagged interactive
+        // runs on trivial misses (299 / 302 vs 300). ceilNum stays === limitNum
+        // for hardcap/range, so their comparisons are byte-for-byte unchanged.
+        let ceilNum = limitNum;
         if (_lcGate.mode === 'target') {
-          floorNum = limitNum;
+          floorNum = Math.round(limitNum * (1 - TARGET_TOLERANCE_UNDER));
+          ceilNum  = Math.round(limitNum * (1 + TARGET_TOLERANCE_OVER));
         } else if (_lcGate.mode === 'range' && _lcGate.min) {
           floorNum = _lcGate.unit === 'pages' ? (_lcGate.wordMin || _lcGate.min) : _lcGate.min;
         } else {
@@ -10636,11 +10678,11 @@ async function runBuilderOnly() {
         // round in the convergence-down sequence is rejected because
         // it still exceeds the absolute ceiling — the user gets stuck
         // in a discard loop with no way to make progress.
-        if (prevActual > limitNum) {
+        if (prevActual > ceilNum) {
           bloatFail = (actual >= prevActual);
         } else {
           // Prior was within target — strict ceiling applies.
-          bloatFail = (actual > limitNum);
+          bloatFail = (actual > ceilNum);
         }
         // v3.36.15 — Trajectory-bypass transparency. When the guard is
         // armed (no override) and the trajectory rule accepted a round
@@ -10649,7 +10691,7 @@ async function runBuilderOnly() {
         // test) hit exactly this case — 1497 words against a 1200
         // ceiling, prior 1500 → 1497 = down, accepted with no console
         // breadcrumb. David asked why armed guard didn't trip.
-        if (prevActual > limitNum && !bloatFail && actual > limitNum) {
+        if (prevActual > ceilNum && !bloatFail && actual > ceilNum) {
           consoleLog(
             `📏 Length guard armed but bypassed — output trending toward target (${prevActual}→${actual} ${unitName}, target ${limitNum})`,
             'info'
@@ -10714,16 +10756,10 @@ async function runBuilderOnly() {
       // "Continue Anyway" against in the unconstrained case.
       let _userKept = false;
       if ((bloatFail || undersizedFail) && gateConstrained) {
-        // v3.33.0 — Floor label depends on mode. Target floor IS the limit
-        // ("hit N exactly"). Range floor is the user-supplied min.
-        let floorLabel;
-        if (_lcGate.mode === 'target') {
-          floorLabel = `${floorNum} ${unitName} (target)`;
-        } else if (_lcGate.mode === 'range') {
-          floorLabel = `${floorNum} ${unitName} (range minimum)`;
-        } else {
-          floorLabel = `${floorNum} ${unitName}`;
-        }
+        // v3.33.0 / v3.56.4 — Floor label depends on mode. Target surfaces the
+        // user's TARGET (not the internal soft-band floor); range surfaces the
+        // user-supplied min. Shared helper so this matches the convergence sites.
+        const floorLabel = lengthFloorLabel(floorNum, unitName, _lcGate.mode, limitNum);
         // P1.3 #8 (v3.56.0) — mid-round length over/under during an Auto run:
         // auto-keep without the modal so the chain isn't interrupted. The
         // round's output is accepted and the run continues. Interactive mode
@@ -10739,7 +10775,7 @@ async function runBuilderOnly() {
           choice = await lengthGuardPrompt({
             kind: bloatFail ? 'over' : 'under',
             actual, prevActual,
-            limitNum: bloatFail ? limitNum : floorNum,
+            limitNum: bloatFail ? limitNum : (_lcGate.mode === 'target' ? limitNum : floorNum),
             unitName,
             limitName: bloatFail ? limitName : floorLabel,
             builderName: builderAI.name
@@ -11189,11 +11225,13 @@ async function runRound() {
           kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
           actual: cstat.actual,
           prevActual: cstat.actual,
-          limitNum: cstat.status === 'over' ? cstat.limitNum : cstat.floorNum,
+          limitNum: cstat.status === 'over'
+            ? cstat.limitNum
+            : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
           unitName: cstat.unitName,
           limitName: cstat.status === 'over'
             ? cstat.limitName
-            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode),
+            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
           builderName: 'The Hive'
         });
         if (choice === 'discard') {
@@ -11320,11 +11358,13 @@ async function runRound() {
           kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
           actual: cstat.actual,
           prevActual: cstat.actual,
-          limitNum: cstat.status === 'over' ? cstat.limitNum : cstat.floorNum,
+          limitNum: cstat.status === 'over'
+            ? cstat.limitNum
+            : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
           unitName: cstat.unitName,
           limitName: cstat.status === 'over'
             ? cstat.limitName
-            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode),
+            : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
           builderName: 'The Hive'
         });
         if (choice === 'discard') {
@@ -11517,8 +11557,11 @@ async function runRound() {
           prevActual = countInUnit(docText, _lcGate.unit);
           limitNum   = _lcGate.unit === 'pages' ? _lcGate.wordLimit : _lcGate.limit;
           // v3.33.0 — Mode-driven floor (matches the runRound site above).
+          // v3.56.4 — Target band (#9), mirror of the runRound site.
+          let ceilNum = limitNum;
           if (_lcGate.mode === 'target') {
-            floorNum = limitNum;
+            floorNum = Math.round(limitNum * (1 - TARGET_TOLERANCE_UNDER));
+            ceilNum  = Math.round(limitNum * (1 + TARGET_TOLERANCE_OVER));
           } else if (_lcGate.mode === 'range' && _lcGate.min) {
             floorNum = _lcGate.unit === 'pages' ? (_lcGate.wordMin || _lcGate.min) : _lcGate.min;
           } else {
@@ -11534,16 +11577,16 @@ async function runRound() {
           // convergence-down sequence gets rejected because each is
           // still over the absolute ceiling — user gets stuck. See the
           // mirrored block in runBuilderOnly for the same comment.
-          if (prevActual > limitNum) {
+          if (prevActual > ceilNum) {
             bloatFail = (actual >= prevActual);
           } else {
-            bloatFail = (actual > limitNum);
+            bloatFail = (actual > ceilNum);
           }
           // v3.36.15 — Trajectory-bypass transparency (mirror of the
           // runBuilderOnly branch above). Emits an INFO line whenever
           // the armed guard let a round pass on trajectory grounds
           // even though it was still over the absolute ceiling.
-          if (prevActual > limitNum && !bloatFail && actual > limitNum) {
+          if (prevActual > ceilNum && !bloatFail && actual > ceilNum) {
             consoleLog(
               `📏 Length guard armed but bypassed — output trending toward target (${prevActual}→${actual} ${unitName}, target ${limitNum})`,
               'info'
@@ -11609,9 +11652,9 @@ async function runRound() {
             choice = await lengthGuardPrompt({
               kind: bloatFail ? 'over' : 'under',
               actual, prevActual,
-              limitNum: bloatFail ? limitNum : floorNum,
+              limitNum: bloatFail ? limitNum : (_lcGate.mode === 'target' ? limitNum : floorNum),
               unitName,
-              limitName: bloatFail ? limitName : lengthFloorLabel(floorNum, unitName, _lcGate.mode),
+              limitName: bloatFail ? limitName : lengthFloorLabel(floorNum, unitName, _lcGate.mode, limitNum),
               builderName: builderAI.name
             });
           }

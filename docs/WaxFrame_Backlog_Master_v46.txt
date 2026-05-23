@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — MASTER BACKLOG (v39)
+WAXFRAME — MASTER BACKLOG (v46)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-20 (post v3.55.4 — Settings page shipped, full-page screen + Auto Mode section UI/persistence; behavior wiring still pending)
-Current version:     v3.55.4 Pro / build 20260520-004
+Last updated:        2026-05-21 (v3.56.3 #9 architecture fix VERIFIED in the wild — hive-vetted 300-word doc in 10 rounds; new parking-lot items logged)
+Current version:     v3.56.3 Pro / build 20260520-010
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Backlog_Master_v35.txt
+Lives:               docs\WaxFrame_Backlog_Master_v46.txt
 
 This file is the single source of truth for code work, feature
 ideas, and bugs in WaxFrame. Companion to:
@@ -25,6 +25,305 @@ Marker key:
   ★     high priority
   ☐     low priority
   ⚠     blocked / waiting on something else
+
+CHANGES IN v45 (from v44, 2026-05-21):
+  - SHIPPED v3.56.3 — P1.3 #9 ARCHITECTURE FIX (one nudge -> re-enter
+    the hive). v3.56.2's reroll ran the Builder SOLO and repeatedly,
+    rewriting/padding the doc with no reviewer vetting it (David caught
+    this: "you can't let the builder make all the choices, he's writing
+    or destroying the doc; both need the hive to look at it"). Observed
+    oscillation in a live test: 47 -> 373 -> 265 -> 344 words, halted at
+    3/3. New flow: ONE Builder length nudge, then a FULL hive round so
+    reviewers vet the change and converge; convergence length-check
+    re-arms #9 only if still out of range, bounded by
+    getAutoRerollAttempts() then halt. "Attempt" now = nudge+hive cycle,
+    not solo grind. Count persists across the hive round; clears on
+    in-range convergence, Auto toggle, clearProject, autoHaltResume.
+
+  ┌─────────────────────────────────────────────────────────────────┐
+  │  #9 STATUS: **OPEN** — DO NOT CLOSE.                              │
+  │  Architecture is correct as of v3.56.3 (one nudge -> hive). BUT   │
+  │  the TOLERANCE BAND is still missing: #9 uses the exact floor/    │
+  │  ceiling check, which is stricter than "close enough" and will    │
+  │  over-nudge on trivial misses (e.g. 299 vs 300 target). NOT       │
+  │  feature-complete until the tolerance work below lands.           │
+  └─────────────────────────────────────────────────────────────────┘
+
+  TOLERANCE BAND SPEC (next #9 work — locked design, David 2026-05-21):
+    Core principle: it's a CONSTRAINT/COHERENCE problem, not a math
+    problem. Get as close as possible while keeping a document that
+    makes sense. NEVER pad/cram a sentence just to hit the count.
+    "Close is close enough" (the teacher 2-page example: a couple
+    sentences short still reads as 2 pages and passes).
+
+    Per-mode logic (DO NOT make everything a range — each mode keeps its
+    own contract):
+      • NONE     — no gating; #9 never fires.
+      • HARD CAP — max only, no floor. STRICT on top: over is over (it's
+                   a real limit, e.g. Yelp char count). No soft tolerance
+                   over the ceiling. Under is always fine.
+      • RANGE    — user-defined min AND max. The user chose the bounds,
+                   so respect them; max stays hard. Maybe a tiny grace on
+                   the min (soft floor). Differentiator from Target: the
+                   HUMAN sets the tolerance (the band IS the min/max).
+      • TARGET   — single number; the TOOL supplies the tolerance. This
+                   is the ONLY mode "close enough" really applies to.
+                   "300 words" colloquially means "about 300." Accept
+                   within a default band (start ±10% — not magic, just
+                   "is this a real miss or a rounding miss"); make it a
+                   SETTING later, not a hardcoded constant.
+
+    Let the HIVE decide "done," not a percentage: if the hive converges
+    and we're in the ballpark, stop. Only re-nudge on a meaningful miss.
+
+    OPEN QUESTIONS (decide before building tolerance):
+      1. Exact default tolerance % for Target (placeholder ±10%) and
+         whether it becomes a user setting.
+      2. Over-vs-under asymmetry in Target (treat over more strictly than
+         under, since over can breach a real cap?).
+      3. Should the directive also tell the REVIEWERS the length goal
+         ("aim ~300, coherence first") so the hive converges toward a
+         good length naturally instead of fighting the Builder?
+
+CHANGES IN v46 (from v45, 2026-05-21):
+  - #9 v3.56.3 VERIFIED IN THE WILD. Live run produced a coherent
+    300-word enterprise product description in 10 rounds / ~50 min,
+    hive-vetted (Round 9 = full 7-AI review building on the
+    length-corrected draft). Architecture fix confirmed: Builder no
+    longer grinds solo; reviewers vet every length correction. Run was
+    mixed-build + manual interventions (started v3.56.2, finished
+    v3.56.3) so NOT a clean Playbook measurement — do not log to
+    Playbook Test Master as a benchmark row.
+  - TOLERANCE BAND need REAL-WORLD-CONFIRMED: interactive convergence
+    modal fired at 302 words vs 300 target ("2 words over"). David kept
+    it manually — that 2-word miss triggering a modal is exactly the
+    case the tolerance band must auto-accept. Reinforces #9 OPEN spec
+    (see v45 tolerance section). Note: modal showed because Auto was OFF
+    at that moment; in Auto + tolerance band, 302 would accept silently.
+
+PROCESS NOTE — DOC RETENTION (David, 2026-05-21):
+  Keep the LAST THREE versions of the versioned docs in docs/ at all
+  times (backlog + playbook), as a rollback safety margin. Only prune
+  the 4th-oldest and older. Claude's deploy reminders must say "delete
+  versions older than the last three" — NOT "delete the prior version."
+  Do not tell David to delete his safety copies.
+
+NEW PARKING-LOT ITEMS (logged 2026-05-21, not started):
+  - FEATURE: show the MODEL NUMBER / model id on each AI provider card
+    (small text under the provider name). David wants it especially for
+    the adjacent/internal providers (Alfredo / OpenWebUI / LM Studio
+    routes) where the provider name alone doesn't say which model is
+    actually answering. Small-text, non-intrusive.
+  - BUG (modal z-index/stacking): inside the Deep Dive capture viewer,
+    the "save backup" button appears not to work — actually the
+    sensitive-backup confirm modal opens BEHIND the capture viewer
+    modal, so it's invisible/unclickable until the capture modal is
+    closed. The action DOES fire; it's a stacking-order bug. Fix: raise
+    the sensitive-backup confirm modal's z-index above the capture
+    viewer (or close/!defer the capture modal before opening it).
+
+PARKING LOT (carried; not started):
+  - DEV TOOLBAR "Force length-reroll" button — trigger an out-of-range
+    convergence on demand. Testing #9 required hand-engineering the
+    condition (hard caps have no floor; Auto must be ON). One-click test.
+  - COPY: backup button "Download" -> "Save" (David, repeated).
+  - SLOW-RESPONDER (#5/#6): reword Settings help para (lead with WHY +
+    worked example); add bench-vs-ask SETTING ("Bench it and keep going"
+    default vs "Pause and ask me"); RECONCILE with existing footer
+    "Slow alerts: on/off" pill (already suppresses vs shows the card —
+    new setting should absorb it, not compete).
+
+P1.3 PHASING (updated 2026-05-21):
+  #8  v3.56.0  DONE
+  #9  v3.56.1 shipped -> v3.56.2 reroll fix -> v3.56.3 architecture fix.
+      STILL OPEN: tolerance band (spec above). Next #9 work = v3.56.4.
+  #5/#6/#7  -> after #9 tolerance (reviewer-health + slow-responder
+            reword/bench-ask).
+  #10  -> builder-death backup promotion + never-disable.
+
+CHANGES IN v44 (from v43, 2026-05-21):
+  - SHIPPED v3.56.2 — P1.3 #9 REROLL FIX. v3.56.1 intercepted at
+    convergence correctly but runBuilderOnly bailed at its top-of-fn
+    empty-Notes guard (built as a manual "apply my note" action). An
+    Auto length reroll has empty Notes by design (instruction is in
+    window._autoLengthDirective, not the textarea), so the round
+    silently aborted before applying the directive. Fix: runBuilderOnly
+    now detects an active reroll (_autoLengthRerollActive + directive)
+    and skips the empty-Notes guard for that case only; USER
+    INSTRUCTIONS block + console line emitted only when real Notes
+    exist; directive injection keyed to the reroll flag. VERIFIED in
+    console: "📏 Auto: converged at 47 words — under the floor …
+    (attempt 1/3)" fired but no Builder followed -> diagnosed to the
+    guard -> fixed. Re-test pending.
+  - LESSON: tested the #9 logic, not the guard. runBuilderOnly's
+    contract (requires Notes) wasn't accounted for when choosing it as
+    the reroll vehicle. Reconcile-all-stragglers applies to function
+    CONTRACTS, not just call sites.
+
+PARKING LOT — captured 2026-05-21 (not started):
+  - DEV TOOLBAR: "Force length-reroll" button. Testing #9 required
+    manually engineering an out-of-range convergence with Auto on
+    (3 failed attempts: hard caps have no floor; Auto was off). A dev
+    button that fakes an out-of-range convergence on demand would make
+    #9 (and future Auto behaviors) testable in one click. David's idea,
+    correct. Target: v3.56.x dev toolbar.
+  - COPY: backup button says "Download" — should say "Save" (David,
+    repeated). Fold into next release touching that control.
+  - SLOW-RESPONDER (feeds #5/#6): (a) reword the Settings help para —
+    "3× / 2 rounds" + two bare input boxes is unreadable without prior
+    knowledge; lead with WHY (slow AI drags the run), then a worked
+    example. (b) Add a bench-vs-ask SETTING: "Bench it and keep going"
+    (default, auto-disable + toast) vs "Pause and ask me" (show the
+    existing slow-responder card). David wants both because some runs
+    are "perfect doc, all day" and others are "fast, no patience".
+    (c) RECONCILE with the existing footer "Slow alerts: on/off" pill —
+    that already suppresses the card vs shows it; the new setting should
+    absorb/replace it, not compete. Console already logs "🐢 Slow-AI
+    alerts disabled (detection still runs … cards suppressed)".
+
+P1.3 PHASING (updated 2026-05-21):
+  #8  v3.56.0  DONE
+  #9  v3.56.1  shipped (broken) -> v3.56.2 FIXED (re-test pending)
+  #5/#6/#7  -> v3.56.3 (reviewer-health: 5xx + slow auto-disable
+            consuming getAutoSlowMultiplier/getAutoSlowRounds; streak
+            -> getAutoStreakLimit; + the slow-responder reword + bench/
+            ask setting from the parking lot above)
+  #10  -> v3.56.4 (builder-death backup promotion + never-disable)
+
+CHANGES IN v43 (from v42, 2026-05-21):
+  - SHIPPED v3.56.1 — P1.3 #9 (at-convergence length reroll, Auto).
+    Builder-only reroll chosen (David: "Absolutely not B — A for
+    sure"). When Auto converges (unanimous/majority) but the doc is
+    out of range, instead of the modal it injects a synthetic
+    trim/expand directive (window._autoLengthDirective) into a
+    builder-only round and re-checks length after: in range -> Auto
+    OFF + Finish; still out & attempts left -> reroll; spent ->
+    _autoHalt('length-reroll-exhausted'). Bounded by
+    getAutoRerollAttempts() (default 2). Interactive modal untouched.
+    Reroll state resets on Auto engage/disengage, clearProject, and
+    runRound start (which also gives autoHaltResume fresh attempts).
+    Moved to RECENTLY SHIPPED.
+  - P1.3 PHASING (updated): #8 v3.56.0 DONE · #9 v3.56.1 DONE ·
+    #5/#6/#7 -> v3.56.2 (reviewer-health: 5xx + slow auto-disable
+    consuming getAutoSlowMultiplier/getAutoSlowRounds; streak limit
+    -> getAutoStreakLimit, reset-on-clean already in place at
+    _autoMaybeChainNextRound) · #10 -> v3.56.3 (builder-death:
+    promote getAutoBackupBuilder() if set; honor
+    getAutoNeverDisableBuilder(); else halt-and-ask).
+  - #9 IMPLEMENTATION NOTES (for future reference / parity work):
+      • directive injected in runBuilderOnly's prompt right after the
+        "USER INSTRUCTIONS FOR THIS BUILD" block; never written to the
+        workNotes textarea.
+      • re-check lives in runBuilderOnly success path, just before the
+        normal _autoMaybeChainNextRound({outcome:'builder-only'}) call.
+      • 'length-reroll' kind added to _autoFireChainedRound -> fires
+        runBuilderOnly().
+      • count semantics: gate increments to 1 + fires reroll #1;
+        re-check increments to 2 + fires reroll #2; re-check at 2 ->
+        halt. = getAutoRerollAttempts() total builder rerolls.
+
+CHANGES IN v42 (from v41, 2026-05-21):
+  - SHIPPED v3.56.0 — P1.3 #8 (mid-round length guard in Auto).
+    Both mid-round lengthGuardPrompt call sites now branch on
+    window._autoMode: in Auto they synthesize 'keep' (console +
+    toast) and skip the modal so the chain isn't interrupted;
+    interactive mode unchanged. Moved to RECENTLY SHIPPED.
+  - P1.3 RE-SCOPED into phased sub-releases (decided after reading
+    the actual convergence machinery this session):
+      • v3.56.0 = #8 only (SHIPPED).
+      • v3.56.1 = #9 at-convergence reroll. BIGGER THAN A BRANCH
+        FLIP — it's a new auto-reroll subsystem, NOT just an Auto
+        branch on the existing prompt. Requires:
+          (a) a one-round Builder trim/expand directive injection
+              point — _autoFireChainedRound only carries 'round' /
+              'apply-decisions' today, no directive channel exists;
+              must map BUILDER_INSTRUCTIONS / builder-prompt assembly
+              (app.js ~L10076) before building.
+          (b) a reroll-counter lifecycle (window._autoLengthReroll
+              count; reset on new project / length-in-range / Auto
+              disengage / manual run).
+          (c) rewiring BOTH convergence sites (unanimous + majority)
+              to NOT push-to-history / play scene / chain-to-finish
+              when about to reroll instead.
+          (d) new _autoHalt reason code 'length-reroll-exhausted'
+              (breadcrumb already at app.js ~L2210). Bounded by
+              getAutoRerollAttempts() (default 2) then auto-halt.
+      • v3.56.2 = #5/#6/#7 reviewer-health (5xx + slow auto-disable
+        consuming getAutoSlowMultiplier/getAutoSlowRounds; streak
+        limit -> getAutoStreakLimit, reset-on-clean already in place
+        at _autoMaybeChainNextRound).
+      • v3.56.3 = #10 builder-death (promote getAutoBackupBuilder()
+        if set; honor getAutoNeverDisableBuilder(); else halt-and-ask).
+    Rationale: one 6-behavior pass on the convergence flow is the
+    v3.21.26 big-bang shape. Each sub-release is independently
+    testable with a clean rollback boundary.
+  - SITE MAPPING CONFIRMED against current app.js (line numbers
+    shifted from v41's): #8 mid-round = L10648 + L11462; #9 at-
+    convergence = L11066 (unanimous) + L11187 (majority).
+
+CHANGES IN v41 (from v40, 2026-05-21):
+  - SHIPPED v3.55.6 — Auto Mode settings UI completed.
+    Added two controls to Settings -> Auto Mode:
+      • Length-guard reround attempts — number, default 2,
+        clamp 1-5. key waxframe_auto_reroll_attempts ·
+        getAutoRerollAttempts(). THIS IS THE #9 LOOP GUARD —
+        no longer a pending decision; shipped as a tunable
+        setting with default 2 ("try twice, then auto-halt"),
+        per David's directive that open Auto choices become
+        settings-with-defaults rather than blockers.
+      • Reset to defaults — resetAutoSettings() writes every
+        AUTO_SETTINGS .def back to localStorage, re-renders,
+        behind a wfConfirm. Defaults: backup builder none /
+        never-disable off / streak 2 / slow 3x·2 / reroll 2.
+    Auto Mode settings UI is now COMPLETE (page + all controls
+    + persistence + reset + getters). Remaining: the behavioral
+    wiring that consumes the getters (P1.3 #5-#10) — that's the
+    next session's focus.
+
+  - DESIGN PRINCIPLE LOGGED (David, 2026-05-21): open Auto-mode
+    design choices are NOT blockers waiting on a decision — they
+    ship as Settings controls with Claude's best-guess default,
+    plus a Reset-to-defaults escape hatch. User decides; default
+    covers the undecided. Applies to any future "should Auto do
+    X or Y" question. (This resolved the #9 loop-guard "twice"
+    question that had been sitting open.)
+
+  - NEXT SESSION (agreed stopping point): P1.3 BEHAVIORAL WIRING.
+    Wire #5-#10 to consume the Settings getters instead of
+    hardcoded values. Touches the round/convergence flow
+    (load-bearing) — David to commit v3.55.6 as the GitHub
+    Desktop checkpoint BEFORE that surgical pass. Recap of locked
+    behavior: #5/#6 reviewer 5xx + slow -> auto-disable + toast;
+    #7 streak (getAutoStreakLimit, reset on clean round); #8
+    mid-round length over/under -> auto-keep no modal (sites
+    L10461 + L11275); #9 at-convergence over/under -> toast +
+    send back to Builder to trim/expand + auto-run another round,
+    up to getAutoRerollAttempts() times then auto-halt (sites
+    L10879 unanimous + L11000 majority); #10 builder dies ->
+    promote getAutoBackupBuilder() if set + getAutoNeverDisable-
+    Builder() honored, else halt-and-ask. BOTH over AND under
+    handled (trim / expand).
+
+CHANGES IN v40 (from v39, 2026-05-20/21):
+  - SHIPPED v3.55.5 — Buy-a-License CTA relocation. Moved the
+    purchase link OUT of the Tools menu group (where it was
+    misfiled among utilities) into its own pinned footer at the
+    bottom of the nav panel (id navBuyFooter), OUTSIDE the
+    scrolling .nav-body so it's always visible. Gated on license
+    state: updateLicenseBadge() sets navBuyFooter.style.display =
+    isLicensed() ? 'none' : '' — shown to trial users, hidden once
+    a valid license is active, re-shown if removed. Same
+    isLicensed() check that drives the license badge, runs on load
+    + every license change, nav closed-until-opened so no flash.
+    COPY FIX: "Upgrade to WaxFrame Pro" -> "Buy a License" (no Pro
+    tier exists; trial and licensed are the same program, license
+    just unlocks unlimited rounds). Menu explainer updated to match
+    + describe new placement. License-modal "buy a key" link
+    unchanged. CSS .nav-panel-footer + .nav-buy-cta (token-based).
+    PROCESS NOTE: this build was interrupted mid-session (~12h gap)
+    after only the Tools-removal step landed; footer + gating + copy
+    completed on resume. Lesson reinforced: a partial edit left
+    un-shipped is a half-broken state — finish or revert, never park.
 
 CHANGES IN v39 (from v38, 2026-05-20):
   - SHIPPED v3.55.4 — Settings page (the unblock for P1.3).
@@ -2290,6 +2589,31 @@ This is a SUGGESTED order — David's call on actual sequencing.
 
 ═════════════════════════════════════════════════════════════
 RECENTLY SHIPPED (most-recent first)
+
+  v3.56.3  P1.3 #9 ARCHITECTURE FIX — one Builder length nudge, then
+           re-enter the HIVE (was: solo Builder grind that rewrote the
+           doc unvetted). Reviewers now vet the length-corrected draft
+           and converge; #9 re-arms only if still out of range, bounded
+           then halt. NOTE: #9 still OPEN — tolerance band outstanding.
+           (build 20260520-010)
+
+  v3.56.2  P1.3 #9 FIX — at-convergence reroll now actually runs the
+           Builder. runBuilderOnly's empty-Notes guard was aborting the
+           reroll (Auto rerolls carry the instruction in a synthetic
+           directive, not Notes). Guard now allows an active reroll
+           through. (build 20260520-009)
+
+  v3.56.1  P1.3 #9 — at-convergence length reroll (Auto, builder-only).
+           Converged-but-out-of-range in Auto sends the doc back to the
+           Builder to trim/expand (one builder-only call), re-checks, and
+           either converges (in range), rerolls (attempts left), or halts
+           ('length-reroll-exhausted'). Bounded by getAutoRerollAttempts().
+           Interactive modal untouched. (build 20260520-008)
+
+  v3.56.0  P1.3 #8 — mid-round length guard no longer interrupts
+           Auto. Both mid-round lengthGuardPrompt sites auto-keep
+           in Auto (console + toast), modal still shown in
+           Interactive. Convergence flow untouched. (build 20260520-007)
 ═════════════════════════════════════════════════════════════
 
 v3.55.0   2026-05-19  Review playbook completion — three platform pages + multi-platform retirement + Claude proxy link. Fifth release this session. Finishes the v3.50.1/v3.52.0 template transition. THREE NEW PLAYBOOK PAGES in document-playbooks.html (+ sidebar links) under Reviews & Recommendations: Trim to TripAdvisor (✈️, 500–900w, refine-only), Trim to Google Maps (📍, 750–1,200c, refine-only), Rewrite as Yelp (💬, 300–700w, refine-only). Each documents pre-filled Setup fields, Reference-Material strategy, Setup 5 paste flow, what each platform keeps, Best AIs, and convergence. CONVERGENCE DATA INTEGRITY: Google Maps cites measured Manly Bikes Google v1.0 (5 rds / ≈23 min / R4 Builder-Only / 155w / 1,003c / 5.37× trim); Yelp cites measured Manly Bikes Yelp v1.0 (8 rds / ≈21 min / R8 majority / 542w / 3,142c / 1.64× trim); TripAdvisor honestly marked "estimated, not yet measured" — the only TripAdvisor data on file came from the retired combined template's sub-section, deliberately NOT quoted as standalone (per the convergence-data rule + v3.52.9/11 lesson about not propagating estimated-as-measured). MULTI-PLATFORM ORPHAN RETIRED (closes two Section 1 bug items): deleted #multi-platform-review playbook page + sidebar link from document-playbooks.html; updated waxframe-user-manual.html template table; reconciled 2 app.js comments + 1 templates.js header comment naming the old template; KEPT the templates.js RETIRED explainer block (documents the why). CLAUDE PROXY LINK (closes 6.2.A follow-up): api-details.html worker URL now clickable to the live endpoint with a note that direct browser visits return an API error; no separate public source repo (David confirmed it's just deployed on Cloudflare), so the live endpoint is what's linked. DOC HYGIENE: Playbook Test Master bumped v26→v27, stale "no playbook pages yet" notes corrected, standalone Trim to TripAdvisor logged as next open measurement task. div balance on document-playbooks.html even (808/808, was 759/759 — increase is 3 pages replacing 1); no inline-CSS violations (caught + fixed an opacity inline style mid-edit, swapped to semantic <em>). FIVE releases this session: v3.53.0 / v3.53.1 / v3.53.2 / v3.54.0 / v3.55.0.
