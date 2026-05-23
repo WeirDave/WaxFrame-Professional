@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260523-004
+   Build: 20260523-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -6578,6 +6578,15 @@ kbd {
    WAXFRAME CONFIRM MODAL (v3.26.8)
    Promise-based replacement for native confirm()
 ══════════════════════════════════════ */
+/* v3.56.8 — wfConfirm is a blocking confirm dialog and must sit above ALL
+   other modals. It shared the .finish-modal-overlay z-index (99999) with the
+   Deep Dive capture viewer (.ddv-overlay), and being EARLIER in the DOM it lost
+   the tie and rendered behind — so the Sensitive-backup confirm launched from
+   the viewer's Save Backup button was invisible/unclickable. ID selector wins
+   the cascade; this guarantees the confirm is always on top regardless of which
+   modal opened it. */
+#wfConfirmModal { z-index: 1000000; }
+
 .wf-confirm-modal {
   max-width: 480px;
   text-align: center;
