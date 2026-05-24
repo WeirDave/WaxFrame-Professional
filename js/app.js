@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-010
+//  Build: 20260523-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-010';         // build stamp — update each session
+const BUILD       = '20260523-011';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -2567,7 +2567,7 @@ async function clearProject() {
   window._flatHoldoutSuggestions = null;
   window._lastAppliedChanges     = null;
   window._lastValidationFailures = null;
-  window._slowConsoleNagged      = new Set(); // v3.56.13 — per-AI "consider toggling off" console dedup
+  window._slowAlertsSilenced     = false; // v3.56.14 — clear the per-session "don't alert me" opt-out on a new project
   localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
@@ -11345,18 +11345,13 @@ async function runRound() {
     allReviewers.forEach(ai => {
       const _t = _timings[ai.id];
       if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
-        // v3.56.13 — Log the slow timing every round (useful telemetry), but
-        // only suggest "consider toggling off" the FIRST time per AID this
-        // session; after that, a quieter "slow again" line so a persistently
-        // slow AI doesn't nag the console every single round.
-        const _nagged = window._slowConsoleNagged ||
-          (window._slowConsoleNagged = new Set());
-        if (!_nagged.has(ai.id)) {
-          _nagged.add(ai.id);
-          consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling it off if it keeps dragging the run`, 'warn');
-        } else {
-          consoleLog(`🐢 ${ai.name} slow again — ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s)`, 'warn');
-        }
+        // v3.56.14 — The reminder cadence is the user's call, not ours. If the
+        // user opted out via the card's "Don't alert me this session" button,
+        // suppress BOTH the card and the console line for the rest of the tab
+        // session. Otherwise the console logs every slow round (the user can
+        // stop it any time from the card).
+        if (window._slowAlertsSilenced) return;
+        consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
         // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
         // preference. Detection + console log run unconditionally above
         // so diagnostic info is always available. Only the user-facing

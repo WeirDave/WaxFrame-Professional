@@ -1,6 +1,27 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.14
+**Build:** `20260523-011` · **Released:** May 23, 2026
+
+### Slow-AI alerts: the user decides the cadence
+
+Reworks the slow-responder behavior shipped in v3.56.13. That release auto-quieted the console nag after the first warning per AI — but the reminder cadence should be the user's call, not a decision baked into the app. Reverted to logging the slow timing **every round** by default (so a persistently slow AI keeps surfacing), and added an explicit opt-out to the troubleshooting card instead.
+
+- The **Slow responder** troubleshooting card now has a third button: **"Don't alert me this session."** Clicking it suppresses both the card and the per-round console line for the rest of the tab session (`window._slowAlertsSilenced`). Session-scoped — resets on a new project or page reload. The footer "Slow alerts" pill remains the persistent, cross-session control.
+- Removed the v3.56.13 `_slowConsoleNagged` console-dedup logic.
+
+The v3.56.13 cross-project carryover fix (the `clearProject` reset of conflict/decision/holdout/validation state) is unchanged.
+
+### Files changed
+
+- **`js/app.js`** — reverted console dedup; per-round slow line gated on new `_slowAlertsSilenced` session flag; flag reset in `clearProject`. `BUILD` → `20260523-011`
+- **`js/wf-debug.js`** — SLOW_RESPONDER card gains "Don't alert me this session" action + `silence-slow` dispatch handler
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.14`
+- **`style.css`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.13
 **Build:** `20260523-010` · **Released:** May 23, 2026
 
