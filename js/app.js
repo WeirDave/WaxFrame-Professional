@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-007
+//  Build: 20260523-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-007';         // build stamp — update each session
+const BUILD       = '20260523-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -478,10 +478,6 @@ function updateSlowResponderIndicator() {
   }
 }
 
-function initSlowResponderIndicator() {
-  updateSlowResponderIndicator();
-}
-
 // ── AUTOSAVE PILL (v3.55.3) ──
 // Work-screen footer pill mirroring the Slow-AI alerts pill. User-level
 // preference persisted globally via localStorage 'waxframe_autosave_enabled'.
@@ -525,10 +521,6 @@ function updateAutosaveIndicator() {
     el.title = 'Autosave is off — automatic saving is paused. Click to turn on.';
     if (labelEl) labelEl.textContent = 'Autosave: off';
   }
-}
-
-function initAutosaveIndicator() {
-  updateAutosaveIndicator();
 }
 
 // ── SETTINGS SCREEN (v3.55.4) ──
@@ -1607,6 +1599,18 @@ const TARGET_TOLERANCE_OVER  = 0.05; // accept up to 105% of the target
 // goals mid-brief on every refine round. Draft phase still sends the FULL goal.
 // Tune here.
 const REFINE_GOAL_MAX_CHARS = 800;
+
+// v3.56.11 — Vision-OCR fallback model per provider, used by the PDF/image OCR
+// path when the user hasn't configured a vision model (visionCfg.model). These
+// WILL go stale as providers rename/retire models, so they live here in ONE
+// place rather than scattered inline. Each provider's OCR call uses
+// `visionCfg.model || VISION_DEFAULTS[provider]` so a user-set model always wins.
+const VISION_DEFAULTS = {
+  chatgpt: 'gpt-4o',
+  claude:  'claude-sonnet-4-6',
+  gemini:  'gemini-2.5-flash',
+  grok:    'grok-4',
+};
 
 // v3.33.0 — Length mode overhaul (#8). Replaced the implicit
 // LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 with explicit user-opted
@@ -7846,7 +7850,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   // ── ChatGPT (OpenAI) ──
   if (visionCfg.provider === 'chatgpt') {
     const body = JSON.stringify({
-      model: 'gpt-4o',
+      model: visionCfg.model || VISION_DEFAULTS.chatgpt,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
         { type: 'text', text: prompt }
@@ -7866,7 +7870,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
 
   // ── Claude (Anthropic) — via WaxFrame proxy ──
   if (visionCfg.provider === 'claude') {
-    const claudeModel = visionCfg.model || 'claude-sonnet-4-6';
+    const claudeModel = visionCfg.model || VISION_DEFAULTS.claude;
     const body = JSON.stringify({
       model: claudeModel,
       max_tokens: 4096,
@@ -7888,7 +7892,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
 
   // ── Gemini (Google) ──
   if (visionCfg.provider === 'gemini') {
-    const geminiModel = visionCfg.model || 'gemini-2.5-flash';
+    const geminiModel = visionCfg.model || VISION_DEFAULTS.gemini;
     const body = JSON.stringify({
       contents: [{ parts: [
         ...pageImages.map(b64 => ({ inline_data: { mime_type: 'image/jpeg', data: b64 } })),
@@ -7907,7 +7911,7 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
 
   // ── Grok (xAI) — OpenAI-compatible ──
   if (visionCfg.provider === 'grok') {
-    const grokModel = visionCfg.model || 'grok-4';
+    const grokModel = visionCfg.model || VISION_DEFAULTS.grok;
     const body = JSON.stringify({
       model: grokModel,
       messages: [{ role: 'user', content: [

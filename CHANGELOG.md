@@ -1,6 +1,29 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.11
+**Build:** `20260523-008` · **Released:** May 23, 2026
+
+### Audit batch — vision-OCR model parity + dead-code cleanup
+
+Three small wins from a code audit pass:
+
+**1. ChatGPT vision-OCR model now respects your configured model.** The PDF/image OCR path pinned ChatGPT to a hardcoded `gpt-4o` with no override, while the Gemini and Grok OCR paths both honored `visionCfg.model`. So a user who set a newer ChatGPT vision model was silently ignored on that one provider. Now all three respect the configured model and fall back consistently.
+
+**2. Centralized the vision-OCR fallback models.** `gpt-4o` / `claude-sonnet-4-6` / `gemini-2.5-flash` / `grok-4` were hardcoded inline across all four vision call sites — they go stale as providers rename or retire models. Moved into one `VISION_DEFAULTS` block so updating is a single edit, and every provider now uses `visionCfg.model || VISION_DEFAULTS[provider]` (user-set model always wins).
+
+**3. Removed two dead functions.** `initAutosaveIndicator()` and `initSlowResponderIndicator()` had zero callers anywhere — the `update*` functions they wrapped are already called directly on work-screen load, so the footer pills were unaffected. Pure dead code.
+
+No behavioral change for existing configs (the fallbacks are identical to the prior hardcoded values); the only functional change is that ChatGPT vision now honors a user-set model like the others already did.
+
+### Files changed
+
+- **`js/app.js`** — `VISION_DEFAULTS` constants block; ChatGPT/Gemini/Grok OCR paths reference it; ChatGPT path now honors `visionCfg.model`; removed `initAutosaveIndicator` + `initSlowResponderIndicator`. `BUILD` → `20260523-008`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.11`
+- **`style.css`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.10
 **Build:** `20260523-007` · **Released:** May 23, 2026
 
