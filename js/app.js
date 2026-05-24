@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-006
+//  Build: 20260523-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-006';         // build stamp — update each session
+const BUILD       = '20260523-007';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1596,6 +1596,17 @@ const CHARS_PER_WORD      = 5.5; // average chars per word for estimation
 // Hardcoded for now; a user setting is tracked in the backlog, not built here.
 const TARGET_TOLERANCE_UNDER = 0.10; // accept down to 90% of the target
 const TARGET_TOLERANCE_OVER  = 0.05; // accept up to 105% of the target
+
+// v3.56.10 — Goal context sent to the hive in non-draft (refine) rounds is
+// truncated so the per-round prompt stays focused on the DOCUMENT, not the brief.
+// Previously a hardcoded 300-char mid-word substring chop in the prompt paths,
+// while the Project-screen preview used the sentence-aware truncateGoalForRefine()
+// — the two disagreed, so the preview lied about what the hive received. Now ONE
+// constant + that sentence-aware function drive BOTH paths and the preview, so the
+// preview always matches reality. Bumped 300 -> 800: 300 amputated most multi-field
+// goals mid-brief on every refine round. Draft phase still sends the FULL goal.
+// Tune here.
+const REFINE_GOAL_MAX_CHARS = 800;
 
 // v3.33.0 — Length mode overhaul (#8). Replaced the implicit
 // LENGTH_FLOOR_RATIO = 0.5 from v3.32.28 with explicit user-opted
@@ -8718,13 +8729,17 @@ function initWorkScreen(isNewSession = false) {
 }
 
 function truncateGoalForRefine(goal) {
-  if (!goal || goal.length <= 300) return goal;
-  // Look backward from 300 for a sentence boundary (must be past 200 to avoid tiny context)
-  const slice = goal.slice(0, 300);
+  // v3.56.10 — bounds derived from REFINE_GOAL_MAX_CHARS (was hardcoded 300/200/450).
+  const CAP   = REFINE_GOAL_MAX_CHARS;
+  const FLOOR = Math.round(CAP * 2 / 3);   // a boundary must sit past this to keep useful context
+  const FWD   = CAP + 150;                 // forward-look window for the next sentence end
+  if (!goal || goal.length <= CAP) return goal;
+  // Look backward from CAP for a sentence boundary (must be past FLOOR to avoid tiny context)
+  const slice = goal.slice(0, CAP);
   const lastBoundary = Math.max(slice.lastIndexOf('.'), slice.lastIndexOf('!'), slice.lastIndexOf('?'));
-  if (lastBoundary > 200) return goal.slice(0, lastBoundary + 1).trim();
-  // No good boundary behind 300 — look forward up to 450 chars for the next sentence end
-  const forward = goal.slice(300, 450);
+  if (lastBoundary > FLOOR) return goal.slice(0, lastBoundary + 1).trim();
+  // No good boundary behind CAP — look forward up to FWD for the next sentence end
+  const forward = goal.slice(CAP, FWD);
   const fwdDot  = forward.indexOf('.');
   const fwdBang = forward.indexOf('!');
   const fwdQ    = forward.indexOf('?');
@@ -8733,16 +8748,16 @@ function truncateGoalForRefine(goal) {
     fwdBang >= 0 ? fwdBang : Infinity,
     fwdQ    >= 0 ? fwdQ    : Infinity
   );
-  if (fwdBoundary < Infinity) return goal.slice(0, 300 + fwdBoundary + 1).trim();
-  // Fall back to last whole word before 300
+  if (fwdBoundary < Infinity) return goal.slice(0, CAP + fwdBoundary + 1).trim();
+  // Fall back to last whole word before CAP
   const lastSpace = slice.lastIndexOf(' ');
-  return (lastSpace > 200 ? goal.slice(0, lastSpace) : slice).trim();
+  return (lastSpace > FLOOR ? goal.slice(0, lastSpace) : slice).trim();
 }
 
 function updateGoalCounter() {
   const goal  = assembleProjectGoal();
   const len   = goal.length;
-  const truncated = len > 300;
+  const truncated = len > REFINE_GOAL_MAX_CHARS;
 
   // v3.27.7: removed dead block that wrote words/chars stats into #goalCounter.
   // The element + its surrounding goal-counter-bar were eliminated in the
@@ -8762,7 +8777,7 @@ function updateGoalCounter() {
     const refined = truncateGoalForRefine(goal);
     if (previewText)  { previewText.textContent = refined; previewText.style.display = 'block'; }
     if (previewCount) previewCount.textContent = `${refined.length} chars`;
-    if (previewSub)   previewSub.textContent = `First ${refined.length} chars sent to refine rounds, trimmed to nearest sentence.`;
+    if (previewSub)   previewSub.textContent = `This is exactly what the hive receives as PROJECT CONTEXT in refine rounds (${refined.length} chars, trimmed to the nearest sentence). The draft round always gets the full goal.`;
     if (previewEmpty) previewEmpty.style.display = 'none';
     if (previewWrap)  previewWrap.classList.add('has-content');
   } else {
@@ -10505,7 +10520,7 @@ function buildPromptForAI(ai, reviewerResponses) {
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Phase: ${PHASES.find(p => p.id === phase)?.label || phase}\n${eq}\n\n`;
 
   if (goal && phase === 'draft') prompt += `PROJECT GOAL:\n${sep}\n${goal}\n\n`;
-  if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0, 300) + '…' : goal}\n\n`;
+  if (goal && phase !== 'draft') prompt += `PROJECT CONTEXT: ${truncateGoalForRefine(goal)}\n\n`;
 
   // ── REFERENCE MATERIAL injection (v3.21.0) ──
   // Standing source material the hive cites against every round but never edits.
@@ -10700,7 +10715,7 @@ async function runBuilderOnly() {
   const name  = document.getElementById('projectName')?.value.trim() || '';
   const numberedDoc = docText.split('\n').map((line, i) => `${String(i+1).padStart(4,' ')}  ${line}`).join('\n');
   let prompt = `${eq}\n  WAXFRAME — ${name.toUpperCase()}\n  Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase}\n${eq}\n\n`;
-  if (goal) prompt += `PROJECT CONTEXT: ${goal.length > 300 ? goal.substring(0,300)+'…' : goal}\n\n`;
+  if (goal) prompt += `PROJECT CONTEXT: ${truncateGoalForRefine(goal)}\n\n`;
   // ── REFERENCE MATERIAL injection (v3.21.0) — Builder Only path ──
   const refBlock = buildReferenceMaterialBlock(sep);
   if (refBlock) {

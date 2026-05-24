@@ -1,6 +1,31 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.10
+**Build:** `20260523-007` · **Released:** May 23, 2026
+
+### Goal-context truncation: preview now matches what the hive actually receives (+ cap raised 300 → 800)
+
+The Project screen's goal preview claimed it showed "what the hive receives in refine rounds, trimmed to the nearest sentence" — but that preview used the sentence-aware `truncateGoalForRefine()`, while the **actual** prompt paths used a dumb `goal.substring(0, 300) + '…'` mid-word chop. The two disagreed, so the preview was lying about both the truncation style and (often) the content.
+
+Fixed by unifying everything on one path:
+
+- New constant `REFINE_GOAL_MAX_CHARS` (single source of truth; was a `300` magic number scattered across three sites).
+- Both real prompt paths — the refine-round path in `runRound` and the Builder-Only path — now call `truncateGoalForRefine(goal)`, the same sentence-aware function the preview uses. Preview = reality, permanently.
+- **Cap raised 300 → 800.** At 300, most multi-field goals were amputated mid-brief on *every* non-draft round, so the hive lost the project context partway through. 800 keeps the brief intact while staying bounded (protects token cost for cloud providers). Tunable in one constant.
+- Draft phase still sends the **full** goal, unchanged.
+- Preview sub-copy reworded to state plainly that it's exactly what the hive receives in refine rounds, and that the draft round gets the full goal.
+
+**Behavioral note:** this changes what reviewers see as PROJECT CONTEXT in refine rounds (more goal, cut at a sentence boundary instead of mid-word). Convergence benchmarks recorded before this build ran on the old 300-char chop and aren't directly comparable on that axis.
+
+### Files changed
+
+- **`js/app.js`** — `REFINE_GOAL_MAX_CHARS` constant; `truncateGoalForRefine` parameterized; both prompt paths switched to the sentence-aware trim; `updateGoalCounter` threshold + preview copy. `BUILD` → `20260523-007`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.10`
+- **`style.css`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.9
 **Build:** `20260523-006` · **Released:** May 23, 2026
 
