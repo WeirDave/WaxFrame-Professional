@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-001
+//  Build: 20260524-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-001';         // build stamp — update each session
+const BUILD       = '20260524-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -2238,8 +2238,10 @@ function _autoMaybeChainNextRound(ctx) {
   //    indicators on the reviewer cards plus the toast already
   //    communicate the win — the modal was redundant and added an
   //    extra click before the user could review. Remaining halt cases
-  //    (ceiling, stall, failure-streak, decision-tie) still surface
-  //    the modal because each requires a deliberate next move.
+  //    (ceiling, stall, failure-streak) still surface the modal because
+  //    each requires a deliberate next move. v3.56.16 — decision-tie no
+  //    longer halts here: it pauses Auto and routes the user to the
+  //    Conflicts panel (Option B), resuming on Apply like the churn flow.
   if (ctx.outcome === 'unanimous' || ctx.outcome === 'majority') {
     window._autoMode             = false;
     window._autoCeilingTarget    = null;
@@ -2303,7 +2305,22 @@ function _autoMaybeChainNextRound(ctx) {
   if (Array.isArray(ud) && ud.length > 0) {
     const resolved = _autoResolveUserDecisions(ud);
     if (!resolved) {
-      _autoHalt('decision-tie', `A USER DECISION block has no clear majority. Pick options manually, then Resume Auto.`);
+      // v3.56.16 — Option B: no halt modal for an unresolved USER DECISION.
+      // Mirrors the churn flow: pause the chain (Auto stays toggled ON, idle),
+      // point the user at the Conflicts panel, and let applyDecisions() →
+      // runBuilderOnly() resume the chain automatically once they pick. Same
+      // "Auto hit a decision → resolve it in the panel → it continues" pattern,
+      // no modal to decode. The _autoHalt modal stays for ceiling / stall /
+      // failure-streak / converged, where Resume genuinely is the next move.
+      if (typeof consoleLog === 'function') {
+        consoleLog(`🤖 Auto paused — a USER DECISION needs your call. Resolve it in the Conflicts panel and Auto will resume.`, 'warn');
+      }
+      if (typeof toast === 'function') {
+        toast('🤖 Auto paused — resolve the decision in the Conflicts panel, then Apply', 5000);
+      }
+      updateAutoToggleUI();
+      const _cpanel = document.getElementById('conflictsPanel');
+      if (_cpanel) _cpanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     // Apply the auto-picks via the existing applyDecisions() path,
@@ -2420,8 +2437,9 @@ function _autoHalt(reasonCode, reasonText) {
   // v3.37.2 — Distinct "Auto halted" cadence. Skip on converged because
   // the unanimous-convergence path already played its fanfare; stacking
   // the halt-sound on top would muddy that moment. Halt reasons that
-  // need their own audible cue: ceiling, stall, failure-streak,
-  // decision-tie (and future length-at-convergence per P1.3 #9).
+  // need their own audible cue: ceiling, stall, failure-streak.
+  // v3.56.16 — decision-tie no longer routes through _autoHalt (Option B),
+  // so it relies on playAlertIfUserDecisions() at round end for its cue.
   if (reasonCode !== 'converged' && typeof playAutoHaltSound === 'function') {
     try { playAutoHaltSound(); } catch (e) {}
   }
