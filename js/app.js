@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-009
+//  Build: 20260523-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-009';         // build stamp — update each session
+const BUILD       = '20260523-010';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -2550,6 +2550,24 @@ async function clearProject() {
   // would never re-warn for the rest of the tab's lifetime, even across
   // unrelated sessions. Mirrors the _aiWarnings reset on the line above.
   window._slowResponderShownFor = new Set();
+  // v3.56.13 — Reset the rest of the project-scoped conflict / decision /
+  // holdout / validation state too. These survived clearProject before, so on
+  // a new project they could carry over (same bug class as the v3.35.6
+  // sessionAIs leak). Most self-heal via the round flow, but _lastConflictFP
+  // gates the v3.56.5 decision-reset — a stale fingerprint matching a new
+  // project's first conflict would skip the reset and leak old picks. Holdout
+  // anchors/suggestions and validation failures were only ever lazily
+  // initialized or overwritten, never cleared. Wipe them all for a clean slate.
+  window._decisionChoices        = {};
+  window._conflictCurrentTexts   = {};
+  window._lastConflicts          = null;
+  window._lastConflictFP         = null;
+  window._holdoutChoices         = {};
+  window._holdoutAnchors         = {};
+  window._flatHoldoutSuggestions = null;
+  window._lastAppliedChanges     = null;
+  window._lastValidationFailures = null;
+  window._slowConsoleNagged      = new Set(); // v3.56.13 — per-AI "consider toggling off" console dedup
   localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
@@ -11327,7 +11345,18 @@ async function runRound() {
     allReviewers.forEach(ai => {
       const _t = _timings[ai.id];
       if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
-        consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
+        // v3.56.13 — Log the slow timing every round (useful telemetry), but
+        // only suggest "consider toggling off" the FIRST time per AID this
+        // session; after that, a quieter "slow again" line so a persistently
+        // slow AI doesn't nag the console every single round.
+        const _nagged = window._slowConsoleNagged ||
+          (window._slowConsoleNagged = new Set());
+        if (!_nagged.has(ai.id)) {
+          _nagged.add(ai.id);
+          consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling it off if it keeps dragging the run`, 'warn');
+        } else {
+          consoleLog(`🐢 ${ai.name} slow again — ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s)`, 'warn');
+        }
         // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
         // preference. Detection + console log run unconditionally above
         // so diagnostic info is always available. Only the user-facing
