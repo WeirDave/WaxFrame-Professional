@@ -1,6 +1,25 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.13
+**Build:** `20260523-010` · **Released:** May 23, 2026
+
+### State hygiene — cross-project carryover fix + slow-alert console dedup
+
+Two fixes from the code audit, both about stale state leaking where it shouldn't.
+
+**1. Project-scoped state now fully resets on a new project.** `clearProject` already reset most state, but a cluster of conflict / decision / holdout / validation globals survived it — the same bug class as the v3.35.6 `sessionAIs` carryover. Most self-healed via the round flow, but `window._lastConflictFP` (the fingerprint that gates the v3.56.5 decision-reset) was never cleared on the boundary: if a new project's first conflict fingerprint-matched the previous project's last conflict, the reset would skip and old decision picks could leak into the new panel. `_holdoutAnchors`, `_flatHoldoutSuggestions`, and `_lastValidationFailures` were only ever lazily initialized or overwritten, never cleared. `clearProject` now wipes all of them (`_decisionChoices`, `_conflictCurrentTexts`, `_lastConflicts`, `_lastConflictFP`, `_holdoutChoices`, `_holdoutAnchors`, `_flatHoldoutSuggestions`, `_lastAppliedChanges`, `_lastValidationFailures`) for a clean slate. Low risk — clearing these on a brand-new project is always correct.
+
+**2. Slow-responder console alert no longer nags every round.** The "consider toggling off" warning fired on every round an AI was slow (a persistently slow Builder/reviewer like Gemini would repeat it 5+ times a run). Now the suggestion fires **once per AI per session**; subsequent slow rounds log a quieter "slow again" line so the timing telemetry is still recorded without the repeated nag. The modal card already deduped once per AI; this brings the console line in line with it.
+
+### Files changed
+
+- **`js/app.js`** — `clearProject` carryover reset block; slow-responder console dedup via `window._slowConsoleNagged` (reset in `clearProject`). `BUILD` → `20260523-010`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.13`
+- **`style.css`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.12
 **Build:** `20260523-009` · **Released:** May 23, 2026
 
