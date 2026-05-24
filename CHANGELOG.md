@@ -1,6 +1,29 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.15
+**Build:** `20260524-001` · **Released:** May 24, 2026
+
+### Churn detector — break the rewording loop
+
+Closes Audit Round 3 from the v48 backlog. The conference-center run (Playbook v29) converged but took 24 rounds because the hive spent ~8 of them rewording a single radio-count sentence with no net change — a grind the satisfied-count stall detector can't see, because the reviewer tally keeps shifting while the document spins in place.
+
+New **churn detector** watches the document itself. After each successful round it diffs the last `CHURN_WINDOW` (3) transitions; if exactly one sentence slot keeps getting reworded round after round (semantically equivalent, just rephrased) while the rest of the document holds stable, it surfaces the loop as a synthetic **USER DECISION** in the Conflicts panel — no new modal, same card you resolve every session.
+
+- The card shows the current sentence (click-to-scroll to it in the document), each round's attempt as a pickable option labelled by round, and a custom field. The current version is **pre-selected** so the default action is one click.
+- **Apply & Lock** is the default action (applying already writes to `_resolvedDecisions`, so the hive can't rework the sentence again — the loop dies). A de-emphasized **Apply without locking** escape hatch is available for the rare case you want the hive to keep working it; it suppresses re-flagging the same slot for `CHURN_WINDOW` more rounds.
+- In **Auto** mode, a trip **pauses** the chain (Auto stays toggled ON, idle) and scrolls to the panel. Resolving the card runs a Builder round via the existing `applyDecisions()` → `runBuilderOnly()` path, which **auto-resumes** the chain. No manual step to figure out what's next.
+- Detector self-arms only after 4 doc-bearing rounds; tuned to ignore healthy multi-sentence progress, no-change rounds, and unrelated rewrites (validated against five scenarios).
+
+### Files changed
+
+- **`js/app.js`** — `_detectChurn` + helpers (`_churnSentences` / `_churnNorm` / `_churnSim` / `_churnFingerprint`); `CHURN_WINDOW` / `CHURN_SIM_MIN` constants; churn-pending gate in `_autoFireChainedRound`; churn short-circuit in the round-success path; synthetic-decision rendering + pre-selection + dual apply buttons in `renderConflicts`; `noLock` path in `applyDecisions`; `checkAllDecisionsMade` toggles the escape-hatch button; `_churnPending` cleared on round start; churn state reset in `clearProject`. `BUILD` → `20260524-001`
+- **`style.css`** — `.churn-warning` header, `.decision-card-churn` tint, `.btn-apply-nolock` escape-hatch button; build stamp
+- **`js/version.js`** — `APP_VERSION` → `v3.56.15 Pro`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.15`, build stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.14
 **Build:** `20260523-011` · **Released:** May 23, 2026
 
