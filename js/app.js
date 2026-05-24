@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-005
+//  Build: 20260523-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-005';         // build stamp — update each session
+const BUILD       = '20260523-006';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1937,6 +1937,11 @@ window._autoChainPending  = false;   // debounce — round just kicked off
 window._autoLengthRerollCount  = 0;     // builder-only rerolls fired this convergence cycle
 window._autoLengthRerollActive = false; // true while a length-reroll cycle is in flight
 window._autoLengthDirective    = '';    // synthetic one-build Builder trim/expand directive
+// v3.56.9 — Manual "Trim/Expand with Builder" reroll flag (interactive analog
+// of #9). Separate from the Auto flags so Auto behavior is unchanged. Reuses
+// _autoLengthDirective as the directive carrier; the inject gate and post-build
+// branch in runBuilderOnly honor this flag even when Auto is OFF.
+window._manualLengthReroll     = false;
 
 // P1.3 #9 (v3.56.1) — Build the synthetic one-build Builder directive telling
 // the Builder to trim (over) or expand (under) the converged document back
@@ -1989,6 +1994,68 @@ function _autoConvergenceLengthReroll(cstat) {
     _autoHalt('length-reroll-exhausted', `The Builder couldn't bring the document into range after ${_max} attempt${_max === 1 ? '' : 's'} (still ${cstat.status} the ${cstat.status === 'over' ? 'limit' : 'floor'}: ${cstat.actual} ${cstat.unitName}). Edit the document and re-run, or accept it as-is.`);
   }
   return true;
+}
+
+// v3.56.9 — Manual "Trim/Expand with Builder" (interactive analog of #9's Auto
+// reroll). Fires ONE builder-only trim/expand using the same directive #9 uses,
+// but driven by the user from the length-guard modal instead of Auto. After the
+// build, runBuilderOnly's manual post-build branch calls _manualLengthAfterFix()
+// to re-check length and re-surface the guard so the user can fix again or
+// accept — a trim -> recheck -> trim/accept loop, fully under user control.
+async function _manualLengthFix(cstat) {
+  // Stop the in-flight (just-converged) round's UI before handing to the Builder.
+  const _runBtn = document.getElementById('runRoundBtn');
+  _runBtn?.classList.remove('running');
+  if (_runBtn) { const _l = _runBtn.querySelector('.shake-wide-label'); if (_l) _l.textContent = 'Smoke the Hive'; }
+  if (typeof stopRoundTimer === 'function') stopRoundTimer();
+  if (typeof hideSmokerOverlay === 'function') hideSmokerOverlay();
+  if (typeof hideBuilderOverlay === 'function') hideBuilderOverlay();
+
+  const _verb = cstat.status === 'over' ? 'trim' : 'expand';
+  window._autoLengthDirective = _autoBuildLengthDirective(cstat);
+  window._manualLengthReroll  = true;
+  consoleLog(`📏 Manual: sending the document back to the Builder to ${_verb} (${cstat.actual} ${cstat.unitName})…`, 'warn');
+  setStatus(`📏 ${_verb === 'trim' ? 'Trimming' : 'Expanding'} — sending the document back to the Builder…`);
+  await runBuilderOnly();
+}
+
+// v3.56.9 — Post-build re-check for the manual length fix. The trimmed/expanded
+// document is already committed by the time this runs. Re-check length: if it's
+// in range, we're done (console note). If it's still out, re-surface the guard
+// so the user can fix again, accept, or disable the guard. Mirrors #9's bounded
+// loop, but interactive and unbounded (the user decides when to stop).
+async function _manualLengthAfterFix() {
+  const cstat = getLengthStatus(docText);
+  if (!cstat || cstat.status === 'ok') {
+    consoleLog(`📏 Length fix landed in range${cstat ? ` (${cstat.actual} ${cstat.unitName})` : ''} — length satisfied`, 'info');
+    if (typeof toast === 'function') toast('📏 Document is now within your length range', 4000);
+    return;
+  }
+  const choice = await lengthGuardPrompt({
+    kind: cstat.status === 'over' ? 'convergence_over' : 'convergence_under',
+    actual: cstat.actual,
+    prevActual: cstat.actual,
+    limitNum: cstat.status === 'over'
+      ? cstat.limitNum
+      : (cstat.mode === 'target' ? cstat.limitNum : cstat.floorNum),
+    unitName: cstat.unitName,
+    limitName: cstat.status === 'over'
+      ? cstat.limitName
+      : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
+    builderName: 'The Hive'
+  });
+  if (choice === 'builder_fix') {
+    await _manualLengthFix(cstat);
+  } else if (choice === 'continue_anyway') {
+    window._lengthGuardOverride = true;
+    if (typeof updateLengthGuardIndicator === 'function') updateLengthGuardIndicator();
+    consoleLog('📏 Length guard disabled for this project — current document accepted', 'warn');
+    if (typeof toast === 'function') toast('📏 Length guard disabled — document accepted', 4500);
+  } else {
+    // 'keep' or 'discard' — leave the corrected document as-is on the work
+    // screen. Nothing further; the user drives the next action.
+    consoleLog(`📏 Length fix: kept the document at ${cstat.actual} ${cstat.unitName} (still ${cstat.status} the ${cstat.status === 'over' ? 'limit' : 'floor'}; guard remains armed)`, 'info');
+  }
 }
 
 // v3.35.2 — saveAutoModePreference() and restoreAutoModePreference()
@@ -2496,6 +2563,7 @@ async function clearProject() {
   window._autoLengthRerollCount  = 0;
   window._autoLengthRerollActive = false;
   window._autoLengthDirective    = '';
+  window._manualLengthReroll     = false;
 
   // v3.35.2 — Per-bee satisfaction + DOM state wipe. Without this, a
   // satisfied reviewer (e.g. Gemini's ★ + NO CHANGES NEEDED pill)
@@ -4340,6 +4408,7 @@ function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitNa
     const discardBtn  = document.getElementById('lengthGuardDiscardBtn');
     const keepBtn     = document.getElementById('lengthGuardKeepBtn');
     const continueBtn = document.getElementById('lengthGuardContinueBtn');
+    const builderFixBtn = document.getElementById('lengthGuardBuilderFixBtn');
     if (!modal) {
       // Modal not in DOM (shouldn't happen, but defensive). Default to
       // the existing failed-round behavior so corruption can't sneak in.
@@ -4416,11 +4485,18 @@ function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitNa
     if (discardBtn) discardBtn.textContent = isConvergence ? 'Block convergence' : 'Discard round';
     if (keepBtn)    keepBtn.textContent    = isConvergence ? 'Accept this convergence' : 'Keep this round';
     if (continueBtn) continueBtn.textContent = 'Continue anyway · disable guard';
+    // v3.56.9 — "Trim/Expand with Builder" shows for convergence kinds only
+    // (the interactive analog of #9's at-convergence reroll). Hidden for the
+    // mid-round over/under prompts, which already have Discard (= re-run).
+    if (builderFixBtn) {
+      builderFixBtn.classList.toggle('is-hidden', !isConvergence);
+      builderFixBtn.textContent = isUnder ? 'Expand with Builder' : 'Trim with Builder';
+    }
 
     // ── Help paragraph copy ──
     if (helpEl) {
       if (isConvergence) {
-        helpEl.innerHTML = '<strong>Block convergence</strong> rejects the celebration so you can edit the document and re-run (default). <strong>Accept</strong> proceeds with the convergence anyway, but the guard stays active if you keep iterating after. <strong>Continue anyway</strong> proceeds and disables the length guard for the rest of this project.';
+        helpEl.innerHTML = '<strong>Trim/Expand with Builder</strong> sends the document back to the Builder to bring it into your length range, then re-checks (recommended). <strong>Block convergence</strong> rejects the celebration so you can edit and re-run. <strong>Accept</strong> proceeds anyway with the guard still armed. <strong>Continue anyway</strong> proceeds and disables the length guard for the rest of this project.';
       } else if (isUnder) {
         helpEl.innerHTML = '<strong>Discard</strong> rejects the round (default). <strong>Keep</strong> accepts this round\'s output as the new document, but the guard stays active for future rounds. <strong>Continue anyway</strong> accepts and disables the length guard for the rest of this project — useful when the floor doesn\'t match what the document actually needs to be.';
       } else {
@@ -4443,6 +4519,7 @@ function _lengthGuardChoose(value) {
     const _label = value === 'discard'         ? 'Discard round'
                  : value === 'keep'            ? 'Keep round (guard stays armed)'
                  : value === 'continue_anyway' ? 'Continue anyway (disable guard for project)'
+                 : value === 'builder_fix'     ? 'Trim/Expand with Builder'
                  : value;
     consoleLog(`📏 Length guard choice: ${_label}`, 'info');
   }
@@ -10546,7 +10623,10 @@ async function runBuilderOnly() {
   // a synthetic directive (window._autoLengthDirective), NOT the Notes field,
   // so an empty Notes box is expected here and must not bail. A manual
   // Builder-Only with no note still requires one.
-  const _lengthReroll = !!(window._autoMode && window._autoLengthRerollActive && window._autoLengthDirective);
+  // v3.56.9 — also fires for the manual "Trim/Expand with Builder" path
+  // (window._manualLengthReroll), which carries the same directive but with
+  // Auto OFF. Either active flag + a directive present counts as a length reroll.
+  const _lengthReroll = !!(((window._autoMode && window._autoLengthRerollActive) || window._manualLengthReroll) && window._autoLengthDirective);
   if (!notes && !_lengthReroll) {
     toast('⚠️ Add a note first — tell the Builder what to change');
     return;
@@ -10594,7 +10674,7 @@ async function runBuilderOnly() {
   consoleLog(`═══ Round ${round} · Builder Only · Phase: ${PHASES.find(p=>p.id===phase)?.label||phase} ═══`, 'divider');
   if (standingNotes) consoleLog(`📌 Standing notes: ${standingNotes}`, 'info');
   if (notes) consoleLog(`🎯 This-round notes: ${notes}`, 'info');
-  if (_lengthReroll) consoleLog(`📏 Auto length-correction directive active for this build (attempt ${window._autoLengthRerollCount}/${getAutoRerollAttempts()})`, 'info');
+  if (_lengthReroll) consoleLog(`📏 ${window._manualLengthReroll ? 'Manual' : 'Auto'} length-correction directive active for this build${window._manualLengthReroll ? '' : ` (attempt ${window._autoLengthRerollCount}/${getAutoRerollAttempts()})`}`, 'info');
   setBeeStatus(builderAI.id, 'sending', 'Building…');
   // v3.36.15 — Round-counter state machine entry. Live "Round N" stays
   // up while the round is in flight; the next round-end site flips
@@ -10927,6 +11007,13 @@ async function runBuilderOnly() {
       consoleLog(`📏 Length nudge applied (${_szRH ? `${_szRH.actual} ${_szRH.unitName}` : '?'}) — re-entering the hive to vet the change`, 'info');
       setStatus(`📏 Length nudge applied — running the hive on the new draft…`);
       _autoFireChainedRound('length-rehive', 'round');
+    } else if (window._manualLengthReroll) {
+      // v3.56.9 — Manual "Trim/Expand with Builder": the corrected document is
+      // already committed above. Consume the flag, then re-check length and
+      // re-surface the guard if still out of range (trim -> recheck loop).
+      window._manualLengthReroll  = false;
+      window._autoLengthDirective = '';   // consumed — this build only
+      await _manualLengthAfterFix();
     } else {
       // v3.35.0 — Auto Mode: builder-only success. No reviewers ran this
       // round, so satisfied/total are zero and the stall window does not
@@ -11263,6 +11350,14 @@ async function runRound() {
             : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
           builderName: 'The Hive'
         });
+        if (choice === 'builder_fix') {
+          // v3.56.9 — Manual "Trim/Expand with Builder": send the converged
+          // document back to the Builder to bring it into range. _manualLengthFix
+          // fires the builder-only round; its post-build re-check re-surfaces the
+          // guard if still out. Skip the celebration — the fix flow takes over.
+          await _manualLengthFix(cstat);
+          return;
+        }
         if (choice === 'discard') {
           consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
           toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
@@ -11396,6 +11491,14 @@ async function runRound() {
             : lengthFloorLabel(cstat.floorNum, cstat.unitName, cstat.mode, cstat.limitNum),
           builderName: 'The Hive'
         });
+        if (choice === 'builder_fix') {
+          // v3.56.9 — Manual "Trim/Expand with Builder": send the converged
+          // document back to the Builder to bring it into range. _manualLengthFix
+          // fires the builder-only round; its post-build re-check re-surfaces the
+          // guard if still out. Skip the celebration — the fix flow takes over.
+          await _manualLengthFix(cstat);
+          return;
+        }
         if (choice === 'discard') {
           consoleLog(`📏 Convergence blocked — document is ${cstat.status} the length ${cstat.status === 'over' ? 'target' : 'floor'} (${cstat.actual} ${cstat.unitName} vs ${cstat.status === 'over' ? cstat.limitName : cstat.floorNum + ' ' + cstat.unitName + ' floor'}). Edit the document and re-run.`, 'warn');
           toast(`📏 Convergence blocked — adjust document length and re-run`, 5000);
