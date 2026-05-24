@@ -1,6 +1,26 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.16
+**Build:** `20260524-002` · **Released:** May 24, 2026
+
+### Auto decision-tie: drop the halt modal, route to the panel
+
+When Auto hit a USER DECISION the attribution-majority resolver couldn't settle, it threw the shared `_autoHalt` modal — the same generic "Auto paused / Resume Auto / Switch to Manual / Stop here" modal used by the ceiling, stall, and failure-streak halts. For a decision-tie that framing was wrong: the actual next move is *resolve the conflict*, not resume, and "Resume Auto" (the primary button) just re-ran the round and re-tripped on the still-unresolved decision.
+
+Replaced with the same pattern as the churn detector (v3.56.15): no modal. Auto **pauses** (stays toggled ON, idle), logs and toasts a pointer, and scrolls to the Conflicts panel. You resolve the decision and hit **Apply** — which runs a Builder round via `applyDecisions()` → `runBuilderOnly()` and **resumes the chain automatically**. One consistent "Auto hit a decision → resolve it in the panel → it continues" behavior across both churn and Builder-raised ties.
+
+The `_autoHalt` modal is unchanged for the cases where Resume genuinely is the next move: round ceiling, satisfied-count stall, failure streak, length-reroll-exhausted, and unanimous convergence.
+
+### Files changed
+
+- **`js/app.js`** — step 5 of `_autoMaybeChainNextRound` no longer calls `_autoHalt('decision-tie', …)`; it pauses Auto, toasts/logs, and scrolls to the Conflicts panel. Reconciled the two comments that listed decision-tie as a modal/halt-sound case. `BUILD` → `20260524-002`
+- **`js/version.js`** — `APP_VERSION` → `v3.56.16 Pro`
+- **`index.html`**, helper HTML — cache-bust `?v=3.56.16`, build stamps
+- **`style.css`** — build stamp (no rule changes)
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.15
 **Build:** `20260524-001` · **Released:** May 24, 2026
 
