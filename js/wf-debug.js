@@ -536,7 +536,8 @@ window.WF_ERROR_CATALOG = [
     meaning: '{ai} took {elapsed}s on this round vs the round average of {avg}s. Toggle it off to speed up rounds without losing accuracy — your other AIs already cover the work.',
     actions: [
       { label: 'Toggle off this AI', kind: 'disable-ai' },
-      { label: 'Keep it on',         kind: 'dismiss' }
+      { label: 'Keep it on',         kind: 'dismiss' },
+      { label: "Don't alert me this session", kind: 'silence-slow' }
     ]
   },
   // v3.29.1 — Import Server (model list) entries. All gate on
@@ -707,6 +708,22 @@ function renderTroubleshootingCard(entry, ctx) {
             if (completed && typeof toast === 'function') {
               toast(`✓ ${ctx.aiName || 'AI'} toggled off for this session`);
             }
+          }
+        };
+      } else if (a.kind === 'silence-slow') {
+        // v3.56.14 — User opts out of slow-AI alerts for the rest of this
+        // tab session. Suppresses both the card and the console line (see the
+        // _slowAlertsSilenced gate in the round-end emit). Session-scoped: it
+        // resets on a new project or page reload. The footer "Slow alerts"
+        // pill remains the persistent (cross-session) control.
+        btn.onclick = () => {
+          closeTroubleshootingCard();
+          window._slowAlertsSilenced = true;
+          if (typeof consoleLog === 'function') {
+            consoleLog('🔕 Slow-AI alerts off for this session — re-enable via the footer "Slow alerts" pill or a new project', 'info');
+          }
+          if (typeof toast === 'function') {
+            toast('🔕 Slow-AI alerts off for this session');
           }
         };
       } else if (a.kind === 'dismiss') {
