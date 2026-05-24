@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260523-011
+   Build: 20260524-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -5883,6 +5883,55 @@ kbd {
   opacity: 0.4;
   cursor: not-allowed;
   transform: none;
+}
+
+/* ── CHURN (v3.56.15) ── */
+/* Header banner for a synthetic churn decision. Uses the same amber language
+   as the length/repeat warnings — caution, not error. */
+.churn-warning {
+  background: rgba(245,166,35,0.1);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+}
+[data-theme="light"] .churn-warning { background: rgba(201,124,6,0.08); }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .churn-warning { background: rgba(201,124,6,0.08); }
+}
+/* Churn decision card — amber edge to read as the hive looping, distinct from
+   the red repeat-offender card and the green resolved/locked states. */
+.decision-card.decision-card-churn {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+}
+.decision-card.decision-card-churn .decision-badge {
+  color: var(--accent);
+}
+/* "Apply without locking" — de-emphasized escape hatch under Apply & Lock. */
+.btn-apply-nolock {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  font-family: var(--font);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 12px;
+  transition: all 0.12s;
+}
+.btn-apply-nolock:hover:not(:disabled) {
+  border-color: var(--text-dim);
+  color: var(--text);
+  background: rgba(255,255,255,0.04);
+}
+.btn-apply-nolock:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* ── BUILDER DECISIONS (informational) ── */

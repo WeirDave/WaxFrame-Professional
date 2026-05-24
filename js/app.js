@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-011
+//  Build: 20260524-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-011';         // build stamp — update each session
+const BUILD       = '20260524-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1949,6 +1949,16 @@ function _abandonInFlightRoundUI() {
 const AUTO_MAX_ROUNDS_DEFAULT  = 30;
 const AUTO_STALL_WINDOW        = 3;
 const AUTO_FAILURE_STREAK_LIMIT = 2;
+// v3.56.15 — Churn detector. Distinct from the satisfied-count stall above:
+// stall watches the reviewer S/T tally; churn watches the DOCUMENT for one
+// sentence slot getting reworded round after round with no net change (the
+// 24-round conference-center grind that oscillated on a single radio-count
+// sentence). CHURN_WINDOW = consecutive rewords of the same slot before we
+// flag it. CHURN_SIM_MIN = Jaccard token overlap below which two sentences
+// are considered different content (not a reword) — keeps real edits from
+// tripping it. Surfaces as a synthetic USER DECISION in the Conflicts panel.
+const CHURN_WINDOW  = 3;
+const CHURN_SIM_MIN = 0.45;
 // v3.35.2 — AUTO_LS_KEY removed. Auto-mode state is no longer persisted
 // to localStorage; it's strictly per-project and resets to OFF on every
 // page reload. Legacy 'waxframe_auto_mode' keys from pre-v3.35.2
@@ -1961,6 +1971,8 @@ window._autoCeilingTarget = null;    // halt-at round number
 window._autoSatisfiedHist = [];      // sliding window of "S/T" strings
 window._autoFailureStreak = 0;       // consecutive builder failures
 window._autoChainPending  = false;   // debounce — round just kicked off
+window._churnPending      = false;   // v3.56.15 — a churn decision is awaiting the user; Auto holds the chain
+window._churnDismissed    = {};      // v3.56.15 — fp → round-until, suppress re-nag after "apply without locking"
 // P1.3 #9 (v3.56.1) — at-convergence length reroll state.
 window._autoLengthRerollCount  = 0;     // builder-only rerolls fired this convergence cycle
 window._autoLengthRerollActive = false; // true while a length-reroll cycle is in flight
@@ -2343,6 +2355,17 @@ function _autoFireChainedRound(label, kind) {
       }
       return;
     }
+    // v3.56.15 — Churn gate. When the churn detector has surfaced a synthetic
+    // decision in the Conflicts panel, hold the chain. Unlike the cards above
+    // we do NOT set _autoChainDeferred: resume comes from applyDecisions() →
+    // runBuilderOnly() (which re-enters the chain on its own), so a deferred
+    // re-fire here would double-fire the round.
+    if (window._churnPending) {
+      if (typeof consoleLog === 'function') {
+        consoleLog(`🤖 Auto paused (${label}) — churn decision pending in the Conflicts panel`, 'info');
+      }
+      return;
+    }
     // v3.51.0 — Builder-disable modal gate. Mirrors the troubleshooting-card
     // gate above. v3.49.0 introduced the builder-disable interception (when
     // user tries to toggle off the current builder, the Change Builder modal
@@ -2610,6 +2633,11 @@ async function clearProject() {
   window._autoLengthRerollActive = false;
   window._autoLengthDirective    = '';
   window._manualLengthReroll     = false;
+  // v3.56.15 — Churn detector state is project-scoped. _churnPending gates the
+  // Auto chain; _churnDismissed suppresses re-nag after "apply without locking".
+  // Both must reset so a new project starts clean.
+  window._churnPending   = false;
+  window._churnDismissed = {};
 
   // v3.35.2 — Per-bee satisfaction + DOM state wipe. Without this, a
   // satisfied reviewer (e.g. Gemini's ★ + NO CHANGES NEEDED pill)
@@ -10695,6 +10723,10 @@ async function runBuilderOnly() {
   if (smokeBtn?.classList.contains('running')) return;
   if (btn?.disabled) return;
 
+  // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
+  // detector (it self-disables while _churnPending is true).
+  window._churnPending = false;
+
   const notes = document.getElementById('workNotes')?.value.trim() || '';
   // P1.3 #9 (v3.56.2) — an at-convergence length reroll drives the Builder via
   // a synthetic directive (window._autoLengthDirective), NOT the Notes field,
@@ -11162,6 +11194,10 @@ async function runRound() {
   const btn = document.getElementById('runRoundBtn');
 
   if (btn?.classList.contains('running')) return;
+
+  // v3.56.15 — A round is firing; clear any pending churn hold and re-arm the
+  // detector (it self-disables while _churnPending is true).
+  window._churnPending = false;
 
   // P1.3 #9 (v3.56.3) — the reroll count is intentionally NOT reset here. A full
   // round is now part of the length-correction cycle (one Builder nudge, then
@@ -12070,13 +12106,29 @@ async function runRound() {
     _autoMaybeChainNextRound({ outcome: 'failed', builderError: true, errorReason: _failedRoundReason || 'unknown' });
   } else {
     toast(`✅ Round ${round - 1} complete!`);
-    // v3.35.0 — Auto Mode: clean round, evaluate guardrails and chain.
-    _autoMaybeChainNextRound({
-      outcome:    'success',
-      satisfied:  (typeof noChangesCount === 'number' ? noChangesCount : 0),
-      total:      (typeof successfulReviews !== 'undefined' && successfulReviews ? successfulReviews.length : 0),
-      conflicts:  _autoCapturedConflicts
-    });
+    // v3.56.15 — Churn check runs first. If the hive has been rewording one
+    // sentence with no net change, _detectChurn surfaces a synthetic decision
+    // in the Conflicts panel and returns true. We then HOLD the Auto chain
+    // (Auto stays toggled ON, just idle) — the user resolves the card and
+    // applyDecisions() → runBuilderOnly() re-enters the chain, so it resumes
+    // automatically. Short-circuiting here also keeps the synthetic decision
+    // out of _autoMaybeChainNextRound's USER-DECISION majority resolver, which
+    // only understands AI-attributed options, not per-round churn variants.
+    const _churned = _detectChurn();
+    if (_churned) {
+      if (window._autoMode) {
+        updateAutoToggleUI();
+        consoleLog(`🤖 Auto paused — resolve the churn decision in the Conflicts panel and it will resume`, 'info');
+      }
+    } else {
+      // v3.35.0 — Auto Mode: clean round, evaluate guardrails and chain.
+      _autoMaybeChainNextRound({
+        outcome:    'success',
+        satisfied:  (typeof noChangesCount === 'number' ? noChangesCount : 0),
+        total:      (typeof successfulReviews !== 'undefined' && successfulReviews ? successfulReviews.length : 0),
+        conflicts:  _autoCapturedConflicts
+      });
+    }
   }
 }
 
@@ -13070,6 +13122,117 @@ function lockConflictDecision(decisionIdx) {
   toast(`🔒 Locked — Builder and reviewers will leave this alone`);
 }
 
+// ── CHURN DETECTOR (v3.56.15) ──
+// After each successful round, look back across the last CHURN_WINDOW
+// document transitions. If exactly ONE sentence slot keeps getting reworded
+// every round — semantically equivalent, just rephrased — while the rest of
+// the document holds stable, the hive is spinning its wheels (the 24-round
+// conference-center grind). We surface it as a synthetic USER DECISION so the
+// user can lock a version and kill the loop. Reuses the entire decision-card
+// path: options, custom, doc-scroll, lock, apply.
+function _churnSentences(doc) {
+  return (doc || '')
+    .replace(/\s+/g, ' ')
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+function _churnNorm(s) {
+  return (s || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
+}
+function _churnSim(a, b) {
+  // Jaccard token overlap of two sentences (0 = disjoint, 1 = identical words).
+  const A = new Set(_churnNorm(a).split(' ').filter(Boolean));
+  const B = new Set(_churnNorm(b).split(' ').filter(Boolean));
+  if (A.size === 0 && B.size === 0) return 1;
+  let inter = 0; A.forEach(t => { if (B.has(t)) inter++; });
+  const uni = A.size + B.size - inter;
+  return uni === 0 ? 0 : inter / uni;
+}
+function _churnFingerprint(s) {
+  return _churnNorm(s).split(' ').slice(0, 8).join(' ');
+}
+function _detectChurn() {
+  try {
+    if (window._churnPending) return false; // a churn card is already up
+    const entries = history.filter(h => h && typeof h.doc === 'string' && h.doc.trim());
+    if (entries.length < CHURN_WINDOW + 1) return false;
+    const win = entries.slice(-(CHURN_WINDOW + 1)); // oldest → newest
+
+    // Walk each consecutive transition. A churn transition is: exactly one
+    // sentence removed and one added, where the two are similar-but-not-equal
+    // (a reword), and the rest of the document is stable.
+    const variants = [];
+    for (let i = 1; i < win.length; i++) {
+      const prev = _churnSentences(win[i - 1].doc);
+      const cur  = _churnSentences(win[i].doc);
+      if (Math.abs(prev.length - cur.length) > 1) return false; // doc not net-flat
+      const prevSet = new Set(prev);
+      const curSet  = new Set(cur);
+      const added   = cur.filter(s => !prevSet.has(s));
+      const removed = prev.filter(s => !curSet.has(s));
+      if (added.length !== 1 || removed.length !== 1) return false; // not a single localized reword
+      const sim = _churnSim(added[0], removed[0]);
+      if (sim < CHURN_SIM_MIN || sim >= 0.999) return false; // unrelated change, or identical (no real edit)
+      variants.push({ text: added[0], round: win[i].round });
+    }
+
+    // The mutating slot must be the SAME slot across all transitions —
+    // each variant similar to the one before it.
+    for (let i = 1; i < variants.length; i++) {
+      if (_churnSim(variants[i - 1].text, variants[i].text) < CHURN_SIM_MIN) return false;
+    }
+
+    const current = variants[variants.length - 1].text; // = the live doc's version
+    const fp = _churnFingerprint(current);
+
+    // Suppressed by a recent "apply without locking"?
+    if (window._churnDismissed && window._churnDismissed[fp] && round <= window._churnDismissed[fp]) return false;
+
+    // Already locked? Then the hive can't be reworking it — nothing to do.
+    const lockedAlready = (window._resolvedDecisions || []).some(rd =>
+      _churnSim(rd.original, current) > 0.9 || _churnSim(rd.chosen, current) > 0.9);
+    if (lockedAlready) return false;
+
+    // Build the synthetic decision. Options = each round's attempt, labelled
+    // by round; the current (live) version is the last option.
+    const options = variants.map(v => ({
+      text: v.text,
+      ais:  v.round != null ? `Round ${v.round}` : 'Earlier round'
+    }));
+
+    const latest = history[history.length - 1];
+    if (!latest) return false;
+    if (!latest.conflicts) latest.conflicts = { userDecisions: [], builderDecisions: [], raw: '' };
+    if (!Array.isArray(latest.conflicts.userDecisions)) latest.conflicts.userDecisions = [];
+    if (latest.conflicts.userDecisions.some(d => d._churn)) return false; // already injected
+
+    latest.conflicts.userDecisions.push({
+      question: `The hive keeps rewording this sentence without changing its meaning — ${CHURN_WINDOW} rounds running. Pick a version to lock in, or write your own.`,
+      current,
+      options,
+      _churn: true,
+      _churnRounds: CHURN_WINDOW
+    });
+    window._lastConflicts = latest.conflicts;
+    window._churnPending  = true;
+
+    consoleLog(
+      `⟳ Churn detected — "${current.slice(0, 60)}${current.length > 60 ? '…' : ''}" reworded ${CHURN_WINDOW} rounds running with no net change. Lock a version in the Conflicts panel to stop the loop.`,
+      'warn'
+    );
+    renderConflicts();
+    if (typeof playAlertSound === 'function') playAlertSound();
+    const panel = document.getElementById('conflictsPanel');
+    if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    saveSession();
+    return true;
+  } catch (e) {
+    console.warn('[churn] detection error:', e);
+    return false;
+  }
+}
+
 function renderConflicts() {
   const el = document.getElementById('conflictsPanel');
   if (!el) return;
@@ -13270,11 +13433,22 @@ function renderConflicts() {
 
   // USER DECISION cards
   if (conflicts.userDecisions && conflicts.userDecisions.length > 0) {
+    // v3.56.15 — Churn cards are synthetic USER DECISIONs the churn detector
+    // injects when the hive keeps rewording one sentence. They get a distinct
+    // banner + badge so the user understands why the card appeared (vs a
+    // Builder-raised conflict), and the apply row defaults to Apply & Lock.
+    const _hasChurn = conflicts.userDecisions.some(d => d._churn);
+    if (_hasChurn) {
+      html += `<div class="conflicts-section-header churn-warning">
+        ⟳ Churn detected — the hive reworded the same text several rounds running with no real change. Lock a version to stop the loop.
+      </div>`;
+    }
     html += `<div class="conflicts-section-header user-decisions-header">
       ⚡ Your Input Needed — the Builder couldn't resolve these
     </div>`;
     conflicts.userDecisions.forEach((d, di) => {
       const total = conflicts.userDecisions.length;
+      const isChurn = !!d._churn;
       const ledgerEntry = getLedgerEntry(d);
       const repeatCount = ledgerEntry ? ledgerEntry.count : 1;
       const isRepeat = repeatCount >= 2;
@@ -13286,10 +13460,15 @@ function renderConflicts() {
       const isLocked = dCurrentTrim && (window._resolvedDecisions || []).some(rd =>
         (rd.original || '').trim() === dCurrentTrim
       );
-      const repeatBadge = isRepeat
+      // v3.56.15 — Churn cards show their own ⟳ badge instead of the repeat-
+      // offender badge (a churn card is, by definition, freshly surfaced).
+      const repeatBadge = (!isChurn && isRepeat)
         ? `<span class="conflict-repeat-badge ${isHot ? 'conflict-repeat-hot' : ''}">
             🔁 Seen ${repeatCount}x
            </span>`
+        : '';
+      const churnBadge = isChurn
+        ? `<span class="conflict-repeat-badge conflict-repeat-hot">⟳ Reworded ${d._churnRounds || CHURN_WINDOW}×</span>`
         : '';
       const lockedBadge = isLocked
         ? `<span class="decision-locked-badge">🔒 LOCKED</span>`
@@ -13299,11 +13478,25 @@ function renderConflicts() {
       const lockBtnTitle = isLocked
         ? 'Remove the lock so reviewers can suggest changes to this again'
         : 'Lock the selected option as a final decision — Builder and reviewers will not raise this conflict again or change the chosen text';
-      const cardClass = `decision-card${isHot ? ' decision-card-hot' : ''}${isLocked ? ' decision-card-locked' : ''}`;
-      html += `<div class="${cardClass}" id="dcard-${di}"
+      const badgeLabel = isChurn ? `⟳ CHURN — pick a version` : `⚡ USER DECISION ${di + 1} of ${total}`;
+      const cardClass = `decision-card${isChurn ? ' decision-card-churn' : ''}${isHot && !isChurn ? ' decision-card-hot' : ''}${isLocked ? ' decision-card-locked' : ''}`;
+      // v3.56.15 — Pre-select the current (live) version of a churn sentence so
+      // "Apply & Lock" is armed on first render: the common action is "lock
+      // what's there now and move on." The user can still pick another round
+      // or write a custom version. The current version is the option whose
+      // text matches d.current (the detector puts it last).
+      if (isChurn && window._decisionChoices[di] == null) {
+        let _curIdx = (d.options || []).findIndex(o => (o.text || '').trim() === dCurrentTrim);
+        if (_curIdx < 0 && d.options && d.options.length) _curIdx = d.options.length - 1;
+        if (_curIdx >= 0) window._decisionChoices[di] = { type: 'option', idx: _curIdx };
+      }
+      const _preIdx = (isChurn && window._decisionChoices[di] && window._decisionChoices[di].type === 'option')
+        ? window._decisionChoices[di].idx : -1;
+      html += `<div class="${cardClass}${_preIdx >= 0 ? ' resolved' : ''}" id="dcard-${di}"
         data-option-texts="${esc(JSON.stringify(d.options.map(o => o.text || '')))}">
         <div class="decision-card-header">
-          <span class="decision-badge">⚡ USER DECISION ${di + 1} of ${total}</span>
+          <span class="decision-badge">${badgeLabel}</span>
+          ${churnBadge}
           ${repeatBadge}
           ${lockedBadge}
         </div>
@@ -13311,7 +13504,7 @@ function renderConflicts() {
         ${d.current ? (() => { window._conflictCurrentTexts[di] = d.current; return `<div class="decision-current decision-current-clickable" title="Click to scroll document to this text" onclick="scrollToCurrentText(window._conflictCurrentTexts[${di}])"><span class="decision-label">Current:</span> "${esc(d.current)}"</div>`; })() : ''}
         <div class="decision-options">
           ${d.options.map((opt, oi) => `
-            <button class="decision-opt-btn" id="dopt-${di}-${oi}"
+            <button class="decision-opt-btn${oi === _preIdx ? ' selected' : ''}" id="dopt-${di}-${oi}"
               onclick="selectDecision(${di}, ${oi}, ${total})">
               <span class="decision-opt-num">${oi + 1}</span>
               <span class="decision-opt-text">"${esc(opt.text)}"</span>
@@ -13322,11 +13515,11 @@ function renderConflicts() {
             <span class="decision-opt-num decision-opt-num-custom">✎</span>
             <span class="decision-opt-text decision-opt-text-dim">Custom — type your own</span>
           </button>
-          <button class="decision-opt-btn decision-opt-bypass" id="dopt-${di}-bypass"
+          ${isChurn ? '' : `<button class="decision-opt-btn decision-opt-bypass" id="dopt-${di}-bypass"
             onclick="selectBypassDecision(${di}, ${total})">
             <span class="decision-opt-num decision-opt-num-bypass">✏️</span>
             <span class="decision-opt-text decision-opt-text-dim">I edited the document directly — skip this conflict</span>
-          </button>
+          </button>`}
         </div>
         <div class="decision-lock-row">
           <button class="${lockBtnClass}" onclick="lockConflictDecision(${di})" title="${lockBtnTitle}">
@@ -13341,9 +13534,23 @@ function renderConflicts() {
       </div>`;
     });
 
-    html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" disabled>
-      ✅ Apply My Decisions to Document
-    </button>`;
+    // v3.56.15 — Apply row. With a churn card present the primary button reads
+    // "🔒 Apply & Lock" (apply already pushes to _resolvedDecisions, so locking
+    // is the default) and a de-emphasized "Apply without locking" escape hatch
+    // appears for the rare case the user wants the hive to keep working it.
+    if (_hasChurn) {
+      const _preArmed = Object.keys(window._decisionChoices).length === conflicts.userDecisions.length;
+      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" ${_preArmed ? '' : 'disabled'}>
+        🔒 Apply &amp; Lock
+      </button>
+      <button class="btn-apply-nolock" id="applyNoLockBtn" onclick="applyDecisions({ noLock: true })" ${_preArmed ? '' : 'disabled'} title="Apply the chosen text but leave it unlocked — the hive may rework it again">
+        Apply without locking
+      </button>`;
+    } else {
+      html += `<button class="btn-apply-decisions" id="applyDecisionsBtn" onclick="applyDecisions()" disabled>
+        ✅ Apply My Decisions to Document
+      </button>`;
+    }
   }
 
   // BUILDER DECISION entries (informational only)
@@ -13536,17 +13743,41 @@ function checkAllDecisionsMade(total) {
   const allMade = Object.keys(window._decisionChoices).length === total;
   const applyBtn = document.getElementById('applyDecisionsBtn');
   if (applyBtn) applyBtn.disabled = !allMade;
+  // v3.56.15 — keep the churn "Apply without locking" escape hatch in sync.
+  const nlBtn = document.getElementById('applyNoLockBtn');
+  if (nlBtn) nlBtn.disabled = !allMade;
 }
 
-function applyDecisions() {
+function applyDecisions(opts) {
+  const _noLock = !!(opts && opts.noLock);
   const latest = history.length > 0 ? history[history.length - 1] : null;
   if (!latest?.conflicts?.userDecisions) return;
+
+  // v3.56.15 — A churn decision is being resolved. Clear the pending flag so
+  // the Auto chain (held by the _churnPending gate) can resume once the
+  // Builder round this kicks off completes. If the user chose "apply without
+  // locking", remember the sentence fingerprint for CHURN_WINDOW more rounds
+  // so the detector doesn't immediately re-flag the same slot.
+  if (window._churnPending) {
+    window._churnPending = false;
+    if (_noLock) {
+      try {
+        const churnD = latest.conflicts.userDecisions.find(d => d._churn);
+        if (churnD && churnD.current) {
+          window._churnDismissed = window._churnDismissed || {};
+          window._churnDismissed[_churnFingerprint(churnD.current)] = round + CHURN_WINDOW;
+        }
+      } catch (e) { /* non-critical */ }
+    }
+  }
 
   const applyBtn = document.getElementById('applyDecisionsBtn');
   if (applyBtn) {
     applyBtn.disabled = true;
     applyBtn.textContent = '⏳ Sending to Builder…';
   }
+  const nlBtn = document.getElementById('applyNoLockBtn');
+  if (nlBtn) nlBtn.disabled = true;
 
   const decisions = latest.conflicts.userDecisions;
   const lines = [];
@@ -13597,9 +13828,11 @@ function applyDecisions() {
     if (d.current && chosenText) {
       // v3.56.5 — Don't double-push a decision already locked via
       // lockConflictDecision (now re-hydrated into _decisionChoices).
+      // v3.56.15 — "Apply without locking" on a churn card skips the push so
+      // the sentence stays editable by the hive.
       const _alreadyResolved = window._resolvedDecisions.some(rd =>
         (rd.original || '').trim() === d.current.trim());
-      if (!_alreadyResolved) {
+      if (!_alreadyResolved && !(_noLock && d._churn)) {
         window._resolvedDecisions.push({ original: d.current, chosen: chosenText });
         localStorage.setItem('waxframe_resolved_decisions', JSON.stringify(window._resolvedDecisions));
       }
