@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260523-005
+     Build: 20260523-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260523-005">
+  <meta name="waxframe-build" content="20260523-006">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.8">
+  <link rel="stylesheet" href="style.css?v=3.56.9">
 </head>
 <body>
 
@@ -1520,6 +1520,7 @@
       </div>
     </div>
     <div class="length-guard-actions">
+      <button title="Send the document back to the Builder to bring it into your length range, then re-check" class="btn length-guard-builderfix is-hidden" id="lengthGuardBuilderFixBtn" onclick="_lengthGuardChoose('builder_fix')">Trim with Builder</button>
       <button title="Discard this round and roll back to the previous document" class="btn length-guard-discard"  id="lengthGuardDiscardBtn"  onclick="_lengthGuardChoose('discard')">Discard round</button>
       <button title="Keep this round's output even though it's outside your length constraint" class="btn length-guard-keep"     id="lengthGuardKeepBtn"     onclick="_lengthGuardChoose('keep')">Keep this round</button>
       <button title="Keep this round AND disable the Length Guard for the rest of the session" class="btn length-guard-continue" id="lengthGuardContinueBtn" onclick="_lengthGuardChoose('continue_anyway')">Continue anyway · disable guard</button>
@@ -2360,20 +2361,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.8"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.8"></script>
-<script src="lib/jszip.min.js?v=3.56.8"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.8"></script>
-<script src="js/version.js?v=3.56.8"></script>
-<script src="js/storage.js?v=3.56.8"></script>
-<script src="js/theme.js?v=3.56.8"></script>
-<script src="js/audio.js?v=3.56.8"></script>
-<script src="js/scenes.js?v=3.56.8"></script>
-<script src="js/wf-debug.js?v=3.56.8"></script>
-<script src="js/api.js?v=3.56.8"></script>
-<script src="js/templates.js?v=3.56.8"></script>
-<script src="js/app.js?v=3.56.8"></script>
-<script src="js/api-links.js?v=3.56.8"></script>
+<script src="lib/pdf.min.js?v=3.56.9"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.9"></script>
+<script src="lib/jszip.min.js?v=3.56.9"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.9"></script>
+<script src="js/version.js?v=3.56.9"></script>
+<script src="js/storage.js?v=3.56.9"></script>
+<script src="js/theme.js?v=3.56.9"></script>
+<script src="js/audio.js?v=3.56.9"></script>
+<script src="js/scenes.js?v=3.56.9"></script>
+<script src="js/wf-debug.js?v=3.56.9"></script>
+<script src="js/api.js?v=3.56.9"></script>
+<script src="js/templates.js?v=3.56.9"></script>
+<script src="js/app.js?v=3.56.9"></script>
+<script src="js/api-links.js?v=3.56.9"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

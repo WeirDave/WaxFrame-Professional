@@ -1,6 +1,29 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.9
+**Build:** `20260523-006` · **Released:** May 23, 2026
+
+### "Trim with Builder" / "Expand with Builder" — manual-mode length fix at convergence
+
+When the hive converges but the document is outside your length range, the interactive length-guard modal previously offered only **Discard / Keep / Continue-anyway-disable-guard**. None of those said "fix it" — so to trim a too-long document you had to disable the guard for the whole project. In Auto mode, #9 already sends the document back to the Builder to trim/expand automatically; this brings that capability to the manual side.
+
+The convergence-over / convergence-under modal now leads with a green **Trim with Builder** (over) / **Expand with Builder** (under) button. It sends the converged document back to the Builder with the same trim/expand directive #9 uses, then re-checks length:
+
+- In range → done (console + toast confirm).
+- Still out → the guard re-surfaces so you can trim again, accept, or disable — a fix → recheck → fix/accept loop, fully under your control. The interactive analog of #9's bounded Auto reroll.
+
+Reuses the existing `_autoBuildLengthDirective` and `runBuilderOnly` machinery via a separate `window._manualLengthReroll` flag, so **Auto-mode behavior is byte-for-byte unchanged**. The button shows for convergence kinds only; mid-round over/under prompts are unchanged (Discard already re-runs there).
+
+### Files changed
+
+- **`js/app.js`** — `_manualLengthFix` + `_manualLengthAfterFix` helpers; `runBuilderOnly` directive-inject gate broadened to honor the manual flag; manual post-build re-check branch; `'builder_fix'` handling in both convergence gates; `lengthGuardPrompt` button label/visibility; choice log; `clearProject` flag reset. `BUILD` → `20260523-006`
+- **`index.html`** — `lengthGuardBuilderFixBtn` button; cache-bust `?v=3.56.9`
+- **`style.css`** — `.length-guard-builderfix` (green positive-action style); build stamp
+- **`js/version.js`** — `APP_VERSION` → `v3.56.9 Pro`
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.8
 **Build:** `20260523-005` · **Released:** May 23, 2026
 

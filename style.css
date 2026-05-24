@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260523-005
+   Build: 20260523-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -6714,6 +6714,20 @@ kbd {
   background: rgba(245, 166, 35, 0.28);
   border-color: rgba(245, 166, 35, 0.7);
   color: #ffc56b;
+}
+.length-guard-builderfix {
+  /* v3.56.9 — Send the converged document back to the Builder to trim (over)
+     or expand (under) into range, then re-check. The recommended, non-
+     destructive fix — positive primary (green), distinct from Keep (amber)
+     and Continue/disable-guard (red). */
+  background: rgba(74, 184, 122, 0.18);
+  border-color: rgba(74, 184, 122, 0.5);
+  color: #6fd49b;
+}
+.length-guard-builderfix:hover {
+  background: rgba(74, 184, 122, 0.30);
+  border-color: rgba(74, 184, 122, 0.8);
+  color: #8fe6b5;
 }
 .length-guard-continue {
   /* Continue anyway is the most consequential option (disables the guard
