@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260523-008
+//  Build: 20260523-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -367,7 +367,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260523-008';         // build stamp — update each session
+const BUILD       = '20260523-009';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -588,6 +588,19 @@ function renderSettings() {
   if (sRounds) sRounds.value = getAutoSlowRounds();
   const reroll = document.getElementById('setAutoRerollAttempts');
   if (reroll) reroll.value = getAutoRerollAttempts();
+  // v3.56.12 — Vision/OCR provider picker. List all four vision providers,
+  // flagging which are keyed; the saved pick is restored (falls back to
+  // Automatic at runtime if it's later un-keyed).
+  const vis = document.getElementById('setVisionProvider');
+  if (vis) {
+    const label = { chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini', grok: 'Grok' };
+    vis.innerHTML = '<option value="">Automatic — first available</option>' +
+      VISION_PROVIDERS.map(p => {
+        const keyed = !!API_CONFIGS[p]?._key;
+        return `<option value="${esc(p)}">${esc(label[p] || p)}${keyed ? '' : ' (no key)'}</option>`;
+      }).join('');
+    vis.value = getVisionProviderPref();
+  }
 }
 
 // Save handlers — each fires on the control's change event, persists to
@@ -6637,10 +6650,37 @@ function copySourceToReferenceMaterial() {
 // Each provider has its own request shape — see runVisionTranscription.
 const VISION_PROVIDERS = ['chatgpt', 'claude', 'gemini', 'grok'];
 
+// v3.56.12 — Which AI handles vision/OCR (re-extract + sparse-page pass on
+// scanned/garbled PDFs). '' = Automatic: the first keyed vision provider, in
+// VISION_PROVIDERS order — the long-standing default. A user pick is honored
+// only if that provider is vision-capable AND keyed; otherwise we fall back to
+// Automatic so OCR never silently fails because the chosen provider has no key.
+// Per-machine preference (Settings → Vision / OCR).
+const VISION_PROVIDER_KEY = 'waxframe_vision_provider';
+function getVisionProviderPref() {
+  const v = localStorage.getItem(VISION_PROVIDER_KEY) || '';
+  return VISION_PROVIDERS.includes(v) ? v : '';
+}
+function saveVisionProvider(val) {
+  const v = VISION_PROVIDERS.includes(val) ? val : '';
+  localStorage.setItem(VISION_PROVIDER_KEY, v);
+  const name = v ? (API_CONFIGS[v]?.label || v) : 'Automatic';
+  const keyed = v ? !!API_CONFIGS[v]?._key : true;
+  toast(keyed ? `🔍 OCR provider: ${name}` : `🔍 OCR provider: ${name} — no key yet, will use Automatic until you add one`, 3500);
+}
+
 // Find the first vision-capable AI from the user's keyed providers.
 // Returns { cfg, key, provider } or null. Used by both initial PDF OCR
 // and the work-screen re-extract button.
 function getVisionCapableAI() {
+  // v3.56.12 — honor an explicit user pick first, but only if it's actually
+  // keyed; otherwise fall through to the Automatic first-available scan so OCR
+  // never fails just because the preferred provider has no key.
+  const pref = getVisionProviderPref();
+  if (pref) {
+    const pcfg = API_CONFIGS[pref];
+    if (pcfg?._key) return { cfg: { ...pcfg, provider: pref }, key: pcfg._key, provider: pref };
+  }
   for (const provider of VISION_PROVIDERS) {
     const cfg = API_CONFIGS[provider];
     if (cfg?._key) return { cfg: { ...cfg, provider }, key: cfg._key, provider };

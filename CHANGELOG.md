@@ -1,6 +1,31 @@
 # WaxFrame Professional — Changelog
 
 ---
+## v3.56.12
+**Build:** `20260523-009` · **Released:** May 23, 2026
+
+### Settings → Vision / OCR — pick which AI handles OCR
+
+Until now, the vision/OCR path (the "Re-extract with AI Vision" button and the automatic pass on image-only PDF pages) silently used the *first* vision-capable provider you had a key for, in a fixed order (ChatGPT → Claude → Gemini → Grok), with no way to choose. New **Settings → Vision / OCR** section adds an **OCR provider** picker:
+
+- **Automatic — first available** (default, unchanged behavior): first keyed vision provider in order.
+- Or pick a specific provider (ChatGPT / Claude / Gemini / Grok). Each option flags `(no key)` if that provider isn't configured.
+- **Graceful fallback:** if your pick later loses its key, `getVisionCapableAI()` falls back to Automatic so OCR never fails because of a stale preference.
+
+The OCR call still uses that provider's configured hive model (with the `VISION_DEFAULTS` fallback from v3.56.11), so this picks the *provider*; the *model* follows your hive config.
+
+Per-machine preference (`waxframe_vision_provider`), mirroring the Auto Mode settings pattern. Default empty = Automatic, so existing behavior is unchanged unless you opt in.
+
+> Logged for later (not built): a per-provider vision *model* override, and pulling the OCR model from the live model list instead of the hardcoded fallback. Both fold into the future AI Profiles / Sources work.
+
+### Files changed
+
+- **`js/app.js`** — `VISION_PROVIDER_KEY` + `getVisionProviderPref()` + `saveVisionProvider()`; `getVisionCapableAI()` honors the preference with graceful fallback; `renderSettings()` populates the picker (flagging un-keyed providers). `BUILD` → `20260523-009`
+- **`index.html`** — Settings "Vision / OCR" section + `setVisionProvider` dropdown; cache-bust `?v=3.56.12`
+- **`style.css`** / **`js/version.js`** — build/version stamps
+- **`CHANGELOG.md`** — this entry
+
+---
 ## v3.56.11
 **Build:** `20260523-008` · **Released:** May 23, 2026
 
