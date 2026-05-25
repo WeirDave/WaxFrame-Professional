@@ -2,6 +2,25 @@
 
 ---
 
+## v3.56.26
+**Build:** `20260524-012` · **Released:** May 24, 2026
+
+### Stop mislabeling built-in network failures as CORS
+
+A transient network failure on a built-in provider (e.g. Gemini dropping one request when seven fire at once) was reported as **"CORS blocked — a proxy is required,"** telling users to fix a problem that doesn't exist for built-in providers, which already support direct browser calls.
+
+`fetch()` rejects only on transport failures, never on HTTP error statuses. Such a failure is a genuine CORS problem only on a **custom** endpoint (self-hosted servers like Open WebUI / Ollama / internal gateways that don't send `Access-Control` headers). The error classifier already encoded this distinction — `CORS_BLOCKED` matches only when the endpoint is custom, otherwise `NETWORK_ERROR` — but the call site short-circuited it by forcing `CORS_BLOCKED` for every transport failure.
+
+Now the call site hands the classifier the real error and branches on endpoint type:
+- **Custom endpoint** → CORS card ("your endpoint did not allow a direct browser call").
+- **Built-in provider** → Network-error card ("the request did not complete — usually transient; retry, or check your connection / blocker extensions"). New `NETWORK_FAILED:` path also gives a clean "Network error" bee-status label instead of the raw exception text.
+
+### Files changed
+- `js/app.js` — reworked the fetch-failure catch to classify-then-branch instead of presuming CORS; added the `NETWORK_FAILED:` bee-status label.
+- `index.html`, `js/version.js`, `js/api.js`, `js/api-links.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.26.
+
+---
+
 ## v3.56.25
 **Build:** `20260524-011` · **Released:** May 24, 2026
 
