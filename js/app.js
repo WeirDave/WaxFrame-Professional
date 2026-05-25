@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-002
+//  Build: 20260524-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -46,13 +46,19 @@ const PHASES = [
 ];
 
 // ── DEFAULT AI LIST ──
+// v3.56.17 — API-console URLs are sourced from js/api-links.js (the single
+// source of truth, also consumed by standalone helper pages). api-links.js is
+// loaded before app.js in index.html. The `|| ''` fallback keeps the catalog
+// from throwing if that list ever fails to load — apiConsole consumers already
+// treat an empty value as "no console link".
+const _CU = (typeof window !== 'undefined' && window.API_CONSOLE_URLS) || {};
 const DEFAULT_AIS = [
-  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: 'https://platform.openai.com/api-keys' },
-  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: 'https://console.anthropic.com/settings/keys' },
-  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: 'https://platform.deepseek.com/api_keys' },
-  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: 'https://aistudio.google.com/apikey' },
-  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: 'https://console.x.ai' },
-  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: 'https://console.perplexity.ai' },
+  { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: _CU.chatgpt    || '' },
+  { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: _CU.claude     || '' },
+  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: _CU.deepseek   || '' },
+  { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: _CU.gemini     || '' },
+  { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: _CU.grok       || '' },
+  { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: _CU.perplexity || '' },
 ];
 
 // ── API CONFIGS + MODEL DISCOVERY (extracted) ──
@@ -367,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-002';         // build stamp — update each session
+const BUILD       = '20260524-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3924,33 +3930,12 @@ function applyNotesTemplate(template) {
 // upgrading from pre-v3.31 had hidden some defaults, their next load
 // shows the full default set again — by design, no migration prompt.
 
-// Open the API key / sign-up console for every default AI in new tabs.
-// (v3.21.25) Opens consoles for all six DEFAULT_AIS regardless of hidden status —
-// the user explicitly asked to see them all, including any they previously hid.
-// Browsers may surface a one-time "allow popups from this site" prompt on first
-// click; once allowed, subsequent invocations open all six tabs cleanly.
-function openAllConsoles() {
-  const seen   = new Set();
-  let opened   = 0;
-  let blocked  = 0;
-  for (const d of DEFAULT_AIS) {
-    const url = d.apiConsole;
-    if (!url || url === '#' || seen.has(url)) continue;
-    seen.add(url);
-    const w = window.open(url, '_blank', 'noopener,noreferrer');
-    if (w) opened++;
-    else   blocked++;
-  }
-  if (opened === 0 && blocked === 0) {
-    toast('⚠️ No API console URLs available');
-  } else if (blocked > 0 && opened === 0) {
-    toast('⚠️ Popups blocked — allow popups for this site and try again', 4500);
-  } else if (blocked > 0) {
-    toast(`↗ Opened ${opened} of ${opened + blocked} — allow popups to open the rest`, 4500);
-  } else {
-    toast(`↗ Opened ${opened} API website${opened !== 1 ? 's' : ''} in new tabs`, 3000);
-  }
-}
+// v3.56.17 — openAllConsoles() moved to js/api-links.js, which is now the
+// single source of truth for the default API-console URLs (and is also loaded
+// by standalone helper pages that can't see DEFAULT_AIS). The "Open default AI
+// websites" button still calls openAllConsoles() — it now resolves to the
+// api-links.js definition. The previous duplicate here read DEFAULT_AIS and
+// was silently shadowed by the api-links.js copy at load time on index.html.
 
 async function clearKeyForAI(id) {
   const ai = aiList.find(a => a.id === id);
