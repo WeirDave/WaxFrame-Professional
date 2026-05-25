@@ -2,6 +2,26 @@
 
 ---
 
+## v3.56.37
+**Build:** `20260525-001` · **Released:** May 25, 2026
+
+### Watchdog, troubleshooting, and backup correctness fixes
+
+Three correctness fixes plus a release-plumbing sync. The fixes shipped under the v3.56.37 commit but the version/build stamps lagged at v3.56.36; this release brings every stamp into line so forensic and debug exports are coherent.
+
+- **Deprecated-model watchdog now sees the live hive.** `detectDeprecatedModels()` in `js/api.js` read `window.activeAIs`, but `activeAIs` is a top-level lexical binding in `js/app.js` and never attaches to `window`, so the watchdog usually saw an empty list. It now resolves the lexical binding at call time, so model-deprecation checks and "model lists refreshed" behavior run against the actual selected AIs.
+- **Troubleshooting "Change Builder" buttons work again.** The handler in `js/wf-debug.js` referenced `showChangeBuilderModal`, but the app function is `openChangeBuilder`. The lookup failed and the buttons fell through to dismiss instead of opening Builder selection. Handler name corrected.
+- **Backups now capture the license.** The backup warning promised the license key may be included, but the backup object omitted `LS_LICENSE` — so "restore exactly where you left off" lost Pro state. `LS_LICENSE` is now written into the backup; v3 and earlier backups still import unchanged.
+- **Build-stamp sync.** Every `Build:` header, the `<meta name="waxframe-build">` tag on all six pages, the `BUILD` constant, and all cache-bust query strings are unified at `20260525-001` / `v3.56.37`. The two helper files (`license-helper.js`, `nav-helper.js`) had stamps frozen back in April; they are now current.
+
+### Files changed
+- `js/api.js` — watchdog resolves the live `activeAIs` lexical binding.
+- `js/wf-debug.js` — `openChangeBuilder` handler name corrected.
+- `js/storage.js` — `LS_LICENSE` added to the backup object.
+- `js/app.js`, `js/version.js`, `js/license-helper.js`, `js/nav-helper.js`, `style.css`, `index.html` + 5 helper pages — version/build/cache-bust sync to v3.56.37.
+
+---
+
 ## v3.56.36
 **Build:** `20260524-022` · **Released:** May 24, 2026
 
