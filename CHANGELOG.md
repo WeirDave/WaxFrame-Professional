@@ -2,6 +2,27 @@
 
 ---
 
+## v3.56.23
+**Build:** `20260524-009` · **Released:** May 24, 2026
+
+### Default six: DeepSeek → Mistral · all known providers now first-class
+
+**Default hive changed.** The six providers that pre-load on first run are now **ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral** — DeepSeek is swapped out for Mistral. DeepSeek is chronically the slowest responder (~80s vs a ~15s field), which gated every round's completion and made a poor first impression for new users. Mistral is fast (2–3s in testing), recognizable, and a distinct model family. DeepSeek remains fully supported and is one click away in Quick Add.
+
+**Provider architecture cleanup.** Mistral, Together AI, and Cohere are now **first-class providers** in `API_CONFIGS`, natively understood like ChatGPT/Claude/etc. — not translated through the generic custom-AI path. All three are OpenAI-compatible, so they share the same request/response handling. This separates three clean tiers: providers we natively speak (`API_CONFIGS`), one-click additions for non-defaults (`QUICK_ADD_PROVIDERS`), and the default six (`DEFAULT_AIS`). Swapping a default in or out is now a one-line change — no "promote it first" step.
+
+- `js/api.js` — added `mistral`, `together`, `cohere` to `API_CONFIGS` (OpenAI-format); added all three to `MODEL_FALLBACKS`. DeepSeek retained (still supported).
+- `js/app.js` — `DEFAULT_AIS`: DeepSeek row → Mistral. `QUICK_ADD_PROVIDERS`: removed Mistral (now default), added DeepSeek (stays one-click). `brandColors`: added Mistral/Together/Cohere. Icon catalog: added a `together` matcher so its icon resolves.
+- `js/api-links.js` — `API_CONSOLE_URLS`: dropped DeepSeek, added Mistral (matches new default six).
+
+Existing users keep their saved hives unchanged — DeepSeek configs persist and continue to work.
+
+### Files changed
+- `js/api.js`, `js/app.js`, `js/api-links.js` — provider swap + first-class promotion.
+- `index.html`, `js/version.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.23.
+
+---
+
 ## v3.56.22
 **Build:** `20260524-008` · **Released:** May 24, 2026
 

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-//  Build: 20260516-007
+//  Build: 20260524-009
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -189,6 +189,32 @@ window.API_CONFIGS = {
     },
     extractFn: d => d?.choices?.[0]?.message?.content || ''
   },
+  mistral: {
+    label: 'Mistral', model: 'mistral-large-latest',
+    endpoint: 'https://api.mistral.ai/v1/chat/completions',
+    note: null,
+    headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
+      const split  = splitB !== -1 ? splitB : splitA;
+      // Reviewer: instructions → system, document → user
+      // Builder:  instructions → system, document + reviews → user
+      let sys, usr;
+      if (isBuilder) {
+        // Builder: put the build instructions in system, everything else in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.' : 'Produce the updated document now.';
+      } else {
+        // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
+    extractFn: d => d?.choices?.[0]?.message?.content || ''
+  },
   deepseek: {
     label: 'DeepSeek', model: 'deepseek-chat',
     endpoint: 'https://api.deepseek.com/v1/chat/completions',
@@ -208,6 +234,54 @@ window.API_CONFIGS = {
         usr = split !== -1 ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.' : 'Produce the updated document now.';
       } else {
         // Reviewer: put the review instructions in system, document in user
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
+    extractFn: d => d?.choices?.[0]?.message?.content || ''
+  },
+  together: {
+    label: 'Together AI', model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo',
+    endpoint: 'https://api.together.xyz/v1/chat/completions',
+    note: null,
+    headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
+      const split  = splitB !== -1 ? splitB : splitA;
+      let sys, usr;
+      if (isBuilder) {
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.' : 'Produce the updated document now.';
+      } else {
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
+      }
+      return JSON.stringify({ model, messages: [{ role: 'system', content: sys }, { role: 'user', content: usr }] });
+    },
+    extractFn: d => d?.choices?.[0]?.message?.content || ''
+  },
+  cohere: {
+    // Cohere's OpenAI-compatibility endpoint (/compatibility/v1/) accepts the
+    // standard chat-completions request shape and returns the standard
+    // choices[0].message.content response — so it rides the same body/extract
+    // as the other OpenAI-format providers.
+    label: 'Cohere', model: 'command-r-plus',
+    endpoint: 'https://api.cohere.ai/compatibility/v1/chat/completions',
+    note: null,
+    headersFn: k => ({ 'Content-Type': 'application/json', 'Authorization': `Bearer ${k}` }),
+    bodyFn: (model, prompt) => {
+      const splitA = prompt.indexOf('SEND TO ALL AIs');
+      const splitB = prompt.indexOf('⚠️ BUILDER:');
+      const isBuilder = splitB !== -1;
+      const split  = splitB !== -1 ? splitB : splitA;
+      let sys, usr;
+      if (isBuilder) {
+        sys = split !== -1 ? prompt.slice(split).trim() : prompt;
+        usr = split !== -1 ? '⚠️ YOU ARE NOW IN THE BUILD STEP. Read your system instructions carefully and follow the output format exactly.\n\n' + prompt.slice(0, split).trim() + '\n\nProduce the complete updated document now, wrapped in the required delimiters. Do not skip the conflicts block.' : 'Produce the updated document now.';
+      } else {
         sys = split !== -1 ? prompt.slice(split).trim() : prompt;
         usr = split !== -1 ? prompt.slice(0, split).trim() + '\n\nBegin your review now.' : 'Begin your review now.';
       }
@@ -246,6 +320,9 @@ window.MODEL_FALLBACKS = {
   gemini:     ['gemini-2.5-flash', 'gemini-2.5-pro'],
   grok:       ['grok-4-fast-non-reasoning', 'grok-4-fast-reasoning', 'grok-4', 'grok-4.20-0309-non-reasoning', 'grok-4.20-0309-reasoning', 'grok-3', 'grok-3-mini'],
   deepseek:   ['deepseek-chat'],
+  mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
+  together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
+  cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
   perplexity: ['sonar-pro', 'sonar-reasoning-pro', 'sonar-reasoning', 'sonar-deep-research', 'sonar'],
 };
 
