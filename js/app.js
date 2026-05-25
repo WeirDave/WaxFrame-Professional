@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-004
+//  Build: 20260524-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-004';         // build stamp — update each session
+const BUILD       = '20260524-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -12489,6 +12489,17 @@ function extractConflicts(text) {
     if (uniqueTexts.size < 2) {
       const sample = decision.options[0]?.text || '(empty)';
       consoleLog(`⚠️ Suppressed no-op USER DECISION — all options identical: "${sample}"`, 'warn');
+      continue;
+    }
+    // v3.56.19 — CURRENT is structurally required. Every applyDecisions() path
+    // (option / custom / bypass) resolves by replacing or locking d.current in
+    // the document, and lockConflictDecision() bails without it. A decision with
+    // no CURRENT anchor would render, accept the user's pick, then silently
+    // no-op on Apply (zero replace-lines → early return, no feedback). Drop it
+    // here, consistent with the other unactionable-decision suppressions above.
+    if (!decision.current || !decision.current.trim()) {
+      const qp = (decision.question || '(no question)').slice(0, 70);
+      consoleLog(`⚠️ Suppressed USER DECISION — no CURRENT anchor to apply against ("${qp}")`, 'warn');
       continue;
     }
     result.userDecisions.push(decision);

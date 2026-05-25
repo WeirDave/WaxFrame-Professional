@@ -2,6 +2,21 @@
 
 ---
 
+## v3.56.19
+**Build:** `20260524-005` · **Released:** May 24, 2026
+
+### Conflict path: drop USER DECISIONs with no CURRENT anchor
+
+A USER DECISION with two or more valid options but no `CURRENT:` line survived parsing and validation, rendered in the Conflicts panel, and accepted the user's pick — but every `applyDecisions()` path (option / custom / bypass) resolves by replacing or locking `d.current` in the document. With no CURRENT, Apply produced zero replace-lines and returned early: the button reset with no toast, no document change, and no round fired. A silent "I clicked Apply and nothing happened."
+
+`extractConflicts()` now drops decisions with no CURRENT anchor and logs the suppression, consistent with the existing `<2 options` and identical-text suppressions — and matching `lockConflictDecision()`, which already bailed on a missing `d.current`. CURRENT is structurally required by the resolution mechanism; a decision without it can never be applied.
+
+### Files changed
+- `js/app.js` — `extractConflicts()` empty-CURRENT suppression; build stamps.
+- `index.html`, `js/version.js`, `js/api-links.js`, helper pages — version/cache-bust to v3.56.19.
+
+---
+
 ## v3.56.18
 **Build:** `20260524-004` · **Released:** May 24, 2026
 
