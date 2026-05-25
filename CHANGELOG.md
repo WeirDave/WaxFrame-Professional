@@ -2,6 +2,28 @@
 
 ---
 
+## v3.56.18
+**Build:** `20260524-004` · **Released:** May 24, 2026
+
+### Auto-Mode Settings are now fully wired
+
+An audit found that five of the six Auto-Mode settings saved and displayed correctly but were never read by the runtime — the logic used hardcoded constants instead. This release wires every setting to its actual behavior.
+
+- **Failure-streak limit** — `_autoMaybeChainNextRound` now reads `getAutoStreakLimit()` instead of the hardcoded `AUTO_FAILURE_STREAK_LIMIT` constant (now removed).
+- **Slow threshold (×)** — the slow-responder check now uses `getAutoSlowMultiplier()` (default 3×) instead of a hardcoded `2×`. The absolute `+15s` floor is unchanged.
+- **Slow threshold (rounds in a row)** — new per-AI consecutive-slow counter (`window._slowStreak`). An AI must be slow for `getAutoSlowRounds()` rounds running before the alert/card fires; a single fluke-slow round logs a quiet diagnostic only. The counter resets when the AI responds at normal speed and on project clear.
+- **Never disable Builder** — when ON, toggling off the current Builder is refused and the user is routed to Settings (where they can change the Builder or set a Backup) instead of the inline Change-Builder modal.
+- **Backup Builder** — when the Builder fails for `getAutoStreakLimit()` rounds running AND a Backup Builder is configured and still eligible, Auto pauses and offers a one-click **Promote {backup} & resume** action in the halt modal (pause-and-ask, not a silent swap). With no backup set, the generic failure-streak halt is unchanged.
+
+Only **Reround attempts** was already wired; it is unchanged.
+
+### Files changed
+- `js/app.js` — wired all five settings; removed the dead `AUTO_FAILURE_STREAK_LIMIT` constant; added `autoHaltPromoteBackup()` and the slow-streak counter.
+- `index.html` — added the conditional Promote-Backup button to the auto-halt modal; version/cache-bust to v3.56.18.
+- `js/version.js`, `js/api-links.js`, helper pages — version/cache-bust to v3.56.18.
+
+---
+
 ## v3.56.17
 **Build:** `20260524-003` · **Released:** May 24, 2026
 

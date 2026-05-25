@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-003
+//  Build: 20260524-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-003';         // build stamp — update each session
+const BUILD       = '20260524-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1954,7 +1954,9 @@ function _abandonInFlightRoundUI() {
 // ────────────────────────────────────────────────────────────────────
 const AUTO_MAX_ROUNDS_DEFAULT  = 30;
 const AUTO_STALL_WINDOW        = 3;
-const AUTO_FAILURE_STREAK_LIMIT = 2;
+// v3.56.18 — failure-streak limit is now user-configurable via Settings;
+// _autoMaybeChainNextRound reads getAutoStreakLimit() (default 2). The former
+// AUTO_FAILURE_STREAK_LIMIT constant was removed.
 // v3.56.15 — Churn detector. Distinct from the satisfied-count stall above:
 // stall watches the reviewer S/T tally; churn watches the DOCUMENT for one
 // sentence slot getting reworded round after round with no net change (the
@@ -2265,11 +2267,27 @@ function _autoMaybeChainNextRound(ctx) {
   // 2) Builder errors — track failure streak, halt at limit
   if (ctx.outcome === 'failed' || ctx.builderError) {
     window._autoFailureStreak = (window._autoFailureStreak || 0) + 1;
-    if (window._autoFailureStreak >= AUTO_FAILURE_STREAK_LIMIT) {
-      const reasonLabel = ctx.errorReason
+    if (window._autoFailureStreak >= getAutoStreakLimit()) {
+      const _base = ctx.errorReason
         ? `Builder failed ${window._autoFailureStreak} rounds in a row (last reason: ${ctx.errorReason}).`
         : `Builder failed ${window._autoFailureStreak} rounds in a row.`;
-      _autoHalt('failure-streak', reasonLabel);
+      // v3.56.18 — Backup-Builder offer. If the user configured a Backup Builder
+      // (Settings) and it's still eligible (in the hive, not the current
+      // Builder), pause and OFFER to promote it — "pause and ask first" per
+      // design, not a silent swap. With no backup set, fall back to the generic
+      // failure-streak halt modal (prior behavior).
+      const _bk   = (typeof getAutoBackupBuilder === 'function') ? getAutoBackupBuilder() : '';
+      const _bkAI = (_bk && Array.isArray(activeAIs))
+        ? activeAIs.find(a => a.id === _bk && a.id !== builder)
+        : null;
+      if (_bkAI) {
+        window._autoBackupCandidate = _bkAI.id;
+        _autoHalt('failure-streak-backup',
+          `${_base} Promote your backup Builder (${_bkAI.name}) and resume, or switch to Manual.`);
+      } else {
+        window._autoBackupCandidate = null;
+        _autoHalt('failure-streak', _base);
+      }
       return;
     }
     // Single failure — don't chain further this turn; user can hit Smoke
@@ -2439,6 +2457,20 @@ function _autoHalt(reasonCode, reasonText) {
     }
   }
   if (modal) modal.classList.add('active');
+  // v3.56.18 — Promote-Backup action. Only shown when the failure-streak halt
+  // has a configured, eligible backup Builder staged (failure-streak-backup).
+  const promoteBtn = document.getElementById('autoHaltPromoteBtn');
+  if (promoteBtn) {
+    if (reasonCode === 'failure-streak-backup' && window._autoBackupCandidate) {
+      const _n = (Array.isArray(activeAIs)
+        ? activeAIs.find(a => a.id === window._autoBackupCandidate)
+        : null)?.name || 'backup Builder';
+      promoteBtn.textContent = `🔁 Promote ${_n} & resume`;
+      promoteBtn.style.display = '';
+    } else {
+      promoteBtn.style.display = 'none';
+    }
+  }
   updateAutoToggleUI();
   // v3.37.2 — Distinct "Auto halted" cadence. Skip on converged because
   // the unanimous-convergence path already played its fanfare; stacking
@@ -2500,6 +2532,29 @@ function autoHaltStop() {
   window._autoFailureStreak = 0;
   updateAutoToggleUI();
   if (typeof toast === 'function') toast('⏹ Auto stopped — toggle off or click Smoke to continue');
+}
+
+// v3.56.18 — Promote the staged backup Builder and resume Auto. Wired to the
+// conditional "Promote … & resume" button in the autoHalt modal, shown only
+// for the failure-streak-backup reason. Switches the Builder, clears the stall
+// + failure tracking (the new Builder shouldn't inherit the old one's streak),
+// extends the ceiling, and re-enters the chain.
+function autoHaltPromoteBackup() {
+  const modal = document.getElementById('autoHaltModal');
+  if (modal) modal.classList.remove('active');
+  const id = window._autoBackupCandidate;
+  window._autoBackupCandidate = null;
+  if (!id || !window._autoMode) { updateAutoToggleUI(); return; }
+  if (typeof setBuilder === 'function') setBuilder(id);  // toasts "🔨 X is now the Builder"
+  window._autoSatisfiedHist = [];
+  window._autoFailureStreak = 0;
+  const r = (typeof round === 'number') ? round : 1;
+  window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
+  if (typeof consoleLog === 'function') {
+    consoleLog(`🤖 Auto resumed — promoted backup Builder, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
+  }
+  updateAutoToggleUI();
+  _autoFireChainedRound('backup-promoted');
 }
 
 // clearProject — wipe project data only, keep hive intact
@@ -2597,6 +2652,9 @@ async function clearProject() {
   // would never re-warn for the rest of the tab's lifetime, even across
   // unrelated sessions. Mirrors the _aiWarnings reset on the line above.
   window._slowResponderShownFor = new Set();
+  // v3.56.18 — Reset the per-AI consecutive-slow counter too, so a new project
+  // starts the slow-rounds-in-a-row tally fresh.
+  window._slowStreak = {};
   // v3.56.13 — Reset the rest of the project-scoped conflict / decision /
   // holdout / validation state too. These survived clearProject before, so on
   // a new project they could carry over (same bug class as the v3.35.6
@@ -10196,6 +10254,18 @@ function toggleSessionBee(id, on) {
   // it completed immediately. Callers (e.g. the slow-responder card
   // handler) can use this to gate post-action toasts.
   if (!on && id === builder) {
+    // v3.56.18 — "Never disable Builder" guard (Settings). When ON, refuse to
+    // disable the current Builder and route the user to Settings — where they
+    // can change the Builder or set a Backup — instead of the inline Change
+    // Builder modal.
+    if (typeof getAutoNeverDisableBuilder === 'function' && getAutoNeverDisableBuilder()) {
+      const _bn = activeAIs.find(a => a.id === id)?.name || 'your Builder';
+      if (typeof toast === 'function') {
+        toast(`🔒 ${_bn} is locked as Builder (Settings → Never disable Builder). Change it in Settings.`, 5000);
+      }
+      if (typeof openSettings === 'function') openSettings();
+      return false;  // refused — Builder unchanged
+    }
     _pendingBuilderDisable = id;
     const name = activeAIs.find(a => a.id === id)?.name || 'This AI';
     openChangeBuilder({
@@ -11376,44 +11446,60 @@ async function runRound() {
   const _timingVals = Object.values(_timings).filter(t => t > 0);
   if (_timingVals.length > 1) {
     const _avg = _timingVals.reduce((a, b) => a + b, 0) / _timingVals.length;
+    // v3.56.18 — Threshold and consecutive-round count are now user-configurable
+    // (Settings → Slow threshold). _mult replaces the former hardcoded 2×; the
+    // absolute +15s floor stays (guards against false alarms when the average is
+    // tiny). _slowRoundsNeeded gates the alert until an AI has been slow for N
+    // rounds in a row — a single fluke-slow round no longer nags.
+    const _mult            = (typeof getAutoSlowMultiplier === 'function') ? getAutoSlowMultiplier() : 3;
+    const _slowRoundsNeeded = (typeof getAutoSlowRounds === 'function') ? getAutoSlowRounds() : 2;
     // v3.29.0 — track which slow AIs have already gotten a Card this
-    // session, so we only nag once per AI per session. Console line
-    // still fires every round (current behavior preserved).
+    // session, so we only nag once per AI per session.
     const _slowSet = window._slowResponderShownFor ||
       (window._slowResponderShownFor = new Set());
+    const _slowStreak = window._slowStreak || (window._slowStreak = {});
     allReviewers.forEach(ai => {
       const _t = _timings[ai.id];
-      if (_t !== undefined && _t > _avg * 2 && _t > _avg + 15) {
-        // v3.56.14 — The reminder cadence is the user's call, not ours. If the
-        // user opted out via the card's "Don't alert me this session" button,
-        // suppress BOTH the card and the console line for the rest of the tab
-        // session. Otherwise the console logs every slow round (the user can
-        // stop it any time from the card).
-        if (window._slowAlertsSilenced) return;
-        consoleLog(`⚠️ ${ai.name} — responded in ${_t.toFixed(0)}s (round avg: ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
-        // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
-        // preference. Detection + console log run unconditionally above
-        // so diagnostic info is always available. Only the user-facing
-        // card (which blocks Auto-Mode chaining via the troubleshooting-
-        // card gate at ~3612) is suppressed when the toggle is off.
-        if (!_slowResponderEnabled) return;
-        if (!_slowSet.has(ai.id)) {
-          _slowSet.add(ai.id);
-          const entry = WF_ERROR_CATALOG.find(e => e.code === 'SLOW_RESPONDER');
-          if (entry) {
-            WF_DEBUG.showCard(entry, {
-              aiName:   ai.name,
-              aiId:     ai.id,
-              provider: ai.provider,
-              elapsed:  _t.toFixed(0),
-              avg:      _avg.toFixed(0),
-              raw:      JSON.stringify({
-                ai: ai.name, elapsed_s: +_t.toFixed(1), round_avg_s: +_avg.toFixed(1),
-                threshold: 'elapsed > 2x avg AND elapsed > avg+15s',
-                round_responses: _timingVals.length
-              }, null, 2)
-            });
-          }
+      if (_t === undefined) return;  // no timing this round — leave the streak untouched
+      const _isSlow = (_t > _avg * _mult && _t > _avg + 15);
+      _slowStreak[ai.id] = _isSlow ? ((_slowStreak[ai.id] || 0) + 1) : 0;
+      if (!_isSlow) return;
+      // Below the consecutive-round threshold: quiet diagnostic only, no alert.
+      if (_slowStreak[ai.id] < _slowRoundsNeeded) {
+        consoleLog(`🐢 ${ai.name} slow this round (${_t.toFixed(0)}s vs avg ${_avg.toFixed(0)}s) — ${_slowStreak[ai.id]}/${_slowRoundsNeeded} before alert`, 'info');
+        return;
+      }
+      // v3.56.14 — The reminder cadence is the user's call, not ours. If the
+      // user opted out via the card's "Don't alert me this session" button,
+      // suppress BOTH the card and the console line for the rest of the tab
+      // session. Otherwise the console logs every slow round (the user can
+      // stop it any time from the card).
+      if (window._slowAlertsSilenced) return;
+      consoleLog(`⚠️ ${ai.name} — slow ${_slowStreak[ai.id]} rounds running (${_t.toFixed(0)}s vs round avg ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
+      // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
+      // preference. Detection + console log run unconditionally above
+      // so diagnostic info is always available. Only the user-facing
+      // card (which blocks Auto-Mode chaining via the troubleshooting-
+      // card gate) is suppressed when the toggle is off.
+      if (!_slowResponderEnabled) return;
+      if (!_slowSet.has(ai.id)) {
+        _slowSet.add(ai.id);
+        const entry = WF_ERROR_CATALOG.find(e => e.code === 'SLOW_RESPONDER');
+        if (entry) {
+          WF_DEBUG.showCard(entry, {
+            aiName:   ai.name,
+            aiId:     ai.id,
+            provider: ai.provider,
+            elapsed:  _t.toFixed(0),
+            avg:      _avg.toFixed(0),
+            raw:      JSON.stringify({
+              ai: ai.name, elapsed_s: +_t.toFixed(1), round_avg_s: +_avg.toFixed(1),
+              threshold: `elapsed > ${_mult}x avg AND elapsed > avg+15s`,
+              consecutive_slow_rounds: _slowStreak[ai.id],
+              rounds_required: _slowRoundsNeeded,
+              round_responses: _timingVals.length
+            }, null, 2)
+          });
         }
       }
     });
@@ -12105,7 +12191,7 @@ async function runRound() {
     updateRoundBadge();
     showRoundErrorModal(_failedRoundReason || 'api', _failedRoundDetails || '');
     // v3.35.0 — Auto Mode: builder errored. Tracks the failure-streak
-    // counter; chains halt at AUTO_FAILURE_STREAK_LIMIT consecutive.
+    // counter; chains halt at getAutoStreakLimit() consecutive.
     _autoMaybeChainNextRound({ outcome: 'failed', builderError: true, errorReason: _failedRoundReason || 'unknown' });
   } else {
     toast(`✅ Round ${round - 1} complete!`);

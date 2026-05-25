@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260524-003
+     Build: 20260524-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-003">
+  <meta name="waxframe-build" content="20260524-004">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.17">
+  <link rel="stylesheet" href="style.css?v=3.56.18">
 </head>
 <body>
 
@@ -1490,6 +1490,7 @@
     <h2 class="finish-modal-title">Auto paused</h2>
     <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
     <div class="auto-halt-actions">
+      <button title="Promote your configured backup Builder and resume Auto Mode" class="auto-halt-btn auto-halt-resume" id="autoHaltPromoteBtn" style="display:none" onclick="autoHaltPromoteBackup()">🔁 Promote backup &amp; resume</button>
       <button title="Resume Auto Mode and chain the next round automatically" class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
       <button title="Switch to Manual Mode — you click Smoke the Hive for each round" class="auto-halt-btn auto-halt-manual" onclick="autoHaltSwitchManual()">↩ Switch to Manual</button>
       <button title="Stop here — keep the current document and end Auto Mode" class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
@@ -2376,20 +2377,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.17"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.17"></script>
-<script src="lib/jszip.min.js?v=3.56.17"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.17"></script>
-<script src="js/version.js?v=3.56.17"></script>
-<script src="js/storage.js?v=3.56.17"></script>
-<script src="js/theme.js?v=3.56.17"></script>
-<script src="js/audio.js?v=3.56.17"></script>
-<script src="js/scenes.js?v=3.56.17"></script>
-<script src="js/wf-debug.js?v=3.56.17"></script>
-<script src="js/api.js?v=3.56.17"></script>
-<script src="js/templates.js?v=3.56.17"></script>
-<script src="js/api-links.js?v=3.56.17"></script>
-<script src="js/app.js?v=3.56.17"></script>
+<script src="lib/pdf.min.js?v=3.56.18"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.18"></script>
+<script src="lib/jszip.min.js?v=3.56.18"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.18"></script>
+<script src="js/version.js?v=3.56.18"></script>
+<script src="js/storage.js?v=3.56.18"></script>
+<script src="js/theme.js?v=3.56.18"></script>
+<script src="js/audio.js?v=3.56.18"></script>
+<script src="js/scenes.js?v=3.56.18"></script>
+<script src="js/wf-debug.js?v=3.56.18"></script>
+<script src="js/api.js?v=3.56.18"></script>
+<script src="js/templates.js?v=3.56.18"></script>
+<script src="js/api-links.js?v=3.56.18"></script>
+<script src="js/app.js?v=3.56.18"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
