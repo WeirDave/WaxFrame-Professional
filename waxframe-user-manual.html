@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260524-017
+     Build: 20260524-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-017">
+  <meta name="waxframe-build" content="20260524-018">
   <title>WaxFrame User Manual</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.31">
+  <link rel="stylesheet" href="style.css?v=3.56.32">
 </head>
 <body class="helper-body">
 
@@ -340,7 +340,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Add Custom AI</span>
-        <span class="goal-info-desc">Opens a form for connecting an AI that's not in the default list — for example Mistral, Together AI, or any other OpenAI-compatible endpoint. See <a href="#appendix-a" class="link-accent">Appendix A — Adding a Custom AI</a> for full instructions. You don't need this for standard providers like ChatGPT, Claude, or Gemini — those are already in the list below.</span>
+        <span class="goal-info-desc">Opens a form for connecting an AI that's not in the default list — for example Together AI, DeepSeek, or any other OpenAI-compatible endpoint. See <a href="#appendix-a" class="link-accent">Appendix A — Adding a Custom AI</a> for full instructions. You don't need this for standard providers like ChatGPT, Claude, or Gemini — those are already in the list below.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Test All Keys</span>
@@ -1395,7 +1395,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">When to use this</div>
-      <p>The six default AIs (ChatGPT, Claude, Gemini, Grok, Perplexity, DeepSeek) cover the most widely-used public AI providers. Use Add Custom AI when you want to connect an AI that is not in that default list — for example, Mistral, Together AI, Cohere, Ollama running locally on your machine, LM Studio, or any other AI service that exposes an API endpoint accepting chat completion requests in OpenAI-compatible, Anthropic, or Google format.</p>
+      <p>The six default AIs (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) cover the most widely-used public AI providers. Use Add Custom AI when you want to connect an AI that is not in that default list — for example, Together AI, Cohere, DeepSeek, Ollama running locally on your machine, LM Studio, or any other AI service that exposes an API endpoint accepting chat completion requests in OpenAI-compatible, Anthropic, or Google format.</p>
       <p>To open the form: go to the Setup screen and click <strong>Add Custom AI</strong> in the toolbar above the Worker Bees list.</p>
     </div>
 
@@ -1407,7 +1407,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">URL (required)</span>
-        <span class="goal-info-desc">The full API endpoint address WaxFrame will send requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://api.mistral.ai/v1/chat/completions</code>. Get this URL from your provider's API documentation.</span>
+        <span class="goal-info-desc">The full API endpoint address WaxFrame will send requests to, including the path. For most OpenAI-compatible providers this ends in <code>/v1/chat/completions</code>. Example: <code>https://api.together.xyz/v1/chat/completions</code>. Get this URL from your provider's API documentation.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Name (auto-detected)</span>
@@ -1415,7 +1415,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">API Format (required)</span>
-        <span class="goal-info-desc">The API format this provider uses. Three options: <strong>OpenAI compatible</strong> (for most third-party providers — Mistral, Together AI, Ollama, LM Studio, and most others), <strong>Anthropic</strong> (for direct Claude API endpoints), or <strong>Google</strong> (for direct Gemini API endpoints). When using Quick Add this is filled automatically. If unsure, ask your provider: "Is this API OpenAI-compatible?" The answer is almost always yes.</span>
+        <span class="goal-info-desc">The API format this provider uses. Three options: <strong>OpenAI compatible</strong> (for most third-party providers — Together AI, DeepSeek, Ollama, LM Studio, and most others), <strong>Anthropic</strong> (for direct Claude API endpoints), or <strong>Google</strong> (for direct Gemini API endpoints). When using Quick Add this is filled automatically. If unsure, ask your provider: "Is this API OpenAI-compatible?" The answer is almost always yes.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Model (required)</span>
@@ -1862,11 +1862,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.56.31"></script>
-<script src="js/nav-helper.js?v=3.56.31"></script>
-<script src="js/license-helper.js?v=3.56.31"></script>
-<script src="js/version.js?v=3.56.31"></script>
-<script src="js/docs-scrollspy.js?v=3.56.31"></script>
+<script src="js/theme.js?v=3.56.32"></script>
+<script src="js/nav-helper.js?v=3.56.32"></script>
+<script src="js/license-helper.js?v=3.56.32"></script>
+<script src="js/version.js?v=3.56.32"></script>
+<script src="js/docs-scrollspy.js?v=3.56.32"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

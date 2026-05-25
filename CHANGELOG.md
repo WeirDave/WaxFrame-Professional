@@ -2,6 +2,30 @@
 
 ---
 
+## v3.56.32
+**Build:** `20260524-018` · **Released:** May 24, 2026
+
+### API Key Guide gets a floating table of contents + documentation currency sweep
+
+**Floating TOC on the API Key Guide.** `api-details.html` — the longest helper page — now has the same sticky left-hand table of contents the user manual and playbooks use (shared `.doc-sidebar` pattern + `docs-scrollspy.js`). Links: Free & low-cost AIs, Pay-as-you-go AIs, Know Your Hive, General Tips, with scroll-spy highlighting the current section.
+
+**Documentation currency sweep** — brings all docs in line with the v3.56.23 default-provider lineup (Mistral is now a default; DeepSeek is opt-in):
+- Corrected four "six default providers" lists that still named DeepSeek instead of Mistral (`index.html` ×3, `waxframe-user-manual.html` ×1).
+- Repointed "add a custom AI" examples away from Mistral (now a default) toward genuine opt-in providers (Together AI, DeepSeek, Cohere) in the user manual.
+- Kept the DeepSeek-as-best-value-Builder guidance (still accurate — cheapest capable model) and added the slow-responder caveat everywhere it appears so it's never a surprise.
+- `js/app.js` grok fallback model string `grok-4` → `grok-4-fast-non-reasoning`, matching `api.js`.
+
+**Word-wrap fix.** Inline code in the "What goes in each field?" info modal no longer breaks mid-path — `/v1/chat/completions` stays a single token (`white-space: nowrap`).
+
+### Files changed
+- `api-details.html` — floating TOC (sidebar + doc-main wrap, section ids, scroll-spy script).
+- `style.css` — `white-space: nowrap` on `.custom-ai-info-body code`.
+- `index.html`, `waxframe-user-manual.html`, `README.md` — currency-sweep prose corrections.
+- `js/app.js` — grok fallback model string.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.32.
+
+---
+
 ## v3.56.31
 **Build:** `20260524-017` · **Released:** May 24, 2026
 
