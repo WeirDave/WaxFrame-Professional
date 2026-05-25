@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-011
+//  Build: 20260524-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-011';         // build stamp — update each session
+const BUILD       = '20260524-012';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -11455,6 +11455,8 @@ async function runRound() {
         toast(`⏳ ${ai.name} hit a usage limit — skipped`, 4000);
       } else if (e.message.startsWith('CORS_BLOCKED:')) {
         setBeeStatus(ai.id, 'error', 'CORS blocked');
+      } else if (e.message.startsWith('NETWORK_FAILED:')) {
+        setBeeStatus(ai.id, 'error', 'Network error');
       } else {
         setBeeStatus(ai.id, 'error', e.message);
       }
@@ -12280,9 +12282,17 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       body: cfg.bodyFn(cfg.model, prompt)
     });
   } catch(fetchErr) {
-    const isCors = fetchErr.message.toLowerCase().includes('network') ||
-                   fetchErr.message.toLowerCase().includes('fetch') ||
-                   fetchErr.message.toLowerCase().includes('cors');
+    // v3.56.26 — fetch() rejects only on a transport failure (the request never
+    // completed), never on an HTTP error status. Such a failure is a genuine
+    // CORS problem only on a CUSTOM endpoint — self-hosted servers (Open WebUI,
+    // Ollama, internal gateways) that don't send Access-Control headers. On a
+    // BUILT-IN provider, which already supports direct browser calls, the same
+    // failure is a transient network hiccup (dropped connection, a blocker
+    // extension, a rate-limited concurrent call) — NOT a reason to set up a
+    // proxy. The classifier already encodes this (CORS_BLOCKED matches only when
+    // isCustom; otherwise NETWORK_ERROR), so hand it the real error and let it
+    // choose the card. (Was: every transport failure forced CORS_BLOCKED and
+    // told built-in users to set up a proxy they don't need.)
     const ctx = {
       aiName:        ai.name,
       provider:      ai.provider,
@@ -12292,16 +12302,14 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
       message:       fetchErr.message,
       raw:           null
     };
-    if (isCors) {
-      consoleLog(`❌ ${ai.name} — CORS blocked. Browser cannot call this API directly. A proxy is required.`, 'error');
-      const entry = WF_DEBUG.classify(new Error('CORS_BLOCKED'), ctx);
-      WF_DEBUG.showCard(entry, ctx);
-      throw new Error('CORS_BLOCKED: Browser cannot reach ' + ai.name + ' API directly. Proxy required.');
-    }
-    consoleLog(`❌ ${ai.name} — Network error: ${fetchErr.message}`, 'error');
     const entry = WF_DEBUG.classify(fetchErr, ctx);
     WF_DEBUG.showCard(entry, ctx);
-    throw fetchErr;
+    if (isCustomEndpoint) {
+      consoleLog(`❌ ${ai.name} — CORS blocked. Your endpoint did not allow a direct browser call.`, 'error');
+      throw new Error('CORS_BLOCKED: ' + ai.name + ' endpoint did not allow a direct browser call. CORS headers or a proxy are required.');
+    }
+    consoleLog(`❌ ${ai.name} — Network error: the request did not complete (${fetchErr.message}). Usually transient — retry, or check your connection or blocker extensions.`, 'error');
+    throw new Error('NETWORK_FAILED: ' + fetchErr.message);
   }
 
   if (!response.ok) {
