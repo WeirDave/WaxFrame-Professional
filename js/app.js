@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-021
+//  Build: 20260524-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-021';         // build stamp — update each session
+const BUILD       = '20260524-022';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4301,6 +4301,22 @@ function populateQuickAddOptions() {
 // Cache: 24hr keyed by stable cacheId (provider name for default 6, raw URL
 // for Custom AI). User can manually swap model anytime via existing dropdown.
 const RECOMMEND_CACHE_TTL = 24 * 60 * 60 * 1000;
+// v3.56.36 — one-time recommendation-cache reset. The Reviewer/Builder prompts
+// gained a capability steer this release, so picks cached under the old prompts
+// are stale (notably the small-model Builder picks on large catalogs like
+// Together). Clear them once on first load of this version so the new guidance
+// applies on the next recheck instead of waiting out the 24h TTL. Subsequent
+// loads no-op via the version flag. Wrapped in try/catch for private-mode.
+(function () {
+  try {
+    if (localStorage.getItem('waxframe_recommend_promptver') !== 'v2') {
+      Object.keys(localStorage)
+        .filter(k => k.indexOf('waxframe_recommend_') === 0 && k !== 'waxframe_recommend_promptver')
+        .forEach(k => localStorage.removeItem(k));
+      localStorage.setItem('waxframe_recommend_promptver', 'v2');
+    }
+  } catch (e) {}
+})();
 
 // v3.32.10 — Replaces the single MODEL_RECOMMENDATION_PROMPT_DEFAULT
 // (three-pick BEST/FASTEST/BUDGET) with two role-specific single-pick
@@ -4326,6 +4342,7 @@ Selection rules:
 - Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
 - Standard non-reasoning chat models are PREFERRED when quality is comparable, because reasoning/thinking models are typically 5-10x slower and more expensive due to billable analysis output.
 - Reasoning, thinking, or chain-of-thought models are ALLOWED only if they are clearly stronger for document review than the available standard chat models.
+- Prefer a capable, flagship-tier model; do NOT default to a small model (roughly 8B parameters or fewer) when a stronger standard chat model is offered by this endpoint. If the endpoint only offers small models, pick the best of those.
 - If multiple models are roughly equivalent, prefer the most recently released.
 
 Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
@@ -4356,6 +4373,7 @@ Selection rules:
 - Do NOT recommend any model whose id, description, or known behavior suggests reasoning, thinking, deep-research, research, chain-of-thought, planner, agentic, reflective, or deliberative output.
 - Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
 - If the most capable model is a reasoning/thinking/research model, skip it and choose the best standard chat model instead.
+- Prefer the MOST CAPABLE standard chat model the endpoint offers — the Builder rewrites the entire document every round, so model capability directly affects output quality. Do NOT default to a small model (roughly 8B parameters or fewer) when a larger or stronger standard chat model is on the list; if the endpoint only offers small models, pick the best available.
 - If no safe standard chat-completion model exists, respond with NONE.
 - If multiple safe models are roughly equivalent, prefer the most recently released.
 
