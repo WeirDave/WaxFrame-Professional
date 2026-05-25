@@ -2,6 +2,19 @@
 
 ---
 
+## v3.56.45
+**Build:** `20260525-008` · **Released:** May 25, 2026
+
+### SEO meta tags on all six pages
+
+Added `<meta name="description">`, Open Graph tags (`og:title`, `og:description`, `og:url`, `og:type`, `og:image`), Twitter Card tags (`summary` type), and `<link rel="canonical">` to every page. Each page has a tailored description; all share the WaxFrame logo as the social preview image. Previously there was zero SEO metadata on any page — search engines and social link previews (Slack, Discord, Twitter, LinkedIn) had nothing to work with.
+
+### Files changed
+- `index.html`, `api-details.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — 11 SEO meta tags each.
+- `js/version.js`, helper `js/*` headers — build/version/cache-bust sync to v3.56.45.
+
+---
+
 ## v3.56.44
 **Build:** `20260525-007` · **Released:** May 25, 2026
 
