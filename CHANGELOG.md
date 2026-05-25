@@ -2,6 +2,24 @@
 
 ---
 
+## v3.56.36
+**Build:** `20260524-022` · **Released:** May 24, 2026
+
+### Recommend Models: capability steer for large catalogs
+
+A 9-AI audit confirmed every provider with a short model list picks its flagship for the Builder, but Together AI (135 models spanning 1B–405B) consistently lowballed the Builder to a 1B model. Root cause: the prompts said "prefer standard non-reasoning chat models" with no capability anchor, so on a huge heterogeneous catalog the asking model read "standard" as "smallest." Same prompt, very different list.
+
+- Both recommendation prompts now include a soft capability steer: prefer a capable flagship-tier model, do not default to a small model (~8B or fewer) when a stronger standard chat model is on the list. The steer is deliberately soft — "if the endpoint only offers small models, pick the best of those" — so self-hosted gateways (Alfredo, Open WebUI, Ollama) that serve only small models still get a pick and are never pushed toward a model the box can't serve.
+- No-op for the eight short-catalog providers (their flagship was already the pick); corrects large/heterogeneous catalogs (Together, model servers).
+- All existing guardrails unchanged: the structural non-document filter (embeddings/audio/image/rerank) and the Builder reasoning-model rejection still run first.
+- One-time recommendation-cache reset on first load of this version so the new guidance applies on the next recheck instead of waiting out the 24h cache.
+
+### Files changed
+- `js/app.js` — capability steer in both recommendation prompts + one-time cache reset.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.36.
+
+---
+
 ## v3.56.35
 **Build:** `20260524-021` · **Released:** May 24, 2026
 
