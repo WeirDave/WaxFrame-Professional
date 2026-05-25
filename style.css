@@ -12301,3 +12301,59 @@ kbd {
   padding: 0;
   gap: 0;
 }
+
+/* ==============================================================
+   "Get an API key" drawer — slide-up list of provider key pages
+   (js/api-links.js). Reuses the .notes-drawer shell for position
+   and slide animation; this block only styles the link list.
+   Shared by the API guide page and the Worker Bees toolbar.
+   v3.56.42
+   ============================================================== */
+.consoles-drawer .consoles-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-16);
+  overflow-y: auto;
+}
+.consoles-link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  padding: var(--space-12) var(--space-16);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.consoles-link:hover {
+  background: var(--surface3);
+  border-color: var(--accent);
+}
+.consoles-link-name {
+  flex-shrink: 0;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-14);
+}
+.consoles-link-host {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--fs-12);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.consoles-link-arrow {
+  flex-shrink: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+.consoles-empty {
+  padding: var(--space-16);
+  color: var(--muted);
+  font-size: var(--fs-13);
+}

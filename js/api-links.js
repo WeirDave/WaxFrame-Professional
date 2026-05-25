@@ -1,10 +1,11 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260525-004
+// Build: 20260525-005
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
-// don't load app.js. There is exactly ONE openAllConsoles() and it lives here
-// — the former duplicate in app.js was removed in v3.56.17.
+// don't load app.js. The "get an API key" UI (a slide-up drawer of
+// per-provider links, same pattern as the Notes drawer) also lives here so
+// both the guide page and the main app share one component (v3.56.42).
 
 // Keyed by DEFAULT_AIS id so app.js can map them 1:1.
 window.API_CONSOLE_URLS = {
@@ -16,41 +17,114 @@ window.API_CONSOLE_URLS = {
   mistral:    'https://console.mistral.ai/api-keys'
 };
 
-// Open the API key / sign-up console for every default AI in new tabs.
-// Dedupes, counts results, and — only where a toast() exists (i.e. the main
-// app) — surfaces feedback; on standalone helper pages it opens silently.
-// Browsers may show a one-time "allow popups from this site" prompt on first
-// click; once allowed, subsequent invocations open every tab cleanly.
-function openAllConsoles() {
-  const seen = new Set();
-  let opened = 0, blocked = 0;
-  for (const url of Object.values(window.API_CONSOLE_URLS)) {
-    if (!url || url === '#' || seen.has(url)) continue;
-    seen.add(url);
-    // Open as a real tab. A windowFeatures string (even just
-    // 'noopener,noreferrer') makes Firefox open a pop-up *window* and its
-    // blocker then allows only the first, blocking the rest — the source of
-    // the "prevented N pop-up windows" message. No features string = a tab;
-    // null the opener afterward for the same security benefit noopener gave.
-    // This also fixes the count: with noopener in the features, window.open()
-    // returns null even on success, so opens were being miscounted as blocked.
-    const w = window.open(url, '_blank');
-    if (w) { try { w.opener = null; } catch (_) {} opened++; }
-    else blocked++;
-  }
-  if (typeof toast === 'function') {
-    if (opened === 0 && blocked === 0) {
-      toast('⚠️ No API console URLs available');
-    } else if (blocked > 0 && opened === 0) {
-      toast('⚠️ Popups blocked — allow popups for this site and try again', 4500);
-    } else if (blocked > 0) {
-      toast(`↗ Opened ${opened} of ${opened + blocked} — allow popups to open the rest`, 4500);
-    } else {
-      toast(`↗ Opened ${opened} API website${opened !== 1 ? 's' : ''} in new tabs`, 3000);
-    }
-  }
-  return { total: seen.size, opened, blocked };
+// ── "Get an API key" drawer ───────────────────────────────────────────
+// v3.56.42 — Replaces the old openAllConsoles() bulk-opener. Browsers allow
+// only ONE window.open() per user click, so firing six at once got five
+// blocked as pop-ups. Instead, a slide-up drawer (same pattern/markup as the
+// Notes drawer) lists each provider as a real link — the user clicks the ones
+// they want and each click opens exactly one tab, never blocked. Shared by
+// both the API guide page (fixed: default 6 + 3 library providers) and the
+// main app (the live hive's AIs that have a console URL); each surface passes
+// its own item list. The drawer is created lazily on first open, so neither
+// page needs duplicate markup.
+
+// Display names for the six default providers (keyed to API_CONSOLE_URLS).
+const _DEFAULT_CONSOLE_NAMES = {
+  chatgpt: 'ChatGPT', claude: 'Claude', gemini: 'Gemini',
+  grok: 'Grok', perplexity: 'Perplexity', mistral: 'Mistral'
+};
+
+// Non-default providers documented in the API guide that have a real
+// API-key page. Copilot is intentionally excluded — Microsoft offers no
+// direct consumer API-key path yet.
+const _GUIDE_EXTRA_CONSOLES = [
+  { name: 'DeepSeek',    url: 'https://platform.deepseek.com/api_keys' },
+  { name: 'Cohere',      url: 'https://dashboard.cohere.com/api-keys' },
+  { name: 'Together AI', url: 'https://api.together.ai/settings/api-keys' }
+];
+
+function _clEsc(s) {
+  return String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
+function _clHost(u) {
+  try { return new URL(u).host.replace(/^www\./, ''); } catch (_) { return ''; }
+}
+function _clSafe(u) {
+  try {
+    const p = new URL(String(u ?? ''));
+    return (p.protocol === 'http:' || p.protocol === 'https:') ? p.href : '';
+  } catch (_) { return ''; }
+}
+
+// Fixed list for the API guide page: default 6 + library 3.
+function _guideConsoleItems() {
+  const items = [];
+  for (const [id, url] of Object.entries(window.API_CONSOLE_URLS)) {
+    if (url) items.push({ name: _DEFAULT_CONSOLE_NAMES[id] || id, url });
+  }
+  return items.concat(_GUIDE_EXTRA_CONSOLES);
+}
+
+function _ensureConsolesDrawer() {
+  let d = document.getElementById('consolesDrawer');
+  if (d) return d;
+  d = document.createElement('div');
+  d.id = 'consolesDrawer';
+  d.className = 'notes-drawer consoles-drawer';
+  d.innerHTML =
+    '<div class="notes-drawer-hdr">' +
+      '<span class="notes-drawer-title">🔑 Get an API key</span>' +
+      '<span class="notes-drawer-sub">Click a provider to open its key page in a new tab.</span>' +
+      '<div class="notes-drawer-actions">' +
+        '<button type="button" title="Close" class="btn btn-accent" onclick="closeConsolesDrawer()">✕ Close</button>' +
+      '</div>' +
+    '</div>' +
+    '<div class="consoles-list" id="consolesList"></div>';
+  document.body.appendChild(d);
+  return d;
+}
+
+// items = [{ name, url }]. Invalid / non-http(s) URLs are dropped.
+function openConsolesDrawer(items) {
+  const d = _ensureConsolesDrawer();
+  const list = d.querySelector('#consolesList');
+  const valid = (items || []).filter(it => it && _clSafe(it.url));
+  if (valid.length === 0) {
+    list.innerHTML = '<div class="consoles-empty">No API console links available.</div>';
+  } else {
+    list.innerHTML = valid.map(function (it) {
+      const url = _clSafe(it.url);
+      return '<a class="consoles-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
+        '<span class="consoles-link-name">' + _clEsc(it.name) + '</span>' +
+        '<span class="consoles-link-host">' + _clEsc(_clHost(url)) + '</span>' +
+        '<span class="consoles-link-arrow">↗</span>' +
+      '</a>';
+    }).join('');
+  }
+  d.classList.add('active');
+}
+
+function closeConsolesDrawer() {
+  const d = document.getElementById('consolesDrawer');
+  if (d) d.classList.remove('active');
+}
+
+function toggleConsolesDrawer(items) {
+  const d = document.getElementById('consolesDrawer');
+  if (d && d.classList.contains('active')) closeConsolesDrawer();
+  else openConsolesDrawer(items);
+}
+
+// API guide page entry point (button onclick).
+function toggleGuideConsoles() {
+  toggleConsolesDrawer(_guideConsoleItems());
+}
+
+// Dismiss on Escape, consistent with other dismissible surfaces.
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') closeConsolesDrawer();
+});
 
 // v3.52.7 — openAllBilling helper removed. Companion to openAllConsoles
 // above; was never wired to any UI surface. Confirmed zero callers across
