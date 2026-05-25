@@ -2,6 +2,29 @@
 
 ---
 
+## v3.56.46
+**Build:** `20260525-009` · **Released:** May 25, 2026
+
+### Newest-viable-model recommendations + social card image
+
+**Recommend Models now asks the newest capable model, and gives a stable answer.**
+
+- **Recency-ordered catalogs.** `fetchModelsForProvider` / `...Live` (in `js/api.js`) sorted model lists *alphabetically*, discarding the provider's real `created` dates. They now sort by actual recency: OpenAI / xAI / DeepSeek by `created` (epoch), Claude by `created_at` (ISO, via the existing Worker proxy). Newest model is first; providers with no date field (Gemini) keep the version-aware reverse-alpha order; providers with no live catalog (Perplexity) keep their fallback list.
+- **Newest *viable* asker.** `recommendForDefault` (`js/app.js`) picked a hardcoded stable model to do the asking, which biased recommendations toward older models it knew. It now takes the newest model that survives the chat-capability filter — the literal-newest is usually a specialized variant (audio / realtime / image), so filtering first is what makes "newest" correct. Falls back to stable → configured → first when no live catalog exists.
+- **Deterministic picks.** Pinned `temperature: 0` on the recommendation call (all three formats — OpenAI, Anthropic, Google), so the same catalog stops producing a different recommendation each run.
+
+**Social card.** `og:image` / `twitter:image` on all six pages now point at `images/WaxFrame_Social_Card_v1.png` (1200×630), and `twitter:card` upgraded from `summary` to `summary_large_image` for full-width link previews. Favicon unchanged.
+
+### Files changed
+- `js/api.js` — recency sort (created / created_at) in both fetch functions.
+- `js/app.js` — newest-viable asker selection; `temperature: 0` on the recommend call.
+- `index.html` + 5 helper pages — social card image swap + `summary_large_image`.
+- `js/version.js`, helper `js/*` headers — build/version/cache-bust sync to v3.56.46.
+
+> Requires `images/WaxFrame_Social_Card_v1.png` (1200×630) to be committed alongside this release.
+
+---
+
 ## v3.56.45
 **Build:** `20260525-008` · **Released:** May 25, 2026
 
