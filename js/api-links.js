@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260525-003
+// Build: 20260525-004
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -27,8 +27,16 @@ function openAllConsoles() {
   for (const url of Object.values(window.API_CONSOLE_URLS)) {
     if (!url || url === '#' || seen.has(url)) continue;
     seen.add(url);
-    const w = window.open(url, '_blank', 'noopener,noreferrer');
-    if (w) opened++; else blocked++;
+    // Open as a real tab. A windowFeatures string (even just
+    // 'noopener,noreferrer') makes Firefox open a pop-up *window* and its
+    // blocker then allows only the first, blocking the rest — the source of
+    // the "prevented N pop-up windows" message. No features string = a tab;
+    // null the opener afterward for the same security benefit noopener gave.
+    // This also fixes the count: with noopener in the features, window.open()
+    // returns null even on success, so opens were being miscounted as blocked.
+    const w = window.open(url, '_blank');
+    if (w) { try { w.opener = null; } catch (_) {} opened++; }
+    else blocked++;
   }
   if (typeof toast === 'function') {
     if (opened === 0 && blocked === 0) {

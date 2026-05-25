@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-003
+//  Build: 20260525-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-003';         // build stamp — update each session
+const BUILD       = '20260525-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -831,7 +831,11 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
     linkEl.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      window.open(url, '_blank', 'noopener,noreferrer');
+      // Open a tab, not a Firefox pop-up window (a windowFeatures string
+      // forces popup mode — see openAllConsoles in api-links.js). Null the
+      // opener for the noopener security benefit.
+      const w = window.open(url, '_blank');
+      if (w) { try { w.opener = null; } catch (_) {} }
     };
     entry.appendChild(sep);
     entry.appendChild(linkEl);
