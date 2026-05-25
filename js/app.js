@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-008
+//  Build: 20260524-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -55,10 +55,10 @@ const _CU = (typeof window !== 'undefined' && window.API_CONSOLE_URLS) || {};
 const DEFAULT_AIS = [
   { id: 'chatgpt',    name: 'ChatGPT',    url: 'https://chatgpt.com',           icon: 'images/icon-chatgpt.png',    provider: 'chatgpt',    apiConsole: _CU.chatgpt    || '' },
   { id: 'claude',     name: 'Claude',     url: 'https://claude.ai',             icon: 'images/icon-claude.png',     provider: 'claude',     apiConsole: _CU.claude     || '' },
-  { id: 'deepseek',   name: 'DeepSeek',   url: 'https://chat.deepseek.com',     icon: 'images/icon-deepseek.png',   provider: 'deepseek',   apiConsole: _CU.deepseek   || '' },
   { id: 'gemini',     name: 'Gemini',     url: 'https://gemini.google.com',     icon: 'images/icon-gemini.png',     provider: 'gemini',     apiConsole: _CU.gemini     || '' },
   { id: 'grok',       name: 'Grok',       url: 'https://grok.com',              icon: 'images/icon-grok.png',       provider: 'grok',       apiConsole: _CU.grok       || '' },
   { id: 'perplexity', name: 'Perplexity', url: 'https://www.perplexity.ai',     icon: 'images/icon-perplexity.png', provider: 'perplexity', apiConsole: _CU.perplexity || '' },
+  { id: 'mistral',    name: 'Mistral',    url: 'https://chat.mistral.ai',       icon: 'images/icon-mistral.png',    provider: 'mistral',    apiConsole: _CU.mistral    || '' },
 ];
 
 // ── API CONFIGS + MODEL DISCOVERY (extracted) ──
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-008';         // build stamp — update each session
+const BUILD       = '20260524-009';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4171,14 +4171,14 @@ function hideCustomAIInfoModal() {
 
 // ── Custom AI Quick Add provider presets ──
 const QUICK_ADD_PROVIDERS = {
-  mistral: {
-    name: 'Mistral',
-    url: 'https://api.mistral.ai/v1/chat/completions',
+  deepseek: {
+    name: 'DeepSeek',
+    url: 'https://api.deepseek.com/v1/chat/completions',
     format: 'openai',
-    keyLink: 'https://console.mistral.ai/api-keys',
-    keyLinkLabel: 'Get your Mistral API key →',
-    defaultModel: 'mistral-large-latest',
-    chooseModelLink: 'https://docs.mistral.ai/getting-started/models/models_overview/'
+    keyLink: 'https://platform.deepseek.com/api_keys',
+    keyLinkLabel: 'Get your DeepSeek API key →',
+    defaultModel: 'deepseek-chat',
+    chooseModelLink: 'https://api-docs.deepseek.com/quick_start/pricing'
   },
   together: {
     name: 'Together AI',
@@ -9564,6 +9564,7 @@ const wfIconUpload = (() => {
     { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
+    { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
   ];
   const GENERIC_ICON = 'images/icon-generic.png';
 
@@ -10001,6 +10002,7 @@ function resolveAiIcon(ai, cssClass, size) {
     { keys: ['mistral', 'mixtral', 'codestral', 'ministral'], src: 'images/icon-mistral.png' },
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
+    { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
   ];
 
   // Shared builder for the safe <img> tag. `src` is the only call-site
@@ -14290,6 +14292,9 @@ function showBuilderOverlay() {
     chatgpt:    { border: 'rgba(16,163,127,0.6)',  bg: 'rgba(16,163,127,0.15)',  glow: 'rgba(16,163,127,0.3)'  },
     claude:     { border: 'rgba(210,140,80,0.6)',   bg: 'rgba(210,140,80,0.15)',   glow: 'rgba(210,140,80,0.3)'   },
     deepseek:   { border: 'rgba(77,138,255,0.6)',   bg: 'rgba(77,138,255,0.15)',   glow: 'rgba(77,138,255,0.3)'   },
+    mistral:    { border: 'rgba(250,110,30,0.6)',    bg: 'rgba(250,110,30,0.15)',    glow: 'rgba(250,110,30,0.3)'    },
+    together:   { border: 'rgba(60,190,150,0.6)',    bg: 'rgba(60,190,150,0.15)',    glow: 'rgba(60,190,150,0.3)'    },
+    cohere:     { border: 'rgba(225,90,150,0.6)',    bg: 'rgba(225,90,150,0.15)',    glow: 'rgba(225,90,150,0.3)'    },
     gemini:     { border: 'rgba(138,100,255,0.6)',  bg: 'rgba(138,100,255,0.15)',  glow: 'rgba(138,100,255,0.3)'  },
     grok:       { border: 'rgba(220,220,220,0.5)',  bg: 'rgba(220,220,220,0.10)',  glow: 'rgba(220,220,220,0.2)'  },
     perplexity: { border: 'rgba(32,210,210,0.6)',   bg: 'rgba(32,210,210,0.15)',   glow: 'rgba(32,210,210,0.3)'   },
