@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-015
+//  Build: 20260524-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-015';         // build stamp — update each session
+const BUILD       = '20260524-017';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3676,6 +3676,8 @@ async function testAllKeys() {
   rowsEl.innerHTML = '';
   if (sentPane) sentPane.innerHTML = '<div class="tkp-empty">Click a row to see the request.</div>';
   if (rcvPane)  rcvPane.innerHTML  = '<div class="tkp-empty">Click a row to see the response.</div>';
+  // v3.56.29 — start collapsed (AI list only) each run; row click reveals detail.
+  document.getElementById('tkpThreeCol')?.classList.remove('tkp-three-col--detail');
   if (title) title.textContent = `Testing ${keyed.length} key${keyed.length !== 1 ? 's' : ''}…`;
   if (closeBtn) { closeBtn.disabled = true; closeBtn.textContent = 'Testing…'; }
   modal.classList.add('active');
@@ -3892,6 +3894,8 @@ function updateTkpTally() {
 // Works whether the test has completed for that row or is still pending.
 function selectTkpRow(id) {
   window._tkpSelected = id;
+  // v3.56.29 — reveal the Sent/Received columns on first row click.
+  document.getElementById('tkpThreeCol')?.classList.add('tkp-three-col--detail');
   document.querySelectorAll('.tkp-row').forEach(r => r.classList.remove('is-selected'));
   const row = document.getElementById(`tkprow-${id}`);
   if (row) row.classList.add('is-selected');
