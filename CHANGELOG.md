@@ -2,6 +2,33 @@
 
 ---
 
+## v3.56.41
+**Build:** `20260525-004` · **Released:** May 25, 2026
+
+### Fix: "Open default AI websites" only opened one tab (Firefox)
+
+Clicking **Open default AI websites** opened a single tab and Firefox blocked the rest with a "prevented this site from opening 5 pop-up windows" notice.
+
+- **Root cause.** `openAllConsoles()` (in `js/api-links.js`) called `window.open(url, '_blank', 'noopener,noreferrer')` in a loop. Passing a `windowFeatures` string — even just `noopener,noreferrer` — makes Firefox treat each call as a *pop-up window* rather than a tab, so its blocker permits only the first and blocks the remaining five. The features string also made `window.open()` return `null` on success (a `noopener` side effect), so the opened-vs-blocked counter in the toast was miscounting.
+- **Fix.** Open each URL with no features string so it lands as a tab, then null the returned window's `opener` for the same security benefit `noopener` provided. The success/blocked count is now accurate.
+- **Sibling fix.** The single per-link opener in `js/app.js` (console error/diagnostic links) used the same pattern. It only opens one tab so it never tripped the blocker, but it was popping a window instead of a tab on Firefox — given the same one-line treatment for consistency.
+
+### Files changed
+- `js/api-links.js` — `openAllConsoles()` opens tabs (no features string) and nulls the opener; count corrected.
+- `js/app.js` — console-link opener aligned to the same tab-opening pattern.
+- `js/version.js`, all helper `js/*` headers, `index.html` + 5 helper pages — build/version/cache-bust/header sync to v3.56.41.
+
+---
+
+## v3.56.40
+**Build:** `20260525-003` · **Released:** May 25, 2026
+
+### Copy fix — DeepSeek tip wording
+
+- Reworded the Gemini API-guide tip so DeepSeek reads as a **near-free reviewer** (lowest *cost*) rather than a "rock-bottom reviewer," which implied lowest *quality*. Content-only change to `api-details.html`; shipped on its own to correct the live page.
+
+---
+
 ## v3.56.39
 **Build:** `20260525-003` · **Released:** May 25, 2026
 
@@ -12,7 +39,6 @@ The API Key Guide (`api-details.html`) was the only documentation page that laid
 - **Single-column card flow.** The page's `.two-col` grid is collapsed to a single column and the two `.col` panel wrappers are dissolved, so the provider cards (`.wf-card` / `.ai-card`) now flow straight down the page exactly like the other docs. The existing flat card styling is reused unchanged — no shadows, hover effects, or new heading treatments were added; the goal was consistency, not a redesign.
 - **Reading order unchanged.** Because the cards were already authored in sidebar-TOC order (Free & Low-Cost → Pay-As-You-Go → Reference), collapsing the columns preserves that exact top-to-bottom order — no markup was reordered.
 - **Fully scoped, zero regression.** The change is gated behind a new `.api-guide-cols` modifier class on the single API-page wrapper. `.two-col` is used on no other page, so nothing else in the app or docs is affected.
-- **Copy fix.** Reworded the Gemini tip so DeepSeek reads as a *near-free* reviewer (lowest cost) rather than a "rock-bottom reviewer," which implied lowest quality.
 
 ### Files changed
 - `api-details.html` — `.api-guide-cols` modifier added to the content wrapper; build/version/cache-bust stamps to v3.56.39.
