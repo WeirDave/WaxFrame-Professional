@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260524-012
+     Build: 20260524-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-012">
+  <meta name="waxframe-build" content="20260524-013">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.26">
+  <link rel="stylesheet" href="style.css?v=3.56.27">
 </head>
 <body class="helper-body">
 
@@ -95,6 +95,7 @@
     <div class="hp-section-title-block">
       <h1 class="hp-section-title">Get Your API Keys</h1>
       <p class="hp-section-sub">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
+      <p class="hp-section-sub"><em>Model recommendations and hive notes on this page were last reviewed <strong>May 24, 2026</strong>. Models shown are the shipped defaults — switch any AI to a newer model in-app via Recommend Models.</em></p>
     </div>
   </div>
   <div class="hp-section-body">
@@ -115,7 +116,7 @@
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys live in your browser</h3>
       <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
-      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
+      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
 
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
       <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
@@ -162,7 +163,7 @@
         </ol>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer">platform.deepseek.com → Top Up</a> — $5 gets you a lot of usage. Excellent Builder choice on a budget.</p></div>
+          <div class="wf-tip-body"><p>DeepSeek is 10–20x cheaper per token than OpenAI or Anthropic. Add credit at <a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer">platform.deepseek.com → Top Up</a> — $5 goes a long way. One caveat: it is consistently the slowest responder in the hive (often 60–90s), which is why it is an opt-in rather than one of the default six. If you don't mind the wait, it is the most affordable capable AI you can add.</p></div>
         </div>
       </div>
     </div>
@@ -230,7 +231,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>grok-4</code>
+          <span class="model-label">Model:</span><code>grok-4-fast-non-reasoning</code>
         </div>
         <ol class="steps">
           <li>Go to <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer">console.x.ai</a> and sign in with your X account.</li>
@@ -265,7 +266,94 @@
         </div>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-          <div class="wf-tip-body"><p>Perplexity offers a recurring API subscription as low as <strong>$5/month — but you must enable auto-pay during signup to lock in that price</strong>. Without auto-pay, the recurring rate jumps to $50/month. The $5 tier provides a solid monthly credit allocation that covers most WaxFrame usage without thinking about per-call costs.</p></div>
+          <div class="wf-tip-body"><p>Enabling auto-pay during signup unlocks a recurring subscription as low as <strong>$5/month</strong>; without it, the recurring rate is $50/month. The $5 tier covers most WaxFrame usage without thinking about per-call costs.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/icon-mistral.png" onerror="this.style.display='none'">
+        <div class="ai-card-name">Mistral</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>mistral-large-latest</code>
+          <span class="model-note">Mistral's flagship model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer">console.mistral.ai/api-keys</a> and sign in.</li>
+          <li>Create a new API key and copy it.</li>
+          <li>Paste it into the Mistral field in WaxFrame and press Enter.</li>
+        </ol>
+        <div class="wf-tip wf-tip-good">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+          <div class="wf-tip-body"><p>Mistral is fast and affordable, with a distinct European model lineage that adds genuine diversity to the hive.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/icon-cohere.png" onerror="this.style.display='none'">
+        <div class="ai-card-name">Cohere</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>command-r-plus</code>
+          <span class="model-note">Cohere's flagship Command model</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://dashboard.cohere.com/api-keys" target="_blank" rel="noopener noreferrer">dashboard.cohere.com/api-keys</a> and sign in.</li>
+          <li>Create an API key and copy it.</li>
+          <li>Paste it into the Cohere field in WaxFrame and press Enter.</li>
+        </ol>
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+          <div class="wf-tip-body"><p>Supported and ready to use, but not yet hive-tested in production — treat the profile notes as provisional until we have run it.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="images/icon-together.png" onerror="this.style.display='none'">
+        <div class="ai-card-name">Together AI</div>
+        <span class="badge badge-paid">Pay-as-you-go</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>meta-llama/Llama-3.3-70B-Instruct-Turbo</code>
+          <span class="model-note">Open-weight model via Together's gateway</span>
+        </div>
+        <ol class="steps">
+          <li>Go to <a href="https://api.together.ai/settings/api-keys" target="_blank" rel="noopener noreferrer">api.together.ai/settings/api-keys</a> and sign in.</li>
+          <li>Create an API key and copy it.</li>
+          <li>Paste it into the Together field in WaxFrame and press Enter.</li>
+        </ol>
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+          <div class="wf-tip-body"><p>A low-cost gateway to open-weight models like Llama. Supported and ready, but not yet hive-tested in production — profile notes are provisional until we have run it.</p></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-card">
+      <div class="ai-card-header">
+        <img src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=64" onerror="this.style.display='none'">
+        <div class="ai-card-name">Copilot (Microsoft)</div>
+        <span class="badge badge-limited">Ready when keys ship</span>
+      </div>
+      <div class="ai-card-body">
+        <div class="model-line">
+          <span class="model-label">Model:</span><code>gpt-4o</code>
+          <span class="model-note">Configured and ready</span>
+        </div>
+        <div class="wf-tip">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+          <div class="wf-tip-body"><p>WaxFrame already speaks Copilot, but Microsoft does not currently offer a direct consumer API-key path the way the other providers do — so there is nothing to set up yet. When Microsoft opens public API keys, Copilot will light up here with no further work on your end.</p></div>
         </div>
       </div>
     </div>
@@ -323,7 +411,7 @@
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>A solid all-rounder for both Builder and Reviewer roles — fast, reliable, and consistent. A strong alternative Builder if DeepSeek is unavailable. As a reviewer, it effectively signals document convergence during final refinement rounds.</p>
+        <p>A solid all-rounder as Builder or Reviewer — fast, reliable, consistent. A strong Builder option alongside Gemini, and a dependable everyday reviewer. As a reviewer, it reliably signals convergence in later rounds.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -365,7 +453,7 @@
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>As a reviewer, Claude excels at catching subtle issues with tone, redundancy, and flow that others miss. As a Builder, it is reliable and format-compliant. Higher cost, but worth it for quality-sensitive projects.</p>
+        <p>As a reviewer, catches subtle tone, redundancy, and flow issues others miss. As a Builder, reliable and format-compliant.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -383,7 +471,7 @@
         <div class="kyh-card-model">deepseek-chat</div>
       </div>
       <div class="kyh-badges">
-        <span class="kyh-badge kyh-badge-builder">Best Builder</span>
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
         <span class="kyh-badge kyh-badge-free">Low Cost</span>
       </div>
     </div>
@@ -391,27 +479,27 @@
       <div class="kyh-section">
         <div class="kyh-section-title">Strengths</div>
         <div class="kyh-pills">
-          <span class="kyh-pill kyh-pill-good">Fast responses</span>
           <span class="kyh-pill kyh-pill-good">Strict format compliance</span>
           <span class="kyh-pill kyh-pill-good">Minimal token cost</span>
           <span class="kyh-pill kyh-pill-good">High reliability</span>
-          <span class="kyh-pill kyh-pill-good">Efficient handling of large documents</span>
+          <span class="kyh-pill kyh-pill-good">Efficient with large documents</span>
         </div>
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Weaknesses</div>
         <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-bad">Slowest responder (often 60–90s)</span>
           <span class="kyh-pill kyh-pill-warn">Can be overly cautious</span>
           <span class="kyh-pill kyh-pill-warn">May provide redundant feedback</span>
         </div>
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>The default Builder choice. Rarely deviates from instructions, making it a stable foundation. Fast, cost-effective, and reliable across document types.</p>
+        <p>A very low-cost, highly reliable reviewer that rarely deviates from instructions. Its main limitation is speed — it dictates the hive's pace, since a round finalizes only after all reviewers respond. Best as an opt-in when budget matters more than speed.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>DeepSeek + Gemini is the most cost-effective hive combination — one paid Builder at rock-bottom prices, one free reviewer.</p></div>
+        <div class="wf-tip-body"><p>Use DeepSeek for large refinement rounds where keeping token cost minimal matters more than fast iteration.</p></div>
       </div>
     </div>
   </div>
@@ -425,6 +513,7 @@
         <div class="kyh-card-model">gemini-2.5-flash</div>
       </div>
       <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
         <span class="kyh-badge kyh-badge-free">Free tier</span>
       </div>
@@ -437,24 +526,22 @@
           <span class="kyh-pill kyh-pill-good">Precise grammar corrections</span>
           <span class="kyh-pill kyh-pill-good">Strong structural suggestions</span>
           <span class="kyh-pill kyh-pill-good">Large context window</span>
-          <span class="kyh-pill kyh-pill-good">Search-aware context integration</span>
         </div>
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Weaknesses</div>
         <div class="kyh-pills">
-          <span class="kyh-pill kyh-pill-warn">Slowest responder</span>
           <span class="kyh-pill kyh-pill-warn">Prone to inconsistent formatting</span>
           <span class="kyh-pill kyh-pill-warn">Sometimes returns NO CHANGES prematurely</span>
         </div>
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>Your primary free reviewer. Great for catching grammar, word choice, and structural issues. Use it as a reviewer and let a paid AI serve as the Builder.</p>
+        <p>A strong default Builder option — capable, free-tier friendly, and strong at grammar, word choice, and structure. Also functions as a reliable reviewer. On paid accounts, consider using it as a reviewer to control Builder token costs.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
-        <div class="wf-tip-body"><p>Gemini + DeepSeek is the minimum viable paid hive — two AIs, one free, total cost often under a cent per round for short documents <em>when Gemini stays on its free tier</em>. If you've enabled billing on your Google AI Studio account, Gemini can start billing per token — keep it as a Reviewer rather than the Builder in that case, since Builders read everything every round and amplify cost.</p></div>
+        <div class="wf-tip-body"><p>Gemini + DeepSeek is the lowest-cost hive — Gemini free as Builder, DeepSeek a rock-bottom reviewer — just expect slower rounds.</p></div>
       </div>
     </div>
   </div>
@@ -465,7 +552,7 @@
       <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Grok</div>
-        <div class="kyh-card-model">grok-4</div>
+        <div class="kyh-card-model">grok-4-fast-non-reasoning</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -475,10 +562,8 @@
       <div class="kyh-section">
         <div class="kyh-section-title">Strengths</div>
         <div class="kyh-pills">
-          <span class="kyh-pill kyh-pill-good">Fast responses</span>
-          <span class="kyh-pill kyh-pill-good">Aggressive early-round suggestions</span>
-          <span class="kyh-pill kyh-pill-good">Good at strong action verb improvements</span>
-          <span class="kyh-pill kyh-pill-good">Pushes for precision and impact</span>
+          <span class="kyh-pill kyh-pill-good">Assertive early-round input</span>
+          <span class="kyh-pill kyh-pill-good">Pushes for stronger phrasing and action verbs</span>
         </div>
       </div>
       <div class="kyh-section">
@@ -486,13 +571,13 @@
         <div class="kyh-pills">
           <span class="kyh-pill kyh-pill-bad">Stubborn — re-raises resolved decisions</span>
           <span class="kyh-pill kyh-pill-bad">Confidence bias — pushes its view assertively</span>
-          <span class="kyh-pill kyh-pill-warn">Skims context rather than reading carefully</span>
-          <span class="kyh-pill kyh-pill-warn">Not recommended as Builder</span>
+          <span class="kyh-pill kyh-pill-warn">May miss context details</span>
+          <span class="kyh-pill kyh-pill-warn">Not suitable as a Builder</span>
         </div>
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>A valuable reviewer in early rounds, pushing hard for stronger phrasing and action verbs. However, its tendency to revisit resolved points may prolong final convergence.</p>
+        <p>A valuable reviewer in early rounds, pushing hard for stronger phrasing. Its tendency to revisit resolved points can prolong final convergence.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
@@ -533,11 +618,155 @@
       </div>
       <div class="kyh-section">
         <div class="kyh-section-title">Best role</div>
-        <p>A specialized reviewer for factual or research-heavy documents. Its search-aware training makes it uniquely effective at spotting unsupported claims, though its inconsistent output formatting may complicate document reconstruction.</p>
+        <p>A specialized reviewer for factual or research-heavy documents. Its search-aware training makes it effective at spotting unsupported claims.</p>
       </div>
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p>Perplexity is particularly useful early in a project when the document is rough and needs fact-checking input from the hive.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MISTRAL -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/icon-mistral.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Mistral</div>
+        <div class="kyh-card-model">mistral-large-latest</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast responses</span>
+          <span class="kyh-pill kyh-pill-good">Concise, direct edits</span>
+          <span class="kyh-pill kyh-pill-good">Distinct model lineage</span>
+          <span class="kyh-pill kyh-pill-good">Good instruction-following</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Can be terse</span>
+          <span class="kyh-pill kyh-pill-warn">Less verbose rationale than Claude</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A fast, capable all-rounder. Quick enough to keep rounds snappy as a reviewer, and a reliable Builder. Its European lineage offers a different perspective from US-based models.</p>
+      </div>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Mistral's speed makes it a great Builder when you want fast iteration without slowdowns.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COHERE -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/icon-cohere.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Cohere</div>
+        <div class="kyh-card-model">command-r-plus</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Not yet hive-tested.</strong> Cohere is fully supported, but we have not yet run it through the hive in production — the notes below are based on its general reputation and will be refined with real data.</p></div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Tuned for enterprise/document workflows</span>
+          <span class="kyh-pill kyh-pill-good">Structured-content awareness</span>
+          <span class="kyh-pill kyh-pill-good">Retrieval-oriented training</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Less general-purpose range than the big labs</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A specialized reviewer whose Command models are designed for business and document workflows. Brings a strong structured approach to content refinement.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOGETHER AI -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="images/icon-together.png" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Together AI</div>
+        <div class="kyh-card-model">meta-llama/Llama-3.3-70B-Instruct-Turbo</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
+        <span class="kyh-badge kyh-badge-free">Low Cost</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Not yet hive-tested.</strong> Together AI is fully supported, but we have not yet run it through the hive in production — the notes below are provisional and will be refined with real data.</p></div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Strengths</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-good">Fast</span>
+          <span class="kyh-pill kyh-pill-good">Low cost</span>
+          <span class="kyh-pill kyh-pill-good">Open-model (Llama) voice</span>
+          <span class="kyh-pill kyh-pill-good">Solid general reviewing</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Weaknesses</div>
+        <div class="kyh-pills">
+          <span class="kyh-pill kyh-pill-warn">Output varies by underlying model</span>
+          <span class="kyh-pill kyh-pill-warn">Less consistent than dedicated providers</span>
+        </div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>A low-cost gateway to open-weight models. Brings a distinct open-source perspective to the hive and runs quickly. A good opt-in reviewer for diversity.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- COPILOT -->
+  <div class="kyh-card">
+    <div class="kyh-card-header">
+      <img src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
+      <div>
+        <div class="kyh-card-name">Copilot</div>
+        <div class="kyh-card-model">gpt-4o</div>
+      </div>
+      <div class="kyh-badges">
+        <span class="kyh-badge">Ready when keys ship</span>
+      </div>
+    </div>
+    <div class="kyh-body">
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p><strong>Not yet available.</strong> WaxFrame already supports Copilot in its configuration, but Microsoft does not currently offer a direct consumer API-key path. There is nothing to set up today.</p></div>
+      </div>
+      <div class="kyh-section">
+        <div class="kyh-section-title">Best role</div>
+        <p>Listed for completeness. The moment Microsoft opens a public API-key path, Copilot becomes usable here with no further work — its configuration already ships in WaxFrame. Profile notes will be added once it can actually be run.</p>
       </div>
     </div>
   </div>
@@ -558,7 +787,7 @@
   <div class="hp-section-body">
 
 <div class="wf-card is-accent">
-  <p><strong>You don't need all six AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, consider DeepSeek as your Builder, Claude for nuanced feedback, Grok for early assertive input, and Gemini for free support — that's a well-balanced hive. A smaller hive completes rounds faster, while the full hive ensures the most thorough review possible.</p>
+  <p><strong>You don't need all your AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, Gemini makes an excellent free Builder, with Claude for nuanced feedback and Grok for early assertive input. On the tightest budget, Gemini as Builder plus DeepSeek as a reviewer is the cheapest hive that runs — just expect slower rounds. A smaller hive completes rounds faster; the full hive gives the most thorough review.</p>
   <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
   <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.</p>
   <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
@@ -664,11 +893,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.56.26"></script>
-<script src="js/nav-helper.js?v=3.56.26"></script>
-<script src="js/license-helper.js?v=3.56.26"></script>
-<script src="js/api-links.js?v=3.56.26"></script>
-<script src="js/version.js?v=3.56.26"></script>
+<script src="js/theme.js?v=3.56.27"></script>
+<script src="js/nav-helper.js?v=3.56.27"></script>
+<script src="js/license-helper.js?v=3.56.27"></script>
+<script src="js/api-links.js?v=3.56.27"></script>
+<script src="js/version.js?v=3.56.27"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
