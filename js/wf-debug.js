@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260516-006
+//  Build: 20260524-022
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -487,7 +487,7 @@ window.WF_ERROR_CATALOG = [
     title: 'Builder did not return the required formatting',
     meaning: 'The Builder produced output but did not include the %%CONFLICTS_START%% block WaxFrame needs to read the result. Some AIs ignore strict formatting instructions. Try retrying the round (often works the second time), or switch to a different Builder via Change Builder.',
     actions: [
-      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -497,7 +497,7 @@ window.WF_ERROR_CATALOG = [
     title: 'Builder output exceeded the length limit',
     meaning: 'The Builder produced a document longer than the length cap you set on the Project screen. Your document was not changed and the round was not saved. You can retry (the next attempt may comply), switch to a different Builder, or raise the length cap on the Project screen.',
     actions: [
-      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -507,7 +507,7 @@ window.WF_ERROR_CATALOG = [
     title: 'Builder formatting was malformed',
     meaning: 'The Builder included the formatting block markers but they did not parse cleanly. The AI may have escaped or modified the markers. Retry the round or switch to a different Builder.',
     actions: [
-      { label: 'Change Builder', kind: 'open-modal', handler: 'showChangeBuilderModal' },
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
