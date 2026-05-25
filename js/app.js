@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-006
+//  Build: 20260525-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-006';         // build stamp — update each session
+const BUILD       = '20260525-007';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4056,10 +4056,14 @@ function applyNotesTemplate(template) {
 // instead, since it has no live hive.
 function toggleHiveConsoles() {
   const src = (typeof aiList !== 'undefined' && Array.isArray(aiList)) ? aiList : [];
-  const items = src
-    .filter(a => a && a.apiConsole)
-    .map(a => ({ name: a.name, url: a.apiConsole }));
-  if (typeof toggleConsolesDrawer === 'function') toggleConsolesDrawer(items);
+  const isDef   = a => !!DEFAULT_AIS.find(d => d.id === a.id);
+  const toItem  = a => ({ name: a.name, url: a.apiConsole });
+  const defaults = src.filter(a => a && a.apiConsole && isDef(a)).map(toItem);
+  const customs  = src.filter(a => a && a.apiConsole && !isDef(a)).map(toItem);
+  const groups = [];
+  if (defaults.length) groups.push({ label: customs.length ? 'Default providers' : '', items: defaults });
+  if (customs.length)  groups.push({ label: 'Custom AIs', items: customs });
+  if (typeof toggleConsolesDrawer === 'function') toggleConsolesDrawer(groups);
 }
 
 async function clearKeyForAI(id) {

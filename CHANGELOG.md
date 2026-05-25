@@ -2,6 +2,21 @@
 
 ---
 
+## v3.56.44
+**Build:** `20260525-007` · **Released:** May 25, 2026
+
+### Get API keys drawer — segmented + alphabetized
+
+The "Get an API key" drawer now mirrors the Worker Bees segmentation: **Default providers** first (alphabetical), then **Custom AIs** / **Additional AI** (alphabetical), with group labels. Previously the drawer was a flat list with inconsistent ordering.
+
+### Files changed
+- `js/api-links.js` — `_guideConsoleItems()` returns grouped data; `openConsolesDrawer()` renders per-group labels and alphabetizes items within each group.
+- `js/app.js` — `toggleHiveConsoles()` splits the live hive into default/custom groups.
+- `style.css` — `.consoles-group-label` styling.
+- `js/version.js`, helper `js/*` headers, `index.html` + 5 helper pages — build/version/cache-bust sync to v3.56.44.
+
+---
+
 ## v3.56.43
 **Build:** `20260525-006` · **Released:** May 25, 2026
 
