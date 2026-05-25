@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-010
+//  Build: 20260524-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-010';         // build stamp — update each session
+const BUILD       = '20260524-011';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3205,6 +3205,19 @@ function dismissTemplateHintBanner() {
 // Custom rows have a delete-checkbox (bulk-remove path); defaults have
 // no action button on the summary line (defaults can't be removed,
 // only their key cleared inside the expanded panel).
+// v3.56.25 — Hive cards always render alphabetically by name, regardless of
+// how activeAIs/aiList were assembled (fresh, migrated, server-imported, or
+// added mid-session). Returns a sorted COPY — the underlying activeAIs/aiList
+// arrays, convergence counting, sessionAIs, and iteration order are all left
+// untouched. Display order and data order are deliberately decoupled. The one
+// place this also informs logic is the *default* Builder pick (first active
+// alphabetically), which is a fallback only and never overrides a user choice.
+function _aiListAlpha(arr) {
+  return (Array.isArray(arr) ? arr.slice() : []).sort((a, b) =>
+    String((a && a.name) || '').localeCompare(String((b && b.name) || ''), undefined, { sensitivity: 'base' })
+  );
+}
+
 function renderAISetupGrid() {
   const grid = document.getElementById('aiSetupGrid');
   if (!grid) return;
@@ -3235,7 +3248,7 @@ function renderAISetupGrid() {
     return isDefault || !isServerImport;
   });
 
-  grid.innerHTML = bulkSelectHTML + visible.map(ai => buildAISetupRowHTML(ai)).join('');
+  grid.innerHTML = bulkSelectHTML + _aiListAlpha(visible).map(ai => buildAISetupRowHTML(ai)).join('');
   renderBuilderPicker();
   renderHiveCountChip();
 }
@@ -3528,7 +3541,7 @@ function renderBuilderPicker() {
   if (!grid) return;
   if (activeAIs.length === 0) return;
   if (!builder || !activeAIs.find(a => a.id === builder)) {
-    builder = activeAIs[0].id;
+    builder = _aiListAlpha(activeAIs)[0].id;
   }
   // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
   // which bypassed the brand-match catalog AND silently hid the icon when
@@ -3536,7 +3549,7 @@ function renderBuilderPicker() {
   // three-tier chain applies: brand match → ai.icon → letter avatar (with
   // v3.32.15's first-alphanumeric pickup). 56px matches the .builder-pick-icon
   // sizing inside .builder-pick-grid-large (Setup 2 variant).
-  grid.innerHTML = activeAIs.map(ai => {
+  grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
     const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 56);
     return `
     <button class="builder-pick-btn ${builder === ai.id ? 'selected' : ''}"
@@ -9277,7 +9290,7 @@ function renderBeeStatusGrid() {
   const grid = document.getElementById('beeStatusGrid');
   if (!grid) return;
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
-  grid.innerHTML = activeAIs.map(ai => {
+  grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     const iconEl = resolveAiIcon(ai, 'hex-icon');
@@ -10190,7 +10203,7 @@ function renderBeeDotStrip() {
   const strip = document.getElementById('beeDotStrip');
   if (!strip) return;
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
-  strip.innerHTML = activeAIs.map(ai => {
+  strip.innerHTML = _aiListAlpha(activeAIs).map(ai => {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     const stateClass = isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive';
