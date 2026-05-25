@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-017
+//  Build: 20260524-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-017';         // build stamp — update each session
+const BUILD       = '20260524-018';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1628,7 +1628,7 @@ const VISION_DEFAULTS = {
   chatgpt: 'gpt-4o',
   claude:  'claude-sonnet-4-6',
   gemini:  'gemini-2.5-flash',
-  grok:    'grok-4',
+  grok:    'grok-4-fast-non-reasoning',
 };
 
 // v3.33.0 — Length mode overhaul (#8). Replaced the implicit

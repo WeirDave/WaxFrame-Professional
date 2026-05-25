@@ -83,9 +83,9 @@ AIs without a saved key remain visible in the hive and skip automatically each r
   <img src="screenshots/screenshot_setup2_dark.png" width="820" alt="Setup 2 — Builder">
 </p>
 
-The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer. It needs a paid API plan with real capacity — free-tier accounts run out mid-round. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin.
+The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer. It needs a paid API plan with real capacity — free-tier accounts run out mid-round. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin, though it is the slowest responder in the hive, so expect longer rounds.
 
-> **Gemini paid-tier caveat.** Gemini is free *only* while your Google AI Studio account has billing disabled. If you've added a credit card to AI Studio, Gemini requests can route through paid-tier paths and charge per token — and the Builder role is the cost amplifier (it reads everything every round). For casual use, keep AI Studio billing off. If billing is on, consider keeping Gemini as a Reviewer and using DeepSeek as Builder.
+> **Gemini paid-tier caveat.** Gemini is free *only* while your Google AI Studio account has billing disabled. If you've added a credit card to AI Studio, Gemini requests can route through paid-tier paths and charge per token — and the Builder role is the cost amplifier (it reads everything every round). For casual use, keep AI Studio billing off. If billing is on, consider keeping Gemini as a Reviewer and using DeepSeek as Builder (the cheapest Builder option, though slower per round).
 
 The Builder also acts as your handyman. Write a directive in the **Notes drawer** — *"rewrite the first paragraph,"* *"stop saying 'refine' so much,"* *"tighten paragraph three"* — and click **Send to Builder** to run just that one task without firing the full hive. Then **Smoke the Hive** when you want the reviewers to weigh in on the change. Pairing targeted Builder calls with full reviewer rounds is one of WaxFrame's most useful workflows.
 

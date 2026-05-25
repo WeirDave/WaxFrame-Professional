@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260524-017
+     Build: 20260524-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-017">
+  <meta name="waxframe-build" content="20260524-018">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.31">
+  <link rel="stylesheet" href="style.css?v=3.56.32">
 </head>
 <body>
 
@@ -158,7 +158,7 @@
           </div>
         </div>
         <div class="hp-section-body">
-          <p class="gold-tip-card"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder. Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Learn about tokens and how to save money →</a></p>
+          <p class="gold-tip-card"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder (though it's the slowest responder in the hive, so rounds take longer). Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Learn about tokens and how to save money →</a></p>
           <div class="builder-pick-grid-large" id="builderPickGrid"></div>
         </div>
       </div>
@@ -2020,7 +2020,7 @@
       <p><strong>Documentation</strong></p>
       <div class="goal-info-row">
         <span class="info-label">🔑 API Key Guide</span>
-        <span class="goal-info-desc">How to get an API key from each of the six default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity), with direct billing links and the exact paid-plan tier you need for the Builder role.</span>
+        <span class="goal-info-desc">How to get an API key from each of the six default providers (Anthropic, OpenAI, Google, Mistral, xAI, Perplexity), with direct billing links and the exact paid-plan tier you need for the Builder role.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">📋 Document Playbooks</span>
@@ -2064,7 +2064,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">What it costs</span>
-        <span class="goal-info-desc">One-time API credits, not monthly subscriptions. <strong>Gemini</strong> has a generous free tier (with billing left off your Google AI Studio account) — pair it with one paid provider (about $5 in credits) and you have the two AIs needed to start. The paid providers (ChatGPT, Claude, DeepSeek, xAI, Perplexity) start around $5 each in one-time credits. A 3-AI hive runs about $10; all six providers about $30 total — versus the $120+/month an equivalent stack of consumer subscriptions would cost. <strong>Heads up:</strong> once you enable billing on Google AI Studio, Gemini can start charging per token — watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer" class="link-accent">AI Studio usage page</a> during longer runs, especially with Gemini as Builder. Per-provider pricing and billing links are in the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide</a>.</span>
+        <span class="goal-info-desc">One-time API credits, not monthly subscriptions. <strong>Gemini</strong> has a generous free tier (with billing left off your Google AI Studio account) — pair it with one paid provider (about $5 in credits) and you have the two AIs needed to start. The paid providers (ChatGPT, Claude, Mistral, xAI, Perplexity) start around $5 each in one-time credits. A 3-AI hive runs about $10; all six providers about $30 total — versus the $120+/month an equivalent stack of consumer subscriptions would cost. <strong>Heads up:</strong> once you enable billing on Google AI Studio, Gemini can start charging per token — watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer" class="link-accent">AI Studio usage page</a> during longer runs, especially with Gemini as Builder. Per-provider pricing and billing links are in the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide</a>.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">AIs without keys</span>
@@ -2084,7 +2084,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">CORS errors</span>
-        <span class="goal-info-desc">CORS is a browser security rule that decides whether a webpage running at <code>weirdave.github.io</code> is allowed to read responses from a given API endpoint. The 6 default providers (Anthropic, OpenAI, Google, DeepSeek, xAI, Perplexity) all whitelist browser clients, so you'll never see CORS errors with default keys. You'll see them with <strong>custom endpoints</strong> — Open WebUI / Ollama / internal gateways like Alfredo — when the gateway operator hasn't added <code>Access-Control-Allow-Origin</code> for browser callers. The fix is on the gateway side, not on WaxFrame's side. Click the ⓘ on Test All Keys for the full troubleshooting reference.</span>
+        <span class="goal-info-desc">CORS is a browser security rule that decides whether a webpage running at <code>weirdave.github.io</code> is allowed to read responses from a given API endpoint. The 6 default providers (Anthropic, OpenAI, Google, Mistral, xAI, Perplexity) all whitelist browser clients, so you'll never see CORS errors with default keys. You'll see them with <strong>custom endpoints</strong> — Open WebUI / Ollama / internal gateways like Alfredo — when the gateway operator hasn't added <code>Access-Control-Allow-Origin</code> for browser callers. The fix is on the gateway side, not on WaxFrame's side. Click the ⓘ on Test All Keys for the full troubleshooting reference.</span>
       </div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Don't have keys yet? Open the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ↗</a> for step-by-step instructions and direct billing links for each provider.</p>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step1" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 1: Set Up Your Worker Bees ↗</a></p>
@@ -2199,7 +2199,7 @@
     <div class="goal-info-body">
       <p>Your hive is the team of AIs collaborating on your document each round. Every checked AI with a saved API key participates automatically. AIs without a key are skipped silently.</p>
       <div class="goal-info-row"><span class="info-label">Reviewers</span><span class="goal-info-desc">Every AI in your hive reviews the document each round — reading it in full and submitting specific numbered suggestions.</span></div>
-      <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds. In a full round it reads all reviewer suggestions and rewrites the document. Between rounds it also acts as your <strong>handyman</strong> — give it a directive in the Notes drawer (<em>"rewrite the first paragraph"</em>, <em>"stop saying 'refine'"</em>) and click <strong>Send to Builder</strong> to make a targeted change without running the full hive. Then Smoke the Hive to see if the reviewers agree. The Builder uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
+      <div class="goal-info-row"><span class="info-label">Builder</span><span class="goal-info-desc">The Builder both reviews and builds. In a full round it reads all reviewer suggestions and rewrites the document. Between rounds it also acts as your <strong>handyman</strong> — give it a directive in the Notes drawer (<em>"rewrite the first paragraph"</em>, <em>"stop saying 'refine'"</em>) and click <strong>Send to Builder</strong> to make a targeted change without running the full hive. Then Smoke the Hive to see if the reviewers agree. The Builder uses significantly more tokens than reviewers and should have a paid API key. DeepSeek is the best value, though it's the slowest responder so expect longer rounds. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini.</span></div>
       <div class="goal-info-row"><span class="info-label">Status indicators</span><span class="goal-info-desc">Idle → Reviewing → Done → Building. Each AI shows its current status live during a round.</span></div>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step7" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 7: The Work Screen ↗</a></p>
     </div>
@@ -2380,20 +2380,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.31"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.31"></script>
-<script src="lib/jszip.min.js?v=3.56.31"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.31"></script>
-<script src="js/version.js?v=3.56.31"></script>
-<script src="js/storage.js?v=3.56.31"></script>
-<script src="js/theme.js?v=3.56.31"></script>
-<script src="js/audio.js?v=3.56.31"></script>
-<script src="js/scenes.js?v=3.56.31"></script>
-<script src="js/wf-debug.js?v=3.56.31"></script>
-<script src="js/api.js?v=3.56.31"></script>
-<script src="js/templates.js?v=3.56.31"></script>
-<script src="js/api-links.js?v=3.56.31"></script>
-<script src="js/app.js?v=3.56.31"></script>
+<script src="lib/pdf.min.js?v=3.56.32"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.32"></script>
+<script src="lib/jszip.min.js?v=3.56.32"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.32"></script>
+<script src="js/version.js?v=3.56.32"></script>
+<script src="js/storage.js?v=3.56.32"></script>
+<script src="js/theme.js?v=3.56.32"></script>
+<script src="js/audio.js?v=3.56.32"></script>
+<script src="js/scenes.js?v=3.56.32"></script>
+<script src="js/wf-debug.js?v=3.56.32"></script>
+<script src="js/api.js?v=3.56.32"></script>
+<script src="js/templates.js?v=3.56.32"></script>
+<script src="js/api-links.js?v=3.56.32"></script>
+<script src="js/app.js?v=3.56.32"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

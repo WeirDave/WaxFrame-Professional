@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260524-017
+     Build: 20260524-018
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-017">
+  <meta name="waxframe-build" content="20260524-018">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.31">
+  <link rel="stylesheet" href="style.css?v=3.56.32">
 </head>
 <body class="helper-body">
 
@@ -86,6 +86,19 @@
 </div>
 
 <div class="page-main">
+<div class="doc-layout">
+  <aside class="doc-sidebar">
+    <div class="doc-sidebar-inner">
+      <div class="doc-sidebar-title">API Key Guide</div>
+      <div class="doc-sidebar-category">Get Your API Keys</div>
+      <a href="#keys-free" class="doc-sidebar-link">Free &amp; low-cost AIs</a>
+      <a href="#keys-paid" class="doc-sidebar-link">Pay-as-you-go AIs</a>
+      <div class="doc-sidebar-category">Reference</div>
+      <a href="#hive" class="doc-sidebar-link">🐝 Know Your Hive</a>
+      <a href="#tips" class="doc-sidebar-link">💡 General Tips</a>
+    </div>
+  </aside>
+  <div class="doc-main">
 
 <!-- ── SECTION 1: API KEY SETUP ── -->
 
@@ -105,7 +118,7 @@
   <!-- LEFT COLUMN -->
   <div class="col">
 
-    <h2>Free or low-cost AIs</h2>
+    <h2 id="keys-free">Free or low-cost AIs</h2>
 
     <div class="wf-card is-accent">
       <h2 class="wf-card-title">What is an API key?</h2>
@@ -173,7 +186,7 @@
   <!-- RIGHT COLUMN -->
   <div class="col">
 
-    <h2>Pay-as-you-go AIs</h2>
+    <h2 id="keys-paid">Pay-as-you-go AIs</h2>
 
     <div class="ai-card">
       <div class="ai-card-header">
@@ -367,7 +380,7 @@
 
 <!-- ── SECTION 2: KNOW YOUR HIVE ── -->
 
-<div class="hp-section">
+<div class="hp-section" id="hive">
   <div class="hp-section-header">
     <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="hp-section-bee">
     <div class="hp-section-title-block">
@@ -778,7 +791,7 @@
 
 <!-- ── SECTION 3: GENERAL TIPS ── -->
 
-<div class="hp-section">
+<div class="hp-section" id="tips">
   <div class="hp-section-header is-bare">
     <div class="hp-section-title-block">
       <h1 class="hp-section-title">General Tips</h1>
@@ -796,6 +809,8 @@
   </div><!-- /hp-section-body Section 3 -->
 </div><!-- /hp-section Section 3 -->
 
+  </div><!-- /.doc-main -->
+</div><!-- /.doc-layout -->
 </div><!-- /page-main -->
 
 <div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
@@ -893,11 +908,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.56.31"></script>
-<script src="js/nav-helper.js?v=3.56.31"></script>
-<script src="js/license-helper.js?v=3.56.31"></script>
-<script src="js/api-links.js?v=3.56.31"></script>
-<script src="js/version.js?v=3.56.31"></script>
+<script src="js/theme.js?v=3.56.32"></script>
+<script src="js/nav-helper.js?v=3.56.32"></script>
+<script src="js/license-helper.js?v=3.56.32"></script>
+<script src="js/api-links.js?v=3.56.32"></script>
+<script src="js/version.js?v=3.56.32"></script>
+<script src="js/docs-scrollspy.js?v=3.56.32"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
