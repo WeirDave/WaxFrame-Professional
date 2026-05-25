@@ -2,6 +2,25 @@
 
 ---
 
+## v3.56.22
+**Build:** `20260524-008` · **Released:** May 24, 2026
+
+### Console logs: who did it — you or Auto?
+
+The Auto state-change log lines didn't make it clear whether a given event was user-initiated or system-initiated. The emoji wasn't a reliable signal (`🤖` was used for both system pauses and user-clicked Resume/Promote), the distinction lived only in subtle wording ("switched to Manual" vs "unanimous convergence"), and `autoHaltStop()` ("Stop here") logged nothing at all.
+
+Every Auto state-change line is now tagged by actor:
+- **`👤 You …`** for user actions — turned Auto ON/OFF, resumed, stopped, promoted the backup Builder, reset Auto settings.
+- **`🤖 Auto …`** for system events — paused (ceiling / stall / failure-streak / decision / churn), turned OFF on convergence, deferred chains, kept-round-in-Auto.
+
+`autoHaltStop()` now logs `👤 You stopped Auto` (previously silent). Scanning the left edge of a transcript now answers "me or the machine?" at a glance.
+
+### Files changed
+- `js/app.js` — actor tags (`👤`/`🤖`) across all Auto state-change console lines; added the missing `autoHaltStop` log; build stamps.
+- `index.html`, `js/version.js`, `js/api-links.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.22.
+
+---
+
 ## v3.56.21
 **Build:** `20260524-007` · **Released:** May 24, 2026
 
