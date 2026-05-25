@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-006
+//  Build: 20260524-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-006';         // build stamp — update each session
+const BUILD       = '20260524-007';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4575,16 +4575,21 @@ function lengthGuardPrompt({ kind = 'over', actual, prevActual, limitNum, unitNa
       }
     }
 
-    // ── Prior + Trajectory rows: hide for convergence kinds (no round-to-round comparison applies) ──
-    if (priorRow) priorRow.classList.toggle('is-hidden', isConvergence);
-    if (deltaRow) deltaRow.classList.toggle('is-hidden', isConvergence);
+    // ── Prior + Trajectory rows: hide for convergence kinds (no round-to-round
+    // comparison applies) AND when there is no prior document (first round /
+    // fresh draft). v3.56.20 — without the no-prior guard, the trajectory showed
+    // `actual - 0` (e.g. "↑ 1,431 words"), the full document size masquerading as
+    // an overage. The Distance row already states the real over/under amount. ──
+    const noPrior = !(prevActual > 0);
+    if (priorRow) priorRow.classList.toggle('is-hidden', isConvergence || noPrior);
+    if (deltaRow) deltaRow.classList.toggle('is-hidden', isConvergence || noPrior);
 
     // ── Values ──
     if (priorEl)  priorEl.textContent  = `${fmt(prevActual || 0)} ${unitName}`;
     if (actualEl) actualEl.textContent = `${fmt(actual)} ${unitName}`;
     if (limitEl)  limitEl.textContent  = limitName || `${fmt(limitNum)} ${unitName}`;
     if (deltaRow) deltaRow.classList.remove('is-improving', 'is-worsening', 'is-stalled');
-    if (deltaEl && !isConvergence) {
+    if (deltaEl && !isConvergence && !noPrior) {
       const delta = actual - prevActual;
       // For 'under', shrinking is worsening and growing is improving — flip the sign semantics.
       const movingTowardTarget = isUnder ? (delta > 0) : (delta < 0);
@@ -11515,7 +11520,18 @@ async function runRound() {
   // Phase 2: Builder compiles ALL reviews (including its own) into updated document
   const failedCount = allReviewers.length - successfulReviews.length;
   if (failedCount > 0) consoleLog(`⚠️ ${failedCount} AI${failedCount!==1?'s':''} failed — continuing with ${successfulReviews.length} response${successfulReviews.length!==1?'s':''}`, 'warn');
-  if (noChangesCount > 0 && noChangesCount === successfulReviews.length) {
+  // v3.56.20 — Convergence is measured on surviving responses, but don't DECLARE
+  // convergence when more reviewers failed than succeeded. Otherwise a round where
+  // most of the hive errored out and the lone survivor said "no changes" would
+  // false-celebrate ("all AIs agree!" beside a wall of error cards). Small hives
+  // are unaffected (few/no failures); this only blocks the genuinely degraded
+  // "mostly broken, one surviving vote" case, which then continues as a normal
+  // Builder round so the user sees the failures and can re-run.
+  const _convergenceReliable = successfulReviews.length > 0 && failedCount <= successfulReviews.length;
+  if (failedCount > 0 && !_convergenceReliable) {
+    consoleLog(`⚠️ Convergence check skipped this round — more AIs failed (${failedCount}) than responded (${successfulReviews.length}). Running a normal Builder round instead.`, 'warn');
+  }
+  if (noChangesCount > 0 && noChangesCount === successfulReviews.length && _convergenceReliable) {
     consoleLog(`🏁 All AIs agree — no further changes needed.`, 'success');
     toast(`🏁 All ${noChangesCount} AIs agree the document is done!`, 5000);
 
@@ -11667,7 +11683,7 @@ async function runRound() {
   }
 
   // ── MAJORITY CONVERGENCE: skip Builder, show holdouts for user review ──
-  if (hasMajorityConvergence && holdouts.length > 0) {
+  if (hasMajorityConvergence && _convergenceReliable && holdouts.length > 0) {
     consoleLog(`🏁 Majority convergence — ${noChangesCount} of ${successfulReviews.length} AIs satisfied. Skipping Builder.`, 'success');
     toast(`🏁 ${noChangesCount} of ${successfulReviews.length} AIs are done — review the holdout suggestions below`, 5000);
 

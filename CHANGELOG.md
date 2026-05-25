@@ -2,6 +2,22 @@
 
 ---
 
+## v3.56.21
+**Build:** `20260524-007` · **Released:** May 24, 2026
+
+### Length-guard trajectory display + convergence reliability
+
+Two fixes from the round-orchestration audit:
+
+- **Length-guard trajectory row was misleading on the first round.** With no prior document, the Trajectory row rendered `actual − 0` — e.g. a 1,431-word first draft against a 1,400 target showed `↑ 1,431 words`, the whole document size masquerading as a 1,431-word overage when the real overage was 31 (correctly shown in the Distance row). `lengthGuardPrompt` now hides the Prior + Trajectory rows when there is no prior document (first round / fresh draft), the same way they're hidden for convergence prompts. Round-to-round trajectory only renders once there's a prior round to compare against.
+- **Convergence could be declared on a single surviving vote.** Convergence is measured on surviving responses, but `runRound` now refuses to *declare* unanimous or majority convergence when more reviewers failed than responded (`failedCount > successfulReviews.length`). Previously, a round where most of the hive errored out and the lone survivor said "no changes" would false-celebrate. Small hives are unaffected (few/no failures); the degraded "mostly broken, one vote" case now continues as a normal Builder round so the failures stay visible and the user can re-run.
+
+### Files changed
+- `js/app.js` — `lengthGuardPrompt` no-prior trajectory hide; `runRound` convergence-reliability guard on both convergence paths; build stamps.
+- `index.html`, `js/version.js`, `js/api-links.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.21.
+
+---
+
 ## v3.56.20
 **Build:** `20260524-006` · **Released:** May 24, 2026
 
