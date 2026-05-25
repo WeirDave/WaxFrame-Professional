@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-007
+//  Build: 20260524-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-007';         // build stamp — update each session
+const BUILD       = '20260524-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -665,7 +665,7 @@ async function resetAutoSettings() {
   Object.values(AUTO_SETTINGS).forEach(s => localStorage.setItem(s.key, s.def));
   renderSettings();
   toast('↺ Auto settings reset to defaults', 3000);
-  consoleLog('↺ Auto Mode settings reset to defaults.', 'info');
+  consoleLog('👤 You reset Auto Mode settings to defaults.', 'info');
 }
 
 // ── AUDIO ──
@@ -2129,7 +2129,7 @@ function toggleAutoMode() {
     window._autoLengthDirective    = '';
     if (typeof consoleLog === 'function') {
       const left = Math.max(0, window._autoCeilingTarget - r);
-      consoleLog(`🚀 Auto mode ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)`, 'info');
+      consoleLog(`👤 You turned Auto ON — ceiling round ${window._autoCeilingTarget}, current round ${r} (${left} left)`, 'info');
     }
     if (typeof toast === 'function') toast('🚀 Auto mode ON');
 
@@ -2147,7 +2147,7 @@ function toggleAutoMode() {
     }
   } else {
     // Disengaging — leave any in-flight round to finish, just don't chain
-    if (typeof consoleLog === 'function') consoleLog('🚀 Auto mode OFF — switched to Manual', 'info');
+    if (typeof consoleLog === 'function') consoleLog('👤 You turned Auto OFF — switched to Manual', 'info');
     if (typeof toast === 'function') toast('🚀 Auto mode OFF — Manual');
     window._autoCeilingTarget = null;
     window._autoSatisfiedHist = [];
@@ -2258,7 +2258,7 @@ function _autoMaybeChainNextRound(ctx) {
     window._autoChainDeferred    = null;
     updateAutoToggleUI();
     consoleLog(
-      `🤖 Auto Mode OFF — ${ctx.outcome === 'unanimous' ? 'unanimous convergence' : 'majority convergence'}`,
+      `🤖 Auto turned OFF — ${ctx.outcome === 'unanimous' ? 'unanimous convergence' : 'majority convergence'}`,
       'info'
     );
     return;
@@ -2500,7 +2500,7 @@ function autoHaltResume() {
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
   if (typeof consoleLog === 'function') {
-    consoleLog(`🤖 Auto resumed — ceiling extended to round ${window._autoCeilingTarget}`, 'info');
+    consoleLog(`👤 You resumed Auto — ceiling extended to round ${window._autoCeilingTarget}`, 'info');
   }
   if (typeof toast === 'function') toast('🤖 Auto resumed');
   updateAutoToggleUI();
@@ -2525,6 +2525,9 @@ function autoHaltSwitchManual() {
 function autoHaltStop() {
   const modal = document.getElementById('autoHaltModal');
   if (modal) modal.classList.remove('active');
+  // v3.56.22 — Was console-silent. A user clicking "Stop here" left no forensic
+  // trace; now tagged as a user action like the other Auto state changes.
+  if (typeof consoleLog === 'function') consoleLog('👤 You stopped Auto — toggle off or click Smoke to continue', 'info');
   // Leave Auto toggled on, but don't chain. User can Resume manually
   // by flipping the toggle off and back on, or by clicking Smoke.
   // Reset stall + failure so a manual chain doesn't immediately re-trip.
@@ -2551,7 +2554,7 @@ function autoHaltPromoteBackup() {
   const r = (typeof round === 'number') ? round : 1;
   window._autoCeilingTarget = r + AUTO_MAX_ROUNDS_DEFAULT;
   if (typeof consoleLog === 'function') {
-    consoleLog(`🤖 Auto resumed — promoted backup Builder, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
+    consoleLog(`👤 You promoted the backup Builder — Auto resumed, ceiling extended to round ${window._autoCeilingTarget}`, 'info');
   }
   updateAutoToggleUI();
   _autoFireChainedRound('backup-promoted');
