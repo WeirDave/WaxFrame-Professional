@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260524-008
+// Build: 20260524-009
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -10,10 +10,10 @@
 window.API_CONSOLE_URLS = {
   chatgpt:    'https://platform.openai.com/api-keys',
   claude:     'https://console.anthropic.com/settings/keys',
-  deepseek:   'https://platform.deepseek.com/api_keys',
   gemini:     'https://aistudio.google.com/apikey',
   grok:       'https://console.x.ai',
-  perplexity: 'https://console.perplexity.ai'
+  perplexity: 'https://console.perplexity.ai',
+  mistral:    'https://console.mistral.ai/api-keys'
 };
 
 // Open the API key / sign-up console for every default AI in new tabs.
