@@ -3019,6 +3019,7 @@ html, body {
 .custom-ai-info-body ul { margin: var(--space-4) 0 var(--space-12) 0; padding-left: var(--space-20); }
 .custom-ai-info-body li { margin: 2px 0; }
 .custom-ai-info-body code {
+  white-space: nowrap;   /* v3.56.32 — keep paths like /v1/chat/completions on one line */
   font-family: 'Courier New', monospace;
   font-size: var(--fs-12);
   background: var(--surface2);
