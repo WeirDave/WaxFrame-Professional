@@ -1,6 +1,30 @@
 # WaxFrame Professional — Changelog
 
 ---
+
+## v3.56.17
+**Build:** `20260524-003` · **Released:** May 24, 2026
+
+### Single source of truth for API-console URLs — duplicate opener eliminated
+
+`openAllConsoles()` was defined twice: a `DEFAULT_AIS`-driven version with toast feedback in `app.js`, and a hardcoded 6-URL copy in `api-links.js`. Because `index.html` loads both scripts (app.js then api-links.js), the api-links.js copy silently shadowed the app.js one at load time — the "Open default AI websites" button ran the static copy, not the catalog-driven one. The two copies of the URL list were also a drift hazard.
+
+Root cause: the default console URLs lived as logic-driving data in two places because the standalone `api-details.html` helper page needs them but does not load `app.js` (and so cannot see `DEFAULT_AIS`).
+
+Resolution — consolidate into the small shared file both pages already load:
+- `api-links.js` is now the **single home**: it owns `window.API_CONSOLE_URLS` (the canonical list, keyed by AI id) and the **only** `openAllConsoles()`. The opener dedupes, counts results, and surfaces toast feedback only where a `toast()` exists (the main app) — opening silently on standalone helper pages.
+- `app.js` no longer defines `openAllConsoles()`. `DEFAULT_AIS[].apiConsole` now reads from `API_CONSOLE_URLS`, with a `|| ''` fallback so the catalog never throws if the list fails to load.
+- `api-links.js` now loads **before** `app.js` in `index.html` so `DEFAULT_AIS` can read the shared list.
+
+No behavior change for users: the main-app button keeps its dedupe + toast feedback, and the `api-details.html` button keeps working. The per-AI console links on worker-bee cards and the troubleshooting card are unaffected (they still read `ai.apiConsole`).
+
+### Files changed
+- `js/api-links.js` — now owns `API_CONSOLE_URLS` + the sole `openAllConsoles()`.
+- `js/app.js` — removed duplicate `openAllConsoles()`; `DEFAULT_AIS` sourced from `API_CONSOLE_URLS`.
+- `index.html` — `api-links.js` reordered before `app.js`; version/cache-bust to v3.56.17.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.17.
+
+---
 ## v3.56.16
 **Build:** `20260524-002` · **Released:** May 24, 2026
 
