@@ -9503,12 +9503,20 @@ kbd {
 }
 .tkp-three-col {
   display: grid;
-  grid-template-columns: 280px 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 10px;
   padding: 6px 20px 2px;
   height: 65vh;
   min-height: 400px;
 }
+/* v3.56.29 — Sent/Received columns stay hidden until a row is clicked, so the
+   Test All Keys panel opens as one full-width AI list instead of two big empty
+   columns. selectTkpRow() adds --detail to reveal them; the single-key test
+   panel carries --detail in its markup since it always shows one result. */
+.tkp-three-col--detail { grid-template-columns: 280px 1fr 1fr; }
+.tkp-col-sent, .tkp-col-rcv { display: none; }
+.tkp-three-col--detail .tkp-col-sent,
+.tkp-three-col--detail .tkp-col-rcv { display: flex; }
 .tkp-col {
   display: flex;
   flex-direction: column;
