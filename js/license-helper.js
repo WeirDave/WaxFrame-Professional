@@ -15,7 +15,6 @@ const GUMROAD_PRODUCT_ID_HELPER = 'Iyg5j-ySEnBtA5CKcuVT9A==';
 
 // ── State helpers — pure localStorage reads ──
 function isLicensed() {
-  if (localStorage.getItem('waxframe_dev') === '1') return true;
   try {
     const data = JSON.parse(localStorage.getItem(LS_LICENSE_HELPER) || 'null');
     return data && data.valid === true && data.key;

@@ -880,6 +880,7 @@ async function backupSession() {
 
   const hive    = localStorage.getItem(LS_HIVE)    || null;
   const project = localStorage.getItem(LS_PROJECT) || null;
+  const license = localStorage.getItem(LS_LICENSE) || null;
   // Legacy localStorage session — almost always null since the IDB migration
   // ran ages ago. Kept for forward compatibility with any unmigrated browser.
   const sessionLS = localStorage.getItem(LS_SESSION) || null;
@@ -888,7 +889,7 @@ async function backupSession() {
   let sessionIDB = null;
   try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
 
-  if (!hive && !project && !sessionLS && !sessionIDB) {
+  if (!hive && !project && !license && !sessionLS && !sessionIDB) {
     toast('⚠️ Nothing to back up'); return;
   }
 
@@ -899,6 +900,7 @@ async function backupSession() {
     _waxframe_backup_ts:      Date.now(),
     LS_HIVE:           hive,
     LS_PROJECT:        project,
+    LS_LICENSE:        license,
     LS_SESSION:        sessionLS,
     IDB_SESSION:       sessionIDB,    // ← the actual round data
   };
@@ -1210,6 +1212,10 @@ async function importSession() {
         if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
         if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
         if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+        if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
+          if (data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
+          else localStorage.removeItem(LS_LICENSE);
+        }
         // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
         // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
         // ── (v3.35.2) IDB write is no longer optional ──

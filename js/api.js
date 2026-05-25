@@ -44,7 +44,7 @@
 //  runtime after both scripts have loaded):
 //    WF_DEBUG.captureFailure(...) — already on window via wf-debug.js
 //    consoleLog                   — Live Console output
-//    window.activeAIs, window._deprecatedModelFlags — state
+//    activeAIs, window._deprecatedModelFlags — state
 // ============================================================
 
 // ══════════════════════════════════════
@@ -592,7 +592,14 @@ async function detectDeprecatedModels(trigger = 'load') {
   // Build the candidate list — all active AIs with a key on a fetchable
   // provider. Custom AIs without a key but with _modelsEndpoint are
   // excluded for now (their model lists come from a different code path).
-  const candidates = (window.activeAIs || []).filter(ai => {
+  // activeAIs is declared as a top-level `let` in app.js. That creates a
+  // global lexical binding, not a window property, so `window.activeAIs`
+  // is usually undefined. Resolve the lexical binding at call time so the
+  // watchdog checks the live hive after app.js has loaded.
+  const activeList = (typeof activeAIs !== 'undefined' && Array.isArray(activeAIs))
+    ? activeAIs
+    : (Array.isArray(window.activeAIs) ? window.activeAIs : []);
+  const candidates = activeList.filter(ai => {
     const cfg = API_CONFIGS[ai.provider];
     return cfg && cfg._key && MODEL_FILTERS[ai.provider];
   });
