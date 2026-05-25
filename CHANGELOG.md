@@ -2,6 +2,43 @@
 
 ---
 
+## v3.56.31
+**Build:** `20260524-017` · **Released:** May 24, 2026
+
+### Fix: Quick Add list still offered Mistral, omitted DeepSeek
+
+Completes the v3.56.23 default-provider swap. That release updated the `QUICK_ADD_PROVIDERS` object in `app.js` (removed Mistral, which became a default; added DeepSeek, now opt-in) but the **static `<option>` list in `index.html` was never updated to match**. `populateQuickAddOptions()` only decorates existing options — it doesn't build them — so the modal kept showing a Mistral entry (redundant, since Mistral is a default worker bee) and never showed DeepSeek (whose preset existed but had no option).
+
+- Swapped the stale `Mistral` option for `DeepSeek` so the dropdown matches `QUICK_ADD_PROVIDERS`: DeepSeek, Together AI, Cohere, Ollama, LM Studio.
+
+One-line markup fix.
+
+### Files changed
+- `index.html` — Quick Add option list now matches the provider presets.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.31.
+
+---
+
+## v3.56.30
+**Build:** `20260524-016` · **Released:** May 24, 2026
+
+### Test All Keys — collapse Sent/Received until a row is clicked
+
+The Test All Keys panel opened as three columns — AI, Sent, Received — with the latter two sitting empty ("Click a row to see the request/response") until a row was selected, leaving two large blank columns on open.
+
+- The panel now opens as a **single full-width AI list**. Clicking any row reveals the Sent and Received columns.
+- The single-key test panel is unchanged — it always shows one result immediately, so it stays expanded by design.
+
+CSS-driven (a `--detail` modifier class) with a one-line reveal in `selectTkpRow` and a collapse-on-open reset in `testAllKeys`. Scoped to the test panel; nothing shared touched.
+
+### Files changed
+- `style.css` — collapse default + `.tkp-three-col--detail` reveal rules.
+- `index.html` — id on the mass panel; `--detail` on the always-expanded single-key panel.
+- `js/app.js` — reveal on row select; collapse on panel open.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.30.
+
+---
+
 ## v3.56.29
 **Build:** `20260524-015` · **Released:** May 24, 2026
 
