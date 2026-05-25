@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260525-006
+// Build: 20260525-007
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -59,11 +59,14 @@ function _clSafe(u) {
 
 // Fixed list for the API guide page: default 6 + library 3.
 function _guideConsoleItems() {
-  const items = [];
+  const defaults = [];
   for (const [id, url] of Object.entries(window.API_CONSOLE_URLS)) {
-    if (url) items.push({ name: _DEFAULT_CONSOLE_NAMES[id] || id, url });
+    if (url) defaults.push({ name: _DEFAULT_CONSOLE_NAMES[id] || id, url });
   }
-  return items.concat(_GUIDE_EXTRA_CONSOLES);
+  return [
+    { label: 'Default providers', items: defaults },
+    { label: 'Additional AI', items: [].concat(_GUIDE_EXTRA_CONSOLES) }
+  ];
 }
 
 function _ensureConsolesDrawer() {
@@ -85,23 +88,32 @@ function _ensureConsolesDrawer() {
   return d;
 }
 
-// items = [{ name, url }]. Invalid / non-http(s) URLs are dropped.
-function openConsolesDrawer(items) {
+// v3.56.44 — accepts an array of {label, items[{name,url}]} groups, renders
+// each with a label header, alphabetical within each group.
+function openConsolesDrawer(groups) {
   const d = _ensureConsolesDrawer();
   const list = d.querySelector('#consolesList');
-  const valid = (items || []).filter(it => it && _clSafe(it.url));
-  if (valid.length === 0) {
+  if (!groups || !groups.length || groups.every(function (g) { return !g.items || !g.items.length; })) {
     list.innerHTML = '<div class="consoles-empty">No API console links available.</div>';
-  } else {
-    list.innerHTML = valid.map(function (it) {
-      const url = _clSafe(it.url);
+    d.classList.add('active');
+    return;
+  }
+  var sortName = function (a, b) { return (a.name || '').localeCompare(b.name || ''); };
+  var html = '';
+  groups.forEach(function (g) {
+    var valid = (g.items || []).filter(function (it) { return it && _clSafe(it.url); }).sort(sortName);
+    if (!valid.length) return;
+    if (g.label) html += '<div class="consoles-group-label">' + _clEsc(g.label) + '</div>';
+    html += valid.map(function (it) {
+      var url = _clSafe(it.url);
       return '<a class="consoles-link" href="' + _clEsc(url) + '" target="_blank" rel="noopener noreferrer">' +
         '<span class="consoles-link-name">' + _clEsc(it.name) + '</span>' +
         '<span class="consoles-link-host">' + _clEsc(_clHost(url)) + '</span>' +
         '<span class="consoles-link-arrow">↗</span>' +
       '</a>';
     }).join('');
-  }
+  });
+  list.innerHTML = html || '<div class="consoles-empty">No API console links available.</div>';
   d.classList.add('active');
 }
 
