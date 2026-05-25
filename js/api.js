@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-//  Build: 20260525-010
+//  Build: 20260525-011
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -348,15 +348,22 @@ const CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
 const DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
 
 // MODEL_FILTERS — null means "this provider has no /v1/models endpoint, use
-// MODEL_FALLBACKS instead" (Perplexity). Otherwise everyone shares the same
-// structural filter, plus per-provider extras.
+// MODEL_FALLBACKS instead". Otherwise everyone shares the same structural
+// filter, plus per-provider extras.
 const MODEL_FILTERS = {
   chatgpt:    id => !STRUCTURAL_NON_CHAT_RE.test(id) && !CHATGPT_RESPONSES_ONLY_RE.test(id) && !DATED_SNAPSHOT_RE.test(id),
   claude:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
   gemini:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
   grok:       id => !STRUCTURAL_NON_CHAT_RE.test(id),
   deepseek:   id => !STRUCTURAL_NON_CHAT_RE.test(id),
-  perplexity: null,
+  // v3.56.48 — Perplexity's /v1/models is a gateway that also resells frontier
+  // models (anthropic/claude-*, gpt-5.x, gemini-3.x, grok-4.x, nvidia/*) plus
+  // pplx-embed-* embeddings. Those frontier models duplicate Worker Bees that
+  // already run directly (markup + an extra hop), and embeddings aren't chat.
+  // Perplexity's unique hive value is the Sonar line — real-time web-grounded
+  // review w/ citations — so whitelist ^sonar only. Was null (forced to
+  // MODEL_FALLBACKS); now goes live.
+  perplexity: id => !STRUCTURAL_NON_CHAT_RE.test(id) && /^sonar/i.test(id),
 };
 
 // Custom AI Add flow uses the same structural filter — naming was previously
@@ -382,7 +389,13 @@ async function fetchModelsForProvider(provider) {
     let models = [];
 
     if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'perplexity') {
-      const baseUrl = cfg.endpoint.replace(/\/v1\/.*/, '');
+      // v3.56.48 — derive the base from the endpoint's origin instead of
+      // regex-stripping "/v1/...". Perplexity's endpoint is /chat/completions
+      // with NO /v1/ segment, so the old replace() left it intact and we
+      // fetched .../chat/completions/v1/models → 404 → silent MODEL_FALLBACKS.
+      // origin yields https://api.perplexity.ai for Perplexity and the
+      // identical base for openai/x.ai/deepseek, so only Perplexity changes.
+      const baseUrl = new URL(cfg.endpoint).origin;
       const resp = await fetch(`${baseUrl}/v1/models`, {
         headers: cfg.headersFn(cfg._key)
       });
@@ -392,10 +405,13 @@ async function fetchModelsForProvider(provider) {
       // v3.56.46 — order by real recency (created epoch), newest first,
       // instead of alphabetically. recommendForDefault then takes the newest
       // *viable* model as the asker. No `created` ⇒ insertion order preserved.
-      models = (data?.data || [])
-        .filter(m => filter(m.id))
-        .sort((a, b) => (b.created || 0) - (a.created || 0))
-        .map(m => m.id);
+      // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
+      // meaningless there; keep the API's own order (like Gemini, no usable date).
+      let entries = (data?.data || []).filter(m => filter(m.id));
+      if (provider !== 'perplexity') {
+        entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      }
+      models = entries.map(m => m.id);
 
     } else if (provider === 'claude') {
       // v3.32.13 — route through the same CF Worker proxy that handles
@@ -510,7 +526,13 @@ async function fetchModelsForProviderLive(provider) {
     let models = [];
 
     if (provider === 'chatgpt' || provider === 'grok' || provider === 'deepseek' || provider === 'perplexity') {
-      const baseUrl = cfg.endpoint.replace(/\/v1\/.*/, '');
+      // v3.56.48 — derive the base from the endpoint's origin instead of
+      // regex-stripping "/v1/...". Perplexity's endpoint is /chat/completions
+      // with NO /v1/ segment, so the old replace() left it intact and we
+      // fetched .../chat/completions/v1/models → 404 → silent MODEL_FALLBACKS.
+      // origin yields https://api.perplexity.ai for Perplexity and the
+      // identical base for openai/x.ai/deepseek, so only Perplexity changes.
+      const baseUrl = new URL(cfg.endpoint).origin;
       const resp = await fetch(`${baseUrl}/v1/models`, {
         headers: cfg.headersFn(cfg._key)
       });
@@ -520,10 +542,13 @@ async function fetchModelsForProviderLive(provider) {
       // v3.56.46 — order by real recency (created epoch), newest first,
       // instead of alphabetically. recommendForDefault then takes the newest
       // *viable* model as the asker. No `created` ⇒ insertion order preserved.
-      models = (data?.data || [])
-        .filter(m => filter(m.id))
-        .sort((a, b) => (b.created || 0) - (a.created || 0))
-        .map(m => m.id);
+      // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
+      // meaningless there; keep the API's own order (like Gemini, no usable date).
+      let entries = (data?.data || []).filter(m => filter(m.id));
+      if (provider !== 'perplexity') {
+        entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
+      }
+      models = entries.map(m => m.id);
 
     } else if (provider === 'claude') {
       // Route through the CF Worker proxy for the same CORS reason as

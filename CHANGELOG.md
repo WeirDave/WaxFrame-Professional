@@ -2,6 +2,39 @@
 
 ---
 
+## v3.56.48
+**Build:** `20260525-011` · **Released:** May 25, 2026
+
+### Fix: Perplexity now uses its live model catalog (Sonar-only)
+
+Perplexity never reached its `/v1/models` endpoint. Two bugs stacked on top of each other:
+
+- **Gated off entirely.** `MODEL_FILTERS.perplexity` was `null`, so `fetchModelsForProvider` / `...Live` (in `js/api.js`) bailed *before any network call* and always fell back to the hardcoded `MODEL_FALLBACKS` list.
+- **Wrong URL even if it hadn't.** The base-URL derivation regex-stripped `/v1/...` from `cfg.endpoint`. Perplexity's endpoint is `https://api.perplexity.ai/chat/completions` — **no `/v1/` segment** — so nothing was stripped and the fetch would have hit `.../chat/completions/v1/models` → 404.
+
+Both fixed:
+
+- Base URL now derives from `new URL(cfg.endpoint).origin` instead of the fragile regex. Output is **identical** for OpenAI / xAI / DeepSeek; only Perplexity's behavior changes (now correctly `https://api.perplexity.ai/v1/models`).
+- `MODEL_FILTERS.perplexity` now whitelists **`^sonar` only**. Perplexity's `/v1/models` is a gateway that also resells frontier models (`anthropic/claude-*`, `gpt-5.x`, `gemini-3.x`, `grok-4.x`, `nvidia/*`) plus `pplx-embed-*` embeddings — the frontier models duplicate Worker Bees that already run directly (markup + an extra hop), and embeddings aren't chat models. The Sonar line (real-time, web-grounded review with citations) is Perplexity's unique hive value, so only it surfaces.
+- Perplexity is excluded from the v3.56.46 recency sort — it returns `created: 0` on every entry, so its API order is preserved (same treatment as Gemini, which also lacks a usable date).
+
+### Branding: stale `github.io` references repointed to `waxframe.com`
+
+Now that the canonical domain is `waxframe.com`, the remaining display/body references were updated (the SEO-tag pass in v3.56.47 was deliberately scoped to metadata only):
+
+- `index.html` mobile-overlay link — `href` and visible text → `waxframe.com`.
+- `waxframe-user-manual.html` print-header sub → `waxframe.com`.
+- `index.html` CORS troubleshooting copy (two spots) — the example browser origin a gateway operator must whitelist is now `waxframe.com`, not `weirdave.github.io`. The github.io origin no longer matches the live serving domain.
+- **Unchanged:** the WaxFrame **Free** link in `api-details.html` still points at `weirdave.github.io/WaxFrame-Free/` — Free has not migrated to a custom domain.
+
+### Files changed
+- `js/api.js` — Perplexity live catalog: `^sonar` filter, origin-based base URL (both fetch functions), recency-sort exclusion.
+- `index.html` — mobile-overlay link + CORS copy → `waxframe.com`.
+- `waxframe-user-manual.html` — print-header → `waxframe.com`.
+- `js/version.js`, `js/app.js`, helper `js/*` headers — build/version/cache-bust sync to v3.56.48.
+
+---
+
 ## v3.56.47
 **Build:** `20260525-010` · **Released:** May 25, 2026
 
