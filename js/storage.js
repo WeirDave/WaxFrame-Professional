@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260524-009
+//  Build: 20260524-010
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -651,6 +651,72 @@ function loadSettings() {
         }
       });
     }
+
+    // ── v3.56.24 — Default-set migration reconciliation ──
+    // The default provider set can change between versions (v3.56.23 swapped
+    // DeepSeek out for Mistral). That creates two saved-state hazards, both
+    // healed here so existing sessions self-repair on load:
+    //
+    //  (1) PROMOTED custom → duplicate. A provider the user Quick-Added
+    //      (stored as a custom with a timestamped id like "mistral_1699…",
+    //      its own endpoint) is now also a built-in default → two cards.
+    //      Fix: detect a custom whose endpoint matches a default provider's
+    //      endpoint, drop the redundant custom, and migrate its saved key
+    //      onto the now-default provider so nothing is lost.
+    //
+    //  (2) DEMOTED default → vanished. A provider that used to be a default
+    //      (never stored in customAIs) is no longer in DEFAULT_AIS, so the
+    //      rebuilt aiList omits it and its card disappears. Fix: if the saved
+    //      hive still references it AND it's a known provider (API_CONFIGS
+    //      has it), synthesize an aiList entry so it survives. Its key
+    //      already re-applies via the keys-merge below.
+    const _normEp = u => String(u || '').replace(/\/+$/, '').toLowerCase();
+    const _defByEndpoint = {};
+    DEFAULT_AIS.forEach(d => {
+      const ep = _normEp(API_CONFIGS[d.provider] && API_CONFIGS[d.provider].endpoint);
+      if (ep) _defByEndpoint[ep] = d.provider;
+    });
+    aiList = aiList.filter(a => {
+      if (DEFAULT_AIS.find(d => d.id === a.id)) return true; // keep defaults
+      const customEp = _normEp((API_CONFIGS[a.provider] && API_CONFIGS[a.provider].endpoint) || a.url);
+      const dupOf = _defByEndpoint[customEp];
+      if (dupOf && dupOf !== a.provider) {
+        const ck = (API_CONFIGS[a.provider] && API_CONFIGS[a.provider]._key) || (h.keys && h.keys[a.id]);
+        if (ck && API_CONFIGS[dupOf] && !API_CONFIGS[dupOf]._key) API_CONFIGS[dupOf]._key = ck;
+        if (typeof consoleLog === 'function') consoleLog(`🔀 Merged saved "${a.name}" into built-in ${(API_CONFIGS[dupOf] && API_CONFIGS[dupOf].label) || dupOf} (now a default).`, 'info');
+        // Remove the orphaned custom config so (a) nothing dangling persists
+        // on the next save and (b) the demoted-default restore loop below
+        // skips it (its !API_CONFIGS[id] guard now passes).
+        if (a.provider !== dupOf) delete API_CONFIGS[a.provider];
+        return false; // remove the duplicate custom
+      }
+      return true;
+    });
+    const _referenced = new Set([
+      ...(h.activeAIIds || []),
+      ...(h.knownDefaultIds || []),
+      ...Object.keys(h.keys || {})
+    ]);
+    const _restoreChatUrls = { deepseek: 'https://chat.deepseek.com', cohere: 'https://coral.cohere.com', together: 'https://api.together.ai', copilot: 'https://copilot.microsoft.com' };
+    _referenced.forEach(id => {
+      if (aiList.find(a => a.id === id)) return;   // already present
+      if (!API_CONFIGS[id]) return;                // not a known provider — skip
+      let icon = 'images/icon-generic.png';
+      if (typeof wfIconUpload !== 'undefined' && typeof wfIconUpload.matchCatalog === 'function') {
+        icon = wfIconUpload.matchCatalog(id) || icon;
+      }
+      aiList.push({
+        id,
+        name: (API_CONFIGS[id].label) || (id.charAt(0).toUpperCase() + id.slice(1)),
+        url: _restoreChatUrls[id] || '',
+        icon,
+        provider: id,
+        apiConsole: (typeof window !== 'undefined' && window.API_CONSOLE_URLS && window.API_CONSOLE_URLS[id])
+          || (typeof QUICK_ADD_PROVIDERS !== 'undefined' && QUICK_ADD_PROVIDERS[id] && QUICK_ADD_PROVIDERS[id].keyLink) || ''
+      });
+      if (typeof consoleLog === 'function') consoleLog(`♻️ Restored "${(API_CONFIGS[id].label) || id}" — no longer a default, kept from your saved hive.`, 'info');
+    });
+
     if (h.keys) {
       Object.keys(h.keys).forEach(id => {
         if (API_CONFIGS[id]) API_CONFIGS[id]._key = h.keys[id];

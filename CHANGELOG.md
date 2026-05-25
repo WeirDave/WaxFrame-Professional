@@ -2,6 +2,24 @@
 
 ---
 
+## v3.56.24
+**Build:** `20260524-010` · **Released:** May 24, 2026
+
+### Hotfix: heal saved hives across the v3.56.23 default-set change
+
+Swapping the default six in v3.56.23 (DeepSeek out, Mistral in) created two migration hazards for hives saved *before* the swap. Both are now self-healed on load in `loadHive`:
+
+- **Promoted-custom duplicate.** A provider the user had Quick-Added (stored as a custom with a timestamped id like `mistral_1699…` and its own endpoint) that is *now* also a built-in default showed up as two cards. `loadHive` now detects a custom whose endpoint matches a default provider's endpoint, drops the redundant custom, deletes its orphaned config, and migrates its saved API key onto the now-default provider.
+- **Demoted-default loss.** A provider that used to be a default (e.g. DeepSeek) was never stored in `customAIs`, so the rebuilt `aiList` dropped it entirely and its card vanished. `loadHive` now restores any saved-but-no-longer-default provider that is still a known first-class provider, synthesizing its `aiList` entry (its key already re-applies via the keys-merge).
+
+The reconciliation is generic — it heals any future default-set change in both directions, not just this one. New users and post-23 hives are unaffected.
+
+### Files changed
+- `js/storage.js` — default-set migration reconciliation in `loadHive`.
+- `index.html`, `js/version.js`, `js/app.js`, `js/api.js`, `js/api-links.js`, helper pages — version/cache-bust to v3.56.24.
+
+---
+
 ## v3.56.23
 **Build:** `20260524-009` · **Released:** May 24, 2026
 
