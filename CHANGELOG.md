@@ -2,6 +2,26 @@
 
 ---
 
+## v3.56.34
+**Build:** `20260524-020` · **Released:** May 24, 2026
+
+### Fix: Recommend Models failed on Together AI (non-serverless asking model)
+
+Recommend Models returned "couldn't get a recommendation" for Together AI (and would for any opt-in provider whose stored model is non-serverless). Root cause confirmed from the live `[recommend]` console log: a HTTP 400 `model_not_available` — "Unable to access non-serverless model Qwen/Qwen3-Next-80B-A3B-Instruct."
+
+Together's `/v1/models` lists dedicated-endpoint-only models alongside serverless ones; they pass the chat-type filter and can end up as `cfg.model`. The recommend flow used `cfg.model` (or `models[0]`) as the model it queries to make the recommendation, so it queried a model the standard API can't run → 400 → null result. Cohere was unaffected because its stored model (`command-r-plus`) is serverless.
+
+- The custom-AI recommend path now prefers a curated **serverless** model from `MODEL_FALLBACKS` as the asking model. Since custom AIs store `provider: id` (a generated id), the canonical provider is resolved by matching the endpoint URL against `QUICK_ADD_PROVIDERS` — so Together resolves to `together` and asks via `meta-llama/Llama-3.3-70B-Instruct-Turbo`.
+- Falls through to the prior `cfg.model` / `models[0]` behavior for unknown endpoints; no change for Cohere/Mistral/DeepSeek or arbitrary custom gateways.
+
+**Known limitation:** the model dropdown still lists every model Together's API returns, including dedicated-only ones, which 400 if selected for actual hive use — Together's model list has no reliable serverless flag to filter on. Recommend Models now steers toward a serverless pick.
+
+### Files changed
+- `js/app.js` — serverless-aware asking-model selection in the custom recommend path.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.34.
+
+---
+
 ## v3.56.33
 **Build:** `20260524-019` · **Released:** May 24, 2026
 
