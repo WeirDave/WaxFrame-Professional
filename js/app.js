@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-014
+//  Build: 20260524-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-014';         // build stamp — update each session
+const BUILD       = '20260524-015';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4084,6 +4084,7 @@ function showAddCustomAI() {
   if (consoleInput) { consoleInput.value = ''; delete consoleInput.dataset.userTyped; }
   const docsInput = document.getElementById('customAIDocsUrl');
   if (docsInput)    { docsInput.value = '';    delete docsInput.dataset.userTyped; }
+  syncCustomAIAdvanced();   // v3.56.29 — collapse Advanced (fields just cleared)
   resetModelField();
   populateQuickAddOptions();
   updateChooseModelLink();
@@ -5306,6 +5307,7 @@ function applyQuickAdd(value) {
   if (consoleInput && !consoleInput.dataset.userTyped) consoleInput.value = preset.keyLink || '';
   const docsInput = document.getElementById('customAIDocsUrl');
   if (docsInput && !docsInput.dataset.userTyped) docsInput.value = preset.chooseModelLink || '';
+  syncCustomAIAdvanced();   // v3.56.29 — auto-expand if the preset pre-filled URLs
 
   if (urlInput)  { urlInput.value = preset.url; }
   if (fmtSelect) fmtSelect.value = preset.format;
@@ -5406,6 +5408,31 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
   // appear twice). Set preserves insertion order so first occurrence wins.
   models = [...new Set(models)];
   return models;
+}
+
+// v3.56.29 — Advanced-options disclosure for the Add Custom Worker Bee modal.
+// The optional API Console URL + Docs URL fields live in a collapsible row so
+// the modal carries no empty space by default. toggleCustomAIAdvanced = manual
+// click; syncCustomAIAdvanced = auto-expand when either field already has a
+// value (a Quick-Add preset pre-fills them), otherwise collapse. The row is a
+// CSS grid, so reveal restores display:grid (not block) to keep its 2 columns.
+function toggleCustomAIAdvanced() {
+  const adv = document.getElementById('customAIAdvanced');
+  const btn = document.getElementById('customAIAdvancedToggle');
+  if (!adv) return;
+  const hidden = adv.style.display === 'none' || !adv.style.display;
+  adv.style.display = hidden ? 'grid' : 'none';
+  if (btn) btn.textContent = hidden ? '− Advanced options' : '+ Advanced options';
+}
+function syncCustomAIAdvanced() {
+  const adv = document.getElementById('customAIAdvanced');
+  const btn = document.getElementById('customAIAdvancedToggle');
+  if (!adv) return;
+  const c = document.getElementById('customAIConsoleUrl');
+  const d = document.getElementById('customAIDocsUrl');
+  const hasVal = !!((c && c.value.trim()) || (d && d.value.trim()));
+  adv.style.display = hasVal ? 'grid' : 'none';
+  if (btn) btn.textContent = hasVal ? '− Advanced options' : '+ Advanced options';
 }
 
 async function fetchCustomAIModels() {

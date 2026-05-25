@@ -2910,6 +2910,22 @@ html, body {
   grid-template-columns: 1fr 1fr;
   gap: var(--space-10);
 }
+/* v3.56.29 — single-field rows span full modal width (API Format, API Key). */
+.custom-ai-form-row--full { grid-template-columns: 1fr; }
+/* v3.56.29 — "+ Advanced options" disclosure for the optional URL fields. */
+.custom-ai-advanced-toggle {
+  align-self: flex-start;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-family: var(--font);
+  font-size: var(--fs-12);
+  font-weight: 600;
+  cursor: pointer;
+  padding: var(--space-4) 0;
+  margin: 0;
+}
+.custom-ai-advanced-toggle:hover { text-decoration: underline; }
 .custom-ai-field-wrap {
   display: flex;
   flex-direction: column;
