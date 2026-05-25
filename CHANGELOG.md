@@ -2,6 +2,24 @@
 
 ---
 
+## v3.56.25
+**Build:** `20260524-011` · **Released:** May 24, 2026
+
+### Hive cards always render alphabetically; default Builder follows suit
+
+The hive's active AIs now always display in alphabetical order by name — on the work screen, the bee-dot strip, the setup grid, and the Builder picker — regardless of how the list was assembled (fresh, migrated, server-imported, or added mid-session). This keeps the order fair and predictable (no provider gets fixed top billing) and incidentally cleans up the post-migration ordering artifact where a restored provider could land mid-list.
+
+- Added `_aiListAlpha()` — returns a name-sorted **copy** for display. The underlying `activeAIs` / `aiList` arrays, convergence counting, `sessionAIs`, and iteration order are all left untouched: display order and data order are decoupled.
+- The **default** Builder pick (the fallback used only when the user hasn't chosen one, or their chosen Builder is no longer active) now selects the first active AI alphabetically, matching the displayed order, instead of insertion order. An explicit user Builder choice always wins and is never overridden.
+
+No CSS changes — `style.css` and the work-screen grid (including the `80ch` document column) are untouched. JS-only.
+
+### Files changed
+- `js/app.js` — `_aiListAlpha()` helper; applied at the four card-render points and the default-Builder fallback.
+- `index.html`, `js/version.js`, `js/api.js`, `js/api-links.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.25.
+
+---
+
 ## v3.56.24
 **Build:** `20260524-010` · **Released:** May 24, 2026
 
