@@ -12278,3 +12278,26 @@ kbd {
   background: var(--accent, #f4b400);
   color: var(--bg);
 }
+
+/* ==============================================================
+   API GUIDE — single-column card flow  (api-details.html)
+   v3.56.39 — The API page was the only helper page using a
+   two-column panel grid. Collapse it to a single column so the
+   provider cards flow straight down doc-main exactly like the
+   User Manual and Document Playbooks pages. No new card styling:
+   the existing flat .wf-card / .ai-card treatment is reused as-is
+   so the page matches the rest of the documentation. Scoped to
+   .api-guide-cols — no other page is affected.
+   ============================================================== */
+
+.helper-body .two-col.api-guide-cols {
+  display: block;
+}
+
+.helper-body .api-guide-cols .col {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  gap: 0;
+}

@@ -2,6 +2,24 @@
 
 ---
 
+## v3.56.39
+**Build:** `20260525-003` · **Released:** May 25, 2026
+
+### API Key Guide — single-column layout for documentation consistency
+
+The API Key Guide (`api-details.html`) was the only documentation page that laid its content out in a two-column panel grid. Every other helper page — the User Manual, Document Playbooks, What Are Tokens — flows its cards straight down a single `doc-main` column. This release brings the API page in line so the documentation set reads consistently.
+
+- **Single-column card flow.** The page's `.two-col` grid is collapsed to a single column and the two `.col` panel wrappers are dissolved, so the provider cards (`.wf-card` / `.ai-card`) now flow straight down the page exactly like the other docs. The existing flat card styling is reused unchanged — no shadows, hover effects, or new heading treatments were added; the goal was consistency, not a redesign.
+- **Reading order unchanged.** Because the cards were already authored in sidebar-TOC order (Free & Low-Cost → Pay-As-You-Go → Reference), collapsing the columns preserves that exact top-to-bottom order — no markup was reordered.
+- **Fully scoped, zero regression.** The change is gated behind a new `.api-guide-cols` modifier class on the single API-page wrapper. `.two-col` is used on no other page, so nothing else in the app or docs is affected.
+
+### Files changed
+- `api-details.html` — `.api-guide-cols` modifier added to the content wrapper; build/version/cache-bust stamps to v3.56.39.
+- `style.css` — appended a scoped `.api-guide-cols` block (single-column collapse + panel dissolve).
+- `js/version.js`, `js/app.js`, all helper `js/*` headers, `index.html` + 5 helper pages — build/version/cache-bust/header sync to v3.56.39.
+
+---
+
 ## v3.56.38
 **Build:** `20260525-002` · **Released:** May 25, 2026
 
