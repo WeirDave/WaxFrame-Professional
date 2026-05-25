@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-020
+//  Build: 20260524-021
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-020';         // build stamp — update each session
+const BUILD       = '20260524-021';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4321,7 +4321,7 @@ Available models on this endpoint:
 Pick exactly ONE model: the best model for high-quality document review.
 
 Selection rules:
-- The model MUST be an exact model id from the list above.
+- Reply with the NUMBER shown beside your chosen model from the list above (a number, not the model name).
 - Must be a chat/text model suitable for document review, editing feedback, summarization, and instruction following.
 - Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
 - Standard non-reasoning chat models are PREFERRED when quality is comparable, because reasoning/thinking models are typically 5-10x slower and more expensive due to billable analysis output.
@@ -4330,7 +4330,7 @@ Selection rules:
 
 Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
 
-RECOMMENDED: <one exact model id from the list above>
+RECOMMENDED: <the number of your chosen model from the list above>
 RECOMMENDED_WHY: <one sentence, max 120 chars>`;
 
 const MODEL_RECOMMENDATION_PROMPT_BUILDER =
@@ -4351,7 +4351,7 @@ Available models on this endpoint:
 Pick exactly ONE model: the best standard chat-completion model for Builder use.
 
 Selection rules:
-- The model MUST be an exact model id from the list above.
+- Reply with the NUMBER shown beside your chosen model from the list above (a number, not the model name).
 - Must be a standard chat-completion model that follows strict output formatting reliably.
 - Do NOT recommend any model whose id, description, or known behavior suggests reasoning, thinking, deep-research, research, chain-of-thought, planner, agentic, reflective, or deliberative output.
 - Do NOT recommend embedding, rerank, moderation, image, audio, speech, transcription, or code-only models.
@@ -4361,7 +4361,7 @@ Selection rules:
 
 Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
 
-RECOMMENDED: <one exact model id from the list above, or NONE>
+RECOMMENDED: <the number of your chosen model from the list above, or NONE>
 RECOMMENDED_WHY: <one sentence, max 120 chars>`;
 
 // v3.32.10 — Code-side substring filters as defense-in-depth.
@@ -4831,7 +4831,10 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
   }
 
   const promptTemplate = getRecommendationPrompt(_role);
-  const prompt = promptTemplate.replace('{MODEL_LIST}', filteredModels.map(m => `- ${m}`).join('\n'));
+  // v3.56.35 — number the list so the AI selects by index, not by echoing an
+  // id. Echoing long ids from large catalogs is unreliable (the AI invents
+  // plausible-but-nonexistent ids); a number maps back to an exact list entry.
+  const prompt = promptTemplate.replace('{MODEL_LIST}', filteredModels.map((m, i) => `${i + 1}. ${m}`).join('\n'));
 
   let url, headers, body;
 
@@ -4887,41 +4890,58 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     }
 
     const cleanId = s => s.trim().replace(/^[`'"*]|[`'"*]$/g, '');
-    const rawModel = cleanId(recMatch[1]);
+    const rawPick = cleanId(recMatch[1]);
     const why = whyMatch ? cleanId(whyMatch[1]) : '';
 
     // NONE fallback path — AI explicitly declined to recommend.
-    if (/^NONE$/i.test(rawModel)) {
+    if (/^NONE$/i.test(rawPick)) {
       console.info(`[recommend:${cacheId}] AI returned NONE for role=${_role}: ${why}`);
       setCachedRecommendation(cacheId, null, why, {}, true);
       return { model: null, why, labels: {}, cached: false, none: true };
     }
 
-    // v3.32.10 — defense-in-depth: even though we filtered the list before
-    // sending, double-check the AI's pick against the role's disallowed
-    // patterns. Catches hallucinated picks that weren't in the filtered list.
-    if (NEVER_ALLOWED_PATTERN.test(rawModel)) {
-      console.warn(`[recommend:${cacheId}] AI returned structurally-incompatible model "${rawModel}" — rejecting.`);
-      return null;
+    // v3.56.35 — resolve the pick to an EXACT entry in the filtered list.
+    // PRIMARY: the AI replies with the NUMBER beside its choice (the list is
+    // presented numbered). Index selection is hallucination-proof — the AI
+    // cannot return a model that isn't on the endpoint, which is the failure
+    // mode on large catalogs (Together has 135 models and the AI offered a
+    // plausible-but-nonexistent "Llama-3.1-70B-Instruct"). FALLBACK: if a saved
+    // custom prompt still asks for an id, accept an exact (case-insensitive) id
+    // match. Anything that doesn't resolve to a real list entry is rejected.
+    // The leading-digit test deliberately requires the number to be followed by
+    // whitespace / punctuation / end so a model id that merely starts with
+    // digits (e.g. "01-ai/...") falls through to the id path, not index 1.
+    let resolved = null;
+    const numMatch = rawPick.match(/^#?(\d{1,4})(?:[\s.):\]]|$)/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1], 10) - 1;
+      if (idx >= 0 && idx < filteredModels.length) {
+        resolved = filteredModels[idx];
+      } else {
+        console.warn(`[recommend:${cacheId}] picked number ${numMatch[1]} out of range (1..${filteredModels.length}).`);
+        return null;
+      }
+    } else if (filteredModels.includes(rawPick)) {
+      resolved = rawPick;
+    } else {
+      const lc = rawPick.toLowerCase();
+      const ci = filteredModels.filter(m => m.toLowerCase() === lc);
+      if (ci.length === 1) resolved = ci[0];
     }
-    if (_role === 'builder' && BUILDER_DISALLOWED_PATTERN.test(rawModel)) {
-      console.warn(`[recommend:${cacheId}] AI returned reasoning/specialised model "${rawModel}" for Builder — rejecting.`);
+
+    if (!resolved) {
+      console.warn('[recommend] could not resolve pick to a list entry. Picked:', rawPick, '| list size:', filteredModels.length);
       return null;
     }
 
-    if (!filteredModels.includes(rawModel)) {
-      console.warn('[recommend] RECOMMENDED model not in fetched/filtered list. Picked:', rawModel, 'Filtered list:', filteredModels);
-      return null;
-    }
-
-    // Build single-entry labels map for dropdown rendering.
-    // Tag is role-derived ('Reviewer' or 'Builder') so the dropdown can
-    // distinguish the two recommendations when both apply to one model.
+    // `resolved` is guaranteed to be a member of filteredModels, which already
+    // passed filterModelsForRole — so role-safety (no reasoning models for the
+    // Builder, no structural non-chat models) holds by construction. No extra
+    // pattern recheck needed.
     const tag = _role === 'builder' ? 'Builder' : 'Reviewer';
-    const labels = { [rawModel]: { tag, why } };
-
-    setCachedRecommendation(cacheId, rawModel, why, labels);
-    return { model: rawModel, why, labels, cached: false };
+    const labels = { [resolved]: { tag, why } };
+    setCachedRecommendation(cacheId, resolved, why, labels);
+    return { model: resolved, why, labels, cached: false };
   } catch(e) {
     console.warn('[recommend] failed:', e);
     return null;
