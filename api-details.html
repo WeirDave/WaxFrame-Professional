@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260524-018
+     Build: 20260524-019
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-018">
+  <meta name="waxframe-build" content="20260524-019">
   <title>WaxFrame — API Key Guide</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.32">
+  <link rel="stylesheet" href="style.css?v=3.56.33">
 </head>
 <body class="helper-body">
 
@@ -90,9 +90,18 @@
   <aside class="doc-sidebar">
     <div class="doc-sidebar-inner">
       <div class="doc-sidebar-title">API Key Guide</div>
-      <div class="doc-sidebar-category">Get Your API Keys</div>
-      <a href="#keys-free" class="doc-sidebar-link">Free &amp; low-cost AIs</a>
-      <a href="#keys-paid" class="doc-sidebar-link">Pay-as-you-go AIs</a>
+      <div class="doc-sidebar-category">Free &amp; Low-Cost</div>
+      <a href="#prov-gemini" class="doc-sidebar-link">Gemini (Google)</a>
+      <a href="#prov-deepseek" class="doc-sidebar-link">DeepSeek</a>
+      <div class="doc-sidebar-category">Pay-As-You-Go</div>
+      <a href="#prov-chatgpt" class="doc-sidebar-link">ChatGPT (OpenAI)</a>
+      <a href="#prov-claude" class="doc-sidebar-link">Claude (Anthropic)</a>
+      <a href="#prov-grok" class="doc-sidebar-link">Grok (xAI)</a>
+      <a href="#prov-perplexity" class="doc-sidebar-link">Perplexity</a>
+      <a href="#prov-mistral" class="doc-sidebar-link">Mistral</a>
+      <a href="#prov-cohere" class="doc-sidebar-link">Cohere</a>
+      <a href="#prov-together" class="doc-sidebar-link">Together AI</a>
+      <a href="#prov-copilot" class="doc-sidebar-link">Copilot (Microsoft)</a>
       <div class="doc-sidebar-category">Reference</div>
       <a href="#hive" class="doc-sidebar-link">🐝 Know Your Hive</a>
       <a href="#tips" class="doc-sidebar-link">💡 General Tips</a>
@@ -138,7 +147,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" onerror="this.style.display='none'">
-        <div class="ai-card-name">Gemini (Google)</div>
+        <div class="ai-card-name" id="prov-gemini">Gemini (Google)</div>
         <span class="badge badge-free">Free tier available</span>
       </div>
       <div class="ai-card-body">
@@ -161,7 +170,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=64" onerror="this.style.display='none'">
-        <div class="ai-card-name">DeepSeek</div>
+        <div class="ai-card-name" id="prov-deepseek">DeepSeek</div>
         <span class="badge badge-free">Very affordable</span>
       </div>
       <div class="ai-card-body">
@@ -191,7 +200,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/chatgpt.ico" onerror="this.style.display='none'">
-        <div class="ai-card-name">ChatGPT (OpenAI)</div>
+        <div class="ai-card-name" id="prov-chatgpt">ChatGPT (OpenAI)</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -215,7 +224,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/claude.ico" onerror="this.style.display='none'">
-        <div class="ai-card-name">Claude (Anthropic)</div>
+        <div class="ai-card-name" id="prov-claude">Claude (Anthropic)</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -239,7 +248,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" onerror="this.style.display='none'">
-        <div class="ai-card-name">Grok (xAI)</div>
+        <div class="ai-card-name" id="prov-grok">Grok (xAI)</div>
         <span class="badge badge-limited">Limited availability</span>
       </div>
       <div class="ai-card-body">
@@ -261,7 +270,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/perplexity.ico" onerror="this.style.display='none'">
-        <div class="ai-card-name">Perplexity</div>
+        <div class="ai-card-name" id="prov-perplexity">Perplexity</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -287,7 +296,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/icon-mistral.png" onerror="this.style.display='none'">
-        <div class="ai-card-name">Mistral</div>
+        <div class="ai-card-name" id="prov-mistral">Mistral</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -310,7 +319,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/icon-cohere.png" onerror="this.style.display='none'">
-        <div class="ai-card-name">Cohere</div>
+        <div class="ai-card-name" id="prov-cohere">Cohere</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -333,7 +342,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="images/icon-together.png" onerror="this.style.display='none'">
-        <div class="ai-card-name">Together AI</div>
+        <div class="ai-card-name" id="prov-together">Together AI</div>
         <span class="badge badge-paid">Pay-as-you-go</span>
       </div>
       <div class="ai-card-body">
@@ -356,7 +365,7 @@
     <div class="ai-card">
       <div class="ai-card-header">
         <img src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=64" onerror="this.style.display='none'">
-        <div class="ai-card-name">Copilot (Microsoft)</div>
+        <div class="ai-card-name" id="prov-copilot">Copilot (Microsoft)</div>
         <span class="badge badge-limited">Ready when keys ship</span>
       </div>
       <div class="ai-card-body">
@@ -908,12 +917,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.56.32"></script>
-<script src="js/nav-helper.js?v=3.56.32"></script>
-<script src="js/license-helper.js?v=3.56.32"></script>
-<script src="js/api-links.js?v=3.56.32"></script>
-<script src="js/version.js?v=3.56.32"></script>
-<script src="js/docs-scrollspy.js?v=3.56.32"></script>
+<script src="js/theme.js?v=3.56.33"></script>
+<script src="js/nav-helper.js?v=3.56.33"></script>
+<script src="js/license-helper.js?v=3.56.33"></script>
+<script src="js/api-links.js?v=3.56.33"></script>
+<script src="js/version.js?v=3.56.33"></script>
+<script src="js/docs-scrollspy.js?v=3.56.33"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

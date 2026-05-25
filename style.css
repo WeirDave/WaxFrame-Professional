@@ -7886,6 +7886,8 @@ kbd {
 
 /* ── AI cards (api page) ── */
 .ai-card { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+/* v3.56.33 — TOC anchor jump clears the sticky page header (matches .dp-playbook). */
+.ai-card-name[id] { scroll-margin-top: 116px; }
 .ai-card-header {
   display: flex; align-items: center; gap: var(--space-12);
   padding: var(--space-10) var(--space-14); border-bottom: 1px solid var(--border);
