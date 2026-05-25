@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-013
+//  Build: 20260524-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-013';         // build stamp — update each session
+const BUILD       = '20260524-014';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5392,7 +5392,12 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
       .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
       .map(m => m.name.replace('models/', ''));
   } else {
-    models = (data?.data || []).map(m => m.id).sort();
+    // v3.56.28 — accept both shapes: OpenAI returns {data:[...]}, Together AI
+    // (and some gateways) return a bare array tagging each entry with a `type`
+    // (chat/image/video/audio/…). Keep only chat when that field is present;
+    // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
+    const _arr = Array.isArray(data) ? data : (data?.data || []);
+    models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
   }
   // Same structural-only filter the default 6 use
   models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
@@ -5444,7 +5449,12 @@ async function fetchCustomAIModels() {
         .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
         .map(m => m.name.replace('models/', ''));
     } else {
-      models = (data?.data || []).map(m => m.id).sort();
+      // v3.56.28 — accept both shapes: OpenAI returns {data:[...]}, Together AI
+      // (and some gateways) return a bare array tagging each entry with a `type`
+      // (chat/image/video/audio/…). Keep only chat when that field is present;
+      // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
+      const _arr = Array.isArray(data) ? data : (data?.data || []);
+      models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
     }
 
     if (!models.length) throw new Error('No models returned');

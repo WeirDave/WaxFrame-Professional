@@ -2,6 +2,25 @@
 
 ---
 
+## v3.56.28
+**Build:** `20260524-014` · **Released:** May 24, 2026
+
+### Fix: model fetch for Together AI (and other bare-array providers)
+
+The "Fetch Models" test in the Add a Custom Worker Bee modal failed for Together AI with a "can't fetch models" error. Together's `/v1/models` endpoint returns a bare top-level JSON array rather than the OpenAI-standard `{ "data": [...] }` wrapper, so both model parsers (`fetchCustomAIModels` and `fetchModelsFromEndpoint`) read `data.data`, got `undefined`, and returned an empty list. The key itself was valid the whole time.
+
+- Both OpenAI-compatible parsers now accept either shape — a bare array or a `{data:[...]}` wrapper.
+- When each model entry carries a `type` field (Together tags every model chat / image / video / audio / embedding / rerank …), only `chat` models are kept, so the picker isn't flooded with hundreds of non-chat entries.
+- Providers without a `type` field (OpenAI, Mistral, DeepSeek, self-hosted gateways) fall through completely unaffected — the existing structural name filter and dedup still run on top.
+
+JS-only change to the two `else` branches; no CSS, no layout, no markup.
+
+### Files changed
+- `js/app.js` — bare-array + `type`-aware model parsing in both fetch paths.
+- `index.html`, `js/version.js`, helper pages — version/cache-bust to v3.56.28.
+
+---
+
 ## v3.56.27
 **Build:** `20260524-013` · **Released:** May 24, 2026
 
