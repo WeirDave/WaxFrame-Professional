@@ -2,6 +2,22 @@
 
 ---
 
+## v3.56.47
+**Build:** `20260525-010` · **Released:** May 25, 2026
+
+### Fix: SEO/social tags pointed at github.io instead of waxframe.com
+
+The SEO metadata added in v3.56.45 hardcoded the `weirdave.github.io/WaxFrame-Professional/` base. The site is served from the custom domain `waxframe.com` (root paths), and the github.io URLs **301-redirect** there — so social crawlers fetching `og:image` hit a redirect and refused to render the preview (LinkedIn: "Cannot display preview"). All four SEO URLs per page now use the real canonical domain.
+
+- `canonical`, `og:url`, `og:image`, `twitter:image` → `https://waxframe.com/...` (apex; `www` 301s to apex). Paths are root-relative (`/images/...`, `/api-details.html`) since the custom domain serves the repo from root, not under `/WaxFrame-Professional/`.
+- Body display links still showing the github.io URL (mobile overlay, manual print header) were intentionally left for a separate branding pass.
+
+### Files changed
+- `index.html` + 5 helper pages — 4 SEO URLs each repointed to `waxframe.com`.
+- `js/version.js`, helper `js/*` headers — build/version/cache-bust sync to v3.56.47.
+
+---
+
 ## v3.56.46
 **Build:** `20260525-009` · **Released:** May 25, 2026
 
