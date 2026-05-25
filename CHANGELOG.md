@@ -2,6 +2,29 @@
 
 ---
 
+## v3.56.27
+**Build:** `20260524-013` · **Released:** May 24, 2026
+
+### API page: provider cards reframed, leveled, and expanded to all ten
+
+`api-details.html` ("Get Your API Keys" + "Know Your Hive") rewritten to match the v3.56.23 provider lineup and a fair, evidence-based posture. Card copy was leveled by running it through the hive itself; model strings were verified against `js/api.js` (the hive's leveling pass had drifted Claude and Grok to older IDs — corrected here).
+
+- **DeepSeek repositioned** — from "best/default Builder" to a low-cost, opt-in reviewer that is honestly noted as the slowest responder (60–90s). Dropped the now-false "Fast responses" pill; added a "Slowest responder" weakness.
+- **Gemini** is now the recommended default Builder; its stale "Slowest responder" weakness (DeepSeek owns that now) was removed and a Strong Builder badge added.
+- **Parity leveling** from the hive: removed evaluative overselling on Claude ("worth it for quality-sensitive projects") and Perplexity's reconstruction caveat; tightened Grok and ChatGPT phrasing.
+- **New first-class cards** — Mistral (default), plus Cohere and Together AI (opt-in), each with setup steps and a Know-Your-Hive profile. Cohere and Together carry an honest "not yet hive-tested — provisional" note since we have no production data on them yet.
+- **Copilot** listed as a "ready when Microsoft ships keys" card — configured in WaxFrame, no consumer API-key path yet, no fake setup steps.
+- **Page-level "last reviewed" date** (May 24, 2026) — this page carries a forward-facing date because its recommendations are time-sensitive and maintained, unlike the build-stamped timeless pages.
+- Real model strings shown for all providers; lean-setup guidance updated to Gemini-as-Builder.
+
+No CSS or layout changes — new cards reuse the existing `ai-card` / `kyh-card` markup; zero inline styles.
+
+### Files changed
+- `api-details.html` — full provider-card rewrite (10 providers across setup + Know Your Hive).
+- `index.html`, `js/version.js`, `js/app.js`, `js/api.js`, `js/api-links.js`, `js/storage.js`, helper pages — version/cache-bust to v3.56.27.
+
+---
+
 ## v3.56.26
 **Build:** `20260524-012` · **Released:** May 24, 2026
 
