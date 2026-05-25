@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260516-011
+//  Build: 20260524-006
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -75,7 +75,16 @@ function idbOpen() {
         db.createObjectStore(IDB_STORE);
       }
     };
-    req.onsuccess = e => { _idb = e.target.result; resolve(_idb); };
+    req.onsuccess = e => {
+      _idb = e.target.result;
+      // v3.56.20 — If another tab upgrades/deletes the DB, or the connection is
+      // force-closed, drop the cached handle so the next idbOpen() reconnects
+      // instead of throwing InvalidStateError on a dead connection. (Multi-tab /
+      // multi-machine safety.) Save still has a localStorage fallback regardless.
+      _idb.onversionchange = () => { try { _idb.close(); } catch(_) {} _idb = null; };
+      _idb.onclose = () => { _idb = null; };
+      resolve(_idb);
+    };
     req.onerror   = e => reject(e.target.error);
   });
 }
@@ -422,6 +431,48 @@ function _sanitizeConsoleChild(node) {
   return null;
 }
 
+// v3.56.20 — Shared session → live-state restore. Previously the primary (IDB)
+// path and the localStorage-fallback path in loadSession each hand-applied the
+// session fields, and the fallback copy had DRIFTED: it silently skipped notes +
+// standingNotes. So an IDB read failure that fell back to localStorage would not
+// repopulate those textareas, and the next saveSession() would then read them
+// empty and overwrite the saved notes — quiet data loss. One helper called by
+// both paths makes that drift impossible.
+function _applySessionToState(s) {
+  round   = s.round   || 1;
+  phase   = s.phase   || 'draft';
+  history = s.history || [];
+  docText = s.docText || '';
+  if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
+  // Length-guard override flag (default false for pre-v3.32.18 sessions).
+  window._lengthGuardOverride = !!s.lengthGuardOverride;
+  updateLengthGuardIndicator?.();
+  // Per-round satisfaction set (array→Set; empty for pre-v3.32.24 sessions).
+  window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
+  // Per-session AI toggle set — leave undefined for pre-v3.32.26 sessions so
+  // initWorkScreen's reset path seeds it with all activeAIs (historical default).
+  if (Array.isArray(s.sessionAIs)) window.sessionAIs = new Set(s.sessionAIs);
+  // Deep Dive forensic capture (pre-v3.36.7 sessions lack these).
+  if (Array.isArray(s.ringBuffer)) WF_DEBUG.ringBuffer = s.ringBuffer;
+  if (s.lastFailure && typeof s.lastFailure === 'object') WF_DEBUG.lastFailure = s.lastFailure;
+  if (docText && phase === 'draft' && round > 1) phase = 'refine';
+  // One-shot notes.
+  if (s.notes) {
+    const notesEl = document.getElementById('workNotes');
+    if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority?.(); }
+  }
+  // Standing notes (pre-v3.36.17 sessions lack this field).
+  if (s.standingNotes) {
+    const standingEl = document.getElementById('workStandingNotes');
+    if (standingEl) standingEl.value = s.standingNotes;
+  }
+  // Console HTML — sanitized on restore (v3.53.1 closed the backup-borne XSS vector).
+  if (s.consoleHTML) {
+    const consoleEl = document.getElementById('liveConsole');
+    if (consoleEl) consoleEl.innerHTML = sanitizeConsoleHTML(s.consoleHTML);
+  }
+}
+
 async function loadSession() {
   // Eviction detection: if the session_exists flag is set in localStorage
   // but no actual data is recoverable, the browser silently evicted our
@@ -454,67 +505,7 @@ async function loadSession() {
       return false;
     }
 
-    round   = s.round   || 1;
-    phase   = s.phase   || 'draft';
-    history = s.history || [];
-    docText = s.docText || '';
-    if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
-    // v3.32.18 — Restore length-guard override flag. Default false for
-    // pre-v3.32.18 sessions where the field doesn't exist.
-    window._lengthGuardOverride = !!s.lengthGuardOverride;
-    // v3.32.28 — #6c indicator state follows the restored flag. The
-    // indicator element may not yet be in DOM at first call (e.g.
-    // during pre-launch verify); the helper short-circuits cleanly
-    // and initWorkScreen re-runs it once the work screen mounts.
-    updateLengthGuardIndicator?.();
-    // v3.32.24 — Restore per-round satisfaction set. Defaults to empty
-    // for pre-v3.32.24 sessions where the field doesn't exist. The
-    // Set is reconstructed from the serialized array; the rehydration
-    // path in renderBeeStatusGrid (added v3.32.14) then walks it to
-    // re-apply is-clean state on each card after the DOM is built.
-    window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
-    // v3.32.26 — Restore per-session AI toggle set. Pre-v3.32.26
-    // sessions don't have this field; in that case leave window.sessionAIs
-    // undefined so initWorkScreen's reset path takes over and seeds it
-    // with all activeAIs (which is the historical default behavior).
-    if (Array.isArray(s.sessionAIs)) {
-      window.sessionAIs = new Set(s.sessionAIs);
-    }
-    // v3.36.7 — Restore Deep Dive forensic capture. Pre-v3.36.7 sessions
-    // don't have these fields; defaults preserve the post-fresh-load
-    // state (empty buffer, no lastFailure). When Deep Dive is currently
-    // off we still restore the buffer so a backup taken with Deep Dive
-    // on retains its captures across reloads — toggling Deep Dive off
-    // mid-session will still wipe the buffer (setDeepDive(off) clears
-    // it), but reload alone preserves it.
-    if (Array.isArray(s.ringBuffer)) {
-      WF_DEBUG.ringBuffer = s.ringBuffer;
-    }
-    if (s.lastFailure && typeof s.lastFailure === 'object') {
-      WF_DEBUG.lastFailure = s.lastFailure;
-    }
-    if (docText && phase === 'draft' && round > 1) phase = 'refine';
-    if (s.notes) {
-      const notesEl = document.getElementById('workNotes');
-      if (notesEl) { notesEl.value = s.notes; updateNotesBtnPriority(); }
-    }
-    // v3.36.17 — Standing notes restore. Pre-v3.36.17 sessions don't
-    // have this field; we leave the standing textarea empty (the
-    // user's existing one-shot buffer migrates as-is into the new
-    // one-shot field, which is the same DOM id #workNotes).
-    if (s.standingNotes) {
-      const standingEl = document.getElementById('workStandingNotes');
-      if (standingEl) standingEl.value = s.standingNotes;
-    }
-    // Restore console HTML synchronously — inline with the rest of state
-    // restore so there is no async gap between load and render during which
-    // the DOM's default console HTML could be captured by an errant saveSession.
-    // v3.53.1 — sanitizeConsoleHTML strips anything outside the strict
-    // schema mirroring consoleLog's output. Backup-borne XSS vector closed.
-    if (s.consoleHTML) {
-      const consoleEl = document.getElementById('liveConsole');
-      if (consoleEl) consoleEl.innerHTML = sanitizeConsoleHTML(s.consoleHTML);
-    }
+    _applySessionToState(s);
     return true;
   } catch(e) {
     // Last resort: try localStorage directly
@@ -522,36 +513,11 @@ async function loadSession() {
       const raw = localStorage.getItem(LS_SESSION);
       if (!raw) return false;
       const s = JSON.parse(raw);
-      round   = s.round   || 1;
-      phase   = s.phase   || 'draft';
-      history = s.history || [];
-      docText = s.docText || '';
-      if (s.projClockSeconds) _projClockSeconds = s.projClockSeconds;
-      // v3.32.18 — fallback path also restores the override flag.
-      window._lengthGuardOverride = !!s.lengthGuardOverride;
-      // v3.32.28 — #6c indicator state follows restored flag (fallback path).
-      updateLengthGuardIndicator?.();
-      // v3.32.24 — fallback path also restores the satisfaction set.
-      window._cleanThisRound = new Set(Array.isArray(s.cleanThisRound) ? s.cleanThisRound : []);
-      // v3.32.26 — fallback path also restores the session toggle set.
-      if (Array.isArray(s.sessionAIs)) {
-        window.sessionAIs = new Set(s.sessionAIs);
-      }
-      // v3.36.7 — fallback path also restores Deep Dive forensic capture.
-      if (Array.isArray(s.ringBuffer)) {
-        WF_DEBUG.ringBuffer = s.ringBuffer;
-      }
-      if (s.lastFailure && typeof s.lastFailure === 'object') {
-        WF_DEBUG.lastFailure = s.lastFailure;
-      }
-      if (docText && phase === 'draft' && round > 1) phase = 'refine';
-      // Restore console HTML in the fallback path too (see main path).
-      // v3.53.1 — sanitizer applies here too; both restore paths share
-      // the same threat surface.
-      if (s.consoleHTML) {
-        const consoleEl = document.getElementById('liveConsole');
-        if (consoleEl) consoleEl.innerHTML = sanitizeConsoleHTML(s.consoleHTML);
-      }
+      // v3.56.20 — Same shared restore as the primary path. Previously this
+      // fallback hand-applied a subset of fields and omitted notes +
+      // standingNotes; now both paths go through _applySessionToState so they
+      // can't diverge.
+      _applySessionToState(s);
       return true;
     } catch(e2) { return false; }
   }
