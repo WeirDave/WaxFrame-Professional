@@ -2,6 +2,27 @@
 
 ---
 
+## v3.56.29
+**Build:** `20260524-015` · **Released:** May 24, 2026
+
+### Add Custom Worker Bee modal — layout cleanup
+
+Tightened the Add a Custom Worker Bee modal so it no longer carries empty space. No change to modal positioning — all modals already center identically; the awkwardness was internal layout, not centering.
+
+- **API Key is now its own full-width row** — previously it shared a row with API Format and was only half-width.
+- **API Format** likewise gets its own full-width row.
+- **API Console URL and Docs URL** (both optional) now live behind a **"+ Advanced options"** toggle, collapsed by default, so the modal isn't padded with an empty row. The section auto-expands when a Quick-Add preset has pre-filled those URLs, and collapses on reset.
+
+CSS + markup + a small JS toggle, all scoped to the custom-AI modal. No change to the working-document column or any shared layout.
+
+### Files changed
+- `index.html` — split Format/Key into full-width rows; wrap the two URL fields in a collapsible Advanced section.
+- `style.css` — `.custom-ai-form-row--full` and `.custom-ai-advanced-toggle`.
+- `js/app.js` — `toggleCustomAIAdvanced()` / `syncCustomAIAdvanced()`; collapse-on-reset and auto-expand-on-preset.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.29.
+
+---
+
 ## v3.56.28
 **Build:** `20260524-014` · **Released:** May 24, 2026
 

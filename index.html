@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260524-014
+     Build: 20260524-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,10 +9,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260524-014">
+  <meta name="waxframe-build" content="20260524-015">
   <title>WaxFrame</title>
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.28">
+  <link rel="stylesheet" href="style.css?v=3.56.29">
 </head>
 <body>
 
@@ -1050,7 +1050,7 @@
         <input type="text" id="customAIName" placeholder="e.g. Work AI" oninput="this.dataset.userTyped='true'; refreshCustomAIIconPreview && refreshCustomAIIconPreview();">
       </div>
     </div>
-    <div class="custom-ai-form-row">
+    <div class="custom-ai-form-row custom-ai-form-row--full">
       <div class="custom-ai-field-wrap">
         <label>API Format <span class="field-required">*</span></label>
         <select id="customAIFormat" class="custom-ai-select">
@@ -1059,6 +1059,8 @@
           <option value="google">Google (Gemini)</option>
         </select>
       </div>
+    </div>
+    <div class="custom-ai-form-row custom-ai-form-row--full">
       <div class="custom-ai-field-wrap">
         <label>API Key <span class="field-optional">(optional)</span></label>
         <div class="custom-ai-key-wrap">
@@ -1067,7 +1069,8 @@
         </div>
       </div>
     </div>
-    <div class="custom-ai-form-row">
+    <button type="button" class="custom-ai-advanced-toggle" id="customAIAdvancedToggle" onclick="toggleCustomAIAdvanced()">+ Advanced options</button>
+    <div class="custom-ai-form-row" id="customAIAdvanced" style="display:none;">
       <div class="custom-ai-field-wrap">
         <label>API Console URL <span class="field-optional">(optional · billing/usage page, used by error troubleshooting)</span></label>
         <input type="text" id="customAIConsoleUrl" placeholder="e.g. https://console.provider.com/api-keys" oninput="this.dataset.userTyped='true'">
@@ -2377,20 +2380,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.56.28"></script>
-<script src="lib/mammoth.browser.min.js?v=3.56.28"></script>
-<script src="lib/jszip.min.js?v=3.56.28"></script>
-<script src="lib/xlsx.full.min.js?v=3.56.28"></script>
-<script src="js/version.js?v=3.56.28"></script>
-<script src="js/storage.js?v=3.56.28"></script>
-<script src="js/theme.js?v=3.56.28"></script>
-<script src="js/audio.js?v=3.56.28"></script>
-<script src="js/scenes.js?v=3.56.28"></script>
-<script src="js/wf-debug.js?v=3.56.28"></script>
-<script src="js/api.js?v=3.56.28"></script>
-<script src="js/templates.js?v=3.56.28"></script>
-<script src="js/api-links.js?v=3.56.28"></script>
-<script src="js/app.js?v=3.56.28"></script>
+<script src="lib/pdf.min.js?v=3.56.29"></script>
+<script src="lib/mammoth.browser.min.js?v=3.56.29"></script>
+<script src="lib/jszip.min.js?v=3.56.29"></script>
+<script src="lib/xlsx.full.min.js?v=3.56.29"></script>
+<script src="js/version.js?v=3.56.29"></script>
+<script src="js/storage.js?v=3.56.29"></script>
+<script src="js/theme.js?v=3.56.29"></script>
+<script src="js/audio.js?v=3.56.29"></script>
+<script src="js/scenes.js?v=3.56.29"></script>
+<script src="js/wf-debug.js?v=3.56.29"></script>
+<script src="js/api.js?v=3.56.29"></script>
+<script src="js/templates.js?v=3.56.29"></script>
+<script src="js/api-links.js?v=3.56.29"></script>
+<script src="js/app.js?v=3.56.29"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
