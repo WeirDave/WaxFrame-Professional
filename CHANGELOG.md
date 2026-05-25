@@ -2,6 +2,27 @@
 
 ---
 
+## v3.56.38
+**Build:** `20260525-002` · **Released:** May 25, 2026
+
+### Import-trust hardening, doc-drift correction, and a genuine header sweep
+
+A review-only audit flagged that imported/saved custom-AI data was trusted too much when rendered back into the UI, plus two doc/plumbing drifts. None were drive-by exploitable, but a shared/poisoned backup could inject markup into the importing session — addressed here in two layers, defense-in-depth.
+
+- **Custom-AI import is now sanitized at the load chokepoint.** `loadSettings()` in `js/storage.js` now runs every imported/saved `customAIs` entry through `_normalizeImportedAI()`: `id` and `provider` are slugged to `[A-Za-z0-9_-]` (legit timestamped ids like `mistral_1699…` survive), `name` is length-capped, and `url`/`apiConsole` are dropped unless they parse as absolute `http`/`https`. Unusable entries are dropped. Icons are deliberately left untouched so uploaded data-URL icons keep working.
+- **Render sinks now output-encode the free-text name.** Every `ai.name` render site (builder-pick modal, Setup 2 builder grid, setup-row summary, token-prep row, edit-hive row, builder block, work-screen hex card) now uses `escapeHtml()`, which escapes quotes — `esc()` did not, so prior attribute-context names could break out of a `title="…"`.
+- **External-link href guard.** New `safeUrl()` helper gates the per-AI console link and the token-prep billing link; non-`http(s)` URLs collapse to an inert empty href. Both links also gained the missing `rel="noopener noreferrer"`.
+- **Default-provider doc drift fixed.** The default set has been ChatGPT, Claude, Gemini, Grok, Perplexity, and **Mistral** (DeepSeek is opt-in/custom). The README provider table and six manual passages that still listed DeepSeek as a *default* now say Mistral. Capability/custom-add mentions of DeepSeek were left intact — DeepSeek is still a valid custom provider.
+- **Build headers genuinely unified.** The v3.56.37 entry claimed every `Build:` header was unified, but `api-links.js`, `audio.js`, `scenes.js`, `theme.js`, `api.js`, `wf-debug.js`, `license-helper.js`, and `nav-helper.js` still lagged. All `Build:` headers, page `<meta name="waxframe-build">` tags, the `BUILD` constant, `APP_VERSION`, top-of-file comment stamps, and all `?v=` cache-busts are now `20260525-002` / `v3.56.38`.
+
+### Files changed
+- `js/storage.js` — `_normalizeImportedAI()` + `_safeImportUrl()`; applied in the `customAIs` import loop.
+- `js/app.js` — `safeUrl()` helper; `escapeHtml()` at all `ai.name` render sinks; href guard + `rel` on two external links.
+- `README.md`, `waxframe-user-manual.html` — DeepSeek→Mistral default-set corrections.
+- `js/api-links.js`, `js/audio.js`, `js/scenes.js`, `js/theme.js`, `js/api.js`, `js/wf-debug.js`, `js/license-helper.js`, `js/nav-helper.js`, `js/version.js`, `index.html` + 5 helper pages — build/version/cache-bust/header sync to v3.56.38.
+
+---
+
 ## v3.56.37
 **Build:** `20260525-001` · **Released:** May 25, 2026
 
