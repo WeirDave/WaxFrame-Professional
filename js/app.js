@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-004
+//  Build: 20260525-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-004';         // build stamp — update each session
+const BUILD       = '20260525-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -831,9 +831,8 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
     linkEl.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      // Open a tab, not a Firefox pop-up window (a windowFeatures string
-      // forces popup mode — see openAllConsoles in api-links.js). Null the
-      // opener for the noopener security benefit.
+      // Open a tab, not a Firefox pop-up window: passing a windowFeatures
+      // string forces popup mode. Null the opener for the noopener benefit.
       const w = window.open(url, '_blank');
       if (w) { try { w.opener = null; } catch (_) {} }
     };
@@ -3444,7 +3443,7 @@ function renderWorkerBeeToolbar() {
       <button class="btn btn-lg" onclick="showAddCustomAI()">Add Custom AI</button>
       <button class="btn btn-lg" id="testAllKeysBtn" onclick="testAllKeys()">Test All Keys</button>
       <button class="btn btn-lg" id="recommendAllBtn" onclick="recommendModelsForAll()" title="Ask every keyed AI to recommend its best model — runs sequentially">Recommend Models for All</button>
-      <button class="btn btn-lg" onclick="openAllConsoles()">Open default AI websites</button>`;
+      <button class="btn btn-lg" onclick="toggleHiveConsoles()">Get API keys</button>`;
   } else {
     buttons = `
       <button class="btn btn-lg" onclick="showImportServerModal()">Import from Model Server</button>
@@ -4021,12 +4020,23 @@ function applyNotesTemplate(template) {
 // upgrading from pre-v3.31 had hidden some defaults, their next load
 // shows the full default set again — by design, no migration prompt.
 
-// v3.56.17 — openAllConsoles() moved to js/api-links.js, which is now the
-// single source of truth for the default API-console URLs (and is also loaded
-// by standalone helper pages that can't see DEFAULT_AIS). The "Open default AI
-// websites" button still calls openAllConsoles() — it now resolves to the
-// api-links.js definition. The previous duplicate here read DEFAULT_AIS and
-// was silently shadowed by the api-links.js copy at load time on index.html.
+// v3.56.42 — "Get an API key" handler for the Worker Bees toolbar. The old
+// openAllConsoles() bulk-opener (in js/api-links.js) was replaced by a shared
+// slide-up drawer of per-provider links, because browsers allow only one
+// window.open() per click and blocked the rest as pop-ups. The drawer + its
+// generic toggleConsolesDrawer(items) live in api-links.js (loaded before
+// app.js and by helper pages). Here we feed it the live hive: every AI in
+// aiList that carries a console URL — defaults plus any custom AIs that have
+// one. Each link in the drawer opens its own tab on click, so nothing is
+// blocked. The API guide page calls toggleGuideConsoles() (a fixed list)
+// instead, since it has no live hive.
+function toggleHiveConsoles() {
+  const src = (typeof aiList !== 'undefined' && Array.isArray(aiList)) ? aiList : [];
+  const items = src
+    .filter(a => a && a.apiConsole)
+    .map(a => ({ name: a.name, url: a.apiConsole }));
+  if (typeof toggleConsolesDrawer === 'function') toggleConsolesDrawer(items);
+}
 
 async function clearKeyForAI(id) {
   const ai = aiList.find(a => a.id === id);

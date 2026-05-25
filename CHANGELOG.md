@@ -2,6 +2,27 @@
 
 ---
 
+## v3.56.42
+**Build:** `20260525-005` · **Released:** May 25, 2026
+
+### "Get an API key" drawer — replaces the blocked bulk-opener
+
+The old **Open default AI websites** button tried to open six tabs from one click. Browsers permit only one `window.open()` per user gesture, so the first opened and the rest were blocked as pop-ups (v3.56.41 made them tabs instead of pop-up windows, but couldn't lift the one-per-click limit — no code can). Replaced with a slide-up drawer of links, so the user clicks the providers they want and each click opens its own tab, never blocked.
+
+- **Shared drawer component** (`js/api-links.js`, same pattern/markup as the Notes drawer, created lazily so neither page needs duplicate markup). `toggleConsolesDrawer(items)` renders a list of provider key-page links; each is a real `<a target="_blank">`.
+- **API guide page** shows a fixed list: the six defaults plus the three documented library providers that have a real key page — DeepSeek, Cohere, Together AI. (Copilot is excluded; Microsoft has no consumer API-key path yet.)
+- **Worker Bees toolbar** shows the live hive instead: every AI in `aiList` that carries a console URL, so custom AIs with a key page appear automatically. Button relabeled **Get API keys**.
+- **Reconciled.** `openAllConsoles()` and its toast logic removed (zero remaining callers). URLs are scheme-validated (`http`/`https` only) and names/URLs are escaped at render. Dismisses on the ✕ Close button or Escape.
+
+### Files changed
+- `js/api-links.js` — removed `openAllConsoles()`; added the consoles drawer (`openConsolesDrawer` / `closeConsolesDrawer` / `toggleConsolesDrawer` / `toggleGuideConsoles`), the library-extras list, and escape/host/url helpers.
+- `js/app.js` — added `toggleHiveConsoles()`; Worker Bees button now opens the drawer; tidied two stale comments.
+- `api-details.html` — footer button now opens the drawer.
+- `style.css` — appended scoped `.consoles-drawer` link-list styling.
+- `js/version.js`, helper `js/*` headers, `index.html` + 5 helper pages — build/version/cache-bust sync to v3.56.42.
+
+---
+
 ## v3.56.41
 **Build:** `20260525-004` · **Released:** May 25, 2026
 
