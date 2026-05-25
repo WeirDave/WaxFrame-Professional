@@ -2,6 +2,26 @@
 
 ---
 
+## v3.56.43
+**Build:** `20260525-006` · **Released:** May 25, 2026
+
+### Default providers vs. additional AI — consistent grouping across both surfaces
+
+The Worker Bees list and the API Key Guide now tell one story: the diverse, tested default providers first, then everything else you can add.
+
+- **Worker Bees list** (`renderAISetupGrid`, Internet mode) is now segmented into a **Default providers** group and a **Custom AIs** group, each sorted alphabetically within itself. Previously all nine sorted into one flat alphabetical list, which buried custom AIs (Cohere, DeepSeek, Together AI) in the middle of the defaults. Group labels appear only when a custom AI exists; Server mode stays a flat list.
+- **API Key Guide** is reorganized from a cost-based split (Free & Low-Cost / Pay-As-You-Go) into **The Default Six** (ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity) and **Additional AI** (Cohere, DeepSeek, Together AI), alphabetical within each. Cost is already conveyed by each card's existing badge, so it no longer needs to drive the page structure. The sidebar table of contents regroups to match.
+- **Openness callout** added at the end of Additional AI: WaxFrame is not limited to these nine — Add Custom AI connects any OpenAI/Anthropic/Google-compatible model, and Server mode brings in a whole gateway. These are just the providers with ready-made guides.
+- **Copilot** demoted from a full setup card to a one-line "ready when Microsoft ships consumer keys" note, since it has no key path yet.
+
+### Files changed
+- `js/app.js` — `renderAISetupGrid()` segments the Internet-mode list into Default providers / Custom AIs.
+- `api-details.html` — provider cards reordered into The Default Six / Additional AI; openness callout added; Copilot demoted; sidebar TOC regrouped.
+- `style.css` — group-label and section-subtitle styling.
+- `js/version.js`, helper `js/*` headers, `index.html` + 5 helper pages — build/version/cache-bust sync to v3.56.43.
+
+---
+
 ## v3.56.42
 **Build:** `20260525-005` · **Released:** May 25, 2026
 

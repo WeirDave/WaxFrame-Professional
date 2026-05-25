@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-005
+//  Build: 20260525-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-005';         // build stamp — update each session
+const BUILD       = '20260525-006';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3260,7 +3260,31 @@ function renderAISetupGrid() {
     return isDefault || !isServerImport;
   });
 
-  grid.innerHTML = bulkSelectHTML + _aiListAlpha(visible).map(ai => buildAISetupRowHTML(ai)).join('');
+  // v3.56.43 — Segment the Internet-mode list into "Default providers" and
+  // "Custom AIs", mirroring the API Key Guide's "The Default Six / Additional
+  // AI" grouping. Each group is sorted alphabetically within itself; the group
+  // labels only appear once a custom AI exists to separate out. Server mode
+  // shows only server-imported customs (all "custom"), so it stays one flat
+  // alphabetical list with no labels.
+  let listHTML;
+  if (_hiveMode === 'server') {
+    listHTML = _aiListAlpha(visible).map(ai => buildAISetupRowHTML(ai)).join('');
+  } else {
+    const isDef    = ai => !!DEFAULT_AIS.find(d => d.id === ai.id);
+    const defaults = _aiListAlpha(visible.filter(isDef));
+    const customs  = _aiListAlpha(visible.filter(ai => !isDef(ai)));
+    let html = '';
+    if (defaults.length) {
+      html += (customs.length ? '<div class="ai-setup-group-label">Default providers</div>' : '')
+            + defaults.map(ai => buildAISetupRowHTML(ai)).join('');
+    }
+    if (customs.length) {
+      html += `<div class="ai-setup-group-label">Custom AIs <span class="ai-setup-group-count">${customs.length}</span></div>`
+            + customs.map(ai => buildAISetupRowHTML(ai)).join('');
+    }
+    listHTML = html;
+  }
+  grid.innerHTML = bulkSelectHTML + listHTML;
   renderBuilderPicker();
   renderHiveCountChip();
 }

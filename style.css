@@ -12357,3 +12357,34 @@ kbd {
   color: var(--muted);
   font-size: var(--fs-13);
 }
+
+/* ==============================================================
+   v3.56.43 — Worker Bees list group labels + API guide section
+   subtitles. Segments the setup list into "Default providers" /
+   "Custom AIs" and labels the guide's "The Default Six" /
+   "Additional AI" sections, so both surfaces tell one story.
+   ============================================================== */
+.ai-setup-group-label {
+  font-size: var(--fs-11);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: var(--space-16) 0 var(--space-8);
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.ai-setup-group-label:first-child {
+  margin-top: var(--space-4);
+}
+.ai-setup-group-count {
+  font-weight: 600;
+  color: var(--accent);
+}
+.api-guide-cols .api-section-sub {
+  font-size: var(--fs-13);
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0 0 var(--space-16);
+}
