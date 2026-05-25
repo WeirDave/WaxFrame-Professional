@@ -2,6 +2,23 @@
 
 ---
 
+## v3.56.35
+**Build:** `20260524-021` · **Released:** May 24, 2026
+
+### Fix: Recommend Models picked a Reviewer but no Builder (id hallucination on large catalogs)
+
+Recommend Models on Together AI returned a Reviewer pick but no Builder. Confirmed from the console: the Builder request succeeded, but the model the AI named — `meta-llama/Llama-3.1-70B-Instruct` — does not exist on Together (their catalog has `Llama-3.1-405B-Instruct` and `Llama-3.3-70B-Instruct`, not a `3.1-70B`). The AI invented a plausible id by combining real version/size fragments. Our exact-id check correctly rejected it, leaving no Builder pick. This is a general fragility: echoing an exact id from a large catalog (Together lists 135 models) is unreliable.
+
+- **The model list is now presented numbered, and the AI selects by number.** The number maps back to the exact id from our own fetched list, so the AI cannot return a model that isn't on the endpoint — the failure mode is eliminated for every provider, known or unknown, regardless of catalog size.
+- A case-insensitive exact-id fallback is retained so any saved custom recommend-prompt that still asks for an id keeps working.
+- Picks are resolved against the already-role-filtered list, so Builder safety (no reasoning/specialised models) holds by construction.
+
+### Files changed
+- `js/app.js` — numbered model list + pick-by-number resolution in the recommend flow (both Reviewer and Builder).
+- `js/version.js`, helper pages — version/cache-bust to v3.56.35.
+
+---
+
 ## v3.56.34
 **Build:** `20260524-020` · **Released:** May 24, 2026
 
