@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260524-019
+//  Build: 20260524-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260524-019';         // build stamp — update each session
+const BUILD       = '20260524-020';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5045,7 +5045,23 @@ async function recheckModelForAI(id) {
       // Stable askingModel: prefer cfg.model if it's in the live list,
       // otherwise first in list. No MODEL_FALLBACKS for customs since we
       // don't curate stable models for arbitrary endpoints.
-      const askingModel = (cfg.model && models.includes(cfg.model)) ? cfg.model : models[0];
+      // v3.56.34 — pick a curated SERVERLESS model as the asking model for known
+      // first-class providers. A custom AI stores provider:id (its generated id),
+      // so MODEL_FALLBACKS can't be keyed on ai.provider directly — resolve the
+      // canonical provider by matching the endpoint against QUICK_ADD_PROVIDERS.
+      // Together's /v1/models lists non-serverless / dedicated-only models (e.g.
+      // Qwen/Qwen3-Next-80B-A3B-Instruct) that 400 with model_not_available on the
+      // standard chat API; cfg.model or models[0] can land on one. The curated
+      // fallback lists are all serverless, so they make safe asking models.
+      const _normEp = u => (u || '').replace(/\/+$/, '').trim();
+      const _canonProv = Object.keys(QUICK_ADD_PROVIDERS).find(
+        k => _normEp(QUICK_ADD_PROVIDERS[k].url) === _normEp(cfg.endpoint)
+      );
+      const _fbList = MODEL_FALLBACKS[_canonProv] || MODEL_FALLBACKS[ai.provider] || [];
+      const _stableAsk = _fbList.find(m => models.includes(m));
+      const askingModel = _stableAsk
+        || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
+        || models[0];
       // v3.32.10 — fire both role-specific recommendations in parallel for
       // custom AIs too. Custom cache keys: custom-{id}-reviewer and
       // custom-{id}-builder. Reviewer result is returned for backwards
