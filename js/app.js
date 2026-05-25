@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-008
+//  Build: 20260525-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-008';         // build stamp — update each session
+const BUILD       = '20260525-009';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4911,19 +4911,19 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     if (format === 'anthropic') {
       url = endpoint;
       headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-      body = JSON.stringify({ model: askingModel, max_tokens: 300, messages: [{ role: 'user', content: prompt }] });
+      body = JSON.stringify({ model: askingModel, max_tokens: 300, temperature: 0, messages: [{ role: 'user', content: prompt }] });
     } else if (format === 'google') {
       // v3.26.3: use header-based auth (x-goog-api-key) instead of query-string
       // ?key= — matches the production review flow's auth method, more robust
       // against tier behavior differences and CORS quirks.
       url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent`;
       headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
-      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0 } });
     } else {
       url = endpoint;
       headers = { 'Content-Type': 'application/json' };
       if (key) headers['Authorization'] = `Bearer ${key}`;
-      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
+      body = JSON.stringify({ model: askingModel, temperature: 0, messages: [{ role: 'user', content: prompt }] });
     }
 
     const resp = await fetch(url, { method: 'POST', headers, body });
@@ -5036,10 +5036,17 @@ async function recommendForDefault(provider) {
   const cfg = API_CONFIGS[provider];
   if (!cfg?._key) return null;
 
-  // v3.26.4: pick a STABLE askingModel rather than just trusting cfg.model.
+  // v3.56.46 — pick the NEWEST VIABLE model as the asker. `models` now arrives
+  // recency-ordered from fetchModelsForProvider (newest first), so the first
+  // entry that survives the chat-capability filter is the most current model
+  // able to answer — it has the best knowledge of newer siblings to judge the
+  // list. Falls back to a stable known model, the configured default, then
+  // list[0] when the filter empties (providers with no live catalog / dates).
+  const viable = filterModelsForRole(models, 'reviewer');
   const fallbackList = MODEL_FALLBACKS[provider] || [];
   const stableFallback = fallbackList.find(m => models.includes(m));
-  const askingModel = stableFallback
+  const askingModel = viable[0]
+    || stableFallback
     || (cfg.model && models.includes(cfg.model) ? cfg.model : null)
     || models[0];
 

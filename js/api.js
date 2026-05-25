@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-//  Build: 20260525-008
+//  Build: 20260525-009
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -389,7 +389,13 @@ async function fetchModelsForProvider(provider) {
       if (!resp.ok) return null;
       const data = await resp.json();
       const filter = MODEL_FILTERS[provider];
-      models = (data?.data || []).map(m => m.id).filter(filter).sort();
+      // v3.56.46 — order by real recency (created epoch), newest first,
+      // instead of alphabetically. recommendForDefault then takes the newest
+      // *viable* model as the asker. No `created` ⇒ insertion order preserved.
+      models = (data?.data || [])
+        .filter(m => filter(m.id))
+        .sort((a, b) => (b.created || 0) - (a.created || 0))
+        .map(m => m.id);
 
     } else if (provider === 'claude') {
       // v3.32.13 — route through the same CF Worker proxy that handles
@@ -409,7 +415,11 @@ async function fetchModelsForProvider(provider) {
       });
       if (!resp.ok) return null;
       const data = await resp.json();
-      models = (data?.data || []).map(m => m.id).sort().reverse(); // newest first
+      // v3.56.46 — Anthropic returns created_at (ISO); sort by real date so
+      // the newest model is first instead of reverse-alpha on the id string.
+      models = (data?.data || [])
+        .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))
+        .map(m => m.id);
 
     } else if (provider === 'gemini') {
       // v3.53.0 — API key moved from query string to header. Generate calls
@@ -507,7 +517,13 @@ async function fetchModelsForProviderLive(provider) {
       if (!resp.ok) return null;
       const data = await resp.json();
       const filter = MODEL_FILTERS[provider];
-      models = (data?.data || []).map(m => m.id).filter(filter).sort();
+      // v3.56.46 — order by real recency (created epoch), newest first,
+      // instead of alphabetically. recommendForDefault then takes the newest
+      // *viable* model as the asker. No `created` ⇒ insertion order preserved.
+      models = (data?.data || [])
+        .filter(m => filter(m.id))
+        .sort((a, b) => (b.created || 0) - (a.created || 0))
+        .map(m => m.id);
 
     } else if (provider === 'claude') {
       // Route through the CF Worker proxy for the same CORS reason as
@@ -517,7 +533,11 @@ async function fetchModelsForProviderLive(provider) {
       });
       if (!resp.ok) return null;
       const data = await resp.json();
-      models = (data?.data || []).map(m => m.id).sort().reverse();
+      // v3.56.46 — Anthropic returns created_at (ISO); sort by real date so
+      // the newest model is first instead of reverse-alpha on the id string.
+      models = (data?.data || [])
+        .sort((a, b) => (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0))
+        .map(m => m.id);
 
     } else if (provider === 'gemini') {
       // v3.53.0 — API key moved from query string to header (see comment
