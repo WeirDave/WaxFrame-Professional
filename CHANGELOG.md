@@ -2,6 +2,22 @@
 
 ---
 
+## v3.56.33
+**Build:** `20260524-019` · **Released:** May 24, 2026
+
+### Per-provider TOC on the API Key Guide + Brightwater wording fix
+
+- **API Key Guide TOC is now per-provider.** The floating sidebar lists every provider individually — Gemini, DeepSeek (Free & Low-Cost), then ChatGPT, Claude, Grok, Perplexity, Mistral, Cohere, Together AI, Copilot (Pay-As-You-Go) — plus Know Your Hive and General Tips. Each provider card got an `id`; clicking a sidebar entry jumps straight to that card (scroll-offset clears the sticky header, matching the playbook convention).
+- **User manual wording.** The first mention of "Brightwater" in the costs section used the term before it was introduced. It now reads "our reference testing (the Brightwater Canoe and Kayak business-proposal runs, detailed in Setup 1)" so the reference is self-explanatory on first encounter.
+
+### Files changed
+- `api-details.html` — per-provider sidebar links + `id` on each provider card.
+- `style.css` — `scroll-margin-top` on anchored provider cards.
+- `waxframe-user-manual.html` — Brightwater first-mention gloss.
+- `js/version.js`, helper pages — version/cache-bust to v3.56.33.
+
+---
+
 ## v3.56.32
 **Build:** `20260524-018` · **Released:** May 24, 2026
 
