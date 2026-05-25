@@ -202,7 +202,7 @@ WaxFrame ships with default configurations for these providers:
 | OpenAI (ChatGPT) | `gpt-4.1` |
 | Google (Gemini) | `gemini-2.5-flash` |
 | xAI (Grok) | `grok-4-fast-non-reasoning` |
-| DeepSeek | `deepseek-chat` |
+| Mistral | `mistral-large-latest` |
 | Perplexity | `sonar-pro` |
 
 You can change any AI's model at any time from the Worker Bees screen.

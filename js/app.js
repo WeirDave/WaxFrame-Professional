@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-001
+//  Build: 20260525-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-001';         // build stamp — update each session
+const BUILD       = '20260525-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -400,6 +400,17 @@ const FREE_TRIAL_ROUNDS  = 3;
 // ── UTILS ──
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+// v3.56.38 — href guard. Returns the URL only if it parses as an absolute
+// http/https URL; anything else (javascript:, data:, relative, garbage from
+// an imported custom-AI object) collapses to '' so it can't fire on click.
+// The returned value is still attribute-escaped at the call site. Storage-layer
+// import validation is the first line of defense; this is the render-sink belt.
+function safeUrl(u) {
+  try {
+    const p = new URL(String(u ?? ''));
+    return (p.protocol === 'http:' || p.protocol === 'https:') ? p.href : '';
+  } catch { return ''; }
 }
 // v3.32.20 — Strip the "[Base] " prefix that's added at module-load to
 // default AI names. Used for display in the work-screen hive cards
@@ -951,10 +962,10 @@ function openChangeBuilder(opts) {
       // parsed, silently dropping `.builder-pick-card-inner`). Merged.
       const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 36);
       return `<div class="builder-pick-btn btn builder-pick-card-inner ${isSelected ? 'selected' : ''}"
-        title="${esc(ai.name)}"
+        title="${escapeHtml(ai.name)}"
         onclick="setBuilderFromModal('${ai.id}')">
         ${iconEl}
-        <span class="builder-pick-name">${ai.name}</span>
+        <span class="builder-pick-name">${escapeHtml(ai.name)}</span>
         ${isSelected ? '<span class="builder-pick-current"><img src="images/WaxFrame_Builder_v3.png" class="builder-pick-current-bee" alt="" onerror="this.style.display=\'none\'"> Current</span>' : ''}
       </div>`;
     }).join('');
@@ -3270,7 +3281,7 @@ function buildAISetupRowHTML(ai) {
   let actionHTML;
   if (isCustom) {
     const checked = _selectedCustomIds.has(ai.id) ? 'checked' : '';
-    actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${esc(ai.name)} for bulk removal">`;
+    actionHTML = `<input type="checkbox" class="ai-select-check" id="aichk-${ai.id}" ${checked} onchange="toggleCustomSelection('${ai.id}', this.checked); event.stopPropagation();" onclick="event.stopPropagation();" title="Select ${escapeHtml(ai.name)} for bulk removal">`;
   } else {
     actionHTML = '';
   }
@@ -3297,7 +3308,7 @@ function buildAISetupRowHTML(ai) {
     // Server-imported AIs typically have no console URL → still
     // suppressed (nothing meaningful to link to).
     const getKeyLink = consoleUrl
-      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${consoleUrl}" target="_blank" rel="noopener">${hasKey ? `Open ${esc(ai.name)} account ↗` : `Get one from ${esc(ai.name)} ↗`}</a></div>`
+      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a></div>`
       : '';
     // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
     // (snap to a recommendation pick) is now redundant with the dropdown's
@@ -3331,9 +3342,9 @@ function buildAISetupRowHTML(ai) {
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
-        <span class="ai-setup-name" title="${ai.name}">${ai.name}</span>
+        <span class="ai-setup-name" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
-          ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${esc(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
+          ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
         <span class="ai-setup-summary-spacer"></span>
         ${actionHTML}
@@ -3551,10 +3562,10 @@ function renderBuilderPicker() {
     const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 56);
     return `
     <button class="builder-pick-btn ${builder === ai.id ? 'selected' : ''}"
-      title="${esc(ai.name)}"
+      title="${escapeHtml(ai.name)}"
       onclick="setBuilder('${ai.id}'); return false;">
       ${iconEl}
-      <span class="builder-pick-name">${ai.name}</span>
+      <span class="builder-pick-name">${escapeHtml(ai.name)}</span>
       ${builder === ai.id ? '<img src="images/WaxFrame_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
     </button>
   `;
@@ -3687,7 +3698,7 @@ async function testAllKeys() {
     row.id = `tkprow-${ai.id}`;
     row.onclick = () => selectTkpRow(ai.id);
     row.innerHTML = `
-      <span class="tkp-ai-name">${ai.name}</span>
+      <span class="tkp-ai-name">${escapeHtml(ai.name)}</span>
       <span class="tkp-status tkp-pending" id="tkpstatusicon-${ai.id}">…</span>`;
     rowsEl.appendChild(row);
     window._tkpData[ai.id] = {
@@ -3923,7 +3934,7 @@ function renderTkpDetail(id) {
   // RECEIVED pane — status + response body
   if (rec.done) {
     const billingLinkHtml = (!rec.ok && rec.consoleUrl)
-      ? `<a class="tkp-billing-link" href="${esc(rec.consoleUrl)}" target="_blank">Open ${esc(rec.name)} billing console →</a>`
+      ? `<a class="tkp-billing-link" href="${escapeHtml(safeUrl(rec.consoleUrl))}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(rec.name)} billing console →</a>`
       : '';
     const retestBtnHtml = (!rec.ok)
       ? `<button class="tkp-retest-btn" type="button" onclick="retestSingleKey('${esc(id)}')">↻ Retest ${esc(rec.name)}</button>`
@@ -9432,7 +9443,7 @@ function renderBeeStatusGrid() {
                 onchange="toggleSessionBee('${ai.id}', this.checked)">`
           }
           ${iconEl}
-          <span class="hex-name" title="${esc(ai.name)}">${esc(displayAiName(ai.name))}</span>
+          <span class="hex-name" title="${escapeHtml(ai.name)}">${esc(displayAiName(ai.name))}</span>
         </div>
         <div class="hex-row hex-row-status">
           <span class="hex-status" id="blive-${ai.id}">Idle</span>
@@ -10335,7 +10346,7 @@ function openEditHive() {
     return `
     <div class="edit-hive-row${isB ? ' is-builder-row' : ''}">
       ${iconEl}
-      <span class="edit-hive-name">${ai.name}</span>
+      <span class="edit-hive-name">${escapeHtml(ai.name)}</span>
       ${isB
         ? `<span class="edit-hive-tag">BUILDER</span>`
         : `<input type="checkbox" class="edit-hive-toggle" ${isOn ? 'checked' : ''}
@@ -14440,7 +14451,7 @@ function showBuilderOverlay() {
       block.style.boxShadow = `inset 0 1px 0 rgba(255,255,255,0.12), 0 4px 14px rgba(0,0,0,0.4), 0 0 14px ${colors.glow}`;
       block.innerHTML = `
         ${resolveAiIcon(ai, 'builder-block-icon', 22)}
-        <span class="builder-block-name">${ai.name}</span>
+        <span class="builder-block-name">${escapeHtml(ai.name)}</span>
       `;
       track.appendChild(block);
     });
