@@ -2,6 +2,22 @@
 
 ---
 
+## v3.56.20
+**Build:** `20260524-006` · **Released:** May 24, 2026
+
+### Persistence hardening — fix a notes data-loss path in session restore
+
+`loadSession()` had two hand-duplicated restore blocks: a primary IndexedDB path and a localStorage fallback (the catch path used when an IDB read throws). The fallback copy had drifted — it omitted `notes` and `standingNotes`. So if an IDB read failed and the session was recovered from localStorage, the notes textareas weren't repopulated, and the next `saveSession()` then read them empty and overwrote the saved notes: quiet data loss. Narrow (needs an IDB read failure plus a localStorage-resident session) but real.
+
+- Both restore paths now route through a single `_applySessionToState(s)` helper, so they can never diverge again. The fallback path now restores `notes` and `standingNotes` like the primary path.
+- `idbOpen()` now drops its cached connection handle on `versionchange`/`close`, so a connection closed by another tab (multi-tab / multi-machine use) reconnects on the next access instead of throwing `InvalidStateError`. The save path's localStorage fallback already covered this, but it now self-heals rather than degrading until reload.
+
+### Files changed
+- `js/storage.js` — `_applySessionToState()` helper unifies both restore paths; `idbOpen()` connection-handle guards; build stamp.
+- `js/app.js`, `index.html`, `js/version.js`, `js/api-links.js`, helper pages — version/cache-bust to v3.56.20.
+
+---
+
 ## v3.56.19
 **Build:** `20260524-005` · **Released:** May 24, 2026
 
