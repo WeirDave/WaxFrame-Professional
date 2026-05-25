@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260525-001
+//  Build: 20260525-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -596,6 +596,33 @@ function saveProject() {
   updateMaskPreview();
 }
 
+// v3.56.38 — Import-trust hardening. Custom AIs entered through "Add Custom
+// AI" get safe, generated ids/urls, but a saved hive or imported backup can
+// carry arbitrary `customAIs` objects whose id / provider / name / urls later
+// land in element IDs, inline handlers, hrefs, titles, and visible text. This
+// normalizes those fields at the single load chokepoint so nothing untrusted
+// reaches the render path with structure intact. Free text (name) is left as
+// a string and output-encoded at the render sinks; format-constrained fields
+// (id, provider) are slugged; urls are dropped unless absolute http/https.
+function _safeImportUrl(u) {
+  try {
+    const p = new URL(String(u ?? ''));
+    return (p.protocol === 'http:' || p.protocol === 'https:') ? p.href : '';
+  } catch { return ''; }
+}
+function _normalizeImportedAI(ai) {
+  if (!ai || typeof ai !== 'object') return null;
+  // id / provider → safe slug. Preserve legit ids like "mistral_1699..".
+  const slug = v => String(v ?? '').replace(/[^A-Za-z0-9_-]/g, '_').slice(0, 64);
+  ai.id        = slug(ai.id);
+  ai.provider  = slug(ai.provider) || ai.id;
+  if (!ai.id) return null;                 // unusable without an id
+  ai.name      = String(ai.name ?? ai.id).slice(0, 200);
+  ai.url       = _safeImportUrl(ai.url);
+  ai.apiConsole = _safeImportUrl(ai.apiConsole);
+  return ai;
+}
+
 function loadSettings() {
   try {
     // ── Try new split storage first ──
@@ -638,6 +665,7 @@ function loadSettings() {
     // kept for clarity / documentation of the migration intent.)
     if (h.customAIs) {
       h.customAIs.forEach(ai => {
+        if (!_normalizeImportedAI(ai)) return;   // sanitize in place; drop if unusable
         if (!aiList.find(a => a.id === ai.id)) aiList.push(ai);
         if (!API_CONFIGS[ai.provider] && h.customAIConfigs?.[ai.provider]) {
           API_CONFIGS[ai.provider] = h.customAIConfigs[ai.provider];
