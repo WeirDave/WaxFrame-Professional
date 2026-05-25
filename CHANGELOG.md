@@ -12,6 +12,7 @@ The API Key Guide (`api-details.html`) was the only documentation page that laid
 - **Single-column card flow.** The page's `.two-col` grid is collapsed to a single column and the two `.col` panel wrappers are dissolved, so the provider cards (`.wf-card` / `.ai-card`) now flow straight down the page exactly like the other docs. The existing flat card styling is reused unchanged — no shadows, hover effects, or new heading treatments were added; the goal was consistency, not a redesign.
 - **Reading order unchanged.** Because the cards were already authored in sidebar-TOC order (Free & Low-Cost → Pay-As-You-Go → Reference), collapsing the columns preserves that exact top-to-bottom order — no markup was reordered.
 - **Fully scoped, zero regression.** The change is gated behind a new `.api-guide-cols` modifier class on the single API-page wrapper. `.two-col` is used on no other page, so nothing else in the app or docs is affected.
+- **Copy fix.** Reworded the Gemini tip so DeepSeek reads as a *near-free* reviewer (lowest cost) rather than a "rock-bottom reviewer," which implied lowest quality.
 
 ### Files changed
 - `api-details.html` — `.api-guide-cols` modifier added to the content wrapper; build/version/cache-bust stamps to v3.56.39.
