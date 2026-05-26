@@ -2,6 +2,35 @@
 
 ---
 
+## v3.58.8
+**Build:** `20260526-025` · **Released:** May 26, 2026
+
+### Fix: ChatGPT vision OCR (gpt-5.x) + surface real provider errors
+
+PDF vision OCR failed with HTTP 400 when the ChatGPT Worker Bee used a
+current model (e.g. `gpt-5.5`). The call sent `max_tokens`, which gpt-5.x
+rejects — it requires `max_completion_tokens`. The failure was hidden behind a
+generic "ChatGPT vision returned no text," so the actual cause (named plainly
+in OpenAI's 400 body) never reached the user.
+
+- **OpenAI vision** now sends `max_completion_tokens` instead of `max_tokens`.
+  This key is accepted by `gpt-4o` and `gpt-5.x` alike, so it is a universal
+  swap, not a conditional.
+- **`visionErrorDetail()`** — on any non-ok vision response (all four
+  providers), WaxFrame now reads the provider's own error body, surfaces its
+  real message in the GUI status line, and logs a DEV console breadcrumb
+  (model + status + body). Applies to **both** the Starting Document and
+  Reference Material upload paths, since both share the extraction core.
+- Empty-response cases are now labeled "(response was empty)" to distinguish
+  them from a rejected request.
+- Grok (xAI) left on `max_tokens` (not deprecated there); if that changes, the
+  surfaced error will name the exact parameter to swap.
+
+Builds on v3.58.7's vision provider-fallback chain: a rejected request from one
+provider is now both clearly explained and retried against the others.
+
+---
+
 ## v3.58.7
 **Build:** `20260526-024` · **Released:** May 26, 2026
 
