@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-026
+//  Build: 20260526-028
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-026';         // build stamp — update each session
+const BUILD       = '20260526-028';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7088,13 +7088,13 @@ async function runVisionWithFallback(images, statusEl = null) {
     }
     try {
       const t = await runVisionTranscription(images, ai.cfg, ai.key);
-      if (t && t.trim()) return { text: t, used: ai.cfg.label, errors };
+      if (t && t.trim()) return { text: t, used: ai.cfg.label, usedProvider: ai.provider, errors };
       errors.push(`${ai.cfg.label}: returned no text`);
     } catch (e) {
       errors.push(`${ai.cfg.label}: ${e.message}`);
     }
   }
-  return { text: '', used: '', errors };
+  return { text: '', used: '', usedProvider: '', errors };
 }
 
 // ── Starting Document handler ──
@@ -7324,6 +7324,15 @@ async function extractFromFile(file, options = {}) {
 async function extractPDF(file) {
   const result = { text: '', warnings: [], sourceType: 'pdf' };
 
+  // v3.59.1 — narrate the whole pipeline, not just the vision tail. This
+  // helper updates whichever status line is live (Starting Doc or Reference)
+  // so the slow parse/render stretch on tricky PDFs no longer sits silently
+  // on "Reading…". Updates land because each phase awaits (yielding to paint).
+  const _stat = (msg) => {
+    const el = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
+    if (el) { el.textContent = msg; if (typeof setFileStatusState === 'function') setFileStatusState(el, 'loading'); }
+  };
+
   if (!window.pdfjsLib) {
     throw new Error('PDF.js not loaded — refresh the page and try again');
   }
@@ -7333,6 +7342,7 @@ async function extractPDF(file) {
     window._pdfjsWorkerSet = true;
   }
 
+  _stat('⏳ Parsing PDF structure…');
   const arrayBuffer = await file.arrayBuffer();
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
 
@@ -7363,6 +7373,7 @@ async function extractPDF(file) {
   let totalAnnotations = 0;
 
   for (let i = 1; i <= pdf.numPages; i++) {
+    if (pdf.numPages > 1) _stat(`⏳ Reading text — page ${i} of ${pdf.numPages}…`);
     const page = await pdf.getPage(i);
     const rawContent = await page.getTextContent();
 
@@ -7522,7 +7533,7 @@ async function extractPDF(file) {
   const reason = isScanned ? 'scanned/image-based PDF detected' : 'character-spacing artifacts detected';
   const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
   if (status) {
-    status.textContent = `⏳ ${reason.charAt(0).toUpperCase() + reason.slice(1)} — sending to AI for vision transcription. This may take 15–30 seconds…`;
+    status.textContent = `⏳ ${reason.charAt(0).toUpperCase() + reason.slice(1)} — rendering pages for AI vision…`;
     setFileStatusState(status, 'loading');
   }
 
@@ -7549,8 +7560,9 @@ async function extractPDF(file) {
 
   // v3.58.7 — Try every keyed vision provider, not just the first. One
   // provider returning empty no longer kills the whole upload.
-  const { text: transcribed, used, errors } = await runVisionWithFallback(pageImages, status);
+  const { text: transcribed, used, usedProvider, errors } = await runVisionWithFallback(pageImages, status);
   if (transcribed && transcribed.trim()) {
+    window._verifyLastProvider = usedProvider || '';   // v3.59.2 — rotation anchor
     result.text = (outlineText + transcribed + formText).trim();
     result.sourceType = 'pdf-vision';
     result.warnings.push(`Extracted via AI vision (${used}) — check for accuracy before running rounds`);
@@ -7736,19 +7748,57 @@ function openVerifyPanelForRef(docId) {
 
 // Core opener. opts: { name, blobUrl|null, text, onSave(newText) }.
 let _verifyOnSave = null;
+let _verifyOriginalText = '';
+
+// v3.59.2 — compute the NEXT keyed vision provider after the last one used,
+// wrapping around. Returns { provider, label, ai } or null if there is no
+// *other* keyed vision provider to rotate to.
+function _verifyNextVisionProvider() {
+  const ais = (typeof getVisionCapableAIs === 'function') ? getVisionCapableAIs() : [];
+  if (ais.length <= 1) return null;          // nothing to rotate to
+  const last = window._verifyLastProvider || '';
+  let idx = ais.findIndex(a => a.provider === last);
+  if (idx < 0) idx = 0;                       // unknown → treat as if at first
+  const next = ais[(idx + 1) % ais.length];
+  return { provider: next.provider, label: next.cfg.label, ai: next };
+}
+
+// Sync the re-scan button label to name the engine it will try NEXT, and the
+// primary button to Save vs Done depending on whether the text was edited.
+function _syncVerifyButtons() {
+  const ta    = document.getElementById('verifyText');
+  const reread = document.getElementById('verifyRereadBtn');
+  const save  = document.getElementById('verifySaveBtn');
+  if (reread) {
+    const nxt = _verifyNextVisionProvider();
+    const canReread = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0 && nxt;
+    reread.style.display = canReread ? 'inline-flex' : 'none';
+    if (canReread) reread.textContent = `🔁 Re-scan with ${nxt.label}`;
+  }
+  if (save && ta) {
+    const changed = ta.value !== _verifyOriginalText;
+    save.textContent = changed ? '✅ Save edits' : 'Done';
+  }
+}
+
 function openVerifyPanel(opts) {
   const panel = document.getElementById('verifyPanel');
   if (!panel) return;
   _verifyOnSave = typeof opts.onSave === 'function' ? opts.onSave : null;
+  _verifyOriginalText = opts.text || '';
 
   const nameEl  = document.getElementById('verifyDocName');
   const frame   = document.getElementById('verifyPdfFrame');
   const noRender= document.getElementById('verifyNoRender');
   const ta      = document.getElementById('verifyText');
-  const reread  = document.getElementById('verifyRereadBtn');
+  const note    = document.getElementById('verifyRereadNote');
 
   if (nameEl) nameEl.textContent = opts.name || 'document';
-  if (ta) ta.value = opts.text || '';
+  if (ta) {
+    ta.value = _verifyOriginalText;
+    ta.oninput = _syncVerifyButtons;   // live Save/Done toggle
+  }
+  if (note) note.textContent = '';
 
   // Left pane: render the original if we have a renderable blob; else show
   // a clear "preview not available" note (Office formats can't render in an
@@ -7763,13 +7813,7 @@ function openVerifyPanel(opts) {
     noRender.style.display = 'flex';
   }
 
-  // "Try a different reader" only makes sense when we still have the
-  // rendered page images from a vision OCR pass to re-send.
-  if (reread) {
-    const canReread = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
-    reread.style.display = canReread ? 'inline-flex' : 'none';
-  }
-
+  _syncVerifyButtons();
   panel.classList.add('active');
   document.addEventListener('keydown', _verifyEscHandler);
 }
@@ -7782,36 +7826,50 @@ function closeVerifyPanel() {
   document.removeEventListener('keydown', _verifyEscHandler);
 }
 
+// Save only when the text actually changed; otherwise just close (the button
+// reads "Done" in that case, so there's no false "save" implication).
 function saveVerifyEdits() {
   const ta = document.getElementById('verifyText');
-  if (ta && _verifyOnSave) _verifyOnSave(ta.value);
+  if (ta && _verifyOnSave && ta.value !== _verifyOriginalText) _verifyOnSave(ta.value);
   closeVerifyPanel();
 }
 
-// Re-run OCR through the NEXT keyed vision provider (real second opinion —
-// different OCR engine, not the same model retried). Repopulates the editor.
+// Re-scan the SAME rendered page images through a DIFFERENT AI — rotating to
+// the next keyed vision provider each click (ChatGPT → Claude → Gemini → Grok
+// → wrap). A genuine second opinion: each is a different OCR engine. This is
+// the "it's too garbled to fix by hand" escape hatch, not the primary path —
+// the primary path is editing the text directly against the original.
 async function verifyTryDifferentReader() {
   const ta   = document.getElementById('verifyText');
   const btn  = document.getElementById('verifyRereadBtn');
   const note = document.getElementById('verifyRereadNote');
   if (!Array.isArray(window._lastPDFPages) || !window._lastPDFPages.length) {
-    if (note) note.textContent = 'No rendered pages available to re-read.';
+    if (note) note.textContent = 'No rendered page images are available to re-scan.';
     return;
   }
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ Re-reading…'; }
-  if (note) note.textContent = 'Sending the page images to the next available vision provider…';
+  const nxt = _verifyNextVisionProvider();
+  if (!nxt) {
+    if (note) note.textContent = 'No other vision-capable AI is keyed. Add a Claude, Gemini, or Grok key to try a different one.';
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = `⏳ Re-scanning with ${nxt.label}…`; }
+  if (note) note.textContent = `Sending the page images to ${nxt.label}…`;
   try {
-    const { text, used, errors } = await runVisionWithFallback(window._lastPDFPages, null);
-    if (text && text.trim()) {
-      if (ta) ta.value = text.trim();
-      if (note) note.textContent = `Re-read via ${used}. Compare against the original and Save if it's better.`;
+    const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
+    if (t && t.trim()) {
+      window._verifyLastProvider = nxt.provider;     // advance the rotation anchor
+      if (ta) { ta.value = t.trim(); }
+      if (note) note.textContent = `Re-scanned with ${nxt.label}. Compare against the original — Save if it's better, or re-scan again with the next AI.`;
     } else {
-      if (note) note.textContent = `No provider could re-read it (${errors.join('; ')}). Edit manually instead.`;
+      window._verifyLastProvider = nxt.provider;     // still advance, so next click tries a new one
+      if (note) note.textContent = `${nxt.label} returned no text. Click again to try the next AI, or edit by hand.`;
     }
   } catch(e) {
-    if (note) note.textContent = `Re-read failed: ${e.message}. Edit manually instead.`;
+    window._verifyLastProvider = nxt.provider;
+    if (note) note.textContent = `${nxt.label} failed: ${e.message}. Click again to try the next AI, or edit by hand.`;
   } finally {
-    if (btn) { btn.disabled = false; btn.textContent = '🔁 Try a different reader'; }
+    if (btn) { btn.disabled = false; }
+    _syncVerifyButtons();   // relabel button to name the NEXT engine in rotation
   }
 }
 

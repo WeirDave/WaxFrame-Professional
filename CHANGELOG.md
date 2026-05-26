@@ -2,6 +2,51 @@
 
 ---
 
+## v3.59.2
+**Build:** `20260526-028` · **Released:** May 26, 2026
+
+### Fix + polish: Verify panel re-scan rotation, button clarity
+
+Follow-up to the v3.59.0 Verify & Edit panel based on testing:
+
+- **Re-scan now actually rotates.** "Try a different reader" always restarted
+  at the first provider (ChatGPT), so every click re-ran the same AI instead of
+  a different one. It now advances to the next keyed vision provider each click
+  — ChatGPT → Claude → Gemini → Grok → wrap — a genuine second opinion.
+- **Renamed** "Try a different reader" → **"Re-scan with {AI}"**, naming the
+  engine it will use next, with a tooltip making clear it's the last-resort
+  escape hatch (re-runs the page images through a different AI), not the primary
+  path. Header guidance now tells the user to edit the text directly first.
+- **Primary button is now dynamic:** reads **"Done"** when nothing has been
+  edited (and simply closes), **"Save edits"** only once the text has actually
+  changed — no more implying a save when there's nothing to save.
+- **Re-scan status is now a clearly separated bar** (thick accent divider +
+  tinted background) instead of a hairline blended into the document text.
+- If no other vision-capable AI is keyed, the re-scan button hides and explains
+  that adding a Claude/Gemini/Grok key enables a different reader.
+
+---
+
+## v3.59.1
+**Build:** `20260526-027` · **Released:** May 26, 2026
+
+### Fix: progress states now cover the whole PDF pipeline
+
+v3.59.0 added an OCR progress message, but it only fired once extraction
+reached the vision step — so the slow, silent stretch *before* that (parsing
+and per-page text extraction on tricky PDFs) still showed nothing but
+"Reading…". Status now narrates every phase:
+
+- `Parsing PDF structure…`
+- `Reading text — page N of M…` (multi-page documents)
+- `Rendering pages for AI vision…`
+- `Reading N pages with AI vision — this can take a minute or two…`
+
+Each phase awaits, so the status line repaints between steps — no more silent
+gaps on slow imports.
+
+---
+
 ## v3.59.0
 **Build:** `20260526-026` · **Released:** May 26, 2026
 
