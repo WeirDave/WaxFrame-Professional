@@ -2,6 +2,31 @@
 
 ---
 
+## v3.57.0
+**Build:** `20260525-012` · **Released:** May 25, 2026
+
+### Feature: Privacy Policy + Terms of Use pages, live model names in the API guide
+
+**Two new legal pages.** `privacy.html` and `terms.html` ship as full helper-pages matching site chrome (nav, header, footer, theme toggle, license + about modals). Content is grounded in WaxFrame's actual architecture — no backend, no database, no tracking; API keys in browser `localStorage`/`IndexedDB`; the single Claude Cloudflare-Worker exception (sees traffic in-flight, logs/persists nothing); third-party providers governed by their own policies; Gumroad handles payments; GitHub Pages hosting. Terms cover AGPL-3.0 / as-is, user-owned API keys and costs, provider compliance, and California governing law. Contact channel is GitHub Issues.
+
+- **Discoverable site-wide.** A new **Legal** nav section (Privacy Policy / Terms of Use) was added to all five helper pages plus the two new pages; the main app links both from its **About** modal. The API guide's "Open Source & Privacy" modal and the Claude-proxy disclosure now link the Privacy Policy directly.
+
+**API guide model names are now live.** `api-details.html` previously hardcoded every "Model:" value in two places (the provider cards and the Know-Your-Hive cards — 19 in total). It now loads the side-effect-free `js/api.js` and derives each name from the live `API_CONFIGS[provider].model` seed via a `data-seed-model` attribute. The hardcoded text remains as a graceful fallback if `api.js` fails to load. The guide can no longer drift from the running app.
+
+**Claude-proxy copy.** The key-storage disclosure now references the new Privacy Policy, while keeping the existing note that opening the Worker URL directly returns an API error (that's normal). The hive's fact-check run was reviewed; its hallucinated model names (`gpt-5.5`, `claude-3-5-sonnet-latest`, `gemini-2.0-flash`, `grok-2`) were rejected — real names stand.
+
+**Build-stamp hygiene.** `js/theme.js` (stuck at `20260525-010`) and `js/docs-scrollspy.js` (no stamp) are now synced/stamped to `20260525-012`. Both files are added to the release ceremony's js-header sync going forward.
+
+### Files changed
+- `privacy.html`, `terms.html` — **new** legal pages.
+- `api-details.html` — live model derivation (`api.js` + injection), Claude-proxy Privacy link, modal Privacy/Terms links, Legal nav section.
+- `index.html` — Legal row in About modal.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `prompt-editor.html` — Legal nav section.
+- `js/theme.js`, `js/docs-scrollspy.js` — build-stamp sync.
+- `js/version.js`, `js/app.js`, helper `js/*` headers — build/version/cache-bust sync to v3.57.0.
+
+---
+
 ## v3.56.48
 **Build:** `20260525-011` · **Released:** May 25, 2026
 

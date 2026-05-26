@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260525-011
+     Build: 20260525-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260525-011">
+  <meta name="waxframe-build" content="20260525-012">
   <title>WaxFrame — API Key Guide</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and more. Includes cost guidance, tips, and a quick-links drawer.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and more. Includes cost guidance, tips, and a quick-links drawer.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.56.48">
+  <link rel="stylesheet" href="style.css?v=3.57.0">
 </head>
 <body class="helper-body">
 
@@ -70,6 +70,11 @@
     <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
     <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Legal</div>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
   </div>
 </div>
 
@@ -146,7 +151,7 @@
     <div class="wf-card is-green">
       <h3 class="wf-card-title">Your keys live in your browser</h3>
       <p>Your API keys are stored in your browser's <code>localStorage</code> and sent to each AI provider only when WaxFrame makes a request on your behalf. WaxFrame has no backend — there is no database holding your keys, your prompts, or your documents.</p>
-      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
+      <p><strong>One exception — Claude.</strong> Anthropic's API does not currently support direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer (see our <a href="privacy.html" class="link-accent">Privacy Policy</a>) at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The worker passes your request straight through to Anthropic and does not log or persist your API key or prompt content, but it does see them in-flight while forwarding. (The link goes to the live Worker endpoint, which expects API requests — opening it directly in a browser returns an API error rather than a page. That's normal.) All other providers (OpenAI, Gemini, Grok, Perplexity, Mistral, Cohere, Together AI, DeepSeek) connect directly browser-to-provider with no intermediary.</p>
 
       <p><strong>Where exactly they live:</strong> your API keys are saved in your browser's <code>localStorage</code> (the same mechanism that remembers your dark-mode preference, your hive setup, and your project state). This is per-browser-profile, per-machine — keys you save on your work laptop don't appear on your phone, and clearing browser data for this site removes them. They are <strong>not encrypted at rest</strong>; any code or extension running in this browser profile that can read <code>localStorage</code> can read them. That's the same threat model as any browser-stored credential. For shared or untrusted devices, use a separate browser profile or clear data when finished.</p>
       <p>WaxFrame — open source, no backend, no tracking. <a href="#" onclick="document.getElementById('openSourceModal').classList.add('active');return false;" class="link-accent">Learn more →</a></p>
@@ -163,7 +168,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>gpt-4.1</code>
+          <span class="model-label">Model:</span><code data-seed-model="chatgpt">gpt-4.1</code>
           <span class="model-note">OpenAI's flagship model</span>
         </div>
         <ol class="steps">
@@ -187,7 +192,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>claude-sonnet-4-6</code>
+          <span class="model-label">Model:</span><code data-seed-model="claude">claude-sonnet-4-6</code>
           <span class="model-note">Anthropic's capable everyday model</span>
         </div>
         <ol class="steps">
@@ -211,7 +216,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>gemini-2.5-flash</code>
+          <span class="model-label">Model:</span><code data-seed-model="gemini">gemini-2.5-flash</code>
           <span class="model-note">Google's fast multimodal model</span>
         </div>
         <ol class="steps">
@@ -234,7 +239,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>grok-4-fast-non-reasoning</code>
+          <span class="model-label">Model:</span><code data-seed-model="grok">grok-4-fast-non-reasoning</code>
         </div>
         <ol class="steps">
           <li>Go to <a href="https://console.x.ai" target="_blank" rel="noopener noreferrer">console.x.ai</a> and sign in with your X account.</li>
@@ -256,7 +261,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>mistral-large-latest</code>
+          <span class="model-label">Model:</span><code data-seed-model="mistral">mistral-large-latest</code>
           <span class="model-note">Mistral's flagship model</span>
         </div>
         <ol class="steps">
@@ -279,7 +284,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>sonar-pro</code>
+          <span class="model-label">Model:</span><code data-seed-model="perplexity">sonar-pro</code>
         </div>
         <ol class="steps">
           <li>Go to <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer">console.perplexity.ai</a> and sign in.</li>
@@ -313,7 +318,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>command-r-plus</code>
+          <span class="model-label">Model:</span><code data-seed-model="cohere">command-r-plus</code>
           <span class="model-note">Cohere's flagship Command model</span>
         </div>
         <ol class="steps">
@@ -336,7 +341,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>deepseek-chat</code>
+          <span class="model-label">Model:</span><code data-seed-model="deepseek">deepseek-chat</code>
           <span class="model-note">DeepSeek's flagship model</span>
         </div>
         <ol class="steps">
@@ -359,7 +364,7 @@
       </div>
       <div class="ai-card-body">
         <div class="model-line">
-          <span class="model-label">Model:</span><code>meta-llama/Llama-3.3-70B-Instruct-Turbo</code>
+          <span class="model-label">Model:</span><code data-seed-model="together">meta-llama/Llama-3.3-70B-Instruct-Turbo</code>
           <span class="model-note">Open-weight model via Together's gateway</span>
         </div>
         <ol class="steps">
@@ -411,7 +416,7 @@
       <img src="images/chatgpt.ico" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">ChatGPT</div>
-        <div class="kyh-card-model">gpt-4.1</div>
+        <div class="kyh-card-model" data-seed-model="chatgpt">gpt-4.1</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
@@ -452,7 +457,7 @@
       <img src="images/claude.ico" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Claude</div>
-        <div class="kyh-card-model">claude-sonnet-4-6</div>
+        <div class="kyh-card-model" data-seed-model="claude">claude-sonnet-4-6</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
@@ -494,7 +499,7 @@
       <img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">DeepSeek</div>
-        <div class="kyh-card-model">deepseek-chat</div>
+        <div class="kyh-card-model" data-seed-model="deepseek">deepseek-chat</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -536,7 +541,7 @@
       <img src="https://www.google.com/s2/favicons?domain=gemini.google.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Gemini</div>
-        <div class="kyh-card-model">gemini-2.5-flash</div>
+        <div class="kyh-card-model" data-seed-model="gemini">gemini-2.5-flash</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
@@ -578,7 +583,7 @@
       <img src="https://www.google.com/s2/favicons?domain=grok.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Grok</div>
-        <div class="kyh-card-model">grok-4-fast-non-reasoning</div>
+        <div class="kyh-card-model" data-seed-model="grok">grok-4-fast-non-reasoning</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -618,7 +623,7 @@
       <img src="images/perplexity.ico" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Perplexity</div>
-        <div class="kyh-card-model">sonar-pro</div>
+        <div class="kyh-card-model" data-seed-model="perplexity">sonar-pro</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -659,7 +664,7 @@
       <img src="images/icon-mistral.png" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Mistral</div>
-        <div class="kyh-card-model">mistral-large-latest</div>
+        <div class="kyh-card-model" data-seed-model="mistral">mistral-large-latest</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-builder">Strong Builder</span>
@@ -700,7 +705,7 @@
       <img src="images/icon-cohere.png" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Cohere</div>
-        <div class="kyh-card-model">command-r-plus</div>
+        <div class="kyh-card-model" data-seed-model="cohere">command-r-plus</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -738,7 +743,7 @@
       <img src="images/icon-together.png" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Together AI</div>
-        <div class="kyh-card-model">meta-llama/Llama-3.3-70B-Instruct-Turbo</div>
+        <div class="kyh-card-model" data-seed-model="together">meta-llama/Llama-3.3-70B-Instruct-Turbo</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge kyh-badge-reviewer">Reviewer</span>
@@ -779,7 +784,7 @@
       <img src="https://www.google.com/s2/favicons?domain=copilot.microsoft.com&sz=64" class="kyh-card-icon" onerror="this.style.display='none'">
       <div>
         <div class="kyh-card-name">Copilot</div>
-        <div class="kyh-card-model">gpt-4o</div>
+        <div class="kyh-card-model" data-seed-model="copilot">gpt-4o</div>
       </div>
       <div class="kyh-badges">
         <span class="kyh-badge">Ready when keys ship</span>
@@ -842,7 +847,7 @@
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
+      <p class="goal-info-tip">Your API keys go directly from your browser to each AI provider, with one exception: Claude traffic routes through a small Cloudflare Worker (no CORS support from Anthropic) that does not log keys or prompts. See the API Setup page for the full disclosure. Read our <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -921,14 +926,28 @@
 </div>
 
 
-<script src="js/theme.js?v=3.56.48"></script>
-<script src="js/nav-helper.js?v=3.56.48"></script>
-<script src="js/license-helper.js?v=3.56.48"></script>
-<script src="js/api-links.js?v=3.56.48"></script>
-<script src="js/version.js?v=3.56.48"></script>
-<script src="js/docs-scrollspy.js?v=3.56.48"></script>
+<script src="js/theme.js?v=3.57.0"></script>
+<script src="js/nav-helper.js?v=3.57.0"></script>
+<script src="js/license-helper.js?v=3.57.0"></script>
+<script src="js/api-links.js?v=3.57.0"></script>
+<script src="js/version.js?v=3.57.0"></script>
+<script src="js/docs-scrollspy.js?v=3.57.0"></script>
+<script src="js/api.js?v=3.57.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+  // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds
+  // (loaded from js/api.js) so this guide can never drift from the app again.
+  // The hardcoded text in each [data-seed-model] element is the graceful
+  // fallback if api.js fails to load.
+  try {
+    if (window.API_CONFIGS) {
+      document.querySelectorAll('[data-seed-model]').forEach(function(el) {
+        var key = el.getAttribute('data-seed-model');
+        var cfg = window.API_CONFIGS[key];
+        if (cfg && cfg.model) el.textContent = cfg.model;
+      });
+    }
+  } catch (e) { /* keep hardcoded fallback */ }
 </script>
 </body>
 </html>
