@@ -2,6 +2,24 @@
 
 ---
 
+## v3.58.1
+**Build:** `20260525-018` · **Released:** May 25, 2026
+
+### Fix: Recommend Models broken for ChatGPT, Claude, and Gemini
+
+The "Recommend Models" feature (Worker Bee page, and the cached picks the Change Builder modal reads) silently returned nothing for the three frontier providers. Two root causes, both isolated to the recommendation call — **the round engine was never affected.**
+
+- **`temperature: 0` is rejected by current ChatGPT and Claude models.** Claude now 400s with "temperature is deprecated for this model"; ChatGPT 400s with "temperature does not support 0 ... only the default (1) is supported." The recommend call was the only place that sent `temperature` — it's been removed from all three payloads. Determinism was a nice-to-have for picking a model; reliability wins.
+- **Gemini answer was buried in chain-of-thought.** Newer Gemini "pro-preview" models emit a long reasoning dump and place the answer indented inside it (`    *   RECOMMENDED: 10`). The parser was anchored to column zero (`/^RECOMMENDED:/m`) and missed it. It now tolerates leading whitespace and markdown bullets, and takes the *last* occurrence — CoT models restate intermediate guesses, so only the final line is authoritative (this also skips the format-spec echo earlier in the response).
+
+After updating, click **Recommend Models** on each affected AI to repopulate the cached ✨/🔨 picks.
+
+### Files changed
+- `js/app.js` — `recommendModel()`: removed `temperature` from all three request formats; tolerant last-match parser for the `RECOMMENDED` / `RECOMMENDED_WHY` lines.
+- All pages + `js/*` — build/cache-bust sync to v3.58.1.
+
+---
+
 ## v3.58.0
 **Build:** `20260525-017` · **Released:** May 25, 2026
 
