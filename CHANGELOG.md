@@ -2,6 +2,20 @@
 
 ---
 
+## v3.58.6
+**Build:** `20260525-023` · **Released:** May 25, 2026
+
+### Fix: removed the crown emoji from the Builder action + toasts
+
+The 👑 crown had crept onto the "Set as Builder" button and the "Builder changed" toasts — it's been out of use for many versions and isn't part of the current iconography. Replaced with the 🔨 hammer, the established Builder symbol used elsewhere (recommendation markers, the Builder Decisions header). No crowns remain in live code.
+
+### Files changed
+- `js/app.js` — `confirmBuilderFromModal` button text + `setBuilderFromModal` toasts: 👑 → 🔨.
+- `index.html` — Change Builder confirm button label: 👑 → 🔨.
+- All pages + `js/*` — build/cache-bust sync to v3.58.6.
+
+---
+
 ## v3.58.5
 **Build:** `20260525-022` · **Released:** May 25, 2026
 
