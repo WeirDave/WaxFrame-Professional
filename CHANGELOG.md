@@ -2,6 +2,23 @@
 
 ---
 
+## v3.57.2
+**Build:** `20260525-014` · **Released:** May 25, 2026
+
+### Fix: a round could falsely report success when every reviewer failed
+
+In `runRound()`, the Builder phase only runs when there is a Builder **and** at least one reviewer responded. If every reviewer failed in the same round (a provider outage, or a bad-key wave) — or if there was no Builder — that phase was skipped, but the round still fell through to the success path. The result: the round counter advanced, an `outcome:'continuing'` record was written to history, and on unlicensed installs a **free trial round was consumed** — all for a round in which no document was actually built.
+
+A guard now hard-fails these cases and routes them into the existing failed-round handler: the round is recorded as `round_failed`, the error modal surfaces, Auto Mode treats it as a failure for streak purposes, the round counter does **not** advance, and no trial round is burned. The normal (happy-path) flow is unchanged.
+
+Found via an external `app.js` audit (Codex); confirmed against the live code before fixing.
+
+### Files changed
+- `js/app.js` — `runRound()` hard-fail guard for zero successful reviews / no Builder.
+- All pages + `js/*` — build/version/cache-bust sync to v3.57.2.
+
+---
+
 ## v3.57.1
 **Build:** `20260525-013` · **Released:** May 25, 2026
 

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-013
+//  Build: 20260525-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-013';         // build stamp — update each session
+const BUILD       = '20260525-014';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -12249,6 +12249,28 @@ async function runRound() {
       setBeeStatus(builderAI.id, 'error', e.message);
       setStatus(`⚠️ Builder failed: ${e.message}`);
       consoleLog(`❌ Builder (${builderAI.name}) failed: ${e.message}`, 'error');
+    }
+  }
+
+  // v3.57.2 — P1: hard-fail a round where nothing was actually built.
+  // The Builder block above is gated on `builderAI && successfulReviews.length
+  // > 0`. If every reviewer failed (outage / bad-key wave) or there is no
+  // Builder, that block is skipped and builderHadError stays false — so the
+  // success/history path below would run, push outcome:'continuing', advance
+  // the round, AND burn a free trial round (incrementTrialRound below), all
+  // while no document was produced. Flip the flag so the round routes into the
+  // existing failure handler instead.
+  if (!builderHadError && (!builderAI || successfulReviews.length === 0)) {
+    builderHadError = true;
+    _failedRoundReason = 'api';
+    if (!builderAI) {
+      _failedRoundDetails = `No Builder selected — nothing to build · Time: ${new Date().toLocaleTimeString()}`;
+      setStatus('⚠️ No Builder selected — round not completed');
+      consoleLog('❌ Round aborted — no Builder selected, nothing to build', 'error');
+    } else {
+      _failedRoundDetails = `All ${allReviewers.length} reviewer${allReviewers.length!==1?'s':''} failed — no reviews to build from · Time: ${new Date().toLocaleTimeString()}`;
+      setStatus('⚠️ Every reviewer failed — round not completed');
+      consoleLog(`❌ Round aborted — all ${allReviewers.length} reviewer${allReviewers.length!==1?'s':''} failed, no document built`, 'error');
     }
   }
 
