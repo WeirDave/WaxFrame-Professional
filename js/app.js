@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-024
+//  Build: 20260526-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-024';         // build stamp — update each session
+const BUILD       = '20260526-025';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -8306,35 +8306,67 @@ function escapeHtml(s) {
 //  Supports the four built-in vision providers: ChatGPT (GPT-4o),
 //  Claude (Sonnet/Opus 4 family), Gemini (1.5+), and Grok (vision).
 // ============================================================
+// v3.58.8 — Surface the provider's REAL error instead of a generic
+// "returned no text". On any non-ok vision response, read the body, pull the
+// provider's own message, log a dev console breadcrumb, and return a rich
+// string. Both extraction wrappers (Starting Document + Reference Material)
+// display `e.message` verbatim, so throwing this message fixes both paths at
+// once. Example surfaced to the user:
+//   "ChatGPT vision rejected the request (HTTP 400) [model: gpt-5.5]:
+//    Unsupported parameter: 'max_tokens' is not supported with this model.
+//    Use 'max_completion_tokens' instead."
+async function visionErrorDetail(label, model, resp) {
+  let raw = '';
+  try { raw = await resp.text(); } catch (e) {}
+  let msg = '';
+  try {
+    const j = JSON.parse(raw);
+    msg = j?.error?.message || j?.message || j?.error?.code || (typeof j?.error === 'string' ? j.error : '');
+    if (msg && typeof msg !== 'string') msg = JSON.stringify(msg);
+  } catch (e) {
+    msg = raw.slice(0, 300);
+  }
+  const detail = `${label} vision rejected the request (HTTP ${resp.status})${model ? ` [model: ${model}]` : ''}${msg ? `: ${msg}` : ''}`;
+  // Dev console breadcrumb (visible in the in-app DEV console).
+  if (typeof consoleLog === 'function') consoleLog(`⚠️ ${detail}`);
+  console.warn(`[vision:${label}] HTTP ${resp.status} model=${model} — body:`, raw.slice(0, 500));
+  return detail;
+}
+
 async function runVisionTranscription(pageImages, visionCfg, visionKey) {
   const prompt = 'Transcribe all text from these document pages exactly as it appears. Preserve paragraph breaks and section structure. Return only the plain text — no commentary, no formatting symbols.';
 
   // ── ChatGPT (OpenAI) ──
   if (visionCfg.provider === 'chatgpt') {
+    const model = visionCfg.model || VISION_DEFAULTS.chatgpt;
     const body = JSON.stringify({
-      model: visionCfg.model || VISION_DEFAULTS.chatgpt,
+      model,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
         { type: 'text', text: prompt }
       ]}],
-      max_tokens: 4096
+      // v3.58.8 — gpt-5.x rejects `max_tokens` ("Unsupported parameter … use
+      // 'max_completion_tokens' instead"). max_completion_tokens is accepted by
+      // gpt-4o AND gpt-5.x, so it's a universal swap, not a conditional.
+      max_completion_tokens: 4096
     });
     const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${visionKey}` },
       body
     });
+    if (!resp.ok) throw new Error(await visionErrorDetail('ChatGPT', model, resp));
     const data = await resp.json();
     const transcribed = data?.choices?.[0]?.message?.content || '';
-    if (!transcribed.trim()) throw new Error('ChatGPT vision returned no text');
+    if (!transcribed.trim()) throw new Error('ChatGPT vision returned no text (response was empty)');
     return transcribed;
   }
 
   // ── Claude (Anthropic) — via WaxFrame proxy ──
   if (visionCfg.provider === 'claude') {
-    const claudeModel = visionCfg.model || VISION_DEFAULTS.claude;
+    const model = visionCfg.model || VISION_DEFAULTS.claude;
     const body = JSON.stringify({
-      model: claudeModel,
+      model,
       max_tokens: 4096,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b64 } })),
@@ -8346,15 +8378,16 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
       headers: { 'Content-Type': 'application/json', 'x-api-key': visionKey, 'anthropic-version': '2023-06-01' },
       body
     });
+    if (!resp.ok) throw new Error(await visionErrorDetail('Claude', model, resp));
     const data = await resp.json();
     const transcribed = data?.content?.[0]?.text || '';
-    if (!transcribed.trim()) throw new Error('Claude vision returned no text');
+    if (!transcribed.trim()) throw new Error('Claude vision returned no text (response was empty)');
     return transcribed;
   }
 
   // ── Gemini (Google) ──
   if (visionCfg.provider === 'gemini') {
-    const geminiModel = visionCfg.model || VISION_DEFAULTS.gemini;
+    const model = visionCfg.model || VISION_DEFAULTS.gemini;
     const body = JSON.stringify({
       contents: [{ parts: [
         ...pageImages.map(b64 => ({ inline_data: { mime_type: 'image/jpeg', data: b64 } })),
@@ -8362,20 +8395,24 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
       ]}]
     });
     const resp = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
       { method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': visionKey }, body }
     );
+    if (!resp.ok) throw new Error(await visionErrorDetail('Gemini', model, resp));
     const data = await resp.json();
     const transcribed = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!transcribed.trim()) throw new Error('Gemini vision returned no text');
+    if (!transcribed.trim()) throw new Error('Gemini vision returned no text (response was empty)');
     return transcribed;
   }
 
   // ── Grok (xAI) — OpenAI-compatible ──
+  // NOTE: xAI still accepts `max_tokens` (not deprecated as of this build), so
+  // it is left as-is. If xAI later mirrors OpenAI's change, the surfaced error
+  // from visionErrorDetail() will name the exact param to swap.
   if (visionCfg.provider === 'grok') {
-    const grokModel = visionCfg.model || VISION_DEFAULTS.grok;
+    const model = visionCfg.model || VISION_DEFAULTS.grok;
     const body = JSON.stringify({
-      model: grokModel,
+      model,
       messages: [{ role: 'user', content: [
         ...pageImages.map(b64 => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${b64}`, detail: 'high' } })),
         { type: 'text', text: prompt }
@@ -8387,9 +8424,10 @@ async function runVisionTranscription(pageImages, visionCfg, visionKey) {
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${visionKey}` },
       body
     });
+    if (!resp.ok) throw new Error(await visionErrorDetail('Grok', model, resp));
     const data = await resp.json();
     const transcribed = data?.choices?.[0]?.message?.content || '';
-    if (!transcribed.trim()) throw new Error('Grok vision returned no text');
+    if (!transcribed.trim()) throw new Error('Grok vision returned no text (response was empty)');
     return transcribed;
   }
 
