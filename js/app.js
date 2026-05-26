@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-018
+//  Build: 20260525-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-018';         // build stamp — update each session
+const BUILD       = '20260525-019';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -958,43 +958,78 @@ function openChangeBuilder(opts) {
       ? activeAIs.filter(a => a.id !== excludeId)
       : activeAIs;
     grid.innerHTML = candidates.map(ai => {
-      const isSelected = ai.id === builder;
-      // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
-      // which bypassed the brand-match catalog AND silently hid the icon
-      // when the PNG failed to load. Now routes through resolveAiIcon so
-      // the same three-tier chain applies: brand match → ai.icon → letter
-      // avatar (with v3.32.15's first-alphanumeric pickup). 36px matches
-      // the .builder-pick-icon CSS sizing in the small grid variant.
-      // Also fixes a pre-existing HTML bug: the prior template emitted
-      // two `class=` attributes on the same <div> (only the first was
-      // parsed, silently dropping `.builder-pick-card-inner`). Merged.
+      const isCurrent = ai.id === builder;
+      // v3.58.2 — compact candidate cards (icon + name). Clicking a card SELECTS
+      // it (highlight + repopulate the single shared model dropdown below the
+      // grid) instead of committing immediately, so the user picks the AI and
+      // its Builder model together, then commits via the "Set as Builder" button.
       const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 36);
-      // v3.58.0 — surface the model selector for each candidate so you can set
-      // the right Builder model AS you switch (slow/hallucinating builder, etc.)
-      // without leaving the work screen. Reuses buildModelSelector with
-      // showRecheck=false, so it reads the ✨/🔨 recommendations ALREADY cached
-      // from the Worker Bee page — NO fresh recommend call is made here. The
-      // wrapper stops click propagation so interacting with the dropdown/notes
-      // doesn't fire the card's setBuilderFromModal commit; clicking the card
-      // body (icon/name) still commits this AI + its currently-selected model.
-      const _cbModel = (API_CONFIGS[ai.provider] && API_CONFIGS[ai.provider].model) || '';
-      const _cbSel   = buildModelSelector(ai.id, ai.provider, _cbModel, false);
-      const _cbModelBlock = _cbSel ? `<div class="builder-pick-model" onclick="event.stopPropagation()">${_cbSel}</div>` : '';
-      return `<div class="builder-pick-btn btn builder-pick-card-inner ${isSelected ? 'selected' : ''}"
+      return `<div class="builder-pick-btn btn builder-pick-card-inner ${isCurrent ? 'selected' : ''}"
+        data-ai-id="${escapeHtml(ai.id)}"
         title="${escapeHtml(ai.name)}"
-        onclick="setBuilderFromModal('${ai.id}')">
+        onclick="selectBuilderCandidate('${ai.id}')">
         ${iconEl}
         <span class="builder-pick-name">${escapeHtml(ai.name)}</span>
-        ${isSelected ? '<span class="builder-pick-current"><img src="images/WaxFrame_Builder_v3.png" class="builder-pick-current-bee" alt="" onerror="this.style.display=\'none\'"> Current</span>' : ''}
-        ${_cbModelBlock}
+        ${isCurrent ? '<span class="builder-pick-current"><img src="images/WaxFrame_Builder_v3.png" class="builder-pick-current-bee" alt="" onerror="this.style.display=\'none\'"> Current</span>' : ''}
       </div>`;
     }).join('');
+    // v3.58.2 — pre-select a candidate so the shared dropdown is populated on
+    // open: prefer the current Builder (normal flow), else the first candidate
+    // (the builder-disable flow excludes the current Builder via excludeId).
+    _cbPendingId = null;
+    const _preId = (candidates.find(a => a.id === builder) || candidates[0])?.id || null;
+    if (_preId) { selectBuilderCandidate(_preId); }
+    else {
+      const _w = document.getElementById('changeBuilderModelWrap'); if (_w) _w.innerHTML = '';
+      const _b = document.getElementById('changeBuilderConfirm'); if (_b) { _b.disabled = true; _b.textContent = '👑 Set as Builder'; }
+    }
   }
   const modal = document.getElementById('changeBuilderModal');
   if (modal) modal.classList.add('active');
 }
 
+// v3.58.2 — shared-dropdown flow. selectBuilderCandidate highlights a card and
+// repopulates the single model dropdown; confirmBuilderFromModal commits.
+function selectBuilderCandidate(id) {
+  const ai = activeAIs.find(a => a.id === id);
+  if (!ai) return;
+  _cbPendingId = id;
+  const grid = document.getElementById('changeBuilderGrid');
+  if (grid) grid.querySelectorAll('.builder-pick-btn').forEach(el =>
+    el.classList.toggle('cb-pending', el.dataset.aiId === id));
+  const wrap = document.getElementById('changeBuilderModelWrap');
+  if (wrap) {
+    // showRecheck=false -> reuses the cached ✨/🔨 recommendations (no fresh call).
+    // v3.58.2 — since the user is picking a BUILDER, default the dropdown to the
+    // cached 🔨 Builder pick when one exists; fall back to the AI's currently
+    // configured model otherwise (no cache, custom AI, or NONE-flagged builder).
+    // The real persist happens in confirmBuilderFromModal, which reads the
+    // dropdown's live value — so the shown default and the committed model can
+    // never diverge even if the user never touches the dropdown.
+    const builderRec = getBuilderRecommendation(ai.id);
+    const cur = (API_CONFIGS[ai.provider] && API_CONFIGS[ai.provider].model) || '';
+    const defaultModel = (builderRec && builderRec.model) ? builderRec.model : cur;
+    const sel = buildModelSelector(ai.id, ai.provider, defaultModel, false);
+    wrap.innerHTML = sel || '<p class="cb-model-empty">No model list cached for this AI yet — run Recommend Models on the Worker Bee page first.</p>';
+  }
+  const btn = document.getElementById('changeBuilderConfirm');
+  if (btn) { btn.disabled = false; btn.textContent = `👑 Set ${ai.name} as Builder`; }
+}
+
+function confirmBuilderFromModal() {
+  if (!_cbPendingId) return;
+  // v3.58.2 — persist whatever the dropdown currently shows (the forced 🔨
+  // default, or the user's override) BEFORE committing. The <select>'s onchange
+  // only fires on user change, so reading .value here covers the click-confirm-
+  // without-touching-the-dropdown case where the shown 🔨 model differs from the
+  // AI's previously-configured model.
+  const selEl = document.getElementById(`modelsel-${_cbPendingId}`);
+  if (selEl && selEl.value) saveModelForAI(_cbPendingId, selEl.value);
+  setBuilderFromModal(_cbPendingId); // reuse existing commit / close / toast / disable-flow
+}
+
 function closeChangeBuilder() {
+  _cbPendingId = null;
   const modal = document.getElementById('changeBuilderModal');
   if (modal) modal.classList.remove('active');
   // v3.49.0 — If user cancelled the builder-disable flow, drop the
@@ -10461,6 +10496,7 @@ function closeEditHive() {
 //   • setBuilderFromModal runs (picks a new builder → completes disable)
 //   • closeChangeBuilder runs without a builder change (user cancelled)
 let _pendingBuilderDisable = null;
+let _cbPendingId = null; // v3.58.2 — highlighted Change-Builder candidate (shared-dropdown flow)
 
 function toggleSessionBee(id, on) {
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
