@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-015
+//  Build: 20260525-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-015';         // build stamp — update each session
+const BUILD       = '20260525-016';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -589,7 +589,7 @@ function renderSettings() {
     const saved = getAutoBackupBuilder();
     const eligible = (Array.isArray(activeAIs) ? activeAIs : []).filter(a => a.id !== builder);
     sel.innerHTML = '<option value="">None — pause and ask me</option>' +
-      eligible.map(a => `<option value="${esc(a.id)}">${esc(a.name)}</option>`).join('');
+      eligible.map(a => `<option value="${escapeHtml(a.id)}">${esc(a.name)}</option>`).join('');
     // Restore the saved choice only if that AI is still in the hive; otherwise
     // fall back to None so we never point at a removed AI.
     sel.value = eligible.some(a => a.id === saved) ? saved : '';
@@ -614,7 +614,7 @@ function renderSettings() {
     vis.innerHTML = '<option value="">Automatic — first available</option>' +
       VISION_PROVIDERS.map(p => {
         const keyed = !!API_CONFIGS[p]?._key;
-        return `<option value="${esc(p)}">${esc(label[p] || p)}${keyed ? '' : ' (no key)'}</option>`;
+        return `<option value="${escapeHtml(p)}">${esc(label[p] || p)}${keyed ? '' : ' (no key)'}</option>`;
       }).join('');
     vis.value = getVisionProviderPref();
   }
@@ -819,15 +819,20 @@ function consoleLog(msg, type = 'info', rawData = null, link = null) {
   // renderTroubleshootingCard's button bindings (app.js:~506). The
   // href stays set as a fallback for middle-click, copy-link, and
   // screen readers, but the primary click path is the onclick.
-  if (link && link.url && link.label) {
+  // v3.57.4 — P2: validate link.url through safeUrl() before it reaches the
+  // href / window.open() sinks. link.url originates from ai.apiConsole, which on
+  // a custom or imported AI can be arbitrary; safeUrl collapses anything that
+  // isn't an absolute http(s) URL to '' so a javascript:/data: URL can't fire.
+  const _safeLinkUrl = link ? safeUrl(link.url) : '';
+  if (link && _safeLinkUrl && link.label) {
     const sep = document.createTextNode(' · ');
     const linkEl = document.createElement('a');
     linkEl.className = 'console-link';
-    linkEl.href = link.url;
+    linkEl.href = _safeLinkUrl;
     linkEl.target = '_blank';
     linkEl.rel = 'noopener';
     linkEl.textContent = link.label;
-    const url = link.url;
+    const url = _safeLinkUrl;
     linkEl.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -3352,7 +3357,7 @@ function buildAISetupRowHTML(ai) {
           </div>
           <input type="password" class="ai-setup-key" id="key-${ai.id}"
             placeholder="Paste key — Enter to save…"
-            value="${esc(key)}"
+            value="${escapeHtml(key)}"
             ${!isActive ? 'disabled' : ''}
             onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
             onclick="event.stopPropagation();">
@@ -5634,9 +5639,9 @@ async function fetchCustomAIModels() {
     // Switch to dropdown — already-in-hive entries stay visible but disabled
     selectEl.innerHTML = models.map(m => {
       if (existingForThisUrl.has(m)) {
-        return `<option value="${esc(m)}" disabled>✓ ${esc(m)} — already in your hive</option>`;
+        return `<option value="${escapeHtml(m)}" disabled>✓ ${esc(m)} — already in your hive</option>`;
       }
-      return `<option value="${esc(m)}">${esc(m)}</option>`;
+      return `<option value="${escapeHtml(m)}">${esc(m)}</option>`;
     }).join('');
 
     // ── v3.25.6: smart default selection ───────────────────────────────────
@@ -5718,7 +5723,19 @@ function addCustomAI() {
   const model  = (modelSelect && modelSelect.style.display !== 'none' ? modelSelect.value : document.getElementById('customAIModel').value.trim()) || 'default';
   let   name   = document.getElementById('customAIName').value.trim();
 
-  if (!url || !url.startsWith('http')) { toast('⚠️ Enter a valid URL starting with http'); return; }
+  // v3.57.4 — P3: validate the endpoint the same way the Import-Server path
+  // does, instead of the weak startsWith('http') check (which accepted junk
+  // like "httpfoo" and ignored the mixed-content trap). Parse it, require an
+  // absolute http/https URL, and pre-flight the http://-from-https:// case the
+  // browser would otherwise block silently.
+  let _parsedUrl = null;
+  try { _parsedUrl = new URL(url); } catch (_) { _parsedUrl = null; }
+  if (!_parsedUrl || (_parsedUrl.protocol !== 'http:' && _parsedUrl.protocol !== 'https:')) {
+    toast('⚠️ Enter a valid http:// or https:// endpoint URL'); return;
+  }
+  if (!IS_LOCAL_RUNTIME && _parsedUrl.protocol === 'http:') {
+    toast('⚠️ WaxFrame is served over https — an http:// endpoint is blocked by the browser. Use https://, or run WaxFrame locally.', 5000); return;
+  }
 
   // Auto-detect name from URL if not provided
   if (!name) {
@@ -6047,7 +6064,7 @@ function populateImportServerQuickAdd() {
     opts.push({ value: 'ollama',   label: 'Ollama (local) — http://localhost:11434' });
     opts.push({ value: 'lmstudio', label: 'LM Studio (local) — http://localhost:1234' });
   }
-  sel.innerHTML = opts.map(o => `<option value="${esc(o.value)}">${esc(o.label)}</option>`).join('');
+  sel.innerHTML = opts.map(o => `<option value="${escapeHtml(o.value)}">${esc(o.label)}</option>`).join('');
 }
 
 function updateImportServerRuntimeNote() {
@@ -6435,7 +6452,7 @@ function renderImportServerChecklist() {
     if (inHive) {
       return `
     <div class="import-server-item import-server-item--in-hive">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" disabled>
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" disabled>
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
       <span class="import-server-in-hive-badge">✓ Already in your hive</span>
     </div>`;
@@ -6443,14 +6460,14 @@ function renderImportServerChecklist() {
 
     return `
     <div class="import-server-item" id="isi-${i}">
-      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${esc(modelId)}" onchange="updateChecklistCount()">
+      <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
       <button type="button" class="import-server-icon-btn" id="isicon-${i}" onclick="openIconPickerForImportRow(${i})" title="Choose icon for ${esc(modelName)}">
         <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" onerror="this.style.opacity='0.3'">
       </button>
       <div class="import-server-nickname-wrap">
         <label class="import-server-nickname-label" for="isn-${i}">Nickname:</label>
-        <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${esc(modelName)}" data-default-value="${esc(modelName)}" oninput="onImportNicknameInput(this)">
+        <input type="text" class="import-server-name-input is-default" id="isn-${i}" value="${escapeHtml(modelName)}" data-default-value="${escapeHtml(modelName)}" oninput="onImportNicknameInput(this)">
       </div>
     </div>`;
   }).join('');
@@ -8489,7 +8506,7 @@ function refCardMarkup(doc, index) {
   <div class="ref-card-hdr">
     <span class="ref-card-position" title="Position ${index + 1} of ${total} — first-listed material reads as most authoritative to the hive. Use the arrows to reorder.">${index + 1}</span>
     <span class="ref-card-source-badge" title="${sourceLabel}">${sourceIcon}</span>
-    <input type="text" class="ref-card-name" value="${esc(doc.name)}"
+    <input type="text" class="ref-card-name" value="${escapeHtml(doc.name)}"
            oninput="renameReferenceDoc('${idAttr}', this.value)"
            aria-label="Reference document name"
            placeholder="Reference name…">
@@ -9859,8 +9876,8 @@ function openIconPicker(opts = {}) {
         ${section.items.map(it => `
           <button type="button" class="icon-picker-tile${opts.currentIcon === it.src ? ' is-selected' : ''}"
                   onclick="_iconPickerSelect('${esc(it.src)}')"
-                  title="${esc(it.name)}">
-            <img src="${it.src}" alt="${esc(it.name)}" class="icon-picker-tile-img"
+                  title="${escapeHtml(it.name)}">
+            <img src="${it.src}" alt="${escapeHtml(it.name)}" class="icon-picker-tile-img"
                  onerror="this.style.opacity='0.2'">
             <span class="icon-picker-tile-name">${esc(it.name)}</span>
           </button>
@@ -13847,7 +13864,7 @@ function renderConflicts() {
       const _preIdx = (isChurn && window._decisionChoices[di] && window._decisionChoices[di].type === 'option')
         ? window._decisionChoices[di].idx : -1;
       html += `<div class="${cardClass}${_preIdx >= 0 ? ' resolved' : ''}" id="dcard-${di}"
-        data-option-texts="${esc(JSON.stringify(d.options.map(o => o.text || '')))}">
+        data-option-texts="${escapeHtml(JSON.stringify(d.options.map(o => o.text || '')))}">
         <div class="decision-card-header">
           <span class="decision-badge">${badgeLabel}</span>
           ${churnBadge}

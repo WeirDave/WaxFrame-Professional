@@ -2,6 +2,25 @@
 
 ---
 
+## v3.57.4
+**Build:** `20260525-016` · **Released:** May 25, 2026
+
+### Hardening: finish the external `app.js` audit (URL + attribute escaping)
+
+Closes the three remaining items from the external audit. All are defensive — no change to normal behavior — and `storage.js` already sanitizes imports, so these are belt-and-suspenders on the render/input sinks.
+
+- **Console links routed through `safeUrl()`.** The live-console error links (which carry an AI's billing/console URL, arbitrary on a custom or imported AI) were the one outbound-link sink still passing a raw URL into `href` / `window.open()`. They now go through `safeUrl()`, which collapses anything that isn't an absolute http(s) URL to nothing. The setup-row, token-page, and console-drawer sinks already did this.
+- **Attribute escaping fixed.** `esc()` escapes `&<>` but not quotes, so it can't safely sit inside an HTML attribute. Every `esc()` used in an attribute value (imported-server model IDs/names, reference-doc filenames, option values, icon titles) now uses `escapeHtml()`, which also escapes `"` and `'`. This also fixes a latent bug where a JSON blob in a `data-` attribute (`data-option-texts`) wasn't quote-escaped at all.
+- **"Add Custom AI" URL validation.** Replaced the weak `startsWith('http')` check (which accepted junk like `httpfoo`) with the same validation the Import-Server path uses: parse with `new URL()`, require an absolute http/https endpoint, and pre-flight the http://-from-https:// mixed-content case the browser would otherwise block silently.
+
+External audit items: all resolved (P1 v3.57.2, P2 timeouts v3.57.3, P2 links + P3 escaping/validation v3.57.4).
+
+### Files changed
+- `js/app.js` — `consoleLog()` `safeUrl()`; `esc()`→`escapeHtml()` in attribute contexts; `addCustomAI()` URL validation.
+- All pages + `js/*` — build/version/cache-bust sync to v3.57.4.
+
+---
+
 ## v3.57.3
 **Build:** `20260525-015` · **Released:** May 25, 2026
 
