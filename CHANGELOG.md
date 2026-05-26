@@ -2,6 +2,27 @@
 
 ---
 
+## v3.58.0
+**Build:** `20260525-017` · **Released:** May 25, 2026
+
+### Change Builder: pick the model while you switch builders
+
+When you swap the Builder mid-run (slow responder, a builder that started drifting), you usually also want to put that AI on the right model for building — and until now you couldn't do that from the work screen. The Change Builder modal now shows a **model selector on each candidate**.
+
+- Each candidate AI in the modal carries its own model dropdown, with the **✨ Reviewer** and **🔨 Builder** picks already marked. These come from the recommendations **already cached** on the Worker Bee setup page — **no fresh recommendation call is made.** Pick the model, then click the card to commit that AI (and model) as the Builder.
+- The dropdown stops click propagation, so changing the model never accidentally commits the builder; only clicking the card body does.
+
+### Modal resized for continuity
+
+The Change Builder modal grew from a tight icon grid into a content list, so it was retiered to match the rest of the app: **`--modal-w-lg` (900px)**, left-aligned, full-height scroll — the same tier and treatment as the other list/document modals. It was previously an off-scale `760px`. Not the wide viewport tier; that stays reserved for the wide-and-short reading modals.
+
+### Files changed
+- `js/app.js` — Change Builder grid renders `buildModelSelector(... showRecheck=false)` per candidate (cached recommendations, no network).
+- `style.css` — Change Builder modal retiered to `--modal-w-lg`, left-aligned, vertical-list card layout; header stamp synced.
+- All pages + `js/*` — build/version/cache-bust sync to v3.58.0.
+
+---
+
 ## v3.57.4
 **Build:** `20260525-016` · **Released:** May 25, 2026
 
