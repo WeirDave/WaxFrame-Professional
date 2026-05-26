@@ -2,6 +2,19 @@
 
 ---
 
+## v3.58.5
+**Build:** `20260525-022` · **Released:** May 25, 2026
+
+### Fix: Change Builder modal scrolled into empty space
+
+v3.58.3 set the modal to a fixed `640px` height. When the content is shorter than that (the usual case), it left dead space at the bottom and let the modal scroll a few pixels into that empty space. The fixed height was there to stop the layout from bouncing between candidates — but v3.58.4's reserved-height model block already handles that, so the height no longer needs to be hard-pinned. Switched to content-sized height with `max-height: 88vh` as the only short-viewport safety valve. Fixed width (900px) is unchanged.
+
+### Files changed
+- `style.css` — `.change-builder-modal`: `height: min(640px, 88vh)` → `max-height: 88vh` (content-sized).
+- All pages + `js/*` — build/cache-bust sync to v3.58.5.
+
+---
+
 ## v3.58.4
 **Build:** `20260525-021` · **Released:** May 25, 2026
 
