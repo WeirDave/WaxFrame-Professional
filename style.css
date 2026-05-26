@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260525-018
+   Build: 20260525-019
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -845,27 +845,34 @@ html, body {
   margin-bottom: 12px;
 }
 
-/* v3.58.0 — Change-Builder modal only: switch the candidate grid to a vertical
-   list so each row has room for its model selector (injected via
-   buildModelSelector, reusing the cached recommendations). .builder-pick-grid
-   is used ONLY by #changeBuilderGrid; Setup 2 uses .builder-pick-grid-large,
-   so these overrides do not touch the setup picker. Nothing here touches the
-   work-main / 80ch doc-column layout. */
-#changeBuilderModal .builder-pick-grid { flex-direction: column; flex-wrap: nowrap; }
-#changeBuilderModal .builder-pick-btn {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  width: 100%;
-  min-width: 0;
-  text-align: left;
-  gap: var(--space-10);
+/* v3.58.2 — Change-Builder modal: compact candidate grid (the base
+   .builder-pick-grid flex-wrap layout, unchanged) + ONE shared model dropdown
+   below it. Clicking a card highlights it (.cb-pending) and repopulates
+   #changeBuilderModelWrap. .builder-pick-grid is used ONLY by #changeBuilderGrid
+   (Setup 2 uses .builder-pick-grid-large). Nothing here touches work-main / 80ch. */
+#changeBuilderModal .builder-pick-btn.cb-pending {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 2px var(--accent);
 }
-#changeBuilderModal .builder-pick-current { margin-left: auto; }
-.builder-pick-model { flex-basis: 100%; margin-top: var(--space-8); cursor: default; }
-#changeBuilderModal .model-select { width: 100%; }
-#changeBuilderModal .model-select-note { padding-left: 0; }
+.cb-model-wrap { width: 100%; margin: var(--space-16) 0 var(--space-12); text-align: left; }
+.cb-model-wrap .model-select { width: 100%; }
+.cb-model-wrap .model-select-note { padding-left: 0; }
+.cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
+.cb-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); justify-content: center; align-items: center; }
+.cb-confirm-btn {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: #1a1410;
+  font-size: var(--fs-13);
+  font-weight: 700;
+  cursor: pointer;
+  padding: var(--space-6) var(--space-20);
+  transition: all 0.12s;
+  font-family: var(--font);
+}
+.cb-confirm-btn:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+.cb-confirm-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
 .builder-pick-btn {
   display: flex;
@@ -7624,32 +7631,20 @@ kbd {
 }
 .full-width         { width: 100%; }
 .change-builder-modal {
-  /* v3.32.21 — Bumped from 560px so the .builder-pick-grid cards
-     (now correctly using the small flex-wrap variant instead of the
-     -large grid that was sized for the Setup 2 screen) have enough
-     room to feel substantial. At 560px, 7 AIs in a flex-wrap layout
-     squeezed cards down to ~100px wide each which felt cramped; at
-     760px they get ~140-160px each which reads cleanly. */
-  /* v3.58.0 — Re-tiered to the --modal-w-lg token (900px) for continuity with
-     the other content/list modals (.finish-modal-goal, .goal-info-modal before
-     its wide-and-short widening) instead of the arbitrary 760px. The candidate
-     grid is now a vertical list (each row carries a cached-recommendation model
-     selector), so it reads like a list modal: left-aligned, full-height scroll.
-     Deliberately NOT the xl/2xl viewport tier — that's reserved for the
-     wide-and-short reading modals. */
-  max-width: var(--modal-w-lg);
-  max-height: 90vh;
+  /* v3.58.2 — back to the --modal-w-base token (640px) after the v3.58.0 900px
+     experiment. The candidate grid is compact again and a single shared model
+     dropdown sits below it, so the modal no longer needs list width. On-scale
+     with the rest of the app; not a viewport-large modal. Keeps scroll for the
+     long cost-note + dropdown notes on short viewports. */
+  max-width: var(--modal-w-base);
+  max-height: 85vh;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
-  text-align: left;
 }
-/* v3.58.0 — stretch the title, reason, and candidate list to the modal width
-   (the base .finish-modal centers children); the Cancel button keeps its
-   natural centered size. */
-#changeBuilderModal .finish-modal-title,
-#changeBuilderModal .finish-modal-msg,
-#changeBuilderModal .builder-pick-grid { align-self: stretch; width: 100%; }
+/* v3.58.2 — the shared dropdown wrap stretches full width (the base
+   .finish-modal centers children); the compact grid and buttons stay centered. */
+#changeBuilderModal .cb-model-wrap { align-self: stretch; }
 
 /* ── Sheet Picker Modal (v3.25.0) ── */
 .sheet-picker-modal       { max-width: 640px; text-align: left; align-items: stretch; }

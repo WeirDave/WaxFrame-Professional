@@ -2,6 +2,26 @@
 
 ---
 
+## v3.58.2
+**Build:** `20260525-019` · **Released:** May 25, 2026
+
+### Change Builder modal redesigned — one shared dropdown, compact again
+
+The v3.58.0 modal put a full model selector on every candidate card and grew to 900px — a lot of real estate for a one-shot action. Redesigned around a single shared dropdown.
+
+- **Compact candidate grid is back** (icon + name cards). Clicking a card no longer commits immediately — it **selects** the card (amber highlight) and repopulates **one shared model dropdown** below the grid. Click another card and the dropdown swaps to that AI's models.
+- **Defaults to the 🔨 Builder pick.** Because you're choosing a Builder, the dropdown auto-selects that AI's cached 🔨 Builder-recommended model (falling back to its currently-configured model when there's no cached pick). One click to land on the card, one to confirm.
+- **Explicit commit.** A "👑 Set [Name] as Builder" button commits the highlighted AI + the chosen model; the dropdown is right there to override first. Confirm reads the dropdown's live value before persisting, so the shown model and the committed model never diverge.
+- **Modal back on-scale** — `--modal-w-base` (640px) instead of the 900px experiment. No fresh recommendation calls anywhere in this flow; it reads the caches from the Worker Bee page.
+
+### Files changed
+- `js/app.js` — `openChangeBuilder` renders compact cards (`selectBuilderCandidate`); new `selectBuilderCandidate` (highlight + populate shared dropdown, default 🔨) and `confirmBuilderFromModal` (read dropdown value, persist, commit). Removed the per-card selector injection.
+- `index.html` — Change Builder modal: shared `#changeBuilderModelWrap` + "Set as Builder" confirm button.
+- `style.css` — reverted v3.58.0 list layout; compact grid + `.cb-pending` highlight + `.cb-confirm-btn`; modal retiered to `--modal-w-base`.
+- All pages + `js/*` — build/cache-bust sync to v3.58.2.
+
+---
+
 ## v3.58.1
 **Build:** `20260525-018` · **Released:** May 25, 2026
 
