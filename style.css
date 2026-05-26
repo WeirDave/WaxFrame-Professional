@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260525-001
+   Build: 20260525-017
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -844,6 +844,28 @@ html, body {
   gap: 8px;
   margin-bottom: 12px;
 }
+
+/* v3.58.0 — Change-Builder modal only: switch the candidate grid to a vertical
+   list so each row has room for its model selector (injected via
+   buildModelSelector, reusing the cached recommendations). .builder-pick-grid
+   is used ONLY by #changeBuilderGrid; Setup 2 uses .builder-pick-grid-large,
+   so these overrides do not touch the setup picker. Nothing here touches the
+   work-main / 80ch doc-column layout. */
+#changeBuilderModal .builder-pick-grid { flex-direction: column; flex-wrap: nowrap; }
+#changeBuilderModal .builder-pick-btn {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-width: 0;
+  text-align: left;
+  gap: var(--space-10);
+}
+#changeBuilderModal .builder-pick-current { margin-left: auto; }
+.builder-pick-model { flex-basis: 100%; margin-top: var(--space-8); cursor: default; }
+#changeBuilderModal .model-select { width: 100%; }
+#changeBuilderModal .model-select-note { padding-left: 0; }
 
 .builder-pick-btn {
   display: flex;
@@ -7608,12 +7630,26 @@ kbd {
      room to feel substantial. At 560px, 7 AIs in a flex-wrap layout
      squeezed cards down to ~100px wide each which felt cramped; at
      760px they get ~140-160px each which reads cleanly. */
-  max-width: 760px;
-  max-height: 85vh;
+  /* v3.58.0 — Re-tiered to the --modal-w-lg token (900px) for continuity with
+     the other content/list modals (.finish-modal-goal, .goal-info-modal before
+     its wide-and-short widening) instead of the arbitrary 760px. The candidate
+     grid is now a vertical list (each row carries a cached-recommendation model
+     selector), so it reads like a list modal: left-aligned, full-height scroll.
+     Deliberately NOT the xl/2xl viewport tier — that's reserved for the
+     wide-and-short reading modals. */
+  max-width: var(--modal-w-lg);
+  max-height: 90vh;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
+  text-align: left;
 }
+/* v3.58.0 — stretch the title, reason, and candidate list to the modal width
+   (the base .finish-modal centers children); the Cancel button keeps its
+   natural centered size. */
+#changeBuilderModal .finish-modal-title,
+#changeBuilderModal .finish-modal-msg,
+#changeBuilderModal .builder-pick-grid { align-self: stretch; width: 100%; }
 
 /* ── Sheet Picker Modal (v3.25.0) ── */
 .sheet-picker-modal       { max-width: 640px; text-align: left; align-items: stretch; }
