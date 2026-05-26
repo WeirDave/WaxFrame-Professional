@@ -2,6 +2,28 @@
 
 ---
 
+## v3.57.3
+**Build:** `20260525-015` · **Released:** May 25, 2026
+
+### Fix: a hung provider could freeze a round indefinitely
+
+`callAPI()` used a plain `fetch()` with no timeout, so a provider (or an unresponsive custom/gateway endpoint) that accepted the connection but never replied would hold the round open forever — the UI just sat in "waiting" with no way out short of a reload.
+
+Every API call is now wrapped in an `AbortController` with a **role-aware timeout**. The values were set from real run data (15 deep-dive exports: 312 reviewer calls, 57 builder calls), not estimates:
+
+- **Reviewers — 360s.** Reviewer calls run ~4s median / ~54s p95, with an observed max of **235s** (a DeepSeek-v4-pro reviewer). 360s clears that worst case with margin.
+- **Builder — 900s.** Builder calls run ~39s median / ~370s p95, with an observed max of **540s** (DeepSeek-v4-pro building for ~9 minutes — and succeeding). 900s clears it, with headroom for a full RFP build not yet measured.
+
+Both sit deliberately above the measured legitimate maxima, so a slow-but-working call is never killed — they exist only to bound a true hang (otherwise infinite). DeepSeek is the long tail in both roles. A timed-out call is reported as a clean "⏳ Timed out" on that AI's bee and skipped; the round continues with whoever responded. Combined with the v3.57.2 guard, if *every* call times out the round correctly fails rather than faking success. Both timeouts are tunable constants.
+
+A future enhancement (backlogged) will switch the Builder to streamed responses with an inter-token stall watchdog — aborting on silence rather than total elapsed time — so even a multi-minute legitimate build is never killed while a true stall dies fast.
+
+### Files changed
+- `js/app.js` — `callAPI()` role-aware `AbortController` timeout + clean timeout status.
+- All pages + `js/*` — build/version/cache-bust sync to v3.57.3.
+
+---
+
 ## v3.57.2
 **Build:** `20260525-014` · **Released:** May 25, 2026
 
