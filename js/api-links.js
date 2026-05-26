@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260525-019
+// Build: 20260525-020
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that

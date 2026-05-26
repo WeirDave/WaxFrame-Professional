@@ -2,6 +2,21 @@
 
 ---
 
+## v3.58.3
+**Build:** `20260525-020` · **Released:** May 25, 2026
+
+### Change Builder modal: fixed size + legible Builder bee
+
+- **Fixed width and height.** The modal now uses a fixed `--modal-w-lg` (900px) width — the same tier as the goal editor (`finish-modal-goal`), so the two substantial content modals are uniform — and a fixed height (`min(640px, 88vh)`). It no longer resizes as you click between candidates (the per-AI recommendation notes vary in length); content top-aligns and scrolls internally if it ever exceeds the height.
+- **Builder bee is visible.** The title mascot was rendering at the shared 22px inline size and read as a speck. Bumped to 44px (scoped to this modal) so the hard-hat Builder bee is actually legible.
+- The long cost-note now reads left-aligned at the wider width.
+
+### Files changed
+- `style.css` — `.change-builder-modal` fixed width/height + box-sizing; scoped `.modal-title-bee` enlargement; left-aligned reason text.
+- All pages + `js/*` — build/cache-bust sync to v3.58.3.
+
+---
+
 ## v3.58.2
 **Build:** `20260525-019` · **Released:** May 25, 2026
 
