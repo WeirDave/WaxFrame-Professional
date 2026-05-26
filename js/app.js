@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-016
+//  Build: 20260525-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-016';         // build stamp — update each session
+const BUILD       = '20260525-017';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -969,12 +969,24 @@ function openChangeBuilder(opts) {
       // two `class=` attributes on the same <div> (only the first was
       // parsed, silently dropping `.builder-pick-card-inner`). Merged.
       const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 36);
+      // v3.58.0 — surface the model selector for each candidate so you can set
+      // the right Builder model AS you switch (slow/hallucinating builder, etc.)
+      // without leaving the work screen. Reuses buildModelSelector with
+      // showRecheck=false, so it reads the ✨/🔨 recommendations ALREADY cached
+      // from the Worker Bee page — NO fresh recommend call is made here. The
+      // wrapper stops click propagation so interacting with the dropdown/notes
+      // doesn't fire the card's setBuilderFromModal commit; clicking the card
+      // body (icon/name) still commits this AI + its currently-selected model.
+      const _cbModel = (API_CONFIGS[ai.provider] && API_CONFIGS[ai.provider].model) || '';
+      const _cbSel   = buildModelSelector(ai.id, ai.provider, _cbModel, false);
+      const _cbModelBlock = _cbSel ? `<div class="builder-pick-model" onclick="event.stopPropagation()">${_cbSel}</div>` : '';
       return `<div class="builder-pick-btn btn builder-pick-card-inner ${isSelected ? 'selected' : ''}"
         title="${escapeHtml(ai.name)}"
         onclick="setBuilderFromModal('${ai.id}')">
         ${iconEl}
         <span class="builder-pick-name">${escapeHtml(ai.name)}</span>
         ${isSelected ? '<span class="builder-pick-current"><img src="images/WaxFrame_Builder_v3.png" class="builder-pick-current-bee" alt="" onerror="this.style.display=\'none\'"> Current</span>' : ''}
+        ${_cbModelBlock}
       </div>`;
     }).join('');
   }
