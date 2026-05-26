@@ -2,6 +2,27 @@
 
 ---
 
+## v3.58.4
+**Build:** `20260525-021` · **Released:** May 25, 2026
+
+### Change Builder modal: layout polish
+
+Four fixes so the modal looks and behaves at pro level instead of shifting around as you click.
+
+- **Fixed 6-column grid.** Candidates lay out 6 per row — the default 6 across the top, then up to 6 more per row after (with 10 AIs that's 6 + 4). Replaces the old auto-wrap.
+- **Uniform card size, always.** Every card is the same fixed dimensions. The current-builder badge is absolutely positioned, so that card is no longer taller than the rest.
+- **Badge says "Builder."** The current-builder badge dropped the bee glyph + "Current" and now reads "Builder" in an amber pill — same role word and look as the `BUILDER` tag on the working-document cards.
+- **No more bounce.** Reserved a fixed-height block for the model dropdown plus up to two note lines per role (✨ Reviewer + 🔨 Builder), with the buttons pinned a fixed gap below. Clicking between candidates no longer shifts the dropdown, notes, or buttons up and down.
+
+Removed the now-orphaned `.builder-pick-current-bee` style.
+
+### Files changed
+- `js/app.js` — current-builder badge markup → plain "Builder".
+- `style.css` — 6-column grid, fixed-size cards, absolute amber "Builder" badge, reserved-height model block + fixed button gap; removed orphan bee-image rule.
+- All pages + `js/*` — build/cache-bust sync to v3.58.4.
+
+---
+
 ## v3.58.3
 **Build:** `20260525-020` · **Released:** May 25, 2026
 

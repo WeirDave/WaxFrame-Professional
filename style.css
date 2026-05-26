@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260525-020
+   Build: 20260525-021
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7621,14 +7621,6 @@ kbd {
   margin-right: var(--space-4);
   margin-top: -1px;
 }
-.builder-pick-current-bee {
-  width: 12px;
-  height: 12px;
-  object-fit: contain;
-  vertical-align: middle;
-  margin-right: var(--space-4);
-  margin-top: -1px;
-}
 .full-width         { width: 100%; }
 .change-builder-modal {
   /* v3.58.3 — FIXED width AND height for a stable, uniform dialog that does not
@@ -7651,7 +7643,46 @@ kbd {
    legible in the title. */
 #changeBuilderModal .modal-title-bee { width: 44px; height: 44px; margin-top: 0; }
 /* shared dropdown stretches full width; the long cost-note reads left at 900px. */
-#changeBuilderModal .cb-model-wrap { align-self: stretch; }
+/* v3.58.4 — bounce fix: reserve a fixed-height block for the dropdown + up to
+   two note lines per role (✨ Reviewer + 🔨 Builder ≈ 4 lines), so switching
+   candidates never shifts the buttons. Buttons then sit a fixed gap below. */
+#changeBuilderModal .cb-model-wrap { align-self: stretch; min-height: 150px; }
+#changeBuilderModal .cb-actions { margin-top: var(--space-16); }
+/* v3.58.4 — fixed 6-column candidate grid: the default 6 on the first row, up
+   to 6 per row after (10 AIs -> 6 + 4). Replaces auto flex-wrap. */
+#changeBuilderModal .builder-pick-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--space-8);
+}
+/* v3.58.4 — uniform card size always. Fixed height + the "Builder" badge
+   absolutely positioned, so the current-builder card matches every other card
+   (the in-flow badge used to make that one taller). */
+#changeBuilderModal .builder-pick-btn {
+  height: 108px;
+  min-width: 0;
+  padding: var(--space-12) var(--space-8);
+  justify-content: center;
+  gap: var(--space-6);
+}
+#changeBuilderModal .builder-pick-icon { width: 32px; height: 32px; }
+#changeBuilderModal .builder-pick-name { font-size: var(--fs-12); line-height: 1.2; }
+/* v3.58.4 — badge mirrors the work-screen .hex-builder-tag pill (amber, dark
+   text) but says "Builder" — same role word as the working-document cards. */
+#changeBuilderModal .builder-pick-current {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #0a0c12;
+  background: var(--accent);
+  border-radius: 3px;
+  padding: 1px var(--space-6);
+  white-space: nowrap;
+}
 #changeBuilderModal .finish-modal-msg { text-align: left; }
 
 /* ── Sheet Picker Modal (v3.25.0) ── */
