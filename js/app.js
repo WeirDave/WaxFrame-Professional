@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-022
+//  Build: 20260525-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-022';         // build stamp — update each session
+const BUILD       = '20260525-023';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -981,7 +981,7 @@ function openChangeBuilder(opts) {
     if (_preId) { selectBuilderCandidate(_preId); }
     else {
       const _w = document.getElementById('changeBuilderModelWrap'); if (_w) _w.innerHTML = '';
-      const _b = document.getElementById('changeBuilderConfirm'); if (_b) { _b.disabled = true; _b.textContent = '👑 Set as Builder'; }
+      const _b = document.getElementById('changeBuilderConfirm'); if (_b) { _b.disabled = true; _b.textContent = '🔨 Set as Builder'; }
     }
   }
   const modal = document.getElementById('changeBuilderModal');
@@ -1013,7 +1013,7 @@ function selectBuilderCandidate(id) {
     wrap.innerHTML = sel || '<p class="cb-model-empty">No model list cached for this AI yet — run Recommend Models on the Worker Bee page first.</p>';
   }
   const btn = document.getElementById('changeBuilderConfirm');
-  if (btn) { btn.disabled = false; btn.textContent = `👑 Set ${ai.name} as Builder`; }
+  if (btn) { btn.disabled = false; btn.textContent = `🔨 Set ${ai.name} as Builder`; }
 }
 
 function confirmBuilderFromModal() {
@@ -1140,9 +1140,9 @@ function setBuilderFromModal(id) {
     // Call toggleSessionBee — since builder is now `id` not `pendingDisableId`,
     // the builder-intercept branch will NOT fire and the disable proceeds.
     toggleSessionBee(pendingDisableId, false);
-    toast(`👑 Builder changed to ${newBuilderName} — ${disabledName} toggled off`);
+    toast(`🔨 Builder changed to ${newBuilderName} — ${disabledName} toggled off`);
   } else {
-    toast(`👑 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
+    toast(`🔨 Builder changed to ${activeAIs.find(a => a.id === id)?.name}`);
   }
 }
 
