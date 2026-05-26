@@ -2,6 +2,22 @@
 
 ---
 
+## v3.57.1
+**Build:** `20260525-013` · **Released:** May 25, 2026
+
+### Fix: main-app menu missing Legal links · New: sitemap + robots
+
+**Legal links in the main-app menu.** v3.57.0 added the **Legal** nav section (Privacy Policy / Terms of Use) to the five helper pages but missed the main app's own slide-in menu — it only got the Legal row in the About modal. The hamburger menu in `index.html` now has the same Legal section as every other page, so the legal pages are reachable from the menu on every screen.
+
+**Sitemap + robots.** Added `sitemap.xml` (all eight public pages under the `waxframe.com` canonical domain) and `robots.txt` (allow-all with a sitemap pointer). Completes the SEO/canonical-domain work from v3.56.45–v3.57.0 — crawlers can now discover every page, including the new Privacy and Terms pages, directly.
+
+### Files changed
+- `index.html` — Legal nav section added to the main-app slide-in menu.
+- `sitemap.xml`, `robots.txt` — **new** SEO files.
+- All pages + `js/*` — build/version/cache-bust sync to v3.57.1.
+
+---
+
 ## v3.57.0
 **Build:** `20260525-012` · **Released:** May 25, 2026
 
@@ -9,7 +25,7 @@
 
 **Two new legal pages.** `privacy.html` and `terms.html` ship as full helper-pages matching site chrome (nav, header, footer, theme toggle, license + about modals). Content is grounded in WaxFrame's actual architecture — no backend, no database, no tracking; API keys in browser `localStorage`/`IndexedDB`; the single Claude Cloudflare-Worker exception (sees traffic in-flight, logs/persists nothing); third-party providers governed by their own policies; Gumroad handles payments; GitHub Pages hosting. Terms cover AGPL-3.0 / as-is, user-owned API keys and costs, provider compliance, and California governing law. Contact channel is GitHub Issues.
 
-- **Discoverable site-wide.** A new **Legal** nav section (Privacy Policy / Terms of Use) was added to all five helper pages plus the two new pages; the main app links both from its **About** modal. The API guide's "Open Source & Privacy" modal and the Claude-proxy disclosure now link the Privacy Policy directly.
+- **Discoverable site-wide.** A new **Legal** nav section (Privacy Policy / Terms of Use) was added to all five helper pages plus the two new pages; the main app links both from its hamburger menu and its **About** modal. The API guide's "Open Source & Privacy" modal and the Claude-proxy disclosure now link the Privacy Policy directly.
 
 **API guide model names are now live.** `api-details.html` previously hardcoded every "Model:" value in two places (the provider cards and the Know-Your-Hive cards — 19 in total). It now loads the side-effect-free `js/api.js` and derives each name from the live `API_CONFIGS[provider].model` seed via a `data-seed-model` attribute. The hardcoded text remains as a graceful fallback if `api.js` fails to load. The guide can no longer drift from the running app.
 
