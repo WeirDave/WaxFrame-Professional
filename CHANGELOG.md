@@ -2,6 +2,31 @@
 
 ---
 
+## v3.58.7
+**Build:** `20260526-024` · **Released:** May 26, 2026
+
+### Fix: PDF vision OCR now falls back across all keyed providers
+
+A PDF whose embedded fonts PDF.js could not decode (`TT: undefined function`)
+was routed to full-document vision OCR — correct — but the OCR path called only
+the first keyed vision provider and **threw** if it returned empty, aborting the
+entire upload instead of trying the others. A resume that one provider's vision
+returned nothing for failed to import at all, even with three other vision
+providers keyed and available.
+
+- Added `getVisionCapableAIs()` — returns the ordered list of all keyed
+  vision providers (user's Settings pick first, then ChatGPT → Claude →
+  Gemini → Grok).
+- Added `runVisionWithFallback()` — tries each keyed provider in turn; first
+  non-empty transcription wins; never throws.
+- Rewired both OCR paths (full-document transcription and the sparse-page
+  pass) to use the fallback chain.
+- The full-document path now **degrades to a warning** with the recovered
+  text plus an actionable message, instead of hard-throwing and killing the
+  upload, when every keyed vision provider fails.
+
+---
+
 ## v3.58.6
 **Build:** `20260525-023` · **Released:** May 25, 2026
 

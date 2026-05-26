@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-023
+//  Build: 20260526-024
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-023';         // build stamp — update each session
+const BUILD       = '20260526-024';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7049,6 +7049,54 @@ function getVisionCapableAI() {
   return null;
 }
 
+// v3.58.7 — Ordered list of ALL keyed vision-capable AIs, user pick first,
+// then VISION_PROVIDERS order. Used by runVisionWithFallback so OCR tries
+// every keyed provider instead of dying on the first one that returns empty.
+function getVisionCapableAIs() {
+  const seen = new Set();
+  const list = [];
+  const pref = getVisionProviderPref();
+  const order = pref && VISION_PROVIDERS.includes(pref)
+    ? [pref, ...VISION_PROVIDERS.filter(p => p !== pref)]
+    : VISION_PROVIDERS;
+  for (const provider of order) {
+    if (seen.has(provider)) continue;
+    const cfg = API_CONFIGS[provider];
+    if (cfg?._key) {
+      list.push({ cfg: { ...cfg, provider }, key: cfg._key, provider });
+      seen.add(provider);
+    }
+  }
+  return list;
+}
+
+// v3.58.7 — Vision OCR with provider fallback. Tries each keyed vision
+// provider in turn (ChatGPT → Claude → Gemini → Grok, or user pick first);
+// first non-empty transcription wins. Never throws — returns
+// { text, used, errors }. text is '' only if EVERY keyed provider failed
+// or none are keyed. statusEl (optional) gets a "trying next…" update so a
+// slow first provider doesn't look hung.
+async function runVisionWithFallback(images, statusEl = null) {
+  const ais = getVisionCapableAIs();
+  if (!ais.length) return { text: '', used: '', errors: ['no vision-capable AI key available'] };
+  const errors = [];
+  for (let i = 0; i < ais.length; i++) {
+    const ai = ais[i];
+    if (statusEl && i > 0) {
+      statusEl.textContent = `⏳ Previous OCR provider returned nothing — trying ${ai.cfg.label} (${i + 1} of ${ais.length})…`;
+      setFileStatusState(statusEl, 'loading');
+    }
+    try {
+      const t = await runVisionTranscription(images, ai.cfg, ai.key);
+      if (t && t.trim()) return { text: t, used: ai.cfg.label, errors };
+      errors.push(`${ai.cfg.label}: returned no text`);
+    } catch (e) {
+      errors.push(`${ai.cfg.label}: ${e.message}`);
+    }
+  }
+  return { text: '', used: '', errors };
+}
+
 // ── Starting Document handler ──
 // Thin UI wrapper around extractFromFile. XLSX uses 'single' mode
 // (radio-button picker if multi-sheet) since there is only one
@@ -7411,11 +7459,11 @@ async function extractPDF(file) {
     if (totalAnnotations > 0) result.warnings.push(`${totalAnnotations} annotation${totalAnnotations === 1 ? '' : 's'} extracted from PDF comments/highlights`);
 
     if (pageOcrCandidates.length > 0) {
-      const visionAI = getVisionCapableAI();
-      if (visionAI) {
+      const visionAIs = getVisionCapableAIs();
+      if (visionAIs.length) {
         const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
         if (status) {
-          status.textContent = `⏳ ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} detected — running OCR pass for embedded images via ${visionAI.cfg.label}…`;
+          status.textContent = `⏳ ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} detected — running OCR pass for embedded images via ${visionAIs[0].cfg.label}…`;
           setFileStatusState(status, 'loading');
         }
         try {
@@ -7430,10 +7478,11 @@ async function extractPDF(file) {
             await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
             sparseImages.push({ pageNum, b64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] });
           }
-          const ocrText = await runVisionTranscription(sparseImages.map(s => s.b64), visionAI.cfg, visionAI.key);
+          // v3.58.7 — fallback across all keyed vision providers.
+          const { text: ocrText, used } = await runVisionWithFallback(sparseImages.map(s => s.b64), status);
           if (ocrText && ocrText.trim()) {
             result.text += `\n\n## OCR Pass (sparse pages: ${pageOcrCandidates.join(', ')})\n${ocrText.trim()}\n`;
-            result.warnings.push(`OCR pass added content from sparse pages ${pageOcrCandidates.join(', ')} via ${visionAI.cfg.label} — verify accuracy`);
+            result.warnings.push(`OCR pass added content from sparse pages ${pageOcrCandidates.join(', ')} via ${used} — verify accuracy`);
           }
         } catch(ocrErr) {
           result.warnings.push(`OCR pass failed (${ocrErr.message}) — sparse pages may have unrecovered image content`);
@@ -7466,10 +7515,22 @@ async function extractPDF(file) {
     return result;
   }
 
-  const transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
-  result.text = (outlineText + transcribed + formText).trim();
-  result.sourceType = 'pdf-vision';
-  result.warnings.push(`Extracted via AI vision (${visionAI.cfg.label}) — check for accuracy before running rounds`);
+  // v3.58.7 — Try every keyed vision provider, not just the first. One
+  // provider returning empty no longer kills the whole upload.
+  const { text: transcribed, used, errors } = await runVisionWithFallback(pageImages, status);
+  if (transcribed && transcribed.trim()) {
+    result.text = (outlineText + transcribed + formText).trim();
+    result.sourceType = 'pdf-vision';
+    result.warnings.push(`Extracted via AI vision (${used}) — check for accuracy before running rounds`);
+    if (errors.length) result.warnings.push(`Earlier OCR attempts skipped: ${errors.join('; ')}`);
+    return result;
+  }
+
+  // Every keyed vision provider failed — degrade to whatever text we have
+  // plus a clear, actionable warning rather than throwing and aborting the load.
+  result.text = assembledText;
+  result.sourceType = 'pdf';
+  result.warnings.push(`Vision OCR could not transcribe this PDF (${errors.join('; ')}). The embedded fonts may be undecodable. Paste the text manually, or try the Re-extract button after changing your OCR provider in Settings.`);
   return result;
 }
 
