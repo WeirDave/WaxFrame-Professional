@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-025
+//  Build: 20260526-026
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-025';         // build stamp — update each session
+const BUILD       = '20260526-026';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7131,6 +7131,12 @@ async function processFile(file) {
       localStorage.setItem('waxframe_v2_source_type', doc.sourceType || file.name.split('.').pop().toLowerCase());
     } catch(e) { console.warn('[v2-filename:save] write failed:', e); }
 
+    // v3.59.0 — stash verify context so the import-warning card's
+    // "Verify / edit text" button (and a later re-open) can show the
+    // original alongside the extracted text. Blob URL only for natively
+    // renderable types (PDF / image); in-memory only, revoked on replace.
+    setVerifyContext({ target: 'starting', docId: null, file, sourceType: doc.sourceType });
+
     // Show status — green if clean, amber if warnings
     const warnings = doc.warnings || [];
     if (warnings.length > 0) {
@@ -7215,6 +7221,14 @@ async function processRefFile(file) {
 
     let totalChars = 0;
     const allWarnings = [];
+    // v3.59.0 — one blob URL per uploaded file, shared by the doc(s) it
+    // produced (a multi-sheet xlsx makes several docs from one file). Held
+    // in-memory on the doc object (not serialized); used by the card 🔍
+    // verify panel to render the original beside the extracted text.
+    const ext = file.name.split('.').pop().toLowerCase();
+    const isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+    const sharedBlobUrl = isRenderable ? URL.createObjectURL(file) : null;
+    let firstNewId = null;
     for (const docResult of docs) {
       const text = (docResult.text || '').trim();
       if (!text) continue;
@@ -7225,11 +7239,19 @@ async function processRefFile(file) {
         text,
         source: 'upload',
         filename: file.name,
+        _blobUrl: sharedBlobUrl,   // in-memory only
+        _isRenderable: isRenderable,
+        _sourceType: docResult.sourceType,
       };
       referenceDocs.push(newDoc);
+      if (firstNewId === null) firstNewId = newDoc.id;
       if (docResult.warnings && docResult.warnings.length) {
         allWarnings.push(...docResult.warnings);
       }
+    }
+    // Stash for the import-warning card's Verify button (reference target).
+    if (firstNewId !== null) {
+      window._lastImportVerify = { target: 'reference', docId: firstNewId };
     }
 
     renderReferenceCards();
@@ -7508,6 +7530,16 @@ async function extractPDF(file) {
   window._lastPDFPages = pageImages;
   try { localStorage.setItem('waxframe_v2_has_pdf_pages', '1'); } catch(e) { console.warn('[v2-has-pdf-pages] write failed:', e); }
 
+  // v3.59.0 — page count is known now; replace the vague "15–30 seconds"
+  // with a concrete, honest estimate so a 1–2 min multi-page OCR doesn't
+  // look hung. The status keeps updating as runVisionWithFallback advances
+  // providers (it already pushes "trying {next}…" via the statusEl arg).
+  if (status) {
+    const n = pageImages.length;
+    status.textContent = `⏳ Reading ${n} page${n === 1 ? '' : 's'} with AI vision — this can take up to ${n > 2 ? 'a minute or two' : 'a minute'} on documents like this. Hang tight…`;
+    setFileStatusState(status, 'loading');
+  }
+
   const visionAI = getVisionCapableAI();
   if (!visionAI) {
     result.text = assembledText;
@@ -7626,6 +7658,160 @@ async function storePDFPageImages(pdf) {
     localStorage.setItem('waxframe_v2_has_pdf_pages', '1');
   } catch(e) {
     window._lastPDFPages = null;
+  }
+}
+
+// ============================================================
+//  VERIFY / EDIT PANEL (v3.59.0)
+//  Side-by-side: the original file rendered by the BROWSER on the
+//  left (PDF/image via blob URL in an <iframe> — the browser's full
+//  renderer handles fonts our minimal lib/pdf.js cannot), the
+//  extracted/OCR'd text on the right as an editable textarea. Lets
+//  the user verify a transcription against the source and fix any
+//  errors in place — and, for vision imports, re-run the OCR through
+//  a different provider (a real second opinion: different OCR engine).
+//  Works for both the Starting Document and Reference Material paths.
+// ============================================================
+
+// Stash the just-imported file so the import-warning card's Verify
+// button can open the panel against it. Blob URL only for natively
+// renderable types; revoked on the next import to avoid leaks.
+function setVerifyContext({ target, docId, file, sourceType }) {
+  try { if (window._verifyBlobUrl) URL.revokeObjectURL(window._verifyBlobUrl); } catch(e) {}
+  const ext = (file?.name || '').split('.').pop().toLowerCase();
+  const isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+  window._verifyBlobUrl = (file && isRenderable) ? URL.createObjectURL(file) : null;
+  window._lastImportVerify = {
+    target: target || 'starting',
+    docId: docId || null,
+    blobUrl: window._verifyBlobUrl,
+    isRenderable,
+    name: file?.name || 'document',
+    sourceType: sourceType || ext,
+  };
+}
+
+// Entry point from the IMPORT_WARNINGS troubleshooting card.
+function openVerifyPanelFromImport() {
+  if (typeof closeTroubleshootingCard === 'function') closeTroubleshootingCard();
+  const ctx = window._lastImportVerify;
+  if (!ctx) { toast('Nothing to verify — re-upload the file first', 2500); return; }
+  if (ctx.target === 'reference' && ctx.docId) { openVerifyPanelForRef(ctx.docId); return; }
+  // Starting Document target.
+  openVerifyPanel({
+    name: ctx.name,
+    blobUrl: ctx.isRenderable ? (ctx.blobUrl || window._verifyBlobUrl) : null,
+    text: docText || '',
+    onSave: (newText) => {
+      docText = newText;
+      const wd = document.getElementById('workDocument');
+      if (wd) wd.value = newText;
+      if (typeof saveSession === 'function') saveSession();
+      toast('✅ Edits saved to the Starting Document', 2500);
+    },
+  });
+}
+
+// Entry point from a reference card's 🔍 button.
+function openVerifyPanelForRef(docId) {
+  const doc = (typeof referenceDocs !== 'undefined')
+    ? referenceDocs.find(d => String(d.id) === String(docId)) : null;
+  if (!doc) { toast('Reference document not found', 2500); return; }
+  openVerifyPanel({
+    name: doc.name || doc.filename || 'reference',
+    blobUrl: doc._isRenderable ? (doc._blobUrl || null) : null,
+    text: doc.text || '',
+    onSave: (newText) => {
+      if (typeof updateReferenceDocText === 'function') {
+        updateReferenceDocText(docId, newText);
+      } else {
+        doc.text = newText;
+        if (typeof renderReferenceCards === 'function') renderReferenceCards();
+        if (typeof saveProject === 'function') saveProject();
+      }
+      toast('✅ Edits saved to this reference document', 2500);
+    },
+  });
+}
+
+// Core opener. opts: { name, blobUrl|null, text, onSave(newText) }.
+let _verifyOnSave = null;
+function openVerifyPanel(opts) {
+  const panel = document.getElementById('verifyPanel');
+  if (!panel) return;
+  _verifyOnSave = typeof opts.onSave === 'function' ? opts.onSave : null;
+
+  const nameEl  = document.getElementById('verifyDocName');
+  const frame   = document.getElementById('verifyPdfFrame');
+  const noRender= document.getElementById('verifyNoRender');
+  const ta      = document.getElementById('verifyText');
+  const reread  = document.getElementById('verifyRereadBtn');
+
+  if (nameEl) nameEl.textContent = opts.name || 'document';
+  if (ta) ta.value = opts.text || '';
+
+  // Left pane: render the original if we have a renderable blob; else show
+  // a clear "preview not available" note (Office formats can't render in an
+  // iframe — the editable text on the right still works).
+  if (opts.blobUrl && frame && noRender) {
+    frame.src = opts.blobUrl;
+    frame.style.display = 'block';
+    noRender.style.display = 'none';
+  } else if (frame && noRender) {
+    frame.removeAttribute('src');
+    frame.style.display = 'none';
+    noRender.style.display = 'flex';
+  }
+
+  // "Try a different reader" only makes sense when we still have the
+  // rendered page images from a vision OCR pass to re-send.
+  if (reread) {
+    const canReread = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0;
+    reread.style.display = canReread ? 'inline-flex' : 'none';
+  }
+
+  panel.classList.add('active');
+  document.addEventListener('keydown', _verifyEscHandler);
+}
+
+function _verifyEscHandler(e) { if (e.key === 'Escape') closeVerifyPanel(); }
+
+function closeVerifyPanel() {
+  const panel = document.getElementById('verifyPanel');
+  if (panel) panel.classList.remove('active');
+  document.removeEventListener('keydown', _verifyEscHandler);
+}
+
+function saveVerifyEdits() {
+  const ta = document.getElementById('verifyText');
+  if (ta && _verifyOnSave) _verifyOnSave(ta.value);
+  closeVerifyPanel();
+}
+
+// Re-run OCR through the NEXT keyed vision provider (real second opinion —
+// different OCR engine, not the same model retried). Repopulates the editor.
+async function verifyTryDifferentReader() {
+  const ta   = document.getElementById('verifyText');
+  const btn  = document.getElementById('verifyRereadBtn');
+  const note = document.getElementById('verifyRereadNote');
+  if (!Array.isArray(window._lastPDFPages) || !window._lastPDFPages.length) {
+    if (note) note.textContent = 'No rendered pages available to re-read.';
+    return;
+  }
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Re-reading…'; }
+  if (note) note.textContent = 'Sending the page images to the next available vision provider…';
+  try {
+    const { text, used, errors } = await runVisionWithFallback(window._lastPDFPages, null);
+    if (text && text.trim()) {
+      if (ta) ta.value = text.trim();
+      if (note) note.textContent = `Re-read via ${used}. Compare against the original and Save if it's better.`;
+    } else {
+      if (note) note.textContent = `No provider could re-read it (${errors.join('; ')}). Edit manually instead.`;
+    }
+  } catch(e) {
+    if (note) note.textContent = `Re-read failed: ${e.message}. Edit manually instead.`;
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '🔁 Try a different reader'; }
   }
 }
 
@@ -8663,6 +8849,13 @@ function refCardMarkup(doc, index) {
          <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>
        </div>`;
 
+  // v3.59.0 — verify/edit button, only for uploaded docs (paste docs are
+  // already editable inline in the card). Opens the side-by-side panel:
+  // original on the left, editable extracted text on the right.
+  const verifyBtn = doc.source === 'upload'
+    ? `<button class="btn btn-sm ref-card-verify" title="Verify / edit extracted text against the original" onclick="openVerifyPanelForRef('${idAttr}')">🔍</button>`
+    : '';
+
   return `
 <div class="ref-card" data-ref-id="${idAttr}">
   <div class="ref-card-hdr">
@@ -8673,7 +8866,7 @@ function refCardMarkup(doc, index) {
            aria-label="Reference document name"
            placeholder="Reference name…">
     <div class="ref-card-actions">
-      ${upBtn}${positionLabel}${downBtn}
+      ${verifyBtn}${upBtn}${positionLabel}${downBtn}
       <button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
     </div>
   </div>

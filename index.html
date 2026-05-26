@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260526-025
+     Build: 20260526-026
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260526-025">
+  <meta name="waxframe-build" content="20260526-026">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.58.8">
+  <link rel="stylesheet" href="style.css?v=3.59.0">
 </head>
 <body>
 
@@ -2395,20 +2395,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.58.8"></script>
-<script src="lib/mammoth.browser.min.js?v=3.58.8"></script>
-<script src="lib/jszip.min.js?v=3.58.8"></script>
-<script src="lib/xlsx.full.min.js?v=3.58.8"></script>
-<script src="js/version.js?v=3.58.8"></script>
-<script src="js/storage.js?v=3.58.8"></script>
-<script src="js/theme.js?v=3.58.8"></script>
-<script src="js/audio.js?v=3.58.8"></script>
-<script src="js/scenes.js?v=3.58.8"></script>
-<script src="js/wf-debug.js?v=3.58.8"></script>
-<script src="js/api.js?v=3.58.8"></script>
-<script src="js/templates.js?v=3.58.8"></script>
-<script src="js/api-links.js?v=3.58.8"></script>
-<script src="js/app.js?v=3.58.8"></script>
+<script src="lib/pdf.min.js?v=3.59.0"></script>
+<script src="lib/mammoth.browser.min.js?v=3.59.0"></script>
+<script src="lib/jszip.min.js?v=3.59.0"></script>
+<script src="lib/xlsx.full.min.js?v=3.59.0"></script>
+<script src="js/version.js?v=3.59.0"></script>
+<script src="js/storage.js?v=3.59.0"></script>
+<script src="js/theme.js?v=3.59.0"></script>
+<script src="js/audio.js?v=3.59.0"></script>
+<script src="js/scenes.js?v=3.59.0"></script>
+<script src="js/wf-debug.js?v=3.59.0"></script>
+<script src="js/api.js?v=3.59.0"></script>
+<script src="js/templates.js?v=3.59.0"></script>
+<script src="js/api-links.js?v=3.59.0"></script>
+<script src="js/app.js?v=3.59.0"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2510,6 +2510,41 @@
         <span class="nav-buy-cta-sub">Unlock unlimited rounds</span>
       </span>
     </a>
+  </div>
+</div>
+
+<!-- ── Verify / Edit panel (v3.59.0) — original rendered by the browser on the
+     left, editable extracted text on the right. Opened from a reference card's
+     🔍 button or the import-warning card's Verify button. ── -->
+<div class="verify-panel-overlay" id="verifyPanel">
+  <div class="verify-panel">
+    <div class="verify-panel-hdr">
+      <span class="verify-panel-title">🔍 Verify &amp; edit — <span id="verifyDocName">document</span></span>
+      <span class="verify-panel-sub">Compare the extracted text against the original. Fix anything wrong, then Save.</span>
+      <button class="btn btn-sm verify-panel-close" title="Close" onclick="closeVerifyPanel()">✕</button>
+    </div>
+    <div class="verify-panel-body">
+      <div class="verify-pane verify-pane-left">
+        <div class="verify-pane-label">Original</div>
+        <iframe id="verifyPdfFrame" class="verify-pdf-frame" title="Original document preview"></iframe>
+        <div id="verifyNoRender" class="verify-no-render">
+          <p>Preview isn't available for this file type in the browser.</p>
+          <p>Edit the extracted text on the right — that still saves normally.</p>
+        </div>
+      </div>
+      <div class="verify-pane verify-pane-right">
+        <div class="verify-pane-label">Extracted text <span class="verify-pane-hint">(editable)</span></div>
+        <textarea id="verifyText" class="verify-text" spellcheck="false" placeholder="Extracted text appears here…"></textarea>
+        <div id="verifyRereadNote" class="verify-reread-note"></div>
+      </div>
+    </div>
+    <div class="verify-panel-ftr">
+      <button class="btn verify-reread-btn" id="verifyRereadBtn" onclick="verifyTryDifferentReader()">🔁 Try a different reader</button>
+      <div class="verify-ftr-right">
+        <button class="btn" onclick="closeVerifyPanel()">Cancel</button>
+        <button class="btn btn-cta" onclick="saveVerifyEdits()">✅ Save edits</button>
+      </div>
+    </div>
   </div>
 </div>
 
