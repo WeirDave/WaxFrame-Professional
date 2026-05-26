@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260526-025
+   Build: 20260526-026
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12466,4 +12466,153 @@ kbd {
   text-transform: uppercase;
   color: var(--muted);
   padding: var(--space-4) 0 0;
+}
+
+/* ============================================================
+   VERIFY / EDIT PANEL (v3.59.0)
+   Side-by-side: browser-rendered original (left) + editable
+   extracted text (right). Uses design tokens so it tracks theme.
+   Text pane is --font-mono (Courier New) per house style.
+   ============================================================ */
+.verify-panel-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000001;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  padding: 24px;
+}
+.verify-panel-overlay.active { display: flex; }
+
+.verify-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1200px;
+  height: 100%;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.5);
+  overflow: hidden;
+}
+
+.verify-panel-hdr {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  position: relative;
+  flex-shrink: 0;
+}
+.verify-panel-title { font-weight: 700; color: var(--text); font-size: 15px; }
+.verify-panel-sub   { color: var(--text-dim); font-size: 12px; }
+.verify-panel-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+}
+
+.verify-panel-body {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.verify-pane {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 50%;
+  min-width: 0;
+  min-height: 0;
+}
+.verify-pane-left  { border-right: 1px solid var(--border); }
+.verify-pane-label {
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  background: var(--surface3);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.verify-pane-hint { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--accent); }
+
+.verify-pdf-frame {
+  flex: 1 1 auto;
+  width: 100%;
+  border: 0;
+  background: #525659;
+  min-height: 0;
+}
+.verify-no-render {
+  flex: 1 1 auto;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.verify-text {
+  flex: 1 1 auto;
+  width: 100%;
+  resize: none;
+  border: 0;
+  padding: 14px 16px;
+  background: var(--surface);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: 1.55;
+  min-height: 0;
+}
+.verify-text:focus { outline: none; }
+.verify-reread-note {
+  padding: 6px 16px;
+  font-size: 12px;
+  color: var(--text-dim);
+  border-top: 1px solid var(--border);
+  min-height: 0;
+  flex-shrink: 0;
+}
+.verify-reread-note:empty { display: none; }
+
+.verify-panel-ftr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.verify-ftr-right { display: flex; gap: 10px; }
+.verify-reread-btn { white-space: nowrap; }
+
+.ref-card-hdr .ref-card-verify {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+}
+.ref-card-hdr .ref-card-verify:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+@media (max-width: 900px) {
+  .verify-panel-body { flex-direction: column; }
+  .verify-pane-left { border-right: 0; border-bottom: 1px solid var(--border); }
 }

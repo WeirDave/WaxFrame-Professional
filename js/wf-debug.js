@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260525-010
+//  Build: 20260526-026
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -581,8 +581,12 @@ window.WF_ERROR_CATALOG = [
     matches: () => false,
     title:   'Imported with warnings: {filename}',
     meaning: 'The main document text imported normally, but some parts of the file could not be fully parsed:\n\n{warnings}\n\nIf any of those parts contained content you need, re-uploading or saving the file in a different format may help.',
+    // v3.59.0 — redundant 'OK' (it only dismissed, same as the built-in
+    // Dismiss footer) replaced with a real action: open the side-by-side
+    // verify/edit panel so the user can check the import against the original
+    // and fix any transcription errors. The built-in Dismiss remains as close.
     actions: [
-      { label: 'OK',  kind: 'dismiss' }
+      { label: '🔍 Verify / edit text', kind: 'open-modal', handler: 'openVerifyPanelFromImport' }
     ]
   }
 ];

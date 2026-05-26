@@ -2,6 +2,42 @@
 
 ---
 
+## v3.59.0
+**Build:** `20260526-026` · **Released:** May 26, 2026
+
+### Verify & Edit panel + OCR progress states
+
+A new side-by-side panel lets you check an imported document against the
+original and fix any extraction/OCR errors in place — and re-run OCR through a
+different vision provider for a genuine second opinion.
+
+- **Verify / Edit panel** — the browser renders the original file (PDF or
+  image) on the left via its full native renderer (handles fonts our in-app
+  PDF.js cannot); the extracted text is an editable pane on the right. Edit,
+  then Save — the corrected text flows back to the Starting Document or the
+  reference doc. For Office formats that can't render in a frame, the left pane
+  shows a clear note and the editable text still works.
+- **Open it two ways:** a 🔍 button in each uploaded reference card's header
+  (available any time), and a "Verify / edit text" button on the import-warning
+  card (replacing the redundant OK button).
+- **Try a different reader** — re-runs OCR through the next keyed vision
+  provider (a real second opinion: each provider is a different OCR engine, not
+  the same model retried) and repopulates the editor.
+- **OCR progress states** — multi-page vision OCR can take a minute or more;
+  the status line now states the page count and an honest time estimate instead
+  of a silent "Reading…".
+- **Removed** the redundant OK button on the import-warning card (it duplicated
+  the built-in Dismiss).
+
+### Housekeeping
+
+- All JavaScript modules are now included in the release package and share a
+  single synchronized build stamp. Five modules (`audio`, `scenes`, `storage`,
+  `templates`, `wf-debug`) had drifted to an older stamp and were missing from
+  recent zips; they are now in sync.
+
+---
+
 ## v3.58.8
 **Build:** `20260526-025` · **Released:** May 26, 2026
 
