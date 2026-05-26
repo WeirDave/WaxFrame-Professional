@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260525-019
+   Build: 20260525-020
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7631,20 +7631,28 @@ kbd {
 }
 .full-width         { width: 100%; }
 .change-builder-modal {
-  /* v3.58.2 — back to the --modal-w-base token (640px) after the v3.58.0 900px
-     experiment. The candidate grid is compact again and a single shared model
-     dropdown sits below it, so the modal no longer needs list width. On-scale
-     with the rest of the app; not a viewport-large modal. Keeps scroll for the
-     long cost-note + dropdown notes on short viewports. */
-  max-width: var(--modal-w-base);
-  max-height: 85vh;
+  /* v3.58.3 — FIXED width AND height for a stable, uniform dialog that does not
+     resize as you click between candidates (per-AI dropdown notes vary in
+     length). Width = --modal-w-lg (900px), matching .finish-modal-goal — the
+     app's other substantial content modal — so the two are uniform. Height is
+     fixed with a short-viewport cap; content top-aligns (base .finish-modal is a
+     flex column) and overflow-y scrolls if the cost-note + notes exceed it.
+     box-sizing:border-box so the fixed height includes the modal padding. */
+  width: var(--modal-w-lg);
+  max-width: var(--modal-w-lg);
+  height: min(640px, 88vh);
+  box-sizing: border-box;
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--border2) transparent;
 }
-/* v3.58.2 — the shared dropdown wrap stretches full width (the base
-   .finish-modal centers children); the compact grid and buttons stay centered. */
+/* v3.58.3 — the Builder mascot was rendering at the shared 22px inline size and
+   read as a speck. Bump it (scoped to this modal) so the hard-hat builder bee is
+   legible in the title. */
+#changeBuilderModal .modal-title-bee { width: 44px; height: 44px; margin-top: 0; }
+/* shared dropdown stretches full width; the long cost-note reads left at 900px. */
 #changeBuilderModal .cb-model-wrap { align-self: stretch; }
+#changeBuilderModal .finish-modal-msg { text-align: left; }
 
 /* ── Sheet Picker Modal (v3.25.0) ── */
 .sheet-picker-modal       { max-width: 640px; text-align: left; align-items: stretch; }
