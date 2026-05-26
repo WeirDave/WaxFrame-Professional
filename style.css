@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260525-021
+   Build: 20260525-022
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7623,16 +7623,17 @@ kbd {
 }
 .full-width         { width: 100%; }
 .change-builder-modal {
-  /* v3.58.3 — FIXED width AND height for a stable, uniform dialog that does not
-     resize as you click between candidates (per-AI dropdown notes vary in
-     length). Width = --modal-w-lg (900px), matching .finish-modal-goal — the
-     app's other substantial content modal — so the two are uniform. Height is
-     fixed with a short-viewport cap; content top-aligns (base .finish-modal is a
-     flex column) and overflow-y scrolls if the cost-note + notes exceed it.
-     box-sizing:border-box so the fixed height includes the modal padding. */
+  /* v3.58.5 — fixed WIDTH (--modal-w-lg, 900px, uniform with .finish-modal-goal)
+     but HEIGHT sizes to content. The v3.58.3 hard height forced 640px even when
+     the content was shorter, leaving dead space at the bottom AND letting it
+     scroll a few px into that empty space. The bounce that the fixed height was
+     meant to stop is already handled by the 150px reserved model block
+     (v3.58.4) — content height no longer changes between candidates — so
+     content-height is stable with no gap and no scroll. max-height is just the
+     short-viewport safety valve. */
   width: var(--modal-w-lg);
   max-width: var(--modal-w-lg);
-  height: min(640px, 88vh);
+  max-height: 88vh;
   box-sizing: border-box;
   overflow-y: auto;
   scrollbar-width: thin;
