@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260525-017
+//  Build: 20260525-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260525-017';         // build stamp — update each session
+const BUILD       = '20260525-018';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4928,19 +4928,26 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     if (format === 'anthropic') {
       url = endpoint;
       headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-      body = JSON.stringify({ model: askingModel, max_tokens: 300, temperature: 0, messages: [{ role: 'user', content: prompt }] });
+      // v3.58.1 — no `temperature`: current Claude models 400 with
+      // "temperature is deprecated for this model". Determinism was nice-to-have
+      // for picking a model; reliability wins. Let the provider default stand.
+      body = JSON.stringify({ model: askingModel, max_tokens: 300, messages: [{ role: 'user', content: prompt }] });
     } else if (format === 'google') {
       // v3.26.3: use header-based auth (x-goog-api-key) instead of query-string
       // ?key= — matches the production review flow's auth method, more robust
       // against tier behavior differences and CORS quirks.
       url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent`;
       headers = { 'Content-Type': 'application/json', 'x-goog-api-key': key };
-      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0 } });
+      // v3.58.1 — drop generationConfig.temperature for consistency with the
+      // other formats (see anthropic/openai branches).
+      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
     } else {
       url = endpoint;
       headers = { 'Content-Type': 'application/json' };
       if (key) headers['Authorization'] = `Bearer ${key}`;
-      body = JSON.stringify({ model: askingModel, temperature: 0, messages: [{ role: 'user', content: prompt }] });
+      // v3.58.1 — no `temperature`: current ChatGPT models 400 with
+      // "temperature does not support 0 ... only the default (1) is supported".
+      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
     }
 
     const resp = await fetch(url, { method: 'POST', headers, body });
@@ -4967,8 +4974,17 @@ async function recommendModel({ cacheId, endpoint, format, key, models, askingMo
     // when no safe model exists on this endpoint. Reviewer role does not
     // emit NONE in normal usage (we filter only structurally-incompatible
     // models there), but the parser tolerates it for symmetry.
-    const recMatch = text.match(/^RECOMMENDED:\s*([^\n\r]+)/im);
-    const whyMatch = text.match(/^RECOMMENDED_WHY:\s*([^\n\r]+)/im);
+    // v3.58.1 — tolerant + last-match parse. Reasoning models (e.g. Gemini 3.x
+    // "pro-preview") emit a long chain-of-thought and bury the answer indented
+    // inside it ("    *   RECOMMENDED: 10"), so the old column-zero ^ anchor
+    // missed it entirely. Allow leading whitespace / markdown bullets, and take
+    // the LAST occurrence — CoT models restate intermediate guesses, so only the
+    // final line is authoritative (and this skips the "RECOMMENDED: <number>"
+    // echo of the format spec, which always appears earlier in the response).
+    const _recAll = [...text.matchAll(/^[ \t>*#`.\-]*RECOMMENDED:\s*([^\n\r]+)/gim)];
+    const _whyAll = [...text.matchAll(/^[ \t>*#`.\-]*RECOMMENDED_WHY:\s*([^\n\r]+)/gim)];
+    const recMatch = _recAll.length ? _recAll[_recAll.length - 1] : null;
+    const whyMatch = _whyAll.length ? _whyAll[_whyAll.length - 1] : null;
 
     if (!recMatch) {
       console.warn('[recommend] no RECOMMENDED line in provider response. Raw text:', text);
