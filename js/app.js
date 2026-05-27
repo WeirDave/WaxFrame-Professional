@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-004
+//  Build: 20260527-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -412,7 +412,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-004';         // build stamp — update each session
+const BUILD       = '20260527-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5643,18 +5643,15 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
     // (and some gateways) return a bare array tagging each entry with a `type`
     // (chat/image/video/audio/…). Keep only chat when that field is present;
     // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
-    // v3.60.5 — additionally filter out entries where `running === false`. Together's
-    // /v1/models response sets `running: false` for models that are in the catalog
-    // but no longer currently-callable on serverless (the canonical case being
-    // Qwen2-72B-Instruct demoted from serverless to dedicated-only). Other
-    // providers either omit the field entirely or always set it true, so the
-    // `!== false` check leaves them untouched.
+    // v3.60.5 added a `running !== false` filter on top of this; v3.60.6 REVERTS
+    // that — `running` does NOT mean "currently serverless." It appears to mean
+    // "a dedicated endpoint instance is currently running for this account,"
+    // which is false by default for every model on a user who hasn't spun up
+    // dedicated infra. The v3.60.5 filter therefore wiped the entire Together
+    // list and broke the dropdown. The right field for serverless-vs-dedicated
+    // is TBD pending a richer diagnostic of Together's response shape.
     const _arr = Array.isArray(data) ? data : (data?.data || []);
-    models = _arr
-      .filter(m => !m.type || m.type === 'chat')
-      .filter(m => m.running !== false)
-      .map(m => m.id)
-      .sort();
+    models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
   }
   // Same structural-only filter the default 6 use
   models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
