@@ -2,6 +2,42 @@
 
 ---
 
+## v3.60.8
+**Build:** `20260527-007` · **Released:** May 27, 2026
+
+### Verify & Edit panel — Done button styled as primary CTA
+
+Cosmetic fix surfaced during the v3.60.7 Together-filter validation run
+(a real 12-round Permit Coordinator resume tailoring). The Verify & Edit
+panel's primary action button — "Done" / "✅ Save changes" depending on
+state — was rendering with the neutral outline style (transparent
+background, dimmed text) instead of the gold Continue-button treatment
+used by every other primary CTA across setup screens.
+
+Visual hierarchy is now consistent: the right-side action ("Done" /
+"Save changes") carries the gold `.btn-accent` styling that marks it as
+the affirmative continue path. Cancel stays neutral on the left.
+
+**Why this mattered:** The Verify & Edit panel is on the critical path
+for any PDF/DOCX import (every uploaded document hits it). A washed-out
+primary button against a neutral Cancel button creates a moment of
+hesitation about which action is the "go forward" choice. The fix
+makes the path obvious without changing any behavior.
+
+### Files changed
+
+- `index.html` — Done button class list gained `btn-accent` (single
+  token added). Cancel button unchanged. No JS or CSS modifications
+  needed — the `.btn-accent` class already exists with the canonical
+  gold-amber-on-white treatment plus the standard hover flip; adding it
+  to the button just opts in. The `.btn-cta:not(.btn-accent)` neutral
+  rule that was previously catching the button stops applying as a
+  consequence of the additional class.
+- Version stamps + full cache-bust sweep across all 8 HTML files to
+  `3.60.8`, build `20260527-007`.
+
+---
+
 ## v3.60.7
 **Build:** `20260527-006` · **Released:** May 27, 2026
 
