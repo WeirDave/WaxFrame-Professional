@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260527-002
+//  Build: 20260527-003
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -697,21 +697,83 @@ function renderTroubleshootingCard(entry, ctx) {
       API_CONFIGS[ctx.provider];
 
     if (canShowModelPicker) {
-      const currentModel = (API_CONFIGS[ctx.provider] && API_CONFIGS[ctx.provider].model) || '';
-      const html = buildModelSelector(ctx.aiId, ctx.provider, currentModel, false);
-      if (html) {
+      // v3.60.4 — Render the picker as a self-contained block we can rebuild
+      // in place after a Recommend-Models pass. The Recommend button below
+      // is OUR button, not buildModelSelector's built-in one, because the
+      // built-in updates by document.getElementById('modelsel-${aiId}') and
+      // there's a guaranteed ID collision with the bee card's dropdown on
+      // the (hidden) setup screen — getElementById returns the FIRST match,
+      // i.e. the offscreen bee dropdown, so the built-in button would
+      // silently update the wrong element. Our button calls recheckModelForAI
+      // (which updates the recommendation CACHE — the source of truth) and
+      // then re-renders this card's picker from cache, sidestepping the DOM
+      // collision entirely.
+      const renderPicker = () => {
+        // Read currentModel FRESH on each render so post-recheck re-renders
+        // pick up any saved-model change (and so the dropdown's selected
+        // option always reflects the live API_CONFIGS state).
+        const currentModel = (API_CONFIGS[ctx.provider] && API_CONFIGS[ctx.provider].model) || '';
+        const html = buildModelSelector(ctx.aiId, ctx.provider, currentModel, false);
+        if (!html) return;
+
+        // Replace any prior render in place (so a recheck re-render swaps
+        // cleanly without duplicating the block).
+        const prior = actionsEl.querySelector('.tc-model-picker');
+        if (prior) prior.remove();
+
         const wrap = document.createElement('div');
         wrap.className = 'tc-model-picker';
+
         const label = document.createElement('div');
         label.className = 'tc-model-picker-label';
         label.textContent = 'Pick a different model for ' + (ctx.aiName || 'this AI') + ':';
+
+        // Tip line — explains what the user is looking at and what the
+        // Recommend button below will do. Visible whether or not
+        // recommendations already exist; the message adapts.
+        const tip = document.createElement('div');
+        tip.className = 'tc-model-picker-tip';
+        const reviewerCached = (typeof getReviewerRecommendation === 'function')
+          ? getReviewerRecommendation(ctx.aiId) : null;
+        const builderCached  = (typeof getBuilderRecommendation === 'function')
+          ? getBuilderRecommendation(ctx.aiId)  : null;
+        const hasAnyRec = !!(reviewerCached?.model || builderCached?.model);
+        if (!hasAnyRec) {
+          tip.textContent = 'No recommendations cached yet — click Recommend Models below to have ' + (ctx.aiName || 'this AI') + ' mark its best ✨ Reviewer and 🔨 Builder picks in the dropdown.';
+        } else {
+          tip.textContent = 'Dropdown shows ✨ for the recommended Reviewer model and 🔨 for the recommended Builder model. Re-run Recommend Models if the lineup has changed.';
+        }
+
         const dd = document.createElement('div');
         dd.className = 'tc-model-picker-select';
         dd.innerHTML = html;
+
+        const recBtn = document.createElement('button');
+        recBtn.type = 'button';
+        recBtn.className = 'tc-model-picker-recommend';
+        recBtn.textContent = 'Recommend Models';
+        recBtn.onclick = async () => {
+          recBtn.disabled = true;
+          recBtn.textContent = 'Recommending…';
+          try {
+            if (typeof recheckModelForAI === 'function') {
+              await recheckModelForAI(ctx.aiId);
+            }
+          } catch (e) {
+            // Swallow — re-render below will surface whatever state we end
+            // up in (markers present or absent), and recheckModelForAI does
+            // its own user-facing toasts/console logging on failure.
+          }
+          renderPicker();
+        };
+
         wrap.appendChild(label);
+        wrap.appendChild(tip);
         wrap.appendChild(dd);
-        actionsEl.appendChild(wrap);
-      }
+        wrap.appendChild(recBtn);
+        actionsEl.insertBefore(wrap, actionsEl.firstChild);
+      };
+      renderPicker();
     }
 
     (entry.actions || []).forEach(a => {

@@ -8625,6 +8625,39 @@ kbd {
 .tc-model-picker-select .model-select {
   width: 100%;
 }
+/* v3.60.4 — explanatory tip line above the dropdown, adapts to whether
+   recommendations are already cached, and the in-card Recommend Models
+   button (own button — not buildModelSelector's built-in, to avoid the
+   DOM id collision with the bee card's dropdown). */
+.tc-model-picker-tip {
+  font-size: 0.8rem;
+  color: var(--text2, var(--text));
+  opacity: 0.85;
+  line-height: 1.4;
+}
+.tc-model-picker-recommend {
+  align-self: flex-start;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+  margin-top: 4px;
+}
+.tc-model-picker-recommend:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--surface);
+  border-color: var(--accent);
+}
+.tc-model-picker-recommend:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
 .tc-actions {
   display: flex;
   flex-wrap: wrap;
