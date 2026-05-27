@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-034
+//  Build: 20260526-035
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-034';         // build stamp — update each session
+const BUILD       = '20260526-035';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1999,8 +1999,11 @@ function _abandonInFlightRoundUI() {
 // ────────────────────────────────────────────────────────────────────
 // Auto chains rounds without waiting for the user. Toggle pill lives
 // in the work-screen topbar. Engages and disengages anytime, mid-run
-// included. A round in flight when Auto flips OFF still completes —
-// the chain check at end-of-round just sees the flag is off and stops.
+// included. v3.60.0 — flipping Auto OFF now ABORTS any in-flight round
+// immediately: toggleAutoMode bumps _projectGen so the round bails at its
+// next write checkpoint without committing, then resets the run UI. (Prior
+// behavior left the in-flight round to finish, which didn't match the
+// Manual = nothing runs model.)
 //
 // Guardrails (v1):
 //   • Max-rounds ceiling     — default 30, set when Auto engages,
@@ -2210,7 +2213,9 @@ function toggleAutoMode() {
       _autoFireChainedRound('toggle-on');
     }
   } else {
-    // Disengaging — leave any in-flight round to finish, just don't chain
+    // Disengaging — switch to Manual. v3.60.0 (Bug 1): Auto OFF now ABORTS
+    // any in-flight round immediately rather than letting it finish, to match
+    // the Manual mental model (Manual = nothing runs). See the abort block below.
     if (typeof consoleLog === 'function') consoleLog('👤 You turned Auto OFF — switched to Manual', 'info');
     if (typeof toast === 'function') toast('🚀 Auto mode OFF — Manual');
     window._autoCeilingTarget = null;
@@ -2221,6 +2226,22 @@ function toggleAutoMode() {
     window._autoLengthDirective    = '';
     // v3.35.1 — Clear any deferred chain so it can't resurrect later.
     window._autoChainDeferred = null;
+    // v3.60.0 — Bug 1: abort the in-flight round (if any) immediately. We drive
+    // the existing generation-token abandonment path used by clearProject —
+    // bumping _projectGen makes runRound / runBuilderOnly bail at their next
+    // write checkpoint WITHOUT committing (no phantom history, no chain), and
+    // _abandonInFlightRoundUI() resets the run button / overlays / timer now
+    // instead of waiting for that checkpoint to be reached. _autoMode is already
+    // false here, so _abandonInFlightRoundUI()'s own Auto-disengage block is a
+    // no-op — only the UI reset runs. Tradeoff (accepted): the in-flight round's
+    // work is discarded, which is the right call when you flip Auto off.
+    if (typeof isRoundInFlight === 'function' && isRoundInFlight()) {
+      window._projectGen = (window._projectGen || 0) + 1;
+      if (typeof _abandonInFlightRoundUI === 'function') _abandonInFlightRoundUI();
+      if (typeof consoleLog === 'function') {
+        consoleLog('🛑 In-flight round aborted — Auto OFF discards the round in progress', 'warn');
+      }
+    }
   }
 
   // v3.35.2 — saveAutoModePreference() call removed; Auto is no longer
