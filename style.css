@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260526-032
+   Build: 20260526-033
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12628,4 +12628,15 @@ kbd {
 .model-select-flash {
   animation: wf-model-flash 0.55s ease-in-out 3;
   border-color: var(--accent) !important;
+}
+
+/* v3.59.7 — USER DECISION option diff highlighting. Shared text with CURRENT
+   is dimmed; text unique to the option is highlighted, so near-identical
+   full-paragraph rewrites are scannable. Toggled via the DEV toolbar. */
+.wf-diff-same   { opacity: 0.42; }
+.wf-diff-change {
+  background: rgba(245, 166, 35, 0.30);
+  color: var(--text, inherit);
+  border-radius: 3px;
+  font-weight: 600;
 }

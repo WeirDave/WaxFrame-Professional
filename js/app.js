@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-032
+//  Build: 20260526-033
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-032';         // build stamp — update each session
+const BUILD       = '20260526-033';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -14080,6 +14080,63 @@ function _detectChurn() {
   }
 }
 
+// v3.59.7 — Smart diff for USER DECISION options. When several reviewers
+// rewrite the same long paragraph, the option cards are near-identical walls
+// of text and the actual change is invisible. This renders an option against
+// the CURRENT baseline, dimming unchanged text and highlighting what differs.
+// Modes (DEV-toolbar toggle): 'off' (plain), 'words' (token LCS), 'sentence'
+// (whole changed sentences). Display-only — does not alter stored option text.
+window._wfDecisionDiffMode = window._wfDecisionDiffMode || 'words';
+
+function wfDecisionDiffHtml(currentText, optionText, mode) {
+  const e = (s) => (typeof esc === 'function' ? esc(s) : String(s == null ? '' : s));
+  mode = mode || 'words';
+  optionText = String(optionText == null ? '' : optionText);
+  currentText = String(currentText == null ? '' : currentText);
+  if (mode === 'off' || !currentText) return e(optionText);
+
+  if (mode === 'sentence') {
+    const split = (t) => t.match(/[^.!?]+[.!?]*\s*/g) || (t ? [t] : []);
+    const curSet = new Set(split(currentText).map(s => s.trim()));
+    return split(optionText).map(s => {
+      const cls = curSet.has(s.trim()) ? 'wf-diff-same' : 'wf-diff-change';
+      return `<span class="${cls}">${e(s)}</span>`;
+    }).join('');
+  }
+
+  // word mode — LCS over whitespace-delimited tokens (whitespace kept as tokens)
+  const a = currentText.split(/(\s+)/);
+  const b = optionText.split(/(\s+)/);
+  const n = a.length, m = b.length;
+  if (n * m > 400000) return e(optionText); // guard against pathological size
+  const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+  for (let i = n - 1; i >= 0; i--)
+    for (let j = m - 1; j >= 0; j--)
+      dp[i][j] = (a[i] === b[j]) ? dp[i + 1][j + 1] + 1 : Math.max(dp[i + 1][j], dp[i][j + 1]);
+  let i = 0, j = 0, out = '';
+  while (j < m) {
+    if (i < n && a[i] === b[j]) {            // shared token → dim
+      out += `<span class="wf-diff-same">${e(b[j])}</span>`; i++; j++;
+    } else if (i < n && dp[i + 1][j] >= dp[i][j + 1]) {
+      i++;                                    // token only in CURRENT → not shown
+    } else {                                  // token only in option → highlight
+      out += `<span class="wf-diff-change">${e(b[j])}</span>`; j++;
+    }
+  }
+  return out;
+}
+
+// DEV toolbar: cycle the diff mode and re-render the Conflicts panel live so
+// the open conflict updates immediately (no new round needed).
+function wfCycleDecisionDiffMode() {
+  const order = ['off', 'words', 'sentence'];
+  window._wfDecisionDiffMode = order[(order.indexOf(window._wfDecisionDiffMode) + 1) % order.length];
+  const labels = { off: 'Off', words: 'Words', sentence: 'Sentences' };
+  const btn = document.getElementById('wfDiffModeBtn');
+  if (btn) btn.textContent = `🔀 Diff: ${labels[window._wfDecisionDiffMode]}`;
+  if (typeof renderConflicts === 'function') renderConflicts();
+}
+
 function renderConflicts() {
   const el = document.getElementById('conflictsPanel');
   if (!el) return;
@@ -14354,7 +14411,7 @@ function renderConflicts() {
             <button class="decision-opt-btn${oi === _preIdx ? ' selected' : ''}" id="dopt-${di}-${oi}"
               onclick="selectDecision(${di}, ${oi}, ${total})">
               <span class="decision-opt-num">${oi + 1}</span>
-              <span class="decision-opt-text">"${esc(opt.text)}"</span>
+              <span class="decision-opt-text">"${wfDecisionDiffHtml(d.current, opt.text, window._wfDecisionDiffMode)}"</span>
               ${opt.ais ? `<span class="decision-opt-ais">${esc(opt.ais)}</span>` : ''}
             </button>`).join('')}
           <button class="decision-opt-btn decision-opt-custom" id="dopt-${di}-custom"
