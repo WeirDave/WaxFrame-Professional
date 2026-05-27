@@ -2,6 +2,28 @@
 
 ---
 
+## v3.59.3
+**Build:** `20260526-029` · **Released:** May 26, 2026
+
+### Fix: live heartbeat during vision OCR + empty-response breadcrumb
+
+The "Reading…" status sat frozen during the vision API call — a single 30s+
+network wait with no other phase to report — so it was indistinguishable from a
+hang. (Phase labels added in v3.59.1 don't help here: on a re-upload the page
+images are cached, the render step is skipped, and the only slow step left is
+the opaque vision call.)
+
+- **Elapsed-time heartbeat** — during the vision call the status now ticks a
+  climbing seconds counter ("Reading 3 pages with AI vision (can take a minute
+  or two) — 14s…"), so it's always visibly alive, even when nothing else is
+  happening. Works regardless of render-cache or which provider runs.
+- **Empty-response breadcrumb** — when a provider returns HTTP 200 with an
+  empty body (not an error, so it never hit the error surfacing — e.g. gpt-5.x
+  vision occasionally returns nothing), a DEV console line now records the skip
+  and the fall-through to the next provider, so a silent empty leaves a trace.
+
+---
+
 ## v3.59.2
 **Build:** `20260526-028` · **Released:** May 26, 2026
 
