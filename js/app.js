@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-005
+//  Build: 20260527-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -323,6 +323,38 @@ function migrateTogetherModelCachesV3605() {
   }
 }
 
+// v3.60.7 — fetchModelsFromEndpoint now appends `?serverless=true` for
+// Together endpoints (see comment block there for the diagnostic history).
+// Existing v3.60.6 caches still contain the unfiltered ~257-entry list, so
+// this migration clears them once on first v3.60.7 load to force a fresh
+// fetch through the new URL. The v3.60.5 migration above is left in place
+// as a no-op for users who never loaded v3.60.5 / v3.60.6 — its sentinel
+// is separate from this one, so this one runs on every browser that
+// hasn't yet seen v3.60.7. Same provider-aware, same one-shot, same
+// localStorage-sentinel pattern.
+function migrateTogetherModelCachesV3607() {
+  if (localStorage.getItem('waxframe_v3607_together_models_migrated')) return;
+  let cleared = 0;
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !/^waxframe_models_/.test(k)) continue;
+      const aiId = k.replace(/^waxframe_models_/, '');
+      const cfg  = (typeof API_CONFIGS !== 'undefined') ? API_CONFIGS[aiId] : null;
+      const ep   = cfg?.endpoint || cfg?._modelsEndpoint || '';
+      if (/api\.together\.xyz/i.test(ep)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
+    localStorage.setItem('waxframe_v3607_together_models_migrated', '1');
+  } catch(e) { /* quota / privacy mode — accept and move on */ }
+  if (cleared > 0) {
+    console.info(`[migrate-v3.60.7] Cleared ${cleared} Together model-list cache(s). Next dropdown render will refetch with ?serverless=true applied at the API.`);
+  }
+}
+
 
 // (both removed in v3.31.0) and the recovery from the legacy removeAI
 // function (removed in v3.30.4). The snapshot is still kept because the
@@ -412,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-005';         // build stamp — update each session
+const BUILD       = '20260527-006';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5627,6 +5659,23 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
       modelsEndpoint = `${base}/v1/models`;
     }
     headers = key ? { 'Authorization': `Bearer ${key}` } : {};
+    // v3.60.7 — Together AI's public /v1/models returns the entire catalog
+    // (~257 entries, 148 chat) with no per-entry serverless-vs-dedicated
+    // flag. Empirically (v3.60.5/v3.60.6 diagnostics) the API honors an
+    // undocumented `?serverless=true` query parameter that filters to
+    // currently-callable serverless models (~102 total / 23 chat). Together
+    // themselves keep that list current, so no hardcoded allowlist, no
+    // proxy, no CORS — same-origin request, same auth, just an appended
+    // param. Other providers' endpoints are unaffected (the regex matches
+    // only `api.together.xyz`).
+    //
+    // Graceful degradation: if Together ever silently drops the param,
+    // response falls back to ~257 entries (i.e. v3.60.6 behavior) —
+    // broken but not empty, and the regression is detectable in console.
+    if (/api\.together\.xyz/i.test(modelsEndpoint)) {
+      const sep = modelsEndpoint.includes('?') ? '&' : '?';
+      modelsEndpoint = `${modelsEndpoint}${sep}serverless=true`;
+    }
   }
   const resp = await fetch(modelsEndpoint, { headers });
   if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
@@ -5643,13 +5692,13 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
     // (and some gateways) return a bare array tagging each entry with a `type`
     // (chat/image/video/audio/…). Keep only chat when that field is present;
     // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
-    // v3.60.5 added a `running !== false` filter on top of this; v3.60.6 REVERTS
-    // that — `running` does NOT mean "currently serverless." It appears to mean
-    // "a dedicated endpoint instance is currently running for this account,"
-    // which is false by default for every model on a user who hasn't spun up
-    // dedicated infra. The v3.60.5 filter therefore wiped the entire Together
-    // list and broke the dropdown. The right field for serverless-vs-dedicated
-    // is TBD pending a richer diagnostic of Together's response shape.
+    // v3.60.5 tried a `running !== false` filter here on the theory that
+    // `running` meant "currently serverless." It does not — `running: false`
+    // is the default state for every entry, including flagship serverless
+    // models. v3.60.6 reverted that filter. v3.60.7 solves the staleness
+    // problem upstream by appending `?serverless=true` to the request URL
+    // for Together AI (see fetchModelsFromEndpoint above), so no per-entry
+    // status filtering is needed here.
     const _arr = Array.isArray(data) ? data : (data?.data || []);
     models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
   }
@@ -15767,6 +15816,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   // endpoint URL — only Together AI caches are cleared, no other provider
   // is affected.
   migrateTogetherModelCachesV3605();
+  // v3.60.7 — one-time clear of v3.60.6 Together model-list caches so the
+  // newly-appended `?serverless=true` URL param takes effect on the next
+  // dropdown read. Independent sentinel from v3.60.5 above; both run idempotently.
+  migrateTogetherModelCachesV3607();
   // v3.41.0 — initMuteBtn() removed. theme.js auto-fires _updateMuteBtn
   // on DOMContentLoaded; since theme.js loads before app.js, theme.js's
   // listener fires first when DOMContentLoaded triggers.
