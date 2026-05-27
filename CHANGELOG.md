@@ -2,6 +2,36 @@
 
 ---
 
+## v3.60.1
+**Build:** `20260526-036` · **Released:** May 26, 2026
+
+### Reverts v3.60.0 abort — finish-then-stop is back, with a heads-up this time
+
+v3.60.0 made toggling Auto OFF abort the in-flight round on the theory that
+"Manual = nothing runs." In practice that discards 6–8 finished reviewer calls
+plus a Builder synthesis to save a few seconds — far too much work to throw
+away. The original finish-then-stop behavior is restored. The only real gap
+was that finish-then-stop happened *silently*, so the "Manual" pill flipping
+while a round visibly kept running looked like a bug. That gap is now closed.
+
+- **In-flight round is allowed to finish.** Toggling Auto OFF stops the chain
+  (no further rounds fire — `_autoMaybeChainNextRound` bails on `!_autoMode`)
+  but the current round runs to completion and records its result. Nothing is
+  discarded.
+- **Heads-up on mid-round toggle-off.** A 6-second toast (`🚀 Auto OFF —
+  finishing the current round, then stopping`) plus a matching console line
+  fire when you flip Auto off with a round in flight. Idle toggle-off (nothing
+  running) stays immediate with the plain `Auto mode OFF — Manual` toast.
+- **`_projectGen` abandonment path is untouched** — it remains the abort
+  mechanism used by `clearProject()`. We just no longer drive it from
+  toggle-off.
+
+**Files changed:** `js/app.js` (`toggleAutoMode` disengage branch + Auto Mode
+header comment). Version stamps + full cache-bust sweep across all 8 HTML to
+`3.60.1`, build `20260526-036`.
+
+---
+
 ## v3.60.0
 **Build:** `20260526-035` · **Released:** May 26, 2026
 
