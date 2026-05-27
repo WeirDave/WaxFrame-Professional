@@ -2,6 +2,46 @@
 
 ---
 
+## v3.60.4
+**Build:** `20260527-003` · **Released:** May 27, 2026
+
+### Recommend Models from inside the troubleshooting card
+
+The v3.60.2 inline model picker rendered a raw dropdown of every model the
+provider offers — and on a provider like Together AI that's 100+ entries
+with no guidance. Without `✨ Reviewer` and `🔨 Builder` markers (which only
+appear when recommendations are cached), the user can't tell which to pick.
+
+v3.60.4 puts the Recommend Models flow inside the card itself:
+
+- **Tip line above the dropdown** explains what the user is looking at — and
+  adapts: when no recommendations are cached it explicitly says so and points
+  to the Recommend Models button; when recommendations exist it explains the
+  ✨ / 🔨 markers.
+- **In-card Recommend Models button** runs `recheckModelForAI(aiId)`, shows a
+  `Recommending…` disabled state while in-flight, then re-renders the picker
+  from the (now-populated) recommendation cache. After it completes the
+  dropdown shows the markers and the note below the dropdown explicitly names
+  the recommended Reviewer and Builder models with the AI's reasoning.
+
+**Why we use our own button instead of the built-in `showRecheck`:**
+`buildModelSelector`'s built-in Recommend button calls `recheckModelForAI`,
+which updates the dropdown via `document.getElementById('modelsel-${aiId}')`.
+When the troubleshooting card is open, *two* elements have that ID — the
+bee card's dropdown on the (hidden) setup screen and the card's dropdown.
+`getElementById` returns the first match in document order = the offscreen
+bee card. The built-in button would silently update the wrong element. Our
+own button calls `recheckModelForAI` to update the recommendation **cache**
+(the source of truth) and then re-renders the card's picker from cache,
+sidestepping the DOM collision.
+
+**Files changed:** `js/wf-debug.js` (the picker block in
+`renderTroubleshootingCard`), `style.css` (`.tc-model-picker-tip` and
+`.tc-model-picker-recommend` rules). Version stamps + full cache-bust sweep
+across all 8 HTML to `3.60.4`, build `20260527-003`.
+
+---
+
 ## v3.60.3
 **Build:** `20260527-002` · **Released:** May 27, 2026
 
