@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260526-036
+//  Build: 20260527-001
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -349,7 +349,10 @@ window.WF_ERROR_CATALOG = [
     title: '{ai} — This model needs a different endpoint',
     meaning: 'The provider rejected this model on the chat-completions endpoint because it requires a different API (e.g. OpenAI\'s pro and reasoning models like gpt-5.5-pro use /v1/responses, not /v1/chat/completions). Pick a different model — the ones WaxFrame can call directly are listed in the dropdown.',
     actions: [
-      { label: 'Pick a different model', kind: 'link', href: '#' },
+      // v3.60.2 — was { kind: 'link', href: '#' } — a dead placeholder. Now
+      // uses fix-bee which the renderer swaps for an inline model dropdown
+      // when ctx.aiId/provider are available.
+      { label: 'Pick a different model', kind: 'fix-bee' },
       { label: 'Retry round', kind: 'retry' }
     ]
   },
@@ -673,7 +676,49 @@ function renderTroubleshootingCard(entry, ctx) {
   // Actions
   if (actionsEl) {
     actionsEl.innerHTML = '';
+
+    // v3.60.2 — Inline model picker for model-related errors. When the card
+    // has a fix-bee action AND we have enough ctx to build a dropdown
+    // (aiId + provider + the buildModelSelector helper + a populated
+    // API_CONFIGS entry), render the dropdown INSTEAD of the navigate-to-
+    // setup "Fix Worker Bee" button. Picking a model saves immediately via
+    // saveModelForAI (which toasts confirmation); the user then clicks Retry
+    // round from this same card to re-run with the new model. No screen
+    // navigation, no second round needed to discover the fix worked. The
+    // legacy fix-bee button is suppressed when the dropdown is shown — the
+    // dropdown is the surgical replacement. Falls back gracefully to the
+    // button when ctx is missing (e.g. cards fired without per-AI context).
+    const hasFixBee = (entry.actions || []).some(a => a.kind === 'fix-bee');
+    const canShowModelPicker =
+      hasFixBee &&
+      ctx?.aiId && ctx?.provider &&
+      typeof buildModelSelector === 'function' &&
+      typeof API_CONFIGS !== 'undefined' &&
+      API_CONFIGS[ctx.provider];
+
+    if (canShowModelPicker) {
+      const currentModel = (API_CONFIGS[ctx.provider] && API_CONFIGS[ctx.provider].model) || '';
+      const html = buildModelSelector(ctx.aiId, ctx.provider, currentModel, false);
+      if (html) {
+        const wrap = document.createElement('div');
+        wrap.className = 'tc-model-picker';
+        const label = document.createElement('div');
+        label.className = 'tc-model-picker-label';
+        label.textContent = 'Pick a different model for ' + (ctx.aiName || 'this AI') + ':';
+        const dd = document.createElement('div');
+        dd.className = 'tc-model-picker-select';
+        dd.innerHTML = html;
+        wrap.appendChild(label);
+        wrap.appendChild(dd);
+        actionsEl.appendChild(wrap);
+      }
+    }
+
     (entry.actions || []).forEach(a => {
+      // v3.60.2 — fix-bee button is suppressed when the inline dropdown
+      // above already covers the same need. Keeps a single, surgical
+      // affordance on the card instead of two ways to do the same thing.
+      if (a.kind === 'fix-bee' && canShowModelPicker) return;
       const btn = document.createElement('button');
       btn.className = 'tc-action-btn';
       btn.textContent = a.label;

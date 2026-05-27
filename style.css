@@ -8596,6 +8596,35 @@ kbd {
   color: var(--accent);
   text-decoration: underline;
 }
+/* v3.60.2 — Inline model picker rendered above the action-button row in
+   the troubleshooting card when the failing AI is known. Takes the full
+   width of the actions container so the dropdown and its recommendation
+   note read naturally instead of squeezing alongside buttons. */
+.tc-model-picker {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+}
+.tc-model-picker-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+.tc-model-picker-select {
+  width: 100%;
+}
+.tc-model-picker-select .model-select-wrap {
+  width: 100%;
+}
+.tc-model-picker-select .model-select {
+  width: 100%;
+}
 .tc-actions {
   display: flex;
   flex-wrap: wrap;
