@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-035
+//  Build: 20260526-036
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-035';         // build stamp — update each session
+const BUILD       = '20260526-036';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1999,11 +1999,13 @@ function _abandonInFlightRoundUI() {
 // ────────────────────────────────────────────────────────────────────
 // Auto chains rounds without waiting for the user. Toggle pill lives
 // in the work-screen topbar. Engages and disengages anytime, mid-run
-// included. v3.60.0 — flipping Auto OFF now ABORTS any in-flight round
-// immediately: toggleAutoMode bumps _projectGen so the round bails at its
-// next write checkpoint without committing, then resets the run UI. (Prior
-// behavior left the in-flight round to finish, which didn't match the
-// Manual = nothing runs model.)
+// included. A round in flight when Auto flips OFF is allowed to FINISH —
+// the chain check at end-of-round sees the flag is off and stops, so no
+// further rounds fire and the round's work is never discarded. v3.60.1 —
+// toggling Auto OFF mid-round now surfaces a toast + console line so the
+// "Manual" pill flipping while a round visibly continues isn't a surprise.
+// (v3.60.0 briefly aborted the in-flight round here; reverted — discarding
+// a full round's work to save a few seconds was the wrong tradeoff.)
 //
 // Guardrails (v1):
 //   • Max-rounds ceiling     — default 30, set when Auto engages,
@@ -2213,11 +2215,15 @@ function toggleAutoMode() {
       _autoFireChainedRound('toggle-on');
     }
   } else {
-    // Disengaging — switch to Manual. v3.60.0 (Bug 1): Auto OFF now ABORTS
-    // any in-flight round immediately rather than letting it finish, to match
-    // the Manual mental model (Manual = nothing runs). See the abort block below.
+    // Disengaging — switch to Manual. v3.60.1: REVERTS the v3.60.0 abort.
+    // An in-flight round is allowed to FINISH (its work — 6-8 reviewer calls
+    // plus a Builder synthesis — is not discarded); Auto simply stops chaining
+    // after it. The earlier finish-then-stop intent was correct; the only gap
+    // was that it happened silently, so when a round is still running we now
+    // INFORM the user that this round will finish and then Auto stops. The
+    // "Manual" pill flipping while a round visibly continues is otherwise a
+    // surprise. Idle toggle-off (nothing running) is immediate.
     if (typeof consoleLog === 'function') consoleLog('👤 You turned Auto OFF — switched to Manual', 'info');
-    if (typeof toast === 'function') toast('🚀 Auto mode OFF — Manual');
     window._autoCeilingTarget = null;
     window._autoSatisfiedHist = [];
     window._autoFailureStreak = 0;
@@ -2226,21 +2232,16 @@ function toggleAutoMode() {
     window._autoLengthDirective    = '';
     // v3.35.1 — Clear any deferred chain so it can't resurrect later.
     window._autoChainDeferred = null;
-    // v3.60.0 — Bug 1: abort the in-flight round (if any) immediately. We drive
-    // the existing generation-token abandonment path used by clearProject —
-    // bumping _projectGen makes runRound / runBuilderOnly bail at their next
-    // write checkpoint WITHOUT committing (no phantom history, no chain), and
-    // _abandonInFlightRoundUI() resets the run button / overlays / timer now
-    // instead of waiting for that checkpoint to be reached. _autoMode is already
-    // false here, so _abandonInFlightRoundUI()'s own Auto-disengage block is a
-    // no-op — only the UI reset runs. Tradeoff (accepted): the in-flight round's
-    // work is discarded, which is the right call when you flip Auto off.
+    // v3.60.1 — Heads-up when a round is mid-flight: it finishes, then Auto
+    // stops (no further rounds chain — _autoMaybeChainNextRound bails on the
+    // !_autoMode check). Nothing is aborted or discarded.
     if (typeof isRoundInFlight === 'function' && isRoundInFlight()) {
-      window._projectGen = (window._projectGen || 0) + 1;
-      if (typeof _abandonInFlightRoundUI === 'function') _abandonInFlightRoundUI();
+      if (typeof toast === 'function') toast('🚀 Auto OFF — finishing the current round, then stopping', 6000);
       if (typeof consoleLog === 'function') {
-        consoleLog('🛑 In-flight round aborted — Auto OFF discards the round in progress', 'warn');
+        consoleLog('🚀 Auto OFF — the in-flight round will finish, then Auto stops (no further rounds)', 'info');
       }
+    } else {
+      if (typeof toast === 'function') toast('🚀 Auto mode OFF — Manual');
     }
   }
 
