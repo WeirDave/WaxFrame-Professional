@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-007';         // build stamp — update each session
+const BUILD       = '20260527-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -566,50 +566,12 @@ function updateSlowResponderIndicator() {
   }
 }
 
-// ── AUTOSAVE PILL (v3.55.3) ──
-// Work-screen footer pill mirroring the Slow-AI alerts pill. User-level
-// preference persisted globally via localStorage 'waxframe_autosave_enabled'.
-// Autosave IS the per-round IndexedDB session write (how reload-restore
-// works). When ON (default), saveSession() persists every round so the user
-// can pick up where they left off. When OFF, the automatic write is skipped
-// (privacy / "don't keep my work + keys in this browser") — but manual Backup
-// and Diagnostic still force a save so they always capture current state.
-// The gate itself lives in storage.js saveSession(); this just drives the
-// flag + pill. Default = ON (key absent or anything but 'false').
-let _autosaveEnabled =
-  (localStorage.getItem('waxframe_autosave_enabled') !== 'false');
-
-function toggleAutosave() {
-  _autosaveEnabled = !_autosaveEnabled;
-  localStorage.setItem('waxframe_autosave_enabled', _autosaveEnabled);
-  updateAutosaveIndicator();
-  if (_autosaveEnabled) {
-    consoleLog('💾 Autosave on — your session saves to this browser every round, so you can pick up where you left off.', 'info');
-    toast('💾 Autosave: on', 3000);
-    // Flush current state immediately so turning it back on captures now.
-    saveSession();
-  } else {
-    consoleLog('💾 Autosave off — automatic per-round saving is paused. Use Backup to keep a copy you can restore or move.', 'info');
-    toast('💾 Autosave: off', 3000);
-  }
-}
-
-// Mirrors updateSlowResponderIndicator() — flips .is-off class + label + title.
-// Defensive: short-circuits if the indicator element is not in DOM yet.
-function updateAutosaveIndicator() {
-  const el = document.getElementById('autosaveIndicator');
-  if (!el) return;
-  const labelEl = el.querySelector('.autosave-indicator-label');
-  if (_autosaveEnabled) {
-    el.classList.remove('is-off');
-    el.title = 'Autosave is on — your session is saved every round so you can resume. Click to turn off.';
-    if (labelEl) labelEl.textContent = 'Autosave: on';
-  } else {
-    el.classList.add('is-off');
-    el.title = 'Autosave is off — automatic saving is paused. Click to turn on.';
-    if (labelEl) labelEl.textContent = 'Autosave: off';
-  }
-}
+// ── AUTOSAVE PILL (REMOVED in v3.61.0) ──
+// The work-screen "Autosave: on" pill, the toggleAutosave() handler, the
+// updateAutosaveIndicator() refresher, and the waxframe_autosave_enabled
+// localStorage flag are all gone. Per-round IndexedDB writes are now
+// unconditional in storage.js saveSession() — they ARE the reload-restore
+// mechanism, and the toggle never represented a user-meaningful preference.
 
 // ── SETTINGS SCREEN (v3.55.4) ──
 // Full-page preferences screen, opened from the hamburger menu. Starts with
@@ -7274,11 +7236,25 @@ async function processFile(file) {
           status.appendChild(line);
         });
       }
-      // v3.29.2 — also fire a Troubleshooting Card so the user can't miss
-      // it. Inline status auto-hides; Card stays until dismissed.
-      const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
-      if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
-        WF_DEBUG.showCard(entry, { filename: file.name, warnings });
+      // v3.61.0 — OCR'd uploads (sourceType === 'pdf-vision') skip the
+      // IMPORT_WARNINGS troubleshooting card and open the new consolidated
+      // Verify modal directly. Non-OCR warnings (DOCX skipped elements,
+      // PDFs where vision failed entirely, etc.) keep the original
+      // Troubleshooting Card path so they're not missed.
+      if (doc.sourceType === 'pdf-vision') {
+        openVerifyModalForImport({
+          target: 'starting',
+          docId: null,
+          file,
+          text: docText,
+          sourceType: doc.sourceType,
+          warnings,
+        });
+      } else {
+        const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
+        if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
+          WF_DEBUG.showCard(entry, { filename: file.name, warnings });
+        }
       }
     } else {
       // v3.52.6 — Banner unit matches the active template's lengthUnit.
@@ -7392,12 +7368,29 @@ async function processRefFile(file) {
       setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
       setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
     }
-    // v3.29.2 — also fire a Troubleshooting Card so warnings can't be
-    // missed during reference-material import.
+    // v3.61.0 — OCR'd uploads (any newly-added ref doc with sourceType
+    // 'pdf-vision') skip the IMPORT_WARNINGS troubleshooting card and open
+    // the new consolidated Verify modal directly, targeting the first
+    // OCR'd doc. Non-OCR warnings keep the original Troubleshooting Card
+    // path so they're not missed.
     if (allWarnings.length > 0) {
-      const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
-      if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
-        WF_DEBUG.showCard(entry, { filename: file.name, warnings: allWarnings });
+      const newlyAdded = referenceDocs.filter(d => d._sourceType === 'pdf-vision' && d.id === firstNewId);
+      const ocrDoc = newlyAdded[0] ||
+        (firstNewId !== null && referenceDocs.find(d => d.id === firstNewId && d._sourceType === 'pdf-vision'));
+      if (ocrDoc) {
+        openVerifyModalForImport({
+          target: 'reference',
+          docId: ocrDoc.id,
+          file,
+          text: ocrDoc.text || '',
+          sourceType: ocrDoc._sourceType,
+          warnings: allWarnings,
+        });
+      } else {
+        const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
+        if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
+          WF_DEBUG.showCard(entry, { filename: file.name, warnings: allWarnings });
+        }
       }
     }
   } catch (e) {
@@ -7877,52 +7870,76 @@ function setVerifyContext({ target, docId, file, sourceType }) {
   };
 }
 
-// Entry point from the IMPORT_WARNINGS troubleshooting card.
+// ============================================================
+//  CONSOLIDATED VERIFY IMPORT MODAL (v3.61.0)
+//  Replaces the two-modal flow (IMPORT_WARNINGS stethoscope card →
+//  separate Verify panel). For OCR'd uploads, the new modal opens
+//  directly from the upload handlers, skipping the troubleshooting
+//  card entirely. The IMPORT_WARNINGS card still fires for non-OCR
+//  warnings (e.g. DOCX skipped elements); its "Verify / edit text"
+//  action also routes into this same modal.
+//
+//  Footer semantics (changed from v3.60.x):
+//    🔁 Re-scan with {next AI}  — rotates keyed vision providers
+//    💾 Back up as .txt          — save-and-stay; modal stays open
+//    Cancel                       — DISCARDS the file (removes ref doc /
+//                                   clears starting doc slot)
+//    ✅ Proceed                   — commits extracted text + closes
+//
+//  Verify is a one-time gate at import time. The 🔍 per-card button
+//  on reference cards has been removed; inline textarea editing
+//  remains for text-only fixes after import.
+// ============================================================
+
+// Module-level state for the active modal session. Cleared on close.
+let _verifyImportCtx   = null;
+let _verifyOriginalText = '';
+let _verifyOwnsBlobUrl  = false;  // true when we created the blob URL (must revoke on close)
+
+// Entry point from the IMPORT_WARNINGS troubleshooting card. The card itself
+// only fires for NON-OCR warnings now (e.g. DOCX skipped elements); the
+// OCR'd-import path routes directly into openVerifyModalForImport from the
+// upload handlers without going through this entry point.
 function openVerifyPanelFromImport() {
   if (typeof closeTroubleshootingCard === 'function') closeTroubleshootingCard();
   const ctx = window._lastImportVerify;
   if (!ctx) { toast('Nothing to verify — re-upload the file first', 2500); return; }
   if (ctx.target === 'reference' && ctx.docId) { openVerifyPanelForRef(ctx.docId); return; }
-  // Starting Document target.
-  openVerifyPanel({
-    name: ctx.name,
-    blobUrl: ctx.isRenderable ? (ctx.blobUrl || window._verifyBlobUrl) : null,
-    text: docText || '',
-    onSave: (newText) => {
-      docText = newText;
-      const wd = document.getElementById('workDocument');
-      if (wd) wd.value = newText;
-      if (typeof saveSession === 'function') saveSession();
-      toast('✅ Edits saved to the Starting Document', 2500);
-    },
+  // Starting Document target — we no longer have the original File object
+  // here (only its blob URL from setVerifyContext). Pass blobUrl + isRenderable
+  // through; openVerifyModalForImport handles the borrowed-URL case.
+  openVerifyModalForImport({
+    target:       'starting',
+    docId:        null,
+    blobUrl:      ctx.isRenderable ? (ctx.blobUrl || window._verifyBlobUrl) : null,
+    isRenderable: !!ctx.isRenderable,
+    name:         ctx.name,
+    text:         docText || '',
+    sourceType:   ctx.sourceType || '',
+    warnings:     [],
   });
 }
 
-// Entry point from a reference card's 🔍 button.
+// Entry point from the IMPORT_WARNINGS card when the target is a reference
+// doc. The per-card 🔍 button has been removed (v3.61.0); this function
+// stays so the import-warning card's Verify / edit action can still route
+// here for non-OCR warnings, and so OCR'd reference uploads have a clean
+// lookup path from docId to the modal.
 function openVerifyPanelForRef(docId) {
   const doc = (typeof referenceDocs !== 'undefined')
     ? referenceDocs.find(d => String(d.id) === String(docId)) : null;
   if (!doc) { toast('Reference document not found', 2500); return; }
-  openVerifyPanel({
-    name: doc.name || doc.filename || 'reference',
-    blobUrl: doc._isRenderable ? (doc._blobUrl || null) : null,
-    text: doc.text || '',
-    onSave: (newText) => {
-      if (typeof updateReferenceDocText === 'function') {
-        updateReferenceDocText(docId, newText);
-      } else {
-        doc.text = newText;
-        if (typeof renderReferenceCards === 'function') renderReferenceCards();
-        if (typeof saveProject === 'function') saveProject();
-      }
-      toast('✅ Edits saved to this reference document', 2500);
-    },
+  openVerifyModalForImport({
+    target:       'reference',
+    docId,
+    blobUrl:      doc._isRenderable ? (doc._blobUrl || null) : null,
+    isRenderable: !!doc._isRenderable,
+    name:         doc.name || doc.filename || 'reference',
+    text:         doc.text || '',
+    sourceType:   doc._sourceType || '',
+    warnings:     [],
   });
 }
-
-// Core opener. opts: { name, blobUrl|null, text, onSave(newText) }.
-let _verifyOnSave = null;
-let _verifyOriginalText = '';
 
 // v3.59.2 — compute the NEXT keyed vision provider after the last one used,
 // wrapping around. Returns { provider, label, ai } or null if there is no
@@ -7937,53 +7954,121 @@ function _verifyNextVisionProvider() {
   return { provider: next.provider, label: next.cfg.label, ai: next };
 }
 
-// Sync the re-scan button label to name the engine it will try NEXT, and the
-// primary button to Save vs Done depending on whether the text was edited.
+// Sync the re-scan button label to name the engine it will try NEXT. The
+// Proceed button is always labeled "✅ Proceed" — the older Save/Done toggle
+// is gone (v3.61.0 spec: single-purpose commit action).
 function _syncVerifyButtons() {
-  const ta    = document.getElementById('verifyText');
   const reread = document.getElementById('verifyRereadBtn');
-  const save  = document.getElementById('verifySaveBtn');
   if (reread) {
     const nxt = _verifyNextVisionProvider();
     const canReread = Array.isArray(window._lastPDFPages) && window._lastPDFPages.length > 0 && nxt;
     reread.style.display = canReread ? 'inline-flex' : 'none';
     if (canReread) reread.textContent = `🔁 Re-scan with ${nxt.label}`;
   }
-  if (save && ta) {
-    // "Done" when the text matches the imported original (nothing to persist);
-    // "Save changes" when it differs by ANY means — user typing OR a re-scan
-    // swapping in another provider's text. Avoids the false "you edited this"
-    // implication of "Save edits" after a re-scan, while still persisting the
-    // chosen version on confirm.
-    const changed = ta.value !== _verifyOriginalText;
-    save.textContent = changed ? '✅ Save changes' : 'Done';
-  }
 }
 
-function openVerifyPanel(opts) {
+// Core opener for the consolidated import modal.
+// opts: {
+//   target:       'starting' | 'reference',
+//   docId:        string|null,                  // reference target only
+//   file:         File|null,                    // when present, we'll mint+revoke a blob URL
+//   blobUrl:      string|null,                  // borrowed URL when file not available
+//   isRenderable: boolean,                      // honored when blobUrl supplied
+//   name:         string,                       // display name + filename anchor
+//   text:         string,                       // extracted text to seed textarea
+//   sourceType:   string,                       // 'pdf-vision' drives OCR-specific copy
+//   warnings:     string[],                     // populate tech-details disclosure
+// }
+function openVerifyModalForImport(opts) {
   const panel = document.getElementById('verifyPanel');
   if (!panel) return;
-  _verifyOnSave = typeof opts.onSave === 'function' ? opts.onSave : null;
-  _verifyOriginalText = opts.text || '';
 
-  const nameEl  = document.getElementById('verifyDocName');
-  const frame   = document.getElementById('verifyPdfFrame');
-  const noRender= document.getElementById('verifyNoRender');
-  const ta      = document.getElementById('verifyText');
-  const note    = document.getElementById('verifyRereadNote');
-
-  if (nameEl) nameEl.textContent = opts.name || 'document';
-  if (ta) {
-    ta.value = _verifyOriginalText;
-    ta.oninput = _syncVerifyButtons;   // live Save/Done toggle
+  // Release any previously-owned URL before opening the next session.
+  if (_verifyImportCtx && _verifyOwnsBlobUrl && _verifyImportCtx.blobUrl) {
+    try { URL.revokeObjectURL(_verifyImportCtx.blobUrl); } catch(e) {}
   }
-  if (note) note.textContent = '';
 
-  // Left pane: render the original if we have a renderable blob; else show
-  // a clear "preview not available" note (Office formats can't render in an
-  // iframe — the editable text on the right still works).
-  if (opts.blobUrl && frame && noRender) {
-    frame.src = opts.blobUrl;
+  // Resolve preview source: prefer minting from File (we own the URL and
+  // revoke on close); fall back to borrowed blobUrl from upstream context.
+  let blobUrl = null;
+  let isRenderable = !!opts.isRenderable;
+  let ownsUrl = false;
+  if (opts.file) {
+    const ext = (opts.file.name || '').split('.').pop().toLowerCase();
+    isRenderable = ext === 'pdf' || ['png','jpg','jpeg','gif','webp'].includes(ext);
+    if (isRenderable) {
+      blobUrl = URL.createObjectURL(opts.file);
+      ownsUrl = true;
+    }
+  } else if (opts.blobUrl) {
+    blobUrl = opts.blobUrl;
+    ownsUrl = false;
+  }
+
+  // For the reference target, store the doc's display name so the backup
+  // filename can include it. Falls back to the file name if no doc lookup.
+  let refName = '';
+  if (opts.target === 'reference' && opts.docId && typeof referenceDocs !== 'undefined') {
+    const doc = referenceDocs.find(d => String(d.id) === String(opts.docId));
+    if (doc) refName = doc.name || doc.filename || '';
+  }
+
+  _verifyImportCtx = {
+    target:     opts.target || 'starting',
+    docId:      opts.docId || null,
+    blobUrl,
+    isRenderable,
+    name:       opts.name || opts.file?.name || 'document',
+    sourceType: opts.sourceType || '',
+    warnings:   Array.isArray(opts.warnings) ? opts.warnings.slice() : [],
+    refName,
+  };
+  _verifyOriginalText = opts.text || '';
+  _verifyOwnsBlobUrl  = ownsUrl;
+
+  // ── Header ──
+  const nameEl = document.getElementById('verifyDocName');
+  if (nameEl) nameEl.textContent = _verifyImportCtx.name;
+
+  // ── Explainer (always visible) ──
+  const explainerEl = document.getElementById('verifyExplainer');
+  if (explainerEl) {
+    if (_verifyImportCtx.sourceType === 'pdf-vision') {
+      explainerEl.textContent =
+        "We used AI vision to read this — the file wasn't plain-text readable, so we OCR'd it. " +
+        "Check the extracted text on the right and fix anything wrong. Back up the clean text " +
+        "if you want a copy. Click Proceed when you're satisfied.";
+    } else {
+      explainerEl.textContent =
+        "Some parts of this file couldn't be parsed cleanly. Compare against the original on the " +
+        "left and fix anything wrong in the extracted text on the right. Back up the clean text " +
+        "if you want a copy. Click Proceed when you're satisfied.";
+    }
+  }
+
+  // ── Tech details (collapsed by default) ──
+  const detailsEl = document.getElementById('verifyTechDetails');
+  if (detailsEl) detailsEl.open = false;
+  const techBody = document.getElementById('verifyTechDetailsBody');
+  if (techBody) {
+    const esc = (typeof escapeHtml === 'function') ? escapeHtml : (s => String(s));
+    const provider = window._verifyLastProvider || '';
+    const bullets = _verifyImportCtx.warnings.length
+      ? `<ul class="verify-tech-warnings">${_verifyImportCtx.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul>`
+      : '<em class="verify-tech-empty">No warnings reported.</em>';
+    techBody.innerHTML =
+      `<div class="verify-tech-row"><span class="verify-tech-label">File:</span> ${esc(_verifyImportCtx.name)}</div>` +
+      `<div class="verify-tech-row"><span class="verify-tech-label">Source type:</span> ${esc(_verifyImportCtx.sourceType || 'unknown')}</div>` +
+      `<div class="verify-tech-row"><span class="verify-tech-label">Target:</span> ${_verifyImportCtx.target === 'reference' ? 'Reference material' : 'Starting document'}</div>` +
+      (provider ? `<div class="verify-tech-row"><span class="verify-tech-label">Vision provider used:</span> ${esc(provider)}</div>` : '') +
+      `<div class="verify-tech-row"><span class="verify-tech-label">Warnings:</span> ${bullets}</div>`;
+  }
+
+  // ── Left pane (original preview or no-render notice) ──
+  const frame    = document.getElementById('verifyPdfFrame');
+  const noRender = document.getElementById('verifyNoRender');
+  if (_verifyImportCtx.blobUrl && _verifyImportCtx.isRenderable && frame && noRender) {
+    frame.src = _verifyImportCtx.blobUrl;
     frame.style.display = 'block';
     noRender.style.display = 'none';
   } else if (frame && noRender) {
@@ -7992,25 +8077,155 @@ function openVerifyPanel(opts) {
     noRender.style.display = 'flex';
   }
 
+  // ── Right pane (editable extracted text) ──
+  const ta = document.getElementById('verifyText');
+  if (ta) {
+    ta.value = _verifyOriginalText;
+    ta.oninput = _syncVerifyButtons;
+  }
+
+  // ── Footer note (cleared between sessions) ──
+  const note = document.getElementById('verifyRereadNote');
+  if (note) note.textContent = '';
+
   _syncVerifyButtons();
   panel.classList.add('active');
   document.addEventListener('keydown', _verifyEscHandler);
 }
 
-function _verifyEscHandler(e) { if (e.key === 'Escape') closeVerifyPanel(); }
+// Esc = cancel (full abandon per v3.61.0 spec).
+function _verifyEscHandler(e) { if (e.key === 'Escape') cancelVerifyImport(); }
 
-function closeVerifyPanel() {
+// Internal close — does not commit or discard, just tears down DOM + state.
+function _closeVerifyModal() {
   const panel = document.getElementById('verifyPanel');
   if (panel) panel.classList.remove('active');
   document.removeEventListener('keydown', _verifyEscHandler);
+  if (_verifyImportCtx && _verifyOwnsBlobUrl && _verifyImportCtx.blobUrl) {
+    try { URL.revokeObjectURL(_verifyImportCtx.blobUrl); } catch(e) {}
+  }
+  _verifyImportCtx   = null;
+  _verifyOriginalText = '';
+  _verifyOwnsBlobUrl  = false;
 }
 
-// Save only when the text actually changed; otherwise just close (the button
-// reads "Done" in that case, so there's no false "save" implication).
-function saveVerifyEdits() {
+// ✅ Proceed — commits current textarea contents to the target, closes modal.
+function proceedVerifyImport() {
+  if (!_verifyImportCtx) { _closeVerifyModal(); return; }
   const ta = document.getElementById('verifyText');
-  if (ta && _verifyOnSave && ta.value !== _verifyOriginalText) _verifyOnSave(ta.value);
-  closeVerifyPanel();
+  const newText = ta ? ta.value : '';
+  const target = _verifyImportCtx.target;
+  const docId  = _verifyImportCtx.docId;
+
+  if (target === 'starting') {
+    docText = newText;
+    const wd = document.getElementById('workDocument');
+    if (wd) wd.value = newText;
+    if (typeof saveSession === 'function') saveSession();
+    toast('✅ Starting document committed', 2500);
+  } else if (target === 'reference' && docId) {
+    if (typeof updateReferenceDocText === 'function') {
+      updateReferenceDocText(docId, newText);
+    } else if (typeof referenceDocs !== 'undefined') {
+      const doc = referenceDocs.find(d => String(d.id) === String(docId));
+      if (doc) {
+        doc.text = newText;
+        if (typeof renderReferenceCards === 'function') renderReferenceCards();
+        if (typeof saveProject === 'function') saveProject();
+      }
+    }
+    toast('✅ Reference material committed', 2500);
+  }
+  _closeVerifyModal();
+}
+
+// Cancel — discards the file entirely (v3.61.0 spec: full abandon, clean
+// break, lands the user back on the setup screen with that slot empty as if
+// they'd never tried).
+function cancelVerifyImport() {
+  if (!_verifyImportCtx) { _closeVerifyModal(); return; }
+  const target = _verifyImportCtx.target;
+  const docId  = _verifyImportCtx.docId;
+
+  if (target === 'starting') {
+    // clearUploadedFile() handles docText reset, status line, source-type
+    // localStorage cleanup, fileClearRow visibility, and requirement refresh.
+    if (typeof clearUploadedFile === 'function') {
+      clearUploadedFile();
+    } else {
+      // Defensive fallback if the helper is unavailable for any reason.
+      docText = '';
+      const wd = document.getElementById('workDocument');
+      if (wd) wd.value = '';
+      try {
+        localStorage.removeItem('waxframe_v2_filename');
+        localStorage.removeItem('waxframe_v2_source_type');
+      } catch(e) {}
+      if (typeof updateLaunchRequirements === 'function') updateLaunchRequirements();
+    }
+  } else if (target === 'reference' && docId) {
+    if (typeof removeReferenceDoc === 'function') {
+      removeReferenceDoc(docId);
+    } else if (typeof referenceDocs !== 'undefined') {
+      const idx = referenceDocs.findIndex(d => String(d.id) === String(docId));
+      if (idx >= 0) referenceDocs.splice(idx, 1);
+      if (typeof renderReferenceCards === 'function') renderReferenceCards();
+      if (typeof saveProject === 'function') saveProject();
+    }
+  }
+  toast('Discarded — pick a different file or paste text instead', 3000);
+  _closeVerifyModal();
+}
+
+// 💾 Back up as .txt — downloads the current textarea contents, leaves the
+// modal open so the user can keep editing or back up again after edits.
+// Filename pattern matches the v3.61.0 spec:
+//   {ProjectName}-{Version}-Ref-{ReferenceName}-{YYYYMMDD-HHmm}.txt   (reference)
+//   {ProjectName}-{Version}-StartingDoc-{YYYYMMDD-HHmm}.txt           (starting)
+function backupVerifyExtractedText() {
+  if (!_verifyImportCtx) return;
+  const ta = document.getElementById('verifyText');
+  const text = ta ? ta.value : '';
+  if (!text.trim()) {
+    toast('Nothing to back up — the extracted text is empty', 3000);
+    return;
+  }
+
+  const slugify = (s) => (s || '')
+    .replace(/[^a-z0-9]/gi, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+
+  const projectName    = document.getElementById('projectName')?.value.trim()    || '';
+  const projectVersion = document.getElementById('projectVersion')?.value.trim() || '';
+  const slugProject = slugify(projectName)    || 'session';
+  const slugVer     = slugify(projectVersion);
+  const baseName    = slugVer ? `${slugProject}-${slugVer}` : slugProject;
+
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+
+  let filename;
+  if (_verifyImportCtx.target === 'reference') {
+    const slugRef = slugify(_verifyImportCtx.refName || _verifyImportCtx.name) || 'reference';
+    filename = `${baseName}-Ref-${slugRef}-${stamp}.txt`;
+  } else {
+    filename = `${baseName}-StartingDoc-${stamp}.txt`;
+  }
+
+  // Mirror the backupSession() download dance: append anchor, click, remove,
+  // defer revoke so Chrome's download dispatcher has time to read the blob.
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => { try { URL.revokeObjectURL(url); } catch(e) {} }, 30000);
+  toast(`💾 Backed up as ${filename}`, 4000);
 }
 
 // Re-scan the SAME rendered page images through a DIFFERENT AI — rotating to
@@ -9086,12 +9301,11 @@ function refCardMarkup(doc, index) {
          <textarea class="ref-card-ta" id="refTa-${idAttr}" placeholder="Paste reference material here…" oninput="updateReferenceDocText('${idAttr}', this.value)">${esc(doc.text)}</textarea>
        </div>`;
 
-  // v3.59.0 — verify/edit button, only for uploaded docs (paste docs are
-  // already editable inline in the card). Opens the side-by-side panel:
-  // original on the left, editable extracted text on the right.
-  const verifyBtn = doc.source === 'upload'
-    ? `<button class="btn btn-sm ref-card-verify" title="Verify / edit extracted text against the original" onclick="openVerifyPanelForRef('${idAttr}')">🔍</button>`
-    : '';
+  // v3.61.0 — The per-card 🔍 verify button has been removed. Verify is a
+  // one-time gate at import time (handled by the new consolidated Verify
+  // modal), not a re-openable inline tool. The openVerifyPanelForRef
+  // function and its call site in openVerifyPanelFromImport() stay — that
+  // path is how the import-time modal opens for reference uploads.
 
   return `
 <div class="ref-card" data-ref-id="${idAttr}">
@@ -9103,7 +9317,7 @@ function refCardMarkup(doc, index) {
            aria-label="Reference document name"
            placeholder="Reference name…">
     <div class="ref-card-actions">
-      ${verifyBtn}${upBtn}${positionLabel}${downBtn}
+      ${upBtn}${positionLabel}${downBtn}
       <button class="btn btn-sm ref-card-remove" title="Remove" onclick="removeReferenceDoc('${idAttr}')">✕</button>
     </div>
   </div>
@@ -9649,8 +9863,7 @@ function initWorkScreen(isNewSession = false) {
   // topbar mounts. Call here to sync class + label + title on the live
   // element. (No project-persistence path needed — preference is global.)
   updateSlowResponderIndicator();
-  // v3.55.3 — Same defensive-init pattern for the autosave pill.
-  updateAutosaveIndicator();
+  // v3.61.0 — Autosave pill removed; no init call needed.
   setStatus('Standing by — Smoke the Hive to begin');
 
   // Keep line numbers filled on resize
