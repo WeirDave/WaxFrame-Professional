@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260526-031
+   Build: 20260526-032
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12617,4 +12617,15 @@ kbd {
 @media (max-width: 900px) {
   .verify-panel-body { flex-direction: column; }
   .verify-pane-left { border-right: 0; border-bottom: 1px solid var(--border); }
+}
+
+/* v3.59.6 — brief highlight when "Fix Worker Bee" jumps to a bee's model
+   picker, so the user's eye lands on the right control. */
+@keyframes wf-model-flash {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245,166,35,0); }
+  20%      { box-shadow: 0 0 0 3px var(--accent); }
+}
+.model-select-flash {
+  animation: wf-model-flash 0.55s ease-in-out 3;
+  border-color: var(--accent) !important;
 }
