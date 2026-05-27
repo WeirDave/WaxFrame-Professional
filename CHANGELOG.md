@@ -2,6 +2,43 @@
 
 ---
 
+## v3.60.2
+**Build:** `20260527-001` · **Released:** May 27, 2026
+
+### Inline model picker on the troubleshooting card — fix the bee without leaving the work screen
+
+When a per-AI error pops the troubleshooting card and the failing AI is known
+(provider + id in `ctx`), the card now shows a **live model dropdown** in place
+of the legacy "🛠 Fix Worker Bee" button. Pick a different model from inside the
+card and `saveModelForAI` saves it immediately with a confirmation toast — no
+navigation to the Worker Bee setup screen, no losing context on the work
+screen. Then click **Retry round** from the same card to re-run with the new
+model.
+
+- **Where it shows:** any card whose actions include `kind: 'fix-bee'` and
+  whose `ctx` carries `aiId`, `provider`, and a populated `API_CONFIGS` entry.
+  This is the common per-AI error path — the `WF_GENERIC_ENTRY` catch-all and
+  the `MODEL_NEEDS_DIFFERENT_ENDPOINT` specific.
+- **Dropdown content:** uses the existing `buildModelSelector()` helper —
+  same options, same ✨ Reviewer / 🔨 Builder markers, same recommendation
+  notes you see on the bee cards.
+- **Save path:** the dropdown's `onchange` calls the existing
+  `saveModelForAI()` — instant write to `API_CONFIGS[provider].model` plus a
+  `✓ {ai} model set to {model}` toast.
+- **Fallback:** if `ctx` is missing the per-AI fields (e.g. cards fired
+  without per-AI context), the legacy Fix Worker Bee button renders
+  normally — no regression.
+- **Dead placeholder fixed:** the `MODEL_NEEDS_DIFFERENT_ENDPOINT` template's
+  first action was `{ kind: 'link', href: '#' }` — a no-op left over from
+  earlier scaffolding. Now `kind: 'fix-bee'`, so it benefits from the same
+  inline dropdown.
+
+**Files changed:** `js/wf-debug.js` (renderer + the dead-placeholder fix),
+`style.css` (new `.tc-model-picker` rule block). Version stamps + full
+cache-bust sweep across all 8 HTML to `3.60.2`, build `20260527-001`.
+
+---
+
 ## v3.60.1
 **Build:** `20260526-036` · **Released:** May 26, 2026
 
