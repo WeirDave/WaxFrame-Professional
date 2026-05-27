@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260526-032
+     Build: 20260526-033
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260526-032">
+  <meta name="waxframe-build" content="20260526-033">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.59.6">
+  <link rel="stylesheet" href="style.css?v=3.59.7">
 </head>
 <body>
 
@@ -2334,6 +2334,8 @@
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
   <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
+  <span class="dev-toolbar-sep">|</span>
+  <button id="wfDiffModeBtn" onclick="wfCycleDecisionDiffMode()" title="USER DECISION option diff — cycle Off → Words → Sentences. Highlights how each option differs from the Current text so near-identical full-paragraph rewrites become scannable. Re-renders the open conflict live.">🔀 Diff: Words</button>
   <!-- v3.35.3 — Cleanup button + cleanup.html retired. Out-of-date
        "known keys" list flagged legitimate state (waxframe_theme,
        waxframe_troubleshooting, waxframe_v2_legacy_idb_purged,
@@ -2395,20 +2397,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.59.6"></script>
-<script src="lib/mammoth.browser.min.js?v=3.59.6"></script>
-<script src="lib/jszip.min.js?v=3.59.6"></script>
-<script src="lib/xlsx.full.min.js?v=3.59.6"></script>
-<script src="js/version.js?v=3.59.6"></script>
-<script src="js/storage.js?v=3.59.6"></script>
-<script src="js/theme.js?v=3.59.6"></script>
-<script src="js/audio.js?v=3.59.6"></script>
-<script src="js/scenes.js?v=3.59.6"></script>
-<script src="js/wf-debug.js?v=3.59.6"></script>
-<script src="js/api.js?v=3.59.6"></script>
-<script src="js/templates.js?v=3.59.6"></script>
-<script src="js/api-links.js?v=3.59.6"></script>
-<script src="js/app.js?v=3.59.6"></script>
+<script src="lib/pdf.min.js?v=3.59.7"></script>
+<script src="lib/mammoth.browser.min.js?v=3.59.7"></script>
+<script src="lib/jszip.min.js?v=3.59.7"></script>
+<script src="lib/xlsx.full.min.js?v=3.59.7"></script>
+<script src="js/version.js?v=3.59.7"></script>
+<script src="js/storage.js?v=3.59.7"></script>
+<script src="js/theme.js?v=3.59.7"></script>
+<script src="js/audio.js?v=3.59.7"></script>
+<script src="js/scenes.js?v=3.59.7"></script>
+<script src="js/wf-debug.js?v=3.59.7"></script>
+<script src="js/api.js?v=3.59.7"></script>
+<script src="js/templates.js?v=3.59.7"></script>
+<script src="js/api-links.js?v=3.59.7"></script>
+<script src="js/app.js?v=3.59.7"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
