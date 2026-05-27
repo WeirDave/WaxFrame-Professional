@@ -7129,49 +7129,12 @@ kbd {
   letter-spacing: 0.2px;
 }
 
-/* v3.55.3 — Autosave pill. Mirrors .slow-responder-indicator structure and
-   color story: ON = green ("session saving every round"), OFF = amber
-   (workflow/privacy preference — pausing automatic saves, not overriding a
-   safety constraint, so amber rather than Length Guard's red). */
-.autosave-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-4);
-  font-size: var(--fs-11);
-  font-weight: 700;
-  line-height: 1.6;
-  padding: var(--space-4) var(--space-10);
-  border-radius: 20px;
-  background: var(--green-dim);
-  border: 1px solid var(--green);
-  color: var(--green);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.12s;
-}
-.autosave-indicator:hover {
-  background: var(--green);
-  color: #0a0c12;
-  box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
-}
-.autosave-indicator.is-off {
-  background: var(--accent-dim);
-  border: 1px solid var(--accent, #f4b400);
-  color: var(--accent, #f4b400);
-  box-shadow: 0 0 8px rgba(244,180,0,0.35);
-}
-.autosave-indicator.is-off:hover {
-  background: var(--accent, #f4b400);
-  color: #0a0c12;
-  box-shadow: 0 0 12px rgba(244,180,0,0.55);
-}
-.autosave-indicator-icon {
-  font-size: var(--fs-12);
-}
-.autosave-indicator-label {
-  letter-spacing: 0.2px;
-}
+/* v3.61.0 — .autosave-indicator pill removed. The work-screen footer pill
+   "Autosave: on" never represented a real user preference (turning it off
+   broke reload-restore silently); per-round IDB writes are now unconditional
+   in storage.js saveSession(). The accompanying app.js handlers
+   (toggleAutosave, updateAutosaveIndicator) and the
+   waxframe_autosave_enabled localStorage flag are all gone. */
 
 /* ══════════════════════════════════════
    SETTINGS SCREEN (v3.55.4)
@@ -12574,17 +12537,93 @@ kbd {
   flex-shrink: 0;
 }
 .verify-panel-title { font-weight: 700; color: var(--text); font-size: 15px; }
-.verify-panel-sub   { color: var(--text-dim); font-size: 12px; }
+/* v3.61.0 — .verify-panel-sub removed; the new modal carries its prose in
+   .verify-panel-explainer below the header instead of as a subtitle. */
 .verify-panel-close {
   position: absolute;
   top: 10px;
   right: 12px;
 }
 
+/* v3.61.0 — Explainer + tech-details disclosure live between the header
+   and the body. Explainer is visible by default; details are collapsed
+   (a <details> element). On dark backgrounds the summary needs a visible
+   chevron and hover hint. */
+.verify-panel-explainer-wrap {
+  padding: 12px 18px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  flex-shrink: 0;
+}
+.verify-panel-explainer {
+  margin: 0 0 8px 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.verify-tech-details {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+.verify-tech-summary {
+  cursor: pointer;
+  user-select: none;
+  display: inline-block;
+  padding: 4px 10px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--surface3);
+  font-weight: 600;
+  color: var(--text-dim);
+  transition: all 0.12s;
+}
+.verify-tech-summary:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.verify-tech-details[open] .verify-tech-summary {
+  margin-bottom: 8px;
+  color: var(--text);
+  border-color: var(--accent);
+}
+.verify-tech-details-body {
+  padding: 10px 12px;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--text);
+}
+.verify-tech-row {
+  margin-bottom: 4px;
+}
+.verify-tech-row:last-child { margin-bottom: 0; }
+.verify-tech-label {
+  font-weight: 700;
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+.verify-tech-warnings {
+  margin: 4px 0 0 18px;
+  padding: 0;
+}
+.verify-tech-warnings li {
+  margin-bottom: 2px;
+}
+.verify-tech-empty {
+  color: var(--text-dim);
+  font-style: italic;
+}
+
 .verify-panel-body {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
+  /* v3.61.0 — cap so iframe + textarea don't dominate the modal on tall
+     viewports. Leaves room for header + explainer/details + footer on a
+     1024px-min laptop screen. */
+  max-height: 55vh;
 }
 .verify-pane {
   display: flex;
@@ -12666,15 +12705,9 @@ kbd {
 .verify-ftr-right { display: flex; gap: 10px; }
 .verify-reread-btn { white-space: nowrap; }
 
-.ref-card-hdr .ref-card-verify {
-  background: transparent;
-  border: 1px solid var(--border2);
-  color: var(--text-dim);
-}
-.ref-card-hdr .ref-card-verify:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-}
+/* v3.61.0 — .ref-card-hdr .ref-card-verify removed. The 🔍 button on
+   reference cards is gone (Verify is a one-time gate at import time).
+   Inline textarea editing on the card remains for text-only fixes. */
 
 @media (max-width: 900px) {
   .verify-panel-body { flex-direction: column; }

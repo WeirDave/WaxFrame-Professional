@@ -2,6 +2,124 @@
 
 ---
 
+## v3.61.0
+**Build:** `20260527-008` · **Released:** May 27, 2026
+
+### Verify modal redesign + Autosave pill removal + Magnifying-glass removal
+
+Three coordinated changes. The Verify & Edit experience for OCR'd
+imports is now a single consolidated modal that handles everything
+from the first frame — no separate stethoscope warning preceding it,
+no per-card re-opening afterward. Autosave is no longer a user-facing
+toggle (it never represented a real preference; turning it off broke
+reload-restore silently).
+
+#### 1. Consolidated Verify Import modal
+
+The old flow showed an `IMPORT_WARNINGS` troubleshooting card
+("Imported with warnings: …") first, then required a click into a
+separate Verify panel to actually inspect the extracted text. For
+OCR'd uploads this is now a single modal that opens directly from the
+upload handlers.
+
+**Trigger:** only fires when the extraction used AI vision
+(`sourceType === 'pdf-vision'`). Pure-text imports — clean TXT/DOCX,
+pure-text PDFs — bypass this entirely and import straight into the
+project as today. No change to the happy path. Applies to both
+Starting Document and Reference Material surfaces.
+
+**Layout:**
+- Original PDF on the left in an iframe, capped so it doesn't dominate
+  the modal on tall viewports — leaves room on a 1024px-min laptop
+  screen for the rest of the modal content.
+- Extracted text on the right, editable (unchanged from prior Verify
+  panel).
+- Explainer blurb visible by default above the panes: *"We used AI
+  vision to read this — the file wasn't plain-text readable, so we
+  OCR'd it. Check the extracted text on the right and fix anything
+  wrong. Back up the clean text if you want a copy. Click Proceed
+  when you're satisfied."*
+- "Show technical details" disclosure collapsed by default; expands
+  to show filename, source type, vision provider used, and the
+  warnings list.
+
+**Footer actions (left to right):**
+- 🔁 **Re-scan with {next AI}** — rotates through keyed vision
+  providers; hidden entirely when no rotation target is available.
+- 💾 **Back up as .txt** — save-and-stay. Downloads a `.txt` of the
+  current textarea contents and leaves the modal open so the user can
+  keep editing or back up again after edits. Filename:
+  `{ProjectName}-{Version}-Ref-{ReferenceName}-{YYYYMMDD-HHmm}.txt` for
+  reference docs, `{ProjectName}-{Version}-StartingDoc-{YYYYMMDD-HHmm}.txt`
+  for the starting document.
+- **Cancel** — **full abandon.** Discards the entire file. The user
+  lands back on the setup screen with that slot empty as if they'd
+  never tried. No half-imported state, no lingering "unverified
+  upload."
+- ✅ **Proceed** — commits the extracted text to the project, closes
+  the modal, returns to the setup screen.
+
+The IMPORT_WARNINGS troubleshooting card still fires for non-OCR
+warnings (DOCX with skipped text boxes, PDFs where vision failed
+entirely, etc.) so those warnings aren't lost. Its "Verify / edit
+text" action routes into the same consolidated modal.
+
+#### 2. Magnifying-glass button removed from reference cards
+
+The 🔍 button on each reference material card is gone. Verify is a
+one-time gate at import time, not a re-openable inline tool. Inline
+text editing in the card textarea remains for any text-only fixes
+after import.
+
+The `openVerifyPanelForRef` function stays — it's the dispatch helper
+used internally when the IMPORT_WARNINGS card routes a reference-target
+warning into the consolidated modal.
+
+#### 3. Autosave pill removed
+
+The "Autosave: on" footer pill on the work screen, the
+`toggleAutosave()` handler, the `updateAutosaveIndicator()` refresher,
+and the `waxframe_autosave_enabled` localStorage flag are all removed.
+Per-round IndexedDB writes in `storage.js saveSession()` are now
+unconditional — they ARE the reload-restore mechanism, and the toggle
+never represented a user-meaningful preference (turning it off broke
+restore silently).
+
+The `opts.force` parameter on `saveSession()` is kept for call-site
+compatibility but no longer gates anything; every call now writes.
+The "More sections (autosave frequency, and more) are on the way"
+footnote on the Settings panel is updated to drop the stale autosave
+reference.
+
+#### Files changed
+
+- `js/app.js` — autosave block removed (5 funcs + flag); ref-card
+  verify button render removed; new `openVerifyModalForImport` +
+  `proceedVerifyImport` + `cancelVerifyImport` + `backupVerifyExtractedText`
+  + `_closeVerifyModal` + new `_syncVerifyButtons`; rerouted
+  `openVerifyPanelFromImport` / `openVerifyPanelForRef`; legacy
+  `openVerifyPanel` / `closeVerifyPanel` / `saveVerifyEdits` retired;
+  starting-doc and reference upload handlers branch on
+  `sourceType === 'pdf-vision'`; BUILD stamp.
+- `js/storage.js` — autosave gate removed from `saveSession()`.
+- `js/version.js` — APP_VERSION → v3.61.0.
+- `index.html` — autosave pill removed; settings footnote cleaned;
+  verify panel HTML replaced with new consolidated structure
+  (explainer + tech details + Backup/Cancel/Proceed footer); meta
+  build stamp; full cache-bust sweep.
+- `style.css` — `.autosave-indicator` block tombstoned;
+  `.ref-card-verify` removed; `.verify-panel-sub` removed;
+  new `.verify-panel-explainer-wrap` / `.verify-panel-explainer` /
+  `.verify-tech-details` / `.verify-tech-summary` /
+  `.verify-tech-details-body` / `.verify-tech-row` /
+  `.verify-tech-label` / `.verify-tech-warnings` /
+  `.verify-tech-empty` styles; `.verify-panel-body` height cap.
+- `waxframe-user-manual.html`, `document-playbooks.html`,
+  `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`
+  — meta build stamp + cache-bust sweep.
+
+---
+
 ## v3.60.8
 **Build:** `20260527-007` · **Released:** May 27, 2026
 

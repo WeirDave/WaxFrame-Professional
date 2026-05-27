@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-007">
+  <meta name="waxframe-build" content="20260527-008">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.60.8">
+  <link rel="stylesheet" href="style.css?v=3.61.0">
 </head>
 <body>
 
@@ -758,17 +758,11 @@
           <span class="slow-responder-indicator-icon">🐢</span>
           <span class="slow-responder-indicator-label">Slow alerts: on</span>
         </button>
-        <!-- v3.55.3 — Autosave pill. Mirrors the Slow-AI alerts pill: always
-             visible, click to toggle, .is-off flips visual state. User-level
-             preference persisted globally via localStorage
-             waxframe_autosave_enabled. ON = saveSession() persists to
-             IndexedDB every round (resume-where-you-left-off). OFF = automatic
-             per-round write skipped; manual Backup/Diagnostic still force a
-             save. The gate lives in storage.js saveSession(). -->
-        <button class="autosave-indicator" id="autosaveIndicator" onclick="toggleAutosave()" title="Autosave is on — your session is saved every round so you can resume. Click to turn off.">
-          <span class="autosave-indicator-icon">💾</span>
-          <span class="autosave-indicator-label">Autosave: on</span>
-        </button>
+        <!-- v3.61.0 — The "Autosave: on" pill was removed. Per-round IDB
+             writes are now unconditional (they ARE the reload-restore
+             mechanism); the user-facing toggle never represented a real
+             preference. See storage.js saveSession() and app.js header
+             comment "AUTOSAVE PILL (REMOVED in v3.61.0)". -->
         <span class="license-badge" id="licenseBadge" title="License status"></span>
         <button title="Open the About panel — credits, build info, and license details" class="footer-about-btn" onclick="document.getElementById('aboutModal').classList.add('active')">ℹ️ About</button>
       </div>
@@ -895,7 +889,7 @@
             </div>
           </div>
 
-          <p class="settings-foot-note">More sections (autosave frequency, and more) are on the way. The Auto behavior that consumes these options ships alongside the "Auto really means Auto" work.</p>
+          <p class="settings-foot-note">More sections are on the way. The Auto behavior that consumes these options ships alongside the "Auto really means Auto" work.</p>
 
         </div>
       </div>
@@ -2398,20 +2392,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.60.8"></script>
-<script src="lib/mammoth.browser.min.js?v=3.60.8"></script>
-<script src="lib/jszip.min.js?v=3.60.8"></script>
-<script src="lib/xlsx.full.min.js?v=3.60.8"></script>
-<script src="js/version.js?v=3.60.8"></script>
-<script src="js/storage.js?v=3.60.8"></script>
-<script src="js/theme.js?v=3.60.8"></script>
-<script src="js/audio.js?v=3.60.8"></script>
-<script src="js/scenes.js?v=3.60.8"></script>
-<script src="js/wf-debug.js?v=3.60.8"></script>
-<script src="js/api.js?v=3.60.8"></script>
-<script src="js/templates.js?v=3.60.8"></script>
-<script src="js/api-links.js?v=3.60.8"></script>
-<script src="js/app.js?v=3.60.8"></script>
+<script src="lib/pdf.min.js?v=3.61.0"></script>
+<script src="lib/mammoth.browser.min.js?v=3.61.0"></script>
+<script src="lib/jszip.min.js?v=3.61.0"></script>
+<script src="lib/xlsx.full.min.js?v=3.61.0"></script>
+<script src="js/version.js?v=3.61.0"></script>
+<script src="js/storage.js?v=3.61.0"></script>
+<script src="js/theme.js?v=3.61.0"></script>
+<script src="js/audio.js?v=3.61.0"></script>
+<script src="js/scenes.js?v=3.61.0"></script>
+<script src="js/wf-debug.js?v=3.61.0"></script>
+<script src="js/api.js?v=3.61.0"></script>
+<script src="js/templates.js?v=3.61.0"></script>
+<script src="js/api-links.js?v=3.61.0"></script>
+<script src="js/app.js?v=3.61.0"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2516,15 +2510,26 @@
   </div>
 </div>
 
-<!-- ── Verify / Edit panel (v3.59.0) — original rendered by the browser on the
-     left, editable extracted text on the right. Opened from a reference card's
-     🔍 button or the import-warning card's Verify button. ── -->
+<!-- ── VERIFY / IMPORT MODAL (v3.61.0 — consolidated) ───────────────
+     Single import-verification screen for OCR'd uploads. Replaces the
+     two-modal flow (IMPORT_WARNINGS stethoscope card → separate Verify
+     panel). Original PDF on the left, editable extracted text on the
+     right, an explainer blurb visible by default, and a collapsible
+     "Show technical details" disclosure. Footer: 🔁 Re-scan with {next
+     AI}, 💾 Back up as .txt (save-and-stay), Cancel (discards the file),
+     ✅ Proceed (commits and closes). ── -->
 <div class="verify-panel-overlay" id="verifyPanel">
   <div class="verify-panel">
     <div class="verify-panel-hdr">
       <span class="verify-panel-title">🔍 Verify &amp; edit — <span id="verifyDocName">document</span></span>
-      <span class="verify-panel-sub">Compare the extracted text against the original and fix anything wrong right here. If it's too garbled to fix by hand, use "Re-scan with another AI" at the bottom.</span>
-      <button class="btn btn-sm verify-panel-close" title="Close" onclick="closeVerifyPanel()">✕</button>
+      <button class="btn btn-sm verify-panel-close" title="Cancel — discards the file entirely" onclick="cancelVerifyImport()">✕</button>
+    </div>
+    <div class="verify-panel-explainer-wrap">
+      <p class="verify-panel-explainer" id="verifyExplainer">We used AI vision to read this — the file wasn't plain-text readable, so we OCR'd it. Check the extracted text on the right and fix anything wrong. Back up the clean text if you want a copy. Click Proceed when you're satisfied.</p>
+      <details class="verify-tech-details" id="verifyTechDetails">
+        <summary class="verify-tech-summary">Show technical details</summary>
+        <div class="verify-tech-details-body" id="verifyTechDetailsBody"></div>
+      </details>
     </div>
     <div class="verify-panel-body">
       <div class="verify-pane verify-pane-left">
@@ -2542,10 +2547,11 @@
       </div>
     </div>
     <div class="verify-panel-ftr">
-      <button class="btn verify-reread-btn" id="verifyRereadBtn" title="Last resort: re-runs the page images through a different AI for a fresh transcription" onclick="verifyTryDifferentReader()">🔁 Re-scan with another AI</button>
+      <button class="btn verify-reread-btn" id="verifyRereadBtn" title="Re-runs the page images through a different keyed vision provider for a fresh transcription" onclick="verifyTryDifferentReader()">🔁 Re-scan with another AI</button>
       <div class="verify-ftr-right">
-        <button class="btn" onclick="closeVerifyPanel()">Cancel</button>
-        <button class="btn btn-cta btn-accent" id="verifySaveBtn" onclick="saveVerifyEdits()">Done</button>
+        <button class="btn" title="Download the extracted text as a .txt — the modal stays open so you can keep editing" onclick="backupVerifyExtractedText()">💾 Back up as .txt</button>
+        <button class="btn" title="Discard this file entirely — returns you to the setup screen with the slot empty" onclick="cancelVerifyImport()">Cancel</button>
+        <button class="btn btn-cta btn-accent" id="verifyProceedBtn" title="Commit the extracted text to the project and close" onclick="proceedVerifyImport()">✅ Proceed</button>
       </div>
     </div>
   </div>

@@ -156,15 +156,11 @@ async function checkStorageQuota() {
 let _saveSessionChain = Promise.resolve();
 
 function saveSession(opts = {}) {
-  // v3.55.3 — Autosave gate. The per-round IndexedDB write IS the autosave
-  // mechanism (this is how reload-restore works). When the user turns autosave
-  // OFF via the work-screen pill, skip the automatic write. Explicit user
-  // actions (Backup, Diagnostic) pass { force: true } so they always capture
-  // current state regardless of the toggle. Read localStorage directly —
-  // storage.js loads before app.js, so we can't depend on app.js's
-  // _autosaveEnabled at parse time. Default = ON (key absent or anything but
-  // 'false'), so existing behavior is unchanged unless the user opts out.
-  if (!opts.force && localStorage.getItem('waxframe_autosave_enabled') === 'false') return;
+  // v3.61.0 — Autosave gate REMOVED. The per-round IndexedDB write IS the
+  // reload-restore mechanism, and the user-facing pill never represented a
+  // user-meaningful preference (turning it off broke restore silently). The
+  // opts.force parameter is kept for call-site compatibility but no longer
+  // gates anything — every saveSession() now writes.
   const consoleEl = document.getElementById('liveConsole');
   const consoleHTML = consoleEl ? consoleEl.innerHTML : '';
   const notesEl = document.getElementById('workNotes');
