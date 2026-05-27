@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260526-031
+//  Build: 20260526-032
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -597,6 +597,7 @@ const WF_GENERIC_ENTRY = {
   meaning: 'WaxFrame ran into an error it does not have a specific explanation for. The technical details below may help diagnose. Use "Report on GitHub" to send them — it opens a pre-filled issue.',
   actions: [
     { label: 'Retry round', kind: 'retry' },
+    { label: '🛠 Fix Worker Bee', kind: 'fix-bee' },
     { label: '🌐 Open provider site', kind: 'console-link' },
     { label: '🐙 Report on GitHub', kind: 'github-issue' }
   ]
@@ -716,6 +717,28 @@ function renderTroubleshootingCard(entry, ctx) {
             `https://github.com/WeirDave/WaxFrame-Professional/issues/new?title=${title}&body=${body}`,
             '_blank', 'noopener,noreferrer'
           );
+        };
+      } else if (a.kind === 'fix-bee') {
+        // v3.59.6 — jump to the Worker Bees setup screen so the user can
+        // re-pick the model for the bee that failed (e.g. a provider retired
+        // the saved model from its serverless tier). If ctx carries the
+        // failing aiId, scroll its model selector into view and flash it;
+        // otherwise just land on the screen (the failed bee shows "FAILED").
+        btn.onclick = () => {
+          closeTroubleshootingCard();
+          if (typeof goToScreen === 'function') goToScreen('screen-bees');
+          const aid = ctx?.aiId;
+          if (aid) {
+            setTimeout(() => {
+              const sel = document.getElementById('modelsel-' + aid);
+              if (sel) {
+                sel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                sel.classList.add('model-select-flash');
+                setTimeout(() => sel.classList.remove('model-select-flash'), 2200);
+                try { sel.focus(); } catch (e) {}
+              }
+            }, 250);
+          }
         };
       } else if (a.kind === 'disable-ai') {
         // v3.29.0 — toggle off the offending AI for the session via the same
