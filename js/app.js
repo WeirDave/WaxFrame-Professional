@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-028
+//  Build: 20260526-029
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-028';         // build stamp — update each session
+const BUILD       = '20260526-029';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7089,9 +7089,15 @@ async function runVisionWithFallback(images, statusEl = null) {
     try {
       const t = await runVisionTranscription(images, ai.cfg, ai.key);
       if (t && t.trim()) return { text: t, used: ai.cfg.label, usedProvider: ai.provider, errors };
-      errors.push(`${ai.cfg.label}: returned no text`);
+      // v3.59.3 — HTTP 200 with an empty body isn't an error, so it never hit
+      // visionErrorDetail and left no trace. Log a DEV breadcrumb so a silent
+      // empty (e.g. gpt-5.x vision occasionally returning nothing) is visible.
+      const m = `${ai.cfg.label}: returned no text (empty 200 response)`;
+      errors.push(m);
+      if (typeof consoleLog === 'function') consoleLog(`⚠️ vision ${m} — falling through to next provider`);
     } catch (e) {
       errors.push(`${ai.cfg.label}: ${e.message}`);
+      if (typeof consoleLog === 'function') consoleLog(`⚠️ vision ${ai.cfg.label} failed: ${e.message} — falling through to next provider`);
     }
   }
   return { text: '', used: '', usedProvider: '', errors };
@@ -7321,6 +7327,23 @@ async function extractFromFile(file, options = {}) {
 //  Beyond text: outline (TOC), form fields, annotations, and
 //  heuristic image-OCR pass for low-density pages.
 // ============================================================
+// v3.59.3 — Elapsed-time heartbeat for long, opaque awaits (the vision API
+// call can run 30s+ with nothing else to report). Ticks a climbing seconds
+// counter on the status line so "is it hung?" is never ambiguous. Returns a
+// stop() function; always call it in a finally block.
+function _startStatusHeartbeat(el, baseMsg) {
+  if (!el) return () => {};
+  const t0 = Date.now();
+  const paint = () => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    el.textContent = `${baseMsg} ${s}s…`;
+    if (typeof setFileStatusState === 'function') setFileStatusState(el, 'loading');
+  };
+  paint();
+  const id = setInterval(paint, 1000);
+  return () => clearInterval(id);
+}
+
 async function extractPDF(file) {
   const result = { text: '', warnings: [], sourceType: 'pdf' };
 
@@ -7560,7 +7583,19 @@ async function extractPDF(file) {
 
   // v3.58.7 — Try every keyed vision provider, not just the first. One
   // provider returning empty no longer kills the whole upload.
-  const { text: transcribed, used, usedProvider, errors } = await runVisionWithFallback(pageImages, status);
+  // v3.59.3 — heartbeat ticks a seconds counter during the (long, opaque)
+  // vision call. We pass null as the statusEl so the fallback's own
+  // provider-advance writes don't fight the heartbeat for the status line;
+  // the provider outcome is reported in the warnings afterward.
+  const _hbBase = `⏳ Reading ${pageImages.length} page${pageImages.length === 1 ? '' : 's'} with AI vision (can take a minute or two) —`;
+  const _stopHb = _startStatusHeartbeat(status, _hbBase);
+  let _vr;
+  try {
+    _vr = await runVisionWithFallback(pageImages, null);
+  } finally {
+    _stopHb();
+  }
+  const { text: transcribed, used, usedProvider, errors } = _vr;
   if (transcribed && transcribed.trim()) {
     window._verifyLastProvider = usedProvider || '';   // v3.59.2 — rotation anchor
     result.text = (outlineText + transcribed + formText).trim();
