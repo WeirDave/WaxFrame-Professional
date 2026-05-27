@@ -1,0 +1,293 @@
+WaxFrame Backlog v51
+Where: v3.60.8 Pro (build 20260527-007)
+
+------------------------------------------------------------
+NEXT UP
+------------------------------------------------------------
+
+v3.61.0 — Verify modal redesign + Autosave pill removal + Magnifying glass removal
+  Goal: single consolidated import-verification screen for OCR'd
+  uploads. Replaces the two-modal flow (stethoscope warning →
+  separate Verify panel) with one screen that handles everything.
+
+  Trigger
+    - Only fires for OCR'd imports — scanned PDFs, garbled PDFs,
+      image-based docs that needed AI vision to extract text.
+    - Pure-text imports (clean TXT/DOCX, pure-text PDFs) bypass
+      this entirely and import straight into the project as today.
+      No change to the happy path.
+    - Applies to BOTH Reference Material and Starting Document
+      surfaces. Same modal, same flow.
+
+  Layout
+    - Single modal replaces both the "Imported with warnings"
+      stethoscope dialog AND the existing Verify panel.
+    - Original PDF on the left, shorter iframe (max-height ~50vh
+      or similar — must fit on a 1024px-min laptop screen with
+      room for the rest of the modal content)
+    - Extracted text on the right, editable (same as today)
+    - New explainer blurb visible by default:
+      "We used AI vision to read this — the file wasn't plain-text
+      readable, so we OCR'd it. Check the extracted text on the
+      right and fix anything wrong. Back up the clean text if you
+      want a copy. Click Proceed when you're satisfied."
+    - "Show technical details" disclosure collapsed by default
+      (carries forward the warning-modal's tech detail content)
+
+  Footer actions (left to right)
+    - 🔁 Re-scan with {next AI}  (rotates through keyed vision
+      providers, hides when none available)
+    - 💾 Back up as .txt  (always enabled — see naming below)
+    - Cancel  (DISCARDS THE ENTIRE FILE — see below)
+    - ✅ Proceed  (was "Done" — commits extracted text, closes
+      modal, returns to setup screen)
+
+  Backup behavior
+    - Save-and-stay: clicking Back up downloads the file and
+      leaves the user in the modal so they can keep editing or
+      back up again after edits
+    - Filename pattern: {ProjectName}-{Version}-Ref-{ReferenceName}-{YYYYMMDD-HHmm}.txt
+      for reference docs, or {ProjectName}-{Version}-StartingDoc-{YYYYMMDD-HHmm}.txt
+      for starting document
+    - No "don't ask again" — each Verify session is its own event,
+      naturally bounded by however many files the user uploads
+
+  Cancel semantics  (CHANGED — full abandon)
+    - Discards the entire file. User lands back on the setup
+      screen with that slot empty as if they'd never tried.
+    - No half-imported state, no "unverified upload" lingering.
+    - If they hit Cancel they're saying "this was a mistake or
+      I don't want it." Clean break.
+
+  Proceed semantics
+    - Commits the extracted text to the project
+    - Closes modal
+    - Returns user to the appropriate setup screen (Reference
+      Material or Starting Document) where they can add another
+      reference or move forward
+
+  Magnifying-glass removal
+    - The 🔍 button on reference material cards (app.js:9093,
+      `class="ref-card-verify"`) is REMOVED entirely.
+    - Verify is a one-time gate at import time. No re-opening it
+      later. Inline text editing in the reference card textarea
+      remains for any text-only fixes.
+    - The openVerifyPanelForRef function and the import-path call
+      at app.js:7885 stay (that's how the consolidated modal
+      opens during import).
+
+  Autosave pill removal
+    - The "Autosave: on" footer pill is removed entirely.
+    - The toggleAutosave() function, _updateAutosaveIndicator(),
+      the waxframe_autosave_enabled localStorage key, and the
+      gate inside saveSession() (storage.js line 167) are all
+      removed.
+    - IDB writes per round become unconditional. This is required
+      for reload-restore to work — it was never a user-meaningful
+      toggle.
+
+------------------------------------------------------------
+v3.62.0 — Settings panel + Auto-Update Models + Checkpoint Backup
+------------------------------------------------------------
+
+Settings panel (main nav menu entry — already exists)
+  Three toggles:
+    - Length Guard (Y/N) — duplicated as footer pill
+    - Slow Alerts (Y/N) — duplicated as footer pill
+    - Auto-Update Models (Y/N) — NEW, no pill (background-only)
+  Footer pills KEEP for Length Guard + Slow Alerts (quick mid-
+  run access). No pill for Auto-Update — background-only.
+
+Auto-Update Models
+  - Fires when REACHING work screen, then at interval if user stays
+  - Interval radios: 24h / 1 week / 30 days (compact)
+  - When OFF: kill existing 7-day MODELS_CACHE_TTL completely.
+    Auto-Update is the single source of truth for refresh.
+  - On refresh:
+    * Console.log always
+    * Status bar message on work screen (Windows-Update style)
+    * Events into transcripts + backups + Deep Dive buffer
+    * Retired-saved-model warning surfaced in status bar
+
+Checkpoint Backup Nudge
+  - Fires ONCE per project on entering work screen after setup
+    (or right after Round 1 draft — TBD which moment is right)
+  - Modal: "💾 Save a checkpoint backup? You can always come back
+    to this exact starting point."
+    * [Save Backup] — fires backupSession() and downloads JSON
+    * [Not now] — dismisses
+    * [Don't ask again for this project] — per-project preference
+  - Backup file is the time machine; Round History is the working
+    tool. Different functions, different reliability.
+
+------------------------------------------------------------
+v3.63.0 — TROUBLESHOOTING TOOLKIT (P0)
+------------------------------------------------------------
+
+Goal: Someone downloads WaxFrame, hits a problem, can send one
+artifact that gives me everything to diagnose. Without the user
+needing to re-run, screenshot, or guess what we want.
+
+Pieces:
+
+1. Standalone troubleshooting page (waxframe_techsupport.html)
+   - Reachable even if index.html is broken
+   - Reads localStorage/IDB directly with minimal JS (no app.js dep)
+   - Hosts: diagnostic bundle button, GitHub Issues link, user
+     manual link, FAQ, common error explanations
+   - Easy URL to remember and document
+   - Bookmark-recommended in user manual
+
+2. Diagnostic bundle generator
+   - One button, three locations: every troubleshooting card,
+     Settings menu, troubleshooting page
+   - Builds single JSON containing:
+     * Session state (scrubbed of secrets + PII)
+     * Last N rounds of forensic detail (prompts sent, raw
+       responses, parse diagnostics, finish reasons, token usage
+       per AI per round)
+     * Console log buffer
+     * Browser + OS + WaxFrame version + build stamp
+     * Specific error context if triggered from an error card
+   - Filename: WaxFrame-Diagnostic-{project}-{YYYYMMDD-HHmm}.json
+   - Auto-downloads
+
+3. Always-on forensic ring buffer
+   - Currently Deep Dive is intermittent/toggle. For P0 it needs
+     to be ALWAYS-ON in a ring buffer (last 5 or 10 rounds default)
+   - Memory cost minimal — text data, capped
+   - Means a user hitting an error has the forensic data already
+     captured, no "go reproduce it with Deep Dive on" round trip
+
+4. Scrubber function
+   - Single utility: takes a session/state object, returns stripped
+     version (API keys removed, names/emails optional)
+   - Used by:
+     * Diagnostic bundle (automatic, always strips)
+     * Standalone backup scrubber tool (still on backlog — see
+       Open Features below, weaker use case now)
+
+5. GitHub Issues integration (David teaches me this)
+   - Replace any "email to support" UX with GitHub Issues
+   - Pre-filled new-issue URL pattern:
+     https://github.com/WeirDave/WaxFrame-Professional/issues/new?title=...&body=...
+   - Body size limit ~8000 chars — diagnostic bundle attached
+     manually (download + upload to issue)
+   - First-error banner: "Click here to report this — opens a
+     GitHub Issue with the diagnostic bundle ready to attach"
+
+6. UX documentation
+   - User manual update explaining the flow
+   - Visible banner/hint on first error in any session telling
+     new users where to go
+
+------------------------------------------------------------
+OPEN BUGS / UX
+------------------------------------------------------------
+
+- restoreRound only rolls back document state. Does NOT roll back
+  console transcript, project timer, token counters, Deep Dive
+  buffer, or UI accumulators. That's why restoring to Round 1
+  doesn't feel like a reset. Define what SHOULD roll back vs
+  what's legitimate session history.
+  Backups are the actual time machine; Round History is just the
+  working tool. Document the distinction.
+
+- Auto-backup misleading in user manual. Need to clarify: WaxFrame
+  auto-saves to this browser only (IDB). Cross-browser/cross-machine
+  restoration requires a manual backup file. v3.62.0 checkpoint
+  nudge addresses this — but the manual still needs language fix.
+
+------------------------------------------------------------
+OPEN FEATURES (post-v3.63.0)
+------------------------------------------------------------
+
+Custom templates
+  - User creates document of a type WaxFrame doesn't ship a template
+    for, OR modifies an existing template
+  - "Save as my template" button
+  - Stored in localStorage or IDB, appears in template picker
+    alongside built-ins
+  - Reusable across projects
+
+Shareable templates
+  - Export a custom template as a portable JSON
+  - Import someone else's exported template
+  - No PII issue, no scrubbing needed
+  - Cleaner answer to "I want to share my workflow with a co-worker"
+    than scrubbed backups
+
+Backup scrubber standalone tool (weakened use case)
+  - Originally intended for sharing backups with co-workers
+  - Use case mostly served by shareable templates now
+  - Still worth keeping because some backups carry actual project
+    state worth sharing (a finished doc colleague wants to see)
+  - Scrubbed file CANNOT be imported back into WaxFrame (keys
+    missing) — read-only artifact for sharing
+  - Naming: Scrubbed-Backup-{original-name}.json
+  - Lower priority — only build if real users ask for it
+
+Deep Dive toggle (in Settings)
+  - Once v3.63.0 makes Deep Dive always-on as a ring buffer, this
+    toggle may become unnecessary. Revisit then.
+  - If we still want it, it's the 4th Settings toggle.
+
+Pause/resume at reviewer seam (architectural)
+  - Pause AFTER reviewer gather, BEFORE Builder call
+  - User fixes broken model via inline picker
+  - Hits Resume → re-call just the failed reviewer, merge response,
+    proceed to Builder
+  - Real round-engine surgery. Spec-first then build.
+
+File System Access API (exploration)
+  - Chromium-only (Chrome/Edge) — user grants WaxFrame write access
+    to a folder once, then we silently write backup files there
+    forever. True Word-style auto-save-to-disk.
+  - Doesn't work in Firefox (David's browser of choice) or Safari.
+  - Investigate later; not committed. Possibility if WaxFrame ever
+    leans into desktop-app feel for Chromium users.
+
+------------------------------------------------------------
+TROUBLESHOOTING TOOLKIT — CAPTURE GAPS (drives v3.63.0)
+------------------------------------------------------------
+
+TRANSCRIPT (exportTranscript)
+  Has: round-by-round event log, AI responses, USER DECISIONS,
+       phase transitions, errors as they happened
+  Missing: HTTP-level detail, exact prompts sent, parse diagnostics,
+           per-AI per-round token usage, raw model response
+
+BACKUP (backupSession)
+  Has: full hive config, project, current docText, history array
+       (every round's doc/notes/phase/decisions), resolved decisions,
+       settings, IDB session — full pause/resume fidelity
+  Missing: any API request/response detail, transcript, debug data
+
+DEEP DIVE
+  Has: per-round forensic capture — prompts sent, raw responses,
+       parse diagnostics, finish reason, token usage per AI
+  Missing: needs verification of what's actually captured today
+  v3.63.0 plan: always-on ring buffer (last N rounds) so it's
+  ALWAYS available, no "reproduce with DD on" round trip
+
+The diagnostic bundle = scrubbed(BACKUP) + DD-ring-buffer +
+console log + browser/OS/version metadata + error context.
+Single artifact, single click, ready for a GitHub Issue.
+
+------------------------------------------------------------
+OBSERVATIONS FROM RUNS
+------------------------------------------------------------
+
+- Cohere R1 runaway captured earlier: 186K chars / 32.6K words /
+  64.5K tokens, finishReason "length", emitted visible chain-of-
+  thought instead of a document. Cohere R1 specifically needs a
+  budget guard or model-side prompt steering.
+
+- Gemini finishReason: null when others return "stop" / "end_turn".
+  Inconsistency in the captured field. Normalize on read.
+
+------------------------------------------------------------
+RECENT SHIPS
+------------------------------------------------------------
+
+Check GitHub.
