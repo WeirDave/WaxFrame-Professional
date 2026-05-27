@@ -2,6 +2,29 @@
 
 ---
 
+## v3.60.3
+**Build:** `20260527-002` · **Released:** May 27, 2026
+
+### Hotfix — v3.60.2 inline picker was starved of `aiId` by `callAPI`
+
+The v3.60.2 inline model picker logic was correct, but it never activated for
+the cards that needed it most. The renderer's gate requires `ctx.aiId`, and
+`callAPI` was the one path that *didn't* set it — so every provider error
+(the most common surface for the picker) fell through to the legacy Fix
+Worker Bee button. Three `ctx = { … }` blocks inside `callAPI` (network
+error, HTTP error, empty response) now include `aiId: ai.id`.
+
+The picker now activates on real provider errors — confirmed against the
+exact ctx shape (`Together AI`, `provider: together_ai_…`, status 400,
+"Unable to access non-serverless model …") that was previously dropping to
+the fallback.
+
+**Files changed:** `js/app.js` — three `ctx` literals in `callAPI` gained
+`aiId: ai.id`. Version stamps + full cache-bust sweep across all 8 HTML
+to `3.60.3`, build `20260527-002`.
+
+---
+
 ## v3.60.2
 **Build:** `20260527-001` · **Released:** May 27, 2026
 
