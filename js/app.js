@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-029
+//  Build: 20260526-030
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-029';         // build stamp — update each session
+const BUILD       = '20260526-030';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7327,6 +7327,20 @@ async function extractFromFile(file, options = {}) {
 //  Beyond text: outline (TOC), form fields, annotations, and
 //  heuristic image-OCR pass for low-density pages.
 // ============================================================
+// v3.59.4 — All 5 setup screens live in one page, so BOTH #fileStatus
+// (Starting Doc) and #refFileStatus (Reference) exist in the DOM at once —
+// the off-screen one is just hidden. The old `getElementById('fileStatus')
+// || getElementById('refFileStatus')` grabbed whichever existed first, which
+// was often the HIDDEN one, so status/heartbeat updates landed on an invisible
+// element. Pick the one actually on screen (offsetParent is null when hidden).
+function _activeStatusEl() {
+  const f = document.getElementById('fileStatus');
+  const r = document.getElementById('refFileStatus');
+  if (f && f.offsetParent !== null) return f;
+  if (r && r.offsetParent !== null) return r;
+  return f || r;
+}
+
 // v3.59.3 — Elapsed-time heartbeat for long, opaque awaits (the vision API
 // call can run 30s+ with nothing else to report). Ticks a climbing seconds
 // counter on the status line so "is it hung?" is never ambiguous. Returns a
@@ -7352,7 +7366,7 @@ async function extractPDF(file) {
   // so the slow parse/render stretch on tricky PDFs no longer sits silently
   // on "Reading…". Updates land because each phase awaits (yielding to paint).
   const _stat = (msg) => {
-    const el = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
+    const el = _activeStatusEl();
     if (el) { el.textContent = msg; if (typeof setFileStatusState === 'function') setFileStatusState(el, 'loading'); }
   };
 
@@ -7517,7 +7531,7 @@ async function extractPDF(file) {
     if (pageOcrCandidates.length > 0) {
       const visionAIs = getVisionCapableAIs();
       if (visionAIs.length) {
-        const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
+        const status = _activeStatusEl();
         if (status) {
           status.textContent = `⏳ ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} detected — running OCR pass for embedded images via ${visionAIs[0].cfg.label}…`;
           setFileStatusState(status, 'loading');
@@ -7554,7 +7568,7 @@ async function extractPDF(file) {
 
   // ── Full-document vision transcription (scanned/garbled) ──
   const reason = isScanned ? 'scanned/image-based PDF detected' : 'character-spacing artifacts detected';
-  const status = document.getElementById('fileStatus') || document.getElementById('refFileStatus');
+  const status = _activeStatusEl();
   if (status) {
     status.textContent = `⏳ ${reason.charAt(0).toUpperCase() + reason.slice(1)} — rendering pages for AI vision…`;
     setFileStatusState(status, 'loading');

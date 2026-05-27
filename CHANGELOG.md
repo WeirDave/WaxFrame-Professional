@@ -2,6 +2,28 @@
 
 ---
 
+## v3.59.4
+**Build:** `20260526-030` · **Released:** May 26, 2026
+
+### Fix: progress heartbeat now updates the VISIBLE status line
+
+The v3.59.3 heartbeat (and the earlier phase labels) were writing to the wrong
+element, so nothing appeared to update. All five setup screens live in one
+page, so both `#fileStatus` (Starting Document) and `#refFileStatus`
+(Reference Material) exist in the DOM simultaneously — the off-screen one is
+just hidden. The lookup `getElementById('fileStatus') || getElementById('refFileStatus')`
+grabbed whichever existed first, which on the Reference screen was the HIDDEN
+Starting-Document element — so the seconds counter ticked on an invisible node
+while the visible bar stayed frozen on "Reading…".
+
+- Added `_activeStatusEl()` — picks the status element that is actually on
+  screen (`offsetParent !== null`) rather than the first one that exists.
+- All status/heartbeat updates in PDF extraction now target the visible bar,
+  so the elapsed-seconds counter and phase labels appear on whichever screen
+  (Starting Document or Reference Material) the import is running on.
+
+---
+
 ## v3.59.3
 **Build:** `20260526-029` · **Released:** May 26, 2026
 
