@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-//  Build: 20260526-030
+//  Build: 20260526-031
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting

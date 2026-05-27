@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-030
+//  Build: 20260526-031
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-030';         // build stamp — update each session
+const BUILD       = '20260526-031';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7082,6 +7082,7 @@ async function runVisionWithFallback(images, statusEl = null) {
   const errors = [];
   for (let i = 0; i < ais.length; i++) {
     const ai = ais[i];
+    window._visionActiveLabel = ai.cfg.label;   // v3.59.5 — heartbeat reads this for the live provider name
     if (statusEl && i > 0) {
       statusEl.textContent = `⏳ Previous OCR provider returned nothing — trying ${ai.cfg.label} (${i + 1} of ${ais.length})…`;
       setFileStatusState(statusEl, 'loading');
@@ -7348,9 +7349,12 @@ function _activeStatusEl() {
 function _startStatusHeartbeat(el, baseMsg) {
   if (!el) return () => {};
   const t0 = Date.now();
+  // baseMsg may be a string OR a function returning a string, so the label
+  // can change mid-run (e.g. when vision falls through to another provider).
+  const base = () => (typeof baseMsg === 'function' ? baseMsg() : baseMsg);
   const paint = () => {
     const s = Math.round((Date.now() - t0) / 1000);
-    el.textContent = `${baseMsg} ${s}s…`;
+    el.textContent = `${base()} ${s}s…`;
     if (typeof setFileStatusState === 'function') setFileStatusState(el, 'loading');
   };
   paint();
@@ -7601,7 +7605,11 @@ async function extractPDF(file) {
   // vision call. We pass null as the statusEl so the fallback's own
   // provider-advance writes don't fight the heartbeat for the status line;
   // the provider outcome is reported in the warnings afterward.
-  const _hbBase = `⏳ Reading ${pageImages.length} page${pageImages.length === 1 ? '' : 's'} with AI vision (can take a minute or two) —`;
+  window._visionActiveLabel = '';
+  const _hbBase = () => {
+    const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+    return `⏳ Reading ${pageImages.length} page${pageImages.length === 1 ? '' : 's'} with ${who} (can take a minute or two) —`;
+  };
   const _stopHb = _startStatusHeartbeat(status, _hbBase);
   let _vr;
   try {
@@ -7825,8 +7833,13 @@ function _syncVerifyButtons() {
     if (canReread) reread.textContent = `🔁 Re-scan with ${nxt.label}`;
   }
   if (save && ta) {
+    // "Done" when the text matches the imported original (nothing to persist);
+    // "Save changes" when it differs by ANY means — user typing OR a re-scan
+    // swapping in another provider's text. Avoids the false "you edited this"
+    // implication of "Save edits" after a re-scan, while still persisting the
+    // chosen version on confirm.
     const changed = ta.value !== _verifyOriginalText;
-    save.textContent = changed ? '✅ Save edits' : 'Done';
+    save.textContent = changed ? '✅ Save changes' : 'Done';
   }
 }
 

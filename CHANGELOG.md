@@ -2,6 +2,28 @@
 
 ---
 
+## v3.59.5
+**Build:** `20260526-031` · **Released:** May 26, 2026
+
+### Verify panel polish + real support path on error cards
+
+- **"Save changes" replaces "Save edits"** in the Verify panel. A re-scan
+  swapping in another provider's text was tripping the "edited" state and
+  flipping the button to "Save edits" even though the user hadn't typed
+  anything. The button now reads "Done" when the text matches the import and
+  "Save changes" when it differs by any means (typing OR re-scan) — honest in
+  both cases, and a re-scanned version still saves on confirm.
+- **Live provider name in the OCR heartbeat.** The ticking status now names the
+  engine actively scanning ("Reading 3 pages with Claude vision … 14s…") and
+  updates if it falls through to the next provider.
+- **Error cards now have a real support path.** The generic "Something went
+  wrong" card gained a "Report on GitHub" button that opens a pre-filled issue
+  with the technical details, plus an "Open provider site" button (auto-hidden
+  when no provider URL is on file). The misleading "share with support if
+  needed" wording is replaced with a pointer to the button.
+
+---
+
 ## v3.59.4
 **Build:** `20260526-030` · **Released:** May 26, 2026
 
