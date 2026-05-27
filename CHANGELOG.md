@@ -2,6 +2,88 @@
 
 ---
 
+## v3.60.7
+**Build:** `20260527-006` · **Released:** May 27, 2026
+
+### Together AI dropdown now filtered at the API layer — `?serverless=true`
+
+This is the proper fix for the Together AI staleness problem that v3.60.5
+(broken) and v3.60.6 (reverted to v3.60.4 baseline) bounced off of.
+
+Empirical testing of Together's `/v1/models` endpoint against six query-
+parameter variants revealed that the API honors an **undocumented**
+`?serverless=true` parameter that filters server-side to currently-
+serverless models. Baseline `/v1/models` returns 257 total entries (148
+chat); `?serverless=true` returns 102 total / **23 chat** — the actual
+currently-callable serverless lineup. Same response shape, same authn,
+same origin, no CORS, no proxy required.
+
+The fix is one `if` block in `fetchModelsFromEndpoint`: when the resolved
+URL targets `api.together.xyz`, append `?serverless=true` (handling
+existing query strings with `&` correctly). Other providers' endpoints
+are untouched.
+
+### Why this is better than the v3.60.5 plan
+
+The pre-CORS-test plan was to embed a hardcoded 21-model allowlist
+sourced from Together's docs page (`docs.together.ai/docs/serverless/models`)
+and filter the response client-side against it. The empirical API test
+made that obsolete:
+
+- **Together themselves maintain the serverless list.** Every fetch
+  returns the live state; nothing to maintain on our end.
+- **No hardcoded list to age.** New serverless models appear automatically;
+  retirements disappear automatically.
+- **No proxy needed.** Direct CORS test against `docs.together.ai` showed
+  the docs page is not cross-origin-fetchable from `waxframe.com`. That
+  would have required a Cloudflare Worker hop. The API param path
+  bypasses that entirely.
+- **Smaller code.** Net delta: one IF block + a migration. No new constant,
+  no allowlist table, no rebuild on every Together lineup change.
+
+### Graceful degradation
+
+The `?serverless=true` parameter is undocumented, so it could in principle
+disappear without warning. If that happens:
+
+- The Together response falls back to ~257 entries (the v3.60.6 behavior).
+- Dropdown gets large and includes retired models again.
+- Detectable via console (the user / a recheck would notice growth back
+  to 100+ chat entries).
+- This is exactly the regression target the planned v3.61.0 Auto-Update
+  Models / Settings panel work is meant to monitor and surface.
+
+### One-time cache migration
+
+Existing v3.60.5 / v3.60.6 caches contain the pre-`?serverless=true`
+fetch with 257 entries. New `migrateTogetherModelCachesV3607()` clears
+any `waxframe_models_*` localStorage entry whose AI is a Together
+endpoint on first v3.60.7 load. Same pattern as the v3.32.10 and
+v3.60.5 migrations. Independent sentinel (`waxframe_v3607_together_models_migrated`)
+so it runs once per browser regardless of which prior version they came
+from. The earlier v3.60.5 migration remains in place as a no-op for any
+browser that never loaded that version.
+
+### What this changes for v3.61.0
+
+Auto-Update Models for **Together specifically** is now essentially
+solved at the API layer — every fetch gets the live filtered list, so
+retired models can no longer enter the dropdown. The CF Worker proxy
+plan and `docs.together.ai` scraping plan are both dropped. v3.61.0
+narrows to a Settings panel consolidation (Length Guard, Autosave, Slow
+Alerts, plus a new "Auto-Update Models" toggle) governing the built-in
+6 providers' existing 7-day `MODELS_CACHE_TTL`.
+
+**Files changed:** `js/app.js` — `fetchModelsFromEndpoint` gained a
+6-line block injecting `?serverless=true` for Together endpoints;
+stale v3.60.5/v3.60.6 comment in the response-parsing path replaced
+with current state. New `migrateTogetherModelCachesV3607()` function
+added next to the v3.60.5 one. One call site in the `DOMContentLoaded`
+handler. Version stamps + full cache-bust sweep across all 8 HTML to
+`3.60.7`, build `20260527-006`.
+
+---
+
 ## v3.60.6
 **Build:** `20260527-005` · **Released:** May 27, 2026
 
