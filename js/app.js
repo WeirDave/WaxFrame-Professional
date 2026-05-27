@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-003
+//  Build: 20260527-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -284,6 +284,45 @@ function migrateRecommendationCachesV33210() {
   }
 }
 
+// v3.60.5 — Together AI's /v1/models response includes a `running` boolean
+// per entry; `running: false` means "in the catalog but no longer currently-
+// serverless" (Qwen2-72B-Instruct is the canonical case, demoted from
+// serverless to dedicated-only). The fetchModelsFromEndpoint parse path
+// now filters those out on every fresh fetch (filter added in v3.60.5),
+// but cached lists from before v3.60.5 still contain the unfiltered ~200+
+// entries. This migration clears the cached model list for any AI whose
+// endpoint is a Together URL, so the next dropdown read triggers a fresh
+// fetch through the now-filtered code path. Runs once, then never again.
+// Provider-aware via endpoint URL inspection — no other provider's caches
+// are touched. (Other providers may grow their own staleness problems
+// later; that's the Auto-Update Models work planned for v3.61.0, not this
+// migration's scope.)
+function migrateTogetherModelCachesV3605() {
+  if (localStorage.getItem('waxframe_v3605_together_models_migrated')) return;
+  let cleared = 0;
+  try {
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k || !/^waxframe_models_/.test(k)) continue;
+      // The cache key is waxframe_models_${aiId}. Look up the AI in
+      // API_CONFIGS by stripping the prefix and matching against an entry
+      // whose endpoint is a Together URL.
+      const aiId = k.replace(/^waxframe_models_/, '');
+      const cfg  = (typeof API_CONFIGS !== 'undefined') ? API_CONFIGS[aiId] : null;
+      const ep   = cfg?.endpoint || cfg?._modelsEndpoint || '';
+      if (/api\.together\.xyz/i.test(ep)) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
+    localStorage.setItem('waxframe_v3605_together_models_migrated', '1');
+  } catch(e) { /* quota / privacy mode — accept and move on */ }
+  if (cleared > 0) {
+    console.info(`[migrate-v3.60.5] Cleared ${cleared} Together model-list cache(s). Next dropdown render will refetch with the new serverless-only filter applied.`);
+  }
+}
+
 
 // (both removed in v3.31.0) and the recovery from the legacy removeAI
 // function (removed in v3.30.4). The snapshot is still kept because the
@@ -373,7 +412,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-003';         // build stamp — update each session
+const BUILD       = '20260527-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5604,8 +5643,18 @@ async function fetchModelsFromEndpoint(url, format, key, explicitModelsEndpoint 
     // (and some gateways) return a bare array tagging each entry with a `type`
     // (chat/image/video/audio/…). Keep only chat when that field is present;
     // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
+    // v3.60.5 — additionally filter out entries where `running === false`. Together's
+    // /v1/models response sets `running: false` for models that are in the catalog
+    // but no longer currently-callable on serverless (the canonical case being
+    // Qwen2-72B-Instruct demoted from serverless to dedicated-only). Other
+    // providers either omit the field entirely or always set it true, so the
+    // `!== false` check leaves them untouched.
     const _arr = Array.isArray(data) ? data : (data?.data || []);
-    models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
+    models = _arr
+      .filter(m => !m.type || m.type === 'chat')
+      .filter(m => m.running !== false)
+      .map(m => m.id)
+      .sort();
   }
   // Same structural-only filter the default 6 use
   models = models.filter(m => !STRUCTURAL_NON_CHAT_RE.test(m));
@@ -15715,6 +15764,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // caches. New role-suffixed format is incompatible with old cache shape,
   // so we wipe legacy keys to force a clean re-recommend. Silent — no toast.
   migrateRecommendationCachesV33210();
+  // v3.60.5 — one-time clear of pre-v3.60.5 Together model-list caches so
+  // the new `running !== false` filter applies on the next dropdown read.
+  // Same pattern as the v3.32.10 migration above. Provider-aware via
+  // endpoint URL — only Together AI caches are cleared, no other provider
+  // is affected.
+  migrateTogetherModelCachesV3605();
   // v3.41.0 — initMuteBtn() removed. theme.js auto-fires _updateMuteBtn
   // on DOMContentLoaded; since theme.js loads before app.js, theme.js's
   // listener fires first when DOMContentLoaded triggers.

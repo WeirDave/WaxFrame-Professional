@@ -2,6 +2,57 @@
 
 ---
 
+## v3.60.5
+**Build:** `20260527-004` · **Released:** May 27, 2026
+
+### Together AI model dropdown filtered to currently-serverless only
+
+Together's `/v1/models` response returns every model in their catalog —
+including ones they've quietly demoted from serverless to dedicated-only
+(`Qwen2-72B-Instruct` is the canonical case). The result: ~257 entries in
+the dropdown, no signal which ones still work, and any saved selection
+silently risked breaking when Together pulled a model off serverless.
+v3.60.5 fixes that at the parse step.
+
+- **Parse filter in `fetchModelsFromEndpoint`** now drops entries where
+  `running === false`. Together exposes this field on every entry; other
+  providers (OpenAI, Anthropic, Mistral, DeepSeek, etc.) either omit it or
+  always set it to `true`, so the `!== false` check leaves them untouched.
+  The existing `type === 'chat'` filter is unchanged. Net effect for
+  Together: dropdown shrinks from ~257 to ~20-30, every entry is currently
+  callable.
+- **One-time migration on first v3.60.5 load** clears any
+  `waxframe_models_*` localStorage cache whose corresponding AI's endpoint
+  is `api.together.xyz/*`. Without this, existing Together servers would
+  keep showing their stale unfiltered list until the next manual refetch.
+  Runs once per browser, console-logs the count. Same pattern as the
+  v3.32.10 recommendation-cache migration.
+- **No other provider's behavior changes.** Provider-aware via endpoint URL
+  inspection. This is not a generalized fix-everywhere — it solves
+  Together's specific staleness symptom while a proper "Auto-Update Models"
+  setting is being scoped for v3.61.0 (alongside a unified Settings panel
+  for Length Guard, Autosave, Slow Alerts, and the new Auto-Update toggle).
+
+### What this does NOT fix
+
+- The recommendation engine still uses AI-training-data memory — if the AI
+  recommends a model name that happens to no longer be on the live filtered
+  list, the picker won't show ✨/🔨 markers because they read against the
+  filtered list. Side benefit, no extra code: the AI physically cannot
+  recommend a non-serverless Together model anymore because such models are
+  no longer in the dropdown options at all.
+- Provider-wide auto-refresh of model lists (only the 6 built-in providers
+  have a 7-day TTL today; custom servers, including this Together server,
+  do not). That's the v3.61.0 work.
+
+**Files changed:** `js/app.js` — `fetchModelsFromEndpoint` parse filter
+gained a `running !== false` check; new `migrateTogetherModelCachesV3605()`
+function next to the existing v3.32.10 migration; one call site in the
+`DOMContentLoaded` handler. Version stamps + full cache-bust sweep across
+all 8 HTML to `3.60.5`, build `20260527-004`.
+
+---
+
 ## v3.60.4
 **Build:** `20260527-003` · **Released:** May 27, 2026
 
