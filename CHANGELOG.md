@@ -2,6 +2,25 @@
 
 ---
 
+## v3.59.6
+**Build:** `20260526-032` · **Released:** May 26, 2026
+
+### Error cards: "Fix Worker Bee" jump-to-fix action
+
+When a round fails because a bee's saved model is no longer available (e.g. a
+provider retired it from its serverless tier), the error card now offers a
+direct path to fix it instead of just explaining the problem.
+
+- **"🛠 Fix Worker Bee"** button on the generic error card jumps to the Worker
+  Bees setup screen and, when the failing bee is known, scrolls its model
+  selector into view and briefly highlights it so you can re-pick a working
+  model on the spot.
+- Sits alongside the v3.59.5 "Open provider site" and "Report on GitHub"
+  actions, so an error card now offers: retry, fix the bee, open the provider,
+  or file an issue — every actionable next step in one place.
+
+---
+
 ## v3.59.5
 **Build:** `20260526-031` · **Released:** May 26, 2026
 
