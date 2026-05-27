@@ -2,6 +2,32 @@
 
 ---
 
+## v3.60.0
+**Build:** `20260526-035` · **Released:** May 26, 2026
+
+### Auto OFF now stops *immediately* — in-flight round aborts
+
+Toggling Auto OFF (Auto → Manual) now aborts any round currently in flight
+instead of letting it run to completion. Previously the in-flight round was
+left to finish and only the *next* round was suppressed — documented behavior,
+but it didn't match the Manual mental model (Manual = nothing runs).
+
+- **Toggle-off aborts the in-flight round** via the existing generation-token
+  abandonment path (`_projectGen` bump + `_abandonInFlightRoundUI()`). The round
+  bails at its next write checkpoint without committing — no phantom history, no
+  chained round — and the run button / smoker + builder overlays / round timer
+  reset immediately rather than waiting for the round to finish.
+- **Tradeoff (intentional):** the in-flight round's work is discarded. That's
+  the correct behavior when you flip Auto off — you're hitting the brakes.
+- **No change to provider-error handling.** A single provider failure already
+  stops the chain via the failure-streak guardrail (v3.56.x) and surfaces the
+  round-error modal; that path is deliberately left untouched.
+
+**Files changed:** `js/app.js` (`toggleAutoMode` disengage branch + Auto Mode
+header comment). Version stamps + full cache-bust sweep across all 8 HTML.
+
+---
+
 ## v3.59.8
 **Build:** `20260526-034` · **Released:** May 26, 2026
 
