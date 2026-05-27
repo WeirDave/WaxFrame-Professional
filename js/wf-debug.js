@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260526-030
+//  Build: 20260526-031
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -594,9 +594,11 @@ window.WF_ERROR_CATALOG = [
 const WF_GENERIC_ENTRY = {
   code: 'UNKNOWN_ERROR',
   title: 'Something went wrong',
-  meaning: 'WaxFrame ran into an error it does not have a specific explanation for. The technical details below may help diagnose. Copy them and share with support if needed.',
+  meaning: 'WaxFrame ran into an error it does not have a specific explanation for. The technical details below may help diagnose. Use "Report on GitHub" to send them — it opens a pre-filled issue.',
   actions: [
-    { label: 'Retry round', kind: 'retry' }
+    { label: 'Retry round', kind: 'retry' },
+    { label: '🌐 Open provider site', kind: 'console-link' },
+    { label: '🐙 Report on GitHub', kind: 'github-issue' }
   ]
 };
 
@@ -697,6 +699,24 @@ function renderTroubleshootingCard(entry, ctx) {
         btn.onclick = () => { closeTroubleshootingCard(); if (typeof runRound === 'function') runRound(); };
       } else if (a.kind === 'open-modal' && a.handler && typeof window[a.handler] === 'function') {
         btn.onclick = () => { closeTroubleshootingCard(); window[a.handler](); };
+      } else if (a.kind === 'github-issue') {
+        // v3.59.5 — real support path: open a prefilled GitHub issue with the
+        // card's technical details, so "share with support" actually goes
+        // somewhere. One click takes the user to a New Issue form.
+        btn.onclick = () => {
+          const dt = document.getElementById('tcDetails');
+          const detail = dt ? String(dt.textContent || '').slice(0, 1500) : '';
+          const ver = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : '';
+          const title = encodeURIComponent(`[Bug] ${entry.code || 'error'}`);
+          const body  = encodeURIComponent(
+            `**What I was doing when this happened:**\n(describe briefly)\n\n` +
+            `**Technical details:**\n\`\`\`\n${detail}\n\`\`\`\n\n— Reported from WaxFrame ${ver}`
+          );
+          window.open(
+            `https://github.com/WeirDave/WaxFrame-Professional/issues/new?title=${title}&body=${body}`,
+            '_blank', 'noopener,noreferrer'
+          );
+        };
       } else if (a.kind === 'disable-ai') {
         // v3.29.0 — toggle off the offending AI for the session via the same
         // mechanism the user has on the bee cards. Requires ctx.aiId.
