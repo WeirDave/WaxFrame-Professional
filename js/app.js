@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260526-033
+//  Build: 20260526-034
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -373,7 +373,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260526-033';         // build stamp — update each session
+const BUILD       = '20260526-034';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -14086,7 +14086,18 @@ function _detectChurn() {
 // the CURRENT baseline, dimming unchanged text and highlighting what differs.
 // Modes (DEV-toolbar toggle): 'off' (plain), 'words' (token LCS), 'sentence'
 // (whole changed sentences). Display-only — does not alter stored option text.
-window._wfDecisionDiffMode = window._wfDecisionDiffMode || 'words';
+window._wfDecisionDiffMode = window._wfDecisionDiffMode ||
+  (() => { try { return localStorage.getItem('waxframe_decision_diff_mode') || 'words'; } catch (e) { return 'words'; } })();
+
+// Keep both the Conflicts-header control and the DEV-toolbar mirror in sync.
+function _wfSyncDiffModeButtons() {
+  const labels = { off: 'Off', words: 'Words', sentence: 'Sentences' };
+  const txt = `🔀 Diff: ${labels[window._wfDecisionDiffMode] || 'Words'}`;
+  const a = document.getElementById('conflictDiffBtn');
+  const b = document.getElementById('wfDiffModeBtn');
+  if (a) a.textContent = txt;
+  if (b) b.textContent = txt;
+}
 
 function wfDecisionDiffHtml(currentText, optionText, mode) {
   const e = (s) => (typeof esc === 'function' ? esc(s) : String(s == null ? '' : s));
@@ -14131,13 +14142,13 @@ function wfDecisionDiffHtml(currentText, optionText, mode) {
 function wfCycleDecisionDiffMode() {
   const order = ['off', 'words', 'sentence'];
   window._wfDecisionDiffMode = order[(order.indexOf(window._wfDecisionDiffMode) + 1) % order.length];
-  const labels = { off: 'Off', words: 'Words', sentence: 'Sentences' };
-  const btn = document.getElementById('wfDiffModeBtn');
-  if (btn) btn.textContent = `🔀 Diff: ${labels[window._wfDecisionDiffMode]}`;
+  try { localStorage.setItem('waxframe_decision_diff_mode', window._wfDecisionDiffMode); } catch (e) {}
+  _wfSyncDiffModeButtons();
   if (typeof renderConflicts === 'function') renderConflicts();
 }
 
 function renderConflicts() {
+  if (typeof _wfSyncDiffModeButtons === 'function') _wfSyncDiffModeButtons();
   const el = document.getElementById('conflictsPanel');
   if (!el) return;
 
