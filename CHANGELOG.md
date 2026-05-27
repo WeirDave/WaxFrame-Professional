@@ -2,6 +2,24 @@
 
 ---
 
+## v3.59.8
+**Build:** `20260526-034` · **Released:** May 26, 2026
+
+### Decision diff control promoted to the Conflicts header (user-facing + sticky)
+
+The USER DECISION diff (v3.59.7) proved useful enough to be a real user feature,
+not just a DEV tool, so its control now lives where users can reach it.
+
+- **🔀 Diff control in the Conflicts panel header** (next to Copy) cycles
+  Words → Sentences → Off and re-renders the open conflict live. Word mode
+  surfaces exactly what differs between near-identical option rewrites;
+  sentence mode suits fuller rewrites; off restores plain text.
+- **Choice persists** across sessions via localStorage (default: Words).
+- The DEV-toolbar 🔀 Diff button remains and now mirrors the same state, so
+  the two controls stay in sync.
+
+---
+
 ## v3.59.7
 **Build:** `20260526-033` · **Released:** May 26, 2026
 
