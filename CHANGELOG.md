@@ -2,6 +2,28 @@
 
 ---
 
+## v3.59.7
+**Build:** `20260526-033` · **Released:** May 26, 2026
+
+### Smart diff on USER DECISION options
+
+When several reviewers rewrite the same long paragraph, the USER DECISION
+option cards were near-identical walls of text — the actual difference between
+"Current" and each option (often just a few words) was invisible. The options
+now render with a diff against the Current baseline.
+
+- **Word mode (default):** text shared with Current is dimmed; words unique to
+  the option are highlighted. A six-way split on a 150-word summary becomes six
+  mostly-dim paragraphs with only the real edits lit up.
+- **Sentence mode:** whole changed sentences are highlighted — cleaner when an
+  option is a fuller rewrite rather than a few word swaps.
+- **DEV toolbar toggle** (🔀 Diff) cycles Off → Words → Sentences and
+  re-renders the open conflict live, so the mode can be compared on real data.
+- Display-only: the stored option text and the decision/apply logic are
+  unchanged. The red/green regular-conflict cards are untouched.
+
+---
+
 ## v3.59.6
 **Build:** `20260526-032` · **Released:** May 26, 2026
 
