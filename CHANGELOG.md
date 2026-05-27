@@ -2,6 +2,57 @@
 
 ---
 
+## v3.60.6
+**Build:** `20260527-005` · **Released:** May 27, 2026
+
+### Hotfix — reverts v3.60.5 `running` filter; misread Together's field semantics
+
+v3.60.5 added a `running !== false` filter to `fetchModelsFromEndpoint` on
+the theory that Together's `running` field meant "currently serverless."
+That was wrong. Together's flagship serverless models (DeepSeek V4 Pro,
+the entire featured row) return `running: false` in the API response —
+because `running` appears to track *dedicated endpoint instance state*
+(default: false for any user without spun-up dedicated infra), not
+serverless availability.
+
+Net effect of the v3.60.5 filter on a real account: every Together model
+got dropped. The dropdown rendered empty (`buildModelSelector` returns
+an empty string when the list is empty), the `Recommend Models` button
+disappeared, and `recheckModelForAI` threw `No chat-compatible models
+returned`. Visible regression confirmed against the live
+`together_ai_1779690170122` server.
+
+v3.60.6 reverts the filter to its v3.60.4 state — `type === 'chat'` only.
+Together's dropdown returns to its previous ~257-entry behavior, which
+includes the original staleness problem we set out to fix, but at least
+the dropdown *works*.
+
+### What stays from v3.60.5
+
+- **The cache migration (`migrateTogetherModelCachesV3605`)** is kept. It
+  was harmless either way — it clears the localStorage cache for any
+  Together server once on first load, forcing a fresh refetch. With the
+  filter reverted, the refetch just produces the same ~257 entries it
+  would have without the migration, so no harm done. Keeping the migration
+  scaffolding in place means we don't have to rewrite it when we ship the
+  correct filter later.
+
+### What's still broken (deliberately, pending diagnosis)
+
+The original v3.60.5 goal — filter Together's response to currently-
+serverless models only — is **still the right idea**, but needs the
+correct field identified. `pricing`, `config`, and `link` are candidates
+based on Together's response shape. The next pass will diagnose properly
+(richer test against a known-serverless vs known-dedicated-only model)
+before re-implementing.
+
+**Files changed:** `js/app.js` — single line in `fetchModelsFromEndpoint`
+reverted; clarifying comment block added next to it explaining the wrong
+turn. Version stamps + full cache-bust sweep across all 8 HTML to
+`3.60.6`, build `20260527-005`.
+
+---
+
 ## v3.60.5
 **Build:** `20260527-004` · **Released:** May 27, 2026
 
