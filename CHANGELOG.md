@@ -2,6 +2,89 @@
 
 ---
 
+## v3.62.2
+**Build:** `20260527-014` · **Released:** May 27, 2026
+
+### Dismiss-permanently option for informational confirms
+
+Adds a **"Don't show this again"** checkbox to four informational
+confirm modals — the ones that explain a consequence rather than
+gating a destructive action. Pick it once and that particular
+confirm is silenced forever (until you reset it).
+
+#### Why now
+
+The question came up: why does the Length Guard toggle pop a
+confirm modal but the Slow-AI Alerts toggle doesn't? Two reasons:
+
+1. **Length Guard is a behavior gate.** Flipping it changes what
+   happens during a round — rounds that would have been paused for
+   your review will now silently proceed. The confirm makes that
+   consequence explicit on the first few flips.
+2. **Slow-AI Alerts is pure notification.** Disabling it doesn't
+   change what runs, just what surfaces. No confirm needed.
+
+That design is defensible on the first few interactions. After the
+third time, you know what each does and the confirm is just nag.
+v3.62.2 introduces an opt-out path.
+
+#### Which confirms got the option
+
+- **📏 Disable length guard?** (footer pill + Settings toggle)
+- **📏 Re-arm length guard?** (footer pill + Settings toggle)
+- **Sensitive backup** (the warning before downloading a full Backup
+  Session — "may include your document text, AI responses, API keys,
+  license key, and debug traces")
+- **Restore from backup** (the warning before opening the file
+  picker for Restore Session)
+
+Destructive confirms (Remove API Key, Clear Project, Clear All
+Reference Material, Remove N Custom AIs, Clear Working Document,
+etc.) are **not eligible** — they exist as a safety brake on an
+irreversible action, and silencing them would be a footgun.
+
+#### How dismissal persists
+
+- Click "Don't show this again" in the modal, then click the
+  confirm action button → the suppression is saved to localStorage
+  under a per-confirm key (`waxframe_suppress_*`).
+- Cancel out of the modal with the checkbox ticked → suppression
+  is NOT saved. Cancel means "I want to see this next time."
+- Future calls to the same confirm short-circuit and resolve true
+  without showing the modal.
+
+#### Reset suppressed prompts
+
+A new row at the bottom of the **Workflow & Updates** Settings
+section: **↺ Reset suppressed prompts**. Scans localStorage for any
+`waxframe_suppress_*` key and clears them all. The dismissed
+confirms come back. Useful when you want a refresher on what an
+action does, or when handing the app to someone less familiar with
+it.
+
+#### Implementation note (for future-you)
+
+`wfConfirm()` gained a `suppressKey: 'waxframe_suppress_xxx'` option
+that's the entire mechanism — no per-modal HTML, no per-call
+boilerplate. To make any new informational confirm dismiss-able,
+just add `suppressKey: '...'` to its opts and pick a unique key.
+The "Don't show this again" checkbox renders automatically, the
+short-circuit on subsequent calls is automatic, and the reset
+button picks it up by prefix. **Never set `suppressKey` on a
+destructive confirm.**
+
+#### Files changed
+
+- `js/app.js` — `wfConfirm()` extended with `suppressKey` option (short-circuit on entry, "Don't show this again" checkbox rendering, persist-on-confirm logic in `wfConfirmOk`, reset in `wfConfirmCancel`); `_disableLengthGuard` + `_rearmLengthGuard` confirms got `suppressKey`; new `resetSuppressedPrompts()` handler. Runtime `BUILD` → `20260527-014`.
+- `js/storage.js` — "Sensitive backup" + "Restore from backup" confirms got `suppressKey`.
+- `index.html` — new ↺ Reset suppressed prompts row at the bottom of the Workflow & Updates Settings section.
+- `js/version.js` — `APP_VERSION` → `v3.62.2`.
+- All 17 source-file `Build:` comment-headers synced to `20260527-014`.
+- HTML `meta name="waxframe-build"` content + `?v=3.62.2` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.62.1
 **Build:** `20260527-013` · **Released:** May 27, 2026
 
