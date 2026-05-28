@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-015
+//  Build: 20260527-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-015';         // build stamp — update each session
+const BUILD       = '20260527-016';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -862,6 +862,90 @@ function resetSuppressedPrompts() {
     }
   } else {
     toast('Nothing to reset — no prompts are currently suppressed.', 3000);
+  }
+}
+
+// ============================================================
+//  v3.63.0 — Checkpoint Backup Nudge
+//
+//  Fires ONCE PER PROJECT on the post-setup transition into the work
+//  screen (initWorkScreen(true) only — never on session restore). The
+//  goal is the pre-token-burn checkpoint: a free, fast moment to grab
+//  a backup of the exact starting state, so if anything goes sideways
+//  later (credit hiccup, unexpected drift, a different direction the
+//  user wants to try without losing this one) the user can restore.
+//
+//  Three outcomes from the user's perspective:
+//   1. Save Backup            → runs the existing backupSession() flow
+//   2. Not now (unchecked)    → in-memory dismissal, re-nudges next
+//                                session if user comes back to this
+//                                project before backing up
+//   3. Don't ask again        → per-project localStorage flag, no
+//                                further nudges for this project
+//
+//  IMPORTANT semantic difference from the v3.62.2 informational-confirm
+//  pattern: here the checkbox ALWAYS persists when checked, regardless
+//  of whether the user clicked Save or Not now. The v3.62.2 pattern
+//  treats cancel-with-suppress as "I want to see it next time"; this
+//  nudge treats the checkbox as a feature opt-out, decoupled from the
+//  immediate action. Documented in the user manual.
+// ============================================================
+
+// Per-project suppress key. Slugifies project name + version into a
+// stable, ASCII-safe localStorage key. Renaming the project effectively
+// resets the suppression (treated as a feature: "fresh project, fresh
+// nudge"). Two projects with identical name + version will share
+// suppression — minor edge case, acceptable.
+function getProjectCheckpointSuppressKey() {
+  const name    = document.getElementById('projectName')?.value.trim()    || '';
+  const version = document.getElementById('projectVersion')?.value.trim() || '';
+  if (!name) return null;  // no project name → no suppression possible
+  const slug = (name + '__' + version)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 80);
+  return `waxframe_suppress_checkpoint_nudge__${slug}`;
+}
+
+async function maybeShowCheckpointBackupNudge() {
+  // Session-only "Not now" dismissal — re-nudge next session.
+  if (window._checkpointNudgeDismissedThisSession) return;
+  // Per-project permanent dismissal.
+  const suppressKey = getProjectCheckpointSuppressKey();
+  if (suppressKey) {
+    try {
+      if (localStorage.getItem(suppressKey) === 'true') return;
+    } catch (e) { /* fall through and nudge */ }
+  }
+  const res = await wfConfirm(
+    '💾 Save a checkpoint backup?',
+    "Your project is set up and ready to run. Before you burn any tokens, save a checkpoint backup so you can restore this exact starting state if something goes sideways later — a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one.\n\nIt's free, takes a second, and the backup includes your hive setup, project goal, reference material, and starting document.",
+    {
+      okText: '💾 Save Backup',
+      cancelText: 'Not now',
+      checkbox: { label: "Don't ask again for this project", checked: false }
+    }
+  );
+  // wfConfirm with opts.checkbox returns { ok, checked } instead of a
+  // bare boolean. Persist the "don't ask again" preference whenever the
+  // checkbox is checked, regardless of which button was clicked.
+  if (res.checked && suppressKey) {
+    try { localStorage.setItem(suppressKey, 'true'); } catch (e) {}
+    if (typeof consoleLog === 'function') {
+      consoleLog('💾 Checkpoint Backup Nudge dismissed permanently for this project.', 'info');
+    }
+  } else if (!res.checked && !res.ok) {
+    // Not-now without persist → session-only dismissal, re-nudge next
+    // time the user launches into this project.
+    window._checkpointNudgeDismissedThisSession = true;
+  }
+  if (res.ok) {
+    // Route through the existing backupSession() flow. That flow has
+    // its own "Sensitive backup" confirm (also dismiss-permanently from
+    // v3.62.2) — if the user has already dismissed it, the backup runs
+    // immediately without a second modal.
+    if (typeof backupSession === 'function') backupSession();
   }
 }
 
@@ -3065,6 +3149,7 @@ async function clearProject() {
   window._lastAppliedChanges     = null;
   window._lastValidationFailures = null;
   window._slowAlertsSilenced     = false; // v3.56.14 — clear the per-session "don't alert me" opt-out on a new project
+  window._checkpointNudgeDismissedThisSession = false; // v3.63.0 — clear the per-session "Not now" so a brand new project still gets the nudge
   localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
   localStorage.removeItem('waxframe_v2_source_type');
@@ -10198,6 +10283,14 @@ function initWorkScreen(isNewSession = false) {
     window._lineNumObserver.observe(docTa);
   }
   updateLineNumbers();
+
+  // v3.63.0 — Checkpoint Backup Nudge. Fires only on the post-setup
+  // launch path (isNewSession=true); never on session restore. The
+  // setTimeout(0) lets the work screen paint behind the modal so the
+  // user sees the project context they're being asked to back up.
+  if (isNewSession && typeof maybeShowCheckpointBackupNudge === 'function') {
+    setTimeout(() => maybeShowCheckpointBackupNudge(), 0);
+  }
 }
 
 function truncateGoalForRefine(goal) {
