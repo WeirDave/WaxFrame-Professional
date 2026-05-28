@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.13
+**Build:** `20260528-008` · **Released:** May 28, 2026
+
+### Model badge on AI cards + diagnosticSession() removal
+
+Two small surgical changes — one UX add, one dead-code strip.
+
+- **Model name on the AI provider card header.** Once you've picked a model
+  for a provider, the collapsed card now shows it inline next to the name —
+  `ChatGPT — gpt-5.5`, `Claude — claude-opus-4-5-20251101`, etc. Quick visual
+  reference so you don't have to expand each card to see what's set,
+  especially useful with 9-AI hives. Mono font + `--text-dim` makes the badge
+  visually subordinate to the provider name; long model IDs
+  (`Qwen/Qwen3-235B-A22B-Instruct-2507-tput`) truncate gracefully with
+  ellipsis. The badge updates the instant you pick a new model from the
+  dropdown — `saveModelForAI()` now re-renders the row.
+- **`diagnosticSession()` removed from `storage.js`.** v3.63.12 removed the
+  Diagnostic Bundle menu button when the Support page took over the
+  bundle-export flow. The underlying function was orphaned (zero callers).
+  Removed in this release — ~95 lines of dead code gone. The redaction
+  helpers it shared with the Support page (`_redactHiveKeys`,
+  `_redactSessionContent`, `_redactSecretsDeep`) STAY — they're the single
+  source of truth for redaction across the Support-page bundle generator.
+  The subsystem header comment in `storage.js` updated to reflect the new
+  ownership.
+
+#### Files Changed
+
+- `js/app.js` — `buildAISetupRowHTML()` injects `<span class="ai-setup-model">` after the provider name when `cfg?.model` is set; `saveModelForAI()` now calls `renderAIRow(aiId)` so the badge updates on model change.
+- `js/storage.js` — `diagnosticSession()` function deleted (~95 lines); subsystem header comment refreshed to document the v3.63.13 ownership change.
+- `style.css` — `.ai-setup-model` rule added (mono, text-dim, ellipsis truncation, max-width 320px).
+- `js/version.js` — `APP_VERSION` → `v3.63.13 Pro`.
+- Standard build-stamp + cache-bust sweep across 9 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.12
 **Build:** `20260528-007` · **Released:** May 28, 2026
 
