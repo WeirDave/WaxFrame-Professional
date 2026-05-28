@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-009';         // build stamp — update each session
+const BUILD       = '20260527-010';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -8035,14 +8035,17 @@ function openVerifyModalForImport(opts) {
   if (explainerEl) {
     if (_verifyImportCtx.sourceType === 'pdf-vision') {
       explainerEl.textContent =
-        "We used AI vision to read this — the file wasn't plain-text readable, so we OCR'd it. " +
-        "Check the extracted text on the right and fix anything wrong. Back up the clean text " +
-        "if you want a copy. Click Proceed when you're satisfied.";
+        "Please check the extracted text on the right and adjust anything that doesn't match. " +
+        "If there are too many things to fix, try the Re-scan button to get another AI to look " +
+        "at it. If it looks good, we recommend making a backup copy by using the Back up button. " +
+        "Otherwise, click Proceed when you're satisfied.";
     } else {
+      // Non-OCR fallback (e.g. DOCX skipped elements). Drop the Re-scan reference
+      // since that button is hidden when there are no PDF page images to re-OCR.
       explainerEl.textContent =
-        "Some parts of this file couldn't be parsed cleanly. Compare against the original on the " +
-        "left and fix anything wrong in the extracted text on the right. Back up the clean text " +
-        "if you want a copy. Click Proceed when you're satisfied.";
+        "Please check the extracted text on the right and adjust anything that doesn't match " +
+        "the original on the left. If it looks good, we recommend making a backup copy by using " +
+        "the Back up button. Otherwise, click Proceed when you're satisfied.";
     }
   }
 
