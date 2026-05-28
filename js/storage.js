@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260528-007
+//  Build: 20260528-008
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -999,30 +999,29 @@ async function backupSession() {
 
 
 /* =============================================================
-   v3.54.0 — DIAGNOSTIC BUNDLE (export-only, support-safe)
+   DIAGNOSTIC REDACTION HELPERS (support-safe)
    ─────────────────────────────────────────────────────────────
-   A SECOND export mode alongside backupSession(), with a
-   different purpose:
+   Pure helpers that strip credentials and (optionally) document
+   content from the live storage blobs so a session snapshot is
+   safe to share in a public bug report.
 
-     • backupSession  → for the USER. Full-fidelity pause/resume
-                        snapshot including API keys. Importable.
-     • diagnosticSession → for SUPPORT (the developer). The user
-                        hits a bug, exports this, and sends it in.
-                        Export-only — it has no reason to round-
-                        trip. API keys / license / bearer tokens
-                        are ALWAYS stripped so a user never emails
-                        their credentials. Document text and AI
-                        responses are kept by default (support
-                        needs them to debug) but a per-export
-                        checkbox lets a privacy-conscious user
-                        redact them too.
+   History:
+     • v3.54.0 — Introduced as the back-end for an in-app
+       diagnosticSession() export function on the Advanced menu.
+     • v3.63.13 — In-app function removed. The Support page
+       (waxframe_techsupport.html) now owns the bundle-export
+       flow end-to-end and reuses these helpers as the single
+       source of truth for redaction — so a public bug report
+       from the Support page and one filed via the diagnostic
+       path can never disagree on what counts as a secret.
+
+   Bundles produced this way carry `_waxframe_diagnostic: true`
+   and deliberately do NOT carry `_waxframe_backup: true`, so
+   importSession() rejects them with a friendly "this is a
+   diagnostic bundle, not a backup" message rather than loading
+   a keyless half-state.
 
    Clears Codex security audit (2026-05-17) finding 6.1.C.
-
-   The file carries `_waxframe_diagnostic: true` and deliberately
-   does NOT carry `_waxframe_backup: true`, so importSession()
-   rejects it with a friendly "this is a diagnostic bundle, not
-   a backup" message rather than loading a keyless half-state.
    ============================================================= */
 
 // Always-on redaction: strip every credential from the LS_HIVE blob.
@@ -1136,103 +1135,6 @@ function _redactSessionContent(session) {
     s.consoleHTML = `[REDACTED — ${s.consoleHTML.length.toLocaleString()} chars]`;
   }
   return s;
-}
-
-async function diagnosticSession() {
-  // Modal carries a checkbox: "Also redact document text and AI
-  // responses". DEFAULT UNCHECKED — support needs the content to debug,
-  // and the user is intentionally sending the file in for that purpose.
-  // wfConfirm with opts.checkbox returns { ok, checked } instead of a
-  // bare boolean (backward-compatible — only the object shape when a
-  // checkbox is requested).
-  const res = await wfConfirm(
-    'Diagnostic bundle',
-    "This creates a support-safe file you can send when something goes wrong. Your API keys, license key, and any saved credentials are ALWAYS removed. Document text and AI responses are included by default so support can reproduce the issue — tick the box below to strip those too if your content is sensitive.\n\nThis file is for sharing with support. It cannot be imported to restore a session — use Backup Session for that.",
-    { okText: 'Download diagnostic', checkbox: { label: 'Also redact document text and AI responses', checked: false } }
-  );
-  if (!res || !res.ok) { closeNavMenu(); return; }
-  const redactContent = !!res.checked;
-
-  try { await saveSession({ force: true }); } catch(e) { console.warn('[diagnostic] saveSession flush failed, proceeding with whatever is in IDB:', e); }
-
-  const hiveRaw    = localStorage.getItem(LS_HIVE)    || null;
-  const project    = localStorage.getItem(LS_PROJECT) || null;
-  let sessionIDB = null;
-  try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
-
-  if (!hiveRaw && !project && !sessionIDB) {
-    toast('⚠️ Nothing to export'); return;
-  }
-
-  // Always strip credentials from the hive. Never include LS_SESSION
-  // (legacy) or LS_LICENSE in a diagnostic bundle at all.
-  const hiveRedacted = _redactHiveKeys(hiveRaw);
-  let sessionOut = sessionIDB;
-  if (redactContent && sessionIDB) sessionOut = _redactSessionContent(sessionIDB);
-
-  // v3.63.7 — LS_PROJECT carries pastedDocument + referenceDocs (the user's
-  // document and reference text), so it must honor the redact-content checkbox
-  // too. It previously shipped raw with a "no secrets" comment that overlooked
-  // document content. Setup fields (goal, length, tabs) stay so support keeps
-  // workflow context; only the document/reference text is masked.
-  let projectOut = project;
-  if (redactContent && project) {
-    try {
-      const p = JSON.parse(project);
-      const mark = (str) => typeof str === 'string'
-        ? `[REDACTED — ${str.length.toLocaleString()} chars]`
-        : str;
-      if (typeof p.pastedDocument === 'string') p.pastedDocument = mark(p.pastedDocument);
-      if (Array.isArray(p.referenceDocs)) {
-        p.referenceDocs = p.referenceDocs.map(d => ({
-          ...d,
-          text:    typeof d.text === 'string' ? mark(d.text) : d.text,
-          content: typeof d.content === 'string' ? mark(d.content) : d.content,
-        }));
-      }
-      projectOut = JSON.stringify(p);
-    } catch (e) {
-      // If LS_PROJECT won't parse, redact the whole blob rather than risk
-      // leaking unparsed content.
-      projectOut = '[REDACTED — project blob unparseable]';
-    }
-  }
-
-  const bundle = {
-    _waxframe_diagnostic:      true,    // NOT _waxframe_backup — import rejects this
-    _waxframe_diagnostic_version: 1,
-    _waxframe_app_version:     typeof APP_VERSION === 'string' ? APP_VERSION : '',
-    _waxframe_build:           (typeof BUILD === 'string' ? BUILD : ''),
-    _waxframe_diagnostic_ts:   Date.now(),
-    _waxframe_content_redacted: redactContent,
-    LS_HIVE:    hiveRedacted,   // credentials stripped
-    LS_PROJECT: projectOut,     // project setup; document/reference text masked when redactContent
-    IDB_SESSION: sessionOut,    // session data (content kept or redacted per checkbox)
-  };
-
-  const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
-  const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9._-]/gi, '');
-  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
-  const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  // Filename pattern mirrors backup but with the -Diagnostic-Safe suffix
-  // so the two are never confused in a Downloads folder.
-  const filename = `${baseName}-r${totalRoundsForName}-${stamp}-Diagnostic-Safe`;
-
-  const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `${filename}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
-  closeNavMenu();
-  toast(`🩹 Diagnostic bundle exported — keys removed${redactContent ? ', content redacted' : ''}`);
 }
 
 async function importSession() {

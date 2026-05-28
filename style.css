@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-007
+   Build: 20260528-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -782,6 +782,25 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-mono);
+}
+/* v3.63.13 — Model badge appended to the AI card header so the chosen
+   model is visible at a glance without expanding the card. Mono font +
+   text-dim + smaller fs makes it visually subordinate to the provider
+   name. flex: 0 1 auto with overflow:hidden + ellipsis truncates long
+   model ids (Qwen/Qwen3-235B-A22B-Instruct-2507-tput) gracefully. The
+   provider name keeps flex:1 so it gets priority on narrow widths. */
+.ai-setup-model {
+  flex: 0 1 auto;
+  min-width: 0;
+  max-width: 320px;
+  font-family: var(--font-mono);
+  font-size: var(--fs-12);
+  font-weight: 400;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: var(--space-6);
 }
 /* v3.40.0 — deprecation flag marker on AI cards when the saved model is
    no longer in the provider's live /v1/models list. Sits right after the
