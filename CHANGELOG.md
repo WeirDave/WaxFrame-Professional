@@ -2,6 +2,61 @@
 
 ---
 
+## v3.63.2
+**Build:** `20260527-019` · **Released:** May 27, 2026
+
+### Settings docs truth-up — in-app copy vs. actual code behavior
+
+An audit of the in-app Settings panel copy and the user manual against
+the actual `AUTO_SETTINGS` code surfaced four places where docs
+overstated behavior or were stale. No code logic changed — this is a
+documentation-accuracy release.
+
+#### What was wrong
+
+- **Backup Builder** said it "promotes when the Builder errors out or
+  goes slow." Code only offers backup promotion after a Builder
+  **failure-streak limit** is hit, and it asks first via the autoHalt
+  modal — never silently promotes, never triggered by "slow."
+
+- **Slow-responder threshold** said slow reviewers are
+  "auto-disabled during Auto so the run keeps moving." Code flags
+  slow responders, logs every slow round to the Live Console, and
+  surfaces a troubleshooting card once per AI per session — there is
+  no automatic disable path. Disabling a slow AI is the user's call.
+
+- **Slow alerts pill** (manual footer) still cited "~2× the hive's
+  average" as the threshold. Actual default is a configurable
+  **3× × 2 rounds** plus an **average + 15s** floor — both multiplier
+  and consecutive-round count live in Settings.
+
+- **Reset suppressed prompts** listed Length Guard, Sensitive Backup,
+  and Restore Backup as the affected confirms. The reset function is
+  a prefix sweep of `waxframe_suppress_*` and therefore also clears
+  the per-project **Checkpoint Backup Nudge** dismissals — that
+  inclusion was undocumented.
+
+#### What changed
+
+- `index.html` Settings panel — three help-text strings rewritten:
+  Backup Builder, Slow-responder threshold, Reset suppressed prompts.
+- `index.html` — stale "Checkpoint Backup lands in v3.63.0" foot-note
+  removed (feature shipped in v3.63.0).
+- `waxframe-user-manual.html` — three matching docs corrected: Slow
+  alerts pill description, Backup Builder block, Slow-responder
+  threshold block.
+
+#### Files changed
+
+- `index.html` (4 copy edits, build stamp, cache-bust)
+- `waxframe-user-manual.html` (3 copy edits, build stamp, cache-bust)
+- `js/version.js` — `APP_VERSION` → `v3.63.2 Pro`
+- `js/app.js` — `BUILD` constant → `20260527-019`
+- Cache-bust + build-stamp sweep across the remaining 4 helper pages,
+  10 JS files, and `style.css` to keep the build matrix uniform.
+
+---
+
 ## v3.63.1
 **Build:** `20260527-017` · **Released:** May 27, 2026
 
