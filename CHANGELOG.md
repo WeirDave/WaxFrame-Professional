@@ -2,6 +2,79 @@
 
 ---
 
+## v3.63.16
+**Build:** `20260528-013` · **Released:** May 28, 2026
+
+### Security — pdf.js upgraded from 3.11.174 to 4.10.38 (closes CVE-2024-4367)
+
+The pdf.js library that handles PDF text extraction (Setup 4 Reference Material
+and Setup 5 Starting Document) was on version 3.11.174, which is vulnerable to
+**CVE-2024-4367** (arbitrary JavaScript execution via a crafted font FontMatrix
+in a malicious PDF). The runtime workaround `isEvalSupported: false`
+mitigated the issue at the WaxFrame layer (shipped in v3.63.6); this release
+fixes it at the library level by upgrading to pdf.js 4.10.38, the latest
+stable 4.x release. The `isEvalSupported: false` option stays on as
+defense-in-depth — WaxFrame only ever extracts text from PDFs, never renders
+them interactively, so it has zero functional cost.
+
+### Loading mechanism — ESM instead of UMD
+
+pdf.js 4.x ships **ES modules only** — there is no more UMD/global-script
+build. WaxFrame previously loaded it via `<script src="lib/pdf.min.js">`,
+which exposed a `window.pdfjsLib` global. The new pattern:
+
+```html
+<script type="module">
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.16';
+  window.pdfjsLib = pdfjsLib;
+</script>
+```
+
+The shim stashes the imported module onto `window` so every other consumer in
+`app.js` (the `window.pdfjsLib.getDocument(...)` and `GlobalWorkerOptions`
+calls) keeps working unchanged. This is still 100% vanilla browser — no
+bundler, no framework, no build step. `<script type="module">` is a native
+browser feature supported by every WaxFrame target browser.
+
+The worker file moved from `lib/pdf.worker.min.js` → `lib/pdf.worker.min.mjs`.
+pdf.js constructs the worker with `type: 'module'` internally when the URL
+ends in `.mjs`, so the only code change needed was updating the
+`GlobalWorkerOptions.workerSrc` string.
+
+### Verification needed
+
+PDF.js 4.x is a major version upgrade. The text-extraction API surface
+(`getDocument`, `getPage`, `getTextContent`, `getOutline`) is unchanged from
+3.x to 4.x, so the call sites in `app.js` did not need rewrites. But the
+internal parser changed in places, and any production deployment should
+**smoke-test PDF extraction with representative real-world files**:
+
+- A multi-page text-heavy PDF (something like a downloaded RFP or report)
+- A scanned PDF (image-only, no embedded text — should yield empty text and
+  surface the existing "no extractable text" message gracefully)
+- A PDF with embedded tables
+- A PDF with an outline / table of contents
+
+If extraction works on the candidate cases, this can be tagged as the
+official release. If anything fails, rolling back is a `git checkout
+v3.63.15 -- lib/ index.html js/app.js` away.
+
+#### Files Changed
+
+- `lib/pdf.min.js` → `lib/pdf.min.mjs` (replaced; pdf.js 4.10.38 ESM bundle).
+- `lib/pdf.worker.min.js` → `lib/pdf.worker.min.mjs` (replaced; pdf.js 4.10.38 ESM worker).
+- `index.html` — UMD `<script src="lib/pdf.min.js">` replaced with `<script type="module">` importing the ESM bundle and stashing `pdfjsLib` onto `window`. Other vendor libs (mammoth, jszip, xlsx) unchanged.
+- `js/app.js` — `GlobalWorkerOptions.workerSrc` updated to `lib/pdf.worker.min.mjs`; comment block refreshed to reflect that the CVE is now fixed at library level rather than just mitigated at runtime.
+- `js/version.js` — `APP_VERSION` → `v3.63.16 Pro`.
+- Standard build-stamp + cache-bust sweep across 9 HTML, 10 JS, and `style.css`.
+
+### After deploy
+
+- **Delete `lib/pdf.min.js` and `lib/pdf.worker.min.js` from your local deployment directory** before committing — they're replaced, not coexisting. GitHub Desktop will catch the deletion in the diff.
+- The Dependabot CVE-2024-4367 alert will auto-close on the next dependency scan once `package.json` reflects the new version. (Bump `pdfjs-dist` in `package.json` to `^4.10.38` if you haven't already — it's the only file Dependabot looks at for the alert state.)
+
+---
+
 ## v3.63.15
 **Build:** `20260528-012` · **Released:** May 28, 2026
 
