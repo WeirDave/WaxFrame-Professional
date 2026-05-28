@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.8
+**Build:** `20260528-002` · **Released:** May 28, 2026
+
+### Fix — OCR seconds-counter now shows on every OCR path
+
+The "reading… Ns…" heartbeat (the climbing seconds counter shown during a
+slow vision/OCR call) was only wired into one of the four OCR entry points.
+The other three fired the same minute-plus vision call behind a static
+message, so OCR looked hung. All four now tick the counter:
+
+- **Auto full-page vision** (initial upload, scanned/garbled PDF) — already had it.
+- **Auto sparse-page OCR** (initial upload, clean text + low-density page like an image-only or non-Latin page) — was static; now ticks.
+- **Verify modal → "re-read with another AI"** — was static "Sending the page images…"; now ticks.
+- **"Re-extract with AI Vision" button** — was a static (and inaccurate) "15–30 seconds…"; now ticks with an accurate "can take a minute+" framing.
+
+Each fix wraps the vision call in the shared `_startStatusHeartbeat` helper
+with a `try/finally` so the ticker always stops cleanly, and passes `null`
+as the status element where applicable so the heartbeat owns the status line.
+
+Cosmetic only — OCR ran and captured text correctly on all paths before;
+this just adds the missing progress feedback. Surfaced during v3.63.7
+smoke-testing; unrelated to that release's security changes.
+
+#### Files Changed
+
+- `js/app.js` — sparse-page OCR, Verify re-read, and Re-extract calls each wrapped with `_startStatusHeartbeat`; `BUILD` → `20260528-002`.
+- `js/version.js` — `APP_VERSION` → `v3.63.8 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and `style.css` — uniform `20260528-002`.
+
+---
+
 ## v3.63.7
 **Build:** `20260528-001` · **Released:** May 28, 2026
 
