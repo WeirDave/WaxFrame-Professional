@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260527-014
+     Build: 20260527-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-014">
+  <meta name="waxframe-build" content="20260527-015">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.62.2">
+  <link rel="stylesheet" href="style.css?v=3.62.3">
 </head>
 <body class="helper-body">
 
@@ -142,6 +142,9 @@
         <a href="#step9"  class="doc-sidebar-link">⑨ Step 9 — Review &amp; Resolve</a>
         <a href="#step10" class="doc-sidebar-link">⑩ Step 10 — Run More Rounds</a>
         <a href="#step11" class="doc-sidebar-link">⑪ Step 11 — Export &amp; Finish</a>
+
+        <div class="doc-sidebar-category">Configuration</div>
+        <a href="#settings" class="doc-sidebar-link">⚙ Settings</a>
 
         <div class="doc-sidebar-category">Appendices</div>
         <a href="#appendix-a" class="doc-sidebar-link">A — Adding a Custom AI</a>
@@ -1049,11 +1052,11 @@
       <p><strong>Footer — right zone (indicators and info, left to right)</strong></p>
       <div class="goal-info-row">
         <span class="info-label">📏 Length Guard pill</span>
-        <span class="goal-info-desc">Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 3). Reads <em>Length guard: armed</em> while watching the document, and switches to amber <em>Length guard: off</em> if you've disabled it for the session via the round-end gate's <strong>Continue anyway</strong> option. Click the pill to toggle (with a confirmation prompt).</span>
+        <span class="goal-info-desc">Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 3). Reads <em>Length guard: armed</em> while watching the document, and switches to amber <em>Length guard: off</em> if you've disabled it for the session via the round-end gate's <strong>Continue anyway</strong> option. Click the pill to toggle (with a confirmation prompt that carries a <em>Don't show this again</em> option). Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🐢 Slow alerts pill</span>
-        <span class="goal-info-desc">A user-level preference for whether to surface the troubleshooting card when an AI takes more than ~2× the hive's average response time. Default is <em>Slow alerts: on</em>; click to switch to <em>Slow alerts: off</em>, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way.</span>
+        <span class="goal-info-desc">A user-level preference for whether to surface the troubleshooting card when an AI takes more than ~2× the hive's average response time. Default is <em>Slow alerts: on</em>; click to switch to <em>Slow alerts: off</em>, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way. Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">License badge</span>
@@ -1393,6 +1396,106 @@
 
         </div><!-- /hp-section-body Getting Good Results -->
       </div><!-- /hp-section Getting Good Results -->
+
+      <div class="hp-section" id="settings">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title">Settings</h2>
+            <p class="hp-section-sub">Per-machine preferences for Auto Mode behavior, OCR provider, workflow toggles, background model-list refresh, and dismissed confirmation prompts. Open from <strong>Menu → ⚙ Settings</strong>. Changes save automatically and apply to every project on this browser.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+
+    <div class="wh-block">
+      <div class="wh-block-title">Where preferences live</div>
+      <p>Everything on the Settings screen is a <strong>per-machine</strong> preference saved in your browser's localStorage. They are global across projects — they are not part of a project backup file, and they do not transfer when you import a backup on a different machine. The only exception is the Length Guard toggle, which mirrors the work-screen footer pill and is therefore project-scoped (it resets when you start a new project).</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Auto Mode section</div>
+      <p>How the hive behaves during hands-off Auto runs. These only take effect while Auto is on; they have no effect when running in Manual mode.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Backup Builder</span>
+        <span class="goal-info-desc">If your Builder errors out or goes slow during an Auto run, WaxFrame promotes this AI to Builder so the run continues instead of stopping. Choose <em>None</em> to have Auto pause and ask you instead.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Never disable the Builder</span>
+        <span class="goal-info-desc">Keep the Builder in the run even if it is slow or throwing errors. Waiting on the Builder is usually better than losing it mid-run — turn this on if your Builder is reliable but occasionally slow.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Failure-streak limit</span>
+        <span class="goal-info-desc">How many rounds in a row can fail before Auto pauses and asks you what to do. A single clean round resets the count, so an early blip will not halt a healthy run later. Default is 2.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Slow-responder threshold</span>
+        <span class="goal-info-desc">A reviewer is flagged "slow" when it takes longer than this multiple of the round average, for this many rounds in a row. During Auto, slow reviewers are auto-disabled so the run keeps moving (you are notified by a toast). Default is 3× / 2 rounds.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Length-guard reround attempts</span>
+        <span class="goal-info-desc">When the hive converges but the result is over or under your length limit, Auto sends the document back to the Builder to trim or expand, then runs another round. This is how many times it will try before giving up and asking you. A clean in-range result stops the loop early. Default is 2.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">↺ Reset to defaults</span>
+        <span class="goal-info-desc">Restore every Auto Mode option above to its built-in default. Useful when an experiment has drifted your settings somewhere you do not remember.</span>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Vision / OCR section</div>
+      <p>Which AI reads text out of scanned or garbled PDFs — used by the "Re-extract with AI Vision" button on the work screen and the automatic vision pass on image-only pages.</p>
+      <div class="goal-info-row">
+        <span class="info-label">OCR provider</span>
+        <span class="goal-info-desc"><em>Automatic</em> uses the first vision-capable AI you have a key for (ChatGPT, Claude, Gemini, or Grok, in that order). Pick a specific one to always use it for OCR. If your pick is not keyed, WaxFrame falls back to Automatic so extraction never silently fails. The provider uses its own currently-configured model.</span>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Workflow &amp; Updates section</div>
+      <p>Mirror toggles for the work-screen footer pills, plus background model-list refresh and a reset path for dismissed informational confirmations.</p>
+      <div class="goal-info-row">
+        <span class="info-label">Length guard</span>
+        <span class="goal-info-desc">Live mirror of the work-screen 📏 Length Guard pill. When armed, rounds and convergence events that exceed your length target are blocked so you can decide whether to trim, expand, or proceed. Flipping the toggle here goes through the same confirm step the pill does — so you can disable / re-arm from either surface. Per-project state; resets when you start a new project.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Slow-AI alerts</span>
+        <span class="goal-info-desc">Live mirror of the work-screen 🐢 Slow alerts pill. When on, a Troubleshooting Card surfaces when a reviewer is taking much longer than its peers and your average round time. Turn off for hands-off Auto runs where the chain should not stop just because one AI is slow. Detection still runs and logs to the Live Console either way.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Auto-update model lists</span>
+        <span class="goal-info-desc">When on, WaxFrame periodically re-fetches the model list from every configured provider so retired or renamed models do not haunt your dropdowns. Refreshes happen in the background — no interruption. If your currently-selected model disappears from a provider's list, you get a toast naming which AI to recheck. When off, model lists persist until you click <strong>↻ Recheck</strong> on an AI row. Default is on.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">Refresh interval</span>
+        <span class="goal-info-desc">How often the background refresh runs: <em>24h</em>, <em>1 week</em>, or <em>30 days</em>. 1 week is a good default — model lists do not change daily, but 30 days lets retirements linger. 24h is for power users following frontier rollouts closely. The interval only matters while Auto-Update is on.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="info-label">↺ Reset suppressed prompts</span>
+        <span class="goal-info-desc">Restores every confirmation modal you have previously dismissed with the <em>Don't show this again</em> checkbox. See the next block for what counts as a dismissible confirm.</span>
+      </div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">"Don't show this again" — dismiss-permanently for informational confirms</div>
+      <p>Some confirmation modals in WaxFrame are <strong>informational</strong> — they explain a consequence rather than gating a destructive action. After you have seen the explanation a few times, the modal is just nag. Those modals carry a <strong>Don't show this again</strong> checkbox; tick it and confirm the action, and that modal will never appear again on this browser.</p>
+      <p><strong>Modals that carry the checkbox:</strong></p>
+      <ul>
+        <li><strong>📏 Disable length guard?</strong> — fires when you flip the Length Guard from armed to off via the footer pill or the Settings toggle. Explains that rounds and convergence events will no longer be blocked when the document is out of length range.</li>
+        <li><strong>📏 Re-arm length guard?</strong> — fires when you flip the Length Guard from off back to armed. Explains that blocking will resume.</li>
+        <li><strong>Sensitive backup</strong> — fires before you download a full Backup Session. Warns that the backup may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.</li>
+        <li><strong>Restore from backup</strong> — fires before you open the file picker for Restore Session. Warns that restoring a backup can replace your local project, AI setup, API keys, and session state, and to only restore backups you created or trust.</li>
+      </ul>
+      <p><strong>How dismissal persists:</strong></p>
+      <ul>
+        <li>Tick the checkbox, then click the confirm button → the suppression is saved and that modal will not appear again.</li>
+        <li>Tick the checkbox, then click Cancel → the suppression is <em>not</em> saved. Cancel means "I want to see this next time" — backing out of an informational confirm should not also silence it.</li>
+        <li>To bring all dismissed prompts back, click <strong>↺ Reset suppressed prompts</strong> at the bottom of the Workflow &amp; Updates Settings section. Every dismissed confirm will reappear next time you trigger its action.</li>
+      </ul>
+      <p><strong>Modals that do NOT carry the checkbox (by design):</strong> <em>destructive</em> confirms — Remove API Key, Clear Project, Clear All Reference Material, Remove N Custom AIs, Clear Working Document, and similar. These exist as a safety brake on an irreversible action; silencing them would be a footgun. If you find yourself wishing one of these were silenceable, the answer is almost always "you do not actually want to silence it."</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div><!-- /hp-section Settings -->
 
       <div class="hp-section">
         <div class="hp-section-header is-bare">
@@ -1878,11 +1981,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.62.2"></script>
-<script src="js/nav-helper.js?v=3.62.2"></script>
-<script src="js/license-helper.js?v=3.62.2"></script>
-<script src="js/version.js?v=3.62.2"></script>
-<script src="js/docs-scrollspy.js?v=3.62.2"></script>
+<script src="js/theme.js?v=3.62.3"></script>
+<script src="js/nav-helper.js?v=3.62.3"></script>
+<script src="js/license-helper.js?v=3.62.3"></script>
+<script src="js/version.js?v=3.62.3"></script>
+<script src="js/docs-scrollspy.js?v=3.62.3"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
