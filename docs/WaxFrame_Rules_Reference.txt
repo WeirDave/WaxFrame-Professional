@@ -77,7 +77,7 @@ RELEASE CEREMONY (every release)
    - app.js?v= cache-bust query string in index.html
 
 2. Full cache-bust + build-stamp sweep:
-   - 9 HTML (index + 5 helpers + privacy + terms + waxframe_techsupport)
+   - 9 HTML (index + 5 helpers + privacy + terms + help)
    - 10 JS-with-headers (NOT templates.js — it has no header)
    - style.css
    These drift silently, so the sweep runs every release even on unchanged

@@ -2,7 +2,7 @@ blank_issues_enabled: false
 
 contact_links:
   - name: 🛠️ Support
-    url: https://waxframe.com/waxframe_techsupport.html
+    url: https://waxframe.com/help.html
     about: Try the support page first — common fixes, environment capture, and a one-click diagnostic bundle. Most things land here, not in an issue.
 
   - name: 🔒 Report a security vulnerability

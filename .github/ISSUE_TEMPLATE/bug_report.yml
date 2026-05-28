@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for reporting! If you came here from the **[Support page](https://waxframe.com/waxframe_techsupport.html)**, your environment is already filled in below. Please add what happened and how to reproduce it, and (if you grabbed one) drag the diagnostic bundle into the issue before posting.
+        Thanks for reporting! If you came here from the **[Help page](https://waxframe.com/help.html)**, your environment is already filled in below. Please add what happened and how to reproduce it, and (if you grabbed one) drag the diagnostic bundle into the issue before posting.
 
         > Found a **security** problem? Don't open a public issue — use [private vulnerability reporting](https://github.com/WeirDave/WaxFrame-Professional/security/advisories/new) instead.
 

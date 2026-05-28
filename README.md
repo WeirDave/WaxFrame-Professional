@@ -35,6 +35,7 @@ Multi-AI document refinement in your browser. No server, no account, no install.
 - [Supported AI Providers](#supported-ai-providers)
 - [Privacy & Local-First Design](#privacy--local-first-design)
 - [Run Locally](#run-locally)
+- [Help & Support](#help--support)
 - [License](#license)
 
 ---
@@ -266,6 +267,24 @@ For the absolute latest dev work between tagged releases — accept that `main` 
 2. Extract and open `index.html`
 
 No build step regardless of which path you pick. Vanilla HTML, CSS, and JavaScript.
+
+---
+
+## Help & Support
+
+If you get stuck, hit a bug, or want to report unexpected behavior, head to the Help page:
+
+### **[→ waxframe.com/help.html](https://waxframe.com/help.html)**
+
+You can also reach it from inside the app — click the **☰** menu in the top-left and pick **🛟 Help** from the **Help & Support** section. Same destination either way.
+
+What's on the Help page:
+
+- **One-click diagnostic bundle export.** Generates a redacted JSON snapshot of your session (API keys, license keys, and document text are stripped — see [`storage.js`](js/storage.js) for the redaction helpers) that you can attach to a bug report so I can reproduce what you saw.
+- **Pre-filled GitHub issue link.** Your WaxFrame version, build, and browser environment auto-populate the issue body so you don't have to type them.
+- **Direct link to file a bug** at [github.com/WeirDave/WaxFrame-Professional/issues/new](https://github.com/WeirDave/WaxFrame-Professional/issues/new?template=bug_report.yml). Issues filed through the in-app flow get auto-labeled `auto-reported` so they're easy to find.
+
+If you're filing an issue, grabbing the diagnostic bundle from the Help page and dragging it into the issue is the fastest way to get a useful answer — it tells me which AIs you had set up, what platform/browser you're on, and what round you were on when things went sideways.
 
 ---
 

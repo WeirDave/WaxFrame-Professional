@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260528-009
+//  Build: 20260528-012
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1009,7 +1009,7 @@ async function backupSession() {
      • v3.54.0 — Introduced as the back-end for an in-app
        diagnosticSession() export function on the Advanced menu.
      • v3.63.13 — In-app function removed. The Support page
-       (waxframe_techsupport.html) now owns the bundle-export
+       (help.html) now owns the bundle-export
        flow end-to-end and reuses these helpers as the single
        source of truth for redaction — so a public bug report
        from the Support page and one filed via the diagnostic
