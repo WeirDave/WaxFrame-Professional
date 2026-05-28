@@ -2,6 +2,68 @@
 
 ---
 
+## v3.62.3
+**Build:** `20260527-015` · **Released:** May 27, 2026
+
+### User manual — Settings section + dismiss-permanently pattern documented
+
+Docs catch-up release. Until this build, the user manual had no
+dedicated coverage of the Settings screen — Auto Mode, Vision /
+OCR, and the new Workflow & Updates section were only discoverable
+by opening the screen itself. As the Settings surface grew across
+v3.62.0 / v3.62.1 / v3.62.2 (and especially with the dismiss-
+permanently mechanism in v3.62.2), this gap got wider. v3.62.3
+closes it.
+
+#### New "Settings" section in `waxframe-user-manual.html`
+
+Top-level section between **Getting Good Results** and
+**Appendices**, anchored at `#settings`, linked from the sidebar
+TOC under a new **Configuration** category. Covers:
+
+- **Where preferences live** — per-machine localStorage, global
+  across projects, not in backup files, with the Length Guard
+  exception (project-scoped because it mirrors the project pill).
+- **Auto Mode section** — every Auto Mode setting documented
+  with the same brevity-and-specificity convention used elsewhere
+  in the manual (Backup Builder, Never disable the Builder,
+  Failure-streak limit, Slow-responder threshold, Length-guard
+  reround attempts, Reset to defaults).
+- **Vision / OCR section** — OCR provider picker, with the
+  Automatic-fallback semantics spelled out.
+- **Workflow & Updates section** — Length Guard mirror, Slow-AI
+  Alerts mirror, Auto-Update Model Lists toggle + Refresh interval
+  radio, Reset suppressed prompts.
+- **"Don't show this again" pattern** — explains which four
+  informational confirms carry the checkbox (Length Guard disable
+  / re-arm, Sensitive backup, Restore from backup), how dismissal
+  persists (confirm-with-checked saves, cancel-with-checked does
+  NOT save), how to bring all dismissed prompts back via Reset
+  suppressed prompts, and the rule for why destructive confirms do
+  not carry the checkbox.
+
+#### Cross-references added
+
+The pre-existing pill descriptions in the Work Screen section now
+cross-link to the new Settings section so a user looking at the
+work-screen footer finds the documentation either by drilling into
+the pill or by jumping to Settings:
+
+- **📏 Length Guard pill** — mention of the Don't-show-this-again
+  option in the confirmation prompt + a link to Settings.
+- **🐢 Slow alerts pill** — link to the Settings mirror.
+
+#### Files changed
+
+- `waxframe-user-manual.html` — new `#settings` section (~85 lines of GFM prose) between Getting Good Results and Appendices; sidebar TOC entry under new Configuration category; cross-references on the two pill descriptions.
+- `js/app.js` — runtime `BUILD` → `20260527-015`.
+- `js/version.js` — `APP_VERSION` → `v3.62.3`.
+- All 17 source-file `Build:` comment-headers synced to `20260527-015`.
+- HTML `meta name="waxframe-build"` content + `?v=3.62.3` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.62.2
 **Build:** `20260527-014` · **Released:** May 27, 2026
 
