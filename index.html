@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260527-012
+     Build: 20260527-013
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-012">
+  <meta name="waxframe-build" content="20260527-013">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.62.0">
+  <link rel="stylesheet" href="style.css?v=3.62.1">
 </head>
 <body>
 
@@ -889,14 +889,16 @@
             </div>
           </div>
 
-          <!-- v3.62.0 — Workflow Toggles section. The Length Guard +
-               Slow Alerts toggles here are live mirrors of the footer
+          <!-- v3.62.0 / v3.62.1 — Workflow & Updates section. The Length
+               Guard + Slow Alerts toggles are live mirrors of the footer
                pills (project-scoped for Length Guard, global for Slow
                Alerts); flipping either runs the same handler the pill
-               does. -->
+               does. Auto-Update Models (v3.62.1) is a global preference
+               with no pill — refresh happens in the background on work-
+               screen entry and at the selected interval thereafter. -->
           <div class="settings-section">
-            <h2 class="settings-section-title">🎛️ Workflow Toggles</h2>
-            <p class="settings-section-desc">Mirror toggles for the work-screen footer pills, so you can find them from one place when you're not on the work screen.</p>
+            <h2 class="settings-section-title">🎛️ Workflow &amp; Updates</h2>
+            <p class="settings-section-desc">Mirror toggles for the work-screen footer pills, plus background refresh of provider model lists.</p>
 
             <div class="settings-row">
               <div class="settings-row-label">
@@ -919,9 +921,32 @@
                 <span class="settings-toggle-slider"></span>
               </label>
             </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Auto-update model lists</span>
+                <span class="settings-row-help">When on, WaxFrame periodically re-fetches the model list from every configured provider so retired/renamed models don't haunt your dropdowns. Refreshes happen in the background — no interruption. If your currently-selected model disappears from a provider's list, you'll get a toast. Off = model lists persist until you click ↻ Recheck on an AI row.</span>
+              </div>
+              <label class="settings-toggle" title="Toggle">
+                <input type="checkbox" id="setAutoUpdateModels" onchange="settingsToggleAutoUpdateModels(this.checked)">
+                <span class="settings-toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-row" id="setAutoUpdateIntervalRow">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Refresh interval</span>
+                <span class="settings-row-help">How often the background refresh runs. 1 week is a good default — model lists don't change daily, but 30 days lets retirements linger. 24h is for power users following frontier rollouts closely.</span>
+              </div>
+              <div class="settings-inline-controls" role="radiogroup" aria-label="Auto-update interval">
+                <label class="settings-radio-pill"><input type="radio" name="setAutoUpdateInterval" value="24h" onchange="saveAutoUpdateInterval(this.value)"><span>24h</span></label>
+                <label class="settings-radio-pill"><input type="radio" name="setAutoUpdateInterval" value="1w" onchange="saveAutoUpdateInterval(this.value)"><span>1 week</span></label>
+                <label class="settings-radio-pill"><input type="radio" name="setAutoUpdateInterval" value="30d" onchange="saveAutoUpdateInterval(this.value)"><span>30 days</span></label>
+              </div>
+            </div>
           </div>
 
-          <p class="settings-foot-note">More sections are on the way — Auto-Update Model Lists and Checkpoint Backup land in v3.62.1 / v3.63.0.</p>
+          <p class="settings-foot-note">More sections are on the way — Checkpoint Backup lands in v3.63.0.</p>
 
         </div>
       </div>
@@ -2424,20 +2449,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.62.0"></script>
-<script src="lib/mammoth.browser.min.js?v=3.62.0"></script>
-<script src="lib/jszip.min.js?v=3.62.0"></script>
-<script src="lib/xlsx.full.min.js?v=3.62.0"></script>
-<script src="js/version.js?v=3.62.0"></script>
-<script src="js/storage.js?v=3.62.0"></script>
-<script src="js/theme.js?v=3.62.0"></script>
-<script src="js/audio.js?v=3.62.0"></script>
-<script src="js/scenes.js?v=3.62.0"></script>
-<script src="js/wf-debug.js?v=3.62.0"></script>
-<script src="js/api.js?v=3.62.0"></script>
-<script src="js/templates.js?v=3.62.0"></script>
-<script src="js/api-links.js?v=3.62.0"></script>
-<script src="js/app.js?v=3.62.0"></script>
+<script src="lib/pdf.min.js?v=3.62.1"></script>
+<script src="lib/mammoth.browser.min.js?v=3.62.1"></script>
+<script src="lib/jszip.min.js?v=3.62.1"></script>
+<script src="lib/xlsx.full.min.js?v=3.62.1"></script>
+<script src="js/version.js?v=3.62.1"></script>
+<script src="js/storage.js?v=3.62.1"></script>
+<script src="js/theme.js?v=3.62.1"></script>
+<script src="js/audio.js?v=3.62.1"></script>
+<script src="js/scenes.js?v=3.62.1"></script>
+<script src="js/wf-debug.js?v=3.62.1"></script>
+<script src="js/api.js?v=3.62.1"></script>
+<script src="js/templates.js?v=3.62.1"></script>
+<script src="js/api-links.js?v=3.62.1"></script>
+<script src="js/app.js?v=3.62.1"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

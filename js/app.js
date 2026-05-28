@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-012
+//  Build: 20260527-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-012';         // build stamp — update each session
+const BUILD       = '20260527-013';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -653,8 +653,8 @@ function renderSettings() {
   }
 
   // v3.62.0 — Workflow Toggles section: live mirrors for the two pill
-  // toggles. Auto-Update Models + Checkpoint Backup land in v3.62.1 /
-  // v3.63.0.
+  // toggles. v3.62.1 — Auto-Update Models toggle + interval radio added.
+  // (Checkpoint Backup lands in v3.63.0.)
   const lgEl = document.getElementById('setLengthGuardArmed');
   if (lgEl) {
     // Length Guard is project-scoped via window._lengthGuardOverride.
@@ -663,6 +663,16 @@ function renderSettings() {
   }
   const slowEl = document.getElementById('setSlowAlertsEnabled');
   if (slowEl) slowEl.checked = _slowResponderEnabled;
+  const auEl = document.getElementById('setAutoUpdateModels');
+  if (auEl) auEl.checked = getAutoUpdateModelsEnabled();
+  const intervalVal = getAutoUpdateInterval();
+  document.querySelectorAll('input[name="setAutoUpdateInterval"]').forEach(r => {
+    r.checked = (r.value === intervalVal);
+  });
+  // Grey out the interval row when Auto-Update is off — the radios are
+  // still readable but visibly inert.
+  const intervalRow = document.getElementById('setAutoUpdateIntervalRow');
+  if (intervalRow) intervalRow.classList.toggle('settings-row-disabled', !getAutoUpdateModelsEnabled());
 }
 
 // Save handlers — each fires on the control's change event, persists to
@@ -756,6 +766,196 @@ function settingsToggleSlowAlerts(wantOn) {
   // recompute the state in an order we don't control).
   const el = document.getElementById('setSlowAlertsEnabled');
   if (el) el.checked = _slowResponderEnabled;
+}
+
+// ============================================================
+//  v3.62.1 — Auto-Update Model Lists
+//
+//  Background scheduler that re-fetches every configured AI's model
+//  list at a user-chosen interval (24h / 1 week / 30 days). Fires on
+//  work-screen entry and then at the interval if the user stays. Pure
+//  list refresh — does NOT change the user's picked model (recheck is
+//  the explicit-action path for that). If a previously-selected model
+//  is no longer in a provider's list after refresh, a toast surfaces
+//  the retirement.
+//
+//  When the preference is OFF, model lists persist until the user
+//  clicks ↻ Recheck on an AI row. (No real "7-day TTL" existed in the
+//  codebase before this — the cache lived forever; this release makes
+//  Auto-Update the single intentional source of refresh.)
+// ============================================================
+
+const AUTO_UPDATE_INTERVALS = {
+  '24h': 24 * 60 * 60 * 1000,
+  '1w':  7  * 24 * 60 * 60 * 1000,
+  '30d': 30 * 24 * 60 * 60 * 1000,
+};
+const AUTO_UPDATE_DEFAULT_INTERVAL = '1w';
+const AUTO_UPDATE_LAST_RUN_KEY     = 'waxframe_auto_update_last_run';
+
+// Auto-Update defaults to ON because retired/renamed models silently
+// breaking dropdowns is a real user pain point and the refresh is
+// background-only with no UI interruption.
+function getAutoUpdateModelsEnabled() {
+  return localStorage.getItem('waxframe_auto_update_models') !== 'false';
+}
+function getAutoUpdateInterval() {
+  const v = localStorage.getItem('waxframe_auto_update_interval');
+  return AUTO_UPDATE_INTERVALS[v] ? v : AUTO_UPDATE_DEFAULT_INTERVAL;
+}
+function getAutoUpdateIntervalMs() {
+  return AUTO_UPDATE_INTERVALS[getAutoUpdateInterval()];
+}
+function getAutoUpdateLastRunMs() {
+  const n = parseInt(localStorage.getItem(AUTO_UPDATE_LAST_RUN_KEY), 10);
+  return Number.isFinite(n) ? n : 0;
+}
+
+// Settings-panel toggle handler. Writes the preference, surfaces a
+// toast and a console line, greys out the interval row when off, and
+// — when flipping ON — kicks off the scheduler immediately so a stale-
+// by-now cache gets refreshed without waiting for the next work-screen
+// entry.
+function settingsToggleAutoUpdateModels(wantOn) {
+  localStorage.setItem('waxframe_auto_update_models', wantOn ? 'true' : 'false');
+  toast(wantOn
+    ? '🔄 Auto-update model lists: on'
+    : '🔄 Auto-update model lists: off — recheck rows manually', 3000);
+  if (typeof consoleLog === 'function') {
+    consoleLog(wantOn
+      ? '🔄 Auto-update model lists enabled.'
+      : '🔄 Auto-update model lists disabled — model dropdowns will persist until you click ↻ Recheck on each AI row.', 'info');
+  }
+  const row = document.getElementById('setAutoUpdateIntervalRow');
+  if (row) row.classList.toggle('settings-row-disabled', !wantOn);
+  if (wantOn) maybeRunAutoUpdateModels({ reason: 'toggled-on', force: true });
+}
+
+// Save handler for the interval radio. Persists the choice and surfaces
+// the human label in the toast. Does NOT kick off an immediate refresh —
+// changing the interval shouldn't fire a fetch, just change the cadence.
+function saveAutoUpdateInterval(val) {
+  if (!AUTO_UPDATE_INTERVALS[val]) val = AUTO_UPDATE_DEFAULT_INTERVAL;
+  localStorage.setItem('waxframe_auto_update_interval', val);
+  const labels = { '24h': '24 hours', '1w': '1 week', '30d': '30 days' };
+  toast(`🔄 Auto-update interval: every ${labels[val]}`, 3000);
+}
+
+// Internal: refresh ONE AI's model list without disturbing the picked
+// model. Writes the fresh cache, returns { id, models, prevModel,
+// stillPresent, error }. Designed to be tolerant of failures (per-AI
+// errors don't abort the whole sweep).
+async function _autoUpdateRefreshOneAI(ai) {
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg) return { id: ai.id, error: 'no config' };
+  // Skip AIs that have no key AND no models endpoint — nothing to fetch.
+  const hasModelsEndpoint = !!cfg._modelsEndpoint;
+  if (!cfg._key && !hasModelsEndpoint) {
+    return { id: ai.id, skipped: 'no key' };
+  }
+  const format = cfg.format || 'openai';
+  const isDefault = !!DEFAULT_AIS.find(d => d.id === ai.id);
+  // Cache key matches the existing writer paths: default AIs key by
+  // provider, customs key by AI id.
+  const cacheKey = isDefault ? `waxframe_models_${ai.provider}` : `waxframe_models_${ai.id}`;
+  const prevModel = cfg.model || '';
+  try {
+    const models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+    if (!Array.isArray(models) || !models.length) {
+      return { id: ai.id, error: 'no models returned' };
+    }
+    try {
+      localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), models }));
+    } catch (e) { /* quota / privacy mode — accept */ }
+    // Detect retired selection: if the user's currently-picked model
+    // isn't in the fresh list, surface the disappearance. We do NOT
+    // change the selection — leaving the picked model as-is lets the
+    // user decide whether to recheck (which picks a new one) or pick
+    // manually from the new list.
+    const stillPresent = !prevModel || models.includes(prevModel);
+    return { id: ai.id, name: ai.name, models, prevModel, stillPresent };
+  } catch (e) {
+    return { id: ai.id, name: ai.name, error: e.message || String(e) };
+  }
+}
+
+// Public: run a refresh sweep across every configured AI. Returns a
+// summary object that callers can log. Per-AI errors are surfaced in
+// the result but don't abort the sweep — one rate-limited provider
+// shouldn't poison the whole pass.
+async function refreshAllModelLists() {
+  const ais = Array.isArray(aiList) ? aiList : [];
+  if (!ais.length) return { refreshed: 0, retired: [], errors: [], skipped: [] };
+  if (typeof consoleLog === 'function') {
+    consoleLog(`🔄 Auto-Update: refreshing ${ais.length} model list${ais.length === 1 ? '' : 's'}…`, 'info');
+  }
+  const results = await Promise.all(ais.map(_autoUpdateRefreshOneAI));
+  const refreshed = results.filter(r => r.models).length;
+  const retired   = results.filter(r => r.models && !r.stillPresent);
+  const errors    = results.filter(r => r.error);
+  const skipped   = results.filter(r => r.skipped);
+  if (typeof consoleLog === 'function') {
+    const bits = [];
+    if (refreshed) bits.push(`${refreshed} refreshed`);
+    if (retired.length) bits.push(`${retired.length} with retired selection`);
+    if (errors.length) bits.push(`${errors.length} errored`);
+    if (skipped.length) bits.push(`${skipped.length} skipped`);
+    consoleLog(`🔄 Auto-Update: ${bits.join(' · ') || 'no AIs to refresh'}`, retired.length || errors.length ? 'warn' : 'info');
+    retired.forEach(r => consoleLog(`⚠️ ${r.name}: previously-selected model "${r.prevModel}" is no longer in the provider's list. Click ↻ Recheck on the AI row to pick a current model.`, 'warn'));
+    errors.forEach(e   => consoleLog(`⚠️ ${e.name || e.id}: model-list refresh failed — ${e.error}`, 'warn'));
+  }
+  if (retired.length) {
+    const names = retired.map(r => r.name).join(', ');
+    toast(`⚠️ Retired model${retired.length === 1 ? '' : 's'} detected on: ${names}. Click ↻ Recheck on those AI rows.`, 6000);
+  }
+  // Stamp the last-run time only on a successful pass that actually
+  // refreshed something. If nothing refreshed (all skipped/errored),
+  // we want the NEXT scheduler tick to try again rather than wait the
+  // full interval out from an empty pass.
+  if (refreshed > 0) {
+    try { localStorage.setItem(AUTO_UPDATE_LAST_RUN_KEY, String(Date.now())); } catch(e) {}
+  }
+  return { refreshed, retired, errors, skipped };
+}
+
+// Public dispatcher: called from work-screen entry and the in-screen
+// interval timer. Gates on (a) the preference being on and (b) enough
+// time having passed since the last run. opts.force bypasses the
+// interval gate (used when the user toggles Auto-Update on).
+async function maybeRunAutoUpdateModels(opts = {}) {
+  if (!getAutoUpdateModelsEnabled()) return false;
+  const now = Date.now();
+  const lastRun = getAutoUpdateLastRunMs();
+  const intervalMs = getAutoUpdateIntervalMs();
+  const due = opts.force || (now - lastRun) >= intervalMs;
+  if (!due) return false;
+  // Reentrancy guard — if a refresh is already in flight, don't start a
+  // second one (e.g. work-screen entry while a toggled-on sweep is
+  // still resolving).
+  if (window._autoUpdateInFlight) return false;
+  window._autoUpdateInFlight = true;
+  try {
+    await refreshAllModelLists();
+    return true;
+  } finally {
+    window._autoUpdateInFlight = false;
+  }
+}
+
+// Interval timer started when the work screen mounts. Re-checks
+// roughly every 15 minutes so a long-running session with no other
+// navigation still triggers Auto-Update when its scheduled time
+// passes. The actual fetch is gated by maybeRunAutoUpdateModels, so
+// this is just a heartbeat.
+let _autoUpdateHeartbeat = null;
+function startAutoUpdateHeartbeat() {
+  if (_autoUpdateHeartbeat) clearInterval(_autoUpdateHeartbeat);
+  _autoUpdateHeartbeat = setInterval(() => {
+    maybeRunAutoUpdateModels({ reason: 'heartbeat' });
+  }, 15 * 60 * 1000);
+}
+function stopAutoUpdateHeartbeat() {
+  if (_autoUpdateHeartbeat) { clearInterval(_autoUpdateHeartbeat); _autoUpdateHeartbeat = null; }
 }
 
 // ── AUDIO ──
@@ -9842,6 +10042,16 @@ function initWorkScreen(isNewSession = false) {
   // which is an explicit user-initiated destructive action. No normal navigation
   // or re-launch should clear the session log.
 
+  // v3.62.1 — Kick the Auto-Update Models scheduler. Internally gated on
+  // the preference being ON and the interval having elapsed, so this is
+  // a safe unconditional call. Then start a 15-min heartbeat so a long
+  // session with no other navigation still triggers refreshes when due.
+  if (typeof maybeRunAutoUpdateModels === 'function') {
+    maybeRunAutoUpdateModels({ reason: 'work-screen-entry' });
+  }
+  if (typeof startAutoUpdateHeartbeat === 'function') {
+    startAutoUpdateHeartbeat();
+  }
   const el = document.getElementById('workProjectName');
   const ve = document.getElementById('workProjectVersion');
   const me = document.getElementById('workStartMode');

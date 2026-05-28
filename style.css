@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260527-012
+   Build: 20260527-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7272,6 +7272,65 @@ kbd {
 .settings-toggle input:checked + .settings-toggle-slider::before {
   transform: translate(20px, -50%);
   background: var(--green);
+}
+
+/* v3.62.1 — Radio pills for the Auto-Update interval picker. Same color
+   story as the toggle (green-on-active) but rendered as a horizontal
+   segmented control instead of a slider. The native radio input is
+   visually hidden; the <span> sibling is the visible pill. */
+.settings-radio-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+.settings-radio-pill input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+.settings-radio-pill span {
+  display: inline-block;
+  padding: 6px 14px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.settings-radio-pill:hover span {
+  color: var(--text);
+  border-color: var(--accent);
+}
+.settings-radio-pill input:checked + span {
+  background: var(--green-dim);
+  border-color: var(--green);
+  color: var(--green);
+}
+.settings-radio-pill input:focus-visible + span {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* v3.62.1 — Greyed-out row state. Used when a parent toggle is off and
+   the dependent control should read as inert (e.g. the interval radios
+   when Auto-Update Models is off). The user can still flip the parent
+   to wake it back up. */
+.settings-row-disabled .settings-row-name,
+.settings-row-disabled .settings-row-help {
+  opacity: 0.5;
+}
+.settings-row-disabled .settings-inline-controls {
+  opacity: 0.55;
+}
+.settings-row-disabled .settings-radio-pill {
+  cursor: default;
 }
 .settings-foot-note {
   font-size: var(--fs-sm);
