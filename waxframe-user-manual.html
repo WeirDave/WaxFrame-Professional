@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260527-017
+     Build: 20260527-019
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-017">
+  <meta name="waxframe-build" content="20260527-019">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.1">
+  <link rel="stylesheet" href="style.css?v=3.63.2">
 </head>
 <body class="helper-body">
 
@@ -1054,7 +1054,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">🐢 Slow alerts pill</span>
-        <span class="goal-info-desc">A user-level preference for whether to surface the troubleshooting card when an AI takes more than ~2× the hive's average response time. Default is <em>Slow alerts: on</em>; click to switch to <em>Slow alerts: off</em>, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way. Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
+        <span class="goal-info-desc">A user-level preference for whether to surface the troubleshooting card when an AI is flagged slow. Detection formula: response time exceeds both (multiplier × round average) AND (round average + 15s), for N consecutive rounds — both the multiplier (default 3×) and round count (default 2) are user-configurable in the <a href="#settings" class="link-accent">Settings</a> panel. Default is <em>Slow alerts: on</em>; click to switch to <em>Slow alerts: off</em>, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way. Also mirrored as a toggle on the <a href="#settings" class="link-accent">Settings</a> screen.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">License badge</span>
@@ -1414,7 +1414,7 @@
       <p>How the hive behaves during hands-off Auto runs. These only take effect while Auto is on; they have no effect when running in Manual mode.</p>
       <div class="goal-info-row">
         <span class="info-label">Backup Builder</span>
-        <span class="goal-info-desc">If your Builder errors out or goes slow during an Auto run, WaxFrame promotes this AI to Builder so the run continues instead of stopping. Choose <em>None</em> to have Auto pause and ask you instead.</span>
+        <span class="goal-info-desc">If your Builder hits the failure-streak limit during an Auto run, WaxFrame pauses and offers to promote this AI to Builder so you can resume in one click. Choose <em>None</em> to have Auto pause and ask you without offering a promotion. Slow Builders do not trigger this — only repeated failures do.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Never disable the Builder</span>
@@ -1426,7 +1426,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Slow-responder threshold</span>
-        <span class="goal-info-desc">A reviewer is flagged "slow" when it takes longer than this multiple of the round average, for this many rounds in a row. During Auto, slow reviewers are auto-disabled so the run keeps moving (you are notified by a toast). Default is 3× / 2 rounds.</span>
+        <span class="goal-info-desc">A reviewer is flagged "slow" when its response time exceeds both (multiplier × round average) AND (round average + 15s), for this many rounds in a row. Default is 3× / 2 rounds. The +15s floor prevents false alarms when the average is tiny. Slow alerts surface a troubleshooting card (once per AI per session) and log every slow round to the Live Console — slow AIs are NOT auto-disabled; staying or going is the user's call.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Length-guard reround attempts</span>
@@ -1991,11 +1991,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.1"></script>
-<script src="js/nav-helper.js?v=3.63.1"></script>
-<script src="js/license-helper.js?v=3.63.1"></script>
-<script src="js/version.js?v=3.63.1"></script>
-<script src="js/docs-scrollspy.js?v=3.63.1"></script>
+<script src="js/theme.js?v=3.63.2"></script>
+<script src="js/nav-helper.js?v=3.63.2"></script>
+<script src="js/license-helper.js?v=3.63.2"></script>
+<script src="js/version.js?v=3.63.2"></script>
+<script src="js/docs-scrollspy.js?v=3.63.2"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

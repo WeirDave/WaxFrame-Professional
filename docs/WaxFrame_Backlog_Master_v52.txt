@@ -1,0 +1,67 @@
+WaxFrame Backlog Master v52
+2026-05-27
+
+State: v3.63.1 in production. v3.62.x Settings buildout + v3.63.0 Checkpoint Nudge + v3.63.1 helper menu alignment all shipped. wfConfirm suppressKey mechanism live. Hash deep-link infrastructure in DOMContentLoaded.
+
+
+Next Up
+
+- Audit Settings docs (v3.62.3 user manual additions) against actual AUTO_SETTINGS code. Verify every setting name, default, range, description. Likely-hallucinated spots: Failure-streak limit default, Slow-responder threshold values, Length-guard reround default. Spot-check, edit where wrong, re-ship as docs patch.
+
+- Hunt for more dismiss-permanently candidates. Four confirms now use suppressKey (Length Guard disable + re-arm, Sensitive backup, Restore from backup). Survey remaining wfConfirm call sites in app.js + storage.js — identify informational ones (not destructive) that could carry "Don't show this again". Candidates worth checking: Discard round + continue, Replace document, Launch new session, Discard and start fresh.
+
+- Stale-reference audit on older helper pages — api-details.html, what-are-tokens.html, document-playbooks.html, prompt-editor.html. Look for: outdated version refs, prompt-editor links that survived (since menu removal), stale screenshots or copy that doesn't match current UI.
+
+- Troubleshooting Toolkit P0 — start with standalone waxframe_techsupport.html stub that loads when index.html is broken. Self-contained page, no app.js dependency. Low-risk first piece of the full P0.
+
+
+Open Bugs
+
+(no specific bugs surfaced in this session — if v51 had open bugs, merge them in)
+
+
+Open Features
+
+- Troubleshooting Toolkit P0 (full scope) — standalone techsupport page + diagnostic bundle generator (one button, three locations) + always-on forensic ring buffer (last 5-10 rounds) + scrubber function that auto-strips secrets + GitHub Issues URL integration with pre-filled body pattern (~8000 char body limit) + user-manual UX docs.
+
+- restoreRound scope clarification — define what should and should not roll back when restoring a round. Round 1 restore doesn't feel like a reset. Map every piece of session state to "rolls back" or "persists" and document the rule.
+
+- Custom templates — user-defined project templates beyond the built-in scaffolds.
+
+- Shareable templates — export/import templates between users.
+
+- Backup scrubber — utility to strip secrets from a backup file before sharing.
+
+- Deep Dive ring buffer — circular history of last N rounds of full reviewer responses, separate from main history for deep debugging.
+
+- Pause/resume at reviewer seam — finer-grained pause point inside a round so you can review before the Builder synthesizes.
+
+- File System Access API exploration — investigate whether the API can replace download-only backups with true file persistence for advanced users.
+
+- Two-layer AI management — separate the server/source layer (where models come from) from the selection layer (which models are in the hive). Currently fused.
+
+- Hive Profiles — saved checkbox-state configurations so a user can switch between "research hive," "draft hive," "polish hive" without manual setup each time.
+
+- Sources view formalizing servers as first-class entities — surface the model source as a top-level concept, not just a per-AI attribute.
+
+
+Observations
+
+- No real 7-day MODELS_CACHE_TTL existed before v3.62.1. Model caches lived forever, refreshed only by explicit recheck. Auto-Update is the first intentional refresh mechanism.
+
+- wfConfirm suppressKey is zero-per-modal-boilerplate. Adding suppressKey: 'waxframe_suppress_xxx' to any informational confirm's opts makes it dismiss-able and reset-eligible. NEVER set suppressKey on a destructive confirm — those are safety brakes.
+
+- Helper menu = strict subset of main menu. Differences should be deletions (things the helper context can't do), never divergences (different items in the same slot). Principle locked in v3.63.1.
+
+- Dismiss-permanently semantic split — two patterns now in the codebase:
+  Pattern A (v3.62.2) — informational warnings: checkbox + confirm = persist; checkbox + cancel = does NOT persist (cancel means "still show me next time")
+  Pattern B (v3.63.0) — feature opt-outs: checkbox = persist regardless of which button (the checkbox IS the opt-out intent, decoupled from the immediate action)
+  Document the choice explicitly whenever adding a new dismiss-permanently surface.
+
+- Hash deep-link infrastructure exists in DOMContentLoaded as of v3.63.1. Currently only #settings is recognized. Future deep-links extend the same dispatcher — pattern is: read hash, dispatch via setTimeout to let active screen paint, clear hash via history.replaceState so reload doesn't re-trigger.
+
+- v3.62.0 originally scoped Auto-Update Models + Checkpoint Backup Nudge alongside the Length Guard / Slow Alerts mirrors. Auto-Update needed a real scheduler; Checkpoint needed per-project suppression. Both split out cleanly (v3.62.1 and v3.63.0). When a release feels like it's growing extra concerns, ship slimmer and split.
+
+- "Create Something" as a section label read like a creative-writing tool, not navigation. Renamed to "WaxFrame App" in v3.63.1. General lesson: nav labels that hint at a verb instead of a destination cause confusion.
+
+- The Sensitive Backup confirm now chains AFTER the Checkpoint Backup Nudge when both are active. Two distinct concerns: (1) do you want a backup now? (2) the backup is sensitive, store it safely. Don't collapse them.
