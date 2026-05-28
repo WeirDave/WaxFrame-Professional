@@ -2,6 +2,90 @@
 
 ---
 
+## v3.63.15
+**Build:** `20260528-012` · **Released:** May 28, 2026
+
+### Support page renamed to `help.html` + 5 CodeQL HTML attribute-sanitization alerts closed
+
+Two changes bundled into this release.
+
+### Rename: `waxframe_techsupport.html` → `help.html`
+
+The Support page filename was unwieldy and not memorable. Renamed to `help.html`
+so it can be referenced naturally in conversation, written into the README and
+User Manual without users squinting at the URL, and remembered by anyone who
+visited it once. The page contents are unchanged — diagnostic bundle export,
+GitHub issue link, environment auto-fill — but everything that referred to it
+now aligns:
+
+- File renamed: `waxframe_techsupport.html` → `help.html`
+- Page `<title>` and `<h1>`: "Support" → "Help"
+- Nav menu label across all 6 menu-bearing HTML files: `🛟 Support` → `🛟 Help`
+  (alphabetical position unchanged — both "Help" and "Support" sort between
+  "Document Playbooks" and "User Manual")
+- GitHub issue template body link label: "Support page" → "Help page"
+- GitHub issue template `config.yml` contact URL updated
+- `storage.js` documentation comment referencing the page updated
+- `docs/WaxFrame_Rules_Reference.txt` HTML inventory entry updated
+
+The release zip ships `help.html` and no `waxframe_techsupport.html`. **After
+deploying, delete the old `waxframe_techsupport.html` from your local
+deployment directory** so it doesn't linger and serve stale cached content.
+
+### Security — Close 5 CodeQL HTML attribute-sanitization alerts
+
+WaxFrame had two HTML-escape helpers in `app.js` with a subtle behavioral
+difference:
+
+- `esc()` — escapes `& < >` only. Safe for **text content**
+  (e.g., `<div>${esc(x)}</div>`), **unsafe** for **attribute context** because
+  it doesn't escape `"` or `'`.
+- `escapeHtml()` — escapes `& < > " '`. Safe for both text and attribute
+  contexts.
+
+CodeQL static analysis correctly flagged 5 sites where `esc()` was used inside
+an HTML attribute (`onclick=""`, `title=""`). All five sites swapped to
+`escapeHtml()`. A header comment was added to the `esc()` definition
+documenting the rule so future contributors don't backslide.
+
+The five fixed sites:
+
+| File line | Context |
+|---|---|
+| `app.js:3426` | Template gallery card — `onclick="applyTemplate('${...}', ...)" title="Apply the ${...} template (...)"` |
+| `app.js:4462` | Test-keys retest button — `onclick="retestSingleKey('${...}')"` |
+| `app.js:7037` | Imported-server row — `title="Choose icon for ${...modelName}"` (highest real-risk site — `modelName` is supplied by the imported server) |
+| `app.js:11331` | Icon picker tile — `onclick="_iconPickerSelect('${...}')"` |
+
+Plus a documentation comment on `esc()` at line 490 explaining the
+text-vs-attribute distinction.
+
+Four additional CodeQL alerts (#1, #2, #3, #18) were triaged in the same pass
+and dismissed with rationale — three false positives (markdown table escaping
+and `textContent` regex usage that has no HTML sink) and one documented design
+decision (`localStorage` storage of API keys, the disclosed persistence model
+for the entire app). Dismissal text is captured in the security audit trail.
+
+The remaining open finding — Dependabot CVE-2024-4367 on `pdfjs-dist` — is
+already mitigated at runtime via `isEvalSupported: false` (shipped in v3.63.6)
+and will be properly closed in a follow-up release when the library is bumped
+to 4.2.67+.
+
+#### Files Changed
+
+- `waxframe_techsupport.html` → `help.html` (file rename; contents unchanged except `<title>` and `<h1>`).
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — nav menu link updated (`href` and `🛟 Support` → `🛟 Help`).
+- `.github/ISSUE_TEMPLATE/config.yml` — contact URL updated to point at `help.html`.
+- `.github/ISSUE_TEMPLATE/bug_report.yml` — body link label updated.
+- `js/storage.js` — five attribute-context `esc()` → `escapeHtml()` swaps; documentation comment added to `esc()` definition; subsystem header comment reference updated to `help.html`.
+- `js/app.js` — five attribute-context `esc()` → `escapeHtml()` swaps; documentation comment added to `esc()` definition.
+- `js/version.js` — `APP_VERSION` → `v3.63.15 Pro`.
+- `README.md` — new top-level `## Help & Support` section between Run Locally and License (plus TOC entry) with the help.html URL, the in-app menu path, and a description of the diagnostic bundle + bug-report flow.
+- `waxframe-user-manual.html` — new "🛟 Help & Support" section as the final entry in the Reference area (covering where to go when stuck, what the diagnostic bundle includes and how it's redacted, how to file a bug, and what does NOT need a bug report); new sidebar entries linking to it from both the in-page sidebar and External Guides; new tip callout in Before You Start mirroring the API Key Guide tip pattern.
+- Standard build-stamp + cache-bust sweep across 9 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.14
 **Build:** `20260528-009` · **Released:** May 28, 2026
 
@@ -117,7 +201,7 @@ of one redundant menu entry.
 
 ### P1 Troubleshooting Toolkit, Phase 3 — Support page wired into the menus
 
-Phase 1 built the standalone `waxframe_techsupport.html` break-glass page;
+Phase 1 built the standalone `help.html` break-glass page;
 Phase 2 added the GitHub issue form + `auto-reported` label. This release
 wires the support page into the app's actual menus so users can reach it
 from anywhere, and folds the page into the official release rotation so it
@@ -135,18 +219,18 @@ forward.
   (page title, H1, and the GitHub issue-template contact link all updated)
   — the page is mostly support with a small "common fixes" blurb, not a
   troubleshooting deep-dive, and the shorter name reads cleaner everywhere.
-- **`waxframe_techsupport.html` joins the rotation**: now part of the
+- **`help.html` joins the rotation**: now part of the
   9-HTML build-stamp + cache-bust sweep, and shipped in the release zip.
 
 #### Files Changed
 
 - `index.html` — new Support nav entry between Documentation and Advanced.
 - `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Support nav entry inserted; legacy "Support" header above Buy CTA removed.
-- `waxframe_techsupport.html` — page title + H1 renamed to "Support"; joined the cache-bust + build-stamp sweep.
+- `help.html` — page title + H1 renamed to "Support"; joined the cache-bust + build-stamp sweep.
 - `.github/ISSUE_TEMPLATE/bug_report.yml` — intro text + environment-field description updated to reference the "Support page".
 - `.github/ISSUE_TEMPLATE/config.yml` — contact link renamed `🛠️ Support`.
 - `js/version.js` — `APP_VERSION` → `v3.63.11 Pro`.
-- Standard build-stamp + cache-bust sweep across **9 HTML** (now including `waxframe_techsupport.html`), 10 JS, and `style.css`.
+- Standard build-stamp + cache-bust sweep across **9 HTML** (now including `help.html`), 10 JS, and `style.css`.
 - `docs/WaxFrame_Rules_Reference.txt` — "8 HTML" → "9 HTML" everywhere, deployment-set enumeration updated.
 
 ---
@@ -432,7 +516,7 @@ Fixed with a self-contained styled confirm/notice flow built inside
   late-night delete. Clusters still flagged: `welcome-card`,
   `save-bar`, `goal-modal-refine-*`, `ai-bfb-*`, autosave/verify-panel
   remnants. Carried to v55.
-- **Troubleshooting Toolkit P0** — standalone `waxframe_techsupport.html`
+- **Troubleshooting Toolkit P0** — standalone `help.html`
   hardening move, on deck.
 
 #### Files Changed

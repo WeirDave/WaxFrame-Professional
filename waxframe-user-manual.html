@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260528-009
+     Build: 20260528-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-009">
+  <meta name="waxframe-build" content="20260528-012">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.14">
+  <link rel="stylesheet" href="style.css?v=3.63.15">
 </head>
 <body class="helper-body">
 
@@ -54,7 +54,7 @@
     <div class="nav-section-label">Help & Support</div>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="waxframe_techsupport.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Support</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
@@ -152,11 +152,13 @@
         <div class="doc-sidebar-category">Reference</div>
         <a href="#problems" class="doc-sidebar-link">🔧 When Things Go Wrong</a>
         <a href="#billing"  class="doc-sidebar-link">💳 API Costs &amp; Billing</a>
+        <a href="#help-support" class="doc-sidebar-link">🛟 Help &amp; Support</a>
 
         <div class="doc-sidebar-category">External Guides</div>
         <a href="api-details.html"        target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
         <a href="document-playbooks.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📋 Document Playbooks ↗</a>
         <a href="what-are-tokens.html"    target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🪙 What Are Tokens? ↗</a>
+        <a href="help.html"               target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🛟 Help Page ↗</a>
       </div>
     </aside>
 
@@ -211,6 +213,10 @@
       <div class="wf-tip">
         <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
         <div class="wf-tip-body"><p>If you are not sure how to get API keys or which providers to use, open the <a href="api-details.html" target="_blank" rel="noopener noreferrer" class="link-accent">API Key Guide ↗</a> — it has step-by-step instructions and direct links to each provider's signup and key console pages.</p></div>
+      </div>
+      <div class="wf-tip">
+        <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+        <div class="wf-tip-body"><p>Stuck on anything, or hit a bug? Visit the <a href="help.html" target="_blank" rel="noopener noreferrer" class="link-accent">🛟 Help page ↗</a> — it has a one-click diagnostic bundle exporter (your keys and document text are stripped automatically) and a pre-filled GitHub issue link. You can also reach it any time from the <strong>☰</strong> menu in the top-left under <strong>Help &amp; Support</strong>.</p></div>
       </div>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
@@ -1912,6 +1918,38 @@
     </div>
   </div>
 
+  <div class="wh-section" id="help-support">
+    <div class="wh-section-hdr">
+      <div class="wh-section-icon">🛟</div>
+      <div class="wh-section-title">Help &amp; Support</div>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Where to go when something goes wrong</div>
+      <p>WaxFrame has a dedicated Help page at <a href="help.html" target="_blank" rel="noopener noreferrer" class="link-accent">help.html ↗</a>. You can reach it any time from inside the app — open the <strong>☰</strong> menu in the top-left and pick <strong>🛟 Help</strong> from the <strong>Help &amp; Support</strong> section — or visit <code>waxframe.com/help.html</code> directly in a browser.</p>
+      <p>The page is built for two situations: you want to file a bug or feature request, or you want to give someone (me) enough information to reproduce what you saw without sending personal data.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">The diagnostic bundle</div>
+      <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be imported to restore a session. For that, use Backup Session instead, which keeps your keys and is importable.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Filing a bug report</div>
+      <p>The Help page also has a one-click link that opens a pre-filled GitHub issue with your WaxFrame version, build number, browser, and operating system already in the body. You add what happened and how to reproduce it, drag the diagnostic bundle in if you grabbed one, and submit. Issues filed through this flow get auto-labeled <code>auto-reported</code> so they show up immediately in the project's triage queue.</p>
+      <p>If you would rather file an issue directly, go to <a href="https://github.com/WeirDave/WaxFrame-Professional/issues/new?template=bug_report.yml" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional/issues/new ↗</a> — it uses the same template, just without the auto-filled environment block.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">What does NOT need a bug report</div>
+      <p>If an AI returns an error message saying you are out of credit or your API key is invalid, that is a billing or authentication issue with that AI provider — not a WaxFrame bug. Open the provider's console (Test All Keys in WaxFrame surfaces a direct link to the right billing page) and resolve it there. WaxFrame surfaces the provider's own error verbatim so you know exactly what to fix.</p>
+      <p>If a round produces a result you do not like, that is also not a bug — that is the hive doing its job and giving you something to react to. Edit your goal fields, resolve any conflicts, and run another round.</p>
+    </div>
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+  </div>
+
         </div><!-- /hp-section-body Reference -->
       </div><!-- /hp-section Reference -->
 
@@ -1994,11 +2032,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.14"></script>
-<script src="js/nav-helper.js?v=3.63.14"></script>
-<script src="js/license-helper.js?v=3.63.14"></script>
-<script src="js/version.js?v=3.63.14"></script>
-<script src="js/docs-scrollspy.js?v=3.63.14"></script>
+<script src="js/theme.js?v=3.63.15"></script>
+<script src="js/nav-helper.js?v=3.63.15"></script>
+<script src="js/license-helper.js?v=3.63.15"></script>
+<script src="js/version.js?v=3.63.15"></script>
+<script src="js/docs-scrollspy.js?v=3.63.15"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

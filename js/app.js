@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-009
+//  Build: 20260528-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -462,7 +462,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-009';         // build stamp — update each session
+const BUILD       = '20260528-012';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -487,6 +487,13 @@ const GUMROAD_PRODUCT_ID = 'Iyg5j-ySEnBtA5CKcuVT9A==';
 const FREE_TRIAL_ROUNDS  = 3;
 
 // ── UTILS ──
+// v3.63.15 — IMPORTANT: `esc()` escapes `& < >` only. It is SAFE for HTML
+// TEXT CONTENT (between tags like <div>${esc(x)}</div>) but UNSAFE for HTML
+// ATTRIBUTE CONTEXTS (inside onclick="...", title="...", value="...", etc.)
+// because it does NOT escape `"` or `'`. For attribute contexts use
+// `escapeHtml()` (defined ~line 9407) which also escapes quotes. CodeQL
+// flagged five attribute-context misuses in this file (lines 11331, 7037,
+// 4462, and 3426 ×2); all were swapped to `escapeHtml()` in v3.63.15.
 function esc(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
@@ -3423,7 +3430,7 @@ function renderTemplateGalleryBody() {
           // wording (e.g. cover-letter already reads "Create or refine…").
           const desc = (t.pathContent && t.pathContent[path] && t.pathContent[path].description) || t.description || '';
           return `
-          <button class="${cardCls}" onclick="applyTemplate('${esc(t.id)}', '${path}')" title="Apply the ${esc(t.name)} template (${esc(pathLabel)})">
+          <button class="${cardCls}" onclick="applyTemplate('${escapeHtml(t.id)}', '${path}')" title="Apply the ${escapeHtml(t.name)} template (${escapeHtml(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
               <div class="template-card-name">${esc(t.name)}${badge}</div>
@@ -4459,7 +4466,7 @@ function renderTkpDetail(id) {
       ? `<a class="tkp-billing-link" href="${escapeHtml(safeUrl(rec.consoleUrl))}" target="_blank" rel="noopener noreferrer">Open ${escapeHtml(rec.name)} billing console →</a>`
       : '';
     const retestBtnHtml = (!rec.ok)
-      ? `<button class="tkp-retest-btn" type="button" onclick="retestSingleKey('${esc(id)}')">↻ Retest ${esc(rec.name)}</button>`
+      ? `<button class="tkp-retest-btn" type="button" onclick="retestSingleKey('${escapeHtml(id)}')">↻ Retest ${escapeHtml(rec.name)}</button>`
       : '';
     rcvPane.innerHTML = `
       ${billingLinkHtml}${retestBtnHtml}
@@ -7034,7 +7041,7 @@ function renderImportServerChecklist() {
     <div class="import-server-item" id="isi-${i}">
       <input type="checkbox" class="import-server-check" id="isc-${i}" value="${escapeHtml(modelId)}" onchange="updateChecklistCount()">
       <label for="isc-${i}" class="import-server-item-label">${esc(modelName)}</label>
-      <button type="button" class="import-server-icon-btn" id="isicon-${i}" onclick="openIconPickerForImportRow(${i})" title="Choose icon for ${esc(modelName)}">
+      <button type="button" class="import-server-icon-btn" id="isicon-${i}" onclick="openIconPickerForImportRow(${i})" title="Choose icon for ${escapeHtml(modelName)}">
         <img src="${_importRowIcons[i] || GENERIC_ICON_PATH}" alt="" class="import-server-icon-thumb" onerror="this.style.opacity='0.3'">
       </button>
       <div class="import-server-nickname-wrap">
@@ -11328,7 +11335,7 @@ function openIconPicker(opts = {}) {
       <div class="icon-picker-section-grid">
         ${section.items.map(it => `
           <button type="button" class="icon-picker-tile${opts.currentIcon === it.src ? ' is-selected' : ''}"
-                  onclick="_iconPickerSelect('${esc(it.src)}')"
+                  onclick="_iconPickerSelect('${escapeHtml(it.src)}')"
                   title="${escapeHtml(it.name)}">
             <img src="${it.src}" alt="${escapeHtml(it.name)}" class="icon-picker-tile-img"
                  onerror="this.style.opacity='0.2'">
