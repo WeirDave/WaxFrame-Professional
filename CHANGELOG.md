@@ -2,6 +2,63 @@
 
 ---
 
+## v3.63.6
+**Build:** `20260527-023` · **Released:** May 27, 2026
+
+### Security hardening — PDF.js CVE mitigation + restore trust gate
+
+Two security fixes.
+
+#### 1. PDF.js CVE-2024-4367 mitigation
+
+The bundled PDF.js (`3.11.174`) is in the affected range for
+**CVE-2024-4367** (High severity): a crafted font `FontMatrix` in a
+malicious PDF can reach an `eval`/`Function` code path and execute
+arbitrary JavaScript in the page context. The documented workaround is
+to disable eval support in the parser.
+
+Fixed by passing `isEvalSupported: false` to the `getDocument` call
+in the PDF text-extraction path (`js/app.js`). WaxFrame only extracts
+text from uploaded PDFs and never renders interactive PDFs, so
+disabling the eval path has **no functional cost** — it simply closes
+the vulnerable code path.
+
+This is the immediate mitigation. The full PDF.js upgrade to `4.2.67+`
+(the patched release) is tracked on the backlog as a follow-up, since
+a vendor-library swap needs its own regression pass.
+
+#### 2. Restore-from-backup warning is now non-dismissable
+
+The Restore-from-backup confirm carried a `suppressKey`
+(`waxframe_suppress_restore_backup_confirm`), meaning a user could tick
+"Don't show this again" and permanently silence it. But importing a
+backup replaces the entire local project, AI setup, API keys, and
+session state — it's a destructive trust boundary, not an
+informational notice. Per the project rule (suppressKey only on
+informational confirms, never on safety brakes), the suppressKey has
+been removed. The warning now fires every time a restore is attempted.
+
+Straggler reconciliation: the dismiss-able-confirm lists in
+`index.html` Settings copy and the user manual were updated to remove
+"Restore Backup" and note explicitly that it's intentionally
+non-dismissable.
+
+#### Files Changed
+
+- `js/app.js` — `getDocument(...)` now passes `isEvalSupported: false`;
+  `BUILD` → `20260527-023`.
+- `js/storage.js` — restore-backup `suppressKey` removed.
+- `index.html` — Settings dismiss-able list reconciled.
+- `waxframe-user-manual.html` — dismiss-able list reconciled + new
+  non-dismissable note.
+- `js/version.js` — `APP_VERSION` → `v3.63.6 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and
+  `style.css` — uniform `20260527-023`.
+- `docs/` now ships only the current backlog
+  (`WaxFrame_Backlog_Master_v56.txt`) plus `WaxFrame_Rules_Reference.txt`.
+
+---
+
 ## v3.63.5
 **Build:** `20260527-022` · **Released:** May 27, 2026
 
