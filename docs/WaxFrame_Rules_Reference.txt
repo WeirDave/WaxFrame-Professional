@@ -77,18 +77,18 @@ RELEASE CEREMONY (every release)
    - app.js?v= cache-bust query string in index.html
 
 2. Full cache-bust + build-stamp sweep:
-   - 8 HTML (index + 5 helpers + privacy.html + terms.html)
+   - 9 HTML (index + 5 helpers + privacy + terms + waxframe_techsupport)
    - 10 JS-with-headers (NOT templates.js — it has no header)
    - style.css
    These drift silently, so the sweep runs every release even on unchanged
-   files. Cache-bust ?v=X.Y.Z on all 8 HTML covers every CSS/JS/lib reference.
+   files. Cache-bust ?v=X.Y.Z on all 9 HTML covers every CSS/JS/lib reference.
 
 3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line).
 
 4. Backlog version bump.
 
 5. Single ZIP of ALL deployment files (~32) preserving directory structure:
-   8 HTML, style.css, CHANGELOG, README, 13 js/*, 5 lib/* vendor files
+   9 HTML, style.css, CHANGELOG, README, 13 js/*, 5 lib/* vendor files
    (pdf.min, pdf.worker.min, mammoth.browser.min, jszip.min, xlsx.full.min),
    plus the docs/ folder. Never individual files.
 

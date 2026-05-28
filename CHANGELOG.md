@@ -2,6 +2,45 @@
 
 ---
 
+## v3.63.11
+**Build:** `20260528-005` · **Released:** May 28, 2026
+
+### P1 Troubleshooting Toolkit, Phase 3 — Support page wired into the menus
+
+Phase 1 built the standalone `waxframe_techsupport.html` break-glass page;
+Phase 2 added the GitHub issue form + `auto-reported` label. This release
+wires the support page into the app's actual menus so users can reach it
+from anywhere, and folds the page into the official release rotation so it
+gets the standard build-stamp + cache-bust treatment on every release going
+forward.
+
+- **Main menu** (`index.html`): new `🛟 Support` entry between Documentation
+  and Advanced — just a divider + link (no labeled section header, so the
+  link stands on its own).
+- **5 helper pages**: same `🛟 Support` entry inserted after Documentation;
+  the existing "Support" section header above the Buy-WaxFrame-Pro CTA
+  removed (it was a misleading label for a single purchase CTA — link
+  speaks for itself).
+- **Page renamed** from "Troubleshooting & Support" to just **Support**
+  (page title, H1, and the GitHub issue-template contact link all updated)
+  — the page is mostly support with a small "common fixes" blurb, not a
+  troubleshooting deep-dive, and the shorter name reads cleaner everywhere.
+- **`waxframe_techsupport.html` joins the rotation**: now part of the
+  9-HTML build-stamp + cache-bust sweep, and shipped in the release zip.
+
+#### Files Changed
+
+- `index.html` — new Support nav entry between Documentation and Advanced.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Support nav entry inserted; legacy "Support" header above Buy CTA removed.
+- `waxframe_techsupport.html` — page title + H1 renamed to "Support"; joined the cache-bust + build-stamp sweep.
+- `.github/ISSUE_TEMPLATE/bug_report.yml` — intro text + environment-field description updated to reference the "Support page".
+- `.github/ISSUE_TEMPLATE/config.yml` — contact link renamed `🛠️ Support`.
+- `js/version.js` — `APP_VERSION` → `v3.63.11 Pro`.
+- Standard build-stamp + cache-bust sweep across **9 HTML** (now including `waxframe_techsupport.html`), 10 JS, and `style.css`.
+- `docs/WaxFrame_Rules_Reference.txt` — "8 HTML" → "9 HTML" everywhere, deployment-set enumeration updated.
+
+---
+
 ## v3.63.10
 **Build:** `20260528-004` · **Released:** May 28, 2026
 
