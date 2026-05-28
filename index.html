@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260528-005
+     Build: 20260528-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-005">
+  <meta name="waxframe-build" content="20260528-007">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.11">
+  <link rel="stylesheet" href="style.css?v=3.63.12">
 </head>
 <body>
 
@@ -2459,20 +2459,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.63.11"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.11"></script>
-<script src="lib/jszip.min.js?v=3.63.11"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.11"></script>
-<script src="js/version.js?v=3.63.11"></script>
-<script src="js/storage.js?v=3.63.11"></script>
-<script src="js/theme.js?v=3.63.11"></script>
-<script src="js/audio.js?v=3.63.11"></script>
-<script src="js/scenes.js?v=3.63.11"></script>
-<script src="js/wf-debug.js?v=3.63.11"></script>
-<script src="js/api.js?v=3.63.11"></script>
-<script src="js/templates.js?v=3.63.11"></script>
-<script src="js/api-links.js?v=3.63.11"></script>
-<script src="js/app.js?v=3.63.11"></script>
+<script src="lib/pdf.min.js?v=3.63.12"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.12"></script>
+<script src="lib/jszip.min.js?v=3.63.12"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.12"></script>
+<script src="js/version.js?v=3.63.12"></script>
+<script src="js/storage.js?v=3.63.12"></script>
+<script src="js/theme.js?v=3.63.12"></script>
+<script src="js/audio.js?v=3.63.12"></script>
+<script src="js/scenes.js?v=3.63.12"></script>
+<script src="js/wf-debug.js?v=3.63.12"></script>
+<script src="js/api.js?v=3.63.12"></script>
+<script src="js/templates.js?v=3.63.12"></script>
+<script src="js/api-links.js?v=3.63.12"></script>
+<script src="js/app.js?v=3.63.12"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2491,13 +2491,13 @@
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
     <h2 class="finish-modal-title">WaxFrame</h2>
     <p class="about-modal-subtitle">About</p>
-    <div class="goal-info-body">
-      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></span></div>
-      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution.</span></div>
-      <div class="goal-info-row"><span class="info-label">Legal</span><span class="goal-info-desc"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
-      <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
-      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+    <div class="about-info-stack">
+      <div class="wf-card is-accent"><h3 class="wf-card-title">Version</h3><div class="wf-card-body"><span id="aboutVersion"></span> — Build <strong id="aboutBuild"></strong></div></div>
+      <div class="wf-card is-accent"><h3 class="wf-card-title">License</h3><div class="wf-card-body">AGPL-3.0 — open source, free to use and modify with attribution.</div></div>
+      <div class="wf-card is-accent"><h3 class="wf-card-title">Legal</h3><div class="wf-card-body"><a href="privacy.html" target="_blank" rel="noopener noreferrer" class="link-accent">Privacy Policy</a> · <a href="terms.html" target="_blank" rel="noopener noreferrer" class="link-accent">Terms of Use</a></div></div>
+      <div class="wf-card is-accent"><h3 class="wf-card-title">Author</h3><div class="wf-card-body">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></div></div>
+      <div class="wf-card is-accent"><h3 class="wf-card-title">Testing</h3><div class="wf-card-body">Candy</div></div>
+      <div class="wf-card is-accent"><h3 class="wf-card-title">Stack</h3><div class="wf-card-body">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</div></div>
       <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('aboutModal').classList.remove('active')">Got it →</button>
@@ -2535,25 +2535,22 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
     <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
     <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Documentation</div>
+    <div class="nav-section-label">Help & Support</div>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="waxframe_techsupport.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Support</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
-    <a class="nav-item" href="waxframe_techsupport.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Support</a>
-
-    <div class="nav-divider"></div>
     <div class="nav-section-label">Advanced</div>
     <a class="nav-item" href="prompt-editor.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">✏️ Prompt Editor</a>
-    <button title="Export a support-safe diagnostic bundle (API keys and license always removed) to send when something goes wrong. Export-only — cannot restore a session." class="nav-item" onclick="diagnosticSession()">🩹 Diagnostic Bundle</button>
     <button title="Open Developer Tools — for testing and debugging" class="nav-item nav-item-dev" onclick="closeNavMenu();showDevModal()">🛠 Dev Tools</button>
     <div class="nav-dev-section" id="navDevSection">
       <button title="Exit Dev Mode and return to normal user mode" class="nav-item nav-item-exit-dev" onclick="closeNavMenu();exitDevMode()">🚪 Exit Dev Mode</button>
