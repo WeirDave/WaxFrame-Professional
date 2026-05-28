@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260527-020
+     Build: 20260527-021
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-020">
+  <meta name="waxframe-build" content="20260527-021">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.3">
+  <link rel="stylesheet" href="style.css?v=3.63.4">
 </head>
 <body class="helper-body">
 
@@ -338,7 +338,7 @@
       <p>Directly under the <em>Your Worker Bees</em> heading and above the toolbar, two big buttons toggle the screen between two modes. The active one is highlighted:</p>
       <div class="goal-info-row">
         <span class="info-label">🌎 Internet Based AI (Default)</span>
-        <span class="goal-info-desc">The standard mode. Your list shows the six default direct-API providers (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) plus any direct-API custom AIs you've added. The toolbar shows the buttons relevant to public-API providers — API Key Guide, Add Custom AI, Test All Keys, Recommend Models for All, Open default AI websites.</span>
+        <span class="goal-info-desc">The standard mode. Your list shows the six default direct-API providers (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) plus any direct-API custom AIs you've added. The toolbar shows the buttons relevant to public-API providers — API Key Guide, Add Custom AI, Test All Keys, Recommend Models for All, Get API keys.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🖥 Server Based AI</span>
@@ -367,8 +367,8 @@
         <span class="goal-info-desc">Asks every AI with a saved key to recommend its best Reviewer model and its best Builder model based on current public information. Runs sequentially across the hive. Recommendations are surfaced directly in each AI's model dropdown with ✨ (best Reviewer) and 🔨 (best Builder) markers. Useful when you don't know which model to pick for a provider; check the results afterward and override any that landed on the same family as another reviewer in your hive (model-family diversity matters — see the tip at the bottom of this section).</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">Open default AI websites</span>
-        <span class="goal-info-desc">Opens the API console or billing dashboard for every AI currently in your hive simultaneously, each in its own new browser tab. Useful for checking usage, billing, or key status across all your providers at once. Your browser may block multiple tabs opening at once — if you see a pop-up blocker notification, click it, choose <strong>Allow</strong>, then click the button again.</span>
+        <span class="info-label">Get API keys</span>
+        <span class="goal-info-desc">Opens an in-app drawer listing each AI's API console URL. Click any provider in the drawer to open its key-acquisition page in a new tab. Used for getting a new API key, checking key status, or finding billing/usage pages for the providers in your hive. The drawer groups defaults separately from any custom AIs you've added.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">⊞ Expand all · ⊟ Collapse all</span>
@@ -395,7 +395,7 @@
         <span class="info-label">⊞ Expand all · ⊟ Collapse all</span>
         <span class="goal-info-desc">Same expand-all / collapse-all controls as Internet mode.</span>
       </div>
-      <p><strong>Not in Server mode:</strong> the API Key Guide button (the default-provider key-acquisition flow doesn't apply), Recommend Models for All (server-hosted models are picked by your gateway operator, not by web research), and Open default AI websites (server endpoints don't have provider billing dashboards).</p>
+      <p><strong>Not in Server mode:</strong> the API Key Guide button (the default-provider key-acquisition flow doesn't apply), Recommend Models for All (server-hosted models are picked by your gateway operator, not by web research), and Get API keys (server endpoints don't expose individual provider consoles).</p>
     </div>
 
     <div class="wh-block">
@@ -1884,17 +1884,12 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Monitoring your spending</div>
-      <p>Click <strong>Open API Websites</strong> on the Setup screen to open the billing or usage dashboard for every AI in your hive simultaneously. Check your usage after your first few sessions to understand your actual per-round cost. Provider pricing changes periodically — bookmark your billing dashboards and check them at least monthly.</p>
+      <p>Click <strong>Get API keys</strong> on the Setup screen to open the in-app drawer listing each AI's console URL — most providers' API consoles also have a billing or usage tab. Check your usage after your first few sessions to understand your actual per-round cost. Provider pricing changes periodically — bookmark your billing dashboards and check them at least monthly.</p>
     </div>
 
     <div class="wh-block">
       <div class="wh-block-title">Perplexity — enable auto-billing before your first use</div>
       <p>Perplexity requires you to explicitly enable auto-billing in your account settings before API calls will succeed. If Perplexity's Test button returns a billing-related error, log into your Perplexity account at <a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="link-accent">console.perplexity.ai</a>, enable auto-billing, and retry the test.</p>
-    </div>
-
-    <div class="wh-block">
-      <div class="wh-block-title">Pop-up blocker and opening multiple billing pages</div>
-      <p>The <strong>Open API Websites</strong> button opens multiple browser tabs simultaneously. Most browsers block this by default and show a pop-up blocked notification in the address bar. Click the notification and choose <strong>Always allow pop-ups from this site</strong>, then click Open API Websites again. This only needs to be done once per browser.</p>
     </div>
 
     <div class="wh-block">
@@ -1997,11 +1992,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.3"></script>
-<script src="js/nav-helper.js?v=3.63.3"></script>
-<script src="js/license-helper.js?v=3.63.3"></script>
-<script src="js/version.js?v=3.63.3"></script>
-<script src="js/docs-scrollspy.js?v=3.63.3"></script>
+<script src="js/theme.js?v=3.63.4"></script>
+<script src="js/nav-helper.js?v=3.63.4"></script>
+<script src="js/license-helper.js?v=3.63.4"></script>
+<script src="js/version.js?v=3.63.4"></script>
+<script src="js/docs-scrollspy.js?v=3.63.4"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
