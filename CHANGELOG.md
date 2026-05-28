@@ -2,6 +2,58 @@
 
 ---
 
+## v3.61.3
+**Build:** `20260527-011` · **Released:** May 27, 2026
+
+### Release packaging — proper 27-file zip + full build-stamp sweep
+
+No content changes from v3.61.2. This release exists because the
+v3.61.2 zip went out under-built — only 13 of the 27 files the app
+actually loads were inside, and 17 comment-header `Build:` stamps
+across source files had been drifting silently since the v3.61.0
+ship-train started.
+
+v3.61.3 is the proper publishable release of the v3.61.2 copy
+polish: same Verify modal explainer rewrite, same Reference
+Material ordering language, same user-manual fixes, but with the
+complete app folder packaged and every drifted build stamp synced.
+Suitable to publish as a GitHub Release.
+
+#### What's in the zip
+
+All 27 files the running app loads, regardless of whether they
+changed in this release:
+
+- `index.html` + 5 helper HTML pages (`waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`)
+- `style.css`
+- `CHANGELOG.md`
+- 13 files in `js/`: `app.js`, `storage.js`, `version.js`, `wf-debug.js`, `theme.js`, `audio.js`, `scenes.js`, `api.js`, `api-links.js`, `templates.js`, `docs-scrollspy.js`, `license-helper.js`, `nav-helper.js`
+- 4 files in `lib/`: `pdf.min.js`, `mammoth.browser.min.js`, `jszip.min.js`, `xlsx.full.min.js`
+
+#### Build-stamp sweep
+
+Comment-header `Build: 20260527-011` is now in lockstep across:
+
+- All 6 HTML pages (was `20260527-010` on most, with `style.css`
+  having drifted as far back as `20260526-034` before this sweep)
+- All 10 JS files with a `Build:` header (templates.js has none —
+  this is by design and unchanged)
+- `style.css`
+
+Runtime `BUILD` constant in `app.js` → `20260527-011`. `meta
+name="waxframe-build"` content → `20260527-011` on all 6 HTML
+pages. Cache-bust `?v=3.61.3` synced across all 6 HTML pages,
+covering every CSS/JS/lib reference.
+
+#### Process change baked in going forward
+
+Every release now ships the complete 27-file deploy package, even
+files with no content change, and every drifted `Build:` stamp gets
+swept on every release — not just the touched files. Memory updated
+to lock this in.
+
+---
+
 ## v3.61.2
 **Build:** `20260527-010` · **Released:** May 27, 2026
 
@@ -55,11 +107,22 @@ sections are on the way."
 
 #### Files changed
 
-- `js/app.js` — `openVerifyModalForImport()` OCR + non-OCR explainer strings rewritten; `BUILD` → `20260527-010`.
+**Content edits:**
+- `js/app.js` — `openVerifyModalForImport()` OCR + non-OCR explainer strings rewritten; runtime `BUILD` → `20260527-010`.
 - `js/version.js` — `APP_VERSION` → `v3.61.2`.
-- `index.html` — default `#verifyExplainer` HTML text; Reference Material Setup 4 `hp-section-sub` blurb; `infoReferenceModal` "Multiple documents supported" row; Settings footnote; meta build stamp + cache-bust sweep.
-- `waxframe-user-manual.html` — Step 4 reference-card-list paragraph; Step 5 scanned-PDF flow paragraph; meta build stamp + cache-bust sweep.
-- `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp + cache-bust sweep.
+- `index.html` — default `#verifyExplainer` HTML text; Reference Material Setup 4 `hp-section-sub` blurb; `infoReferenceModal` "Multiple documents supported" row; Settings footnote.
+- `waxframe-user-manual.html` — Step 4 reference-card-list paragraph; Step 5 scanned-PDF flow paragraph.
+- `CHANGELOG.md` — this entry.
+
+**Build-stamp / cache-bust sweep (no content change):**
+- Comment-header `Build: 20260527-010` synced across all 6 HTML pages (index + 5 helpers), all 10 JS files (app, storage, wf-debug, theme, audio, scenes, api, api-links, docs-scrollspy, license-helper, nav-helper), and `style.css` (which had drifted all the way back to `20260526-034`).
+- Cache-bust query strings `?v=3.61.2` synced across all 6 HTML pages, covering style.css, version.js, storage.js, theme.js, audio.js, scenes.js, wf-debug.js, api.js, templates.js, api-links.js, app.js, nav-helper.js, license-helper.js, docs-scrollspy.js, and the four vendor minified libs (pdf, mammoth, jszip, xlsx).
+- HTML `meta name="waxframe-build"` content → `20260527-010` on all 6 pages.
+
+**Package includes (no edits, shipped for deploy completeness):**
+- `js/templates.js`, `js/theme.js`, `js/audio.js`, `js/scenes.js`, `js/api.js`, `js/api-links.js`, `js/docs-scrollspy.js`, `js/license-helper.js`, `js/nav-helper.js`, `js/storage.js`, `js/wf-debug.js`.
+- `lib/pdf.min.js`, `lib/mammoth.browser.min.js`, `lib/jszip.min.js`, `lib/xlsx.full.min.js`.
+- `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`, `style.css`.
 
 ---
 
