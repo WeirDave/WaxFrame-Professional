@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-013
+//  Build: 20260527-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-013';         // build stamp — update each session
+const BUILD       = '20260527-014';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -839,6 +839,30 @@ function saveAutoUpdateInterval(val) {
   localStorage.setItem('waxframe_auto_update_interval', val);
   const labels = { '24h': '24 hours', '1w': '1 week', '30d': '30 days' };
   toast(`🔄 Auto-update interval: every ${labels[val]}`, 3000);
+}
+
+// v3.62.2 — Reset every "Don't show this again" dismissal so the
+// associated confirms come back. Scans localStorage for any key with
+// the waxframe_suppress_ prefix and clears each. Surfaces a count toast
+// + console line so the user knows what happened.
+function resetSuppressedPrompts() {
+  let cleared = 0;
+  try {
+    const toRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && /^waxframe_suppress_/.test(k)) toRemove.push(k);
+    }
+    toRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch (e) {} });
+  } catch (e) { /* quota / privacy mode */ }
+  if (cleared > 0) {
+    toast(`↺ Restored ${cleared} dismissed prompt${cleared === 1 ? '' : 's'}`, 3000);
+    if (typeof consoleLog === 'function') {
+      consoleLog(`👤 You restored ${cleared} dismissed confirmation prompt${cleared === 1 ? '' : 's'}.`, 'info');
+    }
+  } else {
+    toast('Nothing to reset — no prompts are currently suppressed.', 3000);
+  }
 }
 
 // Internal: refresh ONE AI's model list without disturbing the picked
@@ -4848,12 +4872,33 @@ function getCachedRecommendation(cacheId) {
 //   if (await wfConfirm('Title', 'Body text')) { ... }
 // or with options:
 //   if (await wfConfirm('Title', 'Body', { okText: 'Remove', destructive: true })) ...
+//
+// v3.62.2 — opts.suppressKey: when set, this confirm can be permanently
+// dismissed by the user. The modal renders a "Don't show this again"
+// checkbox; if the localStorage flag for the key is already 'true', the
+// modal is skipped entirely and the promise resolves to true. Only set
+// suppressKey on INFORMATIONAL confirms — never on destructive actions
+// where the modal IS the safety brake. Reserved for the Settings panel
+// "Reset suppressed prompts" button (clears every suppressKey'd flag).
 let _wfConfirmResolve = null;
 let _wfConfirmCheckboxMode = false;  // v3.54.0 — when true, resolve {ok, checked}
+let _wfConfirmSuppressKey  = null;   // v3.62.2 — set on entry, consumed in wfConfirmOk
 
 function wfConfirm(title, message, opts = {}) {
+  // v3.62.2 — Suppressed-dismissal short-circuit. If the user previously
+  // ticked "Don't show this again" for this confirm, resolve true and
+  // skip the modal entirely. Reads localStorage defensively (quota /
+  // privacy modes fall through and show the modal normally).
+  if (opts.suppressKey) {
+    try {
+      if (localStorage.getItem(opts.suppressKey) === 'true') {
+        return Promise.resolve(true);
+      }
+    } catch (e) { /* fall through and show modal */ }
+  }
   return new Promise(resolve => {
     _wfConfirmResolve = resolve;
+    _wfConfirmSuppressKey = opts.suppressKey || null;
     const modal   = document.getElementById('wfConfirmModal');
     const titleEl = document.getElementById('wfConfirmTitle');
     const msgEl   = document.getElementById('wfConfirmMsg');
@@ -4864,6 +4909,10 @@ function wfConfirm(title, message, opts = {}) {
     // wfConfirmOk/Cancel then resolve an object { ok, checked } instead of
     // a bare boolean. Existing callers that don't pass opts.checkbox keep
     // the boolean contract unchanged (backward-compatible).
+    // v3.62.2 — suppressKey reuses the same checkbox row but keeps the
+    // resolution as a bare boolean (dismissal is handled inside
+    // wfConfirmOk, not surfaced to the caller). suppressKey and checkbox
+    // are mutually exclusive — if both are passed, checkbox wins.
     const checkRow  = document.getElementById('wfConfirmCheckRow');
     const checkBox  = document.getElementById('wfConfirmCheck');
     const checkLbl  = document.getElementById('wfConfirmCheckLabel');
@@ -4873,6 +4922,10 @@ function wfConfirm(title, message, opts = {}) {
         if (checkLbl) checkLbl.textContent = opts.checkbox.label || '';
         checkBox.checked = !!opts.checkbox.checked;
         checkRow.style.display = '';
+      } else if (opts.suppressKey) {
+        if (checkLbl) checkLbl.textContent = "Don't show this again";
+        checkBox.checked = false;
+        checkRow.style.display = '';
       } else {
         checkRow.style.display = 'none';
         checkBox.checked = false;
@@ -4880,6 +4933,9 @@ function wfConfirm(title, message, opts = {}) {
     }
     if (!modal) {
       const ok = window.confirm(message || title);
+      // v3.62.2 — native confirm fallback: persist suppressKey if user
+      // confirmed (no way to read a "don't show again" checkbox in the
+      // native dialog, so this branch is best-effort only).
       resolve(opts.checkbox ? { ok, checked: false } : ok);
       return;
     }
@@ -4898,15 +4954,24 @@ function wfConfirmOk() {
   const modal = document.getElementById('wfConfirmModal');
   if (modal) modal.classList.remove('active');
   if (_wfConfirmResolve) {
+    const checkBox = document.getElementById('wfConfirmCheck');
+    const checked  = !!(checkBox && checkBox.checked);
+    // v3.62.2 — Persist the suppressKey if user ticked "Don't show this
+    // again" AND clicked the confirm button. Cancel never persists —
+    // backing out of an informational confirm shouldn't permanently
+    // silence it.
+    if (_wfConfirmSuppressKey && checked) {
+      try { localStorage.setItem(_wfConfirmSuppressKey, 'true'); } catch (e) {}
+    }
     if (_wfConfirmCheckboxMode) {
-      const checkBox = document.getElementById('wfConfirmCheck');
-      _wfConfirmResolve({ ok: true, checked: !!(checkBox && checkBox.checked) });
+      _wfConfirmResolve({ ok: true, checked });
     } else {
       _wfConfirmResolve(true);
     }
     _wfConfirmResolve = null;
   }
   _wfConfirmCheckboxMode = false;
+  _wfConfirmSuppressKey  = null;
 }
 
 function wfConfirmCancel() {
@@ -4917,6 +4982,7 @@ function wfConfirmCancel() {
     _wfConfirmResolve = null;
   }
   _wfConfirmCheckboxMode = false;
+  _wfConfirmSuppressKey  = null;
 }
 
 // ════════════════════════════════════════════════════════════════════
@@ -5159,7 +5225,7 @@ async function _disableLengthGuard() {
   const ok = await wfConfirm(
     '📏 Disable length guard?',
     'The length guard will stop blocking rounds and convergence events that exceed your length target. The Hive will continue producing rounds even when the document is over the ceiling or under the floor. You can re-arm it any time from the same pill.',
-    { okText: 'Disable guard', cancelText: 'Cancel' }
+    { okText: 'Disable guard', cancelText: 'Cancel', suppressKey: 'waxframe_suppress_length_guard_disable_confirm' }
   );
   if (!ok) return;
   window._lengthGuardOverride = true;
@@ -5176,7 +5242,7 @@ async function _rearmLengthGuard() {
   const ok = await wfConfirm(
     '📏 Re-arm length guard?',
     'The length guard will resume blocking rounds and convergence events that violate your length target. You can disable it again from the next length-guard prompt if you change your mind.',
-    { okText: 'Re-arm guard', cancelText: 'Cancel' }
+    { okText: 'Re-arm guard', cancelText: 'Cancel', suppressKey: 'waxframe_suppress_length_guard_rearm_confirm' }
   );
   if (!ok) return;
   window._lengthGuardOverride = false;
