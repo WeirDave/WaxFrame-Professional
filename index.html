@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260527-011
+     Build: 20260527-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-011">
+  <meta name="waxframe-build" content="20260527-012">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.61.3">
+  <link rel="stylesheet" href="style.css?v=3.62.0">
 </head>
 <body>
 
@@ -889,7 +889,39 @@
             </div>
           </div>
 
-          <p class="settings-foot-note">More sections are on the way.</p>
+          <!-- v3.62.0 — Workflow Toggles section. The Length Guard +
+               Slow Alerts toggles here are live mirrors of the footer
+               pills (project-scoped for Length Guard, global for Slow
+               Alerts); flipping either runs the same handler the pill
+               does. -->
+          <div class="settings-section">
+            <h2 class="settings-section-title">🎛️ Workflow Toggles</h2>
+            <p class="settings-section-desc">Mirror toggles for the work-screen footer pills, so you can find them from one place when you're not on the work screen.</p>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Length guard</span>
+                <span class="settings-row-help">When armed, rounds and convergence events that exceed your length target are blocked so you can decide whether to trim, expand, or proceed. Same behavior as the footer pill — flipping it here goes through the same confirm step. Per-project state; resets when you start a new project.</span>
+              </div>
+              <label class="settings-toggle" title="Toggle">
+                <input type="checkbox" id="setLengthGuardArmed" onchange="settingsToggleLengthGuard(this.checked)">
+                <span class="settings-toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Slow-AI alerts</span>
+                <span class="settings-row-help">When on, a Troubleshooting Card surfaces when a reviewer is taking much longer than its peers and your average round time. Turn off for hands-off Auto runs where the chain shouldn't stop just because one AI is slow.</span>
+              </div>
+              <label class="settings-toggle" title="Toggle">
+                <input type="checkbox" id="setSlowAlertsEnabled" onchange="settingsToggleSlowAlerts(this.checked)">
+                <span class="settings-toggle-slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <p class="settings-foot-note">More sections are on the way — Auto-Update Model Lists and Checkpoint Backup land in v3.62.1 / v3.63.0.</p>
 
         </div>
       </div>
@@ -2392,20 +2424,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.61.3"></script>
-<script src="lib/mammoth.browser.min.js?v=3.61.3"></script>
-<script src="lib/jszip.min.js?v=3.61.3"></script>
-<script src="lib/xlsx.full.min.js?v=3.61.3"></script>
-<script src="js/version.js?v=3.61.3"></script>
-<script src="js/storage.js?v=3.61.3"></script>
-<script src="js/theme.js?v=3.61.3"></script>
-<script src="js/audio.js?v=3.61.3"></script>
-<script src="js/scenes.js?v=3.61.3"></script>
-<script src="js/wf-debug.js?v=3.61.3"></script>
-<script src="js/api.js?v=3.61.3"></script>
-<script src="js/templates.js?v=3.61.3"></script>
-<script src="js/api-links.js?v=3.61.3"></script>
-<script src="js/app.js?v=3.61.3"></script>
+<script src="lib/pdf.min.js?v=3.62.0"></script>
+<script src="lib/mammoth.browser.min.js?v=3.62.0"></script>
+<script src="lib/jszip.min.js?v=3.62.0"></script>
+<script src="lib/xlsx.full.min.js?v=3.62.0"></script>
+<script src="js/version.js?v=3.62.0"></script>
+<script src="js/storage.js?v=3.62.0"></script>
+<script src="js/theme.js?v=3.62.0"></script>
+<script src="js/audio.js?v=3.62.0"></script>
+<script src="js/scenes.js?v=3.62.0"></script>
+<script src="js/wf-debug.js?v=3.62.0"></script>
+<script src="js/api.js?v=3.62.0"></script>
+<script src="js/templates.js?v=3.62.0"></script>
+<script src="js/api-links.js?v=3.62.0"></script>
+<script src="js/app.js?v=3.62.0"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
