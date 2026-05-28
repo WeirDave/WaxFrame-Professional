@@ -2,6 +2,103 @@
 
 ---
 
+## v3.63.4
+**Build:** `20260527-021` · **Released:** May 27, 2026
+
+### Codex audit cleanup — straggler sweep
+
+A read-only audit by Codex surfaced five doc/asset misses that
+escaped previous releases. All five are surgical fixes — no JS logic
+changed.
+
+#### What was wrong
+
+- **`privacy.html` + `terms.html` missed the v3.63.1 helper-nav
+  sweep.** Both legal pages still rendered the old "Create Something"
+  section label, still included Prompt Editor in helper nav, and
+  carried no `index.html#settings` deep-link. Both were also stuck
+  at cache-bust `?v=3.60.8` while the rest of the app was at `3.63.1+`.
+
+- **Image assets referenced files that don't exist.**
+  `api-details.html` referenced `images/chatgpt.ico`,
+  `images/claude.ico`, and `images/perplexity.ico` (6 references,
+  inventory + key-acquisition card sections). The repo only has
+  `icon-chatgpt.png` / `icon-claude.png` / `icon-perplexity.png`.
+  The `onerror="this.style.display='none'"` attribute hid the broken
+  images silently — functional bug, just invisible.
+  `prompt-editor.html` and `what-are-tokens.html` referenced a
+  missing `images/favicon.png` for their `<link rel="icon">` tag.
+
+- **README version badge was stale at v3.52.7.** Eleven minor
+  versions behind reality.
+
+- **User manual text didn't match the current Worker Bees toolbar.**
+  Three blocks referenced an "Open default AI websites" / "Open API
+  Websites" button that no longer exists — the button was renamed
+  to "Get API keys" and the underlying behavior changed from
+  multi-tab popup to an in-app drawer. The popup-blocker
+  troubleshooting section was therefore documenting behavior that
+  doesn't happen anymore.
+
+- **Perplexity billing URL drift on `what-are-tokens.html`.** Still
+  pointed at `https://www.perplexity.ai/settings/api` while every
+  other reference across the codebase already moved to
+  `https://console.perplexity.ai`.
+
+#### What changed
+
+- **`privacy.html`, `terms.html`** — nav body replaced with current
+  helper-page structure (WaxFrame App section with Open WaxFrame +
+  Settings deep-link, no more Prompt Editor or "Create Something").
+  Cache-bust bumped to `?v=3.63.4`, build stamp synced.
+- **`api-details.html`** — 6 image references fixed:
+  `chatgpt.ico` / `claude.ico` / `perplexity.ico` →
+  `icon-chatgpt.png` / `icon-claude.png` / `icon-perplexity.png`.
+- **`prompt-editor.html`, `what-are-tokens.html`** — `favicon.png`
+  reference replaced with `Waxframe_logo_v19.png` (matches other
+  helper pages).
+- **`README.md`** — version badge bumped to v3.63.4.
+- **`waxframe-user-manual.html`** — 5 occurrences of the old
+  toolbar button text corrected:
+  - Line ~341: toolbar button enumeration
+  - Line ~370: info-row label + description (full rewrite for the
+    drawer behavior, not the obsolete multi-tab popup behavior)
+  - Line ~398: Server mode exclusion list
+  - Line ~1887: Monitoring your spending block
+  - Line ~1897: Pop-up blocker block (removed entirely — drawer
+    behavior never triggers a popup blocker)
+- **`what-are-tokens.html`** — Perplexity billing URL corrected to
+  `console.perplexity.ai`.
+
+#### docs/ now ships in the release zip
+
+Starting this release, the `docs/` folder is included in the
+distribution zip. Codex and other tools that audit by reading from
+GitHub were already seeing the backlog files in `docs/`; the zip
+just hadn't been shipping them. The current backlog
+(`WaxFrame_Backlog_Master_v54.txt`) is included along with the prior
+two versions (`v53`, `v52`) for the standard 3-version rollback
+margin. Older backlog files in your local `docs/` folder
+(`v51` and earlier) can be deleted after extraction.
+
+#### Files Changed
+
+- `privacy.html`, `terms.html` (nav-body replacement, build stamp,
+  cache-bust)
+- `api-details.html` (6 image refs)
+- `prompt-editor.html`, `what-are-tokens.html` (favicon ref +
+  Perplexity URL on what-are-tokens)
+- `waxframe-user-manual.html` (5 toolbar-text corrections + popup
+  block removal)
+- `README.md` (version badge)
+- `js/version.js` — `APP_VERSION` → `v3.63.4 Pro`
+- `js/app.js` — `BUILD` constant → `20260527-021`
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS,
+  and `style.css` — uniform `20260527-021`.
+- **NEW**: `docs/WaxFrame_Backlog_Master_v54.txt` included in zip.
+
+---
+
 ## v3.63.3
 **Build:** `20260527-020` · **Released:** May 27, 2026
 

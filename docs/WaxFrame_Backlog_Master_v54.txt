@@ -1,0 +1,66 @@
+WaxFrame Backlog Master v54
+2026-05-27
+
+State: v3.63.4 in production. Tonight's three releases: v3.63.2 settings docs truth-up, v3.63.3 dismiss-permanently expansion (9 total suppressKey'd confirms), v3.63.4 Codex audit cleanup (privacy/terms helper-nav sync + image asset refs + toolbar text + README badge + Perplexity URL drift). First release to ship docs/ folder in the zip.
+
+
+Next Up
+
+- Stale-reference audit on older helper pages — api-details.html, what-are-tokens.html, document-playbooks.html, prompt-editor.html. Look for: outdated version refs, prompt-editor links that survived (since menu removal), stale screenshots or copy that doesn't match current UI. (Carried from v53. Tonight's v3.63.4 fixed the image-asset stragglers but did not full-sweep these pages for copy drift.)
+
+- Troubleshooting Toolkit P0 — start with standalone waxframe_techsupport.html stub that loads when index.html is broken. Self-contained page, no app.js dependency. Low-risk first piece of the full P0. (Carried from v52.)
+
+- License-helper.js native confirm()/alert() migration. License removal flow on helper pages still uses jarring browser dialogs; the main app migrated to wfConfirm in v3.52.8 but the helper-page path was missed. Fix needs a design decision: (a) extract a minimal styled modal into license-helper.js itself, or (b) inject the modal HTML into every helper page that loads license-helper.js. Option (a) keeps the helper pages lean. Per Codex's v3.63.1+ audit.
+
+- Post-deploy gut check on v3.63.3 suppressKey paths — open Settings → Reset suppressed prompts, then trigger each of the 5 new confirms (Server/Internet switch, Add ref mid-session, Recommend Models for All, Go back to Home, Apply Template with a primer). Tick + confirm on each. Re-trigger to verify silent skip. Reset again should show ~9 prompts restored toast. (Carried from v53 — still pending verification.)
+
+
+Open Bugs
+
+(none open from this session)
+
+
+Open Features
+
+- Troubleshooting Toolkit P0 (full scope) — standalone techsupport page + diagnostic bundle generator (one button, three locations) + always-on forensic ring buffer (last 5-10 rounds) + scrubber function that auto-strips secrets + GitHub Issues URL integration with pre-filled body pattern (~8000 char body limit) + user-manual UX docs.
+
+- restoreRound scope clarification — define what should and should not roll back when restoring a round. Round 1 restore doesn't feel like a reset. Map every piece of session state to "rolls back" or "persists" and document the rule.
+
+- Custom templates — user-defined project templates beyond the built-in scaffolds.
+
+- Shareable templates — export/import templates between users.
+
+- Backup scrubber — utility to strip secrets from a backup file before sharing.
+
+- Deep Dive ring buffer — circular history of last N rounds of full reviewer responses, separate from main history for deep debugging.
+
+- Pause/resume at reviewer seam — finer-grained pause point inside a round so you can review before the Builder synthesizes.
+
+- File System Access API exploration — investigate whether the API can replace download-only backups with true file persistence for advanced users.
+
+- Two-layer AI management — separate the server/source layer (where models come from) from the selection layer (which models are in the hive). Currently fused.
+
+- Hive Profiles — saved checkbox-state configurations so a user can switch between "research hive," "draft hive," "polish hive" without manual setup each time.
+
+- Sources view formalizing servers as first-class entities — surface the model source as a top-level concept, not just a per-AI attribute.
+
+- CSS dead-selector cleanup branch — Codex's static-grep scan flagged ~155 likely-unused CSS selectors (old welcome cards, old custom AI form styles, removed autosave pill, old API intro/save-bar styles, removed goal-modal refine preview, old Best/Fast/Budget model controls, removed verify-panel styles). DO NOT blind-delete — static grep is insufficient. display:contents rules are load-bearing despite no visible effect, and class names built via JS template-literal concatenation evade word-boundary grep (see v3.21.26 regression). Needs a dedicated branch, surgical phased deletion, and visual smoke testing on every screen as a pre-deploy gate.
+
+
+Observations
+
+- Codex's audit pattern is now repeatable. Pull files into his context, ask for a read-only audit with line numbers and behavior deltas. He delivers a prioritized list with rejection reasoning baked in. Three audits in two sessions, three useful releases out of them. Lean on him whenever the next move is "what did we miss?" rather than "build this feature."
+
+- The docs/ folder now ships in the release zip. This is a meaningful workflow change. Codex was already reading docs/ via GitHub raw URLs, but every other consumer of the zip (offline installs, air-gapped Anduril work laptop) only saw what the zip contained. Now backlog state travels with the release.
+
+- Three-version rollback margin in docs/: keep the last 3 backlog files (v52, v53, v54 as of this release). When the zip ships v54, the local docs/ folder still contains v51 and possibly older — those should be deleted manually after extraction since zip extraction can't remove files. Future automation idea: a docs/ cleanup script that runs post-extract.
+
+- privacy.html and terms.html drifted to a v3.60.8 cache-bust without anyone noticing. Why: the standard release sweep only touches 6 HTML files (index + 5 helpers); legal pages weren't on the list. Decision: privacy.html and terms.html are now part of the standard 8-HTML sweep. Memory rule updated.
+
+- Image references with onerror="this.style.display='none'" silently hide 404s. This is a defense-in-depth that turned into a stealth bug carrier. Three icon files have been broken probably for many versions and no one saw it because the icons just didn't render. Worth a future audit: any onerror hide-on-fail pattern is hiding something.
+
+- The "Open default AI websites" / "Open API Websites" → "Get API keys" rename was a behavior change too, not just a label change. Old behavior: opened multiple browser tabs simultaneously (popup-blocker risk). Current behavior: opens an in-app drawer with clickable provider URLs (no popup-blocker risk). The manual was documenting both the old name AND the old behavior; this release brought both forward.
+
+- Cost ≠ destruction calibration from v3.63.3 reaffirmed — Recommend Models for All carries a suppressKey despite incurring API calls. The rule is about safety brakes on irreversible actions, not about cost. User clicked it intentionally; modal is "did you mean it?" not "you're about to lose data." Locked in.
+
+- Tonight's three-release pattern (docs truth-up → small feature → straggler cleanup) is a good rhythm. Each release was surgical, each had a single coherent theme, and the diffs stayed reviewable. Beats one fat v3.64.0 with all three concerns interleaved.
