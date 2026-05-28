@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-//  Build: 20260527-021
+//  Build: 20260527-022
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
@@ -153,12 +153,105 @@ function replaceLicenseKey() {
   showLicenseModal('');
 }
 
-function confirmRemoveLicense() {
-  if (!confirm('Remove your WaxFrame Pro license key from this browser?\n\nYou will revert to the free trial. If your trial is already used up, you will need to enter a license key to keep running rounds.')) return;
+// ── Styled confirm/notice for helper pages ──
+// Self-contained, injected once, reuses the .license-modal-* classes
+// already defined in style.css and loaded by every helper page. Replaces
+// the old native confirm()/alert() so license removal matches the rest
+// of the app's modal styling. No app.js dependency.
+function _ensureLhDialog() {
+  let overlay = document.getElementById('lhDialogOverlay');
+  if (overlay) return overlay;
+  overlay = document.createElement('div');
+  overlay.className = 'license-modal-overlay';
+  overlay.id = 'lhDialogOverlay';
+  overlay.innerHTML =
+    '<div class="license-modal">' +
+      '<img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">' +
+      '<h2 class="license-modal-title" id="lhDialogTitle"></h2>' +
+      '<p class="license-modal-msg" id="lhDialogMsg"></p>' +
+      '<div class="license-modal-actions" id="lhDialogActions"></div>' +
+    '</div>';
+  document.body.appendChild(overlay);
+  return overlay;
+}
+
+function lhConfirm(title, message, opts) {
+  opts = opts || {};
+  const okText     = opts.okText     || 'Confirm';
+  const cancelText = opts.cancelText || 'Cancel';
+  const danger     = !!opts.danger;
+  return new Promise(function(resolve) {
+    const overlay = _ensureLhDialog();
+    document.getElementById('lhDialogTitle').textContent = title;
+    document.getElementById('lhDialogMsg').textContent   = message;
+    const actions = document.getElementById('lhDialogActions');
+    actions.innerHTML = '';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className   = 'license-modal-btn-secondary';
+    cancelBtn.textContent = cancelText;
+
+    const okBtn = document.createElement('button');
+    okBtn.className   = danger ? 'license-modal-btn-danger' : 'license-modal-btn';
+    okBtn.textContent = okText;
+
+    function close(result) {
+      overlay.classList.remove('active');
+      overlay.onclick = null;
+      resolve(result);
+    }
+    cancelBtn.onclick = function() { close(false); };
+    okBtn.onclick     = function() { close(true); };
+    overlay.onclick   = function(e) { if (e.target === overlay) close(false); };
+
+    actions.appendChild(cancelBtn);
+    actions.appendChild(okBtn);
+    overlay.classList.add('active');
+    setTimeout(function() { okBtn.focus(); }, 100);
+  });
+}
+
+function lhNotice(title, message, okText) {
+  return new Promise(function(resolve) {
+    const overlay = _ensureLhDialog();
+    document.getElementById('lhDialogTitle').textContent = title;
+    document.getElementById('lhDialogMsg').textContent   = message;
+    const actions = document.getElementById('lhDialogActions');
+    actions.innerHTML = '';
+
+    const okBtn = document.createElement('button');
+    okBtn.className   = 'license-modal-btn';
+    okBtn.textContent = okText || 'OK';
+
+    function close() {
+      overlay.classList.remove('active');
+      overlay.onclick = null;
+      resolve();
+    }
+    okBtn.onclick   = close;
+    overlay.onclick = function(e) { if (e.target === overlay) close(); };
+
+    actions.appendChild(okBtn);
+    overlay.classList.add('active');
+    setTimeout(function() { okBtn.focus(); }, 100);
+  });
+}
+
+async function confirmRemoveLicense() {
+  const ok = await lhConfirm(
+    'Remove License',
+    'Remove your WaxFrame Pro license key from this browser? You will revert to the free trial. If your trial is already used up, you will need to enter a license key to keep running rounds.',
+    { okText: 'Remove Key', cancelText: 'Cancel', danger: true }
+  );
+  if (!ok) return;
   clearLicense();
   hideLicenseManageModal();
   updateLicenseBadge();
-  alert('License key removed');
+  await lhNotice(
+    'License Removed',
+    "Your license key has been removed from this browser. You're back on the free trial.",
+    'Got it'
+  );
 }
 
 // ── Init on load ──

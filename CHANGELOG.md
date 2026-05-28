@@ -2,6 +2,73 @@
 
 ---
 
+## v3.63.5
+**Build:** `20260527-022` · **Released:** May 27, 2026
+
+### Helper-page license modal + stale-comment cleanup
+
+Two follow-ups from the Codex audit. The headline fix retires the
+last native browser dialogs in the app; the rest is comment hygiene.
+
+#### Helper-page license removal now uses styled modals
+
+`license-helper.js` `confirmRemoveLicense()` was the last place in
+the app still using native `confirm()` and `alert()` — the main app
+migrated to `wfConfirm` back in v3.52.8, but the self-contained
+helper-page license logic was missed. Clicking "Remove Key" on a
+helper page (api-details, what-are-tokens, document-playbooks,
+prompt-editor, manual, privacy, terms) popped the jarring OS dialog.
+
+Fixed with a self-contained styled confirm/notice flow built inside
+`license-helper.js`:
+- New `lhConfirm(title, message, opts)` and `lhNotice(title, message,
+  okText)` helpers inject a single reusable dialog overlay on demand.
+- They reuse the existing `.license-modal-*` CSS classes already in
+  `style.css` and loaded by every helper page — **zero new CSS, zero
+  new HTML** across the 8 pages. The file stays true to its
+  "no app.js dependency" design.
+- The remove flow now shows a styled confirm (danger-styled "Remove
+  Key" button) and, on success, a styled "License Removed"
+  acknowledgment instead of a native alert.
+
+#### Stale comments cleaned
+
+- `js/app.js` (~line 3929) — the mode-aware toolbar comment block
+  still listed "Open default AI websites" as the fifth Internet-mode
+  button. Updated to "Get API keys" to match the actual rendered
+  button.
+- `waxframe-user-manual.html` (~line 33) — the helper-nav source
+  comment still described the menu as "Documentation / Create
+  Something / Support." Updated to the current "Documentation /
+  WaxFrame App / Tools / Support / Legal" structure. (Confirmed the
+  other seven HTML pages do not carry this stale comment.)
+
+#### Deferred (still on backlog)
+
+- **Dead-CSS cleanup** — Codex re-confirmed some previously suspected
+  selectors are actually live, which is exactly why this needs a
+  dedicated branch with visual smoke testing on every screen, not a
+  late-night delete. Clusters still flagged: `welcome-card`,
+  `save-bar`, `goal-modal-refine-*`, `ai-bfb-*`, autosave/verify-panel
+  remnants. Carried to v55.
+- **Troubleshooting Toolkit P0** — standalone `waxframe_techsupport.html`
+  hardening move, on deck.
+
+#### Files Changed
+
+- `js/license-helper.js` — `lhConfirm`/`lhNotice` helpers added;
+  `confirmRemoveLicense()` rewritten to use them (now async).
+- `js/app.js` — stale toolbar comment corrected; `BUILD` →
+  `20260527-022`.
+- `waxframe-user-manual.html` — stale nav source comment corrected.
+- `js/version.js` — `APP_VERSION` → `v3.63.5 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and
+  `style.css` — uniform `20260527-022`.
+- `docs/WaxFrame_Backlog_Master_v55.txt` shipped (current + v54 + v53
+  rollback margin).
+
+---
+
 ## v3.63.4
 **Build:** `20260527-021` · **Released:** May 27, 2026
 
