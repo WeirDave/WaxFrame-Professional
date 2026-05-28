@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260527-023
+//  Build: 20260528-001
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -835,7 +835,7 @@ function loadSettings() {
         referenceDocs = p.referenceDocs
           .filter(d => d && typeof d === 'object')
           .map(d => ({
-            id:       d.id       || generateRefDocId(),
+            id:       safeRefId(d.id),
             name:     d.name     || 'Reference',
             text:     d.text     || '',
             source:   d.source === 'upload' ? 'upload' : 'paste',
@@ -1120,9 +1120,21 @@ function _redactSessionContent(session) {
       return r;
     });
   }
-  // consoleHTML is kept as-is — entries are short status lines, not
-  // document content. (And it restores through sanitizeConsoleHTML on
-  // the off chance it's ever loaded.)
+  // v3.63.7 — content redaction now also scrubs the debug side-channels.
+  // ringBuffer (Deep Dive per-round captures) and lastFailure (troubleshooting
+  // context) can both contain prompt/response previews; consoleHTML can echo
+  // snippets of document text in some log lines. _redactSessionContent only runs
+  // when the user ticked "redact document text and AI responses", so honor that
+  // fully rather than leaking content through these channels.
+  if (Array.isArray(s.ringBuffer)) {
+    s.ringBuffer = `[REDACTED — ${s.ringBuffer.length} ring-buffer entries]`;
+  }
+  if (s.lastFailure) {
+    s.lastFailure = '[REDACTED]';
+  }
+  if (typeof s.consoleHTML === 'string') {
+    s.consoleHTML = `[REDACTED — ${s.consoleHTML.length.toLocaleString()} chars]`;
+  }
   return s;
 }
 
@@ -1158,6 +1170,34 @@ async function diagnosticSession() {
   let sessionOut = sessionIDB;
   if (redactContent && sessionIDB) sessionOut = _redactSessionContent(sessionIDB);
 
+  // v3.63.7 — LS_PROJECT carries pastedDocument + referenceDocs (the user's
+  // document and reference text), so it must honor the redact-content checkbox
+  // too. It previously shipped raw with a "no secrets" comment that overlooked
+  // document content. Setup fields (goal, length, tabs) stay so support keeps
+  // workflow context; only the document/reference text is masked.
+  let projectOut = project;
+  if (redactContent && project) {
+    try {
+      const p = JSON.parse(project);
+      const mark = (str) => typeof str === 'string'
+        ? `[REDACTED — ${str.length.toLocaleString()} chars]`
+        : str;
+      if (typeof p.pastedDocument === 'string') p.pastedDocument = mark(p.pastedDocument);
+      if (Array.isArray(p.referenceDocs)) {
+        p.referenceDocs = p.referenceDocs.map(d => ({
+          ...d,
+          text:    typeof d.text === 'string' ? mark(d.text) : d.text,
+          content: typeof d.content === 'string' ? mark(d.content) : d.content,
+        }));
+      }
+      projectOut = JSON.stringify(p);
+    } catch (e) {
+      // If LS_PROJECT won't parse, redact the whole blob rather than risk
+      // leaking unparsed content.
+      projectOut = '[REDACTED — project blob unparseable]';
+    }
+  }
+
   const bundle = {
     _waxframe_diagnostic:      true,    // NOT _waxframe_backup — import rejects this
     _waxframe_diagnostic_version: 1,
@@ -1166,7 +1206,7 @@ async function diagnosticSession() {
     _waxframe_diagnostic_ts:   Date.now(),
     _waxframe_content_redacted: redactContent,
     LS_HIVE:    hiveRedacted,   // credentials stripped
-    LS_PROJECT: project,        // project setup — workflow context, no secrets
+    LS_PROJECT: projectOut,     // project setup; document/reference text masked when redactContent
     IDB_SESSION: sessionOut,    // session data (content kept or redacted per checkbox)
   };
 
