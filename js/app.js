@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-022
+//  Build: 20260527-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-022';         // build stamp — update each session
+const BUILD       = '20260527-023';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7908,7 +7908,11 @@ async function extractPDF(file) {
 
   _stat('⏳ Parsing PDF structure…');
   const arrayBuffer = await file.arrayBuffer();
-  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+  // isEvalSupported: false — closes the CVE-2024-4367 eval code path
+  // (arbitrary JS execution via crafted font FontMatrix in a malicious
+  // PDF). WaxFrame only extracts text from uploads, never renders
+  // interactive PDFs, so disabling eval has no functional cost here.
+  const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
 
   // ── Outline (TOC) capture ──
   let outlineText = '';
