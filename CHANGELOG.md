@@ -2,6 +2,67 @@
 
 ---
 
+## v3.61.2
+**Build:** `20260527-010` · **Released:** May 27, 2026
+
+### Copy polish — Verify modal explainer + Reference Material ordering
+
+Front-face copy and documentation pass on top of v3.61.1. Five small
+edits, no logic changes. All risk-free.
+
+**Verify Import modal explainer rewritten.** The v3.61.0/.1 copy
+told the user *what* WaxFrame did ("We used AI vision to read this
+— the file wasn't plain-text readable…") but didn't tell them what
+to *do*. New copy is action-oriented and walks the user through the
+modal's three escape hatches in priority order:
+
+> Please check the extracted text on the right and adjust anything
+> that doesn't match. If there are too many things to fix, try the
+> Re-scan button to get another AI to look at it. If it looks good,
+> we recommend making a backup copy by using the Back up button.
+> Otherwise, click Proceed when you're satisfied.
+
+The non-OCR fallback explainer (shown when the IMPORT_WARNINGS card
+routes a DOCX-with-skipped-elements case into the same modal) got a
+parallel rewrite that drops the Re-scan reference, since that button
+is hidden when there are no PDF page images to re-OCR.
+
+**Reference Material — ordering explained.** Setup 4's descriptive
+blurb on the Reference Material screen now explains *why* the ▲ ▼
+reorder arrows on each card exist:
+
+> When you add more than one, order matters — the first card reads
+> as most authoritative to the hive; use the ▲ ▼ arrows on each
+> card to reorder.
+
+Prior to this release the rule lived only in the position-chip
+tooltip, which most users never hovered. The Reference Material
+info modal ⓘ row and the user-manual Step 4 paragraph got the same
+explicit "first card is most authoritative" treatment so the docs
+read consistently.
+
+**User manual — scanned-PDF flow updated.** The Step 5 prose still
+described the pre-v3.61.0 flow ("the result appears as the working
+document with a warning to verify accuracy"). Rewritten to describe
+the actual v3.61.0+ Verify modal flow that opens automatically when
+OCR returns.
+
+**Settings footnote tightened.** Dropped the trailing "The Auto
+behavior that consumes these options ships alongside the 'Auto
+really means Auto' work" sentence — it conflated two roadmap items
+and predated the v3.61.0 autosave cleanup. Now reads just "More
+sections are on the way."
+
+#### Files changed
+
+- `js/app.js` — `openVerifyModalForImport()` OCR + non-OCR explainer strings rewritten; `BUILD` → `20260527-010`.
+- `js/version.js` — `APP_VERSION` → `v3.61.2`.
+- `index.html` — default `#verifyExplainer` HTML text; Reference Material Setup 4 `hp-section-sub` blurb; `infoReferenceModal` "Multiple documents supported" row; Settings footnote; meta build stamp + cache-bust sweep.
+- `waxframe-user-manual.html` — Step 4 reference-card-list paragraph; Step 5 scanned-PDF flow paragraph; meta build stamp + cache-bust sweep.
+- `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — meta build stamp + cache-bust sweep.
+
+---
+
 ## v3.61.1
 **Build:** `20260527-009` · **Released:** May 27, 2026
 

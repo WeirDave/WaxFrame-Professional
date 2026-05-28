@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-009">
+  <meta name="waxframe-build" content="20260527-010">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.61.1">
+  <link rel="stylesheet" href="style.css?v=3.61.2">
 </head>
 <body class="helper-body">
 
@@ -775,7 +775,7 @@
 
     <div class="wh-block">
       <div class="wh-block-title">Adding reference documents</div>
-      <p>Setup 4 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, ordered, removable, and editable. The hive sees them in array order with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
+      <p>Setup 4 is built around a list of <strong>reference document cards</strong>. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, reorderable (▲ ▼ arrows on the card), removable, and editable. <strong>Order matters: the first card reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers in the prompt envelope so AIs can cite specific documents by name.</p>
       <p>Two action panels above the reference list let you add new ones:</p>
       <ul>
         <li><strong>Paste Text</strong> — clicking this panel (it has a clipboard icon) adds a new editable reference with an empty textarea below. Paste your text in and it becomes the reference's content. The reference name defaults to <em>Reference N</em> — rename it to something meaningful (e.g. <em>RFP Requirements</em>, <em>Style Guide</em>, <em>Job Description</em>) so the hive can cite it by name.</li>
@@ -1656,7 +1656,7 @@
     <div class="wh-block">
       <div class="wh-block-title">PDFs (.pdf)</div>
       <p><strong>Native text PDFs:</strong> Position-aware text extraction with detected tables converted to markdown, plus the document outline (TOC) when present, AcroForm form-field values when filled, and annotation comments and highlights inlined as <code>[Note on page N: contents]</code> markers at the page where they appear. Table detection is heuristic — works well for clean grid-aligned tables, may miss heavily-styled tables or those with merged-cell headers.</p>
-      <p><strong>Scanned or image-only PDFs:</strong> Routed automatically to AI vision transcription using the first vision-capable AI in your hive (ChatGPT, Claude, Gemini, or Grok). The result appears as the working document with a warning to verify accuracy. If no vision-capable AI key is configured, the importer returns whatever text it could extract along with a warning.</p>
+      <p><strong>Scanned or image-only PDFs:</strong> Routed automatically to AI vision transcription using the first vision-capable AI in your hive (ChatGPT, Claude, Gemini, or Grok). When the transcription returns, the <strong>Verify &amp; edit</strong> modal opens automatically so you can check the extracted text against the original PDF on the left, fix anything that doesn't match, re-scan with a different AI if too many things are wrong, back up a clean copy, and commit it to the project with Proceed. If no vision-capable AI key is configured, the importer returns whatever text it could extract along with a warning.</p>
       <p><strong>Mixed PDFs (mostly text with sparse pages):</strong> Pages with very little extractable text in an otherwise text-rich document trigger a heuristic OCR pass. The sparse pages are rendered to images and OCR'd via your vision-capable AI. The OCR output is appended as a separate section so the original text is preserved alongside it. This catches the common "screenshot of a table embedded in an otherwise text PDF" case that previously dropped silently.</p>
       <p><strong>Re-extract on demand:</strong> If the initial extraction for a PDF looks garbled or wrong, the work screen shows a banner offering to re-extract using AI vision. This re-runs the full-document vision transcription regardless of the original detection.</p>
     </div>
@@ -1878,11 +1878,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.61.1"></script>
-<script src="js/nav-helper.js?v=3.61.1"></script>
-<script src="js/license-helper.js?v=3.61.1"></script>
-<script src="js/version.js?v=3.61.1"></script>
-<script src="js/docs-scrollspy.js?v=3.61.1"></script>
+<script src="js/theme.js?v=3.61.2"></script>
+<script src="js/nav-helper.js?v=3.61.2"></script>
+<script src="js/license-helper.js?v=3.61.2"></script>
+<script src="js/version.js?v=3.61.2"></script>
+<script src="js/docs-scrollspy.js?v=3.61.2"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
