@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-008
+   Build: 20260528-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -774,7 +774,13 @@ html, body {
   flex-shrink: 0;
 }
 .ai-setup-name {
-  flex: 1;
+  /* v3.63.14 — was flex:1, but the row also has .ai-setup-summary-spacer with
+     flex:1, so both grew equally and the model badge ended up centered between
+     them instead of next to the name. Letting the name size to content (default
+     flex) keeps it flush-left; the spacer remains the sole grower so the action
+     slot still right-aligns. White-space:nowrap + ellipsis already handle the
+     long-name case, so flex:1 was redundant. */
+  flex: 0 1 auto;
   min-width: 0;
   font-weight: 600;
   font-size: var(--fs-13);
