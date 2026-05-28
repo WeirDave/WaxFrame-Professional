@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260527-019
+     Build: 20260527-020
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-019">
+  <meta name="waxframe-build" content="20260527-020">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.2">
+  <link rel="stylesheet" href="style.css?v=3.63.3">
 </head>
 <body>
 
@@ -948,7 +948,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset suppressed prompts</span>
-                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option — including Length Guard toggle (disable + re-arm), Sensitive Backup warning, Restore Backup warning, and the per-project Checkpoint Backup Nudge — leaves a suppression flag when dismissed. Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
+                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), Sensitive Backup warning, Restore Backup warning, per-project Checkpoint Backup Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
             </div>
@@ -2455,20 +2455,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.63.2"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.2"></script>
-<script src="lib/jszip.min.js?v=3.63.2"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.2"></script>
-<script src="js/version.js?v=3.63.2"></script>
-<script src="js/storage.js?v=3.63.2"></script>
-<script src="js/theme.js?v=3.63.2"></script>
-<script src="js/audio.js?v=3.63.2"></script>
-<script src="js/scenes.js?v=3.63.2"></script>
-<script src="js/wf-debug.js?v=3.63.2"></script>
-<script src="js/api.js?v=3.63.2"></script>
-<script src="js/templates.js?v=3.63.2"></script>
-<script src="js/api-links.js?v=3.63.2"></script>
-<script src="js/app.js?v=3.63.2"></script>
+<script src="lib/pdf.min.js?v=3.63.3"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.3"></script>
+<script src="lib/jszip.min.js?v=3.63.3"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.3"></script>
+<script src="js/version.js?v=3.63.3"></script>
+<script src="js/storage.js?v=3.63.3"></script>
+<script src="js/theme.js?v=3.63.3"></script>
+<script src="js/audio.js?v=3.63.3"></script>
+<script src="js/scenes.js?v=3.63.3"></script>
+<script src="js/wf-debug.js?v=3.63.3"></script>
+<script src="js/api.js?v=3.63.3"></script>
+<script src="js/templates.js?v=3.63.3"></script>
+<script src="js/api-links.js?v=3.63.3"></script>
+<script src="js/app.js?v=3.63.3"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

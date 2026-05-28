@@ -2,6 +2,79 @@
 
 ---
 
+## v3.63.3
+**Build:** `20260527-020` · **Released:** May 27, 2026
+
+### Dismiss-permanently expansion — five more informational confirms
+
+The `wfConfirm` `suppressKey` mechanism from v3.62.2 gets five new
+adopters. Each is an informational confirm — none gates a destructive
+action — so each is safe to silence with the "Don't show this again"
+checkbox once the user has internalized the consequence.
+
+#### New suppress keys
+
+- `waxframe_suppress_hive_mode_switch_confirm` — Server ↔ Internet mode
+  switch. Flipping modes hides the other side's AIs from the inventory
+  view but preserves keys; the modal exists to reassure power users
+  that the switch isn't destructive.
+
+- `waxframe_suppress_add_ref_midsession_confirm` — Adding a reference
+  document mid-session. Informational: explains that the new doc takes
+  effect on the NEXT round and past rounds keep their original snapshot.
+
+- `waxframe_suppress_recommend_all_confirm` — Recommend Models for All.
+  Confirms before firing parallel "what's your best model?" calls.
+  Not destructive but does incur API calls (typically 12 calls for the
+  6 default AIs); suppression is a power-user opt-out.
+
+- `waxframe_suppress_go_home_confirm` — Go back to Home with an active
+  session. Reassures the user that the session and document are saved
+  and can be returned to.
+
+- `waxframe_suppress_template_confirm__<id>` — **per-template**
+  suppression for educational template modals (e.g., Quick Start's
+  naming/versioning teaching moment). Silencing Quick Start's primer
+  does not silence primers on other templates the user hasn't tried
+  yet. Per-template key uses `tpl.id` (the template's stable slug).
+
+#### Pattern reaffirmed
+
+All five follow **Pattern A** semantics from v3.62.2: ticking the
+checkbox + clicking the confirm button persists the dismissal;
+ticking + clicking Cancel does NOT persist (cancel means "I want
+to see this next time"). `resetSuppressedPrompts()` is a prefix
+sweep — clicking the Settings reset button restores every dismissed
+prompt at once regardless of how many suppress keys live in
+localStorage.
+
+#### Hard line on destructive confirms
+
+Codex's audit vetted but **rejected** suppress keys on: Remove API
+Key, Clear Project, Replace Working Document, Clear Working
+Document, Remove Custom AIs, "Saved session did not load." Those
+are real safety brakes on irreversible actions and remain
+un-suppressible by design.
+
+#### Docs updated
+
+- `index.html` — Reset suppressed prompts help text now lists all
+  nine dismiss-able confirms (was four before this release).
+- `waxframe-user-manual.html` — Dismiss-permanently block expanded
+  to list every modal carrying the checkbox, with the per-template
+  semantics called out explicitly.
+
+#### Files changed
+
+- `js/app.js` — 5 `wfConfirm` call sites gain `suppressKey`
+  (lines ~1916, 2750-equivalent, 3902, 4231, 3500-equivalent).
+- `index.html`, `waxframe-user-manual.html` — docs reflect expanded list.
+- `js/version.js` — `APP_VERSION` → `v3.63.3 Pro`.
+- Build-stamp + cache-bust sweep across the standard 6 HTML, 10 JS,
+  and `style.css` — uniform `20260527-020`.
+
+---
+
 ## v3.63.2
 **Build:** `20260527-019` · **Released:** May 27, 2026
 

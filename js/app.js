@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-019
+//  Build: 20260527-020
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-019';         // build stamp — update each session
+const BUILD       = '20260527-020';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1911,7 +1911,8 @@ async function confirmGoHome() {
   if (history.length > 0 || docText) {
     const ok = await wfConfirm(
       'Go back to Home?',
-      'Go back to the Home screen? Your session and document are saved — you can return to it by clicking Pro and navigating back to the work screen.'
+      'Go back to the Home screen? Your session and document are saved — you can return to it by clicking Pro and navigating back to the work screen.',
+      { suppressKey: 'waxframe_suppress_go_home_confirm' }
     );
     if (!ok) return;
   }
@@ -3492,10 +3493,19 @@ async function applyTemplate(templateId, path) {
   // Cancel aborts the apply entirely.
   if (tpl.confirmModal && typeof tpl.confirmModal === 'object') {
     const cm = tpl.confirmModal;
+    // v3.63.3 — per-template suppressKey. Each template's educational
+    // modal can be dismissed independently (a user who has seen the
+    // Quick Start primer five times can silence it without silencing
+    // primers on other templates they haven't tried yet). The gallery
+    // path-picker still warns about full-project reset up front, so
+    // suppressing the per-template modal is safe.
+    const tplSuppressKey = tpl.id
+      ? `waxframe_suppress_template_confirm__${tpl.id}`
+      : null;
     const ok = await wfConfirm(
       cm.title   || 'Apply Template',
       cm.message || '',
-      { okText: cm.okText || `Apply ${tpl.name}` }
+      { okText: cm.okText || `Apply ${tpl.name}`, suppressKey: tplSuppressKey }
     );
     if (!ok) return;
   }
@@ -3901,7 +3911,10 @@ async function setHiveMode(newMode) {
   const ok = await wfConfirm(
     isToServer ? 'Switch to Server mode' : 'Switch to Internet mode',
     msg,
-    { okText: isToServer ? '🖥 Switch to Server' : '🌎 Switch to Internet' }
+    {
+      okText: isToServer ? '🖥 Switch to Server' : '🌎 Switch to Internet',
+      suppressKey: 'waxframe_suppress_hive_mode_switch_confirm'
+    }
   );
   if (!ok) return;
   _hiveMode = newMode;
@@ -4227,7 +4240,8 @@ async function recommendModelsForAll() {
 
   if (!await wfConfirm(
     'Recommend Models for All',
-    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best Reviewer and Builder models? Runs in parallel — typically 5–15s total.`
+    `Ask each of your ${eligible.length} eligible AI${eligible.length !== 1 ? 's' : ''} to recommend its best Reviewer and Builder models? Runs in parallel — typically 5–15s total.`,
+    { suppressKey: 'waxframe_suppress_recommend_all_confirm' }
   )) return;
 
   const btn = document.getElementById('recommendAllBtn');
@@ -7698,9 +7712,11 @@ async function processRefFile(file) {
   const onSetupScreen = document.getElementById('screen-reference')?.classList.contains('active');
   if (!onSetupScreen && history.length > 0) {
     // v3.52.8 — native confirm() → wfConfirm()
+    // v3.63.3 — suppressKey added: this is an informational "next round" warning
     const proceed = await wfConfirm(
       'Add reference doc mid-session?',
-      `Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`
+      `Adding a new reference document mid-session takes effect on the NEXT round. Past rounds keep their original snapshot.\n\nProceed?`,
+      { suppressKey: 'waxframe_suppress_add_ref_midsession_confirm' }
     );
     if (!proceed) return;
   }

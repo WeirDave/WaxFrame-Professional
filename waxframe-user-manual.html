@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260527-019
+     Build: 20260527-020
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-019">
+  <meta name="waxframe-build" content="20260527-020">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.2">
+  <link rel="stylesheet" href="style.css?v=3.63.3">
 </head>
 <body class="helper-body">
 
@@ -1481,6 +1481,12 @@
         <li><strong>📏 Re-arm length guard?</strong> — fires when you flip the Length Guard from off back to armed. Explains that blocking will resume.</li>
         <li><strong>Sensitive backup</strong> — fires before you download a full Backup Session. Warns that the backup may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.</li>
         <li><strong>Restore from backup</strong> — fires before you open the file picker for Restore Session. Warns that restoring a backup can replace your local project, AI setup, API keys, and session state, and to only restore backups you created or trust.</li>
+        <li><strong>💾 Save a checkpoint backup?</strong> (per-project) — fires once per project on first reach of the work screen. Per-project key derived from project name + version; see the Checkpoint Backup Nudge block below for full semantics.</li>
+        <li><strong>Switch to Server / Internet mode</strong> — informational warning that flipping modes hides the other side's AIs from the inventory view (keys preserved, switch back anytime).</li>
+        <li><strong>Add reference doc mid-session?</strong> — informational warning that a new reference document takes effect on the NEXT round; past rounds keep their original snapshot.</li>
+        <li><strong>Recommend Models for All</strong> — confirms before running parallel "what's your best model?" calls across every keyed AI. Not destructive, but does incur API calls; suppression makes sense if you run it often.</li>
+        <li><strong>Go back to Home?</strong> — fires when leaving the work screen mid-session. Reassures you that the session and document are saved; suppress if you bounce between Home and Work frequently.</li>
+        <li><strong>Apply Template</strong> (per-template) — fires before applying a template that includes an educational primer (e.g., Quick Start's naming/versioning teaching moment). Suppression is per-template — silencing Quick Start's primer does not silence primers on other templates.</li>
       </ul>
       <p><strong>How dismissal persists:</strong></p>
       <ul>
@@ -1991,11 +1997,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.2"></script>
-<script src="js/nav-helper.js?v=3.63.2"></script>
-<script src="js/license-helper.js?v=3.63.2"></script>
-<script src="js/version.js?v=3.63.2"></script>
-<script src="js/docs-scrollspy.js?v=3.63.2"></script>
+<script src="js/theme.js?v=3.63.3"></script>
+<script src="js/nav-helper.js?v=3.63.3"></script>
+<script src="js/license-helper.js?v=3.63.3"></script>
+<script src="js/version.js?v=3.63.3"></script>
+<script src="js/docs-scrollspy.js?v=3.63.3"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
