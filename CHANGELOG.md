@@ -2,6 +2,63 @@
 
 ---
 
+## v3.63.7
+**Build:** `20260528-001` · **Released:** May 28, 2026
+
+### Security (P0) — reference-doc XSS hardening + diagnostic redaction completeness
+
+Two trust-boundary fixes from the Codex security sweep. Both touch import
+and diagnostic paths; no user-facing behavior changes in normal use.
+
+#### 1. Reference-doc ID injection (stored XSS from a crafted backup)
+
+Reference-doc ids are interpolated raw into inline event handlers and HTML
+attributes in `refCardMarkup` — `onclick="moveReferenceDocUp('${id}')"`,
+`id="refTa-${id}"`, etc. The render used `esc()`, which escapes `< > &` but
+**not quotes**, so an imported backup carrying a crafted id such as
+`'); someCode(); ('` could break out of the handler string and execute
+script in the page. Because WaxFrame keeps API keys and the license in
+browser storage, in-page script execution is a credential-theft risk.
+
+Fixed with the project's established two-layer pattern (mirrors `safeUrl()`):
+
+- **First line of defense (import):** `storage.js` now passes every imported
+  reference-doc id through a new `safeRefId()` helper, which strips the id to
+  `[A-Za-z0-9_-]` and falls back to a freshly generated id if nothing safe
+  remains. Legit ids (`ref_<base36>_<rand>`) pass through unchanged, so the
+  inline-handler lookups stay intact.
+- **Render-sink belt:** `refCardMarkup` normalizes the id through `safeRefId()`
+  and persists the result back to the doc before rendering, guaranteeing the
+  id is safe in both the JS-string and attribute contexts regardless of how
+  the doc entered the array.
+
+#### 2. Diagnostic bundle redaction completeness
+
+When a user ticked **"Also redact document text and AI responses"** on the
+diagnostic bundle, three channels still leaked content:
+
+- **`LS_PROJECT`** shipped raw — it carries `pastedDocument` and
+  `referenceDocs` (the user's full document and reference text). It's now
+  redacted (document/reference text masked; goal/length setup fields kept so
+  support retains workflow context).
+- **`ringBuffer`** (Deep Dive per-round captures) and **`lastFailure`**
+  (troubleshooting context) ride inside the session object and can contain
+  prompt/response previews. `_redactSessionContent()` now masks both.
+- **`consoleHTML`** can echo document snippets in some log lines; it's now
+  masked too when redaction is requested.
+
+Credentials were always stripped from diagnostic bundles regardless — this
+fix closes the *content* side, so the redact checkbox now means what it says.
+
+#### Files Changed
+
+- `js/app.js` — `safeRefId()` helper added; `refCardMarkup` render belt; `BUILD` → `20260528-001`.
+- `js/storage.js` — import id sanitization; `_redactSessionContent` extended (ringBuffer/lastFailure/consoleHTML); `LS_PROJECT` content redaction in the diagnostic bundle.
+- `js/version.js` — `APP_VERSION` → `v3.63.7 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and `style.css` — uniform `20260528-001`.
+
+---
+
 ## v3.63.6
 **Build:** `20260527-023` · **Released:** May 27, 2026
 

@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-023
+//  Build: 20260528-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -413,6 +413,20 @@ function generateRefDocId() {
   return 'ref_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 7);
 }
 
+// v3.63.7 — Reference-doc id sanitizer (XSS hardening). Ref-doc ids are used
+// raw inside inline event handlers and HTML attributes in refCardMarkup
+// (onclick="...('id')", id="refTa-id"). esc() escapes < > & but NOT quotes,
+// so an imported backup carrying a crafted id (e.g. "'); evil(); ('") could
+// break out of the handler string and execute. Legit ids are ref_<base36>_<rand>,
+// i.e. [A-Za-z0-9_-] only — strip anything outside that charset and fall back to
+// a fresh id if nothing safe remains. Mirrors the safeUrl() belt pattern:
+// storage-layer import validation is the first line of defense; this guarantees
+// the id is attribute- and JS-string-safe wherever it lands.
+function safeRefId(v) {
+  const cleaned = String(v ?? '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+  return cleaned || generateRefDocId();
+}
+
 // Build the labeled prompt-envelope block for all reference docs.
 // Returns empty string if no docs are present, so callers can append unconditionally.
 // Multi-doc setups get a count line + per-doc section headers so AIs can cite
@@ -444,7 +458,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-023';         // build stamp — update each session
+const BUILD       = '20260528-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -9703,7 +9717,16 @@ function refCardMarkup(doc, index) {
   const stats = computeRefStats(doc.text);
   const sourceIcon  = getRefSourceIcon(doc);
   const sourceLabel = getRefSourceLabel(doc);
-  const idAttr = esc(doc.id);
+  // v3.63.7 — render-sink belt for the ref-doc id (XSS). Import sanitizes ids
+  // (first line of defense); this guarantees the rendered id is safe for both
+  // the JS-string-literal handler context (onclick="...('id')") and the
+  // attribute context (id="refTa-id"), regardless of how the doc entered the
+  // array. Persist the normalized id back so the inline handlers — which look
+  // up by doc.id — stay in sync with what's rendered. safeRefId output is
+  // [A-Za-z0-9_-] only, so no further escaping is needed.
+  const safeId = safeRefId(doc.id);
+  if (doc.id !== safeId) doc.id = safeId;
+  const idAttr = safeId;
 
   const upBtn   = total > 1 && !isFirst ? `<button class="btn btn-sm ref-card-arrow" title="Move up" onclick="moveReferenceDocUp('${idAttr}')">▲</button>` : '';
   const downBtn = total > 1 && !isLast  ? `<button class="btn btn-sm ref-card-arrow" title="Move down" onclick="moveReferenceDocDown('${idAttr}')">▼</button>` : '';
