@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-012
+//  Build: 20260528-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -462,7 +462,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-012';         // build stamp — update each session
+const BUILD       = '20260528-013';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7935,16 +7935,20 @@ async function extractPDF(file) {
   }
   // Self-hosted worker — set once per session.
   if (!window._pdfjsWorkerSet) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.js';
+    // v3.63.16 — Upgraded to pdf.js 4.10.38 (was 3.11.174). 4.x ships ESM
+    // only, so the worker file is .mjs; pdf.js itself constructs the worker
+    // with type:'module' internally when the URL ends in .mjs.
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'lib/pdf.worker.min.mjs';
     window._pdfjsWorkerSet = true;
   }
 
   _stat('⏳ Parsing PDF structure…');
   const arrayBuffer = await file.arrayBuffer();
-  // isEvalSupported: false — closes the CVE-2024-4367 eval code path
-  // (arbitrary JS execution via crafted font FontMatrix in a malicious
-  // PDF). WaxFrame only extracts text from uploads, never renders
-  // interactive PDFs, so disabling eval has no functional cost here.
+  // isEvalSupported: false — was the runtime mitigation for CVE-2024-4367
+  // (arbitrary JS execution via crafted font FontMatrix in a malicious PDF).
+  // As of pdf.js 4.10.38 this is fixed at the library level, but we keep the
+  // option set as defense-in-depth — WaxFrame only extracts text from PDFs
+  // and never renders them interactively, so disabling eval has no cost.
   const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer, isEvalSupported: false }).promise;
 
   // ── Outline (TOC) capture ──

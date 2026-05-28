@@ -10,7 +10,7 @@
     "url": "https://github.com/WeirDave/WaxFrame-Professional.git"
   },
   "dependencies": {
-    "pdfjs-dist": "3.11.174",
+    "pdfjs-dist": "4.10.38",
     "mammoth": "1.13.1",
     "jszip": "3.10.1"
   }
