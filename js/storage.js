@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260527-022
+//  Build: 20260527-023
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1205,10 +1205,14 @@ async function importSession() {
   // `_waxframe_backup: true` magic-flag check stays as a format guard
   // inside the file reader — this modal is the human gate that runs
   // before the file picker even opens.
+  // v3.63.6 — suppressKey removed. Importing a backup is a destructive
+  // trust boundary (replaces project, keys, session); per the project
+  // rule, suppressKey belongs only on informational confirms, never on
+  // a safety brake. This warning must fire every time.
   const proceed = await wfConfirm(
     'Restore from backup',
     "Only restore backups you created or trust. A backup can replace your local project, AI setup, API keys, and session state.",
-    { okText: 'Choose file', suppressKey: 'waxframe_suppress_restore_backup_confirm' }
+    { okText: 'Choose file' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
