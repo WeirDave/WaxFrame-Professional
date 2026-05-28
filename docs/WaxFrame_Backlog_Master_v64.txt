@@ -1,0 +1,74 @@
+WaxFrame Backlog Master v64
+2026-05-28
+
+State: v3.63.9 in production. P0 security block CLEARED — ref-doc XSS hardening (safeRefId at import + render-sink belt) and diagnostic redaction completeness (LS_PROJECT + ringBuffer + lastFailure + consoleHTML) both shipped this morning. PDF CVE remains mitigated (isEvalSupported:false, v3.63.6); full upgrade is the only security follow-up left. Next priority is P1 Troubleshooting Toolkit. GitHub security scanning live (Dependabot + CodeQL + secret scanning + private vuln reporting + SECURITY.md + package.json).
+
+
+Next Up
+
+- P1 TROUBLESHOOTING TOOLKIT — now the top priority. Build order:
+    1. Standalone waxframe_techsupport.html — FULLY self-contained (inline <style> + inline <script>, audited exception, break-glass page that works even if style.css is corrupt). Dark/bee theme, can be ugly. Primary bug-report entry point.
+    2. GitHub Issues wiring: pre-fill URL (issues/new?title=..&body=..) — NO labels= in URL (404s for non-collaborators, verified). Labels applied via .github/ISSUE_TEMPLATE/bug_report.yml instead. Two-part flow: page generates SCRUBBED diagnostic bundle -> downloads; opens pre-filled issue with structured body (version/build/browser/error/repro); user drags bundle into the issue.
+    3. Nav link in main nav + helper navs (under Support); also surface the URL where findable when the app is DOWN (error overlay / README / min-screen).
+    4. Diagnostic bundle generator UI surfaced on the page (the redaction machinery is already correct as of v3.63.7 — reuse diagnosticSession()).
+    5. Forensic ring buffer / scrubber / user-manual docs.
+    Label to create when wiring the template: 'auto-reported' (or 'from-app') at github.com/WeirDave/WaxFrame-Professional/labels.
+
+- SECURITY (follow-up, not urgent): Full PDF.js upgrade 3.11.174 -> 4.2.67+. Already mitigated by isEvalSupported:false. The full vendor-lib swap is the durable fix but needs its own regression pass (PDF text extraction across the corpus, worker path, outline capture). Self-hosted lib swap in lib/pdf.min.js + lib/pdf.worker.min.js. When done, bump pdfjs-dist version in package.json so Dependabot stops flagging it. EXPECT: Dependabot will be flagging pdfjs-dist 3.11.174 for CVE-2024-4367 right now — that's correct and is the standing reminder for this item.
+
+- Post-deploy gut checks: v3.63.7 — (a) import a backup with reference docs, confirm cards render and reorder/rename/remove handlers still work (id linkage intact after safeRefId). (b) Generate a diagnostic bundle with the redact box CHECKED, open the JSON, confirm pastedDocument / referenceDocs text / ringBuffer / lastFailure / consoleHTML all show [REDACTED] and LS_PROJECT no longer carries raw document text. (c) Generate with box UNCHECKED, confirm content is present (support still gets what it needs). Earlier pending checks: v3.63.3 suppressKey paths, v3.63.5 license modal, v3.63.6 restore warning fires every time.
+
+- Triage CodeQL + Dependabot findings once first scans complete. CodeQL on a vanilla innerHTML/template-literal app will likely flag some patterns — some real (the ref-doc XSS class we just fixed), some false positives on audited patterns. Walk the list together.
+
+- Stale-reference copy-drift sweep on older helper pages (api-details, what-are-tokens, document-playbooks, prompt-editor) — image/URL/toolbar stragglers already fixed; remaining is copy/screenshot drift.
+
+
+Open Bugs
+
+(none open — multi-file reference upload fixed in v3.63.9; OCR ticker all-paths v3.63.8; P0 security v3.63.7)
+
+
+Open Features
+
+- Troubleshooting Toolkit P0/P1 (full scope) — standalone techsupport page + diagnostic bundle generator + always-on forensic ring buffer (last 5-10 rounds) + scrubber that auto-strips secrets + GitHub Issues URL integration + .github/ISSUE_TEMPLATE/bug_report.yml + user-manual UX docs.
+
+- GitHub Actions release-ceremony consistency check (deferred from the GitHub-tour session) — workflow that runs node --check on all JS, verifies build stamps match across files, validates no dead local asset links, on every push. Automates the manual verification. Needs iteration (can't test a workflow from chat), so build it when there's runway to watch it run green.
+
+- restoreRound scope clarification — define what should and should not roll back when restoring a round. Map every piece of session state to "rolls back" or "persists" and document the rule.
+
+- Custom templates — user-defined project templates beyond the built-in scaffolds.
+
+- Shareable templates — export/import templates between users.
+
+- Backup scrubber — utility to strip secrets from a backup file before sharing. (Shares machinery with the now-complete diagnostic redaction — could reuse _redactSessionContent / the LS_PROJECT redaction.)
+
+- Deep Dive ring buffer — circular history of last N rounds of full reviewer responses, separate from main history for deep debugging.
+
+- Pause/resume at reviewer seam — finer-grained pause point inside a round.
+
+- File System Access API exploration — investigate replacing download-only backups with true file persistence.
+
+- Two-layer AI management — separate the server/source layer from the selection layer. Currently fused.
+
+- Hive Profiles — saved checkbox-state configurations (research/draft/polish hives).
+
+- Sources view formalizing servers as first-class entities.
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors, SOME CONFIRMED LIVE by Codex. Static grep insufficient (display:contents load-bearing; JS template-literal class names evade grep; ref v3.21.26). Dedicated branch, phased deletion, visual smoke test on every screen as pre-deploy gate. Flagged clusters: welcome-card, save-bar, goal-modal-refine-*, ai-bfb-*, autosave/verify-panel remnants. Reference style.css ~598.
+
+
+Observations
+
+- P0 security cleared in one surgical release (v3.63.7). Both fixes followed the codebase's established two-layer trust-boundary pattern (import sanitization + render-sink belt for XSS; the redaction function + bundle-assembly redaction for content). safeRefId mirrors safeUrl exactly.
+
+- safeRefId design: STRIP to [A-Za-z0-9_-] rather than regenerate, so legit ids pass through unchanged and the inline-handler lookups (which match by doc.id ===) stay intact. Only empty/all-bad ids fall back to a fresh generated id. Behaviorally tested: legit preserved, injection payloads stripped of all quotes/parens/brackets, empty falls back.
+
+- The diagnostic redaction was leaking 3 ways despite the checkbox: LS_PROJECT raw (biggest — full document), plus ringBuffer + lastFailure inside the session that the redactor never visited. Lesson: when a redaction function exists, audit EVERY field that ends up in the export, not just the obvious docText/history — side-channels (debug buffers, separate localStorage blobs) are where content hides. consoleHTML included for completeness.
+
+- Render-sink belt mutates doc.id in place when it's unsafe, persisting the normalized id so the rendered DOM id and the array id stay in sync (handlers look up by doc.id). Compute-once (single safeRefId call) avoids the regenerate-returns-different-value-each-call trap.
+
+- Pre-surgery checkpoint when the worktree is already clean: the last pushed commit IS the checkpoint. Nothing to commit = nothing to lose; Discard All Changes reverts to it. No separate checkpoint commit needed.
+
+- New-day build stamp rolled to 20260528-001 (was 20260527-NNN). Daily sequence restarts at 001 on a new calendar day.
+
+- docs/ in zip ships latest backlog (v60) + WaxFrame_Rules_Reference.txt only. No older backlog versions (David keeps 3-version rollback locally, auto-deletes older).

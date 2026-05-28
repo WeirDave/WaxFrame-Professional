@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260528-002
+     Build: 20260528-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-002">
+  <meta name="waxframe-build" content="20260528-003">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.8">
+  <link rel="stylesheet" href="style.css?v=3.63.9">
 </head>
 <body>
 
@@ -388,7 +388,7 @@
           <img src="images/WaxFrame_Reference_Bee_v1.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Optional. Source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction). When you add more than one, order matters — the first card reads as most authoritative to the hive; use the ▲ ▼ arrows on each card to reorder.</p>
+            <p class="hp-section-sub">Optional. Source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction). When you add more than one, order matters — the first document reads as most authoritative to the hive; use the ▲ ▼ arrows on each card to reorder.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -421,8 +421,8 @@
                ondrop="handleRefFileDrop(event)">
             <div class="ref-action-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
             <div class="ref-action-text">Upload File</div>
-            <div class="ref-action-sub">Drag &amp; drop or click to browse — Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), .txt, .md</div>
-            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" style="display:none" onchange="handleRefFileSelect(event)">
+            <div class="ref-action-sub">Drag &amp; drop one or more files, or click to browse — Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), .txt, .md</div>
+            <input type="file" id="refFileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" multiple style="display:none" onchange="handleRefFileSelect(event)">
           </div>
         </div>
         <div id="refFileStatus" class="file-status" style="display:none;"></div>
@@ -506,7 +506,7 @@
           <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
                ondragover="handleDragOver(event)" ondrop="handleFileDrop(event)">
             <div class="drop-zone-icon"><svg viewBox="0 0 64 56" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-upload-cluster" aria-hidden="true"><g transform="translate(8,8) rotate(-12 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#F57C00"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><rect x="7" y="13" width="15" height="5" rx="0.5" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><line x1="7" y1="20.5" x2="22" y2="20.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.2"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">PPT</text></g><g transform="translate(15,5) rotate(4 16 18)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#1976D2"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="14" x2="22" y2="14" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="17.5" x2="22" y2="17.5" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><line x1="7" y1="21" x2="18" y2="21" stroke="rgba(255,255,255,0.6)" stroke-width="1.4"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">DOC</text></g><g transform="translate(22,11)"><path d="M4 2 H20 L28 10 V32 Q28 34 26 34 H6 Q4 34 4 32 Z" fill="#2E7D32"/><path d="M20 2 V10 H28 Z" fill="rgba(255,255,255,0.35)"/><path d="M20 2 L28 10" stroke="rgba(0,0,0,0.15)" stroke-width="0.6" fill="none"/><line x1="7" y1="13" x2="22" y2="13" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="17" x2="22" y2="17" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="7" y1="21" x2="22" y2="21" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="11.5" y1="11" x2="11.5" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><line x1="17" y1="11" x2="17" y2="22" stroke="rgba(255,255,255,0.7)" stroke-width="1.1"/><text x="16" y="30" text-anchor="middle" font-size="6.5" font-weight="800" fill="#ffffff" font-family="Arial,sans-serif">XLS</text></g></svg></div>
-            <div class="drop-zone-text">Drag &amp; drop or click to browse</div>
+            <div class="drop-zone-text">Drag &amp; drop a single file, or click to browse</div>
             <div class="drop-zone-sub">Supports Word (.docx), PDF, PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), or Markdown (.md)</div>
             <input type="file" id="fileInput" accept=".docx,.pdf,.pptx,.txt,.md,.xlsx,.xlsm" style="display:none" onchange="handleFileSelect(event)">
           </div>
@@ -2345,7 +2345,7 @@
       <div class="goal-info-row"><span class="info-label">When to use it</span><span class="goal-info-desc">RFPs, job descriptions, style guides, scoring rubrics, prior consensus decisions, vendor claims you need to cross-check against.</span></div>
       <div class="goal-info-row"><span class="info-label">When to skip it</span><span class="goal-info-desc">Most short documents do not need it. A cookie recipe or thank-you note has no source material to cite against.</span></div>
       <div class="goal-info-row"><span class="info-label">Editable mid-session</span><span class="goal-info-desc">Use the <strong>📚 Reference</strong> button on the Work screen to edit reference material between rounds. Edits apply to the next round.</span></div>
-      <div class="goal-info-row"><span class="info-label">Multiple documents supported</span><span class="goal-info-desc">Add as many references as you need — paste your own text or upload files. Each one is independently named, reorderable (▲ ▼ arrows on the card), and removable. <strong>Order matters: the first card reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers so AIs can cite specific documents by name.</span></div>
+      <div class="goal-info-row"><span class="info-label">Multiple documents supported</span><span class="goal-info-desc">Add as many references as you need — paste your own text or upload files. Each one is independently named, reorderable (▲ ▼ arrows on the card), and removable. <strong>Order matters: the first document reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers so AIs can cite specific documents by name.</span></div>
       <div class="goal-info-row"><span class="info-label">Token cost reality</span><span class="goal-info-desc">Reference material is sent to every reviewer every round. A 5,000-character RFP roughly doubles your prompt size, which roughly doubles per-round cost. Pick a cost-conscious Builder when reference material is large.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is most important. The hive cannot read what you do not paste — but it also costs you money for every token.</p>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
@@ -2455,20 +2455,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.63.8"></script>
-<script src="lib/mammoth.browser.min.js?v=3.63.8"></script>
-<script src="lib/jszip.min.js?v=3.63.8"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.8"></script>
-<script src="js/version.js?v=3.63.8"></script>
-<script src="js/storage.js?v=3.63.8"></script>
-<script src="js/theme.js?v=3.63.8"></script>
-<script src="js/audio.js?v=3.63.8"></script>
-<script src="js/scenes.js?v=3.63.8"></script>
-<script src="js/wf-debug.js?v=3.63.8"></script>
-<script src="js/api.js?v=3.63.8"></script>
-<script src="js/templates.js?v=3.63.8"></script>
-<script src="js/api-links.js?v=3.63.8"></script>
-<script src="js/app.js?v=3.63.8"></script>
+<script src="lib/pdf.min.js?v=3.63.9"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.9"></script>
+<script src="lib/jszip.min.js?v=3.63.9"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.9"></script>
+<script src="js/version.js?v=3.63.9"></script>
+<script src="js/storage.js?v=3.63.9"></script>
+<script src="js/theme.js?v=3.63.9"></script>
+<script src="js/audio.js?v=3.63.9"></script>
+<script src="js/scenes.js?v=3.63.9"></script>
+<script src="js/wf-debug.js?v=3.63.9"></script>
+<script src="js/api.js?v=3.63.9"></script>
+<script src="js/templates.js?v=3.63.9"></script>
+<script src="js/api-links.js?v=3.63.9"></script>
+<script src="js/app.js?v=3.63.9"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
