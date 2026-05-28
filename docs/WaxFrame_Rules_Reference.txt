@@ -1,0 +1,253 @@
+WaxFrame Professional — Project Rules Reference
+Last updated: 2026-05-27 (current production: v3.63.5)
+
+Living reference of the conventions and hard rules this project runs under.
+Update when a rule changes; this is the onboarding/consistency anchor for any
+AI or collaborator working on WaxFrame.
+
+
+====================================================================
+CORE CODE CONSTRAINTS
+====================================================================
+
+- Vanilla HTML/CSS/JS only — no frameworks.
+- No inline CSS, EXCEPT two audited exceptions:
+    (1) style="display:none" attributes (file inputs, banners, modals, dev
+        toolbar, custom AI selects). Toggled via direct JS .style. Do NOT
+        refactor to .is-hidden — past attempts caused show/hide regressions
+        because JS reads style.display directly.
+    (2) Snowflake seed style="--sx:Xpx;--fall:Ypx" lines — intentional
+        CSS-variable injections.
+- Monospace is Courier New only (--font-mono = 'Courier New'). Never
+  JetBrains Mono.
+- Token-based CSS values (--fs-*, --space-*, --modal-w-*). No hardcoded hex.
+  No !important except legitimate uses.
+- Surgical changes only. Warn before anything risky. Big-bang changes cause
+  regressions (ref v3.21.26 CSS deletion incident).
+- Reconcile all straggler code when removing functions/snippets.
+- Always output complete files, not snippets.
+- WORKING DOCUMENT 80ch COLUMN WIDTH IS SACRED AND LOAD-BEARING.
+  min-width: calc(80ch + 8px + 12px). Never alter. Fire-the-AI-level mistake.
+  Audit any work-screen CSS diff for this before shipping.
+- Desktop-only. Minimum viewport 1366x768 (enforced via min-screen-overlay).
+  Modal max-widths stay inside 1366 - 48px overlay padding = 1318px usable.
+- Code comments can lie. Read the actual runtime behavior, not the comments.
+
+
+====================================================================
+FILE HANDLING
+====================================================================
+
+- At session start, David wipes and re-uploads current files to /mnt/project/
+  — that folder is authoritative at chat start.
+- If David commits/pushes mid-chat, /mnt/project/ goes stale. Pull fresh from
+  https://raw.githubusercontent.com/WeirDave/WaxFrame-Professional/main/{file}
+  with cache-bust (?_=$(date +%s)) before further edits.
+- If files seem out of sync, ask David to re-upload rather than guessing.
+- Every delivered file is PRODUCTION. No draft/preview delivery exists. ZIPs
+  get extracted to the Dropbox repo and pushed via GitHub Desktop immediately.
+- Speculative / "what would this look like" work is code-in-chat ONLY, never
+  a deliverable file.
+- The repo lives inside Dropbox INTENTIONALLY (Dropbox backup has saved the
+  project multiple times). Never suggest moving it. The occasional
+  "fatal: Unable to write new index file" error is a known Dropbox/.git/index
+  race condition; workaround is retry or briefly pause Dropbox sync.
+
+
+====================================================================
+PRE-SURGERY CHECKLIST (before any risky code change)
+====================================================================
+
+1. David commits current known-good state via GitHub Desktop as a checkpoint.
+2. The exact before-state of the function being modified is captured verbatim
+   in the conversation (for paste-back).
+3. Rollback path: GitHub Desktop -> "Discard All Changes", or History ->
+   "Revert Changes in Commit".
+   (localStorage session state is independent of source-code rollback.)
+
+
+====================================================================
+RELEASE CEREMONY (every release)
+====================================================================
+
+1. Four version stamps:
+   - meta name="waxframe-build" in index.html
+   - APP_VERSION in js/version.js
+   - BUILD constant in js/app.js
+   - app.js?v= cache-bust query string in index.html
+
+2. Full cache-bust + build-stamp sweep:
+   - 8 HTML (index + 5 helpers + privacy.html + terms.html)
+   - 10 JS-with-headers (NOT templates.js — it has no header)
+   - style.css
+   These drift silently, so the sweep runs every release even on unchanged
+   files. Cache-bust ?v=X.Y.Z on all 8 HTML covers every CSS/JS/lib reference.
+
+3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line).
+
+4. Backlog version bump.
+
+5. Single ZIP of ALL deployment files (~32) preserving directory structure:
+   8 HTML, style.css, CHANGELOG, README, 13 js/*, 5 lib/* vendor files
+   (pdf.min, pdf.worker.min, mammoth.browser.min, jszip.min, xlsx.full.min),
+   plus the docs/ folder. Never individual files.
+
+6. docs/ ships IN the zip — current backlog + prior 2 versions (3-version
+   rollback margin). Delete older-than-3 from local docs/ after extraction
+   (zip overlay can't remove files).
+
+7. Sibling release-notes-vX.Y.Z.md — EXCLUDED from the ZIP, presented as a
+   separate artifact for pasting into the GitHub Release body.
+
+8. GitHub release timing: commit and push FIRST, verify the new version
+   appears in version.js on GitHub web, THEN create the release. Creating the
+   release before pushing produces wrong-version archives.
+
+
+====================================================================
+RELEASE NOTES RULES
+====================================================================
+
+- GitHub Flavored Markdown: ## headings, **bold** titles, `backticks` for
+  code/filenames, --- horizontal rules.
+- Do NOT lead with "# WaxFrame vX.Y.Z — Title" H1. GitHub already shows the
+  release name. Lead with a descriptive subtitle H1 only, then Build/Released
+  metadata, then --- divider, then ## Overview.
+- No "Deployment" / "Right-click -> Extract Here" section. Those are dev-side
+  instructions, not public release content.
+- Release notes END on the Files Changed section.
+
+
+====================================================================
+GITHUB DESKTOP COMMIT FORMAT
+====================================================================
+
+- Summary: VERSION-FIRST, ~80 chars max. "v3.63.5 — Short description"
+  (NOT description-first, NOT "...(v3.63.5)").
+- Description: short paragraph or short bullet list, NOT a press-release.
+  Detail belongs in the CHANGELOG and release notes; the commit message is a
+  navigation aid for git history.
+- Present both as plain code blocks for click-copy.
+- Every response that ships a release ends with the summary + description.
+
+
+====================================================================
+TWO-DOCUMENT PERSISTENCE (docs/)
+====================================================================
+
+(1) WaxFrame_Backlog_Master_vN.txt — plain working notepad, NOT official.
+    Sections: one-line state, Next Up, Open Bugs, Open Features, Observations.
+    NO "Recently Shipped" (GitHub is the source of truth). No metadata
+    headers, marker keys, or boxes. Bump version on change.
+
+(2) WaxFrame_Playbook_Test_Master_vN.txt — ALREADY MEASURED + PENDING +
+    HISTORICAL RUNS. Historical rows are permanent, never overwritten.
+    Canonical convergence data — never quote convergence numbers from memory.
+    When David shares run data, append a HISTORICAL RUNS row the same turn.
+
+- Mid-chat ideas, bugs, and measurements go into the matching file the SAME
+  turn. Scope pushback is correct; losing the idea is the process failure.
+
+
+====================================================================
+UI CONVENTIONS
+====================================================================
+
+- Five-screen setup flow (since v3.21.0):
+  1. Worker Bees  2. Builder  3. Your Project  4. Reference Material (optional)
+  5. Starting Document.
+- 14 provider icons in images/icon-*.png: chatgpt, claude, cohere, deepseek,
+  gemini, generic, grok, llama, mistral, perplexity, alfredo, lmstudio,
+  openwebui, together. wfIconUpload._CATALOG maps text -> PNG; matchCatalog()
+  exposes the matcher.
+- Modal mascot convention: API Bee (WaxFrame_API_Bee_v1.png) = auth/endpoint
+  modals (Import from Model Server, Add Custom AI, Test All Keys, Test Key).
+  Worker Bee (WaxFrame_Worker_Bee_v2.png) = bee-identity modals (Welcome,
+  Setup 1, unanimous convergence). Don't mix.
+- Audio rule: every direct-audio play* function (creates AudioContext or new
+  Audio()) MUST start with `if (_isMuted) return;` as the first statement.
+  Scene orchestrators delegate to gated per-effect helpers and don't need a
+  top-level guard.
+- Helper menu = strict SUBSET of the main menu. Differences are deletions
+  (things the helper context can't do), never divergences (different items in
+  the same slot). Locked v3.63.1.
+- wfConfirm suppressKey: only on INFORMATIONAL confirms, never on destructive
+  safety brakes. Two semantic patterns:
+    Pattern A (informational warnings): checkbox + confirm = persist;
+      checkbox + cancel = does NOT persist (cancel means "still show me").
+    Pattern B (feature opt-outs): checkbox = persist regardless of button.
+  Helper-page styled dialogs use lhConfirm/lhNotice in license-helper.js
+  (reuse .license-modal-* classes; no native confirm/alert anywhere).
+
+
+====================================================================
+ARCHITECTURE NOTES (load-bearing)
+====================================================================
+
+- JS lives in js/: app.js, version.js, api-links.js, nav-helper.js,
+  license-helper.js, plus storage, api, audio, scenes, theme, wf-debug,
+  docs-scrollspy, templates. 5 vendor libs in lib/ (self-hosted for air-gap).
+- Session storage: IndexedDB (waxframe_v2_db / session store, key 'current').
+  navigator.storage.persist() at DOMContentLoaded. localStorage LS_SESSION
+  kept as defense-in-depth fallback only.
+- Typography: DM Sans self-hosted (fonts/, @font-face in style.css, no Google
+  Fonts CDN). Monospace = system Courier New.
+- Builder hallucination defense ships in TWO layers (both needed):
+  (1) ANTI-HALLUCINATION RULES block in BUILDER_INSTRUCTIONS.refine;
+  (2) validateUserDecisions() runtime verification after extractConflicts().
+- Auto mode: "attempts" = nudge-then-hive cycles, not solo Builder grinds.
+  One Builder nudge, then re-enter the hive. You can't let the Builder make
+  all the choices — both trimming and expanding require hive vetting.
+- Length guard: hard cap stays strict on top always. Tolerance band =
+  user-defined bounds + tool-supplied tolerance. "Close enough" is a
+  constraint/coherence problem, not a math problem.
+- Open Auto choices ship as settings-with-defaults, not as blockers waiting
+  on David's answer. Automation that interrupts active user interaction
+  creates more problems than it solves.
+- CSS deletion sweeps: static grep is insufficient. display:contents rules
+  are load-bearing despite no visible effect; class names built via JS
+  template-literal concatenation evade word-boundary grep. Visual smoke
+  testing on every screen is a pre-deploy gate for any CSS cleanup.
+
+
+====================================================================
+COMMUNICATION & TONE (David's preferences)
+====================================================================
+
+- Direct and confident. No hedging — give a position with a confidence level
+  if uncertain.
+- No email sign-offs ("Best," etc.).
+- Push back on generic or inaccurate responses; David will do the same.
+- Skip excessive disclaimers.
+- Structured/scannable (bullets, headers) for technical content; short and
+  direct for quick factual answers. No fluff.
+- Peer-to-peer, SME treatment. Strong RF/Wi-Fi fundamentals assumed;
+  vendor-neutral framing preferred.
+- David calls Claude "brother," uses voice-to-text (expect transcription
+  artifacts), and wants confident calls with assumptions stated inline when
+  he can't answer mid-task (e.g., when driving).
+- Hates invented scope, over-explanation, and getting ahead of decisions.
+
+
+====================================================================
+CREDITS
+====================================================================
+
+- Candy — David's partner; credited WaxFrame Tester in the About modal since
+  v3.17.1.
+- Kai — David's ChatGPT instance; produces custom audio assets, provider
+  icons, and bee mascot artwork. Credit Kai in release notes when shipping a
+  Kai-produced asset.
+
+
+====================================================================
+ENVIRONMENT
+====================================================================
+
+- David is a Senior Wireless Network Engineer (CWNA, CWDP, CWAP) at Anduril
+  Industries (contractor). WaxFrame is a side project separate from the day
+  job, though he also uses it at work via the Anduril AI gateway "Alfredo"
+  (Open WebUI proxy). Air-gapped work laptop requires manual file transfer via
+  GitHub releases — which is part of why docs/ now ships in the zip.
+- Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, sold via
+  weirdave.gumroad.com) and Free (weirdave.github.io/WaxFrame-Free/).
