@@ -2,6 +2,52 @@
 
 ---
 
+## v3.63.9
+**Build:** `20260528-003` · **Released:** May 28, 2026
+
+### Fix — multi-file reference upload (drag a whole pile of mixed sources)
+
+Dragging or selecting more than one reference file only ever processed the
+**first** one — both `handleRefFileDrop` and `handleRefFileSelect` took
+`files[0]` and silently discarded the rest. Any path that did sneak more than
+one in ran concurrent extractions that raced on the shared `referenceDocs`
+array, which is what caused the line-number toggling and stacked-warning
+flakiness.
+
+Both handlers now funnel into a single `processRefFiles()` that:
+
+- Accepts the **whole** drop/selection (`multiple` is also now set on the
+  reference file input, so click-to-browse can pick several).
+- Processes files **strictly sequentially** (awaits each) — no concurrent
+  extraction, no race on shared state.
+- Runs **fast extractors first** (`.txt` / `.md` / `.docx` / `.pptx` /
+  `.xlsx`) so the drop visibly lands right away, then OCR-capable types
+  (`.pdf`, and anything unknown) last, where the per-file seconds-ticker
+  explains the wait. Bulk-drop order from the OS is arbitrary and cards are
+  reorderable, so sorting for speed costs nothing.
+- Shows a **batch progress label** (`(2 of 5) …`) on the status line.
+- **Never drops a file:** unknown / extension-less files fall into the slow
+  bucket and are still attempted (and error gracefully); one bad file no
+  longer aborts the rest of the batch.
+
+### Copy
+
+- Reference upload zone now reads **"Drag & drop one or more files…"** (it
+  handles multiple); the Starting Document zone reads **"Drag & drop a single
+  file…"** (it's deliberately one-at-a-time).
+- Reference intro + help row corrected: the first **document** (not "card")
+  reads as most authoritative to the hive — references can be any file type,
+  so "document" is the accurate noun.
+
+#### Files Changed
+
+- `js/app.js` — `processRefFiles()` multi-file sequential/fast-first ingestion; `processRefFile` gains an optional `batchLabel`; `BUILD` → `20260528-003`.
+- `index.html` — `multiple` on `refFileInput`; reference + starting-doc drop-zone copy; "first document" wording (×2).
+- `js/version.js` — `APP_VERSION` → `v3.63.9 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.8
 **Build:** `20260528-002` · **Released:** May 28, 2026
 

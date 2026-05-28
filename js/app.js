@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-002
+//  Build: 20260528-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -458,7 +458,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-002';         // build stamp — update each session
+const BUILD       = '20260528-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7719,7 +7719,7 @@ async function processFile(file) {
 // Thin UI wrapper around extractFromFile. XLSX uses 'multi' mode
 // (checkbox picker, one ref doc per selected sheet) so each sheet
 // gets its own independent card with its own token chip.
-async function processRefFile(file) {
+async function processRefFile(file, batchLabel = '') {
   // Mid-session-overwrite warning preserved from single-doc behavior.
   // With multi-doc, adding a doc never overwrites — but the warning still
   // educates users about which round will see the new doc.
@@ -7738,7 +7738,7 @@ async function processRefFile(file) {
   const status = document.getElementById('refFileStatus');
   if (status) {
     status.style.display = 'block';
-    status.textContent = `⏳ Reading ${file.name}…`;
+    status.textContent = `${batchLabel}⏳ Reading ${file.name}…`;
     setFileStatusState(status, 'loading');
   }
 
@@ -7791,7 +7791,7 @@ async function processRefFile(file) {
       const msg = allWarnings.length
         ? `⚠️ Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) — ${allWarnings[0]}`
         : `📚 Added ${docCount} ${docNoun} from "${file.name}" (${totalChars.toLocaleString()} chars) as reference material`;
-      status.textContent = msg;
+      status.textContent = batchLabel + msg;
       setFileStatusState(status, allWarnings.length ? 'warn' : 'ok');
       setTimeout(() => { if (status) { status.style.display = 'none'; status.textContent = ''; } }, 6000);
     }
@@ -7823,7 +7823,7 @@ async function processRefFile(file) {
   } catch (e) {
     console.error('Ref file extraction failed:', e);
     if (status) {
-      status.textContent = `❌ Could not read ${file.name}: ${e.message}`;
+      status.textContent = `${batchLabel}❌ Could not read ${file.name}: ${e.message}`;
       setFileStatusState(status, 'error');
     }
   }
@@ -10061,13 +10061,51 @@ function handleRefFileDrop(e) {
   e.preventDefault();
   _refDragCounter = 0;
   document.getElementById('refDropRow')?.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file) processRefFile(file);
+  processRefFiles(e.dataTransfer.files);
 }
 function handleRefFileSelect(e) {
-  const file = e.target.files[0];
-  if (file) processRefFile(file);
+  processRefFiles(e.target.files);
   if (e.target) e.target.value = '';
+}
+
+// v3.63.9 — Multi-file reference ingestion. Both the drop and the file-input
+// handlers funnel here. The old handlers took files[0] only and silently
+// dropped the rest of a multi-file drop/selection.
+//
+// Files are processed STRICTLY SEQUENTIALLY (await each) so concurrent
+// extractFromFile calls never race on the shared referenceDocs array — that
+// race was the line-number toggling / stacked-warning flakiness.
+//
+// Fast extractors (txt/md/docx/pptx/xlsx) run FIRST so the drop visibly lands
+// right away (instant cards = "it did something"); OCR-capable types (pdf, and
+// anything unknown) run LAST, where the per-file ticker explains the wait.
+// Bulk-drop order from the OS is arbitrary (a shift-select pile arrives in
+// filesystem order, not click order) and cards are reorderable, so sorting for
+// speed costs nothing. Unknown / extension-less files fall into the slow bucket
+// and are still ATTEMPTED (and error gracefully) — never dropped.
+async function processRefFiles(fileList) {
+  const files = Array.from(fileList || []);
+  if (!files.length) return;
+  const FAST = new Set(['txt', 'md', 'docx', 'pptx', 'xlsx', 'xlsm']);
+  const extOf = f => (f.name.split('.').pop() || '').toLowerCase();
+  // Stable fast-first sort (fast = 0, slow/unknown = 1); ties keep input order.
+  const ordered = files
+    .map((f, i) => ({ f, i, slow: FAST.has(extOf(f)) ? 0 : 1 }))
+    .sort((a, b) => (a.slow - b.slow) || (a.i - b.i))
+    .map(o => o.f);
+  const total = ordered.length;
+  for (let i = 0; i < total; i++) {
+    // Batch label is prepended to processRefFile's own status lines so the
+    // count survives that function overwriting the status with "Reading…".
+    const batchLabel = total > 1 ? `(${i + 1} of ${total}) ` : '';
+    try {
+      await processRefFile(ordered[i], batchLabel);
+    } catch (e) {
+      // processRefFile surfaces its own per-file error to the status line;
+      // swallow here so one bad file never aborts the rest of the batch.
+      console.error('Ref file processing failed:', ordered[i]?.name, e);
+    }
+  }
 }
 
 
