@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-007
+//  Build: 20260528-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -186,6 +186,10 @@ function saveModelForAI(aiId, modelId) {
     cfg.endpoint = cfg.endpointFn(modelId);
   }
   saveSettings();
+  // v3.63.13 — refresh the row so the new model surfaces in the card header
+  // (— gpt-5.5 etc.) immediately, not only after a full grid re-render. The
+  // expanded panel is preserved by _expandedAIIds, so the dropdown stays open.
+  renderAIRow(aiId);
   // v3.32.12 — note re-render removed. As of v3.32.12, the role-recommendation
   // notes are invariant to which model the user has selected — both ✨ Reviewer
   // and 🔨 Builder lines render whenever the caches exist, full stop. Changing
@@ -458,7 +462,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-007';         // build stamp — update each session
+const BUILD       = '20260528-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3856,6 +3860,7 @@ function buildAISetupRowHTML(ai) {
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
         <span class="ai-setup-name" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
+        ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
           : ''}
