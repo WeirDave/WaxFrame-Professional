@@ -2,6 +2,51 @@
 
 ---
 
+## v3.62.0
+**Build:** `20260527-012` · **Released:** May 27, 2026
+
+### Settings panel — Workflow Toggles section
+
+First slice of the v3.62.x "Settings panel buildout" planned in
+backlog v51. This release adds **Workflow Toggles**, a new section on
+the Settings screen that brings the work-screen footer pills into a
+discoverable single location.
+
+The two existing footer pills — **Length Guard** and **Slow-AI
+Alerts** — now have live mirror toggles in Settings. Flipping either
+toggle routes through the exact same handler the pill does:
+
+- **Length Guard** still uses the confirm modal (the "Disable guard?"
+  / "Re-arm guard?" wfConfirm step is preserved end-to-end). Cancel
+  out of the confirm and the toggle re-syncs to the unchanged state.
+- **Slow-AI Alerts** flips immediately — same toast, console log, and
+  pill label refresh as clicking the pill directly.
+
+Both toggles hydrate to current state every time the Settings screen
+is opened, so they're always accurate to the live project / preference.
+
+### What didn't ship in v3.62.0
+
+The Auto-Update Model Lists toggle and the Checkpoint Backup Nudge
+were both planned for v3.62.0 but defer to **v3.62.1** and **v3.63.0**
+respectively. Auto-Update needs a background scheduler that is non-
+trivial to get right (interval gating, multi-AI fetch sequencing,
+console messaging without UI interrupts); shipping the toggle without
+the scheduler would have been a non-functional half-feature. The
+Checkpoint Backup Nudge is a separate workflow piece and gets its
+own release ceremony.
+
+#### Files changed
+
+- `index.html` — new `🎛️ Workflow Toggles` settings section with two `<label class="settings-toggle">` rows (Length Guard + Slow Alerts); settings-foot-note text updated to flag what's coming.
+- `js/app.js` — `settingsToggleLengthGuard(wantArmed)` + `settingsToggleSlowAlerts(wantOn)` route the new toggles through the existing pill handlers; `renderSettings()` extended to hydrate both checkboxes; runtime `BUILD` → `20260527-012`.
+- `js/version.js` — `APP_VERSION` → `v3.62.0`.
+- Comment-header `Build: 20260527-012` synced across all 6 HTML, all 10 JS-with-headers, and `style.css`.
+- HTML `meta name="waxframe-build"` content + `?v=3.62.0` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.61.3
 **Build:** `20260527-011` · **Released:** May 27, 2026
 

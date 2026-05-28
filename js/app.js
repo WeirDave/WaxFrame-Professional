@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-011
+//  Build: 20260527-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-011';         // build stamp — update each session
+const BUILD       = '20260527-012';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -651,6 +651,18 @@ function renderSettings() {
       }).join('');
     vis.value = getVisionProviderPref();
   }
+
+  // v3.62.0 — Workflow Toggles section: live mirrors for the two pill
+  // toggles. Auto-Update Models + Checkpoint Backup land in v3.62.1 /
+  // v3.63.0.
+  const lgEl = document.getElementById('setLengthGuardArmed');
+  if (lgEl) {
+    // Length Guard is project-scoped via window._lengthGuardOverride.
+    // The pill reads "armed" when override is false, "off" when true.
+    lgEl.checked = !window._lengthGuardOverride;
+  }
+  const slowEl = document.getElementById('setSlowAlertsEnabled');
+  if (slowEl) slowEl.checked = _slowResponderEnabled;
 }
 
 // Save handlers — each fires on the control's change event, persists to
@@ -710,6 +722,40 @@ async function resetAutoSettings() {
   renderSettings();
   toast('↺ Auto settings reset to defaults', 3000);
   consoleLog('👤 You reset Auto Mode settings to defaults.', 'info');
+}
+
+// ============================================================
+//  v3.62.0 — Workflow Toggles settings (Length Guard + Slow
+//  Alerts pill mirrors). Auto-Update Models + Checkpoint Backup
+//  deferred to v3.62.1 / v3.63.0.
+// ============================================================
+
+// Settings-panel handler — routes through the existing toggleLengthGuard()
+// so the confirm-modal flow is identical to clicking the footer pill. The
+// checkbox in Settings reflects the "armed" state (true = armed, false =
+// off); since toggleLengthGuard() flips the *override* (true = off), we
+// only fire it when the user-driven change actually wants a flip.
+async function settingsToggleLengthGuard(wantArmed) {
+  const currentlyArmed = !window._lengthGuardOverride;
+  if (wantArmed === currentlyArmed) return;
+  await toggleLengthGuard();
+  // toggleLengthGuard() may bail at the confirm step — re-sync the
+  // checkbox in case the user cancelled out and we need to flip back.
+  const el = document.getElementById('setLengthGuardArmed');
+  if (el) el.checked = !window._lengthGuardOverride;
+}
+
+// Settings-panel handler — routes through toggleSlowResponder() so the
+// console log + toast + label/title update happen exactly as they do
+// when the user clicks the footer pill. Slow Alerts is a global pref
+// (no confirm step), so this is a direct passthrough.
+function settingsToggleSlowAlerts(wantOn) {
+  if (wantOn === _slowResponderEnabled) return;
+  toggleSlowResponder();
+  // Defensive re-sync (in case toggleSlowResponder's side effects
+  // recompute the state in an order we don't control).
+  const el = document.getElementById('setSlowAlertsEnabled');
+  if (el) el.checked = _slowResponderEnabled;
 }
 
 // ── AUDIO ──
