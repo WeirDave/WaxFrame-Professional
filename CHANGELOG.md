@@ -2,6 +2,47 @@
 
 ---
 
+## v3.63.10
+**Build:** `20260528-004` · **Released:** May 28, 2026
+
+### Fix — multi-file upload now shows its queue (no more "looks dead")
+
+v3.63.9 made multi-file reference upload reliable, but smoke-testing exposed a
+feedback gap: a batch processed sequentially with **no visible queue**. The
+`(N of M)` label was on the per-file status line, which the OCR ticker then
+overwrote — so during the long OCR stretch nothing appeared to be happening.
+A user assumed it had failed, **re-dropped the same files**, and got duplicate
+cards plus two concurrent batches racing.
+
+Four changes:
+
+- **Persistent batch banner** — a dedicated indicator (`#refBatchBanner`) owned
+  by the drain loop from drop to done, independent of the per-file status line
+  and the OCR ticker. Shows `Processing 3 of 6 — file.pdf · 3 more queued` and
+  stays visible through long OCR. The queue is never invisible again.
+- **Concurrency guard** — dropping more files while a batch is running now
+  **appends to the running queue** instead of starting a second concurrent
+  loop (which had reopened the shared-state race).
+- **Duplicate guard** — a file already in the list or already queued is skipped
+  by **name + size**, with a toast. Re-dropping a batch no longer duplicates
+  the files that already landed. (Name + size, so two genuinely different files
+  that share a name still both get in.)
+- **Deferred review** — OCR'd documents that need verification are collected and
+  surfaced as **click-to-review buttons after the batch lands**, instead of
+  popping review modals mid-stream while files are still processing.
+
+Cosmetic/UX only — extraction and redaction are unchanged.
+
+#### Files Changed
+
+- `js/app.js` — `processRefFiles` rewritten as enqueue + dedupe; new `_runRefQueue` drain loop, `_finishRefBatch`, and banner helpers; `processRefFile` gains a `verifyCollector` param and stores `_fileSize`; `BUILD` → `20260528-004`.
+- `index.html` — `#refBatchBanner` element in the reference section.
+- `style.css` — `.ref-batch-banner` rules (token-based).
+- `js/version.js` — `APP_VERSION` → `v3.63.10 Pro`.
+- Standard build-stamp + cache-bust sweep across 8 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.9
 **Build:** `20260528-003` · **Released:** May 28, 2026
 

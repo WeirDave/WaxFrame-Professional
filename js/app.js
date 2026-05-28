@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-003
+//  Build: 20260528-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -458,7 +458,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-003';         // build stamp — update each session
+const BUILD       = '20260528-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -7719,7 +7719,7 @@ async function processFile(file) {
 // Thin UI wrapper around extractFromFile. XLSX uses 'multi' mode
 // (checkbox picker, one ref doc per selected sheet) so each sheet
 // gets its own independent card with its own token chip.
-async function processRefFile(file, batchLabel = '') {
+async function processRefFile(file, batchLabel = '', verifyCollector = null) {
   // Mid-session-overwrite warning preserved from single-doc behavior.
   // With multi-doc, adding a doc never overwrites — but the warning still
   // educates users about which round will see the new doc.
@@ -7766,6 +7766,7 @@ async function processRefFile(file, batchLabel = '') {
         text,
         source: 'upload',
         filename: file.name,
+        _fileSize: file.size,      // v3.63.10 — name+size dedupe on re-drop
         _blobUrl: sharedBlobUrl,   // in-memory only
         _isRenderable: isRenderable,
         _sourceType: docResult.sourceType,
@@ -7805,14 +7806,20 @@ async function processRefFile(file, batchLabel = '') {
       const ocrDoc = newlyAdded[0] ||
         (firstNewId !== null && referenceDocs.find(d => d.id === firstNewId && d._sourceType === 'pdf-vision'));
       if (ocrDoc) {
-        openVerifyModalForImport({
+        const verifyDesc = {
           target: 'reference',
           docId: ocrDoc.id,
           file,
           text: ocrDoc.text || '',
           sourceType: ocrDoc._sourceType,
           warnings: allWarnings,
-        });
+        };
+        // v3.63.10 — during a multi-file batch the drain loop passes a
+        // collector; defer the Verify modal to batch end (surfaced as
+        // click-to-review buttons) so modals don't interrupt mid-stream.
+        // A single add (no collector) opens immediately, as before.
+        if (verifyCollector) verifyCollector.push(verifyDesc);
+        else openVerifyModalForImport(verifyDesc);
       } else {
         const entry = WF_ERROR_CATALOG.find(e => e.code === 'IMPORT_WARNINGS');
         if (entry && typeof WF_DEBUG !== 'undefined' && WF_DEBUG.showCard) {
@@ -10068,43 +10075,149 @@ function handleRefFileSelect(e) {
   if (e.target) e.target.value = '';
 }
 
-// v3.63.9 — Multi-file reference ingestion. Both the drop and the file-input
-// handlers funnel here. The old handlers took files[0] only and silently
-// dropped the rest of a multi-file drop/selection.
+// ── Multi-file reference ingestion (v3.63.9 sequential core, v3.63.10 queue) ──
+// Both the drop and the file-input handlers funnel into processRefFiles().
 //
-// Files are processed STRICTLY SEQUENTIALLY (await each) so concurrent
-// extractFromFile calls never race on the shared referenceDocs array — that
-// race was the line-number toggling / stacked-warning flakiness.
+// v3.63.9 fixed the files[0]-only bug and made the batch run STRICTLY
+// SEQUENTIALLY (await each) so concurrent extractFromFile calls never race on
+// the shared referenceDocs array. Fast extractors (txt/md/docx/pptx/xlsx) run
+// FIRST so the drop visibly lands; OCR-capable types (pdf, unknowns) run LAST.
 //
-// Fast extractors (txt/md/docx/pptx/xlsx) run FIRST so the drop visibly lands
-// right away (instant cards = "it did something"); OCR-capable types (pdf, and
-// anything unknown) run LAST, where the per-file ticker explains the wait.
-// Bulk-drop order from the OS is arbitrary (a shift-select pile arrives in
-// filesystem order, not click order) and cards are reorderable, so sorting for
-// speed costs nothing. Unknown / extension-less files fall into the slow bucket
-// and are still ATTEMPTED (and error gracefully) — never dropped.
+// v3.63.10 hardens the UX that smoke-testing exposed:
+//   • Persistent BANNER (#refBatchBanner) owned end-to-end by the drain loop —
+//     independent of the per-file status line and the OCR heartbeat — so the
+//     queue stays visible through long OCR stretches. No more "looks dead".
+//   • CONCURRENCY GUARD: a 2nd drop while a batch is draining APPENDS to the
+//     running queue instead of starting a 2nd concurrent loop (which had
+//     reopened the race when a user re-dropped a batch that looked stuck).
+//   • DEDUPE by name+size: a file already in the list (or already queued) is
+//     skipped with a toast — the direct fix for the double-drop dupe.
+//   • DEFERRED verifies: OCR'd-doc review modals are collected and surfaced as
+//     click-to-review buttons AFTER the batch lands, so they stop interrupting
+//     mid-stream.
+let _refQueue = [];
+let _refBatchRunning = false;
+let _refBatchTotal = 0;
+let _refBatchDone = 0;
+let _refDeferredVerify = [];
+
+function _refBannerEl()      { return document.getElementById('refBatchBanner'); }
+function _refBannerTextEl()  { return document.getElementById('refBatchBannerText'); }
+function _refBannerRevEl()   { return document.getElementById('refBatchBannerReviews'); }
+
+function _showRefBatchBanner(msg) {
+  const b = _refBannerEl(), t = _refBannerTextEl();
+  if (b) b.style.display = 'block';
+  if (t) t.textContent = msg;
+}
+function _hideRefBatchBanner() {
+  const b = _refBannerEl(), r = _refBannerRevEl();
+  if (b) b.style.display = 'none';
+  if (r) r.innerHTML = '';
+}
+
 async function processRefFiles(fileList) {
-  const files = Array.from(fileList || []);
-  if (!files.length) return;
-  const FAST = new Set(['txt', 'md', 'docx', 'pptx', 'xlsx', 'xlsm']);
+  const incoming = Array.from(fileList || []);
+  if (!incoming.length) return;
+
+  // ── Dedupe by name+size against the live list AND anything already queued.
+  // (Name alone would reject two genuinely different files sharing a name.)
+  const sigOf    = f => `${f.name}::${f.size}`;
+  const existing = new Set(
+    referenceDocs.filter(d => d.filename)
+                 .map(d => `${d.filename}::${d._fileSize != null ? d._fileSize : ''}`)
+  );
+  const seen = new Set(_refQueue.map(sigOf));
+  const fresh = [], skipped = [];
+  for (const f of incoming) {
+    const s = sigOf(f);
+    if (existing.has(s) || seen.has(s)) { skipped.push(f.name); continue; }
+    seen.add(s);                       // also dedupes repeats within this drop
+    fresh.push(f);
+  }
+  if (skipped.length && typeof toast === 'function') {
+    toast(`Skipped ${skipped.length} file${skipped.length === 1 ? '' : 's'} already added: ` +
+          skipped.slice(0, 3).join(', ') + (skipped.length > 3 ? '…' : ''), 5000);
+  }
+  if (!fresh.length) return;
+
+  // ── Fast-first ordering (stable; ties keep order). ──
+  const FAST  = new Set(['txt', 'md', 'docx', 'pptx', 'xlsx', 'xlsm']);
   const extOf = f => (f.name.split('.').pop() || '').toLowerCase();
-  // Stable fast-first sort (fast = 0, slow/unknown = 1); ties keep input order.
-  const ordered = files
+  const ordered = fresh
     .map((f, i) => ({ f, i, slow: FAST.has(extOf(f)) ? 0 : 1 }))
     .sort((a, b) => (a.slow - b.slow) || (a.i - b.i))
     .map(o => o.f);
-  const total = ordered.length;
-  for (let i = 0; i < total; i++) {
-    // Batch label is prepended to processRefFile's own status lines so the
-    // count survives that function overwriting the status with "Reading…".
-    const batchLabel = total > 1 ? `(${i + 1} of ${total}) ` : '';
-    try {
-      await processRefFile(ordered[i], batchLabel);
-    } catch (e) {
-      // processRefFile surfaces its own per-file error to the status line;
-      // swallow here so one bad file never aborts the rest of the batch.
-      console.error('Ref file processing failed:', ordered[i]?.name, e);
+
+  // ── Enqueue. Concurrency guard: if a drain is already running, append and
+  //    let it pick these up — never start a second concurrent loop. ──
+  _refQueue.push(...ordered);
+  _refBatchTotal += ordered.length;
+  if (_refBatchRunning) {
+    const t = _refBannerTextEl();
+    if (t) t.textContent = `📥 Processing ${_refBatchDone + 1} of ${_refBatchTotal} — ${ordered.length} more added to the queue…`;
+    return;
+  }
+  _runRefQueue();   // fire-and-forget drain
+}
+
+async function _runRefQueue() {
+  if (_refBatchRunning) return;
+  _refBatchRunning = true;
+  _refDeferredVerify = [];
+  _refBatchDone = 0;
+  try {
+    while (_refQueue.length) {
+      const file  = _refQueue.shift();
+      const total = _refBatchTotal;
+      const pos   = _refBatchDone + 1;
+      const more  = _refQueue.length;
+      _showRefBatchBanner(`📥 Processing ${pos} of ${total} — ${file.name}` +
+                          (more ? `   ·   ${more} more queued` : ''));
+      const batchLabel = total > 1 ? `(${pos} of ${total}) ` : '';
+      try {
+        await processRefFile(file, batchLabel, _refDeferredVerify);
+      } catch (e) {
+        console.error('Ref file processing failed:', file && file.name, e);
+      }
+      _refBatchDone++;
     }
+  } finally {
+    _refBatchRunning = false;
+    _refBatchTotal = 0;
+    _refBatchDone = 0;
+    _finishRefBatch();
+  }
+}
+
+// End-of-batch: if any OCR'd docs need review, keep the banner up with
+// click-to-review buttons (deferred from mid-stream); otherwise flash a
+// brief "done" and hide.
+function _finishRefBatch() {
+  const reviews = _refDeferredVerify.slice();
+  _refDeferredVerify = [];
+  const t = _refBannerTextEl(), r = _refBannerRevEl();
+  if (!reviews.length) {
+    if (_refBannerEl()) {
+      _showRefBatchBanner('✓ All files added.');
+      setTimeout(_hideRefBatchBanner, 4000);
+    }
+    return;
+  }
+  if (t) t.textContent = `✓ All files added — ${reviews.length} need${reviews.length === 1 ? 's' : ''} a quick review:`;
+  if (r) {
+    r.innerHTML = '';
+    reviews.forEach((desc, idx) => {
+      const btn = document.createElement('button');
+      btn.className = 'btn btn-sm ref-batch-review-btn';
+      btn.textContent = `🔍 Review ${desc.file && desc.file.name ? desc.file.name : ('document ' + (idx + 1))}`;
+      btn.addEventListener('click', function () {
+        openVerifyModalForImport(desc);
+        btn.remove();
+        if (!r.querySelector('button')) _hideRefBatchBanner();
+      });
+      r.appendChild(btn);
+    });
   }
 }
 
