@@ -2,6 +2,61 @@
 
 ---
 
+## v3.61.1
+**Build:** `20260527-009` · **Released:** May 27, 2026
+
+### Verify modal — neaten layout
+
+Cosmetic follow-up to v3.61.0. Three CSS-only fixes for the new
+consolidated Verify Import modal, surfaced during real-PDF testing
+of the CandySimmons_Resume2023.pdf OCR'd import path.
+
+**Issues fixed:**
+
+- **Empty dark space below the footer buttons.** The modal had
+  `height: 100%` forcing it to fill the full 90vh overlay even when
+  content was shorter. Dropped — the modal now sizes to its content
+  (header + explainer + body + footer) and ends right under the
+  buttons, capped from above by `max-height: 90vh` as a safety.
+
+- **Bottom of page 1 cut off in the PDF iframe.** The body was
+  capped at `max-height: 55vh`, which on a typical laptop viewport
+  left ~60px of the first page below the visible area. Changed to
+  `height: 62vh` (definite, not max), which is ~one footer's worth
+  taller and lets the iframe show the full first page without
+  scrolling on a 1366×768 viewport.
+
+- **Explainer paragraph running to the right edge.** The blurb
+  spanned the full 1200px modal width as one or two awkwardly-long
+  lines. Capped `max-width: 800px` so it wraps into 3-4 neat lines
+  at a comfortable reading measure.
+
+**Width latitude used carefully.** The modal `max-width` was bumped
+from 1200px to 1300px — wider real estate gives the iframe more PDF
+page area per vertical pixel without making the modal taller. Stays
+inside the 1366×768 viewport floor (1366 − 48px overlay padding =
+1318px usable; 1300px leaves a 9px margin each side).
+
+#### Memory correction
+
+The prior "WaxFrame minimum viewport is 1024px" note in long-term
+memory was stale — actual enforced floor per the min-screen-overlay
+in index.html is **1366 × 768**, with **1600+ wide recommended**.
+Updated.
+
+#### Files changed
+
+- `style.css` — `.verify-panel`: drop `height: 100%`, bump
+  `max-width` 1200px → 1300px; `.verify-panel-body`: `max-height: 55vh`
+  → `height: 62vh`; `.verify-panel-explainer`: add `max-width: 800px`.
+- `js/version.js` — `APP_VERSION` → v3.61.1.
+- `js/app.js` — `BUILD` stamp → `20260527-009`.
+- `index.html`, `waxframe-user-manual.html`, `document-playbooks.html`,
+  `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` —
+  meta build stamp + cache-bust sweep.
+
+---
+
 ## v3.61.0
 **Build:** `20260527-008` · **Released:** May 27, 2026
 

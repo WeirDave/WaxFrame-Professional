@@ -12516,8 +12516,16 @@ kbd {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1200px;
-  height: 100%;
+  /* v3.61.1 — wider modal (was 1200px). Width is the cheap dimension on a
+     laptop; we'd rather spend horizontal real estate than vertical so the
+     iframe has more page area without the modal getting taller. The 1366px
+     viewport floor (min-screen-overlay) minus 48px of overlay padding leaves
+     1318px of usable width; 1300px stays inside that with a small margin. */
+  max-width: 1300px;
+  /* v3.61.1 — height: 100% removed. Was forcing the modal to fill 90vh even
+     when content was shorter, leaving empty dark space below the footer.
+     Modal now sizes to its content (header + explainer + body + footer),
+     capped from above by max-height as a safety. */
   max-height: 90vh;
   background: var(--surface);
   border: 1px solid var(--border2);
@@ -12557,6 +12565,11 @@ kbd {
 }
 .verify-panel-explainer {
   margin: 0 0 8px 0;
+  /* v3.61.1 — cap reading measure. The modal is now 1400px wide; without
+     this the blurb stretches into one or two awkwardly-long lines that hit
+     the right edge. 800px is a comfortable measure that wraps it into 3-4
+     neat lines. */
+  max-width: 800px;
   font-size: 13px;
   line-height: 1.5;
   color: var(--text);
@@ -12620,10 +12633,14 @@ kbd {
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
-  /* v3.61.0 — cap so iframe + textarea don't dominate the modal on tall
-     viewports. Leaves room for header + explainer/details + footer on a
-     1024px-min laptop screen. */
-  max-height: 55vh;
+  /* v3.61.1 — definite height (was max-height: 55vh). The modal no longer
+     has height: 100%, so the iframe inside needs a concrete target to fill;
+     `flex: 1 1 auto` with no parent height would collapse it to 0. 62vh is
+     also ~60px taller than the previous max-height: 55vh, which addresses
+     the v3.61.0 report that the bottom of page 1 was being cut off. Width
+     latitude (1300px modal, 1366px viewport floor) buys back enough PDF
+     area without the modal getting taller. */
+  height: 62vh;
 }
 .verify-pane {
   display: flex;
