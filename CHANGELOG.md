@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.12
+**Build:** `20260528-007` · **Released:** May 28, 2026
+
+### Menu cleanup + About modal redesign
+
+Visual + structural cleanup of the hamburger menu and a rebuild of the About
+modal so it reads cleanly. No functional code changes beyond the deprecation
+of one redundant menu entry.
+
+#### Menu
+
+- **Documentation + Support merged into Help & Support.** One section header
+  covering both the docs and the support page (which is itself a help/support
+  resource). Frees a section header and a divider — ~50px of vertical space
+  reclaimed before padding even kicks in.
+- **Diagnostic Bundle menu button removed from Advanced.** The Support page
+  now owns the diagnostic-bundle flow end-to-end (with the same redaction).
+  Two paths to the same artifact was confusing; one home is cleaner. The
+  `diagnosticSession()` function in `storage.js` is now orphaned and queued
+  for removal in a later cleanup pass (no other callers).
+- **Alphabetical within sections** — Tools (Backup Session, Import Backup,
+  License Key, Round History) and Help & Support (API Key Guide, Document
+  Playbooks, Support, User Manual, What Are Tokens?) reordered. Navigation
+  kept in workflow order (Setup 1→5 is a sequence, not a list — alphabet
+  would put Settings between Home and Setup 1 and break the wizard flow).
+  Advanced kept as Prompt Editor → Dev Tools so the conditional Exit Dev
+  Mode item nests cleanly at the bottom instead of splitting the section.
+- **Nav-item padding tightened** from `--space-10` to `--space-8` (10px → 8px
+  vertical) for a denser menu that fits more comfortably on smaller screens.
+
+#### About modal
+
+- **Pill labels replaced with side-stripe cards.** The inline orange pills
+  next to each row read as cluttered. Each row is now a `.wf-card.is-accent`
+  with the honey stripe on the left, an uppercase label as the heading, and
+  the value below — the same visual language as the green cards on the API
+  Key Guide page (now a globally reusable primitive instead of helper-only).
+- **`.wf-card` promoted to a global primitive.** Was scoped to `.helper-body`;
+  unscoped so the main app can use the same card system. Zero risk — the
+  class wasn't used outside helper pages.
+
+#### Files Changed
+
+- `index.html` — Documentation merged into Help & Support; Tools alphabetized; Diagnostic Bundle button removed; Help & Support alphabetized; About modal rebuilt with `.wf-card.is-accent` stack.
+- `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html` — Help & Support merge + alphabetical reorder.
+- `style.css` — `.nav-item` vertical padding `var(--space-10)` → `var(--space-8)`; `.wf-card` promoted to global (was `.helper-body .wf-card`); `.about-info-stack` compact overrides added.
+- `js/version.js` — `APP_VERSION` → `v3.63.12 Pro`.
+- Standard build-stamp + cache-bust sweep across 9 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.11
 **Build:** `20260528-005` · **Released:** May 28, 2026
 
