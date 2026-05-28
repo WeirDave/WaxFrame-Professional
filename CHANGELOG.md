@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.14
+**Build:** `20260528-009` · **Released:** May 28, 2026
+
+### Fix — AI card model badge centering
+
+The `— model-name` badge added in v3.63.13 was rendering **centered** in the
+card row instead of next to the provider name. Caused by `.ai-setup-name`
+and `.ai-setup-summary-spacer` both having `flex: 1`, so they each grabbed
+half the row's spare width and the badge ended up sandwiched between them.
+
+Fix: `.ai-setup-name` no longer grows (`flex: 0 1 auto`). The spacer remains
+the sole flexible element, so the badge now sits flush against the name and
+the action slot still right-aligns. `white-space: nowrap` + ellipsis on the
+name already handle the long-name case — `flex: 1` was redundant.
+
+#### Files Changed
+
+- `style.css` — `.ai-setup-name` flex changed from `1` to `0 1 auto`.
+- `js/version.js` — `APP_VERSION` → `v3.63.14 Pro`.
+- Standard build-stamp + cache-bust sweep across 9 HTML, 10 JS, and `style.css`.
+
+---
+
 ## v3.63.13
 **Build:** `20260528-008` · **Released:** May 28, 2026
 
