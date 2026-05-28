@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260527-015
+     Build: 20260527-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-015">
+  <meta name="waxframe-build" content="20260527-016">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.62.3">
+  <link rel="stylesheet" href="style.css?v=3.63.0">
 </head>
 <body class="helper-body">
 
@@ -907,6 +907,7 @@
     <div class="wh-block">
       <div class="wh-block-title">Clicking Launch WaxFrame →</div>
       <p>The <strong>Launch WaxFrame →</strong> button at the bottom right of the Starting Document screen is inactive until the document requirement is green. Once it is, click <strong>Launch WaxFrame →</strong> to move to the Work screen and begin your session. WaxFrame saves your project configuration automatically at this point.</p>
+      <p>The first time you reach the Work screen for a project, WaxFrame nudges you with a <strong>💾 Save a checkpoint backup?</strong> modal. This is the pre-token-burn checkpoint — a free, fast moment to grab a backup of your exact starting state so you can restore it if anything drifts later. The modal offers <em>Save Backup</em>, <em>Not now</em>, and a <em>Don't ask again for this project</em> checkbox. See <a href="#settings" class="link-accent">Settings → Checkpoint Backup Nudge</a> for the full rules.</p>
     <a href="#top" class="wh-back-top">↑ Back to top</a>
     </div>
   </div>
@@ -1493,6 +1494,18 @@
       <p><strong>Modals that do NOT carry the checkbox (by design):</strong> <em>destructive</em> confirms — Remove API Key, Clear Project, Clear All Reference Material, Remove N Custom AIs, Clear Working Document, and similar. These exist as a safety brake on an irreversible action; silencing them would be a footgun. If you find yourself wishing one of these were silenceable, the answer is almost always "you do not actually want to silence it."</p>
     </div>
 
+    <div class="wh-block">
+      <div class="wh-block-title">Checkpoint Backup Nudge</div>
+      <p>The first time you reach the work screen for a project — right after finishing the 5 setup screens and clicking <strong>Smoke the Hive</strong> — WaxFrame nudges you to save a checkpoint backup before you burn any tokens. The backup captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.</p>
+      <p>This modal carries a <em>Don't ask again for this project</em> checkbox, but the semantics are a little different from the four informational confirms above:</p>
+      <ul>
+        <li><strong>💾 Save Backup</strong> — runs the existing Backup Session flow. If you have not dismissed the <em>Sensitive backup</em> warning, that fires next; otherwise the backup downloads immediately.</li>
+        <li><strong>Not now</strong> (checkbox <em>unchecked</em>) — silent for the current session. If you launch into the same project again in a future browser session, you will see the nudge again.</li>
+        <li><strong>Don't ask again</strong> (checkbox <em>checked</em>, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both <em>Save Backup with checked</em> and <em>Not now with checked</em> persist the dismissal.</li>
+      </ul>
+      <p>The per-project key is derived from your project name and version. Renaming the project resets the suppression — treat that as a feature rather than a bug. Clicking ↺ Reset suppressed prompts in the Settings panel also clears all checkpoint-nudge dismissals along with the four informational confirms.</p>
+    </div>
+
     <a href="#top" class="wh-back-top">↑ Back to top</a>
         </div>
       </div><!-- /hp-section Settings -->
@@ -1981,11 +1994,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.62.3"></script>
-<script src="js/nav-helper.js?v=3.62.3"></script>
-<script src="js/license-helper.js?v=3.62.3"></script>
-<script src="js/version.js?v=3.62.3"></script>
-<script src="js/docs-scrollspy.js?v=3.62.3"></script>
+<script src="js/theme.js?v=3.63.0"></script>
+<script src="js/nav-helper.js?v=3.63.0"></script>
+<script src="js/license-helper.js?v=3.63.0"></script>
+<script src="js/version.js?v=3.63.0"></script>
+<script src="js/docs-scrollspy.js?v=3.63.0"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

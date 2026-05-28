@@ -2,6 +2,82 @@
 
 ---
 
+## v3.63.0
+**Build:** `20260527-016` · **Released:** May 27, 2026
+
+### Checkpoint Backup Nudge
+
+The first time you reach the Work screen for a project — right
+after finishing the 5 setup screens and clicking <strong>Launch
+WaxFrame →</strong> — WaxFrame now nudges you to save a checkpoint
+backup before you burn any tokens.
+
+#### Why this checkpoint specifically
+
+The original spec considered nudging after Round 1, but the
+pre-token-burn moment is where the backup is most valuable. At
+that point your hive setup, project goal, reference material, and
+starting document are fully assembled, but you haven't spent any
+money yet — so if anything drifts later (credit hiccup, an
+unexpected direction the document took, or a brand-new approach
+you want to try without losing this one), restoring from the
+checkpoint lands you exactly where you were the moment before the
+first round fired.
+
+#### Three outcomes
+
+- **💾 Save Backup** — runs the existing `backupSession()` flow.
+  If you've previously dismissed the v3.62.2 "Sensitive backup"
+  warning, the backup downloads immediately; otherwise that
+  warning fires next.
+- **Not now** (checkbox unchecked) — silent for the current
+  session. If you launch the same project again in a future
+  browser session, you'll see the nudge again. This is the right
+  choice if you mean to back up shortly but not right now.
+- **Don't ask again for this project** (checkbox checked + either
+  button) — persists a per-project suppression keyed on project
+  name + version. The nudge will not fire again for this project
+  on this browser.
+
+#### Semantic note vs. v3.62.2 informational confirms
+
+The v3.62.2 pattern treats cancel-with-checkbox as "do not save the
+suppression" — backing out of a warning should not silence it.
+This nudge inverts that rule: the checkbox always persists when
+checked, regardless of which button you clicked. That's because
+the checkpoint nudge is an opt-out from a feature, not a warning
+to silence; if you've decided you don't want it, both "Save and
+don't ask again" and "Not now and don't ask again" are coherent
+intents. Documented in the user manual.
+
+#### When the nudge fires (and when it doesn't)
+
+- **Fires:** when `initWorkScreen(isNewSession=true)` runs — the
+  post-setup Launch path, after `goToScreen('screen-work')`.
+- **Does not fire:** on session restore (`initWorkScreen(false)`),
+  on navigation back to the work screen mid-project, or when the
+  user has previously dismissed via either path above.
+- **Reset cases:**
+  - `clearProject()` resets the in-memory "Not now this session"
+    flag so the next project always gets the nudge.
+  - Renaming the project effectively resets the per-project
+    suppression (the localStorage key is derived from name +
+    version). Treat as a feature, not a bug.
+  - **↺ Reset suppressed prompts** in Settings → Workflow &
+    Updates clears all `waxframe_suppress_checkpoint_nudge__*`
+    keys along with the v3.62.2 informational-confirm dismissals.
+
+#### Files changed
+
+- `js/app.js` — `getProjectCheckpointSuppressKey()` slug helper, `maybeShowCheckpointBackupNudge()` gated dispatcher; `initWorkScreen()` extended to call the nudge at the tail on `isNewSession=true` via `setTimeout(0)` so the work screen paints behind the modal; `clearProject()` resets `_checkpointNudgeDismissedThisSession`. Runtime `BUILD` → `20260527-016`.
+- `waxframe-user-manual.html` — new "Checkpoint Backup Nudge" block in the Settings section explaining the three outcomes and the semantic difference vs. v3.62.2 informational confirms; brief mention added to the Step 6 "Clicking Launch WaxFrame" block with a link to the Settings docs.
+- `js/version.js` — `APP_VERSION` → `v3.63.0`.
+- All 17 source-file `Build:` comment-headers synced to `20260527-016`.
+- HTML `meta name="waxframe-build"` content + `?v=3.63.0` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.62.3
 **Build:** `20260527-015` · **Released:** May 27, 2026
 
