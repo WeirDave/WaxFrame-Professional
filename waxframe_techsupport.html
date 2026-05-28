@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Troubleshooting & Support (break-glass page)
-  Build: 20260528-003
+  Build: 20260528-004
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,26 +23,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-003">
+  <meta name="waxframe-build" content="20260528-004">
   <title>WaxFrame — Troubleshooting &amp; Support</title>
   <style>
+    /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
+       break-glass page must render correctly even if style.css is broken, so it
+       can't pull the live tokens. Keep in sync with style.css :root. */
     :root {
-      --bg:        #17110b;
-      --panel:     #221913;
-      --panel-2:   #2c211a;
-      --border:    #3d2f22;
+      --bg:        #0a0c12;
+      --panel:     #111318;
+      --panel-2:   #181b24;
+      --border:    #252838;
       --honey:     #f5a623;
-      --amber:     #f57c00;
-      --amber-dk:  #c8610a;
-      --text:      #f3e9dc;
-      --text-dim:  #b9a890;
-      --text-mute: #8a795f;
-      --ok:        #4caf7d;
-      --warn:      #e0a83c;
-      --err:       #e06a5a;
+      --amber:     #f5a623;
+      --amber-dk:  #f7b84a;
+      --text:      #e8ecf4;
+      --text-dim:  #9aa3b8;
+      --text-mute: #6b7494;
+      --ok:        #00b300;
+      --warn:      #fbbf24;
+      --err:       #f87171;
       --mono:      'Courier New', Courier, monospace;
-      --sans:      system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --sans:      'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
     }
+    /* Self-hosted DM Sans to match the app; degrades to system-ui if fonts/ is gone. */
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('fonts/dm-sans-v17-latin-regular.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:600; font-display:swap; src:url('fonts/dm-sans-v17-latin-600.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:700; font-display:swap; src:url('fonts/dm-sans-v17-latin-700.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:800; font-display:swap; src:url('fonts/dm-sans-v17-latin-800.woff2') format('woff2'); }
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
@@ -55,9 +63,8 @@
     main { max-width: 860px; margin: 0 auto; }
 
     .hdr { text-align: center; margin-bottom: 8px; }
-    .hex {
-      font-size: 40px; line-height: 1;
-      color: var(--amber); margin-bottom: 8px;
+    .logo {
+      height: 88px; width: auto; display: block; margin: 0 auto 12px;
     }
     h1 { font-size: 26px; margin: 0 0 4px; color: var(--text); }
     .tagline { color: var(--text-dim); font-size: 15px; margin: 0 0 6px; }
@@ -100,7 +107,7 @@
       transition: background .15s, opacity .15s; text-decoration: none;
       display: inline-flex; align-items: center; gap: 7px;
     }
-    button:hover, .btn:hover { background: var(--honey); }
+    button:hover, .btn:hover { background: var(--amber-dk); }
     button:disabled { opacity: .5; cursor: not-allowed; }
     .btn-ghost {
       background: transparent; color: var(--honey); border-color: var(--border);
@@ -152,7 +159,7 @@
   <main>
 
     <div class="hdr">
-      <div class="hex">⬡</div>
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="logo">
       <h1>Troubleshooting &amp; Support</h1>
       <p class="tagline">Something went wrong, or the app won't load? You're in the right place.</p>
       <p class="verline" id="verline">WaxFrame · loading version…</p>
@@ -222,15 +229,22 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.9"></script>
-  <script src="js/storage.js?v=3.63.9"></script>
+  <script src="js/version.js?v=3.63.10"></script>
+  <script src="js/storage.js?v=3.63.10"></script>
   <script>
   (function () {
     'use strict';
 
     var REPO = 'https://github.com/WeirDave/WaxFrame-Professional';
     var APP_VER  = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'unknown';
-    var APP_BLD  = (typeof BUILD !== 'undefined') ? BUILD : 'unknown';
+    // BUILD lives in app.js, which this break-glass page deliberately doesn't
+    // load. Fall back to the build stamp baked into this page's own <meta>
+    // (the release ceremony updates that on every HTML file, so it tracks).
+    var APP_BLD  = (function () {
+      if (typeof BUILD !== 'undefined') return BUILD;
+      var m = document.querySelector('meta[name="waxframe-build"]');
+      return (m && m.content) || 'unknown';
+    })();
 
     // ── version line ──
     var verEl = document.getElementById('verline');
@@ -306,28 +320,18 @@
       } catch (e) { done(false); }
     });
 
-    // ── open pre-filled GitHub issue (NO labels= — 404s for non-collaborators) ──
+    // ── open pre-filled GitHub issue using the bug_report.yml form ──
+    // The form auto-applies labels (bug, auto-reported), enforces required
+    // fields, and is pre-filled via field-id query params (?environment=…).
+    // The legacy ?labels= param is intentionally NOT used — labels on the
+    // form's own frontmatter avoid the 404 it caused for non-collaborators.
     var issueBtn = document.getElementById('openIssueBtn');
     if (issueBtn) issueBtn.addEventListener('click', function () {
       var title = '[Bug] ' + APP_VER + ' — ';
-      var body = [
-        '## What happened',
-        '_Describe the problem._',
-        '',
-        '## Steps to reproduce',
-        '1. ',
-        '2. ',
-        '3. ',
-        '',
-        '## Diagnostic bundle',
-        '- [ ] I attached a diagnostic bundle (drag the downloaded file in)',
-        '',
-        '## Environment',
-        '```',
-        envText,
-        '```'
-      ].join('\n');
-      var url = REPO + '/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+      var url = REPO + '/issues/new'
+              + '?template=bug_report.yml'
+              + '&title='       + encodeURIComponent(title)
+              + '&environment=' + encodeURIComponent(envText);
       window.open(url, '_blank', 'noopener');
     });
 
