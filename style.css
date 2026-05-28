@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-003
+   Build: 20260528-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1037,6 +1037,27 @@ html, body {
 .file-status--warn     { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
 .file-status--error    { background: var(--red-dim);    border-color: var(--red);    color: var(--red);    }
 .file-status-line      { font-size: var(--fs-11); margin-top: var(--space-4); opacity: 0.85; }
+/* v3.63.10 — Multi-file upload batch banner. Persistent queue indicator owned
+   end-to-end by the drain loop (independent of .file-status + the OCR
+   heartbeat) so a running batch stays visible through long OCR stretches.
+   Accent border makes "a batch is running" unmistakable. */
+.ref-batch-banner {
+  margin-top: var(--space-10);
+  padding: var(--space-12) var(--space-16);
+  border-radius: var(--radius-md);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-size: var(--fs-13);
+}
+.ref-batch-banner-main { font-weight: 600; }
+.ref-batch-banner-reviews {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  align-items: center;
+}
+.ref-batch-banner-reviews:not(:empty) { margin-top: var(--space-10); }
 .quota-warn-btn        { margin: 4px 0 4px 90px; font-size: 11px; }
 .file-clear-row        { margin-top: var(--space-6); }
 
