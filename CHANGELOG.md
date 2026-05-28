@@ -2,6 +2,80 @@
 
 ---
 
+## v3.62.1
+**Build:** `20260527-013` · **Released:** May 27, 2026
+
+### Auto-Update Model Lists — background refresh scheduler
+
+Second slice of the v3.62.x Settings-panel buildout. Adds the
+**Auto-Update Model Lists** toggle (default ON) plus a **Refresh
+interval** radio (24h / 1 week / 30 days, default 1 week) to the
+existing Workflow & Updates section, and wires both to a real
+background scheduler.
+
+#### How it works
+
+- **Trigger 1 — Work-screen entry.** Every time you reach the work
+  screen, `maybeRunAutoUpdateModels()` checks whether enough time has
+  elapsed since the last successful refresh. If yes, every configured
+  AI's model list gets re-fetched in parallel.
+- **Trigger 2 — Heartbeat.** A 15-minute interval re-runs the same
+  check while you stay on the work screen, so a long hands-off
+  session still gets a refresh at the right time without needing
+  navigation to fire it.
+- **Trigger 3 — Toggle-on.** Flipping the Settings toggle to ON
+  forces an immediate refresh (bypasses the interval gate) so a
+  stale-by-now cache doesn't have to wait.
+
+#### What gets refreshed (and what doesn't)
+
+The refresh updates **only the model list cache** (the dropdown
+options). Your **currently-picked model is left alone** — Auto-Update
+is the unobtrusive "is the catalog still current" pass, not the
+"pick a better model" pass. The existing **↻ Recheck** button on
+each AI row remains the explicit-action path for re-picking.
+
+If your currently-selected model isn't in the freshly-fetched list
+for any provider, you get:
+
+- A **toast** flagging which AIs have retired selections
+- A **console warning** per affected AI
+- Your saved selection is **left as-is** so you can decide whether
+  to recheck (auto-pick) or pick manually from the new list
+
+#### When OFF
+
+Model lists persist until you click ↻ Recheck on an AI row. No
+silent expiry, no background fetches. This release also notes for
+the record that no real "7-day MODELS_CACHE_TTL" existed in the
+codebase before Auto-Update — model caches lived forever, refreshed
+only by recheck. Auto-Update is now the single intentional source
+of refresh.
+
+#### Defensive details
+
+- **Per-AI errors don't abort the sweep.** One rate-limited provider
+  doesn't poison the whole pass.
+- **Reentrancy guarded.** A second trigger while a refresh is in
+  flight is a no-op.
+- **Empty passes don't stamp `last_run`.** If every AI errors or is
+  skipped (no key, no models endpoint), the next heartbeat tries
+  again instead of waiting the full interval from an empty pass.
+- **No UI interruption.** The refresh logs to the Live Console and
+  fires a toast only when a retired selection is detected.
+
+#### Files changed
+
+- `index.html` — Auto-Update Models toggle row + Refresh interval radio row restored in the Workflow & Updates section; settings-foot-note updated.
+- `js/app.js` — `AUTO_UPDATE_INTERVALS` map, `getAutoUpdateModelsEnabled`/`getAutoUpdateInterval`/`getAutoUpdateIntervalMs`/`getAutoUpdateLastRunMs` getters; `settingsToggleAutoUpdateModels` + `saveAutoUpdateInterval` panel handlers; `_autoUpdateRefreshOneAI` per-AI refresh; `refreshAllModelLists` sweep; `maybeRunAutoUpdateModels` interval-gated dispatcher; `startAutoUpdateHeartbeat` / `stopAutoUpdateHeartbeat` for the 15-min keep-alive; `initWorkScreen` extended to fire both on entry; `renderSettings` extended to hydrate toggle + interval radio + disabled-row class. Runtime `BUILD` → `20260527-013`.
+- `js/version.js` — `APP_VERSION` → `v3.62.1`.
+- `style.css` — radio-pill + disabled-row styles restored.
+- All 17 source-file `Build:` comment-headers synced to `20260527-013`.
+- HTML `meta name="waxframe-build"` content + `?v=3.62.1` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.62.0
 **Build:** `20260527-012` · **Released:** May 27, 2026
 
