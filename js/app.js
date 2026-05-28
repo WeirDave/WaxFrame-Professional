@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260527-016
+//  Build: 20260527-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -444,7 +444,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260527-016';         // build stamp — update each session
+const BUILD       = '20260527-017';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -16616,5 +16616,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       : 'The browser has not granted persistent storage. Bookmark this site, visit it regularly, and export transcripts after each session to be safe.';
     toast(`⚠️ Browser cleared your saved WaxFrame session. This was the browser, not WaxFrame. ${remediation}`, 18000);
     console.warn('[WaxFrame] Session eviction detected on load. Previous IndexedDB store was wiped by the browser between visits. Persistent storage status:', window._storagePersistent);
+  }
+
+  // v3.63.1 — Deep-link hash handler. Helper-page nav menus link to
+  // `index.html#settings` so a user reading the manual can jump straight
+  // into the Settings modal without navigating through the app first.
+  // Currently the only recognized hash is #settings; future deep-links
+  // can extend this dispatch. setTimeout lets the active screen paint
+  // before the modal opens. History API replaceState clears the hash so
+  // a subsequent reload does not re-trigger the action.
+  if (window.location.hash === '#settings') {
+    setTimeout(() => {
+      if (typeof openSettings === 'function') openSettings();
+      try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
+    }, 50);
   }
 });

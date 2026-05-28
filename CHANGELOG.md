@@ -2,6 +2,79 @@
 
 ---
 
+## v3.63.1
+**Build:** `20260527-017` · **Released:** May 27, 2026
+
+### Helper-page nav menu — alignment + Settings deep-link
+
+The hamburger menu on the five helper pages
+(`waxframe-user-manual.html`, `document-playbooks.html`,
+`what-are-tokens.html`, `api-details.html`, `prompt-editor.html`)
+was a mix of "subset of main app menu" and "different items." This
+release re-aligns it as a strict subset focused on cross-page
+wayfinding plus a route back into the app, and adds a real
+deep-link to Settings.
+
+#### Three concrete changes
+
+- **Prompt Editor removed from helper menus.** It's an in-app power
+  tool, not navigation between docs. Discovery path stays via the
+  main app's hamburger → Advanced → Prompt Editor. The Prompt
+  Editor page itself still loads with the helper-page menu — it
+  just no longer links to itself or from sibling helpers, which is
+  the right behavior for a self-contained tool.
+
+- **⚙ Settings added to helper menus.** Links to `index.html#settings`.
+  A new hash handler on the main app's `DOMContentLoaded` reads
+  `window.location.hash === '#settings'` after initialization and
+  calls `openSettings()` on a 50ms tick so the active screen paints
+  first. The hash is cleared via `history.replaceState` so a
+  subsequent reload does not re-trigger the modal. This is a real
+  deep-link — clicking Settings from the manual takes you straight
+  into the Settings modal in the app, not to a docs anchor.
+
+- **"Create Something" section renamed → "WaxFrame App"** and
+  Settings was placed there next to 🚀 Open WaxFrame, since both
+  items navigate to the main app. "Create Something" was a fuzzy
+  label that read like a creative-writing tool, not nav.
+
+#### The "Advanced" section disappears from helper menus
+
+It was Prompt Editor only. With Prompt Editor removed, the section
+goes too. The main app still has an Advanced section
+(Prompt Editor, Diagnostic Bundle, Dev Tools).
+
+#### Final helper-page menu structure
+
+```
+Documentation
+  🔑 API Key Guide
+  📋 Document Playbooks
+  📖 User Manual
+  🪙 What Are Tokens?
+WaxFrame App
+  🚀 Open WaxFrame
+  ⚙ Settings        ← new (deep-links to index.html#settings)
+Tools
+  🔑 License Key
+Support
+  🛒 Buy WaxFrame Pro
+Legal
+  🛡️ Privacy Policy
+  📜 Terms of Use
+```
+
+#### Files changed
+
+- `js/app.js` — `DOMContentLoaded` handler extended with a hash dispatcher: `#settings` calls `openSettings()` on a 50ms tick and clears the hash via `history.replaceState`. Currently the only recognized hash; future deep-links extend the same block. Runtime `BUILD` → `20260527-017`.
+- `waxframe-user-manual.html` / `document-playbooks.html` / `what-are-tokens.html` / `api-details.html` / `prompt-editor.html` — identical nav-menu block replacement in each. Section order: Documentation, WaxFrame App, Tools, Support, Legal. Prompt Editor removed; Settings deep-link added; "Create Something" → "WaxFrame App".
+- `js/version.js` — `APP_VERSION` → `v3.63.1`.
+- All 17 source-file `Build:` comment-headers synced to `20260527-017`.
+- HTML `meta name="waxframe-build"` content + `?v=3.63.1` cache-bust sweep on all 6 HTML pages.
+- All 27 files of the deploy package shipped regardless of whether they changed.
+
+---
+
 ## v3.63.0
 **Build:** `20260527-016` · **Released:** May 27, 2026
 
