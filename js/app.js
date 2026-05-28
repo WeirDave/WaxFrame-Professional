@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-001
+//  Build: 20260528-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -458,7 +458,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-001';         // build stamp — update each session
+const BUILD       = '20260528-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -8093,8 +8093,27 @@ async function extractPDF(file) {
             await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
             sparseImages.push({ pageNum, b64: canvas.toDataURL('image/jpeg', 0.85).split(',')[1] });
           }
-          // v3.58.7 — fallback across all keyed vision providers.
-          const { text: ocrText, used } = await runVisionWithFallback(sparseImages.map(s => s.b64), status);
+          // v3.63.8 — heartbeat the sparse-page OCR call too. The full-page
+          // vision path already ticks a seconds counter; the sparse-page path
+          // only set a static line, so OCR on docs that route here (clean text
+          // + a few low-density pages, e.g. a multi-page form with one image-
+          // only page) looked hung for the minute-plus the vision call takes.
+          // Mirror the full-page pattern: pass null as the statusEl so the
+          // heartbeat owns the status line instead of fighting the fallback's
+          // provider-advance writes.
+          window._visionActiveLabel = '';
+          const _hbBaseSparse = () => {
+            const who = window._visionActiveLabel ? `${window._visionActiveLabel} vision` : 'AI vision';
+            return `⏳ OCR pass on ${pageOcrCandidates.length} sparse page${pageOcrCandidates.length === 1 ? '' : 's'} with ${who} (can take a minute or two) —`;
+          };
+          const _stopHbSparse = _startStatusHeartbeat(status, _hbBaseSparse);
+          let _sparseRes;
+          try {
+            _sparseRes = await runVisionWithFallback(sparseImages.map(s => s.b64), null);
+          } finally {
+            _stopHbSparse();
+          }
+          const { text: ocrText, used } = _sparseRes;
           if (ocrText && ocrText.trim()) {
             result.text += `\n\n## OCR Pass (sparse pages: ${pageOcrCandidates.join(', ')})\n${ocrText.trim()}\n`;
             result.warnings.push(`OCR pass added content from sparse pages ${pageOcrCandidates.join(', ')} via ${used} — verify accuracy`);
@@ -8682,6 +8701,9 @@ async function verifyTryDifferentReader() {
   }
   if (btn) { btn.disabled = true; btn.textContent = `⏳ Re-scanning with ${nxt.label}…`; }
   if (note) note.textContent = `Sending the page images to ${nxt.label}…`;
+  // v3.63.8 — heartbeat the manual re-read too (full vision call, can take a
+  // minute+). Ticks the note line so it doesn't look hung; stopped in finally.
+  const _stopHbReread = _startStatusHeartbeat(note, () => `⏳ Re-scanning with ${nxt.label} vision —`);
   try {
     const t = await runVisionTranscription(window._lastPDFPages, nxt.ai.cfg, nxt.ai.key);
     if (t && t.trim()) {
@@ -8696,6 +8718,7 @@ async function verifyTryDifferentReader() {
     window._verifyLastProvider = nxt.provider;
     if (note) note.textContent = `${nxt.label} failed: ${e.message}. Click again to try the next AI, or edit by hand.`;
   } finally {
+    _stopHbReread();        // v3.63.8 — stop the OCR seconds-ticker
     if (btn) { btn.disabled = false; }
     _syncVerifyButtons();   // relabel button to name the NEXT engine in rotation
   }
@@ -9552,7 +9575,15 @@ async function reExtractWithVision() {
     }
 
     consoleLog(`🔍 Re-extracting PDF via ${visionAI.cfg.label} vision…`, 'info');
-    const transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
+    // v3.63.8 — heartbeat the manual re-extract too (full vision call, can
+    // take a minute+). Ticks the button text so it doesn't look frozen.
+    const _stopHbReExtract = _startStatusHeartbeat(btn, () => `⏳ Re-extracting with ${visionAI.cfg.label} vision —`);
+    let transcribed;
+    try {
+      transcribed = await runVisionTranscription(pageImages, visionAI.cfg, visionAI.key);
+    } finally {
+      _stopHbReExtract();
+    }
 
     docText = transcribed;
     const docTa = document.getElementById('workDocument');
