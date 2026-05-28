@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260527-009">
+  <meta name="waxframe-build" content="20260527-010">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.61.1">
+  <link rel="stylesheet" href="style.css?v=3.61.2">
 </head>
 <body>
 
@@ -388,7 +388,7 @@
           <img src="images/WaxFrame_Reference_Bee_v1.png" class="hp-section-bee" alt="">
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Reference Material <button class="goal-info-btn" onclick="document.getElementById('infoReferenceModal').classList.add('active')" title="About reference material"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
-            <p class="hp-section-sub">Optional. Source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction).</p>
+            <p class="hp-section-sub">Optional. Source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims. Distinct from <strong>Notes</strong> (round-to-round directives) and from your <strong>Starting Document</strong> (the document under construction). When you add more than one, order matters — the first card reads as most authoritative to the hive; use the ▲ ▼ arrows on each card to reorder.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -889,7 +889,7 @@
             </div>
           </div>
 
-          <p class="settings-foot-note">More sections are on the way. The Auto behavior that consumes these options ships alongside the "Auto really means Auto" work.</p>
+          <p class="settings-foot-note">More sections are on the way.</p>
 
         </div>
       </div>
@@ -2282,7 +2282,7 @@
       <div class="goal-info-row"><span class="info-label">When to use it</span><span class="goal-info-desc">RFPs, job descriptions, style guides, scoring rubrics, prior consensus decisions, vendor claims you need to cross-check against.</span></div>
       <div class="goal-info-row"><span class="info-label">When to skip it</span><span class="goal-info-desc">Most short documents do not need it. A cookie recipe or thank-you note has no source material to cite against.</span></div>
       <div class="goal-info-row"><span class="info-label">Editable mid-session</span><span class="goal-info-desc">Use the <strong>📚 Reference</strong> button on the Work screen to edit reference material between rounds. Edits apply to the next round.</span></div>
-      <div class="goal-info-row"><span class="info-label">Multiple documents supported</span><span class="goal-info-desc">Add as many references as you need — paste your own text or upload files. Each one is independently named, reorderable, and removable. The hive sees them in array order with labeled section headers so AIs can cite specific documents by name.</span></div>
+      <div class="goal-info-row"><span class="info-label">Multiple documents supported</span><span class="goal-info-desc">Add as many references as you need — paste your own text or upload files. Each one is independently named, reorderable (▲ ▼ arrows on the card), and removable. <strong>Order matters: the first card reads as most authoritative to the hive</strong>, and the hive sees them with labeled section headers so AIs can cite specific documents by name.</span></div>
       <div class="goal-info-row"><span class="info-label">Token cost reality</span><span class="goal-info-desc">Reference material is sent to every reviewer every round. A 5,000-character RFP roughly doubles your prompt size, which roughly doubles per-round cost. Pick a cost-conscious Builder when reference material is large.</span></div>
       <p class="goal-info-tip"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Trim reference material to what is most important. The hive cannot read what you do not paste — but it also costs you money for every token.</p>
       <p class="goal-info-manual-link"><a href="waxframe-user-manual.html#step4" target="_blank" rel="noopener noreferrer" class="link-accent">Read the full guide in the user manual — Step 4: Reference Material ↗</a></p>
@@ -2392,20 +2392,20 @@
 </div>
 
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.1MB total. -->
-<script src="lib/pdf.min.js?v=3.61.1"></script>
-<script src="lib/mammoth.browser.min.js?v=3.61.1"></script>
-<script src="lib/jszip.min.js?v=3.61.1"></script>
-<script src="lib/xlsx.full.min.js?v=3.61.1"></script>
-<script src="js/version.js?v=3.61.1"></script>
-<script src="js/storage.js?v=3.61.1"></script>
-<script src="js/theme.js?v=3.61.1"></script>
-<script src="js/audio.js?v=3.61.1"></script>
-<script src="js/scenes.js?v=3.61.1"></script>
-<script src="js/wf-debug.js?v=3.61.1"></script>
-<script src="js/api.js?v=3.61.1"></script>
-<script src="js/templates.js?v=3.61.1"></script>
-<script src="js/api-links.js?v=3.61.1"></script>
-<script src="js/app.js?v=3.61.1"></script>
+<script src="lib/pdf.min.js?v=3.61.2"></script>
+<script src="lib/mammoth.browser.min.js?v=3.61.2"></script>
+<script src="lib/jszip.min.js?v=3.61.2"></script>
+<script src="lib/xlsx.full.min.js?v=3.61.2"></script>
+<script src="js/version.js?v=3.61.2"></script>
+<script src="js/storage.js?v=3.61.2"></script>
+<script src="js/theme.js?v=3.61.2"></script>
+<script src="js/audio.js?v=3.61.2"></script>
+<script src="js/scenes.js?v=3.61.2"></script>
+<script src="js/wf-debug.js?v=3.61.2"></script>
+<script src="js/api.js?v=3.61.2"></script>
+<script src="js/templates.js?v=3.61.2"></script>
+<script src="js/api-links.js?v=3.61.2"></script>
+<script src="js/app.js?v=3.61.2"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2525,7 +2525,7 @@
       <button class="btn btn-sm verify-panel-close" title="Cancel — discards the file entirely" onclick="cancelVerifyImport()">✕</button>
     </div>
     <div class="verify-panel-explainer-wrap">
-      <p class="verify-panel-explainer" id="verifyExplainer">We used AI vision to read this — the file wasn't plain-text readable, so we OCR'd it. Check the extracted text on the right and fix anything wrong. Back up the clean text if you want a copy. Click Proceed when you're satisfied.</p>
+      <p class="verify-panel-explainer" id="verifyExplainer">Please check the extracted text on the right and adjust anything that doesn't match. If there are too many things to fix, try the Re-scan button to get another AI to look at it. If it looks good, we recommend making a backup copy by using the Back up button. Otherwise, click Proceed when you're satisfied.</p>
       <details class="verify-tech-details" id="verifyTechDetails">
         <summary class="verify-tech-summary">Show technical details</summary>
         <div class="verify-tech-details-body" id="verifyTechDetailsBody"></div>
