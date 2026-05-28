@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<!--
+  WaxFrame Professional — Troubleshooting & Support (break-glass page)
+  Build: 20260528-003
+
+  DESIGN CONTRACT (intentional, audited exception to the usual rules):
+  This page must work even when the main app is broken — corrupt style.css,
+  a thrown error in app.js, a bad deploy. So it is FULLY SELF-CONTAINED:
+  inline <style> + inline page <script>, no dependency on style.css or app.js.
+  Hardcoded hex / inline CSS here are deliberate (the no-hardcoded-hex and
+  no-inline-CSS rules assume style.css is healthy; this page can't assume that).
+
+  The ONLY external scripts are js/version.js and js/storage.js — both small,
+  stable, and definition-only at load. storage.js gives us idbGet() and the
+  pure redaction functions (_redactHiveKeys / _redactSessionContent) so the
+  diagnostic bundle reuses the SAME redaction as the in-app path (single source
+  of truth — no duplicated secret-stripping logic to drift). Everything is
+  feature-detected: if storage.js fails to load, the page still renders, still
+  captures the environment, and still opens the GitHub issue — only the bundle
+  button degrades with a clear message.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260528-003">
+  <title>WaxFrame — Troubleshooting &amp; Support</title>
+  <style>
+    :root {
+      --bg:        #17110b;
+      --panel:     #221913;
+      --panel-2:   #2c211a;
+      --border:    #3d2f22;
+      --honey:     #f5a623;
+      --amber:     #f57c00;
+      --amber-dk:  #c8610a;
+      --text:      #f3e9dc;
+      --text-dim:  #b9a890;
+      --text-mute: #8a795f;
+      --ok:        #4caf7d;
+      --warn:      #e0a83c;
+      --err:       #e06a5a;
+      --mono:      'Courier New', Courier, monospace;
+      --sans:      system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+      padding: 32px 20px 64px;
+    }
+    main { max-width: 860px; margin: 0 auto; }
+
+    .hdr { text-align: center; margin-bottom: 8px; }
+    .hex {
+      font-size: 40px; line-height: 1;
+      color: var(--amber); margin-bottom: 8px;
+    }
+    h1 { font-size: 26px; margin: 0 0 4px; color: var(--text); }
+    .tagline { color: var(--text-dim); font-size: 15px; margin: 0 0 6px; }
+    .verline {
+      font-family: var(--mono); font-size: 12px; color: var(--text-mute);
+      margin: 0 0 28px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+    section > h2 {
+      font-size: 16px; margin: 0 0 4px; color: var(--honey);
+      display: flex; align-items: center; gap: 8px;
+    }
+    section > .sub { color: var(--text-dim); font-size: 13.5px; margin: 0 0 14px; }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--amber); color: #1a1208; font-weight: 800;
+      font-size: 13px; flex: none;
+    }
+
+    pre.env {
+      font-family: var(--mono); font-size: 12.5px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; margin: 0 0 12px;
+      white-space: pre-wrap; word-break: break-word;
+      color: var(--text-dim); max-height: 280px; overflow: auto;
+    }
+
+    button, .btn {
+      font-family: var(--sans); font-size: 14px; font-weight: 600;
+      border-radius: 8px; padding: 10px 16px; cursor: pointer;
+      border: 1px solid var(--amber); background: var(--amber); color: #1a1208;
+      transition: background .15s, opacity .15s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    button:hover, .btn:hover { background: var(--honey); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--honey); border-color: var(--border);
+    }
+    .btn-ghost:hover { background: var(--panel-2); }
+
+    .step { margin: 0 0 18px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .step-head .t { font-weight: 700; font-size: 14.5px; }
+    .step-body { padding-left: 32px; }
+    .step-body p { margin: 6px 0; font-size: 13.5px; color: var(--text-dim); }
+
+    label.chk {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 13px; color: var(--text-dim); margin: 10px 0;
+      cursor: pointer;
+    }
+    label.chk input { margin-top: 3px; flex: none; }
+
+    .note {
+      font-size: 12.5px; color: var(--text-mute);
+      border-left: 2px solid var(--border); padding-left: 10px; margin: 10px 0 0;
+    }
+    .status { font-family: var(--mono); font-size: 12.5px; margin: 10px 0 0; min-height: 16px; }
+    .status.ok  { color: var(--ok); }
+    .status.warn{ color: var(--warn); }
+    .status.err { color: var(--err); }
+
+    ul.fixes { margin: 6px 0 0; padding-left: 0; list-style: none; }
+    ul.fixes li {
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+      font-size: 13.5px; color: var(--text-dim);
+    }
+    ul.fixes li:last-child { border-bottom: none; }
+    ul.fixes b { color: var(--text); }
+    kbd {
+      font-family: var(--mono); font-size: 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px;
+      color: var(--honey);
+    }
+
+    .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+    .footer { text-align: center; color: var(--text-mute); font-size: 12px; margin-top: 28px; }
+    a { color: var(--honey); }
+  </style>
+</head>
+<body>
+  <main>
+
+    <div class="hdr">
+      <div class="hex">⬡</div>
+      <h1>Troubleshooting &amp; Support</h1>
+      <p class="tagline">Something went wrong, or the app won't load? You're in the right place.</p>
+      <p class="verline" id="verline">WaxFrame · loading version…</p>
+    </div>
+
+    <!-- 1. Environment ------------------------------------------------------ -->
+    <section>
+      <h2>📋 Your environment</h2>
+      <p class="sub">This is gathered automatically — no personal data, no document text. Copy it into your bug report so support knows what you're running.</p>
+      <pre class="env" id="envBlock">Gathering…</pre>
+      <button class="btn-ghost" id="copyEnvBtn" type="button">⧉ Copy environment</button>
+      <p class="status" id="copyStatus"></p>
+    </section>
+
+    <!-- 2. Report a bug ----------------------------------------------------- -->
+    <section>
+      <h2>🐝 Report a bug</h2>
+      <p class="sub">Two quick steps. Your API keys and license are <strong>always</strong> stripped from anything this page produces.</p>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="t">Open a pre-filled bug report</span></div>
+        <div class="step-body">
+          <p>Opens a new GitHub issue with your environment already filled in. Add what happened and the steps to reproduce it.</p>
+          <button id="openIssueBtn" type="button">↗ Open bug report on GitHub</button>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="t">Attach a diagnostic bundle</span></div>
+        <div class="step-body">
+          <p>A support-safe snapshot of your setup and session. Download it, then <strong>drag the file into your GitHub issue</strong>.</p>
+          <label class="chk">
+            <input type="checkbox" id="includeContent">
+            <span>Include my document &amp; reference text. <strong>Leave this off</strong> for a public issue — document text is redacted by default. (Keys are always removed either way.)</span>
+          </label>
+          <button id="bundleBtn" type="button">⬇ Download diagnostic bundle</button>
+          <p class="status" id="bundleStatus"></p>
+        </div>
+      </div>
+
+      <p class="note">Found a <strong>security</strong> issue instead? Please don't post it publicly — use GitHub's private vulnerability reporting on the <a id="securityLink" href="#" target="_blank" rel="noopener">Security tab</a>.</p>
+    </section>
+
+    <!-- 3. Common fixes ----------------------------------------------------- -->
+    <section>
+      <h2>🔧 Try these first</h2>
+      <p class="sub">Most issues clear with one of these.</p>
+      <ul class="fixes">
+        <li><b>Hard refresh.</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Windows/Linux) or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac). Clears a stale cached file after an update.</li>
+        <li><b>Check your window size.</b> WaxFrame is desktop-only and needs at least <b>1366×768</b>. A narrow or zoomed window triggers the minimum-size overlay.</li>
+        <li><b>Try another browser.</b> A recent Chrome, Edge, or Firefox. Private/incognito windows can block the storage WaxFrame needs.</li>
+        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, clearing WaxFrame's site data forces a clean start. <b>This wipes your local hive, project, and session</b> — back up first (or import a backup afterward). Do this in your browser's site-settings for this page.</li>
+      </ul>
+    </section>
+
+    <!-- 4. Links ------------------------------------------------------------ -->
+    <section>
+      <h2>↩ Get back to it</h2>
+      <div class="links">
+        <a class="btn-ghost" href="index.html">← Back to WaxFrame</a>
+        <a class="btn-ghost" href="waxframe-user-manual.html">📖 User Manual</a>
+      </div>
+    </section>
+
+    <p class="footer">WaxFrame Professional · Many minds, one refined result.</p>
+
+  </main>
+
+  <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
+  <script src="js/version.js?v=3.63.9"></script>
+  <script src="js/storage.js?v=3.63.9"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var REPO = 'https://github.com/WeirDave/WaxFrame-Professional';
+    var APP_VER  = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'unknown';
+    var APP_BLD  = (typeof BUILD !== 'undefined') ? BUILD : 'unknown';
+
+    // ── version line ──
+    var verEl = document.getElementById('verline');
+    if (verEl) verEl.textContent = 'WaxFrame ' + APP_VER + ' · build ' + APP_BLD;
+
+    // ── security link ──
+    var secLink = document.getElementById('securityLink');
+    if (secLink) secLink.href = REPO + '/security/advisories/new';
+
+    // ── environment capture ──
+    var envText = 'gathering…';
+    function buildEnvText(extra) {
+      var nav = window.navigator || {};
+      var lines = [
+        'WaxFrame version : ' + APP_VER,
+        'Build            : ' + APP_BLD,
+        'Page URL         : ' + location.href,
+        'Browser (UA)     : ' + (nav.userAgent || 'unknown'),
+        'Platform         : ' + (nav.platform || (nav.userAgentData && nav.userAgentData.platform) || 'unknown'),
+        'Language         : ' + (nav.language || 'unknown'),
+        'Screen           : ' + (screen.width + '×' + screen.height) +
+                                 '  ·  window ' + window.innerWidth + '×' + window.innerHeight +
+                                 '  ·  DPR ' + (window.devicePixelRatio || 1),
+        'Online           : ' + (nav.onLine ? 'yes' : 'no'),
+        'localStorage     : ' + (extra.lsOk ? 'available' : 'BLOCKED'),
+        'Storage persisted: ' + extra.persisted,
+        'Last recorded err: ' + (extra.lastErr || 'none on record'),
+        'Captured         : ' + new Date().toISOString()
+      ];
+      return lines.join('\n');
+    }
+
+    function lsAvailable() {
+      try { var k = '__wf_probe__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+      catch (e) { return false; }
+    }
+
+    var envEl = document.getElementById('envBlock');
+
+    (async function gatherEnv() {
+      var persisted = 'unknown';
+      try { if (navigator.storage && navigator.storage.persisted) persisted = (await navigator.storage.persisted()) ? 'yes' : 'no'; }
+      catch (e) { persisted = 'unavailable'; }
+
+      // lastFailure is persisted inside the IDB session, so we can surface it
+      // even though the app's in-memory WF_DEBUG is gone on this separate page.
+      var lastErr = '';
+      try {
+        if (typeof idbGet === 'function') {
+          var s = await idbGet();
+          if (s && s.lastFailure) {
+            var lf = s.lastFailure;
+            lastErr = (lf.code || lf.status || 'error') + (lf.message ? (' — ' + String(lf.message).slice(0, 160)) : '');
+          }
+        }
+      } catch (e) { /* ignore — best effort */ }
+
+      envText = buildEnvText({ lsOk: lsAvailable(), persisted: persisted, lastErr: lastErr });
+      if (envEl) envEl.textContent = envText;
+    })();
+
+    // ── copy environment ──
+    var copyBtn = document.getElementById('copyEnvBtn');
+    var copyStatus = document.getElementById('copyStatus');
+    if (copyBtn) copyBtn.addEventListener('click', function () {
+      var done = function (ok) {
+        if (!copyStatus) return;
+        copyStatus.textContent = ok ? '✓ Copied to clipboard' : '⚠ Couldn\u2019t copy — select the text above and copy manually';
+        copyStatus.className = 'status ' + (ok ? 'ok' : 'warn');
+      };
+      try {
+        navigator.clipboard.writeText(envText).then(function () { done(true); }, function () { done(false); });
+      } catch (e) { done(false); }
+    });
+
+    // ── open pre-filled GitHub issue (NO labels= — 404s for non-collaborators) ──
+    var issueBtn = document.getElementById('openIssueBtn');
+    if (issueBtn) issueBtn.addEventListener('click', function () {
+      var title = '[Bug] ' + APP_VER + ' — ';
+      var body = [
+        '## What happened',
+        '_Describe the problem._',
+        '',
+        '## Steps to reproduce',
+        '1. ',
+        '2. ',
+        '3. ',
+        '',
+        '## Diagnostic bundle',
+        '- [ ] I attached a diagnostic bundle (drag the downloaded file in)',
+        '',
+        '## Environment',
+        '```',
+        envText,
+        '```'
+      ].join('\n');
+      var url = REPO + '/issues/new?title=' + encodeURIComponent(title) + '&body=' + encodeURIComponent(body);
+      window.open(url, '_blank', 'noopener');
+    });
+
+    // ── diagnostic bundle (reuses storage.js redaction; own assembly) ──
+    var bundleBtn = document.getElementById('bundleBtn');
+    var bundleStatus = document.getElementById('bundleStatus');
+
+    function setBundleStatus(msg, cls) {
+      if (!bundleStatus) return;
+      bundleStatus.textContent = msg;
+      bundleStatus.className = 'status ' + (cls || '');
+    }
+
+    // Feature-detect the storage layer. If storage.js didn't load, degrade.
+    var storageReady = (typeof idbGet === 'function') &&
+                       (typeof _redactHiveKeys === 'function') &&
+                       (typeof _redactSessionContent === 'function') &&
+                       (typeof LS_HIVE === 'string') && (typeof LS_PROJECT === 'string');
+
+    if (!storageReady && bundleBtn) {
+      bundleBtn.disabled = true;
+      setBundleStatus('Bundle generator needs storage.js, which didn\u2019t load. Use the in-app Diagnostic button if you can reach the app, or copy the environment above into your issue.', 'warn');
+    }
+
+    function redactProjectContent(projectStr) {
+      // Mirrors the in-app LS_PROJECT content redaction: mask document/reference
+      // text, keep setup fields. (Credentials don't live in LS_PROJECT.)
+      try {
+        var p = JSON.parse(projectStr);
+        var mark = function (str) {
+          return (typeof str === 'string') ? ('[REDACTED — ' + str.length.toLocaleString() + ' chars]') : str;
+        };
+        if (typeof p.pastedDocument === 'string') p.pastedDocument = mark(p.pastedDocument);
+        if (Array.isArray(p.referenceDocs)) {
+          p.referenceDocs = p.referenceDocs.map(function (d) {
+            var c = Object.assign({}, d);
+            if (typeof c.text === 'string') c.text = mark(c.text);
+            if (typeof c.content === 'string') c.content = mark(c.content);
+            return c;
+          });
+        }
+        return JSON.stringify(p);
+      } catch (e) {
+        return '[REDACTED — project blob unparseable]';
+      }
+    }
+
+    if (bundleBtn && storageReady) bundleBtn.addEventListener('click', async function () {
+      bundleBtn.disabled = true;
+      setBundleStatus('Building…', '');
+      try {
+        var includeContent = !!document.getElementById('includeContent').checked;
+        var redactContent = !includeContent;
+
+        var hiveRaw = null, projectRaw = null, sessionIDB = null;
+        try { hiveRaw = localStorage.getItem(LS_HIVE); } catch (e) {}
+        try { projectRaw = localStorage.getItem(LS_PROJECT); } catch (e) {}
+        try { sessionIDB = await idbGet(); } catch (e) {}
+
+        if (!hiveRaw && !projectRaw && !sessionIDB) {
+          setBundleStatus('Nothing to export — no WaxFrame data found in this browser.', 'warn');
+          bundleBtn.disabled = false;
+          return;
+        }
+
+        // Always strip credentials from the hive.
+        var hiveOut = _redactHiveKeys(hiveRaw);
+        // Content redaction (default ON for the public-issue path).
+        var sessionOut = (redactContent && sessionIDB) ? _redactSessionContent(sessionIDB) : sessionIDB;
+        var projectOut = (redactContent && projectRaw) ? redactProjectContent(projectRaw) : projectRaw;
+
+        var bundle = {
+          _waxframe_diagnostic: true,
+          _waxframe_diagnostic_version: 1,
+          _waxframe_diagnostic_source: 'techsupport-page',
+          _waxframe_app_version: APP_VER,
+          _waxframe_build: APP_BLD,
+          _waxframe_diagnostic_ts: Date.now(),
+          _waxframe_content_redacted: redactContent,
+          LS_HIVE: hiveOut,
+          LS_PROJECT: projectOut,
+          IDB_SESSION: sessionOut
+        };
+
+        var projName = 'session';
+        try { var pj = JSON.parse(projectRaw || '{}'); if (pj.projectName) projName = pj.projectName; } catch (e) {}
+        var safeName = projName.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'session';
+        var d = new Date(), pad = function (n) { return String(n).padStart(2, '0'); };
+        var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+        var filename = safeName + '-' + stamp + '-Diagnostic-Safe.json';
+
+        var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+
+        setBundleStatus('✓ Downloaded ' + filename + ' — keys removed' + (redactContent ? ', content redacted' : '') + '. Now drag it into your GitHub issue.', 'ok');
+      } catch (e) {
+        setBundleStatus('⚠ Could not build the bundle: ' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        bundleBtn.disabled = false;
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>
