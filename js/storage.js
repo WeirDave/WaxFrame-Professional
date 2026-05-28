@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260527-013
+//  Build: 20260527-014
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -885,7 +885,7 @@ async function backupSession() {
   const proceed = await wfConfirm(
     'Sensitive backup',
     "Full backups let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
-    { okText: 'Save to Backup' }
+    { okText: 'Save to Backup', suppressKey: 'waxframe_suppress_sensitive_backup_confirm' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
@@ -1208,7 +1208,7 @@ async function importSession() {
   const proceed = await wfConfirm(
     'Restore from backup',
     "Only restore backups you created or trust. A backup can replace your local project, AI setup, API keys, and session state.",
-    { okText: 'Choose file' }
+    { okText: 'Choose file', suppressKey: 'waxframe_suppress_restore_backup_confirm' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
