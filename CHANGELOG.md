@@ -2,6 +2,15 @@
 
 ---
 
+## v3.63.37
+**Build:** `20260529-010` · **Released:** May 29, 2026
+
+### Fixed — Custom Templates card alignment
+
+- The **⭐ Custom Templates** card on the template picker now centers on its own full-width row beneath the two built-in path cards, instead of sitting orphaned in the bottom-left of the grid.
+
+---
+
 ## v3.63.36
 **Build:** `20260529-009` · **Released:** May 29, 2026
 
