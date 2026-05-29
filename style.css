@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-022
+   Build: 20260528-023
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12084,28 +12084,41 @@ kbd {
   text-decoration: underline;
 }
 
-/* v3.63.22 — Inline invalid-key error banner.
-   Sits inside the manage-account banner, pushed to the right via
-   margin-left:auto so it shares the row with "Open {Provider} account ↗"
-   (the user's natural next action when a key is bad). Red against the
-   amber-dashed banner background gives clear visual signal without
-   needing a separate row. .is-invalid-only kicks in when the AI has
-   no console URL (server-imported customs) — the banner then exists
-   purely to host the error message, with no manage-account link.
-   The .has-invalid modifier on the parent could host future styling
-   if we want to e.g. tint the banner border red on invalid; for now
-   the message itself carries the signal. */
+/* v3.63.23 — Invalid-key banner styling.
+   When validate-on-save flags a bad key, the entire manage-account
+   banner flips to a red-tinted card so the bad-key signal catches
+   the eye at a glance — not just the small red message text at the
+   right. The amber-dashed default banner is fine for "here's where
+   to manage your account"; when there's an actual problem with the
+   key, the banner needs to look like a problem.
+   .has-invalid kicks in when the manage-account link is present and
+   the key is invalid; .is-invalid-only is the standalone-banner
+   variant used when the AI has no console URL. Both share the same
+   red palette so the visual signal is consistent across configurations. */
 .ai-key-invalid-msg {
   margin-left: auto;
-  color: var(--red, #d33);
+  color: #ffd6d6;
   font-weight: 600;
-  font-size: 12.5px;
+  font-size: 13px;
   white-space: nowrap;
+}
+.ai-getkey-link-wrap.has-invalid,
+.ai-getkey-link-wrap.is-invalid-only {
+  background: rgba(211, 51, 51, 0.18);
+  border-color: var(--red, #d33);
+  border-style: solid;
+}
+/* When the banner is in invalid state, brighten the existing prompt
+   and link text so they stay legible against the red wash. Otherwise
+   the dim --text-dim prompt disappears into the red. */
+.ai-getkey-link-wrap.has-invalid .ai-getkey-prompt {
+  color: #ffe4e4;
+}
+.ai-getkey-link-wrap.has-invalid .ai-getkey-link {
+  color: #fff;
 }
 .ai-getkey-link-wrap.is-invalid-only {
   justify-content: flex-start;
-  border-color: var(--red, #d33);
-  background: rgba(211, 51, 51, 0.08);
 }
 .ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg {
   margin-left: 0;

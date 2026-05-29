@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.23
+**Build:** `20260528-023` · **Released:** May 28, 2026
+
+### UX — Bad-key banner now tints the whole card red
+
+v3.63.22 placed an inline red error message on the right side of the
+manage-account banner. The text was clear once you read it, but the
+amber-dashed banner around it still looked like normal informational
+chrome — the bad-key state didn't catch the eye until the user had
+already focused on that row.
+
+This release tints the entire manage-account banner red when the key
+is invalid: red-tinted background, solid red border (replacing the
+amber dashed default), brightened text colors so the existing
+"Manage account?" prompt and "Open {Provider} account ↗" link stay
+legible against the red wash. The error message text itself is also
+brightened from a saturated red to a light pink so it pops against
+the red card.
+
+Net effect: scanning the Worker Bees screen, a card with a bad key
+now reads as "problem here" before the user reads any individual
+piece of text on it.
+
+Applies to both banner variants:
+
+- `.has-invalid` — manage-account banner with the error message
+  appended (the common case for default providers)
+- `.is-invalid-only` — standalone-banner fallback used when the AI
+  has no console URL (server-imported customs)
+
+### Files changed
+
+- `style.css` — invalid-key styling rewritten:
+  - `.ai-key-invalid-msg` — text brightened to `#ffd6d6` and font
+    size bumped to 13px for legibility against the red background
+  - `.ai-getkey-link-wrap.has-invalid` + `.is-invalid-only` —
+    shared red palette (background `rgba(211, 51, 51, 0.18)`, solid
+    red border)
+  - `.has-invalid .ai-getkey-prompt` — brightened to `#ffe4e4`
+  - `.has-invalid .ai-getkey-link` — brightened to `#fff`
+- `js/version.js` — APP_VERSION bump to v3.63.23 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v82.txt`
+
 ## v3.63.22
 **Build:** `20260528-022` · **Released:** May 28, 2026
 
