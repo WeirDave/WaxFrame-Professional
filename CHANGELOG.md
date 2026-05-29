@@ -2,6 +2,48 @@
 
 ---
 
+## v3.63.32
+**Build:** `20260529-005` · **Released:** May 29, 2026
+
+### New — Model picker is now a custom dropdown with tinted Reviewer/Builder rows
+
+The model picker was a native `<select>`, which can't tint its own option rows
+(Chrome ignores `<option>` background colors). So the recommended picks were
+only marked with words and emoji in the row text — easy to scan past. The
+picker is now a custom dropdown that **tints the rows**:
+
+- The **✨ Reviewer** pick row is gold; the **🔨 Builder** pick row is blue;
+  when one model is both (the common case), the row carries both accents.
+- The role markers render as colored words inline, matching the gold/blue note
+  lines below the picker.
+- The selected model is highlighted, and the trigger shows the current pick with
+  its role markers.
+
+Selection, the `↻ Recheck`/Recommend flow, the Change Builder modal, and the
+Troubleshooting-card picker all keep working — the value contract is unchanged
+(the trigger still carries `id="modelsel-<ai>"` and exposes its value).
+
+Because the rows are real elements (not native `<option>`s) the tint works in
+every browser. Arrow-key navigation within the open list is deferred to a
+follow-up; click plus Enter/Space/Esc cover this release.
+
+### Files changed
+
+- `js/app.js` — `buildModelSelector` rebuilt as a custom combobox (tinted rows,
+  role-colored markers, `data-value` value store); new `wfModelSelectToggle` /
+  `wfModelSelectPick` / `wfModelSelectKey` / `wfModelSelectCloseAll` handlers
+  with one idempotent outside-click closer; `confirmBuilderFromModal` reads
+  `data-value`
+- `style.css` — `.model-select-custom` + `.model-select-list` +
+  `.model-select-opt`; row tints use the existing theme-aware `--accent-dim`
+  (gold) / `--blue-dim` (blue) rgba tokens — universal browser support, no new
+  colors, no `color-mix`
+- `js/version.js` — APP_VERSION bump to v3.63.32 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust sweep
+  to `20260529-005` / `3.63.32`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v94.txt`
+
 ## v3.63.31
 **Build:** `20260529-004` · **Released:** May 29, 2026
 
