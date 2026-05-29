@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260529-016
+     Build: 20260529-017
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260529-016">
+  <meta name="waxframe-build" content="20260529-017">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.43">
+  <link rel="stylesheet" href="style.css?v=3.63.44">
 </head>
 <body>
 
@@ -1852,7 +1852,7 @@
 <!-- SAVE AS TEMPLATE MODAL (v3.63.35) -->
 <div class="finish-modal-overlay" id="saveTemplateModal" onclick="if(event.target===this)closeSaveTemplateModal()">
   <div class="finish-modal save-template-modal">
-    <h2 class="finish-modal-title">&#x2B50; Save as Template</h2>
+    <h2 class="finish-modal-title" id="saveTemplateTitle">&#x2B50; Save as Template</h2>
     <p class="save-template-sub">Save this project's setup as a reusable recipe &mdash; your Goal fields, starting document, reference material, length guard, and the hive that ran it (AI lineup + Builder). The round history is <strong>not</strong> saved.</p>
     <p class="save-template-note">Saved to this browser, on your hard drive. (Sharing templates with other people is coming in a later update.)</p>
     <label class="save-template-label" for="saveTemplateName">Template name</label>
@@ -1864,7 +1864,7 @@
     <p class="save-template-hive" id="saveTemplateHive"></p>
     <div class="save-template-actions">
       <button class="finish-modal-cancel" onclick="closeSaveTemplateModal()">Cancel</button>
-      <button class="finish-modal-btn finish-modal-btn-export" onclick="confirmSaveTemplate()">&#x2B50; Save Template</button>
+      <button class="finish-modal-btn finish-modal-btn-export" id="saveTemplateConfirmBtn" onclick="confirmSaveTemplate()">&#x2B50; Save Template</button>
     </div>
   </div>
 </div>
@@ -2505,22 +2505,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.43';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.44';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.43"></script>
-<script src="lib/jszip.min.js?v=3.63.43"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.43"></script>
-<script src="js/version.js?v=3.63.43"></script>
-<script src="js/storage.js?v=3.63.43"></script>
-<script src="js/theme.js?v=3.63.43"></script>
-<script src="js/audio.js?v=3.63.43"></script>
-<script src="js/scenes.js?v=3.63.43"></script>
-<script src="js/wf-debug.js?v=3.63.43"></script>
-<script src="js/api.js?v=3.63.43"></script>
-<script src="js/templates.js?v=3.63.43"></script>
-<script src="js/api-links.js?v=3.63.43"></script>
-<script src="js/app.js?v=3.63.43"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.44"></script>
+<script src="lib/jszip.min.js?v=3.63.44"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.44"></script>
+<script src="js/version.js?v=3.63.44"></script>
+<script src="js/storage.js?v=3.63.44"></script>
+<script src="js/theme.js?v=3.63.44"></script>
+<script src="js/audio.js?v=3.63.44"></script>
+<script src="js/scenes.js?v=3.63.44"></script>
+<script src="js/wf-debug.js?v=3.63.44"></script>
+<script src="js/api.js?v=3.63.44"></script>
+<script src="js/templates.js?v=3.63.44"></script>
+<script src="js/api-links.js?v=3.63.44"></script>
+<script src="js/app.js?v=3.63.44"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

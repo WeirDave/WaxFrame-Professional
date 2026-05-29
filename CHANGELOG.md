@@ -2,6 +2,17 @@
 
 ---
 
+## v3.63.44
+**Build:** `20260529-017` · **Released:** May 29, 2026
+
+### New — Custom templates: create from scratch & edit (Phase 2)
+
+- **New blank template** — the Custom Templates gallery now has a button to start a fresh template: it clears to an empty setup, you fill it in, and Save as Template banks it.
+- **Edit a saved template** — hover a custom template card for an **✏️ edit** button (next to delete). It loads the template's full setup — goal, reference, starting document, length, and hive — into the setup screens so you can change anything, then **Update Template** saves it back in place.
+- Editing reuses WaxFrame's normal setup screens as the editor, so it behaves exactly like building any project.
+
+---
+
 ## v3.63.43
 **Build:** `20260529-016` · **Released:** May 29, 2026
 
