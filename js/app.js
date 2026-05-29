@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-005
+//  Build: 20260529-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -206,8 +206,33 @@ function wfModelSelectToggle(trigger, ev) {
   if (!wasOpen) {
     trigger.classList.add('is-open');
     trigger.setAttribute('aria-expanded', 'true');
+    // v3.63.33 — the list is position:fixed; place it from the trigger's live
+    // rect so it escapes the Worker Bees scroll container and the modal
+    // backdrop-filter clip that otherwise trapped/under-rendered it.
+    wfModelSelectPosition(trigger);
     const sel = trigger.querySelector('.model-select-opt.is-selected');
     if (sel) sel.scrollIntoView({ block: 'nearest' });
+    // A fixed list can't track the trigger, so close on the next scroll/resize.
+    window.addEventListener('scroll', wfModelSelectCloseAll, { capture: true, once: true });
+    window.addEventListener('resize', wfModelSelectCloseAll, { once: true });
+  }
+}
+// v3.63.33 — anchor the fixed list to the trigger; flip up when there isn't
+// room below so it never spills off the bottom of the viewport.
+function wfModelSelectPosition(trigger) {
+  const list = trigger.querySelector('.model-select-list');
+  if (!list) return;
+  const r = trigger.getBoundingClientRect();
+  list.style.left  = r.left + 'px';
+  list.style.width = r.width + 'px';
+  const spaceBelow = window.innerHeight - r.bottom;
+  const needed = Math.min(list.scrollHeight || 320, 320) + 8;
+  if (spaceBelow < needed && r.top > spaceBelow) {
+    list.style.top = '';
+    list.style.bottom = (window.innerHeight - r.top + 4) + 'px';
+  } else {
+    list.style.bottom = '';
+    list.style.top = (r.bottom + 4) + 'px';
   }
 }
 function wfModelSelectPick(opt, ev) {
@@ -436,7 +461,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-005';         // build stamp — update each session
+const BUILD       = '20260529-006';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
