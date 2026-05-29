@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-017
+   Build: 20260529-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13282,10 +13282,11 @@ kbd {
   justify-self: center;
 }
 /* v3.63.44 — Phase 2: custom-template edit affordance + new-blank toolbar. */
+.template-card-export,
 .template-card-edit {
   position: absolute;
   top: var(--space-8);
-  right: 44px;               /* sits left of the delete button */
+  right: 44px;               /* edit sits left of delete */
   width: 28px;
   height: 28px;
   display: flex;
@@ -13306,7 +13307,7 @@ kbd {
 .template-card-edit:focus-visible { opacity: 1; }
 .template-card-edit:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
 .template-card-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.template-card-wrap > .template-card { padding-right: var(--space-40); }
+.template-card-wrap > .template-card { padding-right: 116px; }
 
 .template-custom-toolbar {
   display: flex;
@@ -13329,3 +13330,18 @@ kbd {
 }
 .template-new-blank:hover { background: var(--accent); color: #0a0c12; }
 .template-custom-hint { font-size: var(--fs-12); color: var(--text-dim); }
+/* v3.63.45 — Phase 3: export affordance (third hover button on custom cards). */
+.template-card-export { right: 80px; }   /* export | edit | delete, left-to-right */
+.template-card-wrap:hover .template-card-export,
+.template-card-export:focus-visible { opacity: 1; }
+.template-card-export {
+  width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+  padding: 0; font-size: var(--fs-sm); line-height: 1;
+  background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  color: var(--text-dim); cursor: pointer; opacity: 0;
+  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
+}
+.template-card-export:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
+.template-card-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.template-import-btn { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.template-import-btn:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }

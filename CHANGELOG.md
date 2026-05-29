@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.45
+**Build:** `20260529-018` · **Released:** May 29, 2026
+
+### New — Custom templates: export & import (Phase 3)
+
+- **Export** — hover a custom template card for a **⬇ export** button. It downloads the template as a `.json` file (named `project-version-date-time-template.json`) you can email to someone or keep as a backup.
+- **Import** — the Custom Templates gallery has an **⬆ Import template** button: pick a `.json` someone shared and it's added to your library, ready to apply. Imported templates get a fresh local id and their fields are sanitized.
+- Saving a template still goes to your local library only — exporting a file is a separate, deliberate action.
+- This completes the custom-templates feature: create, edit, apply (with hive reconcile), delete, and now share.
+
+### Maintenance
+
+- Every source file now carries the same build stamp — `version.js` and `templates.js`, previously stampless, are now included in the version sweep so audits read one consistent version across the board.
+
+---
+
 ## v3.63.44
 **Build:** `20260529-017` · **Released:** May 29, 2026
 

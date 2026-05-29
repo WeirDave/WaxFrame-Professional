@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-017
+//  Build: 20260529-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-017';         // build stamp — update each session
+const BUILD       = '20260529-018';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3451,7 +3451,7 @@ function renderTemplateGalleryBody() {
   // who already have a draft and points back to the path picker for
   // the onboarding demo.
   const newuserCallout = (path === 'custom')
-    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><span class="template-custom-hint">Hover a saved template to edit \u270f\ufe0f or delete \ud83d\uddd1 it.</span></div>`
+    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">\u2b06 Import template</button><span class="template-custom-hint">Hover a saved template to export \u2b07, edit \u270f\ufe0f, or delete \ud83d\uddd1 it.</span></div>`
     : (path === 'scratch')
     ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
     : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
@@ -3490,7 +3490,7 @@ function renderTemplateGalleryBody() {
           // can't be removed). Wrap so the 🗑 sits over the card without
           // nesting a button inside the apply button.
           if (t.custom) {
-            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
+            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-export" type="button" title="Export ${escapeHtml(t.name)} as a file" onclick="event.stopPropagation(); exportCustomTemplate('${escapeHtml(t.id)}')">⬇</button><button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
           }
           return cardBtn;
         }).join('')}
@@ -3599,6 +3599,8 @@ function captureTemplateFromProject(meta) {
     category:    'My Templates',
     createdTs:   ts,
     appVersion:  (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+    srcName:     proj.projectName    || '',   // v3.63.45 — for export filename
+    srcVersion:  proj.projectVersion || '',
     description: recipe.description,
     // Identical recipe under both paths so the template applies whether the
     // user starts from scratch or refines an existing draft next time.
@@ -3716,6 +3718,106 @@ async function newBlankTemplate() {
   if (g) g.classList.remove('active');
   if (typeof goToScreen === 'function') goToScreen('screen-project');
   toast('\u2795 New template \u2014 fill in the setup, then Save as Template', 5500);
+}
+
+// ============================================================
+// v3.63.45 — Custom templates Phase 3: export / import (.json)
+// ------------------------------------------------------------
+// Templates are shareable files now. Save still goes to the local
+// library only (no auto-download); EXPORT is an explicit per-card
+// action that downloads one template as JSON; IMPORT reads a file
+// and adds it to the library. Imported templates get a fresh local
+// id and are field-sanitized (their strings reach element ids /
+// onclick / visible text on gallery cards), so a hand-edited or
+// hostile file can't inject structure.
+// ============================================================
+function _wfTemplateStamp() {
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+function _wfSlug(s) { return String(s || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, ''); }
+
+function exportCustomTemplate(id) {
+  const tpl = getTemplateById(id);
+  if (!tpl || !tpl.custom) { toast('\u26a0\ufe0f Template not found'); return; }
+  const envelope = {
+    _waxframe_template:         true,
+    _waxframe_template_version: 1,
+    _waxframe_app_version:      (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+    exportedTs:                 Date.now(),
+    template:                   tpl
+  };
+  const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  // Filename convention: {project}-{version}-{YYYYMMDD}-{HHmm}-template.json,
+  // using the originating project name/version when captured, else the
+  // template's own name.
+  const base = (tpl.srcName ? _wfSlug(tpl.srcName) + (tpl.srcVersion ? '-' + _wfSlug(tpl.srcVersion) : '') : _wfSlug(tpl.name)) || 'template';
+  const a = document.createElement('a');
+  a.href = url; a.download = `${base}-${_wfTemplateStamp()}-template.json`;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 1000);
+  toast(`\u2b07 Exported "${tpl.name}"`, 4000);
+}
+
+function importCustomTemplate() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.json,application/json';
+  inp.onchange = (e) => { const f = e.target.files && e.target.files[0]; if (f) _readImportedTemplate(f); };
+  inp.click();
+}
+function _sanitizeRecipe(pc) {
+  pc = (pc && typeof pc === 'object') ? pc : {};
+  const str = (v) => (typeof v === 'string' ? v : '');
+  const out = {};
+  ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes','refMaterial','pastedDocument','lengthLimit','lengthMin','lengthUnit','description']
+    .forEach(k => { out[k] = str(pc[k]); });
+  out.lengthMode = (['none','hardcap','target','range'].indexOf(pc.lengthMode) !== -1) ? pc.lengthMode : 'none';
+  out.hint = Array.isArray(pc.hint)
+    ? pc.hint.filter(h => h && typeof h === 'object').map(h => ({ field: str(h.field), text: str(h.text) }))
+    : [];
+  return out;
+}
+function _readImportedTemplate(file) {
+  const r = new FileReader();
+  r.onload = () => {
+    let obj;
+    try { obj = JSON.parse(r.result); } catch (e) { toast('\u26a0\ufe0f Not a valid template file'); return; }
+    const src = (obj && obj._waxframe_template && obj.template) ? obj.template : obj;
+    if (!src || typeof src !== 'object' || !src.pathContent || !Array.isArray(src.paths)) {
+      toast('\u26a0\ufe0f That doesn\'t look like a WaxFrame template'); return;
+    }
+    const paths = src.paths.filter(p => p === 'scratch' || p === 'refine');
+    const pc = {};
+    (paths.length ? paths : ['scratch','refine']).forEach(p => { pc[p] = _sanitizeRecipe(src.pathContent[p]); });
+    const hv = (src.hive && typeof src.hive === 'object') ? src.hive : {};
+    const clean = {
+      id:          'custom-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      custom:      true,
+      name:        (typeof src.name === 'string' ? src.name : 'Imported template').slice(0, 80),
+      icon:        ((typeof src.icon === 'string' ? src.icon : '') || '\ud83d\udcc1').slice(0, 4) || '\ud83d\udcc1',
+      category:    'My Templates',
+      createdTs:   Date.now(),
+      importedTs:  Date.now(),
+      appVersion:  (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+      description: (typeof src.description === 'string' ? src.description : '').slice(0, 240),
+      srcName:     (typeof src.srcName === 'string' ? src.srcName : ''),
+      srcVersion:  (typeof src.srcVersion === 'string' ? src.srcVersion : ''),
+      paths:       paths.length ? paths : ['scratch','refine'],
+      pathContent: pc,
+      hive: {
+        aiIds:    Array.isArray(hv.aiIds) ? hv.aiIds.filter(x => typeof x === 'string').slice(0, 30) : [],
+        builder:  (typeof hv.builder === 'string' ? hv.builder : null),
+        hiveMode: (hv.hiveMode === 'server' ? 'server' : 'internet')
+      }
+    };
+    const all = loadCustomTemplates();
+    all.push(clean);
+    saveCustomTemplates(all);
+    if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
+    toast(`\u2b06 Imported "${clean.name}" into My Templates`, 5000);
+  };
+  r.readAsText(file);
 }
 function deleteCustomTemplate(id) {
   const all = loadCustomTemplates();
