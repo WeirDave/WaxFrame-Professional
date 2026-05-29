@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-020
+//  Build: 20260528-021
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-020';         // build stamp — update each session
+const BUILD       = '20260528-021';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3956,104 +3956,70 @@ function saveKeyForAI(id, val, inputEl) {
   }
 }
 
-// v3.63.19 — Lightweight background validation fired by saveKeyForAI.
-// Uses per-provider routing so each of the six default providers hits
-// the right /v1/models endpoint with the right auth headers. Auth-class
-// failures (HTTP 401 / 403) flip the in-memory _invalidKeys flag for
-// this AI and re-render the row so the ❌ indicator appears on the
+// v3.63.21 — Lightweight background validation fired by saveKeyForAI.
+// Sends a minimal chat-completion request to the AI's normal chat
+// endpoint — the same path testApiKey uses for the explicit Test
+// button click, but silent (no modal, no UI). Auth-class failures
+// (HTTP 401 / 403) flip the in-memory _invalidKeys flag for this AI
+// and re-render the row so the ❌ indicator appears on the
 // key-status badge.
 //
-// Per-provider routing rationale: the generic fetchModelsFromEndpoint
-// derive path (strip /v1/.* then append /v1/models) breaks for
-// Perplexity (endpoint has no /v1/ segment, derive yields
-// /chat/completions/v1/models → 404 instead of clean 401) and Claude
-// (direct Anthropic endpoint CORS-fails from browser). This function
-// mirrors the per-provider dispatch already in fetchModelsForProvider
-// (api.js ~376) so all six defaults get a real auth signal. Custom
-// AIs go through fetchModelsFromEndpoint since we don't curate
-// validation paths for arbitrary endpoints.
+// Rationale: v3.63.19's first cut and v3.63.20's per-provider routing
+// both used /v1/models as the validation endpoint. That endpoint
+// turns out to be unreliable for validation across providers —
+// Perplexity's /v1/models is a public catalog that returns 200 even
+// with a bogus key, so a bad Perplexity key never surfaced ❌.
+// Chat-completion endpoints require real auth on every provider
+// (that's what makes them billable), so they're the reliable signal.
+// Cost is a few tokens per key save — sub-cent, negligible compared
+// to the round costs the hive runs.
 //
-// Race-protected: if the user changes the key between fire and resolve,
-// the stale result is ignored (stillCurrent() guard at every callback).
+// Race-protected: if the user changes the key between fire and
+// resolve, the stale result is ignored.
 //
-// Network errors and CORS failures leave status unknown — better than
-// a false ❌ on a key that's actually valid but the user is offline.
+// Network errors and CORS failures leave status unknown — better
+// than a false ❌ on a key that's actually valid but the user is
+// offline.
 function validateKeyOnSave(aiId, keyAtFire) {
   const ai = aiList.find(a => a.id === aiId);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg?._key) return;
+  // Custom AIs imported from servers (Open WebUI, etc.) may legitimately
+  // have no model picked yet — skip validation rather than failing on a
+  // malformed body. The Test button handles the same case the same way.
+  if (!cfg.model || typeof cfg.headersFn !== 'function' || typeof cfg.bodyFn !== 'function') return;
   const stillCurrent = () => API_CONFIGS[ai.provider]?._key === keyAtFire;
-  const isDefault = !!DEFAULT_AIS.find(d => d.id === ai.id);
 
-  const onAuthFail = (status) => {
-    if (!stillCurrent()) return;
-    window._invalidKeys = window._invalidKeys || {};
-    window._invalidKeys[aiId] = true;
-    if (typeof consoleLog === 'function') {
-      consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${status}). Double-check the key you just saved.`, 'warn');
-    }
-    renderAIRow(aiId);
-  };
-  const onSuccess = () => {
-    if (!stillCurrent()) return;
-    if (window._invalidKeys && window._invalidKeys[aiId]) {
-      delete window._invalidKeys[aiId];
-      renderAIRow(aiId);
-    }
-  };
+  // One-word probe — mirrors testApiKey's prompt. Keeps token cost trivial.
+  const body = cfg.bodyFn(cfg.model, 'Reply with exactly one word: CONNECTED');
 
-  if (isDefault) {
-    // Per-provider URL + headers (mirrors api.js fetchModelsForProvider).
-    let url, headers;
-    const provider = ai.provider;
-    if (provider === 'claude') {
-      // Route through the CF Worker proxy (cfg.endpoint is the proxy base
-      // URL). The proxy passes /v1/models through to Anthropic and returns
-      // a real HTTP status — no CORS surprises.
-      url = `${cfg.endpoint}/v1/models`;
-      headers = { 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' };
-    } else if (provider === 'gemini') {
-      url = 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=10';
-      headers = { 'x-goog-api-key': cfg._key };
-    } else if (provider === 'chatgpt' || provider === 'grok' || provider === 'perplexity' || provider === 'deepseek') {
-      // Origin-based derive — handles Perplexity correctly (endpoint has no
-      // /v1/ segment, so the older regex-strip path produced a broken URL).
-      try {
-        url = `${new URL(cfg.endpoint).origin}/v1/models`;
-      } catch { return; }
-      headers = cfg.headersFn(cfg._key);
-    } else if (provider === 'mistral') {
-      url = 'https://api.mistral.ai/v1/models';
-      headers = { 'Authorization': `Bearer ${cfg._key}` };
-    } else {
-      // Unknown default provider — skip validation rather than risk a
-      // false ❌ on a path we don't curate.
-      return;
-    }
-    fetch(url, { headers })
-      .then(resp => {
-        if (!stillCurrent()) return;
-        if (resp.status === 401 || resp.status === 403) onAuthFail(resp.status);
-        else if (resp.ok) onSuccess();
-        // 4xx (non-auth), 5xx, and other statuses: leave status unknown.
-      })
-      .catch(() => { /* network error / CORS / DNS — leave status unknown */ });
-    return;
-  }
-
-  // Custom AI — use the existing fetchModelsFromEndpoint derive path. Its
-  // throws are "HTTP {status}" strings so the regex catches auth errors.
-  const format = cfg.format || 'openai';
-  fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint)
-    .then(onSuccess)
-    .catch(err => {
-      const msg = err?.message || '';
-      const m = msg.match(/HTTP (\d+)/i);
-      const status = m ? parseInt(m[1], 10) : 0;
-      if (status === 401 || status === 403) onAuthFail(status);
-      // Network errors and non-auth HTTP statuses: leave unknown.
-    });
+  fetch(cfg.endpoint, {
+    method: 'POST',
+    headers: cfg.headersFn(cfg._key),
+    body
+  })
+    .then(resp => {
+      if (!stillCurrent()) return;
+      if (resp.status === 401 || resp.status === 403) {
+        window._invalidKeys = window._invalidKeys || {};
+        window._invalidKeys[aiId] = true;
+        if (typeof consoleLog === 'function') {
+          consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${resp.status}). Double-check the key you just saved.`, 'warn');
+        }
+        renderAIRow(aiId);
+      } else if (resp.ok) {
+        // Success — clear any prior invalid flag.
+        if (window._invalidKeys && window._invalidKeys[aiId]) {
+          delete window._invalidKeys[aiId];
+          renderAIRow(aiId);
+        }
+      }
+      // 4xx (non-auth), 5xx, and other statuses: leave status unknown.
+      // Could be model-not-available, rate-limit, server hiccup — none of
+      // those are "your key is bad," so we don't flip the badge.
+    })
+    .catch(() => { /* network / CORS / DNS — leave status unknown */ });
 }
 
 // v3.31.0 — Partial re-render after a key save / clear. The original
