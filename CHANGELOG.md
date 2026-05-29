@@ -2,6 +2,15 @@
 
 ---
 
+## v3.63.40
+**Build:** `20260529-013` · **Released:** May 29, 2026
+
+### Changed — Help pages: Download as Word (replaces Save as PDF)
+
+- The **Save as PDF** button on the help pages (User Manual, API Details, Document Playbooks, Privacy, Terms, Prompt Editor, What Are Tokens) is replaced with **⬇ Download as Word**. Browser print-to-PDF produced a blank page on these pages and proved too fragile to rely on. The new button generates a formatted `.doc` directly — headings, tables, tips, and steps intact — that opens in Word, Google Docs, or LibreOffice. No browser print dialog, no library, works offline.
+
+---
+
 ## v3.63.39
 **Build:** `20260529-012` · **Released:** May 29, 2026
 

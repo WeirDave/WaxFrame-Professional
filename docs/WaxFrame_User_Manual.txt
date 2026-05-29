@@ -1,0 +1,1279 @@
+WaxFrame User Manual
+====================
+
+Source: waxframe-user-manual.html
+Generated: 2026-05-29
+
+WaxFrame puts a team of AI assistants to work on your document at the same time. One AI writes and refines — the rest review, challenge, and suggest improvements. Round by round, your document gets sharper. This manual covers every screen, every button, and every field in the exact order you encounter them. Appendices and reference sections follow at the end for advanced features and troubleshooting.
+
+## Before You Start
+
+What WaxFrame is, who it's for, and what's in your downloaded folder.
+
+### What WaxFrame Does
+
+#### The concept in plain English
+
+WaxFrame runs multiple AI assistants on your document at the same time. Most of them act as **reviewers** — they each read your document independently and produce numbered, specific suggestions for improvement. One AI acts as the **Builder** — it reads every suggestion from every reviewer, decides which ones are the strongest, and rewrites the document incorporating them. You review the result, resolve any disagreements between AIs, and run another round if needed. Each round the document improves — you stop when you're satisfied with the result.
+
+WaxFrame works whether you are starting from a blank page, improving an existing draft, uploading a file, or pasting content in. It handles any kind of written document — business proposals, technical reports, cover letters, blog posts, marketing copy, executive summaries, policy documents, résumés, and more.
+
+#### The setup flow
+
+WaxFrame walks you through five setup screens in order before you reach the Work screen. Each screen is dedicated to one task, and you can move forward or back freely using the navigation buttons at the top of each screen.
+
+Screen | What you do there
+**Setup 1 — Worker Bees** | Connect your AI assistants by saving their API keys. This is a one-time setup — your configuration is saved automatically and is there every time you return.
+**Setup 2 — Builder** | Choose which AI will act as the Builder — the AI that rewrites your document each round.
+**Setup 3 — Your Project** | Name your project and fill in the structured goal fields that guide every AI.
+**Setup 4 — Reference Material** | Optional. Paste or upload source material The Hive will reference on every round but never edit — job descriptions (rules and responsibilities), RFP requirements, style guides, scoring rubrics, prior decisions, vendor claims.
+**Setup 5 — Starting Document** | Upload a file, paste text, or choose to start from scratch and let the AIs write the first draft.
+**Work** | Run rounds, read the updated document, resolve conflicts between AIs, refine further if needed, and export when you are done.
+
+#### What you will need before you start
+
+WaxFrame connects to AI providers using **API keys**. An API key is a unique code — like a password — that gives WaxFrame permission to use a specific AI on your behalf. You need at least two API keys from any combination of the supported providers: ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google), Grok (xAI), Perplexity, or Mistral.
+
+You pay each AI provider directly for the tokens you use. WaxFrame itself does not charge per use — it requires only a one-time license fee after your first three free rounds.
+
+If you are not sure how to get API keys or which providers to use, open the API Key Guide ↗ (api-details.html) — it has step-by-step instructions and direct links to each provider's signup and key console pages.
+
+Stuck on anything, or hit a bug? Visit the 🛟 Help page ↗ (help.html) — it has a one-click diagnostic bundle exporter (your keys and document text are stripped automatically) and a pre-filled GitHub issue link. You can also reach it any time from the **☰** menu in the top-left under **Help & Support**.
+
+### Free Trial & Licensing
+
+#### Three free rounds — no credit card required
+
+Every new installation of WaxFrame includes three free rounds. A round is one complete cycle — all your reviewer AIs process the document and the Builder produces an updated version. Three rounds is enough to see meaningful improvement on most documents. The free round count is stored in your browser and persists across sessions — it does not reset when you start a new project.
+
+#### Purchasing a license
+
+After your three free rounds, WaxFrame requires a license key to run additional rounds. Purchase one at weirdave.gumroad.com/l/WaxFrame (https://weirdave.gumroad.com/l/WaxFrame). Your key arrives by email immediately after purchase. The license is a one-time purchase with no subscription or renewal fee.
+
+#### Entering your license key
+
+1. Click the **Menu** button in the top left corner of any screen. It shows three horizontal lines with the word **Menu** next to it.
+
+2. In the menu panel that slides in from the left, click **🔑 Enter License Key**.
+
+3. A dialog box appears. Paste your license key into the field and click **Unlock Pro**.
+
+4. WaxFrame validates the key against the server. If valid, a confirmation animation plays and unlimited rounds are unlocked immediately. A small license badge appears in the top bar of the Work screen to confirm your status.
+
+### What's in the Folder
+
+#### The files and what they do
+
+File / Folder | What it is
+`index.html` | The main application. Double-click this to open WaxFrame in your browser. This is the only file you interact with directly.
+`style.css` | Visual styling for the application. Do not edit.
+`app.js` | All application logic. Do not edit.
+`version.js` | Application version number. Do not edit.
+`api-links.js` | API console links used by helper pages. Do not edit.
+`theme.js` | Light/dark theme logic for helper pages. Do not edit.
+`api-details.html` | The API Key Guide — a separate page with step-by-step instructions for getting an API key from each supported provider, including direct links to each provider's signup page and key console.
+`waxframe-user-manual.html` | This document.
+`document-playbooks.html` | A library of ready-made project goals for common document types — résumés, business proposals, blog posts, RFPs, cover letters, and more. Open this when you are not sure what to write for your project goal.
+`what-are-tokens.html` | A plain-English explanation of AI tokens, how they are counted, what they cost, and how to manage your spending across providers.
+`prompt-editor.html` | An advanced tool for customising the exact instructions WaxFrame sends to your AIs each round. For experienced users only.
+`images/` | All icons and images used by the application.
+`sounds/` | Sound effects played during rounds and at completion.
+`docs/` | PDF versions of this manual and the Getting Started guide for printing or offline reference.
+
+#### How WaxFrame runs — browser-based, no install
+
+WaxFrame is a browser-based application. There is nothing to install — you open `index.html` in any modern web browser and the app runs entirely in that browser window. Your API keys, settings, and session data are saved in your browser's local storage, not in the folder. This means the files in the folder never change as you use the app.
+
+⚠️ Because your data lives in your browser, clearing your browser's site data or cache will permanently erase your saved API keys, settings, and any unsaved session. Use **Menu → Backup Session** regularly to save a copy of your session that you can restore later.
+
+#### Setting up easy access
+
+Once you have `index.html` open, bookmark it in your browser using **Ctrl+D** on Windows or **Cmd+D** on Mac so you can open it quickly in future. On Windows you can also right-click the file in File Explorer and choose **Send to → Desktop (create shortcut)**. On Mac, drag the file to your Dock to pin it.
+
+## Setup — The 5 Setup Screens
+
+Worker Bees, Builder, Project, Reference Material, and Starting Document. These screens collect everything WaxFrame needs to start running rounds.
+
+### Step 1 — Set Up Your Worker Bees
+
+#### What you are looking at
+
+After clicking **Let's get started →** on the welcome screen, you arrive at the first setup screen: **Worker Bees**. This is a full-width screen dedicated to connecting your AI assistants. Your Worker Bees are the AI assistants that act as reviewers each round. They each read your document independently and produce a numbered list of specific suggestions. You need **at least two Worker Bees with saved API keys** before WaxFrame will allow you to proceed — but **three or more is the empirical recommendation** because runs converge faster with three reviewers and reviewer disagreements get resolved automatically by majority instead of pausing the run for your decision. A status indicator at the bottom of the screen shows whether the minimum is met.
+
+Directly above the list of AIs, a **hive count chip** shows the total number of AIs in your hive and how many of them have saved API keys. This is purely informational — WaxFrame's convergence logic is a threshold check (a majority of the hive must agree on "no more changes"), not an either-or vote between competing proposals, so there is no tie risk on convergence regardless of whether your count is even or odd. (This is different from how reviewers resolve specific change disagreements during a round — with only two reviewers a disagreement can tie and pause the run for your decision, which is why three or more is recommended. See Step 5 below.)
+
+#### On cost — APIs are not subscriptions
+
+WaxFrame talks to each AI through its **API**, not through the consumer chat product you might already pay a monthly fee for. This matters for cost: APIs charge per usage in one-time credits, not as a recurring subscription. You pay only for the tokens you actually send and receive — typically a fraction of a cent per round per reviewer.
+
+**Gemini's API is currently free** within Google's published rate limits. This makes Gemini a useful free reviewer to anchor your hive, and it's why **Gemini-as-Builder** is a common starting configuration. The other five default providers — ChatGPT (OpenAI), Claude (Anthropic), Mistral, xAI (Grok), Perplexity — each require a one-time minimum API credit purchase, typically **starting at $5**. Once loaded, the credit stays in your account and only depletes as you actually use the API; an unused credit doesn't expire monthly the way an unused subscription month does.
+
+**Gemini paid-tier caveat.** Gemini's free tier applies only while your Google AI Studio account has *billing disabled*. The moment you add a credit card and enable billing — even if you intended to stay on the free tier — Gemini requests can route through paid-tier paths and charge per token. The Builder role amplifies this because it reads project setup, reference material, the full working document, and every reviewer's suggestions every round, then writes the document back out. A multi-round session with paid-tier Gemini as Builder on a long document with reference material attached can chew through a few dollars unexpectedly. For casual use, keep billing off on AI Studio. If billing is on, check the AI Studio usage page (https://aistudio.google.com/usage) after longer runs, and consider keeping Gemini as a Reviewer (lighter token load) rather than the Builder.
+
+Practical cost ladder:
+
+- **Cheapest entry point:** Gemini (free) + one paid provider with the minimum $5 credit = 2-AI hive, about **$5 in one-time credits**. Meets the WaxFrame minimum to continue and runs an entire document refinement session.
+
+- **Recommended hive:** Gemini (free) + two paid providers = 3-AI hive, about **$10 in one-time credits**. Hits the empirical 3+ recommendation for faster convergence and automatic resolution of reviewer disagreements (see the status bar block for why 2 vs 3 matters).
+
+- **Full default hive:** All six default providers loaded with minimum credits = about **$30 total in one-time credits**.
+
+For context: the equivalent consumer subscription stack — ChatGPT Plus, Claude Pro, Gemini Advanced, and the paid tiers of Perplexity, xAI, and Mistral combined — runs around **$120 per month**. WaxFrame's API-based approach is dramatically cheaper for document refinement because you only pay for the tokens you process, not for unused capacity.
+
+If you're cost-conscious, the temptation is to stop at the $5 minimum (one paid provider + free Gemini). That works — you'll meet the 2-AI requirement and complete real document runs — but the jump from about $5 to about $10 in one-time credits (adding one more paid provider) buys you the 3+ hive that our reference testing (the Brightwater Canoe and Kayak business-proposal runs, detailed in Setup 1) showed converges faster and resolves disagreements automatically. The $5 difference is the gap between "barely works" and "works reliably."
+
+#### Hive mode — Internet vs Server
+
+Directly under the *Your Worker Bees* heading and above the toolbar, two big buttons toggle the screen between two modes. The active one is highlighted:
+
+- 🌎 Internet Based AI (Default): The standard mode. Your list shows the six default direct-API providers (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) plus any direct-API custom AIs you've added. The toolbar shows the buttons relevant to public-API providers — API Key Guide, Add Custom AI, Test All Keys, Recommend Models for All, Get API keys.
+
+- 🖥 Server Based AI: For users running WaxFrame against a self-hosted or enterprise AI server — Open WebUI, Ollama, LM Studio, an internal gateway. Flipping to this mode *hides* the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear when you switch back) and shows only AIs imported from a model server. The toolbar narrows to Import from Model Server, Add Custom AI, and Test All Keys.
+
+Flipping the toggle filters the visible AI list and rebuilds the toolbar — the underlying inventory is unchanged. You can move freely between modes without losing anything.
+
+#### The toolbar — Internet mode
+
+In Internet mode (the default), the toolbar across the top of the Worker Bees panel shows five buttons followed by two compact row controls on the right. In order, left to right:
+
+- API Key Guide: Opens the **API Key Guide** — a separate page that walks you through getting an API key from each of the six default providers, with direct links to each provider's signup page and key console. Opens in a new tab; your WaxFrame session is not disturbed.
+
+- Add Custom AI: Opens a form for connecting an AI that's not in the default list — for example Together AI, DeepSeek, or any other OpenAI-compatible endpoint. See Appendix A — Adding a Custom AI for full instructions. You don't need this for standard providers like ChatGPT, Claude, or Gemini — those are already in the list below.
+
+- Test All Keys: Sends a minimal one-word test request to every AI with a saved API key and displays results in a panel that slides in from the bottom. Each AI is tested sequentially. The panel shows a pass / fail result per row; click any row to see the full request sent and response received. Run this before your first round to confirm every key is working.
+
+- Recommend Models for All: Asks every AI with a saved key to recommend its best Reviewer model and its best Builder model based on current public information. Runs sequentially across the hive. Recommendations are surfaced directly in each AI's model dropdown: the best Reviewer pick is labeled **✨ Reviewer** and the best Builder pick **🔨 Builder**, and the explanation lines below the dropdown are color-coded — gold for the Reviewer pick, blue for the Builder pick. Useful when you don't know which model to pick for a provider; check the results afterward and override any that landed on the same family as another reviewer in your hive (model-family diversity matters — see the tip at the bottom of this section).
+
+- Get API keys: Opens an in-app drawer listing each AI's API console URL. Click any provider in the drawer to open its key-acquisition page in a new tab. Used for getting a new API key, checking key status, or finding billing/usage pages for the providers in your hive. The drawer groups defaults separately from any custom AIs you've added.
+
+- ⊞ Expand all · ⊟ Collapse all: Two small compact buttons sitting at the right of the toolbar. They open or close every AI's setup panel at once. Useful when you have a large hive and want to scan every key field or model selector quickly without clicking each row individually.
+
+#### The toolbar — Server mode
+
+In Server mode, the toolbar shows a narrower set of buttons appropriate for managing AIs imported from a model server:
+
+- Import from Model Server: Opens a form that connects to a local or enterprise AI server (Open WebUI, Ollama, LM Studio, etc.) and fetches the full list of available models. Adds multiple AIs to your hive at once. See Appendix B — Importing from a Model Server for full instructions.
+
+- Add Custom AI: Same as in Internet mode — the form for connecting any OpenAI-compatible endpoint manually, one AI at a time.
+
+- Test All Keys: Same as in Internet mode — sends a minimal test request to every AI with a saved key and shows the result.
+
+- ⊞ Expand all · ⊟ Collapse all: Same expand-all / collapse-all controls as Internet mode.
+
+**Not in Server mode:** the API Key Guide button (the default-provider key-acquisition flow doesn't apply), Recommend Models for All (server-hosted models are picked by your gateway operator, not by web research), and Get API keys (server endpoints don't expose individual provider consoles).
+
+#### The bulk-select toolbar — only when you have custom AIs
+
+Once you've added at least one custom AI (via Add Custom AI or Import from Model Server), a small toolbar appears between the main toolbar and the AI list. It exists for removing customs in batch instead of one at a time. When no customs exist, this row is hidden and the AI list sits directly under the main toolbar.
+
+The toolbar shows:
+
+- Selection counter: A live count of how many custom AIs are currently ticked for removal, in the form *"N of M custom AIs selected"*. M is the total count of customs in your inventory; N is how many have their checkbox ticked.
+
+- All: Selects every custom AI in one click. Disabled once everything is already selected.
+
+- None: Clears the selection. Disabled when nothing is selected.
+
+- 🗑 Remove N: Deletes the selected custom AIs in one action. The count of pending removals is included in the button label (e.g. *"🗑 Remove 3"*) so you can see at a glance what's about to happen. WaxFrame asks you to confirm before proceeding. Default AIs (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) cannot be removed — they have no checkbox — only their keys can be cleared inside their expanded panel.
+
+#### The AI list — collapsible rows
+
+Below the toolbars is the list of your Worker Bees. By default, six AIs are shown in Internet mode: ChatGPT, Claude, Mistral, Gemini, Grok, and Perplexity. Each AI is a **collapsible row** with two states.
+
+**Collapsed (default state)** — the row shows just the basics:
+
+- Chevron ▶: Click anywhere on the row to expand it. The chevron flips to ▼ when expanded.
+
+- AI icon and name: The logo and display name of the AI provider. The name renders dimmed when no API key is saved for that AI, so at a glance you can see which AIs are configured and which are not.
+
+- Bulk-select checkbox *(custom AIs only)*: For AIs you've added yourself (Add Custom AI or Import from Model Server), a checkbox sits at the right of the row. Tick one or more boxes to select customs for bulk removal — a Remove button appears in the bulk-select toolbar above the list once anything is selected. The six default AIs (ChatGPT, Claude, etc.) do not show a checkbox; they cannot be removed from the inventory, only have their keys cleared (which is done inside the expanded panel — see below).
+
+**Expanded state** — clicking the row reveals the setup panel, containing all the controls for entering a key and picking a model:
+
+- Get-key link: A contextual link at the top of the panel: when no key is saved it reads *"Don't have a key? Get one from [provider] ↗"* and links directly to the provider's key console; when a key is saved it reads *"Manage account? Open [provider] account ↗"*. Always opens in a new tab. (Server-imported AIs typically don't have a console URL, so this link is suppressed for them.)
+
+- Key status indicator: A small icon to the left of the key field. A white square (⬜) means no key is saved. A key icon (🔑) means a key is saved and active.
+
+- API Key field: A password-obscured input field with the placeholder text *Paste key — Enter to save…* Click into the field, paste your API key from the provider, and press **Enter**. The field saves on Enter or when you click away. Once saved, the status icon flips to 🔑 and the ✕ Key and Test buttons appear next to it.
+
+- 👁️ (eye button): Toggles the key field between hidden (dots) and visible (plain text) so you can verify the key you pasted. Click again to re-hide.
+
+- ✕ Key *(appears only when a key is saved)*: Removes the saved key from that AI. The AI stays in your hive but won't participate in rounds until a new key is saved. WaxFrame asks you to confirm before deleting.
+
+- Test *(appears only when a key is saved)*: Sends a single minimal test message to that AI and opens a result modal showing the exact endpoint used, the JSON body sent, the HTTP status code and response time, and the complete raw JSON response. A passing result shows a green ✅; a failing result shows a red ❌ with a plain-English explanation. Always use this after saving a new key to confirm it works.
+
+- Model selector *(appears only when a key is saved)*: Shows the model currently selected for that AI — for example, `gpt-4.1` for ChatGPT or `claude-sonnet-4-6` for Claude. Click the dropdown to see available models fetched directly from that provider. If you've run **Recommend Models for All**, two picks in the dropdown are labeled **✨ Reviewer** and **🔨 Builder** — look for the words, not just the icons. The explanation lines below the dropdown are color-coded to match: gold for the Reviewer pick, blue for the Builder pick. WaxFrame uses sensible defaults; you don't need to change this unless you have a specific reason.
+
+- Recommend a Model *(Internet mode only, when a key is saved)*: A per-AI version of the toolbar's **Recommend Models for All**. Asks just this one AI to recommend its best Reviewer and Builder models. Useful for refreshing a single recommendation without re-running the full sweep.
+
+#### Entering your API keys — step by step
+
+1. Locate the AI you want to connect in the list — for example, **ChatGPT**.
+
+2. Click the **API Key** field next to that AI — the field with the placeholder text *Paste key — Enter to save…*
+
+3. Paste your API key using **Ctrl+V** on Windows or **Cmd+V** on Mac, then press **Enter**. The key status indicator changes to 🔑 to confirm the key is saved.
+
+4. Click the **Test** button that now appears next to the key field. Confirm the test passes before continuing.
+
+5. Repeat steps 1–4 for at least two more AIs. Two AIs is the technical minimum to proceed, but **three or more is strongly recommended** — runs converge faster with three reviewers, and disagreements between reviewers about specific changes get resolved automatically by majority instead of pausing the run for your decision. In our reference Brightwater Canoe and Kayak business proposal test (May 2026, three measured runs): the early **v1.0 scaffold** with a three-AI hive converged in **3 rounds in about 8 minutes**; the polished **v3.0 scaffold** (a more developed version of the same project with more constraints to satisfy) with a three-AI hive converged in **5 rounds in about 10 minutes**; the **v2.0 stress test** with only two AIs took **11 rounds in about 16 minutes** because Round 5 hit a tied reviewer disagreement that paused the run for manual resolution. The two-AI tie-halt is what drove the move to recommending three or more reviewers.
+
+Do not have API keys yet? Click the **API Key Guide** button in the toolbar above the list — it has direct links to each provider's signup page and walks you through getting a key for each one.
+
+#### The status bar — knowing when you are ready
+
+At the very bottom of the Setup screen, a status bar shows exactly what is still needed before you can continue. It reads: *To continue you need:* followed by two indicators:
+
+- **✗ At least 2 AIs set up** — shows a red ✗ until two or more AIs have saved keys (the indicator also includes a live count, e.g. *(1 so far)*). Turns green ✓ when the requirement is met.
+
+- **✗ Builder selected** — shows a red ✗ until you have selected a Builder on the next screen (Setup 2). Turns green ✓ when selected.
+
+The **Continue — Choose Builder →** button at the bottom right of the screen remains inactive until the keys indicator is green.
+
+**Model diversity matters more than model count.** The reviewer hive works because each AI has different training, different biases, and a different sense of what "good" looks like. A hive of six AIs that are all running the same underlying model (or near-identical fine-tunes of the same family) is functionally one reviewer with six voices — convergence happens fast because they were never going to disagree, but the result is no better than a one-shot. Use the **Recommend Models for All** button if you're unsure which provider models to pick; just check the picks afterward and override any that landed on the same family. *Minimum rule:* at least two distinct model families in your hive (e.g., ChatGPT + Claude, or Claude + Gemini). Three or more is better.
+
+### Step 2 — Choose Your Builder
+
+#### What you are looking at
+
+After continuing from the Worker Bees screen, you arrive at Setup 2: **Builder**. This is a full-width screen dedicated to choosing which AI will rewrite your document each round. While your Worker Bees (reviewers) each produce numbered suggestions, the Builder reads all of those suggestions and the full document and produces the updated version.
+
+#### What makes the Builder different from reviewers
+
+Every Worker Bee reads the document and gives suggestions. The Builder does the actual writing. Because the Builder must process the entire document plus all reviewer suggestions every single round, it consumes significantly more tokens than any individual reviewer. This has two practical implications:
+
+- The Builder **must** have a paid API subscription with sufficient token capacity. Free-tier API accounts have low limits and will cause rounds to fail mid-way through.
+
+- Choosing a capable, reliable AI as your Builder matters more than your choice of reviewers. The Builder's output is what you see in the working document after each round.
+
+#### The Builder's two roles
+
+The Builder plays two distinct roles in WaxFrame. In a full round (when you click **Smoke the Hive**), it acts as the **synthesizer** — reading every reviewer's suggestions plus the full document and producing the new version that incorporates the consensus.
+
+Between full rounds, the Builder also acts as your **handyman**. Open the Notes drawer (📝 Notes button in the top bar), write a directive — anything from *"rewrite the first paragraph"* to *"stop using the word 'refine' so much"* to *"the conclusion needs to be more decisive"* — then click **Send to Builder** in the footer. The Builder performs just that one task without running the reviewers, saving tokens and time. After the Builder finishes, you can click **Smoke the Hive** to see if the reviewers agree with the change.
+
+This pairing is one of WaxFrame's most useful workflows: targeted edits via Notes + Send to Builder, then full reviewer feedback via Smoke the Hive when you want validation. Use it when you have a specific change in mind that you don't need the whole hive to debate first.
+
+#### The Builder picker — what you see
+
+The screen body shows a grid of cards, one for each AI that has a saved API key in your hive. AIs without a saved key do not appear here — you must save a key for an AI in Step 1 before it can be selected as Builder.
+
+Each card shows the AI's name and icon. Click a card to select that AI as your Builder. The selected card is highlighted and marked with a small **Builder badge** in the top-right corner — the Builder Bee mascot image — that indicates this AI is the current Builder. Only one AI can be the Builder at a time. You can change your Builder at any time, including from the Work screen during an active session, where the selected Builder is shown with a 👑 crown label in the Change Builder modal.
+
+Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably. DeepSeek in particular offers excellent output at a significantly lower cost than the other providers, making it an efficient choice as Builder. If a round fails with a structure error, switch your Builder to ChatGPT or Gemini — they tend to be the most consistent at following strict output format requirements. For a full breakdown of token costs across providers, see What Are Tokens? ↗ (what-are-tokens.html)
+
+#### Continuing to the Project screen
+
+Once the status bar at the bottom shows **✓ Builder selected** in green, the **Continue — Your Project →** button at the bottom right of the screen activates. Click it to move to the Project screen. Your Builder selection is saved automatically — it will be there every time you return to WaxFrame.
+
+### Step 3 — Define Your Project
+
+#### What you are looking at
+
+Setup 3 — **Your Project** — is a single scrollable screen. At the top is your project name and version, followed by the Project Goal section with six structured fields. Work through the fields top to bottom.
+
+You can either fill in the goal fields manually, or click **📋 Use Template** in the section header to pre-fill them from a curated library of document types. **If this is your first time running WaxFrame, click 📋 Use Template, pick Starting from scratch on the path picker, then choose ⭐ Quick Start** — a small, low-stakes project where the hive writes and refines a real chocolate-chip-cookie recipe across a few rounds. Identical flow to any other project; the recipe is small enough to see convergence quickly and the topic is harmless enough that nothing rides on the outcome.
+
+#### 📋 Project Templates — pre-fill the Goal fields
+
+The **📋 Use Template** button at the top of the Project section opens a gallery of 19 templates organised into 6 categories. The gallery first asks whether you are starting from scratch or refining an existing draft (the path picker), then shows the templates that fit your chosen path. Click any card to populate all six Project Goal fields with proven starting content for that document type.
+
+Category | Templates
+**Quick Start** | ⭐ Quick Start (chocolate chip cookies — recommended for new users; scratch path only)
+**Career & Hiring** | ✉️ Cover Letter · 🔍 Job Description · 📄 Résumé · 🔗 LinkedIn About · 🙏 Thank-You Letter
+**Business & Sales** | 💼 Business Proposal · 📬 Email & Outreach · 📊 Executive Summary · 📋 RFP Response
+**Content & Marketing** | 📝 Blog Post / Article · 🖥️ Presentation Outline · 💼 LinkedIn Post
+**Personal & Everyday** | 🍳 Recipe · 🧾 Contractor / Vendor Letter
+**Reviews & Recommendations** | 🍽️ Restaurant Review · 🏨 Hotel Review · 🧾 Business / Service Review · ✈️ Trim to TripAdvisor · 📍 Trim to Google Maps · 💬 Rewrite as Yelp *(the three platform templates are refine-only — they reshape an existing review)*
+
+**How template apply works.** Click a card → if the Goal fields are empty, the template populates silently. If any field has content, a confirmation prompt appears warning that current entries will be replaced. **Project name, version, length constraint, Reference Material, and Starting Document are never touched** — only the six Goal fields.
+
+**Template Hint banner.** Most templates contain `[bracketed]` placeholders the user must fill in — for example *[company name]* or *[job title]*. After applying a template with placeholders, an amber-bordered banner appears above the Project Name with a per-field bulleted list telling you exactly which form field to look at and what to fix there. Templates that ship clean (Quick Start, Executive Summary) skip the banner entirely.
+
+Templates are starting points — every field can still be edited after the template populates. Treat the populated content as a strong first draft, then tailor it to your specific situation. The full set of templates is also documented as standalone playbooks in the Document Playbooks ↗ (document-playbooks.html).
+
+#### Project Name field
+
+At the top of the screen, below the intro, is the project name field. Type a name for your project here. This name is used in the export filename and appears in the round history. It has no effect on how the AIs work — it is purely for your own organisation. Examples: *Q3 Board Report*, *Marketing Email — Product Launch*, *Cover Letter — Senior Engineer Role*.
+
+#### Version field
+
+The smaller field next to the project name has the placeholder text *Version — e.g. v1*. Enter a version identifier here. This is also used in the export filename. Use whatever versioning makes sense to you — *v1*, *draft1*, *2.0*, *final*. Like the project name, it does not affect how the AIs work.
+
+#### Length Constraint
+
+Below the goal fields is a section headed **Length Constraint**. This is where you tell WaxFrame what kind of length rule applies to your document — not in the goal fields. As of v3.33.0 there are four modes covering the common cases:
+
+Mode | What it does | When to use it
+**No limit** | No length gating. Reviewers and Builder receive no length instruction. No round-end or convergence-time guards fire. | Default for documents where length is irrelevant or you want the hive to choose what fits.
+**Hard cap** | Ceiling only. The Builder is told "stay at or below the limit; shorter is fine." Round-end and convergence-time guards fire only when the document goes over. | Documents with a maximum but no minimum — a tweet under 280 characters, a cover letter under 500 words, a report under 10 pages.
+**Target** | Aim to hit the target value exactly. Both ceiling and floor guards are armed against the same value. Round-end checks are trajectory-aware so you only get prompted on rounds that move *away* from the target — a Builder converging from 320 down to 305 toward a 300-word target won't nag you, but a Builder going 305 to 320 will. | Documents where you want the hive aiming at a specific length — a 500-word essay, a 10-line poem, a strict word-count submission.
+**Range** | Stay between a minimum and a maximum that you supply. The Builder is told "aim for the middle of that range." Both guards armed against their respective bounds. | Documents with both a floor and a ceiling — "between 800 and 1200 words", "3 to 5 paragraphs", "2 to 4 pages".
+
+**Important:** put your length rule here — not in the Scope & constraints goal field. If you put "under 200 words" in your goal text, the AIs receive it as loose instruction mixed in with everything else, and it is easy to miss. When you pick a mode here, WaxFrame formats and enforces it explicitly in every round as a hard constraint separate from the rest of your goal.
+
+The word count shown in the document stats bar above the Working Document updates live as the document changes. Use it to verify the constraint is being respected after each round.
+
+#### How Length Constraint is measured
+
+Behind the scenes, after the Builder returns each round, WaxFrame measures the output in the exact unit you chose. If the result violates your active mode (over the cap, away from the target, outside the range), the gate prompts you with three options: **Discard** the round, **Keep** it anyway, or **Continue anyway** (which disables the guard for the rest of the project). The prior document is preserved on Discard — you never lose work to a gate failure. Here is how each unit is counted:
+
+Unit | How it is counted | Notes
+**Characters** | Every character in the text, including spaces. | Matches how web forms, SMS counters, and social media count. Accurate for plain English. Emoji and complex scripts can count differently than what appears on screen.
+**Words** | Tokens separated by whitespace. | Matches how most submission forms count. Can differ from Microsoft Word by 1–2% on hyphenated terms or URLs. For hard ceilings elsewhere, trim a few words under your target as a buffer.
+**Paragraphs** | Blocks of text separated by blank lines. | Matches how markdown, plain text, and Word documents denote paragraph breaks. Headings and bullet lists count as paragraphs if they are separated by blank lines.
+**Pages** | Approximated using 600 words per single-spaced 12pt page (industry-standard typewriter math — Word's default and what most word processors round to). 1 page ≈ 600 words, 2 pages ≈ 1200 words, 5 pages ≈ 3000 words. | This is the one unit WaxFrame cannot measure directly — actual page count depends on your font, margins, and line spacing. For firm limits (court filings, one-page résumés), aim slightly under the target to leave headroom.
+
+The convergence-time gate is symmetric: when the hive converges (unanimous or majority), WaxFrame checks the final document against your mode's bounds before celebrating. If the doc is over a cap, under a target, or outside a range, you get the same three-option prompt — Discard returns you to the work screen to edit and re-run, Keep accepts the convergence, Continue anyway accepts and silences the guard for the rest of the project session.
+
+**Who actually responds to length directives.** Reviewers focus on prose quality — clarity, structure, persuasion, accuracy — and do *not* address length. **Only the Builder responds to length directives**, including the ✂ Trim, 📈 Expand, and 📐 Match Notes templates. If the document consistently overshoots your target across multiple reviewer rounds, that is expected — the reviewers are doing their job and the Builder is the lever for size. The standard playbook: wait for a round where reviewers signal they are done with prose changes, then run a Builder-Only round with the ✂ Trim template injected to compress the output. Real-world reference: a 1499-word document compressed to 1083 words (a 27.6% reduction) in a single Builder-Only round with one Trim injection.
+
+If you projects from before v3.33.0 (the mode picker addition), the migration assumes **Hard cap** mode if you had a length set, or **No limit** if you didn't. Open the project on the Setup 3 screen, look at the active pill, and switch modes if you want different behavior.
+
+#### Project Goal — six structured fields
+
+Below the project name and version is the **Project Goal** section — six labelled fields assembled into a structured brief that every AI reads before each round. You do not need to fill all six — even two or three give the hive a strong foundation. Here is what each field is for:
+
+Field | What to write
+**Document type** | State the format clearly — a business proposal, a technical comparison, a cover letter, an executive summary. This is the first thing assembled into the brief and is always included when a document exists.
+**Target audience** | Who will read this? IT Director, hiring manager, VP of Facilities, small business owners? The audience shapes the tone, language, and depth every AI uses.
+**Desired outcome** | What do you want the reader to walk away able to do, decide, or understand? Give the AIs a finish line.
+**Scope & constraints** | What must be covered — and what should be left out? AIs expand into adjacent topics unless you draw the boundary clearly. If you want wireless only and not switching or routing, say so here.
+**Tone & voice** | Formal or conversational? Technical or plain-English? Confident or cautious? The more specific, the more consistent the output will be across rounds.
+**Additional instructions** | Anything else the AIs need to know — style preferences, things to avoid, structure requirements, sections that must not be changed.
+
+Every AI reads your assembled brief before touching your document. **The goal works identically whether you are uploading a file, pasting text, or starting from scratch.** The difference is only in what the AIs have to work with — not in how the brief is applied.
+
+Vague fields produce a vague document. Specific, detailed fields produce something you can actually use.
+
+#### Writing a goal that gets results
+
+The goal works the same whether you are uploading an existing document, pasting text, or starting from scratch. The AIs have nothing else to work from — no access to the internet, no knowledge of your organisation, no understanding of what you want unless you tell them. The more you put in, the better every round will be.
+
+The most common mistake is writing a goal so short and vague that the AIs have to guess. They will guess — and they will all guess differently, which produces drift and conflicts that never resolve.
+
+Too vague *"Make this proposal better."*
+
+Much better *"This is a wireless network infrastructure upgrade proposal for a 950,000 sq ft warehouse. Audience: IT Director (technical) and VP of Facilities (budget-focused). The technical sections and vendor comparison table are solid — do not change them. Focus all improvements on the executive summary, which is too long and too jargon-heavy for the VP, and on the cost justification section, which needs a clearer ROI narrative. Tone: confident and direct, not salesy. Do not add any new sections."*
+
+Too vague *"Write a report about wireless networking."*
+
+Much better *"Technical comparison of enterprise wireless networking platforms — HPE Aruba, Cisco Meraki, Juniper Mist, and Extreme Networks. Audience: IT infrastructure team evaluating a campus-wide refresh. Scope: strictly wireless — APs, controllers, cloud management, licensing. Exclude switching, routing, firewalls. Tone: technical and neutral. Include a summary comparison table at the top, a dedicated section per vendor covering strengths, weaknesses, and pricing, then a shortlist recommendation."*
+
+Not sure what to write? The Document Playbooks ↗ (document-playbooks.html) has ready-made goals for common document types. Open it from the Menu.
+
+Do not put a target length in the goal. Use the **Length Constraint** field below the goal instead — WaxFrame sends it automatically in a standardised format every round.
+
+#### What each field does — and what to put in it
+
+Field | What it controls | Tips
+**Document type** | Sets the format, length conventions, and depth every AI aims for on every round. This is the first thing assembled into the brief and is always sent. | Be specific. *Cover letter* not *document*. If there is one thing the AIs should never forget, make it part of this field.
+**Target audience** | Calibrates tone, vocabulary, and how much to explain. Without it, different AIs write for different audiences and the document becomes inconsistent. | *IT Director and VP of Facilities* is better than *business audience*. Specify seniority, technical level, and any split audience.
+**Desired outcome** | Gives the AIs a finish line. The most impactful field — this is what every suggestion and every rewrite is ultimately working toward. | *Approve the budget*, *schedule an interview*, *understand the three options and pick one*. Vague here means vague everywhere.
+**Scope & constraints** | Draws the fence. AIs expand into adjacent topics unless you stop them explicitly. | Cover both sides — what must be included and what must not. *Wireless only — no switching, routing, or security products.*
+**Tone & voice** | Prevents tone drift across rounds when multiple AIs are writing in different styles. | A few adjectives is a floor. Richer is better: *Direct and confident, not stiff — like a peer they'd want to work with*. Say what to sound like, what to avoid, and who's reading.
+**Additional instructions** | Hard rules that must survive every round — things the AIs must always or never do regardless of what the document looks like. | *Do not add new sections*. *Never change the numbers in the cost table*. *Always use Oxford commas*. For one-round-only instructions, use the Notes drawer on the Work screen instead.
+
+#### Clear Goal and Clear Project buttons
+
+Below the goal fields are two clear buttons:
+
+- **✕ Clear Goal** — erases all six goal fields. Your project name, version, and all other settings are kept.
+
+- **🗑 Clear Project** — erases everything on the Your Project screen: name, version, all goal fields, and length constraint. Your API keys and Builder selection are not affected.
+
+**Setup specificity drives convergence speed more than starting-document quality.** Same hive, same topic, same starting document — but a project with specific Target Audience, anchored Desired Outcome, narrow Scope, defined Tone, and explicit Additional Instructions converges in a fraction of the rounds compared to one with generic fields. Empirical example from session 2026-05-07: v1.0 with 243-character goalNotes and anchored persona converged in **5 rounds**. v2.0 with 48-character goalNotes and generic tone on the same topic ran **37 rounds without converging**. Fill every field as if you were briefing a senior contractor — say what good looks like, what the constraints are, and what definitely is not in scope. The hive cannot read your mind; vague setup forces reviewers to invent their own version of the answer, and they invent *different* answers, which is what conflicts are.
+
+### Step 4 — Reference Material
+
+#### What you are looking at
+
+After continuing from the Your Project screen, you arrive at Setup 4: **Reference Material**. This is a full-width screen with a small ⓘ info button next to the heading. Reference material is *optional* — most projects do not need it. The Continue button is always active and you can skip the screen entirely if your project has no source material to cite against.
+
+This screen is where you provide source documentation that the hive should consult on every round but never edit. The hive sees this content alongside your starting document, but the prompt explicitly tells every reviewer and the Builder to treat it as read-only authoritative source — not as something to rewrite.
+
+#### When to use it
+
+Reference material is the right tool when there is a specific document the hive needs to cross-check against. Common cases:
+
+- **RFP responses** — paste the RFP itself so the hive can verify your response addresses every required section, scoring criterion, and constraint.
+
+- **Cover letters and résumés** — paste the job description so every revision is checked against the actual role requirements, not a generic idea of the job.
+
+- **Brand or style guides** — paste your organization's style rules so the hive enforces them on every round without needing you to repeat them in Notes.
+
+- **Scoring rubrics** — paste a grading rubric or evaluation criteria so the hive can self-score against it as it refines.
+
+- **Prior decisions or vendor claims** — paste the agreed positions, technical specifications, or contractual claims you must stay consistent with.
+
+#### When to skip it
+
+Most short documents do not need reference material. A cookie recipe, a thank-you note, a personal blog post, or a quick email rarely has external source material to cite against. If you cannot name what the hive would be checking *against*, leave Setup 4 empty and continue.
+
+#### How it differs from Notes and from your Starting Document
+
+Three places hold instructions or content for the hive. They are distinct, and using the wrong one is a common cause of confusion.
+
+Field | Role | How the hive treats it
+**Project Goal** (Setup 3) | Standing target — what you are trying to produce | Sent every round, never changes within a session
+**Reference Material** (Setup 4) | Standing source material — what the document must cite against | Sent every round, can be edited mid-session, never edited by the hive
+**Starting Document** (Setup 5) | The document under construction | Line-numbered, reviewed, rewritten by the Builder each round
+**Notes** (Work screen) | Round-to-round directives for the Builder only | Sent on the next round only; cleared automatically after that round runs
+
+#### Adding reference documents
+
+Setup 4 is built around a list of **reference document cards**. You can add as many as you need — RFP requirements alongside scoring rubrics, style guides alongside brand voice references, prior decisions alongside vendor claims. Each card is independently named, reorderable (▲ ▼ arrows on the card), removable, and editable. **Order matters: the first card reads as most authoritative to the hive**, and the hive sees them with labeled section headers in the prompt envelope so AIs can cite specific documents by name.
+
+Two action panels above the reference list let you add new ones:
+
+- **Paste Text** — clicking this panel (it has a clipboard icon) adds a new editable reference with an empty textarea below. Paste your text in and it becomes the reference's content. The reference name defaults to *Reference N* — rename it to something meaningful (e.g. *RFP Requirements*, *Style Guide*, *Job Description*) so the hive can cite it by name.
+
+- **Upload File** — clicking this panel (it has a stack-of-document-types icon) opens a file picker, or you can drag & drop a file directly onto it (the panel is the drop target). The file is read once and its content is loaded into a new read-only reference with the original filename as the name. Supported formats: Word (.docx), PDF (.pdf), PowerPoint (.pptx), Excel (.xlsx, .xlsm), plain text (.txt), and Markdown (.md). For Excel workbooks with multiple visible sheets, a sheet picker appears and each selected sheet becomes its own independent reference. For the canonical breakdown of what gets extracted from each format and what does not, see File Ingestion ↓.
+
+Each card has the same controls: a position number badge at the top-left (the hive reads cards in the order shown, top-down), a source-icon badge (showing which file type the content came from — DOCX, PDF, paste, etc.), a character / word / token counter, **▲** and **▼** arrow buttons to reorder, and a **✕** remove button. Paste cards have a fully editable textarea below the header row; upload cards are read-only — to replace an uploaded card's content, remove it and re-upload.
+
+A soft warning banner appears at the top of Setup 4 if the total token count across all cards exceeds approximately 150,000. Most provider context windows in 2026 are 100k–1M tokens; the threshold is conservative and informational — it never blocks, just flags genuinely heavy use so you can split across rounds, remove low-priority documents, or switch to a long-context Builder before launching.
+
+#### The character / word / token counter
+
+Below the input area is a live counter showing characters, words, and an estimated token count. The token estimate uses the rule of thumb `characters ÷ 4`, which is the standard approximation for English text in OpenAI-family tokenizers. Real tokenizers vary by model, language, and content type — treat the number as an order-of-magnitude estimate, not a precise count. The ⓘ button next to the token count opens a brief explainer with more detail.
+
+#### Token cost reality
+
+Reference material is sent to *every reviewer every round*. A 5,000-character RFP is roughly 1,250 tokens per request. A six-bee hive running four rounds is 30,000 tokens spent just transmitting the reference material — before any document content, project goal, or response is counted.
+
+Two consequences follow:
+
+- **Trim aggressively.** Paste only what is most important. If a 40-page RFP has three pages of substantive requirements and 37 pages of boilerplate, paste the three pages.
+
+- **Pick a cost-conscious Builder.** When reference material is large, switch your Builder to a model with low input-token pricing — DeepSeek and Gemini Flash are typically the cheapest options. The Builder is sent the largest prompt every round, so changing it has the biggest cost impact.
+
+For the full breakdown of how tokens are priced and why per-round costs scale the way they do, see the What Are Tokens? ↗ (what-are-tokens.html) guide.
+
+#### Editing reference material mid-session
+
+Once you launch a session, the Work screen toolbar shows a new **📚 Reference** button between Notes and Finish. Clicking it opens a drawer that slides up from the bottom of the screen, showing the current reference material in an editable textarea with the same character / word / token counter.
+
+Edits saved from this drawer apply to the *next* round — past rounds keep the snapshot of the reference material that was active when they ran. This is intentional: each entry in Round History stores the reference material as it existed at the moment that round was generated, so the transcript stays internally consistent even if you change the source material between rounds.
+
+The drawer has three actions: **📋 Copy** (copies the current text to your clipboard), **✕ Clear** (wipes the field with confirmation — does not affect past rounds), and **💾 Save & Close** (commits the edit and closes the drawer).
+
+If your reference material grows large mid-session and you notice rounds getting expensive, this is the moment to switch your Builder to a cheaper-per-token model. Go to **Menu → Setup 2 — Builder**, pick a low-cost option, and continue. The Builder change applies to the next round; past rounds keep their original Builder credit in the transcript.
+
+### Step 5 — Provide Your Starting Document
+
+#### What you are looking at
+
+After continuing from the Your Project screen, you arrive at Setup 5: **Starting Document**. This is a full-width screen with a small ⓘ info button next to the heading. This is where you tell WaxFrame what to work with. There are three ways to provide a starting point, selected using the three buttons at the top of the screen.
+
+**Important:** These three buttons — **Upload File**, **Paste Text**, and **Start from Scratch** — are *mode selectors*, not action buttons. Each carries a small distinct icon to its left (a stack of file-type cards for Upload, a clipboard for Paste, a blank-page-with-sparkles for Scratch). Clicking one selects that mode and changes what appears below the buttons. You then interact with the area below them to actually provide your content. A brief instruction line directly below the buttons updates to tell you exactly what to do next.
+
+#### Export Filename
+
+Below the mode selector buttons and above the content area is a row labelled **💾 Export filename**. This field controls what your downloaded document file will be named when you export it at the end of your session. It uses two tokens:
+
+- **{name}** — replaced with your project name, with spaces and special characters converted to underscores.
+
+- **{version}** — replaced with your version number.
+
+The default value is `{name}_{version}`, which produces a filename like `Q3_Executive_Summary_v1.txt`. You can customise this — for example `{name}_FINAL_{version}` — or leave it as the default. A live preview of the resulting filename appears to the right of the field as you type, using your actual project name and version. Click the small ⓘ button next to the label for a full explanation of available tokens.
+
+#### Upload File — I have a document saved on my computer
+
+Click **Upload File** to select Upload mode. A drop zone appears below — a dashed bordered area with the text *Drag & drop or click to browse*. To upload your file:
+
+- Click anywhere inside the drop zone to open your operating system's file browser. Navigate to your file and select it.
+
+- Or drag your file from any folder on your computer and drop it directly onto the drop zone.
+
+Supported file formats: Word documents (.docx), PDFs (.pdf), PowerPoint presentations (.pptx), Excel workbooks (.xlsx, .xlsm), plain text files (.txt), and Markdown files (.md). WaxFrame extracts the text content from the file and loads it into the working document automatically. A confirmation message appears below the drop zone once the file is processed successfully, showing the filename and word count. For Excel workbooks with multiple visible sheets, a sheet picker appears and selected sheets are concatenated into a single document with `## Sheet:` dividers. For the canonical breakdown of what gets extracted from each format and what does not, see File Ingestion — What Gets Extracted ↓.
+
+**PDF tip:** PDF extraction works best with standard digitally-created documents — files exported from Word, Google Docs, or similar applications. Scanned documents and PDFs created from images do not contain extractable text and will produce garbled or empty results. If your PDF was scanned, use the **Paste Text** option instead and copy the text from a version of the document you can select text in.
+
+⚠️ **Large file tip:** If you import a very large file — a dense report, a long PowerPoint, or any document that produces a very high word count — and a round later fails with a structure error, this usually means the document exceeded your Builder's token limit for a single request. Switch your Builder to ChatGPT or Gemini using the Change Builder button on the Work screen and retry. Both handle large context windows reliably.
+
+#### Paste Text — I have text I want to copy in
+
+Click **Paste Text** to select Paste mode. A text editor appears below the buttons — the same line-numbered editor used on the Work screen. Click anywhere inside the editor to place your cursor, then paste your text using **Ctrl+V** on Windows or **Cmd+V** on Mac. You can also type directly into the editor.
+
+Use this option when your content comes from a website, an email, a Google Doc, another application, or any source where you can copy and paste text but do not have or do not want to use a file. There is no size limit on pasted text other than your Builder's token capacity.
+
+The editor uses a fixed 80-character-wide column — the same width as the working document on the Work screen. This is intentional and ensures consistent formatting throughout your session.
+
+#### Start from Scratch — I do not have a document yet
+
+Click **Start from Scratch** to select Scratch mode. A confirmation panel appears indicating that WaxFrame will generate the first draft entirely from your project goal. There is nothing else to do in this panel — no file to upload, no text to paste.
+
+In this mode, your project goal is the only context the AIs have. Write it in as much detail as possible before launching. The more specific and complete your goal, the closer the first draft will be to what you actually need.
+
+#### The ⓘ button — About Starting Document
+
+The small ⓘ button next to the **Starting Document** heading opens an overlay that explains the three mode buttons and what to do after selecting each one — a quick in-app reference to this section of the manual.
+
+## Work Flow — Running Rounds
+
+Launching WaxFrame, navigating the Work screen, running rounds, reviewing decisions, and exporting your finished document.
+
+### Step 6 — Launch WaxFrame
+
+#### The requirements bar
+
+At the bottom of each setup screen is a requirements bar showing exactly what is still needed before you can continue or launch. On the Starting Document screen it reads: *To launch you need:* followed by one indicator:
+
+- **✗ Document — upload a file, paste text, or choose Start from Scratch** — turns green ✓ when a starting document mode is selected and, for Upload and Paste modes, content has been provided.
+
+On the Your Project screen the requirements are: Project name, Version, Document type, Target audience, and Desired outcome — all five must be filled before you can continue to the Starting Document screen.
+
+#### Clicking Launch WaxFrame →
+
+The **Launch WaxFrame →** button at the bottom right of the Starting Document screen is inactive until the document requirement is green. Once it is, click **Launch WaxFrame →** to move to the Work screen and begin your session. WaxFrame saves your project configuration automatically at this point.
+
+The first time you reach the Work screen for a project, WaxFrame nudges you with a **💾 Save a checkpoint backup?** modal. This is the pre-token-burn checkpoint — a free, fast moment to grab a backup of your exact starting state so you can restore it if anything drifts later. The modal offers *Save Backup*, *Not now*, and a *Don't ask again for this project* checkbox. See Settings → Checkpoint Backup Nudge for the full rules.
+
+### Step 7 — The Work Screen
+
+#### What you are looking at
+
+The Work screen is where all rounds happen. It has a top bar, a three-column main area (left panel · Working Document · right panel), and a footer bar at the bottom. Most of the screen's controls are clustered into those four zones. Here is what each contains, top to bottom and left to right.
+
+#### The top bar
+
+Running across the very top of the Work screen, three zones — left, centre, right:
+
+**Top bar — left zone**
+
+- Menu button (☰): Three horizontal lines in the top-left corner. Opens the slide-in navigation drawer with access to Setup screens, Round History, the User Manual, API Key Guide, Document Playbooks, session backup and import, license management, and more.
+
+- Project info (clickable): Shows your project name, version, and start mode (e.g. *From scratch*, *From upload*, *From paste*). Clicking anywhere on this cluster opens a Project Goal viewer where you can read your full assembled goal and copy it without leaving the Work screen.
+
+**Top bar — centre zone**
+
+- Round badge: Shows the current round number and phase — for example *Round 1 — Draft*, *Round 3 — Reviewing*, *Round 5 — Building*, or *Round 7 — ✓ Converged*. Updates live as a round progresses through its phases and again after the round completes.
+
+**Top bar — right zone** (left to right):
+
+- 📝 Notes: Opens the Notes drawer. Contains two fields: a **per-round Notes** field that's cleared after each round (use it for one-time directives like *"Tighten the third paragraph"*), and a **Standing Notes** field that persists across all rounds (use it for invariants like *"Always use Oxford commas"* or *"Never invent statistics"*).
+
+- 📚 Reference: Opens the Reference Material drawer where you can view, edit, add, or remove reference documents during an active session. Changes take effect on the next round; past rounds keep the reference snapshot that was active when they ran. (Setup 4 — Reference Material is the entry point for first-time setup; this is the live-edit equivalent on the Work screen.)
+
+- 🏁 Finish: Opens the Finish panel where you can export your document, export the full transcript, or start a new project. Covered in full in Step 11.
+
+- 🚀 Auto Mode toggle: A two-state toggle to the right of the divider, labelled *Manual* (amber) or *Auto* (green). When set to Auto, WaxFrame chains rounds automatically — after each round completes, the next round fires without you clicking Smoke the Hive. Auto Mode pauses for USER DECISION blocks and for slow-AI alerts so you stay in the loop on anything that needs a human call.
+
+- 🔊 Mute: Toggles sound effects on and off. WaxFrame plays subtle sound cues at round start, round end, convergence, and a few other key moments. The icon flips to 🔇 when muted.
+
+- ☀️ / ⚙️ / 🌙 Theme buttons: Three compact buttons at the far right: **☀️ Light**, **⚙️ Auto** (follows your operating system's preference), and **🌙 Dark**. Theme choice persists across sessions.
+
+Round History is reachable via the Menu (top-left) — covered in detail in Step 10.
+
+#### The left column — The Hive and Conflicts
+
+The left column contains two sections stacked vertically: **The Hive** at the top and **Conflicts** below it.
+
+**The Hive** section has a small ⓘ info button and two buttons in its header:
+
+- Edit Hive button: On laptop-sized screens (at or below 1600px wide) the full AI cards are hidden and replaced with a compact dot strip — one small dot per AI — to save space. Clicking **Edit Hive** opens a modal where you can toggle individual AIs on or off for the session. On a full desktop screen this button may be hidden because you can interact with the AI cards directly instead.
+
+- Change Builder button: Always visible. Opens a panel where you can switch which AI is acting as Builder for the current session without going back to Setup. Any AI with a saved key can be selected. Use this if your current Builder produces a structure error or if you want to try a different AI's writing style.
+
+Below the header, the AI status area displays differently depending on your screen size:
+
+- Desktop (wider than 1600px): Each active AI is shown as a full card with its name, icon, and live status. During a round each card updates to show the AI's current state — idle, reviewing, complete, or error. After a round you can click any card to view that AI's full reviewer response.
+
+- Laptop (1600px or narrower): The full cards are hidden and replaced by a compact row of small circular dots — one per active AI — showing colour-coded status. Hover any dot to see which AI it represents. The Edit Hive button appears in the header to compensate for the loss of the card controls.
+
+Below the AI status area is the **Conflicts** section, also in the left column:
+
+- Conflicts: Shows any disagreements between your AIs that the Builder flagged for your decision after a round. A **📋 Copy** button in the Conflicts header copies the current conflicts to your clipboard. Each conflict is listed with the options your AIs proposed — you resolve each one by choosing an option, writing a custom resolution, or keeping the original. **The panel always shows conflicts from the most recent round only — it's not a project-wide completion indicator** (see the ⓘ button next to the Conflicts heading for the full breakdown of when "no conflicts" does and does not mean done). Conflict resolution covered in full in Step 9.
+
+#### The centre column — Working Document
+
+The centre column is headed **📄 Working Document** with a small ⓘ info button. This is where your document lives and is updated after each round.
+
+- Document editor: The large line-numbered text area showing your current document. It is fully editable between rounds — click anywhere and type to make direct changes. The AIs work with whatever is in this editor when the next round starts.
+
+- Stats bar: Below the document editor. Shows the current line count, word count, and character count of the document, updated live as you type or as rounds complete.
+
+- 💾 Export · 📋 Copy · ✕ Clear: Three buttons in the Working Document header. **💾 Export** downloads the document as a .txt file immediately without opening the Finish panel. **📋 Copy** puts the full document text on your clipboard. **✕ Clear** wipes the document editor — use with caution; WaxFrame asks you to confirm.
+
+- 🔍 Re-extract with AI Vision: A conditional button that appears under the Working Document toolbar only when your starting document was uploaded from a file (PDF, DOCX, etc.). Clicking it asks a vision-capable AI to re-read your original source file and replace the current document text with a cleaner extraction. Useful when local PDF.js / Mammoth extraction produced garbled text — particularly common with scanned PDFs, multi-column layouts, or rich formatting that doesn't translate well to plain text.
+
+#### The right column — Timers and Live Console
+
+The right column contains three elements stacked vertically: the WaxFrame logo and version stamp, the dual-face clock widget, and the Live Console.
+
+- Dual-face clock widget: Two timers displayed side by side in a single bezel. The left face — labelled **ROUND** — counts up automatically while a round is running and stops when the round completes, showing you how long that round took. It resets when the next round starts. The right face — labelled **PROJECT** — is a manual stopwatch for your overall session. It has a ▶ Start button and a ⏸ Pause button. Use it to track total time spent on a project across multiple rounds and sessions; this value is what the Brightwater empirical reference numbers and the playbook convergence times in the User Manual are measured against.
+
+- 🖥️ Live Console: A colour-coded live log of everything happening during a round — when each AI request was sent, the HTTP status code returned, response received, and any errors. A legend at the top of the console identifies what each colour means: Round, Sending, Response, Success, Warning, Error, Info. A **📋 Copy** button in the console header copies the full log to your clipboard. Use the console to monitor progress during a round and to diagnose problems if something goes wrong.
+
+#### The footer bar
+
+At the very bottom of the Work screen is the footer bar. Three zones — left status, centre actions, right indicators.
+
+**Footer — left zone**
+
+- Status text: A status line on the left that shows what WaxFrame is currently doing — *Standing by — Smoke the Hive to begin* when idle, or progress updates like *Reviewing — ChatGPT, Claude, Gemini…* while a round is in flight.
+
+**Footer — centre zone (the two big round-trigger buttons)**
+
+- Send to Builder: Like asking a **handyman** to perform a specific task. Pair it with a directive in the Notes drawer (*"rewrite the first paragraph"*, *"stop saying 'refine'"*, *"tighten paragraph three"*) and click Send to Builder — the Builder performs just that task without running the reviewers. Saves tokens and time. After the Builder finishes, click **Smoke the Hive** to see if the reviewers agree with the change. (The Conflicts panel won't populate from a Builder-Only round because no reviewers ran.)
+
+- Smoke the Hive: The main round button. Runs a full round — all reviewers process the document simultaneously, then the Builder reads all their suggestions and produces the updated document. This is the button you click to start each round and to keep refining toward convergence. Covered in detail in Step 8.
+
+**Footer — right zone (indicators and info, left to right)**
+
+- 📏 Length Guard pill: Visible whenever a Length Constraint mode is active on the project (Hard cap / Target / Range — set on Setup 3). Reads *Length guard: armed* while watching the document, and switches to amber *Length guard: off* if you've disabled it for the session via the round-end gate's **Continue anyway** option. Click the pill to toggle (with a confirmation prompt that carries a *Don't show this again* option). Also mirrored as a toggle on the Settings screen.
+
+- 🐢 Slow alerts pill: A user-level preference for whether to surface the troubleshooting card when an AI is flagged slow. Detection formula: response time exceeds both (multiplier × round average) AND (round average + 15s), for N consecutive rounds — both the multiplier (default 3×) and round count (default 2) are user-configurable in the Settings panel. Default is *Slow alerts: on*; click to switch to *Slow alerts: off*, which suppresses the troubleshooting card (helpful for long hands-off Auto Mode runs where a single slow AI shouldn't break the chain). Detection still runs and logs to the Live Console either way. Also mirrored as a toggle on the Settings screen.
+
+- License badge: A small indicator showing your current license status — either the number of free trial rounds remaining or a Pro indicator if you have a valid license. Click it to open the Manage License modal where you can replace, remove, or check the status of your license key.
+
+- ℹ️ About: Opens the About modal with credits, build info, and license details.
+
+### Step 8 — Run Your First Round
+
+#### Clicking Smoke the Hive
+
+Click the **Smoke the Hive** button in the footer bar to start a round. All your active reviewer AIs begin processing simultaneously — having more AIs does not make the round take longer, since they all run at the same time. You can watch each AI's progress in the Hive panel on the left — each icon animates as its AI works.
+
+Do not close the browser tab or navigate away while a round is running. If the round is interrupted, the document will not be updated and the round will not be saved to history, though your API call tokens will still have been consumed.
+
+#### What happens during a round
+
+1. WaxFrame sends each reviewer AI a prompt containing your goal, the current document, and instructions for their role. All reviewer AIs receive the same prompt simultaneously.
+
+2. Each reviewer AI returns a numbered list of specific suggestions. You can see these in the Live Console as they arrive, and in the Conflicts section of the left column after the round.
+
+3. Once all reviewers complete, WaxFrame sends the Builder AI a prompt containing the current document, all reviewer suggestions, and your goal. The Builder incorporates the strongest suggestions and produces an updated document.
+
+4. The updated document appears in the Working Document panel. Any significant disagreements between your AIs are flagged as conflicts in the left column for your decision. The round is saved to history automatically.
+
+#### How WaxFrame handles your goal — two situations, automatically determined
+
+WaxFrame decides how to use your goal based on one simple question: does a document exist? You do not choose or configure this — it is handled automatically.
+
+- No document — generating from scratch: If you chose **Start from Scratch**, no document exists yet. WaxFrame sends your **full project goal** to every AI. They write independently and the Builder combines the best elements into the initial working document. This is the only situation in which your full goal is sent.
+
+- Document exists — always: The moment a document exists — whether you uploaded a file, pasted text, or the AIs generated one from scratch in a previous run — WaxFrame sends only a trimmed *Project Context* to your AIs on every run from that point forward, regardless of what round number you are on. The trim targets approximately 300 characters, always cut at a sentence boundary. This is permanent for the life of the session — it is not a round-1-only thing that changes later.
+
+### Step 9 — Review Results and Resolve Conflicts
+
+#### Reading the updated document
+
+After a round completes, the centre column shows the updated document. Read it carefully before running another round. Each version is saved automatically to the Round History — open the **Menu** and click **📖 Round History** to access any previous version and restore it if needed.
+
+#### What is a conflict?
+
+A conflict appears in the left column when your AIs gave the Builder genuinely incompatible suggestions — recommendations that point in different directions strongly enough that the Builder flagged the decision for you rather than choosing arbitrarily. Common scenarios: one AI suggested removing a section while another suggested expanding it; reviewers proposed different conclusions; AIs disagreed on tone, phrasing, or structure for a key passage.
+
+Conflicts are not a sign something went wrong. They are a signal that your AIs found a real decision point — one that genuinely depends on your intent and cannot be resolved by the AI alone. When you see conflicts, the hive is working correctly.
+
+#### Resolving conflicts
+
+Each conflict card shows:
+
+- The original text in dispute, labelled **Current:** — click this text to jump directly to that passage in the Working Document. Essential on long documents.
+
+- Two or more options proposed by your AIs, each clearly labelled
+
+- A **Custom** option where you type your own resolution
+
+- A **Keep Original** option to leave that passage unchanged
+
+Read the current text in context, read each option, and click the one that best matches your intent. Once you have selected every conflict, click **Apply Decisions** to update the document. Resolved conflicts are locked — WaxFrame tells the Builder about your decisions in future rounds and instructs it not to re-raise them.
+
+#### When the Builder ignores your resolution
+
+This happens. Some AIs — particularly those running under a proxy or enterprise gateway — do not consistently carry resolution instructions into the next round. The conflict card disappears, but the next round produces the same issue. Here is what to do, in order:
+
+**Step 1 — Reinforce it in Notes.** Before the next round, open the Notes drawer and write the resolution explicitly. Do not paraphrase — quote the exact text you want locked:
+
+*"This line is final and must not be changed under any circumstances: "The recommended solution is a cloud-managed architecture." Do not re-raise this as a conflict. Do not offer alternatives."*
+
+The Notes drawer has a **🔒 Lock a line** template button that pre-fills this format for you. Paste the exact text into the placeholder and run the round.
+
+**Step 2 — Add it to your Project Goal.** If the same issue returns after two rounds of Notes reinforcement, it means the AI is not reading the resolution at all — it needs the instruction in the permanent brief. Open the Project screen via the Menu, add the constraint to **Additional instructions**, and return to the Work screen. The goal is sent every round; Notes are cleared after each round.
+
+**Step 3 — Remove the offending AI.** If one specific AI keeps re-raising a resolved conflict after both Notes and goal reinforcement, it is not reading your instructions. Use **Edit Hive** (laptop) or toggle its card directly (desktop) to remove it from the session. The hive will converge faster without it.
+
+When quoting text to lock it, use the exact words from the document — not a paraphrase. The Builder pattern-matches against what it sees in the document. A near-match may not trigger the lock.
+
+#### When conflicts do not appear but the document is not improving
+
+No conflicts does not always mean convergence — it can mean the AIs are making changes that do not produce disagreement, or that the Builder is silently overriding suggestions. If the document is drifting in a direction you do not want but no conflicts are flagged, use Notes to give the Builder explicit direction: what to fix, what to leave alone, and what the next round must accomplish. Then run the round and check the console to see which AIs responded and what they said.
+
+#### Using conflicts to steer the document
+
+Rather than treating conflicts as a problem to dismiss quickly, use them as a tool. They surface real decisions about the document's direction — questions about emphasis, tone, structure, or argument that you will need to answer to get the document where you want it. Each resolution tells the entire hive which direction to take. A well-resolved conflict round is often the most productive round in a session.
+
+**Two kinds of convergence: unanimous and majority.** WaxFrame stops the hive automatically when one of these fires:
+
+**Unanimous** means every reviewer in the hive marked the round as "no changes needed." Full agreement — the document is done by all of them. This is the strongest stopping signal.
+
+**Majority** means more than half the reviewers marked the round clean, but at least one holdout is still suggesting changes. The Builder stops here because there is no productive direction left — the holdouts' suggestions are typically nice-to-haves that the majority view as fine-as-is. The document is shippable; you can review the holdout suggestions and either incorporate selected ones via Notes or just finish.
+
+Neither convergence type means the document is "perfect." It means the hive has converged on *what they think is shippable*. If you want stronger output beyond that, the right move is usually to inject targeted Notes (e.g., "tighten the third paragraph" or "the closing line is too long") and run another round — not to keep waiting for a state that may never come.
+
+### Step 10 — Run More Rounds
+
+#### The rhythm of a session
+
+After your first round, the process repeats: click **Smoke the Hive**, wait for the round to complete, read the updated document, resolve any conflicts, make any direct edits you want, and decide whether to run another round. Most documents reach a high quality in three to five rounds. Some need more; some need fewer. The right time to stop is when the document reads the way you want it to.
+
+#### Why a round can come up empty before the document is done
+
+Every reviewer is constrained to its **top three most impactful suggestions per round**. This keeps responses focused and prevents long lists of trivial nitpicks. On a small document this is plenty of coverage. On a long or complex document, six reviewers picking three issues each only adds up to eighteen specific spots — and they do not always pick the same spots.
+
+The practical effect: one round may concentrate every reviewer on the opening section, the next round may scatter them across the middle, and a third round may surface things in the conclusion that nobody flagged before. A round can complete with **zero conflicts** not because the document is finished, but because the reviewers happened to focus on different parts and none of their suggestions overlapped enough to disagree about.
+
+This is how prioritised review works, not a bug. The real "done" signal is not "no conflicts in the last round" — it is a round where every reviewer responds with **NO CHANGES NEEDED**. Until you reach that, keep running rounds. On a big document, expect to run more rounds than you would on a small one, and expect the focus to move around between them. That is the system covering ground three issues at a time.
+
+#### Using the Notes drawer for targeted direction
+
+Click **📝 Notes** in the top bar to open the Notes drawer. This is where you write direct instructions for the Builder for the next round only. Notes are not sent to reviewers — only the Builder receives them. They are cleared automatically after each round so they do not carry over unintentionally.
+
+Use Notes when you want something specific to happen in the next round that your goal alone would not produce — a targeted fix, a section to protect, a direction to push toward.
+
+The Notes drawer has a row of **template buttons** that pre-fill common instructions for you. Click one and the textarea fills with a ready-made instruction — the placeholder text is automatically selected so you can type your replacement immediately.
+
+#### What to write in Notes — examples
+
+Notes work best when they are specific and direct. The Builder reads them as instruction, not suggestion.
+
+Situation | What to write in Notes
+Tighten a section | *"The executive summary is too long. Rewrite it so it is no more than three sentences."*
+Remove something specific | *"Remove the third paragraph in the Cost section — it repeats what was already said in paragraph one."*
+Strengthen a weak part | *"The conclusion is weak and non-committal. Rewrite it to be decisive and action-oriented."*
+Lock a line | *"This line is final — do not change it: "The recommended solution is a cloud-managed architecture.""*
+Lock a section | *"Do not change anything in the Technical Specifications section. The section begins with: "The proposed system consists of…""*
+Block new content | *"Do not add any new sections or headings. Work only with the existing structure."*
+After reverting the document | *"I have reverted the document to a previous version. Ignore any changes from the previous round and work from what is here now."*
+
+#### Locking a line the AIs keep changing
+
+If the Builder or reviewers keep modifying a line you need to preserve — a specific metric, a name, a legal phrase, a date — quote the exact text in your Notes instruction. Do not paraphrase it. The Builder pattern-matches against what it sees in the document and needs the exact wording to recognise what you are protecting.
+
+Use the **🔒 Lock a line** template button in the Notes drawer. It pre-fills:
+
+*"Lock this line exactly as written — do not change it: "[PASTE THE EXACT LINE HERE]""*
+
+Replace the placeholder with the exact text from your document — copy and paste it directly. Then run the round. If the issue persists after two rounds of this, add the same instruction to your **Additional instructions** goal field so it is sent permanently, not just for one round.
+
+The Notes field is cleared after every round. If a constraint needs to survive every round permanently, put it in **Additional instructions** on the Project screen — not in Notes.
+
+#### Editing the document directly
+
+The Working Document editor is fully editable at any time between rounds. If you can see exactly what needs to change — remove a paragraph, fix a factual error, rewrite a heading — just do it directly. The AIs will work with whatever is in the editor when the next round starts. If you remove something intentionally and want to make sure the AIs do not reintroduce it, add a Note: *"I have removed [X] — do not reintroduce it."*
+
+#### Adjusting your hive between rounds
+
+On desktop screens, toggle individual AIs directly on their cards in the Hive panel. On laptop screens, click **Edit Hive** in the Hive header to open the toggle modal. Click **Change Builder** to switch which AI is doing the writing. Neither action requires going back to Setup or losing your current session. Both take effect on the next round you run.
+
+#### Using Send to Builder instead of a full round
+
+When you have made direct edits to the document and want the Builder to integrate and clean them up — without running a full reviewer cycle — click **Send to Builder** in the footer bar instead of Smoke the Hive. The Builder rewrites the document based on your current version and your Notes (if any), but the reviewers do not run. This saves time and tokens when you already know what direction to take and just need the Builder to execute it cleanly.
+
+#### Knowing when you are done
+
+Watch for these signals that the document is ready:
+
+- Your AIs are agreeing more than they are disagreeing — conflicts are rare or minor.
+
+- Conflicts are about word choices rather than structural or argument issues.
+
+- You are accepting most suggestions without hesitation.
+
+- Reading the document feels like reading a finished piece, not a draft.
+
+Running more rounds past this point produces diminishing returns. When the document reads the way you want it to, stop and export.
+
+### Step 11 — Export and Finish
+
+#### Opening the Finish panel
+
+Click the **🏁 Finish** button in the top right of the Work screen to open the Finish panel. A modal dialog appears titled **🏁 Project Complete!** with three buttons and two secondary options at the bottom.
+
+#### The three export and finish options
+
+- 💾 Export Document: Downloads your working document as a plain text (.txt) file using the export filename you configured on the Project screen. The file contains only the document text. Use this when you need the final text to paste into another application, submit somewhere, or keep as a clean finished copy.
+
+- 📋 Export Full Transcript: Downloads a complete record of your entire session as a single text file. This includes every round, every AI's full reviewer response, all conflicts and the decisions you made, and the final document. Use this for a full audit trail, to review what each AI contributed, or to share the session record with a colleague.
+
+- Start New Project: Clears the current session and returns you to the Project screen to begin a new project. Your API keys and Builder selection are preserved. Your working document and round history are permanently deleted. WaxFrame will warn you before proceeding.
+
+#### The secondary buttons
+
+- ← Back to Hive: Closes the Finish panel and returns you to the Work screen without exporting or clearing anything. Use this if you opened the panel accidentally or decided you want to run another round first.
+
+- ⌂ Exit to Home: Closes the Finish panel and takes you back to the Welcome screen. Your session is preserved — you can return to the Work screen via Setup → Continue at any time. This does not export or clear your session.
+
+⚠️ **Export before you start a new project.** Clicking **Start New Project** permanently clears your working document and round history. There is no way to recover them. Always use **💾 Export Document** before clicking Start New Project if there is any chance you will want this session's content again. If you want to be able to *resume* the full session later — with all rounds, conflicts, and working document intact — use **Menu → 💾 Backup Session** first.
+
+## Getting Good Results
+
+Patterns observed in measured production runs — what makes a hive converge faster, and when to start over.
+
+### Setup specificity matters
+
+#### The pattern
+
+The goal fields on Setup 3 aren't optional decoration. Reviewers can only judge whether a document fits the goal if the goal is clearly stated, and the more specifically you state it, the faster the hive converges.
+
+#### Measured data points (selected)
+
+A curated set of measured runs that illustrate patterns. Full data lives in `docs/WaxFrame_Playbook_Test_Master.txt`. The point of these isn't completeness — it's to show how setup specificity, hive size, and scaffold quality drive convergence rounds.
+
+- **Job Description (Altura test):** specific company name, role, seniority, and reporting structure filled into the structured goal fields — **20–22 rounds** convergence on a complex multi-page document.
+
+- **Résumé (Dana Reyes test):** specific candidate background and target industry filled at setup, with mid-stream notes injection added between Round 2 and 3 — **10–12 rounds** convergence.
+
+- **Business Proposal (Brightwater Canoe and Kayak):** **v3.0 scaffold**, 3-AI hive on a from-scratch run with a fully-populated identity scaffold in Scope & constraints — **5 rounds, ≈10 minutes**. Earlier **v2.0 scaffold** with a 2-AI hive: **11 rounds, ≈16 minutes** (extra rounds came from a tied USER DECISION block at Round 5 that halted Auto Mode for manual selection). The third reviewer is what breaks decision ties automatically. For reference, the original **v1.0 scaffold** with a 3-AI hive converged faster (3 rounds, ≈8 minutes) because the scaffold had fewer constraints to satisfy; v3.0 is the polished version reflected in the in-app Business Proposal template today.
+
+- **LinkedIn Post (DFS in defense):** 3-AI hive on a sharply-scoped social post with a clear opinion in the Tone field — **2 rounds, ≈1 minute**. Posted to live LinkedIn. A vaguer prompt on the same category previously took 5 rounds; setup specificity is the difference.
+
+- **LinkedIn About profile (wireless engineer):** 3-AI hive with a 1,163-character identity scaffold pasted into Reference Material plus a Round 1 buzzword guard in Notes — **2 rounds**. The Reference Material did most of the work; the buzzword guard kept the draft clean from Round 1.
+
+- **Thank-You Letter (from scratch vs refining a draft):** same final document type, same hive, same goal fields. Starting from scratch with empty starting document → **2 rounds**. Refining a misaligned draft → **13 rounds**. The misaligned draft cost 6× more rounds.
+
+#### What this implies
+
+Three patterns repeat across these runs.
+
+**1. Setup specificity drives convergence.** The structured goal fields — audience, outcome, scope, tone — pay back as rounds you don't have to run. The minutes you spend on the Project screen save you minutes on the work screen, and usually more than break even.
+
+**2. Three or more AIs converges faster than two.** When two reviewers disagree on a specific change, the run pauses and asks you to break the tie; with three or more reviewers, disagreements resolve automatically by majority and the run keeps moving. The cost is one more reviewer per round; the win is fewer interruptions and noticeably faster wall-clock — the Brightwater data above is the clearest example.
+
+**3. Reference Material is high-leverage.** When the hive needs a body of facts to draw from (an identity scaffold, a job description, a research brief, a source recipe), pasting that into Setup 4 — Reference Material delivers more value per character than expanding the goal fields. The hive pulls from it on every round; you only have to type it once. Demonstrated in the Recipe (Publix-style Southern potato salad) test: a 2,636-character reference recipe paired with an empty Starting Document and a fully-populated Project scaffold converged in **4 rounds**, well below the 5–20+ range estimated for traditional recipe refinement. When the source recipe instead sits in the Starting Document, the hive treats it as a draft to fight; when it's in Reference Material, the hive builds fresh from the scaffold. Same source content, very different convergence shape.
+
+If your hive is struggling to converge after Round 3 or 4, open the Project screen and read your goal fields aloud — would a reviewer know what success looks like from those words alone? If not, expand them. Then check whether you should be using Reference Material instead of cramming everything into Scope.
+
+### Starting from scratch vs refining a misaligned draft
+
+#### When refining costs more than starting over
+
+When a starting document is misaligned with the goal you've defined, the hive can spend many rounds dragging it toward what was actually wanted. Sometimes the faster path is to discard the draft entirely and let the hive build from scratch using only the goal fields.
+
+#### Measured data point
+
+A Thank-You note converged in **2 rounds** when started from scratch (Start from Scratch button on Setup 5, empty starting document) versus **13 rounds** when refining a rough draft pulled from a pre-existing template. Same final document type, same hive, same goal fields. The only variable was whether the run started with a 0-character document or a misaligned draft. The misaligned draft cost roughly 6× more rounds.
+
+#### When to refine vs scratch
+
+This isn't a universal rule. When your starting draft is already well-aligned with the goal — your existing résumé that just needs polish, an article draft you're happy with the bones of — refining is faster than starting over. The decision point: does the starting document already reflect the goal, or is it a different goal that needs reshaping? If the latter, scratch usually wins.
+
+### Builder selection matters
+
+#### Why the Builder is the highest-leverage role
+
+The Builder does heavier synthesis work than reviewers — it accepts, rejects, and integrates change proposals across the hive every round, and the reviewers then judge its output. The Builder is also usually a reviewer itself, which means its synthesis style is being judged against its own preferences as well as the other reviewers'.
+
+A Builder mismatched to the document type tends to invite more reviewer dissent, which extends convergence. We don't yet have systematic measured data comparing specific Builders across document types — as more runs are measured, this section will be updated with concrete recommendations.
+
+#### Diagnostic move when stuck
+
+If you've run two or three rounds where reviewers keep flagging the same kinds of issues, and the Builder's output keeps drifting away from the goal in a consistent direction, try changing the Builder on the Worker Bees screen and re-run. The hive's convergence behavior often shifts immediately when the Builder is better matched.
+
+## Settings
+
+Per-machine preferences for Auto Mode behavior, OCR provider, workflow toggles, background model-list refresh, and dismissed confirmation prompts. Open from **Menu → ⚙ Settings**. Changes save automatically and apply to every project on this browser.
+
+#### Where preferences live
+
+Everything on the Settings screen is a **per-machine** preference saved in your browser's localStorage. They are global across projects — they are not part of a project backup file, and they do not transfer when you import a backup on a different machine. The only exception is the Length Guard toggle, which mirrors the work-screen footer pill and is therefore project-scoped (it resets when you start a new project).
+
+#### Auto Mode section
+
+How the hive behaves during hands-off Auto runs. These only take effect while Auto is on; they have no effect when running in Manual mode.
+
+- Backup Builder: If your Builder hits the failure-streak limit during an Auto run, WaxFrame pauses and offers to promote this AI to Builder so you can resume in one click. Choose *None* to have Auto pause and ask you without offering a promotion. Slow Builders do not trigger this — only repeated failures do.
+
+- Never disable the Builder: Keep the Builder in the run even if it is slow or throwing errors. Waiting on the Builder is usually better than losing it mid-run — turn this on if your Builder is reliable but occasionally slow.
+
+- Failure-streak limit: How many rounds in a row can fail before Auto pauses and asks you what to do. A single clean round resets the count, so an early blip will not halt a healthy run later. Default is 2.
+
+- Slow-responder threshold: A reviewer is flagged "slow" when its response time exceeds both (multiplier × round average) AND (round average + 15s), for this many rounds in a row. Default is 3× / 2 rounds. The +15s floor prevents false alarms when the average is tiny. Slow alerts surface a troubleshooting card (once per AI per session) and log every slow round to the Live Console — slow AIs are NOT auto-disabled; staying or going is the user's call.
+
+- Length-guard reround attempts: When the hive converges but the result is over or under your length limit, Auto sends the document back to the Builder to trim or expand, then runs another round. This is how many times it will try before giving up and asking you. A clean in-range result stops the loop early. Default is 2.
+
+- ↺ Reset to defaults: Restore every Auto Mode option above to its built-in default. Useful when an experiment has drifted your settings somewhere you do not remember.
+
+#### Vision / OCR section
+
+Which AI reads text out of scanned or garbled PDFs — used by the "Re-extract with AI Vision" button on the work screen and the automatic vision pass on image-only pages.
+
+- OCR provider: *Automatic* uses the first vision-capable AI you have a key for (ChatGPT, Claude, Gemini, or Grok, in that order). Pick a specific one to always use it for OCR. If your pick is not keyed, WaxFrame falls back to Automatic so extraction never silently fails. The provider uses its own currently-configured model.
+
+#### Workflow & Updates section
+
+Mirror toggles for the work-screen footer pills, plus background model-list refresh and a reset path for dismissed informational confirmations.
+
+- Length guard: Live mirror of the work-screen 📏 Length Guard pill. When armed, rounds and convergence events that exceed your length target are blocked so you can decide whether to trim, expand, or proceed. Flipping the toggle here goes through the same confirm step the pill does — so you can disable / re-arm from either surface. Per-project state; resets when you start a new project.
+
+- Slow-AI alerts: Live mirror of the work-screen 🐢 Slow alerts pill. When on, a Troubleshooting Card surfaces when a reviewer is taking much longer than its peers and your average round time. Turn off for hands-off Auto runs where the chain should not stop just because one AI is slow. Detection still runs and logs to the Live Console either way.
+
+- Auto-update model lists: When on, WaxFrame periodically re-fetches the model list from every configured provider so retired or renamed models do not haunt your dropdowns. Refreshes happen in the background — no interruption. If your currently-selected model disappears from a provider's list, you get a toast naming which AI to recheck. When off, model lists persist until you click **↻ Recheck** on an AI row. Default is on.
+
+- Refresh interval: How often the background refresh runs: *24h*, *1 week*, or *30 days*. 1 week is a good default — model lists do not change daily, but 30 days lets retirements linger. 24h is for power users following frontier rollouts closely. The interval only matters while Auto-Update is on.
+
+- ↺ Reset suppressed prompts: Restores every confirmation modal you have previously dismissed with the *Don't show this again* checkbox. See the next block for what counts as a dismissible confirm.
+
+#### "Don't show this again" — dismiss-permanently for informational confirms
+
+Some confirmation modals in WaxFrame are **informational** — they explain a consequence rather than gating a destructive action. After you have seen the explanation a few times, the modal is just nag. Those modals carry a **Don't show this again** checkbox; tick it and confirm the action, and that modal will never appear again on this browser.
+
+**Modals that carry the checkbox:**
+
+- **📏 Disable length guard?** — fires when you flip the Length Guard from armed to off via the footer pill or the Settings toggle. Explains that rounds and convergence events will no longer be blocked when the document is out of length range.
+
+- **📏 Re-arm length guard?** — fires when you flip the Length Guard from off back to armed. Explains that blocking will resume.
+
+- **Sensitive backup** — fires before you download a full Backup Session. Warns that the backup may contain your document text, AI responses, API keys, license key, and debug traces, and asks you to store it somewhere private.
+
+- **💾 Save a checkpoint backup?** (per-project) — fires once per project on first reach of the work screen. Per-project key derived from project name + version; see the Checkpoint Backup Nudge block below for full semantics.
+
+- **Switch to Server / Internet mode** — informational warning that flipping modes hides the other side's AIs from the inventory view (keys preserved, switch back anytime).
+
+- **Add reference doc mid-session?** — informational warning that a new reference document takes effect on the NEXT round; past rounds keep their original snapshot.
+
+- **Recommend Models for All** — confirms before running parallel "what's your best model?" calls across every keyed AI. Not destructive, but does incur API calls; suppression makes sense if you run it often.
+
+- **Go back to Home?** — fires when leaving the work screen mid-session. Reassures you that the session and document are saved; suppress if you bounce between Home and Work frequently.
+
+- **Apply Template** (per-template) — fires before applying a template that includes an educational primer (e.g., Quick Start's naming/versioning teaching moment). Suppression is per-template — silencing Quick Start's primer does not silence primers on other templates.
+
+**Intentionally NOT dismissable** (security/safety brakes — these fire every time): the Restore-from-backup warning (importing a backup can replace your whole project, AI setup, API keys, and session — a trust decision that must be made each time), plus destructive confirms like Remove API Key, Clear Project, Clear Working Document, and Remove Custom AIs.
+
+**How dismissal persists:**
+
+- Tick the checkbox, then click the confirm button → the suppression is saved and that modal will not appear again.
+
+- Tick the checkbox, then click Cancel → the suppression is *not* saved. Cancel means "I want to see this next time" — backing out of an informational confirm should not also silence it.
+
+- To bring all dismissed prompts back, click **↺ Reset suppressed prompts** at the bottom of the Workflow & Updates Settings section. Every dismissed confirm will reappear next time you trigger its action.
+
+**Modals that do NOT carry the checkbox (by design):** *destructive* confirms — Remove API Key, Clear Project, Clear All Reference Material, Remove N Custom AIs, Clear Working Document, and similar. These exist as a safety brake on an irreversible action; silencing them would be a footgun. If you find yourself wishing one of these were silenceable, the answer is almost always "you do not actually want to silence it."
+
+#### Checkpoint Backup Nudge
+
+The first time you reach the work screen for a project — right after finishing the 5 setup screens and clicking **Smoke the Hive** — WaxFrame nudges you to save a checkpoint backup before you burn any tokens. The backup captures your hive setup, project goal, reference material, and starting document, so if anything goes sideways during the run (a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one) you can restore the exact starting state.
+
+This modal carries a *Don't ask again for this project* checkbox, but the semantics are a little different from the four informational confirms above:
+
+- **💾 Save Backup** — runs the existing Backup Session flow. If you have not dismissed the *Sensitive backup* warning, that fires next; otherwise the backup downloads immediately.
+
+- **Not now** (checkbox *unchecked*) — silent for the current session. If you launch into the same project again in a future browser session, you will see the nudge again.
+
+- **Don't ask again** (checkbox *checked*, then either button) — persists a per-project suppression. The nudge will not fire again for this project on this browser, regardless of which button you clicked. Both *Save Backup with checked* and *Not now with checked* persist the dismissal.
+
+The per-project key is derived from your project name and version. Renaming the project resets the suppression — treat that as a feature rather than a bug. Clicking ↺ Reset suppressed prompts in the Settings panel also clears all checkpoint-nudge dismissals along with the four informational confirms.
+
+## Appendices
+
+Advanced features — adding a custom AI, importing from a model server, and using WaxFrame at work on an internal AI server.
+
+### Appendix A — Adding a Custom AI
+
+#### When to use this
+
+The six default AIs (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral) cover the most widely-used public AI providers. Use Add Custom AI when you want to connect an AI that is not in that default list — for example, Together AI, Cohere, DeepSeek, Ollama running locally on your machine, LM Studio, or any other AI service that exposes an API endpoint accepting chat completion requests in OpenAI-compatible, Anthropic, or Google format.
+
+To open the form: go to the Setup screen and click **Add Custom AI** in the toolbar above the Worker Bees list.
+
+#### The Add Custom AI form — every field explained
+
+- Quick Add (optional): A dropdown with presets for Mistral, Together AI, Cohere, Ollama (local), and LM Studio (local). Selecting a preset auto-fills the endpoint URL and API format fields. You can then fill in the remaining fields manually. If your provider is not listed, leave this on the default and fill all fields manually.
+
+- URL (required): The full API endpoint address WaxFrame will send requests to, including the path. For most OpenAI-compatible providers this ends in `/v1/chat/completions`. Example: `https://api.together.xyz/v1/chat/completions`. Get this URL from your provider's API documentation.
+
+- Name (auto-detected): The display name for this AI in WaxFrame — what you will see in the list and in the Hive panel. Auto-filled by Quick Add and also attempted from the URL you enter. You can change it to anything.
+
+- API Format (required): The API format this provider uses. Three options: **OpenAI compatible** (for most third-party providers — Together AI, DeepSeek, Ollama, LM Studio, and most others), **Anthropic** (for direct Claude API endpoints), or **Google** (for direct Gemini API endpoints). When using Quick Add this is filled automatically. If unsure, ask your provider: "Is this API OpenAI-compatible?" The answer is almost always yes.
+
+- Model (required): The exact model ID string the provider expects in API requests — for example `mistral-small-latest` or `llama-3.1-8b-instruct`. This must be exact — even a single typo causes every API call to fail with a model-not-found error. Use the **Fetch Models** button (see below) instead of typing this manually whenever possible.
+
+- API Key (optional): Your API key or bearer token for this provider, if authentication is required. Paste it in. For local models like Ollama with no authentication, leave this blank. There is an 👁️ button to toggle visibility of the key field.
+
+#### Fetch Models button
+
+After entering your URL and API key, click **Fetch Models**. WaxFrame sends a request to the provider's models endpoint and retrieves the list of available models. A dropdown appears below the Model field showing all available models — click the one you want to use. This is significantly more reliable than typing a model ID manually and eliminates the risk of typo errors.
+
+#### Test Connection — required before adding
+
+Click **Test Connection** before adding the AI. WaxFrame sends a minimal test message to the endpoint and opens a result panel showing the exact endpoint used, the full JSON body sent, the HTTP status code and response time, and the complete raw JSON response received. A passing test shows a green success message. A failing test shows a red error with a plain-English explanation:
+
+- **401 / 403** — bad or missing API key
+
+- **404** — wrong endpoint URL or path
+
+- **405** — method not allowed — the endpoint may not support chat completions at this path
+
+- **429** — rate limited — wait a moment and try again
+
+- **Network Error** — the endpoint is unreachable, or a CORS policy is blocking the request from a local file origin (CORS — Cross-Origin Resource Sharing — is the browser security check that decides whether one origin is allowed to call another; see the CORS troubleshooting block below)
+
+⚠️ The **Add to Hive** button only appears after a successful test result. If you change any field after a passing test, the result resets and you must test again before the Add to Hive button reappears. This prevents accidentally adding a misconfigured AI.
+
+### Appendix B — Importing from a Model Server
+
+#### When to use this
+
+If you have a local or enterprise AI server running — such as Open WebUI, Ollama, or LM Studio — and it hosts multiple models, Import from Model Server lets you fetch the complete list of models from that server and add several AIs to your hive at once, instead of adding them one by one using the Add Custom AI form. To open the form: go to the Setup screen and click **Import from Model Server** in the toolbar.
+
+#### The Import from Model Server form — every field explained
+
+- Quick Add (optional): A dropdown with presets for Open WebUI, Ollama (local), and LM Studio (local). Selecting a preset auto-fills the Chat Endpoint and Models Endpoint fields with the standard paths for that server type. You then confirm or adjust the base URL portion to match your actual server address.
+
+- Chat Endpoint (required): The full URL WaxFrame uses to send chat completion requests to this server — the URL that ends in the chat completions path. For Open WebUI this is typically `https://your-server.com/api/chat/completions`. For Ollama it is `http://localhost:11434/v1/chat/completions`.
+
+- Models Endpoint (required): The full URL WaxFrame uses to fetch the list of available models from your server. For Open WebUI this is typically `https://your-server.com/api/models`. For Ollama it is `http://localhost:11434/api/tags`. This endpoint is queried when you click Fetch Models.
+
+- API Key (optional): Your API key or bearer token if your server requires authentication. Leave blank for local servers with no authentication configured.
+
+#### Fetching and selecting models
+
+The Import from Model Server form is a single-screen workflow laid out in three columns: inputs on the left, context in the middle, and the model list on the right. At laptop viewport widths the middle and right columns merge into one region that shows the right content for the current state, so you always see what matters most.
+
+1. Fill in the Chat Endpoint, Models Endpoint, and API Key fields on the left (or use Quick Add to pre-fill them). When the form is empty, a **What you'll need** guide is shown to explain each field.
+
+2. Click **Fetch Models**. WaxFrame queries your Models Endpoint and retrieves the full list of available models. On success, the model checklist appears on the right and a **📋 View raw response** button appears under the Fetch button so you can inspect the server response if you want. The header of the checklist shows a live **Fetched Xs ago** timestamp so you always know how fresh the list is.
+
+3. Review the checklist on the right. Models that are already in your hive from this same server are **filtered out** of the list — the purpose of this screen is "what can I add?", not "what do I already have?". The header shows how many were filtered out, for example *29 available · 0 selected · 8 already in hive*. To remove a model from your hive, use the delete button next to it on the Worker Bees setup page.
+
+4. Adjust the checklist as needed. All available models are checked by default. Use **All** or **None** at the top of the list to toggle everything. Edit any model's display name in the text field beside its ID.
+
+5. Click **Add N to Hive** in the footer. WaxFrame adds each selected model as a separate AI in your Worker Bees list, using the Chat Endpoint you provided and the model ID for each one. The server config is saved for next time.
+
+WaxFrame remembers the last server you successfully added models from. The next time you open **Import from Model Server**, the three fields are pre-filled, a **🔑 saved** indicator appears next to the API Key label, and WaxFrame automatically fetches the current model list for you — every open is a live query, never a cached list. Just tick any new models and click **Add N to Hive**. To switch to a different server, pick a new preset from Quick Add or type new URLs — the new values are saved on your next successful add. To clear the saved server, click **Forget saved server** below the Fetch Models button.
+
+The **📋 View raw response** button swaps the right region to show the endpoint, HTTP status, and full JSON the server returned — useful when a server returns models in an unusual format or when you want to verify exactly what WaxFrame received. Click **← Back to models** on the same button to return to the checklist. The raw response is hidden by default since it is a diagnostic most users never need.
+
+If a fetch fails, the right region switches to an error panel that explains what likely went wrong and suggests next steps. Common causes: an incorrect Models Endpoint path, an invalid or missing API Key, CORS restrictions on the server, or mixed-content blocking when WaxFrame is loaded from `https://` but the server URL is `http://localhost`. For the mixed-content case, download WaxFrame and open it from a `file://` URL instead, or serve it from a local web server on the same origin as your model server.
+
+### Appendix C — Using WaxFrame at Work
+
+#### Enterprise and internal AI platforms
+
+Many organisations run their own AI infrastructure — platforms like Open WebUI connected to internally hosted models, or enterprise subscriptions to OpenAI or Anthropic with private endpoints and access controls. WaxFrame connects to these through the Add Custom AI form (Appendix A) or Import from Model Server (Appendix B), provided the platform exposes an API endpoint that accepts chat completion requests.
+
+#### What to get from your IT team before you start
+
+What you need | What to ask for
+**API endpoint URL** | "What is the chat completions API endpoint URL for our AI platform, including the full path?"
+**Authentication method** | "How do I authenticate API requests — is it a bearer token, an API key in a header, or something else?"
+**Model name** | "What is the exact model ID string I should use in API calls?"
+**API format** | "Is the API OpenAI-compatible?" (The answer is almost always yes for enterprise platforms.)
+**CORS policy** | "Does the API allow requests from file:// origins, or does it need to be accessed from a web server?"
+
+#### Setting up an internal-only hive
+
+If your organisation uses only internal AI models and you do not want the six default public AIs (ChatGPT, Claude, etc.) visible in your list, flip the **🖥 Server Based AI** toggle at the top of Setup 1 — Worker Bees. This hides the six defaults and any direct-API customs from view (their saved keys are preserved — they reappear if you switch back to Internet mode) and shows only AIs imported from a model server. You can then click **Import from Model Server** in the toolbar to fetch the models available from your gateway (Open WebUI, Ollama, LM Studio, an internal endpoint like Anduril's Alfredo, or any other OpenAI-compatible server) and add several at once. See Appendix B — Importing from a Model Server for the full walkthrough.
+
+#### What to expect from your AI server at work
+
+Internal AI servers — Open WebUI, LM Studio, on-prem deployments serving multiple models — are common in defense, healthcare, financial, and other secure-network environments. They behave differently from the public-AI hives you'd run at home.
+
+The substrate matters. A typical internal AI server hosts whatever models the deployment has been configured to serve. Those models can have knowledge cutoffs months apart, sometimes years apart. Two AIs in the same hive may have been trained against entirely different snapshots of reality.
+
+What this means in practice:
+
+- For a **factually-anchored document** (a technical paper, a current-events post, a vendor comparison), one AI may know information the others don't. The hive can't fact-check itself on knowledge it doesn't share.
+
+- For an **opinion-or-style-driven document** (a personal observation, an essay, a stylistic refinement), cutoff variance matters much less because the content doesn't depend on shared current knowledge.
+
+- Possible failure modes on factual content: **non-convergence** (one AI insists on a fact the others won't accept), or **false convergence** (every AI hallucinates plausible-sounding filler that drifts apart on subsequent rounds).
+
+The hive's output quality is bounded by the substrate it runs on. This is not a defect in WaxFrame — it's a property of the underlying models you're orchestrating.
+
+#### Mitigating cutoff and substrate variance
+
+When you need to run factually-anchored work on an internal AI server, three approaches help:
+
+1. **Inject a shared baseline via Setup 4 (Reference Material).** Reference Material is shown to every AI every round as authoritative context. Cutoffs stop mattering for facts that live in the reference document — every AI works from the same source of truth. Use this for any current-events, technical, or fact-heavy run on an internal server.
+
+2. **Keep the hive small.** Three or four AIs from the same model family (the most recent three of one vendor on the server) tends to give better consistency than mixing six AIs across vendors and ages. The variance you fight is roughly proportional to the spread.
+
+3. **Use a public-AI hive at home as a control before blaming WaxFrame.** If a run won't converge on your work server and you're not sure why, run the same project setup at home on a public-AI hive (ChatGPT, Claude.ai, Gemini, all current). If it converges there but not at work, the substrate is the variable. If it fails to converge in both, the goal fields or starting document likely need work.
+
+#### A real-world example
+
+A 6-AI hive on a corporate internal AI server, refining a 16,214-character research report into a 300-word LinkedIn post, converged via the engine's majority path (4 of 6 AIs satisfied) in 5 rounds and 7 minutes.
+
+Setting | Value
+**Document type** | LinkedIn Post
+**Target audience** | Fellow Wi-Fi nerds and friends from various life stages
+**Tone** | A specific voice description (one full sentence)
+**Length limit** | 300 words
+**Starting document** | 16,214 characters (a research report on the topic)
+**Hive** | 6 AIs across three vendor families
+**Builder** | One of the reviewers, doubling as Builder
+**Result** | Engine-triggered majority convergence (4 of 6) at Round 5, 7 minutes total
+
+The run shows that internal AI servers can converge cleanly on heavy compression tasks (an 80× length reduction in this case) when the goal fields are filled specifically. This single run does not prove that goal-field specificity *caused* the convergence — only that the run had these properties and converged via the engine's normal majority path. As more runs are measured systematically, this guide will be updated with broader patterns.
+
+#### CORS and running from a local web server
+
+WaxFrame opens as a local HTML file in your browser. Some internal AI servers block requests from `file://` origins as a CORS policy — this is a security measure that prevents arbitrary web pages from connecting to internal servers. If you see a Network Error or CORS error when testing a connection, you have two options:
+
+- Ask your IT team to add `file://` to the allowed origins on the AI server's CORS configuration.
+
+- Serve WaxFrame from a simple local web server. On most machines this can be done by opening a terminal in the WaxFrame folder and running `python -m http.server 8080`, then opening `http://localhost:8080` in your browser instead of the file directly. Requests from `localhost` are typically allowed by internal servers.
+
+## Reference
+
+File ingestion details, troubleshooting common problems, and a primer on API costs and billing.
+
+### File Ingestion — What Gets Extracted From Your Files
+
+Both **Setup 4 (Reference Material)** and **Setup 5 (Starting Document)** use the same importer, so everything described here applies equally to both surfaces. The importer aims for full-fidelity content capture — not just raw text. Because AIs only consume plain text, anything visual or structural must be flattened in some way or it is lost. This section is the canonical reference for exactly what makes the cut and what does not, format by format.
+
+#### Accepted formats at a glance
+
+Format | Extensions | What it is good for
+Word | .docx | Most documents that originated in Word — proposals, reports, letters, templates, résumés.
+PDF | .pdf | Anything you cannot get back to its original source — published reports, downloaded specs, scanned documents.
+PowerPoint | .pptx | Slide decks, especially when the substance lives in speaker notes rather than on-slide bullets.
+Excel | .xlsx, .xlsm | Tabular data — pricing sheets, requirement matrices, scoring rubrics, comparison tables.
+Plain text | .txt | Already-clean text from any source.
+Markdown | .md | Already-clean structured text. Markdown formatting is preserved as-is.
+
+#### Word documents (.docx)
+
+**Preserved:** Heading hierarchy rendered as markdown headings, bullet and numbered lists, tables, bold and italic emphasis, comments rendered as a Comments section with author and text, footnotes and endnotes (numbered), headers and footers (deduplicated so boilerplate appears once), text boxes (Word's native text-box content that other importers silently drop), and tracked-change accepted text — insertions are kept, deletions are dropped.
+
+**Not preserved:** Embedded images, charts, exact fonts and styling, page break locations, drop caps, watermarks. The text and structure survive; the visual layout does not.
+
+#### PDFs (.pdf)
+
+**Native text PDFs:** Position-aware text extraction with detected tables converted to markdown, plus the document outline (TOC) when present, AcroForm form-field values when filled, and annotation comments and highlights inlined as `[Note on page N: contents]` markers at the page where they appear. Table detection is heuristic — works well for clean grid-aligned tables, may miss heavily-styled tables or those with merged-cell headers.
+
+**Scanned or image-only PDFs:** Routed automatically to AI vision transcription using the first vision-capable AI in your hive (ChatGPT, Claude, Gemini, or Grok). When the transcription returns, the **Verify & edit** modal opens automatically so you can check the extracted text against the original PDF on the left, fix anything that doesn't match, re-scan with a different AI if too many things are wrong, back up a clean copy, and commit it to the project with Proceed. If no vision-capable AI key is configured, the importer returns whatever text it could extract along with a warning.
+
+**Mixed PDFs (mostly text with sparse pages):** Pages with very little extractable text in an otherwise text-rich document trigger a heuristic OCR pass. The sparse pages are rendered to images and OCR'd via your vision-capable AI. The OCR output is appended as a separate section so the original text is preserved alongside it. This catches the common "screenshot of a table embedded in an otherwise text PDF" case that previously dropped silently.
+
+**Re-extract on demand:** If the initial extraction for a PDF looks garbled or wrong, the work screen shows a banner offering to re-extract using AI vision. This re-runs the full-document vision transcription regardless of the original detection.
+
+#### PowerPoint (.pptx)
+
+**Preserved:** Slide order, slide titles separated from body content (each slide becomes `## Slide N: Title`), bullet content on each slide, speaker notes (rendered as `**Speaker notes:**` directly under each slide), embedded tables converted to markdown, SmartArt diagram text, and chart titles, category labels, and series names.
+
+**Not preserved:** Slide layouts and themes, animations and transitions, embedded images, chart visualizations themselves (only the labels survive), per-element positioning. Decks that rely heavily on visual composition rather than text content will lose most of their meaning — paste the key takeaways manually if that is what matters.
+
+**Note on speaker notes:** The importer maps notes to slides by filename (`notesSlide1.xml` ↔ `slide1.xml`). For typical decks this works correctly. For decks rebuilt from templates with non-default note ordering, notes may appear under the wrong slide — rare but worth knowing about.
+
+#### Excel (.xlsx, .xlsm)
+
+Workbooks with two or more visible sheets show a **sheet picker modal** on import. Pick which sheets to ingest. The picker shows the cell count and an estimated token count for each sheet so you can make informed selections. Single-sheet workbooks ingest directly with no modal.
+
+**Setup 4 (Reference Material):** Each selected sheet becomes its own independent reference card with its own name, token chip, and reorder controls. Leverages the multi-document support added in v3.24.0.
+
+**Setup 5 (Starting Document):** Selected sheets are concatenated into a single document with `## Sheet:` H2 dividers between them. If you only want one sheet, uncheck the others in the picker.
+
+**Per-sheet conversion:** Cell values are extracted with formulas evaluated to their displayed values — a cell showing `$1,250.00` from a SUM formula appears as `$1,250.00` in the output, not the raw number or the formula text. Merged cells are flattened by repeating the top-left value across the merged span. Cell comments are captured in a per-sheet `**Cell notes:**` footer. Workbook-level defined names are surfaced as a glossary header. Sheets with more than 15 columns prepend a warning that markdown table comprehension by AIs may degrade past that width — there is no hard cap.
+
+**Not preserved:** Cell colors and conditional formatting, chart visualizations and embedded images, pivot table source data (cached display values are shown for pivots), macros (not run), hidden sheets (skipped — count surfaced via warning).
+
+#### Plain text (.txt) and Markdown (.md)
+
+Read directly into the working document or reference card with no transformation. Markdown formatting is preserved as-is — most reviewers handle markdown structure naturally and will respect heading hierarchy, lists, and emphasis when reasoning about the document.
+
+#### The Vision OCR fallback — when and how it fires
+
+Vision OCR runs automatically when the standard text extraction yields garbled or near-empty output (scanned PDFs, image-only PDFs, or PDFs with sparse-text pages where embedded screenshots dominate). It uses the first vision-capable AI from your hive in this priority order: ChatGPT, Claude, Gemini, Grok. If none of those four providers have a key configured, the importer skips the OCR step and returns whatever text it could extract along with a warning suggesting which keys to add.
+
+OCR runs add latency — typically 15–30 seconds for a short document, longer for many pages. They also add cost (a vision API call per page or batch of pages). The importer is conservative about firing OCR — it only does so when the standard extraction quality is genuinely poor.
+
+#### When to paste manually instead
+
+The importer is best-effort. For documents where exact wording matters — a legal contract, a regulatory specification, a customer email you must respond to verbatim — paste the text manually rather than relying on extraction. Two clicks of copy/paste from the source application will always be more accurate than any importer because there is no extraction step at all.
+
+For documents where structure and bulk content matter more than exact wording — research papers, long reports, drafts you want feedback on, RFP requirements you want the hive to cite against — the importer is more than good enough. Spot-check the result if you have any doubt about a critical passage.
+
+#### Air-gap and secure-network deployment
+
+All four ingestion libraries (PDF.js, Mammoth, JSZip, SheetJS) ship inside the WaxFrame source tree at `/lib/`. There is no CDN reach-back at runtime — the page works end-to-end on networks that block external fetches. This is the recommended configuration for defense, healthcare, financial, and other secure environments. Total library footprint is approximately 3.1 MB added to first-load.
+
+### When Things Go Wrong
+
+#### The document is going in the wrong direction
+
+Situation | What to do
+Tone is wrong throughout | Open Notes before the next round and write explicitly: *"The tone throughout the entire document must be [formal / conversational / technical / plain-English]. Rewrite any passages that do not match this."* Be specific about what you want.
+AIs keep adding content you do not want | Edit your project goal to explicitly exclude it. Add a Note reinforcing the exclusion. If one specific AI keeps doing it, use Edit Hive (laptop) or toggle the AI card directly (desktop) to remove that AI for a round or two.
+The document has drifted badly from where you want it | Open the **Menu** and click **📖 Round History** to restore an earlier version. Add a Note explaining the direction the next round should take. If your goal was too vague, edit it on the Project screen before running another round — click the project name in the top bar to open the goal viewer without leaving the Work screen.
+It would be faster to start over | Click **🏁 Finish → Start New Project**. This clears the document and history but keeps your API keys. Return to the Project screen, rewrite your goal with tighter scope, and begin again.
+
+#### A round failed with a structure error
+
+This means the Builder returned output that WaxFrame could not parse — usually because the document was too long or complex for that AI to follow the required output format precisely under that token load. Click **Change Builder** in the Hive panel, switch to ChatGPT or Gemini, and run the round again. Your document was not changed by the failed round, and the failed attempt is recorded in your Round History for reference.
+
+#### An AI keeps re-raising a conflict you already resolved
+
+Open the Notes drawer before the next round and quote the exact text you resolved. Do not paraphrase — use the **🔒 Lock a line** template button and paste the exact passage from your document into the placeholder. Write clearly that this decision is final and must not be re-raised. If the problem persists after two rounds, add the same instruction to **Additional instructions** on the Project screen so it is sent every round permanently. If it still continues after that, toggle the offending AI off via **Edit Hive** (laptop) or directly on its card (desktop).
+
+#### An API key is not working
+
+Click the **Test** button next to that AI on the Setup screen. The result panel shows the exact error. Common causes: the key was copied incorrectly (extra space at the start or end is a frequent culprit), the key has been revoked or expired at the provider's end, the account has run out of credit, or the account is on a free plan that does not include API access. To visit that provider's API console directly, expand that AI's row by clicking it, then click the **Open [provider] account ↗** link inside the expanded panel — and verify your key and account status.
+
+#### The Smoke the Hive button is not active
+
+WaxFrame requires at least two AIs with saved, working keys and a Builder selected before the Smoke the Hive button activates. If it is greyed out or inactive, open the Menu and navigate to Setup 1 — Worker Bees. Verify that at least two AI key fields show the 🔑 icon. Then navigate to Setup 2 — Builder and confirm a Builder is selected. Note: two AIs is the technical minimum, but **three or more is the empirical recommendation** for faster convergence and automatic resolution of reviewer disagreements — see Step 5 above.
+
+#### A provider link or page has moved
+
+AI provider websites change their navigation regularly. If a link in WaxFrame leads to a dead or moved page, open the API Key Guide ↗ (api-details.html) from the Menu — it is updated with each WaxFrame release and contains current direct links for every supported provider.
+
+### API Costs & Billing
+
+#### You pay the AI providers directly — not WaxFrame
+
+WaxFrame does not charge per use. The cost of running rounds comes from the API calls WaxFrame makes to your AI providers on your behalf — and those are billed directly to your account at each provider. WaxFrame requires only a one-time license fee after the first three free rounds.
+
+API costs are measured in **tokens** — small units of text (roughly 0.75 words per token). You are charged for both the tokens sent in the prompt and the tokens returned in the response. For a detailed explanation of how tokens work and how to estimate your costs, see What Are Tokens? ↗ (what-are-tokens.html)
+
+DeepSeek consistently produces high-quality output at a fraction of the cost of OpenAI, Anthropic, or Google. It is an excellent choice as both a reviewer and Builder when managing costs matters.
+
+#### Monitoring your spending
+
+Click **Get API keys** on the Setup screen to open the in-app drawer listing each AI's console URL — most providers' API consoles also have a billing or usage tab. Check your usage after your first few sessions to understand your actual per-round cost. Provider pricing changes periodically — bookmark your billing dashboards and check them at least monthly.
+
+#### Perplexity — enable auto-billing before your first use
+
+Perplexity requires you to explicitly enable auto-billing in your account settings before API calls will succeed. If Perplexity's Test button returns a billing-related error, log into your Perplexity account at console.perplexity.ai (https://console.perplexity.ai), enable auto-billing, and retry the test.
+
+#### Default models and their providers
+
+AI | Default model | Provider billing page
+**ChatGPT** | `gpt-4.1` | platform.openai.com ↗ (https://platform.openai.com/settings/organization/billing/overview)
+**Claude** | `claude-sonnet-4-6` | console.anthropic.com ↗ (https://console.anthropic.com/settings/billing)
+**Gemini** | `gemini-2.5-flash` | aistudio.google.com ↗ (https://aistudio.google.com/apikey)
+**Grok** | `grok-4-fast-non-reasoning` | console.x.ai ↗ (https://console.x.ai)
+**Perplexity** | `sonar-pro` | console.perplexity.ai ↗ (https://console.perplexity.ai)
+**DeepSeek** | `deepseek-chat` | platform.deepseek.com ↗ (https://platform.deepseek.com/top_up)
+
+To change the model for any AI, go to the Setup screen and click the model name shown below that AI's key field. A dropdown appears with all models currently available on your account with that provider, fetched live at the time you open it.
+
+### Help & Support
+
+#### Where to go when something goes wrong
+
+WaxFrame has a dedicated Help page at help.html ↗ (help.html). You can reach it any time from inside the app — open the **☰** menu in the top-left and pick **🛟 Help** from the **Help & Support** section — or visit `waxframe.com/help.html` directly in a browser.
+
+The page is built for two situations: you want to file a bug or feature request, or you want to give someone (me) enough information to reproduce what you saw without sending personal data.
+
+#### The diagnostic bundle
+
+The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: **every API key**, **your license key**, and (optionally, with a checkbox) **your document text and AI responses**. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.
+
+The bundle is for sharing with support only — it has no reason to round-trip and cannot be imported to restore a session. For that, use Backup Session instead, which keeps your keys and is importable.
+
+#### Filing a bug report
+
+The Help page also has a one-click link that opens a pre-filled GitHub issue with your WaxFrame version, build number, browser, and operating system already in the body. You add what happened and how to reproduce it, drag the diagnostic bundle in if you grabbed one, and submit. Issues filed through this flow get auto-labeled `auto-reported` so they show up immediately in the project's triage queue.
+
+If you would rather file an issue directly, go to github.com/WeirDave/WaxFrame-Professional/issues/new ↗ (https://github.com/WeirDave/WaxFrame-Professional/issues/new?template=bug_report.yml) — it uses the same template, just without the auto-filled environment block.
+
+#### What does NOT need a bug report
+
+If an AI returns an error message saying you are out of credit or your API key is invalid, that is a billing or authentication issue with that AI provider — not a WaxFrame bug. Open the provider's console (Test All Keys in WaxFrame surfaces a direct link to the right billing page) and resolve it there. WaxFrame surfaces the provider's own error verbatim so you know exactly what to fix.
+
+If a round produces a result you do not like, that is also not a bug — that is the hive doing its job and giving you something to react to. Edit your goal fields, resolve any conflicts, and run another round.
