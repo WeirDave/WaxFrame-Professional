@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-//  Build: 20260529-003
+//  Build: 20260529-004
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -336,7 +336,7 @@ window.MODEL_FALLBACKS = {
 //
 // "nano-banana" is Google's image-gen model — no naming pattern catches it,
 // but the AI knows what it is and won't recommend it. Trust the AI.
-const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana/i;
+const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity/i;
 
 // v3.28.1 — ChatGPT-specific exclusions:
 // (a) -pro / -codex variants are Responses-API-only on OpenAI as of GPT-5.5 —
@@ -369,6 +369,56 @@ const MODEL_FILTERS = {
 // Custom AI Add flow uses the same structural filter — naming was previously
 // duplicated as NON_CHAT_RE, now an alias of STRUCTURAL_NON_CHAT_RE.
 const NON_CHAT_RE = STRUCTURAL_NON_CHAT_RE;
+
+// v3.63.31 — Runtime model quarantine (self-healing incapable-model filter).
+//
+// Some models appear in a provider's /v1/models list but can never actually
+// run a WaxFrame round: they reject the developer/system-instruction shape
+// every prompt relies on (e.g. antigravity-preview-05-2026 -> "Developer
+// instruction is not enabled"), or they need an endpoint we don't speak yet
+// (Responses API). No naming pattern reliably catches these ahead of time and
+// the recommending AI can pick them anyway, so instead of an omniscient
+// blocklist we LEARN them from the provider's own error: when a round fails
+// with that signature (see WF_DEBUG.showCard), the failing model id is recorded
+// here and excluded from every future model list + recommendation. The provider
+// error is the ground truth.
+//
+// Stored as { id: { ts, reason } } under one localStorage key; membership is
+// what matters (ts/reason kept for future TTL/inspection).
+const INCAPABLE_MODELS_KEY = 'waxframe_incapable_models';
+let _incapableModels = null; // lazy-loaded Set of model ids
+
+function _loadIncapableModels() {
+  if (_incapableModels) return _incapableModels;
+  _incapableModels = new Set();
+  try {
+    const raw = JSON.parse(localStorage.getItem(INCAPABLE_MODELS_KEY) || '{}');
+    Object.keys(raw || {}).forEach(id => _incapableModels.add(id));
+  } catch (e) { /* corrupt -> start empty */ }
+  return _incapableModels;
+}
+
+function isModelIncapable(id) {
+  if (!id) return false;
+  return _loadIncapableModels().has(id);
+}
+
+function quarantineModel(id, reason) {
+  if (!id) return;
+  const set = _loadIncapableModels();
+  if (set.has(id)) return; // already known — idempotent, no re-log
+  set.add(id);
+  try {
+    const raw = JSON.parse(localStorage.getItem(INCAPABLE_MODELS_KEY) || '{}');
+    raw[id] = { ts: Date.now(), reason: reason || 'incapable' };
+    localStorage.setItem(INCAPABLE_MODELS_KEY, JSON.stringify(raw));
+  } catch (e) { /* storage blocked — Set still holds it for this session */ }
+  if (typeof consoleLog === 'function') {
+    consoleLog(`\u26d4 Model "${id}" quarantined (${reason || 'incapable'}) — it failed a round and will be kept out of model lists and recommendations.`, 'warn');
+  } else {
+    console.warn(`[quarantine] ${id} (${reason || 'incapable'})`);
+  }
+}
 
 // Cache key prefix and TTL (7 days)
 const MODELS_CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
@@ -498,7 +548,9 @@ function getModelsForProvider(provider) {
   } catch(e) {}
   if (!models.length) models = MODEL_FALLBACKS[provider] || [];
   // Set preserves insertion order, so the first occurrence of each id wins.
-  return [...new Set(models)];
+  // v3.63.31 — drop quarantined (incapable) models so neither the dropdown
+  // nor the recommend candidate list can ever surface one again.
+  return [...new Set(models)].filter(id => !isModelIncapable(id));
 }
 
 // v3.40.0 — Live model-list fetch that bypasses the read cache.
