@@ -3,9 +3,9 @@
 ---
 
 ## v3.63.18
-**Build:** `20260528-015` · **Released:** May 28, 2026
+**Build:** `20260528-016` · **Released:** May 28, 2026
 
-### Three surgical fixes shipped in one release
+### Four surgical fixes shipped in one release
 
 **1. Checkpoint Backup Nudge — checkbox removed**
 
@@ -70,13 +70,56 @@ border, matching border-radius. The amber palette is preserved (this
 is still an "attention-getter for bad PDF extraction" affordance), but
 now legible without squinting.
 
+**4. Dead one-shot migration code removed**
+
+Four pieces of dead startup code that have been firing on every page
+load for users who long since ran them:
+
+- `migrateRecommendationCachesV33210` — pre-v3.32.10 recommend-cache
+  reshuffle (33 releases stale)
+- `migrateTogetherModelCachesV3605` — Together AI `running !== false`
+  filter migration (post-fetch parse-path change shipped in v3.60.5)
+- `migrateTogetherModelCachesV3607` — Together AI `?serverless=true`
+  URL-param migration (endpoint-URL change shipped in v3.60.7)
+- The v3.30.2 one-time "captured baseline" upgrade toast inside
+  `ensureOriginalModelBaseline` — targeted pre-v3.30.2 users, 33
+  releases gone
+
+All four are removed. Their previously-set localStorage sentinels
+(`waxframe_v330_baseline_migrated`,
+`waxframe_v33210_recommend_migrated`,
+`waxframe_v3605_together_models_migrated`,
+`waxframe_v3607_together_models_migrated`) would otherwise sit inert
+in every existing user's localStorage forever, so a small
+unconditional orphan-key sweep was added at the top of
+`DOMContentLoaded`. `removeItem` is idempotent — running it on already-
+absent keys is a no-op — so no new sentinel is needed to track the
+sweep itself (which would just become the next generation of cruft).
+Cost: four `removeItem` calls per page load, negligible.
+
+Net effect for users: identical behavior, faster boot (the
+migrations were never doing anything anyway), and a localStorage that
+no longer carries one-shot-migration scar tissue from the v3.30 →
+v3.60 development window.
+
+`ensureOriginalModelBaseline` itself is kept — the underlying
+baseline-capture logic still has a forward-compat purpose for custom
+AIs being added today. Only the one-time toast guard was removed.
+
 ### Files changed
 
-- `js/app.js` — three function bodies modified:
-  - `maybeShowCheckpointBackupNudge` (around line 930) simplified;
+- `js/app.js` — five function bodies modified or removed:
+  - `maybeShowCheckpointBackupNudge` simplified;
     `getProjectCheckpointSuppressKey` deleted
-  - `clearUploadedFile` (around line 7231) — added source_type +
-    has_pdf_pages + `_lastPDFPages` cleanup, hides re-extract banner
+  - `clearUploadedFile` — added source_type + has_pdf_pages +
+    `_lastPDFPages` cleanup, hides re-extract banner
+  - `ensureOriginalModelBaseline` — removed the pre-v3.30.2 one-time
+    upgrade toast (baseline-capture logic kept)
+  - `migrateRecommendationCachesV33210` — function deleted
+  - `migrateTogetherModelCachesV3605` — function deleted
+  - `migrateTogetherModelCachesV3607` — function deleted
+  - `DOMContentLoaded` — call sites for the three removed migrations
+    deleted; orphan-sentinel sweep added in their place
 - `style.css` — `.reextract-banner` rule block (around line 7623)
   rewritten to render as a proper panel
 - `index.html` — no logic change; build stamp + cache-bust bump only
