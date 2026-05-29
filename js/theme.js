@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared theme + mute utility
-//  Build: 20260528-014
+//  Build: 20260528-015
 //  Single source of truth for theme + mute behavior. Loaded by:
 //    • index.html (main app) — BEFORE app.js
 //    • All 5 helper pages (api-details, document-playbooks,

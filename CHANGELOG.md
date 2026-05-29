@@ -2,6 +2,96 @@
 
 ---
 
+## v3.63.18
+**Build:** `20260528-015` · **Released:** May 28, 2026
+
+### Three surgical fixes shipped in one release
+
+**1. Checkpoint Backup Nudge — checkbox removed**
+
+The "Don't ask again for this project" checkbox on the post-setup
+backup nudge modal has been removed. The modal already fires only via
+`initWorkScreen(true)`, which skips on session restore — so in practice
+the checkbox was suppressing an edge case (Back-from-work → Continue
+round-trip in the same browser session) at the cost of confusing copy
+in the modal. The phrase "Don't ask again" implied the modal was a
+repeat offender; it isn't. Replaced with a lightweight in-memory
+session flag that handles the same-session round-trip case without
+persistent state. Result: cleaner modal, simpler code, no behavior
+regression for the normal flow.
+
+The `getProjectCheckpointSuppressKey()` helper and the per-project
+localStorage write paths are gone. Any orphan
+`waxframe_suppress_checkpoint_nudge__*` keys left in localStorage from
+prior versions are inert (no code reads them); users who hit the
+"Reset Dismissed Prompts" function will sweep them up along with any
+other `waxframe_suppress_*` keys.
+
+**2. `clearUploadedFile()` — proper PDF residue cleanup**
+
+A user-data residue bug in `clearUploadedFile()`. Pre-v3.63.18 the
+function cleared `docText`, the textarea, and the
+`waxframe_v2_filename` localStorage entry — but **not** the PDF-import
+metadata. Three pieces of state survived clear:
+
+- `waxframe_v2_source_type` localStorage flag (e.g., `'pdf'`)
+- `waxframe_v2_has_pdf_pages` localStorage flag (e.g., `'1'`)
+- `window._lastPDFPages` in-memory rasterized PDF page images
+
+The first two are tags; the third is real data — the rasterized pages
+were kept around to support the Re-extract with AI Vision feature.
+After a clear, the textarea looked empty but the rasterized page
+images were still sitting in memory. The PDF re-extract banner on the
+work screen also stayed visible (because it reads `source_type` from
+localStorage to decide visibility), inviting the user to re-extract a
+document they had just cleared.
+
+`clearUploadedFile()` now matches the four-step wipe that
+`clearProject()` already does: filename, source_type, has_pdf_pages,
+and `window._lastPDFPages = null`. It also calls
+`showReExtractBanner()` after the wipe so the banner immediately
+hides instead of waiting for the next work-screen render.
+
+The fallback path in `discardVerifyExtractedText()` (line 8607–8615)
+that used to set source_type itself when `clearUploadedFile` was
+unavailable can stay as defense-in-depth, but the primary path now
+does the full cleanup.
+
+**3. PDF Re-extract banner — proper panel styling**
+
+The "Imported from PDF — if the text looks garbled, re-extract it
+using AI vision" banner on the work screen was rendered as an
+8%-opacity amber wash with a single bottom border. Against the
+honeycomb background it was nearly invisible — a notice the user could
+easily miss. The banner has been promoted to a proper floating panel
+matching the `.honeycomb-header` weight used by the Working Document
+strip above it: dark translucent background, backdrop blur, amber
+border, matching border-radius. The amber palette is preserved (this
+is still an "attention-getter for bad PDF extraction" affordance), but
+now legible without squinting.
+
+### Files changed
+
+- `js/app.js` — three function bodies modified:
+  - `maybeShowCheckpointBackupNudge` (around line 930) simplified;
+    `getProjectCheckpointSuppressKey` deleted
+  - `clearUploadedFile` (around line 7231) — added source_type +
+    has_pdf_pages + `_lastPDFPages` cleanup, hides re-extract banner
+- `style.css` — `.reextract-banner` rule block (around line 7623)
+  rewritten to render as a proper panel
+- `index.html` — no logic change; build stamp + cache-bust bump only
+- `js/version.js` — APP_VERSION bump to v3.63.18 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v76.txt`
+
+---
+
+
+---
+
 ## v3.63.17
 **Build:** `20260528-014` · **Released:** May 28, 2026
 

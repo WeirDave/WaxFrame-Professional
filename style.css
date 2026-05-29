@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-014
+   Build: 20260528-015
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7619,36 +7619,50 @@ kbd {
   [data-theme="auto"] .doc-stats { color: var(--accent); border-color: var(--border); }
 }
 
-/* ── PDF RE-EXTRACT BANNER ── */
+/* ── PDF RE-EXTRACT BANNER ──
+   v3.63.18 — Promoted from a near-invisible 8%-opacity tint to a proper
+   floating panel that matches the .honeycomb-header weight used by the
+   Working Document strip above it. Pre-v3.63.18 the banner sat naked on
+   the honeycomb background with only a faint amber wash and a bottom
+   border — visually orphaned and easy to miss. The amber palette is
+   kept (this is still an attention-getter for "your PDF text looks bad,
+   re-extract it"), but now rendered as a self-contained panel: dark
+   translucent background + backdrop blur + amber border + matching
+   border-radius + side margins. Width matches the .work-doc-panel
+   margins so it tucks under the header strip naturally. */
 .reextract-banner {
   display: flex;
   align-items: center;
   gap: var(--space-10);
+  margin: 0 0 var(--space-8);
   padding: var(--space-8) var(--space-12);
-  background: rgba(245,166,35,0.08);
-  border-bottom: 1px solid rgba(245,166,35,0.3);
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(245,166,35,0.55);
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
   flex-shrink: 0;
   flex-wrap: wrap;
 }
 [data-theme="light"] .reextract-banner {
-  background: rgba(245,166,35,0.06);
-  border-bottom-color: rgba(245,166,35,0.4);
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(245,166,35,0.55);
 }
 @media (prefers-color-scheme: light) {
   [data-theme="auto"] .reextract-banner {
-    background: rgba(245,166,35,0.06);
-    border-bottom-color: rgba(245,166,35,0.4);
+    background: rgba(255,255,255,0.85);
+    border-color: rgba(245,166,35,0.55);
   }
 }
 .reextract-banner-text {
   font-size: var(--fs-12);
-  color: var(--text-dim);
+  color: #ffffff;
   flex: 1;
   min-width: 0;
 }
-[data-theme="light"] .reextract-banner-text { color: #4b5563; }
+[data-theme="light"] .reextract-banner-text { color: #1f2937; }
 @media (prefers-color-scheme: light) {
-  [data-theme="auto"] .reextract-banner-text { color: #4b5563; }
+  [data-theme="auto"] .reextract-banner-text { color: #1f2937; }
 }
 .reextract-dismiss {
   background: transparent;
