@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.27
+**Build:** `20260528-027` · **Released:** May 28, 2026
+
+### UX — Reference Material info button moved next to its label
+
+On the Reference Material screen, the ⓘ info button (links to the
+"About token cost" modal) lived at the far right of the totals
+summary bar, across the row from the label it explained. The user
+had to scan past `Total reference size`, the doc-count chip, and
+the Chars / Words / Tokens chips before reaching the affordance.
+
+The button now sits immediately after the `📚 Total reference size`
+label, so the row reads naturally left-to-right:
+
+`📚 Total reference size ⓘ  0 docs  Chars: 0  Words: 0  Tokens (est.): 0  [Clear All]`
+
+The Clear-All button still floats to the far right of the row when
+it's visible (the `margin-left: auto` that used to push the info
+button right has been moved to Clear-All, preserving its layout).
+
+### Files changed
+
+- `index.html` — `<button class="goal-info-btn ref-counter-info">`
+  relocated from after the Tokens chip to between the label and
+  the doc-count chip
+- `style.css`:
+  - `.ref-counter-info` — dropped `margin-left: auto`
+  - `.ref-clear-all-btn` — picked up `margin-left: auto` so Clear-All
+    still floats to the right when visible
+- `js/version.js` — APP_VERSION bump to v3.63.27 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v86.txt`
+
 ## v3.63.26
 **Build:** `20260528-026` · **Released:** May 28, 2026
 

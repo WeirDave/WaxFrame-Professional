@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260528-026
+     Build: 20260528-027
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-026">
+  <meta name="waxframe-build" content="20260528-027">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.26">
+  <link rel="stylesheet" href="style.css?v=3.63.27">
 </head>
 <body>
 
@@ -395,11 +395,11 @@
 
         <div class="ref-counter-row" id="refCounterRow">
           <span class="ref-counter-label">📚 Total reference size</span>
+          <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
           <span class="ref-counter-item ref-doc-count-chip" id="refDocCount">0 docs</span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Chars:</span> <span id="refCountChars">0</span></span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Words:</span> <span id="refCountWords">0</span></span>
           <span class="ref-counter-item"><span class="ref-counter-sublabel">Tokens (est.):</span> <span id="refCountTokens">0</span></span>
-          <button class="goal-info-btn ref-counter-info" onclick="document.getElementById('infoTokenCostModal').classList.add('active')" title="About token cost"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button>
           <button class="btn btn-sm ref-clear-all-btn is-hidden" id="refClearAllSetup" onclick="clearAllReferenceMaterial()" title="Remove all reference documents">✕ Clear All</button>
         </div>
 
@@ -2463,22 +2463,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.26';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.27';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.26"></script>
-<script src="lib/jszip.min.js?v=3.63.26"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.26"></script>
-<script src="js/version.js?v=3.63.26"></script>
-<script src="js/storage.js?v=3.63.26"></script>
-<script src="js/theme.js?v=3.63.26"></script>
-<script src="js/audio.js?v=3.63.26"></script>
-<script src="js/scenes.js?v=3.63.26"></script>
-<script src="js/wf-debug.js?v=3.63.26"></script>
-<script src="js/api.js?v=3.63.26"></script>
-<script src="js/templates.js?v=3.63.26"></script>
-<script src="js/api-links.js?v=3.63.26"></script>
-<script src="js/app.js?v=3.63.26"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.27"></script>
+<script src="lib/jszip.min.js?v=3.63.27"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.27"></script>
+<script src="js/version.js?v=3.63.27"></script>
+<script src="js/storage.js?v=3.63.27"></script>
+<script src="js/theme.js?v=3.63.27"></script>
+<script src="js/audio.js?v=3.63.27"></script>
+<script src="js/scenes.js?v=3.63.27"></script>
+<script src="js/wf-debug.js?v=3.63.27"></script>
+<script src="js/api.js?v=3.63.27"></script>
+<script src="js/templates.js?v=3.63.27"></script>
+<script src="js/api-links.js?v=3.63.27"></script>
+<script src="js/app.js?v=3.63.27"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
