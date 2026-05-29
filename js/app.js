@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-001
+//  Build: 20260529-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-001';         // build stamp — update each session
+const BUILD       = '20260529-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -15540,8 +15540,7 @@ function renderConflicts() {
       }
       const _preIdx = (isChurn && window._decisionChoices[di] && window._decisionChoices[di].type === 'option')
         ? window._decisionChoices[di].idx : -1;
-      html += `<div class="${cardClass}${_preIdx >= 0 ? ' resolved' : ''}" id="dcard-${di}"
-        data-option-texts="${escapeHtml(JSON.stringify(d.options.map(o => o.text || '')))}">
+      html += `<div class="${cardClass}${_preIdx >= 0 ? ' resolved' : ''}" id="dcard-${di}">
         <div class="decision-card-header">
           <span class="decision-badge">${badgeLabel}</span>
           ${churnBadge}
@@ -15726,15 +15725,13 @@ function selectCustomDecision(decisionIdx, total) {
     if (customWrap) { customWrap.style.display = 'block'; }
     const ta = document.getElementById(`dcustom-ta-${decisionIdx}`);
     if (ta) {
-      // Pre-fill with last selected option text, or first option text, never blank
+      // v3.63.29 — seed the box with the text the user was about to edit: the
+      // option they had selected, if any, otherwise the CURRENT sentence (what the
+      // textarea is already rendered with). Previously fell back to option 1
+      // (opts[0]) when no option was picked, dropping option 1 into the box instead
+      // of the current text. Never clobber text the user has already typed.
       const lastSelected = card?.dataset.lastSelectedText;
-      let prefill = lastSelected;
-      if (!prefill) {
-        try {
-          const opts = JSON.parse(card?.dataset.optionTexts || '[]');
-          prefill = opts[0] || '';
-        } catch(e) {}
-      }
+      const prefill = lastSelected || window._conflictCurrentTexts?.[decisionIdx] || '';
       if (prefill && !ta.dataset.userEdited) {
         ta.value = prefill;
         ta.dataset.userEdited = '1';
