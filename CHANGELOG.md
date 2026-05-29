@@ -2,6 +2,20 @@
 
 ---
 
+## v3.63.36
+**Build:** `20260529-009` · **Released:** May 29, 2026
+
+### Improved — Custom templates: capture everything, plus a home of their own
+
+Follow-up to the Phase 1 custom-templates release.
+
+- **Captures the full setup now** — templates now also save your **starting document** and **reference material**, not just the Goal fields. Whatever was in the project rides along; empty stays empty, so a template can be a universal starting point.
+- **Custom Templates section** — the template gallery's opening picker now has a third card, **⭐ Custom Templates**, alongside *Starting from scratch* and *Refining an existing draft*. Your saved templates live there.
+- **Save prompt on first run** — the first time you reach the work screen, alongside the checkpoint-backup prompt, WaxFrame now also offers to save the project as a template. Dismissible permanently.
+- Clarified that templates are saved to this browser, on your hard drive — with shareable/portable templates coming in a later update.
+
+---
+
 ## v3.63.35
 **Build:** `20260529-008` · **Released:** May 29, 2026
 

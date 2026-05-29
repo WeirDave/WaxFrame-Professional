@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-008
+//  Build: 20260529-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-008';         // build stamp — update each session
+const BUILD       = '20260529-009';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -986,7 +986,28 @@ async function maybeShowCheckpointBackupNudge() {
   // its own "Sensitive backup" confirm (also dismiss-permanently from
   // v3.62.2) — if the user has already dismissed it, the backup runs
   // immediately without a second modal.
-  if (typeof backupSession === 'function') backupSession();
+  if (typeof backupSession === 'function') {
+    try { await backupSession(); } catch (e) { /* download flow owns its own errors */ }
+  }
+  // v3.63.36 — same first-entry moment also offers to bank the setup as a
+  // reusable template. Independent suppressKey so power users can silence
+  // just this one. Fires whether or not they took the backup.
+  await maybeOfferSaveTemplateOnEntry();
+}
+
+// v3.63.36 — Save-as-Template offer, paired with the checkpoint backup nudge
+// on first post-setup work-screen entry. Separate suppressKey from the backup
+// nudge. Opening the save modal is all this does; the modal owns the capture.
+async function maybeOfferSaveTemplateOnEntry() {
+  try {
+    if (localStorage.getItem('waxframe_suppress_template_nudge') === 'true') return;
+  } catch (e) {}
+  const want = await wfConfirm(
+    '⭐ Save this project as a template?',
+    "You've got a setup worth reusing? Save it as a template now and you can apply the same recipe — goal, starting document, reference material, length guard, and this hive — to future documents in one click. You can also do this anytime from the Finish panel or the Tools menu.",
+    { okText: '⭐ Save as Template', cancelText: 'Not now', suppressKey: 'waxframe_suppress_template_nudge' }
+  );
+  if (want && typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
 }
 
 // Internal: refresh ONE AI's model list without disturbing the picked
@@ -3397,6 +3418,13 @@ function renderTemplateGalleryBody() {
               <div class="template-path-card-desc">I already have a draft. The hive will polish, tighten, and restructure what I paste into Starting Document — without rewriting wholesale.</div>
             </div>
           </button>
+          <button class="template-path-card" onclick="selectTemplatePath('custom')" type="button">
+            <span class="template-path-card-icon">⭐</span>
+            <div class="template-path-card-text">
+              <div class="template-path-card-name">Custom Templates</div>
+              <div class="template-path-card-desc">Your own saved recipes. Apply a setup you've banked from a past project — goal, starting document, reference material, length guard, and the hive that ran it.</div>
+            </div>
+          </button>
         </div>
       </div>`;
     return;
@@ -3404,19 +3432,24 @@ function renderTemplateGalleryBody() {
 
   // ── State 2: Template grid filtered to selected path ──────────────
   const path = _selectedTemplatePath;
-  const pathLabel = (path === 'scratch') ? 'Starting from scratch' : 'Refining an existing draft';
-  const pathIcon  = (path === 'scratch') ? '📝' : '✂️';
+  const pathLabel = (path === 'custom') ? 'Custom Templates'
+                  : (path === 'scratch') ? 'Starting from scratch' : 'Refining an existing draft';
+  const pathIcon  = (path === 'custom') ? '⭐'
+                  : (path === 'scratch') ? '📝' : '✂️';
 
   // Filter templates to those supporting the selected path.
-  // v3.63.35 — custom templates join the gallery (both paths supported).
+  // v3.63.36 — custom templates now live behind their own "Custom Templates"
+  // path-card instead of being mixed into the scratch/refine grids.
   const _customs = (typeof loadCustomTemplates === 'function') ? loadCustomTemplates() : [];
-  const visibleTemplates = WAXFRAME_TEMPLATES.concat(_customs).filter(t =>
-    Array.isArray(t.paths) && t.paths.includes(path)
-  );
+  const visibleTemplates = (path === 'custom')
+    ? _customs
+    : WAXFRAME_TEMPLATES.filter(t => Array.isArray(t.paths) && t.paths.includes(path));
 
   // Bucket by category, preserving original order. Same category list
   // as before — Quick Start always first, Reviews & Recs last.
-  const order = ['Quick Start', 'My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+  const order = (path === 'custom')
+    ? ['My Templates']
+    : ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
   const buckets = {};
   visibleTemplates.forEach(t => {
     const k = t.category || 'Other';
@@ -3434,7 +3467,9 @@ function renderTemplateGalleryBody() {
   // Quick Start card rendered below; refine path reframes for users
   // who already have a draft and points back to the path picker for
   // the onboarding demo.
-  const newuserCallout = (path === 'scratch')
+  const newuserCallout = (path === 'custom')
+    ? ''
+    : (path === 'scratch')
     ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
     : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
 
@@ -3479,7 +3514,10 @@ function renderTemplateGalleryBody() {
       </div>
     </div>`).join('');
 
-  body.innerHTML = pathIndicator + newuserCallout + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
+  const _emptyMsg = (path === 'custom')
+    ? '<p class="template-gallery-empty">You haven\'t saved any templates yet. Finish a project you like, then use <strong>⭐ Save as Template</strong> (in the Finish panel or the Tools menu) to bank its setup here.</p>'
+    : '<p class="template-gallery-empty">No templates found for this path.</p>';
+  body.innerHTML = pathIndicator + newuserCallout + (sections || _emptyMsg);
 }
 
 // ============================================================
@@ -3552,6 +3590,7 @@ function captureTemplateFromProject(meta) {
     goalTone:     proj.goalTone     || '',
     goalNotes:    proj.goalNotes    || '',
     refMaterial:  refMaterial,
+    pastedDocument: proj.pastedDocument || '',   // v3.63.36 — starting document (empty stays empty)
     lengthMode:   proj.lengthMode   || 'none',
     lengthLimit:  proj.lengthLimit  || '',
     lengthMin:    proj.lengthMin    || '',
@@ -3833,6 +3872,17 @@ async function applyTemplate(templateId, path) {
       // v3.52.8 — was raw console.log; standardized to consoleLog wrapper
       // for consistency with surrounding logging surfaces.
       consoleLog(`applyTemplate: RM sweep removed ${swept} template card(s); ${pc.refMaterial ? 'added 1 new card' : 'no new card injected (refMaterial empty)'}`);
+    }
+  }
+
+  // v3.63.36 — Starting Document. Custom templates capture pc.pastedDocument;
+  // built-in templates leave it undefined (no change). Non-empty → write it
+  // into the paste tab and switch to it so the user lands on their draft.
+  if (typeof pc.pastedDocument === 'string' && pc.pastedDocument.length > 0) {
+    const _pasteTa = document.getElementById('pasteText');
+    if (_pasteTa) {
+      _pasteTa.value = pc.pastedDocument;
+      if (typeof switchDocTab === 'function') switchDocTab('paste');
     }
   }
 
