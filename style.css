@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-002
+   Build: 20260529-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -1801,6 +1801,24 @@ html, body {
   border-radius: 3px;
   padding: 1px var(--space-4);
   letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+/* v3.63.30 — "D" default-provider marker on work-screen bee cards. Brings the
+   Worker Bees setup screen's Default-vs-Custom split onto the live hive: the
+   six first-class providers carry this chip so they read at a glance against
+   any custom AIs the user added. Sized to match .hex-builder-tag so both chips
+   share row 1's baseline. Neutral palette (dim text + token border) keeps it
+   purely informational — it must not compete with the amber BUILDER chip or
+   the status colors. */
+.hex-default-badge {
+  font-size: 8px /* out-of-scale — matches .hex-builder-tag */;
+  font-weight: 800;
+  color: var(--text-dim);
+  border: 1px solid var(--border2);
+  border-radius: 3px;
+  padding: 0 var(--space-4);
+  letter-spacing: 0.05em;
+  line-height: 1.5;
   flex-shrink: 0;
 }
 /* v3.32.23 — Card-level satisfaction star, sibling of .hex-cell-body.

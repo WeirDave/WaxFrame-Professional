@@ -2,6 +2,51 @@
 
 ---
 
+## v3.63.30
+**Build:** `20260529-003` · **Released:** May 29, 2026
+
+### New — Recommend Models shows a live progress counter
+
+The **Recommend Models** buttons used to sit on a static "Asking…" /
+"Recommending…" label for the whole call, which can run 10s+ per AI. They
+now tick a climbing seconds counter so it's obvious the request is alive,
+not hung:
+
+- **Per-AI** (Worker Bees row, and the same button inside the
+  Troubleshooting card): `Asking… 8s` / `Recommending… 8s`.
+- **Recommend Models for All**: `Asking… 3/6 · 12s` — completed count plus
+  total elapsed, updating as each AI lands.
+
+The counter inside the Troubleshooting card mirrors the Worker Bees one —
+useful exactly when a round fails because a chosen model went unavailable
+and you re-pick from the error card.
+
+### New — "D" default-provider badge on work-screen bee cards
+
+The live hive's AI cards now carry a small **D** chip on the six
+first-class default providers, and the cards are ordered defaults-first
+(alphabetical) then custom AIs (alphabetical) below — matching the
+"Default providers / Custom AIs" split already used on the Worker Bees
+setup screen. Setup order and live-hive order are now consistent.
+
+### Files changed
+
+- `js/app.js` — new `_aiListGrouped()` (defaults-alpha then customs-alpha,
+  returns a copy, same no-mutation contract as `_aiListAlpha`);
+  `renderBeeStatusGrid` + `renderBeeDotStrip` switched to grouped order;
+  `D` badge rendered on default cards; new `wfBtnElapsed()` button ticker;
+  `recheckModelForAI` (per-AI counter) and `recommendModelsForAll`
+  (aggregate `done/total · elapsed` counter)
+- `js/wf-debug.js` — Troubleshooting-card Recommend button uses the same
+  `wfBtnElapsed` counter, mirroring the Worker Bees button
+- `style.css` — `.hex-default-badge` (neutral chip, token palette, sized to
+  match `.hex-builder-tag`)
+- `js/version.js` — APP_VERSION bump to v3.63.30 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust
+  sweep to `20260529-003` / `3.63.30`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v92.txt`
+
 ## v3.63.29
 **Build:** `20260529-002` · **Released:** May 29, 2026
 
