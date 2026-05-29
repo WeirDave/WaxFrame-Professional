@@ -2,6 +2,23 @@
 
 ---
 
+## v3.63.46
+**Build:** `20260529-019` · **Released:** May 29, 2026
+
+### Fixed — Word export for helper/document pages
+
+- Rebuilt `downloadPageAsDocx()` around WaxFrame's current helper-page structure so exports start from the full `.page-main` content instead of dropping the visible intro/top sections.
+- Preserved more of the page shape in Word: headings, cards, callouts, prompt blocks, provider rows, textareas, ordered/unordered lists, tables, links with URLs, and inline bold/italic/code text.
+- Improved image handling for local/manual screenshots by embedding bytes when possible, scaling them to Word-safe widths, detecting MIME type from real file signatures, and falling back through canvas when browser `fetch()` cannot read the source.
+- Removed the duplicate `document.title` heading behavior that could make exported documents start with a mismatched title before the real page title.
+
+### Maintenance
+
+- Swept the full release stamp set to `20260529-019` / `v3.63.46 Pro`, including all 9 HTML files, all 14 JS files, `style.css`, and helper-page cache-bust URLs.
+- Included the refreshed `WaxFrame_Rules_Reference.txt` in the commit so the current release ceremony and build-stamp rules travel with the code.
+
+---
+
 ## v3.63.45
 **Build:** `20260529-018` · **Released:** May 29, 2026
 
