@@ -2,6 +2,59 @@
 
 ---
 
+## v3.63.22
+**Build:** `20260528-022` · **Released:** May 28, 2026
+
+### UX — Inline error message when validate-on-save flags a bad key
+
+v3.63.21 made validate-on-save reliable across all six default
+providers (and customs), but the only feedback signals were the
+🔑 → ❌ badge swap and a console line. Both have gaps:
+
+- The ❌ icon visually collides with the **X Key** (remove key) button
+  that lives in the same row — at a glance it reads as "delete," not
+  "invalid."
+- Console messages aren't visible on the Worker Bees screen unless the
+  user has DevTools already open. The whole point of validate-on-save
+  is to catch bad keys *before* the user walks to the work screen, so
+  the feedback needs to live on the same screen the user is looking at.
+
+This release adds an inline red error message — `⚠️ API key looks
+invalid — please check the key` — surfaced on the AI's card whenever
+the `_invalidKeys` flag is set. The message lives inside the existing
+manage-account banner (right of the "Open {Provider} account ↗" link),
+so the bad-key signal and the natural next action (open the provider
+console to check / rotate the key) sit on the same row.
+
+For AIs that have no provider console URL (server-imported custom
+AIs), the error message gets its own dedicated banner with a red
+border instead of riding inside the manage-account banner.
+
+The ❌ badge and console line are kept — they're complementary
+signals at different levels of attention. The inline banner is the
+primary user-facing affordance.
+
+### Files changed
+
+- `js/app.js` — `buildAISetupRowHTML` extended:
+  - New `invalidMsg` snippet inserted into `getKeyLink` when
+    `_invalidKeys[ai.id]` is truthy
+  - Standalone-banner fallback when the AI has no console URL
+- `style.css` — three new rules:
+  - `.ai-key-invalid-msg` — red, semibold, pushed right via
+    `margin-left: auto`
+  - `.ai-getkey-link-wrap.is-invalid-only` — red border + tinted
+    background for the standalone-banner variant
+  - `.ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg` —
+    resets the auto-margin so the message left-aligns in the
+    standalone case
+- `js/version.js` — APP_VERSION bump to v3.63.22 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v81.txt`
+
 ## v3.63.21
 **Build:** `20260528-021` · **Released:** May 28, 2026
 

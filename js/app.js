@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-021
+//  Build: 20260528-022
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-021';         // build stamp — update each session
+const BUILD       = '20260528-022';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3719,9 +3719,20 @@ function buildAISetupRowHTML(ai) {
     // the user would most need it for credit/billing problems.
     // Server-imported AIs typically have no console URL → still
     // suppressed (nothing meaningful to link to).
-    const getKeyLink = consoleUrl
-      ? `<div class="ai-getkey-link-wrap"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a></div>`
+    // v3.63.22 — Inline error message surfaced when validate-on-save
+    // flips the _invalidKeys flag. Placed inside the manage-account
+    // banner so it sits on the same row as "Open {Provider} account ↗"
+    // — the user's natural next action when a key is bad is to open
+    // the provider console and check / rotate the key, so the message
+    // and the action live together. Pushed to the right via
+    // margin-left: auto in CSS. Falls back to a standalone banner when
+    // the AI has no console URL (server-imported customs).
+    const invalidMsg = (hasKey && window._invalidKeys && window._invalidKeys[ai.id])
+      ? `<span class="ai-key-invalid-msg" role="alert">⚠️ API key looks invalid — please check the key</span>`
       : '';
+    const getKeyLink = consoleUrl
+      ? `<div class="ai-getkey-link-wrap${invalidMsg ? ' has-invalid' : ''}"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a>${invalidMsg}</div>`
+      : (invalidMsg ? `<div class="ai-getkey-link-wrap is-invalid-only">${invalidMsg}</div>` : '');
     // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
     // (snap to a recommendation pick) is now redundant with the dropdown's
     // dual ✨ Reviewer / 🔨 Builder markers — users see both picks
