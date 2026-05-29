@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-016
+//  Build: 20260529-017
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-016';         // build stamp — update each session
+const BUILD       = '20260529-017';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3093,6 +3093,7 @@ function autoHaltPromoteBackup() {
 
 // clearProject — wipe project data only, keep hive intact
 async function clearProject() {
+  window._editingTemplateId = null;  // v3.63.44 — any project reset ends a template-edit session
   // v3.32.17 — Bump the project-generation token so any in-flight round
   // that was mid-await when the user discarded the project will detect
   // the mismatch at its next write checkpoint and bail before writing
@@ -3450,7 +3451,7 @@ function renderTemplateGalleryBody() {
   // who already have a draft and points back to the path picker for
   // the onboarding demo.
   const newuserCallout = (path === 'custom')
-    ? ''
+    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><span class="template-custom-hint">Hover a saved template to edit \u270f\ufe0f or delete \ud83d\uddd1 it.</span></div>`
     : (path === 'scratch')
     ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
     : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
@@ -3489,7 +3490,7 @@ function renderTemplateGalleryBody() {
           // can't be removed). Wrap so the 🗑 sits over the card without
           // nesting a button inside the apply button.
           if (t.custom) {
-            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
+            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
           }
           return cardBtn;
         }).join('')}
@@ -3624,9 +3625,26 @@ function openSaveTemplateModal() {
   const nameEl = document.getElementById('saveTemplateName');
   const iconEl = document.getElementById('saveTemplateIcon');
   const descEl = document.getElementById('saveTemplateDesc');
-  if (nameEl) nameEl.value = (proj.projectName ? proj.projectName + ' \u2014 recipe' : '');
-  if (iconEl) iconEl.value = '\ud83d\udcc1';
-  if (descEl) descEl.value = '';
+  // v3.63.44 (Phase 2) — edit mode: if we're editing an existing custom
+  // template, prefill from it and relabel the modal as an update.
+  const editTpl = window._editingTemplateId
+    ? loadCustomTemplates().find(t => t.id === window._editingTemplateId)
+    : null;
+  const titleEl = document.getElementById('saveTemplateTitle');
+  const btnEl   = document.getElementById('saveTemplateConfirmBtn');
+  if (editTpl) {
+    if (nameEl) nameEl.value = editTpl.name || '';
+    if (iconEl) iconEl.value = editTpl.icon || '\ud83d\udcc1';
+    if (descEl) descEl.value = editTpl.description || '';
+    if (titleEl) titleEl.textContent = '\u270f\ufe0f Update Template';
+    if (btnEl)   btnEl.textContent   = '\u270f\ufe0f Update Template';
+  } else {
+    if (nameEl) nameEl.value = (proj.projectName ? proj.projectName + ' \u2014 recipe' : '');
+    if (iconEl) iconEl.value = '\ud83d\udcc1';
+    if (descEl) descEl.value = '';
+    if (titleEl) titleEl.textContent = '\u2b50 Save as Template';
+    if (btnEl)   btnEl.textContent   = '\u2b50 Save Template';
+  }
   // Show the lineup that will be captured so the save is transparent.
   const hiveEl = document.getElementById('saveTemplateHive');
   if (hiveEl) {
@@ -3651,11 +3669,53 @@ function confirmSaveTemplate() {
   const tpl = captureTemplateFromProject({ name, icon, description });
   if (!tpl) return; // capture toasts its own reason
   const all = loadCustomTemplates();
+  // v3.63.44 (Phase 2) — update an existing template in place when editing.
+  const editId = window._editingTemplateId;
+  if (editId) {
+    const idx = all.findIndex(t => t.id === editId);
+    if (idx !== -1) {
+      tpl.id        = all[idx].id;                      // preserve identity
+      tpl.createdTs = all[idx].createdTs || tpl.createdTs;
+      tpl.updatedTs = Date.now();
+      all[idx] = tpl;
+      saveCustomTemplates(all);
+      window._editingTemplateId = null;
+      closeSaveTemplateModal();
+      toast(`\u2705 Updated "${tpl.name}"`, 5000);
+      return;
+    }
+    window._editingTemplateId = null; // stale id — fall through to create
+  }
   all.push(tpl);
   saveCustomTemplates(all);
   closeSaveTemplateModal();
   toast(`\u2b50 Saved "${tpl.name}" to My Templates`, 5000);
   if (typeof consoleLog === 'function') consoleLog(`Saved custom template "${tpl.name}" (${tpl.hive.aiIds.length}-AI hive captured).`, 'info');
+}
+
+// v3.63.44 (Phase 2) — edit an existing custom template: load it into the
+// setup screens (recipe + hive, silently), flag it so the next save UPDATES
+// it, and drop the user on the Project screen to make changes.
+async function editCustomTemplate(id) {
+  const tpl = getTemplateById(id);
+  if (!tpl || !tpl.custom) return;
+  const path = (Array.isArray(tpl.paths) && tpl.paths[0]) || 'scratch';
+  window._editLoadInProgress = true;          // tells reconcile to load hive silently
+  try { await applyTemplate(id, path); }      // loads recipe + hive (silent)
+  finally { window._editLoadInProgress = false; }
+  window._editingTemplateId = id;             // applyTemplate -> clearProject cleared it; set for the save step
+  if (typeof goToScreen === 'function') goToScreen('screen-project');
+  toast('\u270f\ufe0f Editing template \u2014 change the setup, then Update Template', 5500);
+}
+
+// v3.63.44 (Phase 2) — start a brand-new template from a blank setup.
+async function newBlankTemplate() {
+  window._editingTemplateId = null;
+  if (typeof clearProject === 'function') await clearProject();
+  const g = document.getElementById('templateGalleryModal');
+  if (g) g.classList.remove('active');
+  if (typeof goToScreen === 'function') goToScreen('screen-project');
+  toast('\u2795 New template \u2014 fill in the setup, then Save as Template', 5500);
 }
 function deleteCustomTemplate(id) {
   const all = loadCustomTemplates();
@@ -3944,13 +4004,21 @@ async function reconcileTemplateHive(tpl) {
   const wantNames = want.map(nameFor).join(', ');
   const bName = tpl.hive.builder ? nameFor(tpl.hive.builder) : null;
 
-  // Can't form a 2+ AI hive from what they have — inform, keep their hive.
+  // v3.63.44 (Phase 2) — during an edit-LOAD, load the hive silently (no
+  // prompt) so what the editor shows + re-saves matches the template. Uses a
+  // transient flag (not _editingTemplateId) because applyTemplate -> clearProject
+  // clears _editingTemplateId before this runs.
+  if (window._editLoadInProgress) {
+    if (have.length >= 2) _applyTemplateHive(tpl, keyedNow, have);
+    return;
+  }
+
+  // Run-mode: can't form a 2+ AI hive from what they have — inform, keep theirs.
   if (have.length < 2) {
     const haveTxt = have.length ? `you have ${have.map(nameFor).join(', ')} keyed` : `you don't have any of them keyed`;
     toast(`\u2139\ufe0f This template ran on ${wantNames} \u2014 ${haveTxt}, so your current hive stays. Add keys on Worker Bees to match it.`, 7000);
     return;
   }
-
   // Already matches? Don't nag.
   const curIds = new Set((Array.isArray(activeAIs) ? activeAIs : []).map(a => a.id));
   const sameSet = have.length === curIds.size && have.every(id => curIds.has(id));
@@ -3965,8 +4033,13 @@ async function reconcileTemplateHive(tpl) {
     { okText: 'Use this hive', cancelText: 'Keep mine' }
   );
   if (!useTheirs) return;
+  _applyTemplateHive(tpl, keyedNow, have);
+  toast(`\u2705 Hive set to this template's lineup: ${have.map(nameFor).join(', ')}`, 5000);
+}
 
-  // Apply the template's lineup (limited to what the user has keyed).
+// Apply a template's hive (limited to the AIs the user has keyed). Shared by
+// the run-mode "use this hive" path and the silent edit-load path.
+function _applyTemplateHive(tpl, keyedNow, have) {
   activeAIs = keyedNow.filter(ai => have.includes(ai.id));
   if (tpl.hive.builder && have.includes(tpl.hive.builder)) {
     builder = tpl.hive.builder;
@@ -3976,12 +4049,9 @@ async function reconcileTemplateHive(tpl) {
   }
   if (tpl.hive.hiveMode) _hiveMode = tpl.hive.hiveMode;
   if (typeof saveHive === 'function') saveHive();
-  // Belt-and-suspenders re-renders; the work screen also repaints from
-  // activeAIs on entry, so these just keep any already-rendered surface fresh.
   try { if (typeof renderBeeStatusGrid === 'function') renderBeeStatusGrid(); } catch (e) {}
   try { if (typeof renderBeeDotStrip === 'function') renderBeeDotStrip(); } catch (e) {}
   try { if (typeof updateProjectRequirements === 'function') updateProjectRequirements(); } catch (e) {}
-  toast(`\u2705 Hive set to this template's lineup: ${have.map(nameFor).join(', ')}`, 5000);
 }
 
 // v3.32.1 — Dismiss handler for the template hint banner. Hides the
