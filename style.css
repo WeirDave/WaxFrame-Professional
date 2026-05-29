@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-004
+   Build: 20260529-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4216,6 +4216,88 @@ html, body {
    keep their own colors regardless of the text color. */
 .model-select-note-line.is-reviewer { color: var(--accent); }
 .model-select-note-line.is-builder  { color: var(--blue); }
+
+/* v3.63.32 — Custom model dropdown. Native <select> can't tint option rows
+   cross-browser (Chrome ignores <option> background), so the picker is a
+   custom combobox: the trigger keeps the .model-select look + the
+   #modelsel-<id> / .model-select-flash contract, and the popup list rows CAN
+   be tinted to surface the picks at a glance — gold = ✨ Reviewer (--accent),
+   blue = 🔨 Builder (--blue), matching the note lines above. Tints are derived
+   from your existing --accent-dim / --blue-dim tokens (theme-aware rgba,
+   universal browser support) so there are no hardcoded colors. */
+.model-select-custom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+  user-select: none;
+}
+.model-select-custom .model-select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.model-select-custom .model-select-arrow {
+  flex-shrink: 0;
+  color: var(--text-dim);
+  font-size: var(--fs-10);
+  transition: transform 0.12s;
+}
+.model-select-custom.is-open { border-color: var(--accent); }
+.model-select-custom.is-open .model-select-arrow { transform: rotate(180deg); }
+.model-select-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 60;
+  max-height: 320px;
+  overflow-y: auto;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  padding: var(--space-4);
+}
+.model-select-custom.is-open .model-select-list { display: block; }
+.model-select-opt {
+  font-family: var(--font-mono);
+  font-size: var(--fs-11);
+  color: var(--text);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-sm);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.model-select-opt + .model-select-opt { margin-top: 2px; }
+.model-select-opt:hover { background: var(--surface3); }
+.model-select-opt.is-selected { background: var(--accent-dim); }
+.model-select-opt.is-reviewer-pick {
+  background: var(--accent-dim);
+  border-left-color: var(--accent);
+}
+.model-select-opt.is-builder-pick {
+  background: var(--blue-dim);
+  border-left-color: var(--blue);
+}
+.model-select-opt.is-both-pick {
+  background: linear-gradient(90deg, var(--accent-dim), var(--blue-dim));
+  border-left-color: var(--accent);
+  border-right: 3px solid var(--blue);
+}
+.model-select-opt.is-reviewer-pick:hover,
+.model-select-opt.is-builder-pick:hover,
+.model-select-opt.is-both-pick:hover { filter: brightness(1.12); }
+.model-select-opt .opt-role { font-weight: 700; }
+.model-select-opt .opt-role.is-reviewer { color: var(--accent); }
+.model-select-opt .opt-role.is-builder  { color: var(--blue); }
 /* .ai-remove-btn rules removed in v3.30.4 — the trash button it
    styled was replaced by a persistent checkbox (.ai-select-check)
    plus the bulk-select toolbar above the list. */

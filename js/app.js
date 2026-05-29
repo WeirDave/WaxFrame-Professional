@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-004
+//  Build: 20260529-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -117,16 +117,31 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
   const isReasoningLike = (m) => BUILDER_DISALLOWED_PATTERN.test(m);
 
-  const options = models.map(m => {
-    const markers = [];
-    if (m === reviewerModel) markers.push('✨ Reviewer'); // Reviewer pick
-    if (m === builderModel)  markers.push('🔨 Builder');  // Builder pick
-    const markerPart = markers.length ? markers.join(' · ') + ' — ' : '';
+  // v3.63.32 — Custom dropdown rows. Native <option> can't be background-tinted
+  // in Chrome, so the picker is a custom combobox: each row carries the role
+  // markers as colored words AND a tint class so the ✨ Reviewer (gold) and
+  // 🔨 Builder (blue) picks pop the moment the list opens. A shared inner
+  // builder keeps the trigger's current-value display identical to its row.
+  const _optInner = (m) => {
+    const spans = [];
+    if (m === reviewerModel) spans.push('<span class="opt-role is-reviewer">✨ Reviewer</span>');
+    if (m === builderModel)  spans.push('<span class="opt-role is-builder">🔨 Builder</span>');
+    const markerHTML = spans.length ? spans.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
-    const baseDisplay = `${markerPart}${m}${reasoningBadge}`;
-    const selected = m === currentModel ? 'selected' : '';
-    return `<option value="${m}" ${selected}>${esc(baseDisplay)}</option>`;
-  }).join('');
+    return `${markerHTML}${esc(m)}${reasoningBadge}`;
+  };
+  const _tintCls = (m) => {
+    const r = m === reviewerModel, b = m === builderModel;
+    return (r && b) ? ' is-both-pick' : r ? ' is-reviewer-pick' : b ? ' is-builder-pick' : '';
+  };
+  const optRows = models.map(m =>
+    `<div class="model-select-opt${_tintCls(m)}${m === currentModel ? ' is-selected' : ''}" role="option" data-value="${escapeHtml(m)}" onclick="wfModelSelectPick(this, event)">${_optInner(m)}</div>`
+  ).join('');
+  // Current-value display: matches the chosen row, or the raw id when the saved
+  // model isn't in the live list (e.g. it was quarantined / removed).
+  const valueInner = models.includes(currentModel)
+    ? _optInner(currentModel)
+    : esc(currentModel || '(pick a model)');
 
   // Note line: shows the WHY for BOTH role recommendations whenever they're
   // cached — independent of which model the user currently has selected.
@@ -165,14 +180,73 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
   return `<div class="model-select-wrap">
     <span class="model-select-label">Pick a model:</span>
-    <select class="model-select" id="modelsel-${aiId}"
-      onchange="saveModelForAI('${aiId}', this.value)"
-      onclick="event.stopPropagation();">
-      ${options}
-    </select>
+    <div class="model-select model-select-custom" id="modelsel-${aiId}" data-value="${escapeHtml(currentModel || '')}"
+      tabindex="0" role="combobox" aria-haspopup="listbox" aria-expanded="false"
+      onclick="wfModelSelectToggle(this, event)"
+      onkeydown="wfModelSelectKey(this, event)">
+      <span class="model-select-value">${valueInner}</span>
+      <span class="model-select-arrow" aria-hidden="true">▾</span>
+      <div class="model-select-list" role="listbox">${optRows}</div>
+    </div>
     ${recheckBtn}
     ${noteHtml}
   </div>`;
+}
+
+// v3.63.32 — Custom model-dropdown behavior (open/close, outside-click, pick,
+// keyboard). The trigger keeps id="modelsel-<aiId>" + data-value so the value
+// contract (confirmBuilderFromModal read; Fix-Worker-Bee flash/scroll) is
+// unchanged; selection writes data-value and calls saveModelForAI, matching the
+// old <select> onchange. Arrow-key option navigation is intentionally deferred
+// to a follow-up — click + Enter/Space/Esc cover v1.
+function wfModelSelectToggle(trigger, ev) {
+  if (ev) ev.stopPropagation();
+  const wasOpen = trigger.classList.contains('is-open');
+  wfModelSelectCloseAll();
+  if (!wasOpen) {
+    trigger.classList.add('is-open');
+    trigger.setAttribute('aria-expanded', 'true');
+    const sel = trigger.querySelector('.model-select-opt.is-selected');
+    if (sel) sel.scrollIntoView({ block: 'nearest' });
+  }
+}
+function wfModelSelectPick(opt, ev) {
+  if (ev) ev.stopPropagation();
+  const trigger = opt.closest('.model-select-custom');
+  if (!trigger) return;
+  const m = opt.dataset.value;
+  const aiId = trigger.id.slice('modelsel-'.length);
+  trigger.dataset.value = m;
+  const valEl = trigger.querySelector('.model-select-value');
+  if (valEl) valEl.innerHTML = opt.innerHTML;
+  trigger.querySelectorAll('.model-select-opt.is-selected').forEach(o => o.classList.remove('is-selected'));
+  opt.classList.add('is-selected');
+  trigger.classList.remove('is-open');
+  trigger.setAttribute('aria-expanded', 'false');
+  if (typeof saveModelForAI === 'function' && aiId) saveModelForAI(aiId, m);
+}
+function wfModelSelectKey(trigger, ev) {
+  if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
+    ev.preventDefault();
+    wfModelSelectToggle(trigger, ev);
+  } else if (ev.key === 'Escape') {
+    trigger.classList.remove('is-open');
+    trigger.setAttribute('aria-expanded', 'false');
+  }
+}
+function wfModelSelectCloseAll(e) {
+  document.querySelectorAll('.model-select-custom.is-open').forEach(t => {
+    if (!e || !t.contains(e.target)) {
+      t.classList.remove('is-open');
+      t.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+// One global outside-click closer (idempotent). In-widget clicks stopPropagation
+// so they never reach this and can't self-close.
+if (typeof window !== 'undefined' && !window._wfModelSelectOutsideBound) {
+  window._wfModelSelectOutsideBound = true;
+  document.addEventListener('click', wfModelSelectCloseAll);
 }
 
 function saveModelForAI(aiId, modelId) {
@@ -362,7 +436,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-004';         // build stamp — update each session
+const BUILD       = '20260529-005';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -1325,7 +1399,8 @@ function confirmBuilderFromModal() {
   // without-touching-the-dropdown case where the shown 🔨 model differs from the
   // AI's previously-configured model.
   const selEl = document.getElementById(`modelsel-${_cbPendingId}`);
-  if (selEl && selEl.value) saveModelForAI(_cbPendingId, selEl.value);
+  const selVal = selEl ? selEl.dataset.value : '';
+  if (selVal) saveModelForAI(_cbPendingId, selVal);
   setBuilderFromModal(_cbPendingId); // reuse existing commit / close / toast / disable-flow
 }
 

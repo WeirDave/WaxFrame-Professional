@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — license-helper.js
-//  Build: 20260529-004
+//  Build: 20260529-005
 //  Self-contained license badge + modal logic for helper pages.
 //  Mirrors the in-app license functions in app.js, minus the
 //  trial-rounds tracking (helper pages don't run rounds, so the
