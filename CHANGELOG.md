@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.21
+**Build:** `20260528-021` · **Released:** May 28, 2026
+
+### Fix — validate-on-save now uses the chat-completion endpoint
+
+v3.63.19 and v3.63.20 both routed `validateKeyOnSave` through `/v1/models`
+endpoints (with v3.63.20 doing it per-provider to fix the Perplexity
+URL-shape and Claude CORS issues). Real-user dogfooding revealed the
+deeper problem: **`/v1/models` is unreliable as a validation endpoint
+across providers**. Specifically, Perplexity's `/v1/models` is a public
+catalog that returns `200 OK` regardless of auth — so a bogus Perplexity
+key still got a successful response and never flipped the ❌ badge.
+
+We do not know which other providers have the same behavior, and we
+can't audit every provider's documentation forever. The reliable
+validation is the chat-completion endpoint — the same path `testApiKey`
+uses for the explicit Test button. Chat-completion endpoints require
+real auth on every provider (that's what makes them billable), so they
+give a clean HTTP 401 / 403 signal universally.
+
+`validateKeyOnSave` has been rewritten to:
+
+- Send a minimal one-word probe ("Reply with exactly one word: CONNECTED")
+  to `cfg.endpoint` — the same endpoint the hive uses for normal rounds
+- Use the provider's own `headersFn(key)` and `bodyFn(model, prompt)`
+  config (the same dispatch `testApiKey` uses), so every provider —
+  defaults AND customs — gets validated the same way
+- Skip validation if the AI has no model picked yet (matches what the
+  Test button does in the same edge case)
+
+Per-provider `/v1/models` routing introduced in v3.63.20 is removed —
+that path was the wrong call.
+
+**Cost:** a few tokens per key save (one short prompt, one short
+response). Sub-cent at any provider's pricing. Negligible compared to
+the round costs the hive already runs.
+
+**Net effect for users:** typing a bogus API key into any provider
+card now flips the badge to ❌ within 1–2 seconds, regardless of
+whether that provider's `/v1/models` endpoint requires auth.
+
+### Files changed
+
+- `js/app.js` — one function body modified:
+  - `validateKeyOnSave` — switched from per-provider `/v1/models`
+    routing to a chat-completion probe via `cfg.endpoint` /
+    `cfg.headersFn` / `cfg.bodyFn`. The per-provider URL dispatch
+    introduced in v3.63.20 was removed in favor of leveraging the
+    existing API_CONFIGS shape that `testApiKey` already uses.
+- `js/version.js` — APP_VERSION bump to v3.63.21 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v80.txt`
+
 ## v3.63.20
 **Build:** `20260528-020` · **Released:** May 28, 2026
 
