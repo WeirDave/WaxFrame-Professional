@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260528-027
+     Build: 20260529-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-027">
+  <meta name="waxframe-build" content="20260529-001">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.27">
+  <link rel="stylesheet" href="style.css?v=3.63.28">
 </head>
 <body class="helper-body">
 
@@ -371,7 +371,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Recommend Models for All</span>
-        <span class="goal-info-desc">Asks every AI with a saved key to recommend its best Reviewer model and its best Builder model based on current public information. Runs sequentially across the hive. Recommendations are surfaced directly in each AI's model dropdown with ✨ (best Reviewer) and 🔨 (best Builder) markers. Useful when you don't know which model to pick for a provider; check the results afterward and override any that landed on the same family as another reviewer in your hive (model-family diversity matters — see the tip at the bottom of this section).</span>
+        <span class="goal-info-desc">Asks every AI with a saved key to recommend its best Reviewer model and its best Builder model based on current public information. Runs sequentially across the hive. Recommendations are surfaced directly in each AI's model dropdown: the best Reviewer pick is labeled <strong>✨ Reviewer</strong> and the best Builder pick <strong>🔨 Builder</strong>, and the explanation lines below the dropdown are color-coded — gold for the Reviewer pick, blue for the Builder pick. Useful when you don't know which model to pick for a provider; check the results afterward and override any that landed on the same family as another reviewer in your hive (model-family diversity matters — see the tip at the bottom of this section).</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Get API keys</span>
@@ -470,7 +470,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Model selector <em>(appears only when a key is saved)</em></span>
-        <span class="goal-info-desc">Shows the model currently selected for that AI — for example, <code>gpt-4.1</code> for ChatGPT or <code>claude-sonnet-4-6</code> for Claude. Click the dropdown to see available models fetched directly from that provider. If you've run <strong>Recommend Models for All</strong>, two picks in the dropdown are marked with ✨ (best Reviewer) and 🔨 (best Builder). WaxFrame uses sensible defaults; you don't need to change this unless you have a specific reason.</span>
+        <span class="goal-info-desc">Shows the model currently selected for that AI — for example, <code>gpt-4.1</code> for ChatGPT or <code>claude-sonnet-4-6</code> for Claude. Click the dropdown to see available models fetched directly from that provider. If you've run <strong>Recommend Models for All</strong>, two picks in the dropdown are labeled <strong>✨ Reviewer</strong> and <strong>🔨 Builder</strong> — look for the words, not just the icons. The explanation lines below the dropdown are color-coded to match: gold for the Reviewer pick, blue for the Builder pick. WaxFrame uses sensible defaults; you don't need to change this unless you have a specific reason.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">Recommend a Model <em>(Internet mode only, when a key is saved)</em></span>
@@ -2032,11 +2032,11 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.27"></script>
-<script src="js/nav-helper.js?v=3.63.27"></script>
-<script src="js/license-helper.js?v=3.63.27"></script>
-<script src="js/version.js?v=3.63.27"></script>
-<script src="js/docs-scrollspy.js?v=3.63.27"></script>
+<script src="js/theme.js?v=3.63.28"></script>
+<script src="js/nav-helper.js?v=3.63.28"></script>
+<script src="js/license-helper.js?v=3.63.28"></script>
+<script src="js/version.js?v=3.63.28"></script>
+<script src="js/docs-scrollspy.js?v=3.63.28"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

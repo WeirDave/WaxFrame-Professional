@@ -2,6 +2,72 @@
 
 ---
 
+## v3.63.28
+**Build:** `20260529-001` · **Released:** May 29, 2026
+
+### New — "Get Your First Key" step-by-step walkthrough (API Key Guide)
+
+The API Key Guide (`api-details.html`) now opens with a full-width
+**Start Here** walkthrough card that takes a complete beginner from
+zero to a working two-AI hive, using Claude (Anthropic) as the worked
+example. It covers the whole path with nothing skipped: sign in, add
+credit first (the wall most first-timers hit), create and name the key,
+the one-time copy, paste into WaxFrame, the automatic green-edge
+validation, and Recommend Models. A red warning callout drives home the
+save-your-key-before-you-click-away habit.
+
+The tail then walks the reader into a **second AI** — framed as required,
+not optional ("one AI isn't a hive") — and steers them to **Gemini** as
+the free second provider, with guidance to make Gemini the **Builder**
+so the heaviest role runs on the free model and the starter hive costs
+almost nothing.
+
+### Changed — model dropdown now labels the Reviewer / Builder picks in words
+
+After Recommend Models, the dropdown options previously marked the picks
+with bare `✨` / `🔨` emoji, which were easy to scan past. Options now
+read **`✨ Reviewer — model`** and **`🔨 Builder — model`** (and
+**`✨ Reviewer · 🔨 Builder — model`** when one model is picked for both
+roles). The recommendation note lines below the dropdown are now
+color-coded — **gold** for the Reviewer pick, **blue** for the Builder
+pick (matching the Recommend action color). Native `<select>` options
+can't be background-tinted cross-browser, so the words carry the signal
+inside the list and the color lives on the note lines.
+
+### Fixed — Gemini "create a new key" trap
+
+The Gemini card now warns against reusing the key AI Studio displays for
+an existing project (it looks usable but won't authenticate in WaxFrame).
+Step reworded to create a fresh key named WaxFrame, plus a red callout.
+
+### Added — `wf-tip-warn` red callout primitive
+
+A red variant of the `.wf-tip` callout (`--red-dim` background / `--red`
+border, theme-safe) for critical warnings the user must not miss.
+Reusable across helper pages.
+
+### Docs
+
+- `waxframe-user-manual.html` — the Recommend-Models toolbar and per-AI
+  model-dropdown descriptions now describe the **word labels + gold/blue
+  colors** users actually see ("look for the words, not just the icons").
+
+### Files changed
+
+- `api-details.html` — new walkthrough hero card; sidebar "Start Here"
+  entry; Gemini card key-trap rewording + red callout
+- `js/app.js` — `buildModelSelector`: Reviewer/Builder word labels in
+  option text; `is-reviewer` / `is-builder` classes on note lines
+- `style.css` — `.model-select-note-line.is-reviewer` (gold) /
+  `.is-builder` (blue); new `.wf-tip-warn` red variant
+- `waxframe-user-manual.html` — dropdown-marker descriptions updated
+- `js/version.js` — APP_VERSION bump to v3.63.28 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v88.txt`
+
 ## v3.63.27
 **Build:** `20260528-027` · **Released:** May 28, 2026
 

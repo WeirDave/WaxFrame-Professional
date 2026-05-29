@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260528-027
+     Build: 20260529-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260528-027">
+  <meta name="waxframe-build" content="20260529-001">
   <title>WaxFrame — API Key Guide</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and more. Includes cost guidance, tips, and a quick-links drawer.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and more. Includes cost guidance, tips, and a quick-links drawer.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.27">
+  <link rel="stylesheet" href="style.css?v=3.63.28">
 </head>
 <body class="helper-body">
 
@@ -103,6 +103,8 @@
   <aside class="doc-sidebar">
     <div class="doc-sidebar-inner">
       <div class="doc-sidebar-title">API Key Guide</div>
+      <div class="doc-sidebar-category">Start Here</div>
+      <a href="#first-key" class="doc-sidebar-link">🚀 Get Your First Key</a>
       <div class="doc-sidebar-category">The Default Six</div>
       <a href="#prov-chatgpt" class="doc-sidebar-link">ChatGPT (OpenAI)</a>
       <a href="#prov-claude" class="doc-sidebar-link">Claude (Anthropic)</a>
@@ -133,6 +135,32 @@
     </div>
   </div>
   <div class="hp-section-body">
+
+<div class="wf-card is-accent" id="first-key">
+  <h2 class="wf-card-title">🚀 Start Here: Get Your First Key (Step by Step)</h2>
+  <p>New to API keys? This is the part where most first-timers get stuck — so here’s the whole thing, start to finish, with nothing skipped. We’ll use <strong>Claude (Anthropic)</strong> as the example because the console is clean and easy to follow. Every other provider on this page works the same way: once you’ve done one, you’ve done them all.</p>
+  <ol class="steps">
+    <li>Go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer">console.anthropic.com/settings/keys</a> and sign in. If you don’t have an account yet, create one — it’s free, and you only pay for what you actually use later.</li>
+    <li><strong>Add a little credit first — you’ll probably run into this before anything else.</strong> A brand-new API account starts at $0, and a key with no balance can’t actually make calls — so fund it before you go on. Open <a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer">Billing</a> and add about <strong>$5</strong>; you’re only charged for what you use, and that covers a lot of WaxFrame runs.</li>
+    <li>On the <strong>API Keys</strong> page, click <strong>Create Key</strong> (top-right). A small dialog opens.</li>
+    <li>Leave the <strong>Workspace</strong> dropdown on <strong>Default</strong>, type <strong>WaxFrame</strong> in the <strong>Name</strong> field, then click <strong>Add</strong>.</li>
+    <li><strong>Copy the key.</strong> ⚠️ It is shown only once. Don’t close the popup until you’ve copied it somewhere safe (see the tip below — this matters).</li>
+    <li>In WaxFrame, open the <strong>Worker Bees</strong> screen, find the <strong>Claude</strong> card, paste the key into its field, and press <strong>Enter</strong>. WaxFrame checks the key automatically — the card’s edge turns <strong>green</strong> when it’s good (red if something’s off).</li>
+    <li>With the key validated, click <strong>Recommend Models</strong> on the Claude card. WaxFrame picks the best current model for you, so you’re not guessing at model names — your first AI is in the hive. 🐝</li>
+  </ol>
+  <h3 class="wf-card-title">Now add a second AI — that’s what makes it a hive</h3>
+  <p>The Worker Bees screen stays right where it is, so this is the moment to add your second AI. <strong>One AI isn’t a hive.</strong> WaxFrame works by having AIs review and sharpen each other’s work, so you need at least two to get anything out of it — and the good news is your second one can be <strong>free</strong>.</p>
+  <p>Make it <strong>Gemini (Google)</strong>. It has a generous free tier with no credit card to start, so you get to a working two-AI hive at zero extra cost. Scroll to the <strong>Gemini</strong> card in <strong>The Default Six</strong> below and follow the same steps — its sign-in link is right there.</p>
+  <p><strong>Then make Gemini your Builder — it saves you money.</strong> The Builder is the busiest role in the hive: every round it reads your project setup, all your reference material, the whole working document, and every reviewer’s notes. Run that on the free model and your two-AI hive costs almost nothing. After you click <strong>Recommend Models</strong> on Gemini, open its model dropdown and choose the option labeled <strong>🔨 Builder</strong>, then set Gemini as your Builder.</p>
+  <p><strong>Want sharper results? Add more.</strong> Every AI you bring in is another independent perspective catching what the others miss. Start with two, then grow your hive whenever you want — the rest of The Default Six are added exactly the same way.</p>
+  <div class="wf-tip wf-tip-warn">
+    <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+    <div class="wf-tip-body">
+      <p><strong>Save your key before you click away — you usually only get one chance.</strong> Most provider consoles show the full key <em>once</em>. If you close that popup without copying it somewhere, you can’t get it back — you have to generate a brand-new key, which then invalidates the one you just pasted into WaxFrame, and now you’re chasing your tail.</p>
+      <p>So before you click past the copy popup, also paste the key into a plain text file or your password manager. The simplest habit: keep <strong>one note</strong> — Notepad, Notepad++, or a password-manager entry — with every WaxFrame key in it, labeled by provider, and update it whenever you rotate a key. It’s exactly what David, WaxFrame’s developer, does. This applies to <em>every</em> provider on this page, not just Claude.</p>
+    </div>
+  </div>
+</div>
 
 <div class="two-col api-guide-cols">
 
@@ -218,9 +246,13 @@
         </div>
         <ol class="steps">
           <li>Go to <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">aistudio.google.com/apikey</a> and sign in with your Google account.</li>
-          <li>Click <strong>Create API Key</strong> and copy the key shown.</li>
-          <li>Paste it into the Gemini field in WaxFrame and press Enter.</li>
+          <li>Click <strong>Create API Key</strong>, name it <strong>WaxFrame</strong>, and copy the new key. (Don’t reuse a key already listed for an existing project — see the note below.)</li>
+          <li>Paste the new key into the Gemini field in WaxFrame and press Enter.</li>
         </ol>
+        <div class="wf-tip wf-tip-warn">
+          <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
+          <div class="wf-tip-body"><p><strong>Create a new key — don’t use the one already shown for your project.</strong> AI Studio may display an existing project key that looks ready to use, but it won’t authenticate in WaxFrame. Click <strong>Create API Key</strong> to generate a fresh one, name it WaxFrame, and use that.</p></div>
+        </div>
         <div class="wf-tip wf-tip-good">
           <span class="wf-tip-icon"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="helper-tip-icon-img"></span>
           <div class="wf-tip-body"><p>Gemini has a generous free API tier — no credit card required to start. Important caveat: once you enable billing on your Google AI Studio account (add a credit card), the same Gemini model can start routing through paid-tier paths and charging per token, even when you think you're still on free. Costs can climb quickly with the Builder role specifically — it reads project setup, reference material, the full working document, and every reviewer's suggestions every round. For casual use, keep billing off. If billing is on, watch your <a href="https://aistudio.google.com/usage" target="_blank" rel="noopener noreferrer">Google AI Studio usage page</a> during longer runs.</p></div>
@@ -923,13 +955,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.27"></script>
-<script src="js/nav-helper.js?v=3.63.27"></script>
-<script src="js/license-helper.js?v=3.63.27"></script>
-<script src="js/api-links.js?v=3.63.27"></script>
-<script src="js/version.js?v=3.63.27"></script>
-<script src="js/docs-scrollspy.js?v=3.63.27"></script>
-<script src="js/api.js?v=3.63.27"></script>
+<script src="js/theme.js?v=3.63.28"></script>
+<script src="js/nav-helper.js?v=3.63.28"></script>
+<script src="js/license-helper.js?v=3.63.28"></script>
+<script src="js/api-links.js?v=3.63.28"></script>
+<script src="js/version.js?v=3.63.28"></script>
+<script src="js/docs-scrollspy.js?v=3.63.28"></script>
+<script src="js/api.js?v=3.63.28"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds
