@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-016
+//  Build: 20260528-018
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-016';         // build stamp — update each session
+const BUILD       = '20260528-018';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -911,7 +911,20 @@ async function refreshAllModelLists() {
     if (skipped.length) bits.push(`${skipped.length} skipped`);
     consoleLog(`🔄 Auto-Update: ${bits.join(' · ') || 'no AIs to refresh'}`, retired.length || errors.length ? 'warn' : 'info');
     retired.forEach(r => consoleLog(`⚠️ ${r.name}: previously-selected model "${r.prevModel}" is no longer in the provider's list. Click ↻ Recheck on the AI row to pick a current model.`, 'warn'));
-    errors.forEach(e   => consoleLog(`⚠️ ${e.name || e.id}: model-list refresh failed — ${e.error}`, 'warn'));
+    errors.forEach(e => {
+      consoleLog(`⚠️ ${e.name || e.id}: model-list refresh failed — ${e.error}`, 'warn');
+      // v3.63.19 — friendly translation of the most common cause. Many
+      // background API calls (Auto-Update, migrate-recommend, deprecation
+      // watchdog) error with raw "HTTP 401" / "HTTP 403" text that means
+      // nothing to a non-technical user. Auth-class errors map to "check
+      // your API key" — anything else (rate limits, 5xx, network) is left
+      // as the raw text since the right action depends on the specific
+      // condition. Detection is on text shape from fetchModelsFromEndpoint's
+      // thrown errors (the source of e.error here).
+      if (/HTTP 401|HTTP 403|unauthorized|invalid.*key|authenticat/i.test(e.error || '')) {
+        consoleLog(`💡 Please check the API key for ${e.name || e.id} — it may be invalid, expired, or rotated.`, 'info');
+      }
+    });
   }
   if (retired.length) {
     const names = retired.map(r => r.name).join(', ');
@@ -3719,8 +3732,8 @@ function buildAISetupRowHTML(ai) {
         ${getKeyLink}
         <div class="ai-setup-key-wrap">
           <div class="ai-setup-key-status ${hasKey ? 'has-key' : ''}"
-            title="${hasKey ? 'API key saved ✅' : 'No API key — paste one below to enable this AI'}">
-            ${hasKey ? '🔑' : '⬜'}
+            title="${(hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? 'API key looks invalid — double-check the key' : hasKey ? 'API key saved ✅' : 'No API key — paste one below to enable this AI'}">
+            ${(hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? '❌' : hasKey ? '🔑' : '⬜'}
           </div>
           <input type="password" class="ai-setup-key" id="key-${ai.id}"
             placeholder="Paste key — Enter to save…"
@@ -3914,6 +3927,11 @@ function saveKeyForAI(id, val, inputEl) {
   }
   cfg._key = val.trim();
   saveSettings();
+  // v3.63.19 — Clear any prior invalid-key flag for this AI before we
+  // re-validate. If the user is fixing a previously-bad key, the ❌
+  // indicator should disappear immediately on save; we'll restore it via
+  // validateKeyOnSave if the new key also fails.
+  if (window._invalidKeys && window._invalidKeys[id]) delete window._invalidKeys[id];
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
   // v3.26.6: NO LONGER auto-fires recommend pipeline on key save. Auto-fire
@@ -3926,6 +3944,57 @@ function saveKeyForAI(id, val, inputEl) {
   // current without active interference.
   renderAIRow(id);
   toast(val.trim() ? `🔑 ${ai.name} key saved` : `🗑 ${ai.name} key cleared`, 2000);
+  // v3.63.19 — Fire-and-forget lightweight validation. If the key 401s/403s,
+  // we re-render with the ❌ indicator and log a friendly console line so
+  // the user catches a bad key on the Worker Bees screen instead of walking
+  // all the way to the work screen and hitting downstream errors. Silent
+  // on network errors and CORS failures (Claude's direct-endpoint path
+  // can't distinguish bad-key from network from browser context, so it
+  // silent-passes — better partial coverage than false negatives).
+  if (val.trim()) {
+    validateKeyOnSave(id, val.trim());
+  }
+}
+
+// v3.63.19 — Lightweight background validation fired by saveKeyForAI. Uses
+// the existing fetchModelsFromEndpoint machinery which throws "HTTP {status}"
+// on non-OK responses. Auth-class errors flip the in-memory _invalidKeys
+// flag for this AI and re-render the row so the ❌ indicator appears on
+// the key-status badge. Race-protected: if the user changes the key again
+// between fire and resolve, the stale result is ignored.
+function validateKeyOnSave(aiId, keyAtFire) {
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  const cfg = API_CONFIGS[ai.provider];
+  if (!cfg?._key) return;
+  const stillCurrent = () => API_CONFIGS[ai.provider]?._key === keyAtFire;
+  const format = cfg.format || 'openai';
+  fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint)
+    .then(() => {
+      if (!stillCurrent()) return;
+      // Success — make sure the invalid flag is cleared (defensive; we
+      // already clear in saveKeyForAI, but this catches the rare case
+      // where validation lands after another save attempt).
+      if (window._invalidKeys && window._invalidKeys[aiId]) {
+        delete window._invalidKeys[aiId];
+        renderAIRow(aiId);
+      }
+    })
+    .catch(err => {
+      if (!stillCurrent()) return;
+      const msg = err?.message || '';
+      // Only auth-class failures flip the invalid flag. Network errors
+      // (Failed to fetch / CORS) leave status unknown — we can't reliably
+      // distinguish bad-key from offline-network in those cases.
+      if (/HTTP 401|HTTP 403/i.test(msg)) {
+        window._invalidKeys = window._invalidKeys || {};
+        window._invalidKeys[aiId] = true;
+        if (typeof consoleLog === 'function') {
+          consoleLog(`⚠️ ${ai.name}: API key looks invalid (${msg}). Double-check the key you just saved.`, 'warn');
+        }
+        renderAIRow(aiId);
+      }
+    });
 }
 
 // v3.31.0 — Partial re-render after a key save / clear. The original
@@ -4169,6 +4238,19 @@ async function recommendModelsForAll() {
   });
 
   if (btn) { btn.disabled = false; btn.textContent = origLabel; }
+  // v3.63.18 — Green-flash the All button when any AI succeeded. Same
+  // race-protected revert as the per-row flash in recheckModelForAI.
+  if (succeeded > 0 && btn) {
+    btn.classList.add('is-recommended-success');
+    btn.textContent = `✓ Recommended ${succeeded} Model${succeeded !== 1 ? 's' : ''}`;
+    setTimeout(() => {
+      const after = document.getElementById('recommendAllBtn');
+      if (after && after.classList.contains('is-recommended-success')) {
+        after.classList.remove('is-recommended-success');
+        after.textContent = origLabel;
+      }
+    }, 5000);
+  }
   if (failed > 0) {
     toast(`✓ Recommend complete: ${succeeded} succeeded, ${failed} failed (see console)`, 5000);
   } else {
@@ -5623,11 +5705,34 @@ async function recheckModelForAI(id) {
     return;
   }
 
+  // v3.63.18 — Green-flash helper. After a successful recommendation,
+  // paint the per-row Recommend Models button green with a "✓ Recommended
+  // Model Picked" label for 5 seconds, then revert. Grabs a FRESH button
+  // ref after renderAIRow because that call replaces the DOM node. Race
+  // protection: the revert only fires if the button is still in the
+  // success state at timeout — if the user clicked Recommend again within
+  // the 5s window, the new click will have cleared the class (via the
+  // "Asking…" path), and the timeout becomes a no-op.
+  const flashGreen = () => {
+    const fresh = document.getElementById(`recheckbtn-${id}`);
+    if (!fresh) return;
+    fresh.classList.add('is-recommended-success');
+    fresh.innerHTML = '✓ Recommended Model Picked';
+    setTimeout(() => {
+      const after = document.getElementById(`recheckbtn-${id}`);
+      if (after && after.classList.contains('is-recommended-success')) {
+        after.classList.remove('is-recommended-success');
+        after.innerHTML = 'Recommend Models';
+      }
+    }, 5000);
+  };
+
   // v3.27.0: always re-render the row after a successful recommend so the
   // dropdown picks up the freshly-cached labels, even when the AI confirms
   // the existing model is still the best pick.
   if (result.model === previousModel) {
     renderAIRow(id);
+    flashGreen();
     toast(`✓ ${ai.name}: ${result.model} — already the recommended pick${result.why ? '. ' + result.why : ''}`, 6000);
     return;
   }
@@ -5635,6 +5740,7 @@ async function recheckModelForAI(id) {
   cfg.model = result.model;
   saveSettings();
   renderAIRow(id);
+  flashGreen();
   toast(`✨ ${ai.name}: switched to ${result.model}${result.why ? ' — ' + result.why : ''}`, 6000);
 }
 
