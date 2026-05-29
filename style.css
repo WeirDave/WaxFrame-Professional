@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-005
+   Build: 20260529-006
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4250,11 +4250,13 @@ html, body {
 .model-select-custom.is-open .model-select-arrow { transform: rotate(180deg); }
 .model-select-list {
   display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  z-index: 60;
+  /* v3.63.33 — fixed (not absolute) + JS-positioned from the trigger's rect so
+     the list escapes every clipping/overflow/stacking container it lives in
+     (the Worker Bees scroll area; the Change Builder + Troubleshooting modals,
+     whose backdrop-filter would otherwise clip an absolute child). z-index sits
+     above the modal layer (99999). Closes on scroll/resize. */
+  position: fixed;
+  z-index: 100001;
   max-height: 320px;
   overflow-y: auto;
   background: var(--surface2);

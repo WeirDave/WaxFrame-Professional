@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.33
+**Build:** `20260529-006` · **Released:** May 29, 2026
+
+### Fixed — Model dropdown was clipped / rendered under the page
+
+The new custom model dropdown (v3.63.32) used `position: absolute`, so the open
+list got trapped by its containers: on the Worker Bees screen the surrounding
+scroll area clipped it, and the note text below showed through. The list now
+uses `position: fixed`, anchored to the trigger's live position via JS, with a
+z-index above the modal layer — so it renders on top of everything, on all three
+surfaces (Worker Bees row, Change Builder modal, Troubleshooting card). It flips
+upward when there isn't room below, and closes on scroll/resize (a fixed list
+can't follow the trigger).
+
+### Files changed
+
+- `js/app.js` — `wfModelSelectToggle` positions the list via new
+  `wfModelSelectPosition` (rect-anchored, flip-up) and registers scroll/resize
+  close-on-open
+- `style.css` — `.model-select-list` switched from `absolute` to `fixed`,
+  z-index above the modal layer
+- `js/version.js` — APP_VERSION bump to v3.63.33 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust sweep
+  to `20260529-006` / `3.63.33`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v95.txt`
+
 ## v3.63.32
 **Build:** `20260529-005` · **Released:** May 29, 2026
 
