@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-021
+   Build: 20260528-022
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12082,6 +12082,33 @@ kbd {
 }
 .ai-getkey-link:hover {
   text-decoration: underline;
+}
+
+/* v3.63.22 — Inline invalid-key error banner.
+   Sits inside the manage-account banner, pushed to the right via
+   margin-left:auto so it shares the row with "Open {Provider} account ↗"
+   (the user's natural next action when a key is bad). Red against the
+   amber-dashed banner background gives clear visual signal without
+   needing a separate row. .is-invalid-only kicks in when the AI has
+   no console URL (server-imported customs) — the banner then exists
+   purely to host the error message, with no manage-account link.
+   The .has-invalid modifier on the parent could host future styling
+   if we want to e.g. tint the banner border red on invalid; for now
+   the message itself carries the signal. */
+.ai-key-invalid-msg {
+  margin-left: auto;
+  color: var(--red, #d33);
+  font-weight: 600;
+  font-size: 12.5px;
+  white-space: nowrap;
+}
+.ai-getkey-link-wrap.is-invalid-only {
+  justify-content: flex-start;
+  border-color: var(--red, #d33);
+  background: rgba(211, 51, 51, 0.08);
+}
+.ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg {
+  margin-left: 0;
 }
 
 /* ── Best / Fast / Budget category buttons ── */
