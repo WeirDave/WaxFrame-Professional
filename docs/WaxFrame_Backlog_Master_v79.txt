@@ -1,0 +1,97 @@
+WaxFrame Backlog Master v79
+2026-05-28
+
+State: v3.63.20 shipping — two fixes covering gaps surfaced during v3.63.19 dogfooding (validate-on-save per-provider routing for full 6-provider coverage; X-Key wipes stale model + recommendation caches). v3.63.19 shipped with 3 improvements (Recommend Models green success, validate-on-save initial cut, bad-key console message). v3.63.18 shipped clean (4 fixes). P1 Troubleshooting Toolkit remains next priority. PDF CVE remains mitigated (isEvalSupported:false, v3.63.6); full upgrade is the only security follow-up left. GitHub security scanning live.
+
+
+Next Up
+
+- P1 TROUBLESHOOTING TOOLKIT — now the top priority. Build order:
+    1. Standalone help.html — FULLY self-contained (inline <style> + inline <script>, audited exception, break-glass page that works even if style.css is corrupt). Dark/bee theme, can be ugly. Primary bug-report entry point.
+    2. GitHub Issues wiring: pre-fill URL (issues/new?title=..&body=..) — NO labels= in URL (404s for non-collaborators, verified). Labels applied via .github/ISSUE_TEMPLATE/bug_report.yml instead. Two-part flow: page generates SCRUBBED diagnostic bundle -> downloads; opens pre-filled issue with structured body (version/build/browser/error/repro); user drags bundle into the issue.
+    3. Nav link in main nav + helper navs (under Support); also surface the URL where findable when the app is DOWN (error overlay / README / min-screen).
+    4. Diagnostic bundle generator UI surfaced on the page (the redaction machinery is already correct as of v3.63.7 — reuse diagnosticSession()).
+    5. Forensic ring buffer / scrubber / user-manual docs.
+    Label to create when wiring the template: 'auto-reported' (or 'from-app') at github.com/WeirDave/WaxFrame-Professional/labels.
+
+- SECURITY (follow-up, not urgent): Full PDF.js upgrade 3.11.174 -> 4.2.67+. Already mitigated by isEvalSupported:false. The full vendor-lib swap is the durable fix but needs its own regression pass (PDF text extraction across the corpus, worker path, outline capture). Self-hosted lib swap in lib/pdf.min.js + lib/pdf.worker.min.js. When done, bump pdfjs-dist version in package.json so Dependabot stops flagging it. EXPECT: Dependabot will be flagging pdfjs-dist 3.11.174 for CVE-2024-4367 right now — that's correct and is the standing reminder for this item.
+
+- Post-deploy gut checks: v3.63.19 — (a) save a bogus key on Worker Bees for each of the six default providers in turn, confirm the key-status badge flips from 🔑 to ❌ within 1-2 seconds and a friendly console line appears for each. Perplexity and Claude specifically need verification (those were the two providers the initial v3.63.19 build missed before the per-provider routing rewrite). (b) Save a valid key, confirm badge stays/becomes 🔑 and no console error. (c) Click X Key on any AI with a saved key — confirm the model-list cache + recommendation caches are cleared via DevTools (the waxframe_models_{provider} and waxframe_recommend_*-reviewer/-builder keys should disappear from localStorage). Then paste a new key and confirm the model dropdown is no longer showing stale cached models from the prior key. (d) Click Recommend Models on a row, confirm button flips to green "✓ Recommended Model Picked" for ~5 seconds then reverts to blue. (e) Click Recommend Models for All with 2+ keys, confirm header button flips to green "✓ Recommended N Models" then reverts. v3.63.18 — (f) verify the re-extract banner now renders as a proper panel (dark background, amber border, matches Working Document strip weight) and only appears when a real PDF was imported; clear the starting doc with a PDF loaded and confirm the banner hides immediately. (g) Confirm the checkpoint backup nudge no longer has the "Don't ask again for this project" checkbox; modal still fires once per project on first work-screen entry. (h) Verify Re-extract with AI Vision still works after re-uploading a PDF (the cleanup includes `window._lastPDFPages = null` — re-upload must repopulate it). (i) Open DevTools -> Application -> Local Storage on a browser that previously visited a pre-v3.63.18 build; confirm the four orphan sentinels (waxframe_v330_baseline_migrated, waxframe_v33210_recommend_migrated, waxframe_v3605_together_models_migrated, waxframe_v3607_together_models_migrated) are gone after one page load. Earlier pending checks: v3.63.3 suppressKey paths, v3.63.5 license modal, v3.63.6 restore warning fires every time, v3.63.7 redaction completeness.
+
+- Triage CodeQL + Dependabot findings once first scans complete. CodeQL on a vanilla innerHTML/template-literal app will likely flag some patterns — some real (the ref-doc XSS class fixed in v3.63.7), some false positives on audited patterns. Walk the list together.
+
+- Stale-reference copy-drift sweep on older helper pages (api-details, what-are-tokens, document-playbooks, prompt-editor) — image/URL/toolbar stragglers already fixed; remaining is copy/screenshot drift.
+
+
+Open Bugs
+
+(none open — Claude validate-on-save coverage gap that surfaced during v3.63.19 dogfooding was fixed in the same release by rewriting validateKeyOnSave with per-provider routing; X-Key stale-cache leak also fixed in v3.63.19)
+
+
+Open Features
+
+- API Key Walkthrough — step-by-step beginner guide to getting a first API key. Real adoption-friction signal from user feedback (May 28, 2026): a prospect said "I don't know if my friend can figure out how to use your program" — the API-key step is where non-technical users bounce. The existing api-details.html explains API keys CONCEPTUALLY (what they are, where they live) but never walks someone through actually getting one. Proposal: add a "Step-by-Step Walkthrough — Get Your First Key" section at the TOP of api-details.html (above "What is an API key?"), using Claude/Anthropic as the worked example (David's suggestion — clean console, familiar to him). Hand-holding tone: 1) sign in at console.anthropic.com, 2) navigate to API Keys, 3) Create Key, 4) name it WaxFrame, 5) copy (only shown once), 6) paste into WaxFrame's Claude card, 7) click Test, done. Ideally with screenshots / annotated images of each step. Keep it Claude-specific to avoid sprawl; existing per-provider sections below cover the other providers and link out to their respective consoles. Goal: someone can hand the URL to a friend who's never touched an API before and they get to a working hive without help.
+    SAVE-YOUR-KEYS CALLOUT (must include): when the provider shows the one-time copy popup, prompt the reader to also paste the key into a local text file (Notepad / Notepad++ / their password manager) BEFORE clicking past the popup. Many provider consoles only show the full key once — close the popup without copying it elsewhere and the user has to regenerate a new key (which then invalidates the key already pasted into WaxFrame). Recommended pattern: keep one text file (or password-manager note) with all WaxFrame API keys labeled by provider; when a key rotates, update the file. Frame as "this is what David does" so it reads as practitioner advice, not corporate hand-holding. This callout applies to every per-provider walkthrough section, not just the Claude worked example.
+
+- User Manual restructure — current manual is a wall of text; restructure into walkthrough format with screenshots. Subsumes the API Key Walkthrough above as one section. Triggered same session (May 28, 2026) when David and Candy reviewed the existing manual while planning the API walkthrough. Screenshot refresh must happen before/with this work — current screenshots/ folder is stale (referenced in README and possibly elsewhere; run grep -rn "screenshots/" --include="*.md" --include="*.html" before shipping). Naming convention proposal: page-state-purpose with numbered prefix on flow sequences (setup-01-bees.png, setup-02-builder.png, ..., api-walkthrough-01-signin.png, etc.) so files sort in narrative order in the folder.
+
+- Screenshot capture tooling — eliminate manual Windows Snipping Tool workflow. Tier 1 (today): Chrome DevTools full-page capture (F12 -> Ctrl+Shift+P -> "Capture full size screenshot") at 1366x768 viewport for consistency with WaxFrame min size. Tier 2: GoFullPage extension. Tier 3 (right long-term answer): tools/capture-screenshots.ps1 — headless Edge from PowerShell (msedge --headless --disable-gpu --window-size=1366,768 --screenshot=...), array of {url, filename} pairs, regenerates all 8 screenshots in one command. Zero dependencies, lives in repo, no npm. Pays for itself the second time screenshots need a refresh.
+
+- Troubleshooting Toolkit P0/P1 (full scope) — standalone techsupport page + diagnostic bundle generator + always-on forensic ring buffer (last 5-10 rounds) + scrubber that auto-strips secrets + GitHub Issues URL integration + .github/ISSUE_TEMPLATE/bug_report.yml + user-manual UX docs.
+
+- GitHub Actions release-ceremony consistency check (deferred from the GitHub-tour session) — workflow that runs node --check on all JS, verifies build stamps match across files, validates no dead local asset links, on every push. Automates the manual verification. Needs iteration (can't test a workflow from chat), so build it when there's runway to watch it run green.
+
+- restoreRound scope clarification — define what should and should not roll back when restoring a round. Map every piece of session state to "rolls back" or "persists" and document the rule.
+
+- Custom templates — user-defined project templates beyond the built-in scaffolds.
+
+- Shareable templates — export/import templates between users.
+
+- Backup scrubber — utility to strip secrets from a backup file before sharing. (Shares machinery with the now-complete diagnostic redaction — could reuse _redactSessionContent / the LS_PROJECT redaction.)
+
+- Deep Dive ring buffer — circular history of last N rounds of full reviewer responses, separate from main history for deep debugging.
+
+- Pause/resume at reviewer seam — finer-grained pause point inside a round.
+
+- File System Access API exploration — investigate replacing download-only backups with true file persistence.
+
+- Two-layer AI management — separate the server/source layer from the selection layer. Currently fused.
+
+- Hive Profiles — saved checkbox-state configurations (research/draft/polish hives).
+
+- Sources view formalizing servers as first-class entities.
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors, SOME CONFIRMED LIVE by Codex. Static grep insufficient (display:contents load-bearing; JS template-literal class names evade grep; ref v3.21.26). Dedicated branch, phased deletion, visual smoke test on every screen as pre-deploy gate. Flagged clusters: welcome-card, save-bar, goal-modal-refine-*, ai-bfb-*, autosave/verify-panel remnants. Reference style.css ~598.
+
+
+Observations
+
+- v3.63.19 validate-on-save scope: catches auth-class failures (HTTP 401 / 403) at the moment of save on the Worker Bees screen so bogus keys surface ❌ before the user walks to the work screen. Per-provider routing covers all six default providers correctly: ChatGPT/Grok/Perplexity/DeepSeek use origin-based derive (handles Perplexity's endpoint shape that has no /v1/ segment), Claude routes through the CF Worker proxy (avoids browser CORS), Gemini uses the Google API with x-goog-api-key, Mistral hits api.mistral.ai/v1/models with Bearer. Initial implementation (build -018) used fetchModelsFromEndpoint and only worked for 4 of 6 providers — caught during same-session dogfooding when David X-Key'd Perplexity, typed a bogus key, and got no ❌ feedback. The rewrite mirrors fetchModelsForProvider's per-provider dispatch (api.js ~376) rather than relying on the generic derive path. Lesson: when adding a feature that needs auth-error signals, mirror the existing provider-aware code rather than the generic helper that swallows or mis-derives.
+
+- v3.63.19 green Recommend button: third button-state UI convention added to WaxFrame (after Test green ✅ and the slow-responder indicator). Pattern is now: blue idle -> "Asking…" disabled in-flight -> green confirm with check-mark + 5-second timed revert. Race-protected by class-presence check in the setTimeout callback — if user clicks the action again during the green window, the new in-flight state takes priority and the revert becomes a no-op. Worth codifying as a button-state-transition rule for the next utility action button that ships.
+
+- v3.63.18 dead-migration cleanup: removed three one-shot data migrations (V33210 recommend-cache reshuffle, V3605 + V3607 Together model-list filter/URL changes) plus a v3.30.2 one-time upgrade toast inside ensureOriginalModelBaseline. All four had been firing on every page load for users who had long since completed them, doing nothing each time. Their localStorage sentinels were swept in the same release via a small unconditional removeItem block at the top of DOMContentLoaded (removeItem is idempotent so no new sentinel needed — the sweep itself can run forever without becoming the next generation of cruft). Pattern lesson: one-shot migrations need a sunset, or they become permanent boot-time overhead and visible scar tissue in user localStorage. Going forward: when a migration is written, include a "remove after vX.Y.Z" comment in the doc-comment so future-you has a clear delete signal. Aggressive removal is appropriate when the project hasn't reached broad adoption — any returning user who somehow missed every release for a year can self-heal via cache wipe.
+
+- v3.63.18 clearUploadedFile bug: the function had been silently leaking PDF state since the PDF re-extract feature was introduced. The fallback path in discardVerifyExtractedText carried a comment claiming "clearUploadedFile() handles ... source-type localStorage cleanup" — comment was lying; only filename was cleared. Code-comments-can-lie principle confirmed again. Audit reminder: when a function's doc-comment claims behavior, verify the body actually does it before trusting the comment.
+
+- Layered code surfaces bugs that only appear under specific edge interactions. The clearUploadedFile leak and the v3.63.17 disabled-attribute trap both required a user to back-navigate after partial setup to hit them. Forward-only happy-path testing never sees either. Pattern: after every multi-step setup flow change, regression-test every Back-button path.
+
+- v3.63.18 re-extract banner styling: pre-v3.63.18 the banner relied on .honeycomb-header class semantics that were gated to .work-panel-header — it never received the panel styling. Trying to add the class to the banner div was a non-fix because the CSS selector requires the parent class too. Right fix was to give .reextract-banner its own self-contained panel styling matching the visual weight of .honeycomb-header without inheriting from it.
+
+- v3.63.17 Worker Bees paste-key bug = dead code from the pre-v3.31.0 single-list era (Internet + Server AIs combined; Server mode hid Internet defaults via isActive=false). v3.31.0 two-tab split made the gate unnecessary but the disabled attribute + matching CSS rule survived as orphan code. Bug only fired when continueFromBees stripped activeAIs to keyed-only, then user back-navigated — invisible under normal forward-only setup. Lesson: when a UX architecture changes (single-list -> two-tab), audit every gate that depended on the old shape, not just the ones that visibly fire under the new shape.
+
+- Incognito is the cleanest "factory state" diagnostic available — no extensions, no LS_HIVE residue, no service worker. When a bug reproduces in main Chrome AND Edge but not Incognito, the differentiator is persisted state from prior visits (LS_HIVE in this case), not browser / extension / environment.
+
+- P0 security cleared in one surgical release (v3.63.7). Both fixes followed the codebase's established two-layer trust-boundary pattern (import sanitization + render-sink belt for XSS; the redaction function + bundle-assembly redaction for content). safeRefId mirrors safeUrl exactly.
+
+- safeRefId design: STRIP to [A-Za-z0-9_-] rather than regenerate, so legit ids pass through unchanged and the inline-handler lookups (which match by doc.id ===) stay intact. Only empty/all-bad ids fall back to a fresh generated id. Behaviorally tested: legit preserved, injection payloads stripped of all quotes/parens/brackets, empty falls back.
+
+- The diagnostic redaction was leaking 3 ways despite the checkbox: LS_PROJECT raw (biggest — full document), plus ringBuffer + lastFailure inside the session that the redactor never visited. Lesson: when a redaction function exists, audit EVERY field that ends up in the export, not just the obvious docText/history — side-channels (debug buffers, separate localStorage blobs) are where content hides. consoleHTML included for completeness.
+
+- Render-sink belt mutates doc.id in place when it's unsafe, persisting the normalized id so the rendered DOM id and the array id stay in sync (handlers look up by doc.id). Compute-once (single safeRefId call) avoids the regenerate-returns-different-value-each-call trap.
+
+- Pre-surgery checkpoint when the worktree is already clean: the last pushed commit IS the checkpoint. Nothing to commit = nothing to lose; Discard All Changes reverts to it. No separate checkpoint commit needed.
+
+- New-day build stamp rolled to 20260528-001 (was 20260527-NNN). Daily sequence restarts at 001 on a new calendar day.
+
+- docs/ in zip ships latest backlog + WaxFrame_Rules_Reference.txt only. No older backlog versions (David keeps 3-version rollback locally, auto-deletes older).
