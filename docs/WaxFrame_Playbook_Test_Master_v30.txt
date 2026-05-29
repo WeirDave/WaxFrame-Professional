@@ -1,10 +1,10 @@
 ════════════════════════════════════════════════════════════
-WAXFRAME — PLAYBOOK TEST MASTER (v26)
+WAXFRAME — PLAYBOOK TEST MASTER (v30)
 ════════════════════════════════════════════════════════════
-Last updated:        2026-05-19 (v3.55.0 — three platform playbook pages shipped using Google Maps + Yelp measured data; multi-platform orphan retired)
-WaxFrame version:    v3.39.12 Pro and later
+Last updated:        2026-05-23 (two more Instructional-Document benchmarks logged from the same session, BOTH converged from real transcripts: Conference-Center guide (24-round majority, length overshoot-then-recovery in-range) and Mixed-Use guide (6-round majority after a failed round; drove v3.56.9))
+WaxFrame version:    v3.39.12 Pro and later (current: v3.56.14 Pro)
 Maintained by:       R David Paine III
-Lives:               docs\WaxFrame_Playbook_Test_Master_v26.txt
+Lives:               docs\WaxFrame_Playbook_Test_Master_v30.txt
 
 This is David's project to-do list — strictly the test runs
 that gather convergence data. Companion to:
@@ -17,6 +17,75 @@ Two-document persistence system, per memory rule:
                 + PROJECTS TO RUN NEXT + PENDING TESTS detail
                 + HISTORICAL RUNS (permanent)
   • Backlog Master = code work + ideas + bug-fix list
+
+CHANGES IN v30 (from v29, 2026-05-29):
+  - HIVE-SIZE SWEEP — RUN A (2-AI) logged. First data point in the
+    controlled reviewer-count experiment (isolate hive size vs
+    convergence; find the tipping point). Fernbox product-blurb REFINE,
+    Hard cap 300w (rail, never bound), on v3.63.28 Pro.
+    RESULT: 2 AIs (ChatGPT + Claude) -> 6 rounds, UNANIMOUS convergence
+    at R6, 580s engaged (9.7 min), final 49w/307c (trimmed from ~230w
+    draft), 3 USER DECISIONS (R2x2, R4x1).
+  - PROTOCOL DEVIATION (flagged): the sweep design fixed Builder=Gemini
+    every run so the builder isn't a confound. Run A actually used
+    CHATGPT as Builder, doubling as reviewer (a true 2-AI hive, no
+    Gemini). Decision for the rest of the sweep: hold the builder
+    CONSTANT = ChatGPT for Runs B-E (add reviewers on top), so A-E stay
+    comparable. (Alternative: restart with a dedicated Gemini builder.)
+    Builder identity is now a covariate to keep fixed, not vary.
+  - With 2 AIs, convergence can only be UNANIMOUS (majority needs 3+).
+    This is the structural reason a 2-AI hive is the hardest to converge
+    and the prediction the sweep is testing: 2->3 should drop rounds.
+
+CHANGES IN v29 (from v28, 2026-05-23):
+  - TWO MORE INSTRUCTIONAL-DOCUMENT BENCHMARKS logged from the same session
+    as the Ekahau run, both from FULL TRANSCRIPTS (not memory). BOTH
+    CONVERGED (majority, holdouts). Earlier mid-session notes had tentatively
+    flagged these as non-convergence based on a partial console snapshot —
+    the transcripts correct that: both reached majority convergence and both
+    landed IN-RANGE. (Lesson re-affirmed: log convergence numbers from the
+    transcript/backup, never from a partial live view.)
+  - CONFERENCE-CENTER GUIDE — 24 rounds to MAJORITY convergence (holdouts),
+    final 1,157 words, IN-RANGE under a 1-2 page (≈1200w) RANGE cap. The
+    notable shape: length OVERSHOT to ~1252w mid-run (R4-R12, guard overridden
+    every round — Auto silently keeps overruns; manual rounds the user kept),
+    then the hive PULLED IT BACK under the cap to 1,157w by R24. Heavy mid-run
+    oscillation on the capacity-based "radio count" sentence (rotating rewords
+    across Claude/Gemini/Mistral/Perplexity) — it eventually settled. A
+    long-grind convergence, not a failure. Multi-build run: spanned v3.56.9
+    (start backup) -> v3.56.14 (export). This is the run that prompted the
+    v3.56.14 slow-alert rework (Gemini-as-Builder flagged slow most rounds).
+  - MIXED-USE BUILDING GUIDE — 6 rounds to MAJORITY convergence (holdouts),
+    final 845 words, IN-RANGE (1-2 page RANGE), 42 min, on v3.56.6. One
+    Builder-only round FAILED mid-run (document not updated) then recovered.
+    The at-convergence length handling forced the "Continue anyway · disable
+    guard" choice — the UX pain point that drove the v3.56.9 "Trim/Expand with
+    Builder" fix — but the run still landed in-range.
+  - ROUND-3 AUDIT MOTIVATION (Backlog v48): the conference-center run shows
+    the hive CAN recover from oscillation + length overshoot and still
+    converge in-range — but it took 24 rounds and a lot of churn on one
+    sentence. A stall / oscillation / length-churn detector could flag "same
+    sentence reworked N rounds running / net-zero progress" and shorten the
+    grind or surface it. Separately: Auto kept every mid-run overrun SILENTLY
+    (no modal) — worth deciding whether Auto should at least nudge on a
+    sustained RANGE-max breach.
+
+CHANGES IN v28 (from v26/v27, 2026-05-23):
+  - VERSIONING RECONCILE: prior file shipped as filename v27 while the
+    internal title still read v26 (a filename-only bump). This revision
+    reconciles filename AND title to v28.
+  - NEW BENCHMARK — first Instructional Document data point ever logged:
+    Ekahau Site Survey Guide v1.0. TARGET 600 words -> converged 617
+    (in-band, +2.8%), majority convergence, 5 rounds / 53 min, single
+    build v3.56.6, length guard ARMED and silent. Added to RUNS COMPLETED
+    tracking table; full forensic entry appended to HISTORICAL RUNS.
+  - This run is the FIRST CLEAN real-world confirmation of the #9 TARGET
+    tolerance band (shipped v3.56.4). It is the headline of the HISTORICAL
+    RUNS entry. (Companion record — "#9 band DONE + verified" — lives in
+    Backlog v47. Same run, two facts: Playbook = convergence benchmark;
+    Backlog = feature verified.)
+  - INSTRUCTIONAL DOCUMENT baseline established: ~5 rounds to majority for
+    a ~600-word multi-section how-to guide built from scratch.
 
 CHANGES IN v26 (from v25, 2026-05-17):
   - AMENDMENT (post-v3.52.11): The v3.52.9 entry under
@@ -345,6 +414,10 @@ as wall-clock; see Backlog v10 Section 2).
 
   Date        Run                                          Hive  Builder      Rounds  Wall-clock   Engaged†  Final length      Status
   ──────────  ───────────────────────────────────────────  ────  ───────────  ──────  ───────────  ────────  ────────────────  ──────────────
+  2026-05-29  Hive Sweep Run A — Fernbox (2-AI, size sweep)   2     ChatGPT*     6       9.7 min eng  n/a       49w / 307c        unanimous (R6; ChatGPT doubles as Builder — see note)
+  2026-05-23  Ekahau Site Survey Guide v1.0 (Instr. Doc)   7     DeepSeek     5       53 min       n/a       617w / 4,132c     majority (engine, holdouts)
+  2026-05-23  High-Density Wi-Fi — Conf Center (Instr,RANGE) 7→6   Gemini       24      50 min eng†  n/a       1,157w / 8,314c   majority (R24, holdouts; overshoot→in-range; multi-build 3.56.9→14)
+  2026-05-23  Mixed-Use Building Guide (Instr, RANGE 1–2pg)  7     Gemini       6       42 min       n/a       845w / 5,993c     majority (R6, holdouts; 1 failed round recovered)
   2026-05-17  Manly Bikes Yelp v1.0 (Rewrite-as-Yelp)      7     Gemini→Builder switched mid-session  8       21 min       n/a       542w / 3,142c     majority (engine, holdouts)
   2026-05-17  Manly Bikes Google v1.0 (Trim-to-Google)     7     Gemini       5       23 min       n/a       155w / 1,003c     majority (R4 Builder-Only)
   2026-05-17  Manly Bikes v2.0 combined (RETIRED tpl)      7     Gemini       6       35 min‡      n/a       510w + 180w + 339w  majority (3 sub-sections at floor)
@@ -369,6 +442,9 @@ as wall-clock; see Backlog v10 Section 2).
   earlier     Blog — One-Shot AI v1.0 (1st measurement)    (5)   (n/a)        16      (n/a)        n/a       (n/a)             majority
   earlier     Presentation — Wi-Fi 7 v3.0                  (5)   (n/a)        8       (n/a)        n/a       (n/a)             majority
 
+†  Conference-Center 50 min = engaged project-clock (projClockSeconds
+   2981). Wall-clock R1->R24 was ~77 min (6:18->7:35 PM) with idle
+   gaps; exported 8:39 PM. Engaged time is the meaningful figure.
 *  T4 Recipe wall-clock includes a lunch break — engaged time
    was much lower. This is the case study for the engaged-time
    tracking enhancement (Backlog v10 Section 2).
@@ -578,6 +654,61 @@ NOTE on time data: until engaged-time tracking ships (see
 Backlog v10 Section 2), wall-clock minutes include any idle
 periods (lunch breaks, etc.). Annotate runs where the user
 stepped away mid-session so the data has the right caveat.
+
+
+2026-05-29 · HIVE-SIZE SWEEP RUN A — Fernbox product blurb (2-AI)
+────────────────────────────────────────────────────────────
+  Experiment:      Controlled reviewer-count sweep (Run A of A-E).
+                   Goal: isolate hive size vs convergence, find the
+                   tipping point. Fixed source doc + builder + length
+                   mode across runs; ONLY reviewer count varies.
+  Project:         Hive Sweep — Fernbox v1.0
+  Built on:        WaxFrame v3.63.28 Pro / build 20260529-001
+  Hive (2 total):  ChatGPT (gpt-5.5) + Claude (claude-opus-4-5-20251101).
+                   ★ ChatGPT served as BOTH reviewer AND Builder
+                   (double-duty). Gemini NOT used — DEVIATION from the
+                   protocol's "Builder = Gemini, fixed" design. For the
+                   sweep to stay comparable, ChatGPT is now the held-
+                   constant builder for Runs B-E (or restart on Gemini).
+  Approach:        REFINE on a fixed ~230-word deliberately-flabby
+                   product blurb (clichés, vague claims, repetition,
+                   limp CTA). Same draft byte-identical every run = the
+                   experimental control.
+  Length:          Hard cap 300 words — a RAIL, never bound. Final
+                   landed at 49w (16% of cap), confirming the design
+                   intent (length never drives rounds; pure prose
+                   convergence, which is what's sensitive to reviewer
+                   count).
+  Rounds:          6 (R1-R6).
+  Round structure: R1 full (both review + builder) -> R2 full (2 USER
+                   DECISIONS) -> R3 Builder-only (applied decisions) ->
+                   R4 full (1 USER DECISION) -> R5 Builder-only -> R6
+                   full -> UNANIMOUS convergence (both AIs NO CHANGES).
+                   The refine -> user-decisions -> Builder-only ->
+                   refine -> ... rhythm, same as T8/T4 runs.
+  Engaged time:    580s = 9.7 min (projClockSeconds). Wall-clock ~52 min
+                   8:50:26 -> 9:42:13 AM, but with a ~50-min IDLE GAP
+                   between R2 (8:51) and R4 (9:41) — David stepped away.
+                   Engaged (580s) is the meaningful figure.
+  Final length:    49 words / 307 chars (from ~230w draft = ~79% trim).
+  Convergence:     UNANIMOUS — all AIs satisfied at R6 (transcript:
+                   "Unanimous convergence — all AIs satisfied"). With
+                   only 2 AIs, majority == unanimity, so this is the
+                   only convergence mode available at this hive size.
+  USER DECISIONS:  3 total (R2 x2, R4 x1) — the 2-AI tie surface: with
+                   two reviewers, a disagreement on a specific change has
+                   no third voice to break it, so it escalates to the
+                   user. This is the structural cost the sweep is
+                   measuring (more reviewers -> majority resolves
+                   disagreements automatically instead of pausing).
+  Sweep status:    Run A DONE. Pending: B (3-AI), C (4-AI), D (5-AI),
+                   E (6-AI). Hold builder = ChatGPT constant; add one
+                   reviewer per run (nested). Log rounds + projClock per
+                   run; plot rounds vs reviewer count.
+  Files:           Hive-Sweep-Fernbox-v1-0-WaxFrame-Backup-20260529-0943.json
+                   Hive-Sweep-Fernbox-v1_0-r6-20260529-0942-Transcript.txt
+                   Hive-Sweep-Fernbox-v1_0-r6-20260529-0943-DeepDive.json
+                   Hive-Sweep-Fernbox-v1_0.txt
 
 
 2026-05-16 · T4 RECIPE — Indian Butter Chicken (Ref-Mat scaffold-only)
@@ -1185,6 +1316,179 @@ Document quality (subjective):
   Reads like something a real Yelp user would post. The 60%-of-range
   positioning gave the prose room to breathe — voice didn't get
   squeezed out by length pressure.
+
+
+═════════════════════════════════════════════════════════════
+Ekahau Site Survey Guide v1.0 — Instructional (scratch)
+                                                  [2026-05-23]
+═════════════════════════════════════════════════════════════
+WaxFrame build:    v3.56.6 Pro / build 20260523-003 (SINGLE BUILD
+                   throughout — clean benchmark).
+Category:          Instructional Document — FIRST measured instance
+                   of this document type. Establishes the
+                   instructional convergence baseline.
+Source:            Scratch (no starting document). Hive built the
+                   guide from the Project Goal alone.
+Mode:              SCRATCH -> draft -> refine.
+
+Project Goal:
+  Doc type:  Instructional Document
+  Audience:  Network Analysts / junior engineers
+  Outcome:   Complete, thorough understanding of how to conduct a
+             wireless site survey with Ekahau.
+  Length:    TARGET 600 words.
+             NOTE: initially mis-set as 600 CHARACTERS in an early
+             setup (1313 backup) — absurdly small for a multi-section
+             guide — corrected to 600 WORDS before the run. The
+             measured run was words throughout (1558 backup confirms
+             unit = words).
+
+Hive:              7 AIs total — 6 reviewers + DeepSeek as Builder.
+                   Reviewers: ChatGPT, Claude, Gemini, Grok,
+                   Perplexity, Mistral.
+
+Round-by-round:    5 rounds to majority convergence. Per-round timing
+                   not separately captured this run; 53 min wall-clock
+                   total.
+
+Total:             5 rounds, 53 min wall-clock.
+Final document:    617 words / 4,132 chars.
+Length result:     TARGET 600 words; converged at 617 (+2.8%) — INSIDE
+                   the +5% over-tolerance ceiling (630 words).
+Length guard:      ARMED (lengthGuardOverride = false) and DID NOT FIRE.
+                   No length nudge, no convergence-over modal — the
+                   transcript goes straight to majority convergence.
+Convergence:       MAJORITY — engine triggered, holdouts present.
+USER DECISIONS:    not separately captured this run.
+
+  ★ HEADLINE — #9 TOLERANCE BAND, FIRST CLEAN REAL-WORLD CONFIRMATION:
+    First single-build, guard-armed run that lands OFF the exact target
+    and converges SILENTLY because the result is in-band. Pre-v3.56.4
+    (no tolerance band), a 17-word miss on a 600-word target would have
+    tripped the convergence-over path — nudging the Builder to trim or
+    firing the interactive modal. With the band (TARGET: -10% floor /
+    +5% ceiling, shipped v3.56.4), 617 reads as "close enough," the
+    hive's convergence stands, and the doc stays coherent at length.
+    Validates the teacher-2-page principle in the wild. (The v3.56.3 #9
+    architecture-verification run was mixed-build + manual interventions
+    and was explicitly NOT logged as a benchmark; THIS one is clean.)
+
+Document quality (subjective):
+  Coherent multi-section guide — intro, equipment/prep, project setup,
+  survey config, performing the survey, post-survey analysis,
+  improvements/validation, reporting, conclusion — at ~600 words.
+  Tight but complete for the topic; domain-accurate for an RF/Wi-Fi
+  audience (passive vs active survey, Sidekick, attenuation materials,
+  -67 dBm threshold, heatmaps/SNR/co-channel).
+
+
+High-Density Wi-Fi Design for a Conference Center
+— Instructional (scratch, RANGE)                 [2026-05-23]
+═════════════════════════════════════════════════════════════
+WaxFrame build:    MULTI-BUILD run — started on v3.56.9 Pro (1817 start
+                   backup) and exported on v3.56.14 Pro (2039 backup /
+                   doc footer). David shipped releases DURING this run,
+                   so it is NOT a clean single-build benchmark; it is a
+                   convergence-behavior case study.
+Category:          Instructional Document (2nd measured instance).
+                   Audience: network analysts / junior wireless engineers.
+Source:            Scratch (R1 = draft phase from the Project Goal).
+Mode:              SCRATCH -> draft -> refine.
+Length:            RANGE, 1-2 pages (≈600-1200 words). Strict max ~1200
+                   (RANGE max has NO tolerance band, per the #9 spec).
+
+Hive:              7 total at R1 (ChatGPT, Claude, DeepSeek, Gemini,
+                   Grok, Perplexity, Mistral). DeepSeek toggled OFF after
+                   R1 (slow — 71s, flagged) -> 6 from R2 on. Gemini =
+                   Builder throughout. Models: claude-opus-4-5,
+                   gpt-4o, gemini-3.1-pro-preview, grok-4.3, sonar-pro,
+                   deepseek-v4-pro, mistral-large.
+
+OUTCOME:           ★ MAJORITY CONVERGENCE at R24 (engine triggered,
+                   holdouts present), 7:35:44 PM.
+Final document:    1,157 words / 8,314 chars (body, excl. footer).
+Length result:     IN-RANGE — under the ~1200 cap. (Final 1,157w.)
+Total:             24 rounds. 50 min ENGAGED (projClockSeconds 2981);
+                   wall-clock R1->R24 ~77 min (6:18->7:35 PM) with idle
+                   gaps; exported 8:39:32 PM.
+
+Round structure:   16 full-hive rounds (R1 draft, R2, R4-R7, R9, R11,
+                   R13, R15, R16, R19-R22, R24) interleaved with 8
+                   Builder-only rounds (R3, R8, R10, R12, R14, R17, R18,
+                   R23). 7 USER-DECISION applications across the run.
+
+★ HEADLINE — LENGTH OVERSHOOT, THEN RECOVERY IN-RANGE:
+  Word trajectory climbed OVER the cap mid-run — R1 1191 -> R4 1219 ->
+  R6 1226 -> R7 1232 -> R9 1241 -> R11 1249 -> R12 1252 (peak) — with the
+  length guard OVERRIDDEN on every round (Auto silently keeps overruns,
+  "no modal in Auto Mode"; the manual Builder-only rounds the user Kept
+  via the halt modal). THEN the hive walked it back DOWN under the cap to
+  1,157w by R24. So a strict RANGE-max run that ran ~50w over for ~8
+  rounds still self-corrected to in-range by convergence — the recovery
+  came from continued hive refinement, NOT from the guard (which was
+  overridden throughout).
+
+★ SECOND FINDING — SINGLE-SENTENCE OSCILLATION (Round-3 audit motivator):
+  From R4 onward the hive repeatedly re-litigated ONE sentence — the
+  "Capacity-Based Access Point Sizing" / baseline "radio count" line.
+  Round after round, rotating reviewers (Claude, Gemini, Mistral,
+  Perplexity) reworded it slightly — "yields the baseline access point
+  count" -> "yields the baseline required radio count, which then
+  determines..." -> "rounding up to the next whole number, then determine
+  the required access point count based on available radio bands" -> and
+  around again. A directional-antenna sector line and a throughput-target
+  line got the same churn. It DID eventually settle (the final doc has a
+  stable version), but it cost rounds. No stall/oscillation detector
+  existed to notice the doc was churning the same sentence with little
+  net progress.
+
+SLOW ALERTS (prompted the v3.56.14 rework):
+  DeepSeek flagged R1 (71s) -> toggled off. Gemini (Builder) flagged slow
+  on most build rounds (54s, 27s, 35s, 23s, 37s observed). The repetition
+  of "consider toggling off" every round is exactly what moved the
+  slow-alert opt-out to the user's control in v3.56.14.
+
+LESSONS / FOLLOW-UPS:
+  • This is a LONG-GRIND CONVERGENCE, not a failure: the hive recovers
+    from oscillation + overshoot and lands in-range — but 24 rounds is a
+    lot. Backlog v48 Audit Round 3: a stall / oscillation / length-churn
+    detector to shorten or surface these grinds.
+  • Open question: should Auto surface SOMETHING on a sustained RANGE-max
+    breach instead of silently keeping every overrun?
+  • Candidate signature: RANGE strict-max + a genuinely contestable
+    sentence -> long oscillating grind (but still convergent here).
+
+
+How to Implement a Predictive Wireless Design for a
+Mixed-Use Building — Instructional (RANGE)        [2026-05-23]
+═════════════════════════════════════════════════════════════
+WaxFrame build:    v3.56.6 Pro (doc footer: "6 rounds and 42 minutes").
+                   Same session as the conference-center run.
+Category:          Instructional Document (RANGE mode).
+Source:            Scratch.
+Mode:              SCRATCH -> draft -> refine.
+Length:            RANGE, 1-2 pages. Builder = Gemini.
+
+OUTCOME:           MAJORITY CONVERGENCE at R6 (engine triggered, holdouts
+                   present) — AFTER a mid-run round failure that recovered.
+Final document:    845 words / 5,993 chars (body). IN-RANGE.
+Total:             6 rounds, 42 min. Exported 5:02:48 PM.
+
+What happened:
+  • A Builder-only round FAILED mid-run ("Builder-only round failed" ->
+    "Round failed — document not updated"). The run recovered on the next
+    round and proceeded to majority convergence at R6.
+  • The at-convergence length handling forced the "Continue anyway ·
+    disable guard" choice — which disables the guard PROJECT-WIDE rather
+    than trimming. That UX pain point is the direct motivation for the
+    v3.56.9 "Trim/Expand with Builder" fix (an at-convergence length
+    nudge that does NOT disable the guard).
+  • Despite the messy path, the doc landed in-range at 845w.
+
+★ WHY IT MATTERS — drove v3.56.9:
+  Re-run candidate now that v3.56.9 ships the at-convergence trim path —
+  confirm the "disable guard project-wide" dead-end is gone and the trim
+  flow is clean.
 
 
 ═════════════════════════════════════════════════════════════
