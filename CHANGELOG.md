@@ -2,6 +2,17 @@
 
 ---
 
+## v3.63.43
+**Build:** `20260529-016` · **Released:** May 29, 2026
+
+### New — Custom templates: apply the hive too (Phase 1b)
+
+- When you apply a custom template, WaxFrame now reconciles the **hive that produced it** (the AI lineup + Builder) against what you have keyed. If the lineup differs from your current hive, you're asked: **use this template's hive** or **keep your current one**.
+- It only switches to the AIs you actually have keyed and skips the rest (with a note), and never blocks — if you have fewer than two of the template's AIs, your current hive simply stays.
+- Completes the save-a-setup-and-reproduce-it loop: the recipe *and* the lineup come back together.
+
+---
+
 ## v3.63.42
 **Build:** `20260529-015` · **Released:** May 29, 2026
 
