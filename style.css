@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-009
+   Build: 20260529-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13248,4 +13248,12 @@ kbd {
   color: var(--text-dim);
   margin: calc(var(--space-12) * -1) 0 0;
   font-style: italic;
+}
+/* v3.63.37 — Custom Templates path-card centered on its own full-width row
+   (third card in a 2-col grid would otherwise sit orphaned bottom-left). */
+.template-path-card--custom {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: calc(50% - (var(--space-16) / 2));
+  justify-self: center;
 }
