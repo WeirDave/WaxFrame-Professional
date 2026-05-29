@@ -2,6 +2,21 @@
 
 ---
 
+## v3.63.47
+**Build:** `20260529-020` · **Released:** May 29, 2026
+
+### Fixed — Word accepts exported documents with images
+
+- Fixed the remaining `.docx` corruption path in the helper-page Word exporter. Word rejected image-bearing exports because the `ImageRun` alt-text option produced OOXML that Word would not open.
+- Page images are still embedded, but now pass through a canvas-to-JPEG normalization path and are inserted without the problematic `altText` metadata.
+- Verified against the actual User Manual export with installed Microsoft Word: the generated `.docx` opens successfully with 956 paragraphs, 14 tables, and 1 embedded image.
+
+### Maintenance
+
+- Swept the full release stamp set to `20260529-020` / `v3.63.47 Pro`, including all 9 HTML files, all 14 JS files, `style.css`, and helper-page cache-bust URLs.
+
+---
+
 ## v3.63.46
 **Build:** `20260529-019` · **Released:** May 29, 2026
 
