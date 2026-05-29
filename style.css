@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-006
+   Build: 20260529-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4300,6 +4300,13 @@ html, body {
 .model-select-opt .opt-role { font-weight: 700; }
 .model-select-opt .opt-role.is-reviewer { color: var(--accent); }
 .model-select-opt .opt-role.is-builder  { color: var(--blue); }
+/* v3.63.34 — keyboard-active row (arrow-key highlight). Distinct from
+   .is-selected (the committed pick) and :hover. An outline rather than a
+   background so it reads clearly even on the gold/blue-tinted pick rows. */
+.model-select-opt.is-active {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
 /* .ai-remove-btn rules removed in v3.30.4 — the trash button it
    styled was replaced by a persistent checkbox (.ai-select-check)
    plus the bulk-select toolbar above the list. */

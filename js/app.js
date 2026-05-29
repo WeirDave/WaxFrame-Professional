@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-006
+//  Build: 20260529-007
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -251,19 +251,59 @@ function wfModelSelectPick(opt, ev) {
   if (typeof saveModelForAI === 'function' && aiId) saveModelForAI(aiId, m);
 }
 function wfModelSelectKey(trigger, ev) {
-  if (ev.key === 'Enter' || ev.key === ' ' || ev.key === 'Spacebar') {
-    ev.preventDefault();
-    wfModelSelectToggle(trigger, ev);
-  } else if (ev.key === 'Escape') {
-    trigger.classList.remove('is-open');
-    trigger.setAttribute('aria-expanded', 'false');
+  // v3.63.34 — full keyboard nav, restoring the native <select> feel:
+  // closed  -> Enter/Space/Down/Up opens and highlights the current pick
+  // open     -> Up/Down move the highlight (wrap), Home/End jump, Enter commits,
+  //             Esc/Tab close.
+  const k = ev.key;
+  const isOpen = trigger.classList.contains('is-open');
+  if (!isOpen) {
+    if (k === 'Enter' || k === ' ' || k === 'Spacebar' || k === 'ArrowDown' || k === 'ArrowUp') {
+      ev.preventDefault();
+      wfModelSelectToggle(trigger, ev);
+      wfModelSelectSetActiveFromSelected(trigger);
+    }
+    return;
   }
+  if (k === 'Escape' || k === 'Tab') {
+    if (k === 'Escape') ev.preventDefault();
+    wfModelSelectCloseAll();
+    return;
+  }
+  const opts = Array.from(trigger.querySelectorAll('.model-select-opt'));
+  if (!opts.length) return;
+  let i = opts.findIndex(o => o.classList.contains('is-active'));
+  if (k === 'ArrowDown') {
+    ev.preventDefault(); wfModelSelectActivate(opts, i < 0 ? 0 : (i + 1) % opts.length);
+  } else if (k === 'ArrowUp') {
+    ev.preventDefault(); wfModelSelectActivate(opts, i <= 0 ? opts.length - 1 : i - 1);
+  } else if (k === 'Home') {
+    ev.preventDefault(); wfModelSelectActivate(opts, 0);
+  } else if (k === 'End') {
+    ev.preventDefault(); wfModelSelectActivate(opts, opts.length - 1);
+  } else if (k === 'Enter' || k === ' ' || k === 'Spacebar') {
+    ev.preventDefault();
+    const active = opts[i] || opts.find(o => o.classList.contains('is-selected')) || opts[0];
+    if (active) wfModelSelectPick(active, ev);
+  }
+}
+function wfModelSelectActivate(opts, i) {
+  opts.forEach(o => o.classList.remove('is-active'));
+  const el = opts[i];
+  if (el) { el.classList.add('is-active'); el.scrollIntoView({ block: 'nearest' }); }
+}
+function wfModelSelectSetActiveFromSelected(trigger) {
+  const opts = Array.from(trigger.querySelectorAll('.model-select-opt'));
+  if (!opts.length) return;
+  let i = opts.findIndex(o => o.classList.contains('is-selected'));
+  wfModelSelectActivate(opts, i < 0 ? 0 : i);
 }
 function wfModelSelectCloseAll(e) {
   document.querySelectorAll('.model-select-custom.is-open').forEach(t => {
     if (!e || !t.contains(e.target)) {
       t.classList.remove('is-open');
       t.setAttribute('aria-expanded', 'false');
+      t.querySelectorAll('.model-select-opt.is-active').forEach(o => o.classList.remove('is-active'));
     }
   });
 }
@@ -461,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-006';         // build stamp — update each session
+const BUILD       = '20260529-007';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
