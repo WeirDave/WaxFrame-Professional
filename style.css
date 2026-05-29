@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-026
+   Build: 20260528-027
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10430,12 +10430,17 @@ kbd {
   font-size: var(--fs-12);
 }
 .ref-counter-info {
-  margin-left: auto;
+  /* v3.63.27 — Info button moved from far-right to between the label
+     and the doc-count chip, so the user reads "Total reference size ⓘ
+     0 docs Chars: 0 …" left to right. The margin-left: auto that used
+     to live here has been moved to .ref-clear-all-btn below so the
+     Clear-All control still floats to the far right when visible. */
 }
 .ref-clear-all-btn {
   /* v3.27.5: dropped the two !important flags. .btn-sm at line 286 and this
      rule at line 7881 both have specificity (0,1,0); source order already
      gives this rule the win. The !important was preemptive overcaution. */
+  margin-left: auto;
   font-size: var(--fs-11);
   padding: var(--space-4) var(--space-10);
   color: var(--text-dim);
