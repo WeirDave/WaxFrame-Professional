@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.34
+**Build:** `20260529-007` · **Released:** May 29, 2026
+
+### New — Keyboard navigation for the model dropdown
+
+The custom model dropdown now drives fully from the keyboard, restoring (and
+matching) the native `<select>` feel it replaced:
+
+- Closed: **Enter / Space / ↑ / ↓** opens it and highlights your current pick.
+- Open: **↑ / ↓** move the highlight (wrapping at the ends), **Home / End**
+  jump to first / last, **Enter** commits the highlighted model, **Esc / Tab**
+  close.
+
+The keyboard highlight is a distinct outline, so it reads clearly even on the
+gold/blue tinted Reviewer/Builder rows.
+
+### Files changed
+
+- `js/app.js` — `wfModelSelectKey` rewritten for full arrow/Home/End/Enter nav;
+  new `wfModelSelectActivate` / `wfModelSelectSetActiveFromSelected` helpers;
+  `wfModelSelectCloseAll` clears the stale active highlight on close
+- `style.css` — `.model-select-opt.is-active` keyboard-highlight outline
+- `js/version.js` — APP_VERSION bump to v3.63.34 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust sweep
+  to `20260529-007` / `3.63.34`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v96.txt`
+
 ## v3.63.33
 **Build:** `20260529-006` · **Released:** May 29, 2026
 
