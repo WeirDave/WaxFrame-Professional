@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-024
+//  Build: 20260528-025
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-024';         // build stamp — update each session
+const BUILD       = '20260528-025';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3620,6 +3620,13 @@ function renderAISetupGrid() {
   const grid = document.getElementById('aiSetupGrid');
   if (!grid) return;
 
+  // v3.63.25 — Auto-validate every saved key on Worker Bees screen
+  // entry so the colored card edges + manage-account banners reflect
+  // current reality, not just "the most recent thing the user did."
+  // Fire-and-forget; results land asynchronously and re-render the
+  // affected row once each.
+  validateAllSavedKeys();
+
   // Render the mode toggle and mode-aware toolbar into their containers.
   // These are top-of-screen siblings of #aiSetupGrid — kept in sync with
   // the AI list render so a mode flip rebuilds everything.
@@ -3727,12 +3734,21 @@ function buildAISetupRowHTML(ai) {
     // and the action live together. Pushed to the right via
     // margin-left: auto in CSS. Falls back to a standalone banner when
     // the AI has no console URL (server-imported customs).
+    // v3.63.25 — Parallel green success message when _validKeys flag
+    // is set (validate-on-save returned 2xx). Symmetric with the
+    // invalid case: same row position, same standalone-banner
+    // fallback, green palette instead of red.
     const invalidMsg = (hasKey && window._invalidKeys && window._invalidKeys[ai.id])
       ? `<span class="ai-key-invalid-msg" role="alert">⚠️ API key looks invalid — please check the key</span>`
       : '';
+    const validMsg = (hasKey && !invalidMsg && window._validKeys && window._validKeys[ai.id])
+      ? `<span class="ai-key-valid-msg">✓ API key works — ready to use</span>`
+      : '';
+    const stateClass = invalidMsg ? ' has-invalid' : (validMsg ? ' has-valid' : '');
+    const stateMsg = invalidMsg || validMsg;
     const getKeyLink = consoleUrl
-      ? `<div class="ai-getkey-link-wrap${invalidMsg ? ' has-invalid' : ''}"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a>${invalidMsg}</div>`
-      : (invalidMsg ? `<div class="ai-getkey-link-wrap is-invalid-only">${invalidMsg}</div>` : '');
+      ? `<div class="ai-getkey-link-wrap${stateClass}"><span class="ai-getkey-prompt">${hasKey ? 'Manage account?' : "Don't have a key?"}</span> <a class="ai-getkey-link" href="${escapeHtml(safeUrl(consoleUrl))}" target="_blank" rel="noopener noreferrer">${hasKey ? `Open ${escapeHtml(ai.name)} account ↗` : `Get one from ${escapeHtml(ai.name)} ↗`}</a>${stateMsg}</div>`
+      : (stateMsg ? `<div class="ai-getkey-link-wrap ${invalidMsg ? 'is-invalid-only' : 'is-valid-only'}">${stateMsg}</div>` : '');
     // v3.32.10 — Best/Fast/Budget category buttons removed. Their function
     // (snap to a recommendation pick) is now redundant with the dropdown's
     // dual ✨ Reviewer / 🔨 Builder markers — users see both picks
@@ -3759,8 +3775,18 @@ function buildAISetupRowHTML(ai) {
       </div>`;
   }
 
+  // v3.63.25 — Compute the card-edge state class. Reflects validation
+  // result on every render: gray dashed default (no key OR not yet
+  // validated), green left edge (validated good), red left edge
+  // (validated bad / 401-403). The flags are populated by
+  // validateAllSavedKeys (auto-fire on screen entry) and
+  // validateKeyOnSave (fire on user save).
+  const validateState =
+    (hasKey && window._invalidKeys && window._invalidKeys[ai.id]) ? 'key-invalid' :
+    (hasKey && window._validKeys && window._validKeys[ai.id]) ? 'key-valid' :
+    '';
   return `
-    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'}" id="airow-${ai.id}">
+    <div class="ai-setup-row ${isExpanded ? 'is-expanded' : 'is-collapsed'} ${hasKey ? 'has-key' : 'no-key'} ${validateState}" id="airow-${ai.id}">
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
@@ -3943,6 +3969,10 @@ function saveKeyForAI(id, val, inputEl) {
   // indicator should disappear immediately on save; we'll restore it via
   // validateKeyOnSave if the new key also fails.
   if (window._invalidKeys && window._invalidKeys[id]) delete window._invalidKeys[id];
+  // v3.63.25 — Same idea for the valid flag — clear it on every save so
+  // the green banner only appears after the new key has actually been
+  // validated. Stale green would suggest the previous key is still good.
+  if (window._validKeys && window._validKeys[id]) delete window._validKeys[id];
   // Move focus away so user knows it saved
   if (inputEl) inputEl.blur();
   // v3.26.6: NO LONGER auto-fires recommend pipeline on key save. Auto-fire
@@ -3964,6 +3994,28 @@ function saveKeyForAI(id, val, inputEl) {
   // silent-passes — better partial coverage than false negatives).
   if (val.trim()) {
     validateKeyOnSave(id, val.trim());
+  }
+}
+
+// v3.63.25 — Auto-validate every AI that has a saved key. Called from
+// renderAISetupGrid on screen entry so the card-edge colors and the
+// manage-account banner state reflect current reality, not just the
+// last save action. Each AI is throttled to one validation per 90
+// seconds — renderAISetupGrid gets called many times during a single
+// screen visit (mode toggle, bulk-select changes, model picks), and
+// we don't want to fire a chat-completion probe on every one of
+// those. 90s is long enough to skip the rapid-fire re-renders but
+// short enough that returning to the screen after a coffee break
+// re-validates fresh.
+function validateAllSavedKeys() {
+  const now = Date.now();
+  window._lastKeyValidationAt = window._lastKeyValidationAt || {};
+  for (const ai of aiList) {
+    const cfg = API_CONFIGS[ai.provider];
+    if (!cfg?._key) continue;
+    const last = window._lastKeyValidationAt[ai.id] || 0;
+    if (now - last < 90000) continue;
+    validateKeyOnSave(ai.id, cfg._key);
   }
 }
 
@@ -4000,6 +4052,13 @@ function validateKeyOnSave(aiId, keyAtFire) {
   // have no model picked yet — skip validation rather than failing on a
   // malformed body. The Test button handles the same case the same way.
   if (!cfg.model || typeof cfg.headersFn !== 'function' || typeof cfg.bodyFn !== 'function') return;
+  // v3.63.25 — Mark throttle so a subsequent renderAISetupGrid call
+  // within 90 seconds skips re-validation of this AI. Stamping at the
+  // entry of the function means any caller (validateAllSavedKeys,
+  // saveKeyForAI's direct fire-and-forget) participates in the same
+  // throttle window.
+  window._lastKeyValidationAt = window._lastKeyValidationAt || {};
+  window._lastKeyValidationAt[aiId] = Date.now();
   const stillCurrent = () => API_CONFIGS[ai.provider]?._key === keyAtFire;
 
   // One-word probe — mirrors testApiKey's prompt. Keeps token cost trivial.
@@ -4015,6 +4074,9 @@ function validateKeyOnSave(aiId, keyAtFire) {
       if (resp.status === 401 || resp.status === 403) {
         window._invalidKeys = window._invalidKeys || {};
         window._invalidKeys[aiId] = true;
+        // v3.63.25 — Clear any prior valid flag so we don't render
+        // both states at once.
+        if (window._validKeys && window._validKeys[aiId]) delete window._validKeys[aiId];
         if (typeof consoleLog === 'function') {
           consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${resp.status}). Double-check the key you just saved.`, 'warn');
         }
@@ -4023,8 +4085,16 @@ function validateKeyOnSave(aiId, keyAtFire) {
         // Success — clear any prior invalid flag.
         if (window._invalidKeys && window._invalidKeys[aiId]) {
           delete window._invalidKeys[aiId];
-          renderAIRow(aiId);
         }
+        // v3.63.25 — Set the valid flag so the banner can flip green
+        // (parallels _invalidKeys / red). Both flags are in-memory only,
+        // so reload returns the banner to its neutral amber state — which
+        // is correct: "currently validated" loses meaning across sessions,
+        // and we don't want a stale green to suggest a key still works
+        // after the provider may have rotated it.
+        window._validKeys = window._validKeys || {};
+        window._validKeys[aiId] = true;
+        renderAIRow(aiId);
       }
       // 4xx (non-auth), 5xx, and other statuses: leave status unknown.
       // Could be model-not-available, rate-limit, server hiccup — none of
@@ -4599,6 +4669,12 @@ async function clearKeyForAI(id) {
     }
   } catch (e) { /* quota / privacy mode — accept */ }
   if (window._invalidKeys && window._invalidKeys[id]) delete window._invalidKeys[id];
+  // v3.63.25 — Also clear the valid flag (parallel to _invalidKeys).
+  if (window._validKeys && window._validKeys[id]) delete window._validKeys[id];
+  // v3.63.25 — And clear the throttle marker so if the user immediately
+  // pastes a new key, the next renderAISetupGrid validates without
+  // waiting 90 seconds.
+  if (window._lastKeyValidationAt && window._lastKeyValidationAt[id]) delete window._lastKeyValidationAt[id];
   saveSettings();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} API key removed`);
