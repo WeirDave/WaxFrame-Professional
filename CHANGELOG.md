@@ -2,6 +2,23 @@
 
 ---
 
+## v3.63.48
+**Build:** `20260529-021` · **Released:** May 29, 2026
+
+### Improved — Word export reads like a native manual
+
+- Helper-page Word exports now skip decorative helper imagery, including the large manual bee/logo and tip icons, so the User Manual starts cleanly at `WaxFrame User Manual` instead of a stray image paragraph.
+- Long helper pages now get a generated **Contents** section near the top of the Word document, using the page's section headings for easier scanning outside the website.
+- Heading export now applies more deliberate Word formatting while retaining real Word heading structure.
+- Tip/callout blocks export as shaded Word note paragraphs instead of flattened loose paragraphs with icon text.
+
+### Validation
+
+- Verified every helper page that exposes **Download as Word** with installed Microsoft Word: User Manual, Document Playbooks, API Details, Prompt Editor, Privacy, Terms, and What Are Tokens all generate `.docx` files that open successfully. The User Manual starts with title/intro/Contents and contains 961 paragraphs, 14 tables, 0 decorative images, and 38 pages.
+- Swept the full release stamp set to `20260529-021` / `v3.63.48 Pro`, including all 9 HTML files, all 14 JS files, `style.css`, and helper-page cache-bust URLs.
+
+---
+
 ## v3.63.47
 **Build:** `20260529-020` · **Released:** May 29, 2026
 

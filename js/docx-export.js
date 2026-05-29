@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-//  Build: 20260529-020
+//  Build: 20260529-021
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
@@ -81,6 +81,17 @@
     ));
   }
 
+  function isDecorativeImage(img) {
+    if (!img || img.nodeType !== 1 || img.tagName.toLowerCase() !== 'img') return false;
+    var cl = img.classList;
+    var alt = img.getAttribute('alt');
+    return !alt || !!(cl && (
+      cl.contains('hp-section-bee') ||
+      cl.contains('helper-tip-icon-img') ||
+      cl.contains('wf-tip-icon-img')
+    ));
+  }
+
   function para(options) {
     var docx = docxLib();
     return new docx.Paragraph(Object.assign({
@@ -115,6 +126,7 @@
       if (tag === 'script' || tag === 'style' || tag === 'button' || tag === 'noscript') return;
       if (tag === 'br') { runs.push(new docx.TextRun({ break: 1 })); return; }
       if (tag === 'img') {
+        if (isDecorativeImage(n)) return;
         var alt = n.getAttribute('alt') || '';
         if (alt) runs.push(textRun(alt, opts));
         return;
@@ -157,12 +169,34 @@
     if (runs.length) out.push(para({ children: runs }));
   }
 
+  function headingPara(el, level) {
+    var docx = docxLib();
+    var size = level === docx.HeadingLevel.HEADING_1 ? 34 : (level === docx.HeadingLevel.HEADING_2 ? 28 : 24);
+    var color = level === docx.HeadingLevel.HEADING_1 ? COLOR_ACCENT : COLOR_TEXT;
+    return para({
+      children: inlineRuns(el, { bold: true, size: size, color: color }),
+      heading: level,
+      spacing: { before: level === docx.HeadingLevel.HEADING_1 ? 0 : 220, after: 120 }
+    });
+  }
+
+  function headingText(text, level) {
+    var docx = docxLib();
+    var size = level === docx.HeadingLevel.HEADING_2 ? 28 : 24;
+    return para({
+      children: [textRun(text, { bold: true, size: size, color: level === docx.HeadingLevel.HEADING_2 ? COLOR_ACCENT : COLOR_TEXT })],
+      heading: level,
+      spacing: { before: 220, after: 120 }
+    });
+  }
+
   function imageKey(imgEl) {
     try { return new URL(imgEl.getAttribute('src'), document.baseURI).href; } catch (e) { return ''; }
   }
 
   function emitImage(imgEl, out, imgMap) {
     var docx = docxLib();
+    if (isDecorativeImage(imgEl)) return;
     var key = imageKey(imgEl);
     if (!key) return;
     var info = imgMap.get(key);
@@ -182,10 +216,14 @@
   }
 
   function calloutBlocks(el, out, imgMap, fill, border) {
-    var inner = [];
-    blocksFromNode(el, inner, imgMap, {});
-    inner.forEach(function (block) { out.push(block); });
-    if (inner.length) out.push(para({ text: '' }));
+    var runs = [textRun('Note: ', { bold: true, color: COLOR_ACCENT })];
+    push(runs, inlineRuns(el, {}));
+    if (runs.length < 2) return;
+    out.push(para({
+      children: runs,
+      shading: { fill: fill || 'FFFBEA' },
+      spacing: { before: 80, after: 140 }
+    }));
   }
 
   function buildTable(tableEl, imgMap) {
@@ -263,10 +301,10 @@
       if (cl.contains('wf-tip-icon')) return;
 
       if (cl.contains('hp-section-bee') || tag === 'img') { emitImage(el, out, imgMap); return; }
-      if (cl.contains('hp-section-title')) { out.push(para({ children: inlineRuns(el, ctx), heading: tag === 'h1' ? H.HEADING_1 : H.HEADING_2 })); return; }
-      if (cl.contains('wh-section-title')) { out.push(para({ text: textOf(el), heading: H.HEADING_2 })); return; }
+      if (cl.contains('hp-section-title')) { out.push(headingPara(el, tag === 'h1' ? H.HEADING_1 : H.HEADING_2)); return; }
+      if (cl.contains('wh-section-title')) { out.push(headingText(textOf(el), H.HEADING_2)); return; }
       if (cl.contains('wh-block-title') || cl.contains('wf-card-title') || cl.contains('kyh-card-name') || cl.contains('prompt-group-title')) {
-        out.push(para({ text: textOf(el), heading: H.HEADING_3 }));
+        out.push(headingText(textOf(el), H.HEADING_3));
         return;
       }
       if (cl.contains('kyh-card-model') || cl.contains('prompt-group-sub') || cl.contains('prompt-block-desc')) {
@@ -291,12 +329,12 @@
       }
 
       switch (tag) {
-        case 'h1': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_1 })); return;
-        case 'h2': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_2 })); return;
-        case 'h3': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_3 })); return;
+        case 'h1': out.push(headingPara(el, H.HEADING_1)); return;
+        case 'h2': out.push(headingPara(el, H.HEADING_2)); return;
+        case 'h3': out.push(headingPara(el, H.HEADING_3)); return;
         case 'h4':
         case 'h5':
-        case 'h6': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_4 })); return;
+        case 'h6': out.push(headingPara(el, H.HEADING_4)); return;
         case 'p':
           paragraphFromInline(el, out, ctx);
           return;
@@ -422,7 +460,7 @@
 
   function prefetchImages(root) {
     var imgs = Array.prototype.slice.call(root.querySelectorAll('img[src]')).filter(function (img) {
-      return !isHidden(img);
+      return !isHidden(img) && !isDecorativeImage(img);
     });
     var map = new Map();
     var jobs = imgs.map(function (img) {
@@ -435,6 +473,30 @@
       });
     });
     return Promise.all(jobs).then(function () { return map; });
+  }
+
+  function contentsBlocks(root) {
+    var docx = docxLib();
+    var seen = {};
+    var items = [];
+    Array.prototype.forEach.call(root.querySelectorAll('h2.hp-section-title, h2, .wh-section-title'), function (el) {
+      if (isHidden(el)) return;
+      var label = textOf(el);
+      if (!label || seen[label]) return;
+      seen[label] = true;
+      items.push(label);
+    });
+    if (items.length < 5) return [];
+    var blocks = [headingText('Contents', docx.HeadingLevel.HEADING_2)];
+    items.forEach(function (label) {
+      blocks.push(para({
+        children: [textRun(label, { color: COLOR_BLUE })],
+        bullet: { level: 0 },
+        spacing: { after: 40 }
+      }));
+    });
+    blocks.push(para({ text: '' }));
+    return blocks;
   }
 
   function exportRoot() {
@@ -459,6 +521,11 @@
       var imgMap = await prefetchImages(root);
       var blocks = [];
       blocksFromNode(root, blocks, imgMap, {});
+      var toc = contentsBlocks(root);
+      if (toc.length) {
+        var insertAt = Math.min(blocks.length, 2);
+        Array.prototype.splice.apply(blocks, [insertAt, 0].concat(toc));
+      }
       if (!blocks.length) {
         blocks.unshift(para({ text: document.title || 'WaxFrame', heading: docx.HeadingLevel.TITLE }));
       }
