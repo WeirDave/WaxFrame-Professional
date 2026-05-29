@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-023
+   Build: 20260528-024
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12084,38 +12084,36 @@ kbd {
   text-decoration: underline;
 }
 
-/* v3.63.23 — Invalid-key banner styling.
-   When validate-on-save flags a bad key, the entire manage-account
-   banner flips to a red-tinted card so the bad-key signal catches
-   the eye at a glance — not just the small red message text at the
-   right. The amber-dashed default banner is fine for "here's where
-   to manage your account"; when there's an actual problem with the
-   key, the banner needs to look like a problem.
+/* v3.63.24 — Invalid-key banner styling, theme-aware.
+   Matches the existing error-banner pattern used by .file-status--error
+   and .bee-status-card.is-error: --red-dim background, --red border,
+   --red text for the actual error message. Prompt and link inside the
+   banner inherit --text so they read black in light mode and white in
+   dark mode (v3.63.23's hardcoded light-pink colors washed out against
+   the light-mode pinkish background).
    .has-invalid kicks in when the manage-account link is present and
    the key is invalid; .is-invalid-only is the standalone-banner
-   variant used when the AI has no console URL. Both share the same
-   red palette so the visual signal is consistent across configurations. */
+   variant used when the AI has no console URL. */
 .ai-key-invalid-msg {
   margin-left: auto;
-  color: #ffd6d6;
+  color: var(--red);
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;
 }
 .ai-getkey-link-wrap.has-invalid,
 .ai-getkey-link-wrap.is-invalid-only {
-  background: rgba(211, 51, 51, 0.18);
-  border-color: var(--red, #d33);
+  background: var(--red-dim);
+  border-color: var(--red);
   border-style: solid;
 }
-/* When the banner is in invalid state, brighten the existing prompt
-   and link text so they stay legible against the red wash. Otherwise
-   the dim --text-dim prompt disappears into the red. */
-.ai-getkey-link-wrap.has-invalid .ai-getkey-prompt {
-  color: #ffe4e4;
-}
+/* Force prompt + link to the mode-aware text token. The default rules
+   set prompt to --text-dim (washes out on red bg) and link to --accent
+   (amber — clashes with red). Override both to --text so they're
+   legible in both modes against the red wash. */
+.ai-getkey-link-wrap.has-invalid .ai-getkey-prompt,
 .ai-getkey-link-wrap.has-invalid .ai-getkey-link {
-  color: #fff;
+  color: var(--text);
 }
 .ai-getkey-link-wrap.is-invalid-only {
   justify-content: flex-start;

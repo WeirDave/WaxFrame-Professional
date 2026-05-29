@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.24
+**Build:** `20260528-024` · **Released:** May 28, 2026
+
+### Fix — Invalid-key banner colors now use theme tokens
+
+v3.63.23 hardcoded the invalid-key banner's text colors as light pinks
+(`#ffe4e4` / `#fff` / `#ffd6d6`) to read against a dark red wash. That
+worked in dark mode but the same light colors washed out against the
+light-mode pinkish background — the "Manage account?" prompt, the
+"Open {Provider} account ↗" link, and the error message itself all
+went invisible.
+
+This release matches the existing error-banner pattern used elsewhere
+in WaxFrame (`.file-status--error`, `.bee-status-card.is-error`):
+
+- Banner background: `var(--red-dim)` — same 10% red wash both modes
+- Banner border: `var(--red)` — same red border both modes
+- Error message text: `var(--red)` — matches existing error pattern
+- Prompt and link text inside the banner: `var(--text)` — black in
+  light mode, white in dark mode
+
+Banner reads "problem here" at a glance in both modes, and every
+piece of text inside it stays legible.
+
+### Files changed
+
+- `style.css` — `.ai-key-invalid-msg`, `.ai-getkey-link-wrap.has-invalid`,
+  `.ai-getkey-link-wrap.is-invalid-only` rewritten to use theme tokens
+  (`--red-dim`, `--red`, `--text`) instead of hardcoded hex values.
+  Overrides for `.has-invalid .ai-getkey-prompt` and
+  `.has-invalid .ai-getkey-link` force `var(--text)` so the default
+  `--text-dim` (washes out on red) and `--accent` (amber clashes with
+  red) get replaced with the mode-aware text color.
+- `js/version.js` — APP_VERSION bump to v3.63.24 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v83.txt`
+
 ## v3.63.23
 **Build:** `20260528-023` · **Released:** May 28, 2026
 
