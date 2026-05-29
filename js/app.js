@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-007
+//  Build: 20260529-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-007';         // build stamp — update each session
+const BUILD       = '20260529-008';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3408,13 +3408,15 @@ function renderTemplateGalleryBody() {
   const pathIcon  = (path === 'scratch') ? '📝' : '✂️';
 
   // Filter templates to those supporting the selected path.
-  const visibleTemplates = WAXFRAME_TEMPLATES.filter(t =>
+  // v3.63.35 — custom templates join the gallery (both paths supported).
+  const _customs = (typeof loadCustomTemplates === 'function') ? loadCustomTemplates() : [];
+  const visibleTemplates = WAXFRAME_TEMPLATES.concat(_customs).filter(t =>
     Array.isArray(t.paths) && t.paths.includes(path)
   );
 
   // Bucket by category, preserving original order. Same category list
   // as before — Quick Start always first, Reviews & Recs last.
-  const order = ['Quick Start', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
+  const order = ['Quick Start', 'My Templates', 'Career & Hiring', 'Business & Sales', 'Content & Marketing', 'Personal & Everyday', 'Reviews & Recommendations'];
   const buckets = {};
   visibleTemplates.forEach(t => {
     const k = t.category || 'Other';
@@ -3458,7 +3460,7 @@ function renderTemplateGalleryBody() {
           // used as the fallback for templates that don't need per-path
           // wording (e.g. cover-letter already reads "Create or refine…").
           const desc = (t.pathContent && t.pathContent[path] && t.pathContent[path].description) || t.description || '';
-          return `
+          const cardBtn = `
           <button class="${cardCls}" onclick="applyTemplate('${escapeHtml(t.id)}', '${path}')" title="Apply the ${escapeHtml(t.name)} template (${escapeHtml(pathLabel)})">
             <span class="template-card-icon">${esc(t.icon || '📄')}</span>
             <div class="template-card-text">
@@ -3466,11 +3468,188 @@ function renderTemplateGalleryBody() {
               <div class="template-card-desc">${esc(desc)}</div>
             </div>
           </button>`;
+          // v3.63.35 — custom templates get a delete affordance (built-ins
+          // can't be removed). Wrap so the 🗑 sits over the card without
+          // nesting a button inside the apply button.
+          if (t.custom) {
+            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
+          }
+          return cardBtn;
         }).join('')}
       </div>
     </div>`).join('');
 
   body.innerHTML = pathIndicator + newuserCallout + (sections || '<p class="template-gallery-empty">No templates found for this path.</p>');
+}
+
+// ============================================================
+// v3.63.35 — CUSTOM TEMPLATES (Phase 1)
+// ------------------------------------------------------------
+// A custom template is the SAME shape as a built-in WAXFRAME_TEMPLATES
+// entry (id/name/icon/category/paths/pathContent) PLUS:
+//   custom: true        — flags it for delete UI + the "My Templates" bucket
+//   hive: {aiIds, builder, hiveMode}  — the lineup that produced the result
+//   createdTs, appVersion
+// Captured from the CURRENT project's saved state (LS_PROJECT + the live
+// hive globals), never from transient DOM, so "Save as Template" works from
+// any screen including the Finish modal. The finished document and round
+// history are deliberately NOT captured — a template is the recipe, not the
+// output. The hive is stored now and shown on apply; auto-reconciling it
+// against the user's keyed AIs ("use theirs vs mine") is Phase 1b.
+const CUSTOM_TEMPLATES_KEY = 'waxframe_custom_templates';
+
+function loadCustomTemplates() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(CUSTOM_TEMPLATES_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch (e) { return []; }
+}
+function saveCustomTemplates(arr) {
+  try { localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(Array.isArray(arr) ? arr : [])); }
+  catch (e) { console.warn('[custom-templates] write failed:', e); toast('\u26a0\ufe0f Could not save template — storage may be full'); }
+}
+// Unified lookup: built-ins first, then customs. applyTemplate routes through
+// this so a custom template flows through the exact same proven apply path.
+function getTemplateById(id) {
+  if (typeof WAXFRAME_TEMPLATES !== 'undefined' && Array.isArray(WAXFRAME_TEMPLATES)) {
+    const built = WAXFRAME_TEMPLATES.find(t => t.id === id);
+    if (built) return built;
+  }
+  return loadCustomTemplates().find(t => t.id === id) || null;
+}
+
+// Build a template object from the current project's saved state. Returns null
+// (with a toast) when there's nothing meaningful to capture.
+function captureTemplateFromProject(meta) {
+  let proj = {};
+  try { proj = JSON.parse(localStorage.getItem(LS_PROJECT) || '{}') || {}; } catch (e) { proj = {}; }
+
+  const goalFilled = ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes']
+    .some(k => (proj[k] || '').trim().length > 0);
+  if (!goalFilled) {
+    toast('\u26a0\ufe0f Nothing to save yet — fill in the Project Goal first');
+    return null;
+  }
+
+  // Reference scaffold: join the live reference docs' text (the recipe's
+  // starting material). Project-specific content can be trimmed in the editor
+  // once Phase 2 ships; for now it rides along as the scaffold.
+  let refMaterial = '';
+  try {
+    if (typeof referenceDocs !== 'undefined' && Array.isArray(referenceDocs)) {
+      refMaterial = referenceDocs
+        .map(d => (d && d.text ? String(d.text).trim() : ''))
+        .filter(Boolean)
+        .join('\n\n---\n\n');
+    }
+  } catch (e) { /* leave blank */ }
+
+  const recipe = {
+    goalDocType:  proj.goalDocType  || '',
+    goalAudience: proj.goalAudience || '',
+    goalOutcome:  proj.goalOutcome  || '',
+    goalScope:    proj.goalScope    || '',
+    goalTone:     proj.goalTone     || '',
+    goalNotes:    proj.goalNotes    || '',
+    refMaterial:  refMaterial,
+    lengthMode:   proj.lengthMode   || 'none',
+    lengthLimit:  proj.lengthLimit  || '',
+    lengthMin:    proj.lengthMin    || '',
+    lengthUnit:   proj.lengthUnit   || 'characters',
+    description:  (meta && meta.description) || '',
+    hint: []
+  };
+
+  // Capture the hive that ran it — ids only (keys never travel). Stored as a
+  // soft preference; Phase 1b reconciles it against the user's keyed AIs.
+  const hive = {
+    aiIds:    (Array.isArray(activeAIs) ? activeAIs.map(a => a && a.id).filter(Boolean) : []),
+    builder:  (typeof builder !== 'undefined' ? builder : null),
+    hiveMode: (typeof _hiveMode !== 'undefined' ? _hiveMode : 'internet')
+  };
+
+  const ts = Date.now();
+  return {
+    id:          'custom-' + ts + '-' + Math.random().toString(36).slice(2, 7),
+    custom:      true,
+    name:        ((meta && meta.name) || 'My Template').trim(),
+    icon:        ((meta && meta.icon) || '\ud83d\udcc1').trim() || '\ud83d\udcc1',
+    category:    'My Templates',
+    createdTs:   ts,
+    appVersion:  (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+    description: recipe.description,
+    // Identical recipe under both paths so the template applies whether the
+    // user starts from scratch or refines an existing draft next time.
+    paths:       ['scratch', 'refine'],
+    pathContent: { scratch: { ...recipe }, refine: { ...recipe } },
+    hive
+  };
+}
+
+// ── Save-as-Template modal ──────────────────────────────────────────────
+function openSaveTemplateModal() {
+  if (typeof closeNavMenu === 'function') closeNavMenu();
+  // Guard: nothing to save without a goal.
+  let proj = {};
+  try { proj = JSON.parse(localStorage.getItem(LS_PROJECT) || '{}') || {}; } catch (e) {}
+  const goalFilled = ['goalDocType','goalAudience','goalOutcome','goalScope','goalTone','goalNotes']
+    .some(k => (proj[k] || '').trim().length > 0);
+  if (!goalFilled) {
+    toast('\u26a0\ufe0f Set up a Project Goal first, then save it as a template');
+    return;
+  }
+  const modal = document.getElementById('saveTemplateModal');
+  if (!modal) return;
+  const nameEl = document.getElementById('saveTemplateName');
+  const iconEl = document.getElementById('saveTemplateIcon');
+  const descEl = document.getElementById('saveTemplateDesc');
+  if (nameEl) nameEl.value = (proj.projectName ? proj.projectName + ' \u2014 recipe' : '');
+  if (iconEl) iconEl.value = '\ud83d\udcc1';
+  if (descEl) descEl.value = '';
+  // Show the lineup that will be captured so the save is transparent.
+  const hiveEl = document.getElementById('saveTemplateHive');
+  if (hiveEl) {
+    const names = (Array.isArray(activeAIs) ? activeAIs : []).map(a => (a && a.name) ? displayAiName(a.name) : '').filter(Boolean);
+    const bName = (activeAIs.find(a => a.id === builder) || {}).name;
+    hiveEl.textContent = names.length
+      ? `Hive captured: ${names.join(', ')}${bName ? '  \u00b7  Builder: ' + displayAiName(bName) : ''}`
+      : 'No hive captured yet.';
+  }
+  modal.classList.add('active');
+  if (nameEl) setTimeout(() => nameEl.focus(), 50);
+}
+function closeSaveTemplateModal() {
+  const modal = document.getElementById('saveTemplateModal');
+  if (modal) modal.classList.remove('active');
+}
+function confirmSaveTemplate() {
+  const name = (document.getElementById('saveTemplateName')?.value || '').trim();
+  if (!name) { toast('\u26a0\ufe0f Give your template a name'); return; }
+  const icon = (document.getElementById('saveTemplateIcon')?.value || '').trim();
+  const description = (document.getElementById('saveTemplateDesc')?.value || '').trim();
+  const tpl = captureTemplateFromProject({ name, icon, description });
+  if (!tpl) return; // capture toasts its own reason
+  const all = loadCustomTemplates();
+  all.push(tpl);
+  saveCustomTemplates(all);
+  closeSaveTemplateModal();
+  toast(`\u2b50 Saved "${tpl.name}" to My Templates`, 5000);
+  if (typeof consoleLog === 'function') consoleLog(`Saved custom template "${tpl.name}" (${tpl.hive.aiIds.length}-AI hive captured).`, 'info');
+}
+function deleteCustomTemplate(id) {
+  const all = loadCustomTemplates();
+  const tpl = all.find(t => t.id === id);
+  if (!tpl) return;
+  wfConfirm(
+    'Delete template',
+    `Delete "${tpl.name}" from My Templates? This can't be undone.`,
+    { okText: 'Delete', destructive: true }
+  ).then(ok => {
+    if (!ok) return;
+    saveCustomTemplates(all.filter(t => t.id !== id));
+    if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
+    toast(`\ud83d\uddd1 Deleted "${tpl.name}"`);
+  });
 }
 
 // Apply a template by id and path. v3.37.0 dual-path:
@@ -3495,8 +3674,9 @@ function renderTemplateGalleryBody() {
 //     pushed with source: 'template' and templateOriginId for the
 //     sweep next time.
 async function applyTemplate(templateId, path) {
-  if (typeof WAXFRAME_TEMPLATES === 'undefined') return;
-  const tpl = WAXFRAME_TEMPLATES.find(t => t.id === templateId);
+  // v3.63.35 — unified lookup so custom templates flow through this same
+  // proven apply path (recipe fields, length, reference scaffold).
+  const tpl = getTemplateById(templateId);
   if (!tpl) {
     toast('⚠️ Template not found');
     return;

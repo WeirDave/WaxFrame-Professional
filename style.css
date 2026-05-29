@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-007
+   Build: 20260529-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13133,4 +13133,113 @@ kbd {
   color: var(--text, inherit);
   border-radius: 3px;
   font-weight: 600;
+}
+
+/* ============================================================
+   v3.63.35 — Custom templates: card wrapper + delete affordance,
+   and the Save-as-Template modal.
+   ============================================================ */
+.template-card-wrap {
+  position: relative;
+  display: flex;
+}
+.template-card-wrap > .template-card {
+  flex: 1;
+  /* leave room for the delete button so long names don't slip under it */
+  padding-right: var(--space-40);
+}
+.template-card-del {
+  position: absolute;
+  top: var(--space-8);
+  right: var(--space-8);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  color: var(--text-dim);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
+}
+.template-card-wrap:hover .template-card-del,
+.template-card-del:focus-visible {
+  opacity: 1;
+}
+.template-card-del:hover {
+  border-color: var(--red);
+  color: var(--red);
+  background: var(--surface3);
+}
+.template-card-del:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Save-as-Template modal ----------------------------------- */
+.save-template-modal {
+  max-width: 520px;
+  text-align: left;
+}
+.save-template-sub {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 var(--space-20);
+}
+.save-template-label {
+  display: block;
+  font-size: var(--fs-12);
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: var(--space-16) 0 var(--space-6);
+}
+.save-template-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--space-10) var(--space-12);
+  background: var(--surface3);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: var(--fs-base);
+}
+.save-template-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.save-template-input--icon {
+  width: 80px;
+  text-align: center;
+  font-size: var(--fs-24);
+}
+.save-template-textarea {
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.45;
+}
+.save-template-hive {
+  font-size: var(--fs-12);
+  color: var(--text-dim);
+  background: var(--accent-dim);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-md);
+  padding: var(--space-10) var(--space-12);
+  margin: var(--space-20) 0 0;
+  line-height: 1.4;
+}
+.save-template-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-12);
+  margin-top: var(--space-24);
 }

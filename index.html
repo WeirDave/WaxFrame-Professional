@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260529-007
+     Build: 20260529-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260529-007">
+  <meta name="waxframe-build" content="20260529-008">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.34">
+  <link rel="stylesheet" href="style.css?v=3.63.35">
 </head>
 <body>
 
@@ -1480,6 +1480,9 @@
         📋 Export Full Transcript
         <span class="finish-modal-btn-sub">Every round, every AI response, and the final document — all in one file</span>
       </button>
+      <button title="Save this project's setup as a reusable template so you can repeat this result on future documents" class="finish-modal-btn finish-modal-btn-export" onclick="hideFinishModal(); openSaveTemplateModal();">&#x2B50; Save as Template
+        <span class="finish-modal-btn-sub">Reuse this project's goal, reference scaffold, length guard, and hive on future documents</span>
+      </button>
       <button title="Start a fresh project — clears your current document and round history (export first if you need them)" class="finish-modal-btn finish-modal-btn-new" onclick="finishAndNew()">
         <span>Start New Project</span>
         <span class="finish-modal-btn-new-sub">Clears your current document and round history — export first if you need them</span>
@@ -1843,6 +1846,25 @@
       <button class="template-gallery-close" onclick="document.getElementById('templateGalleryModal').classList.remove('active')" title="Close" aria-label="Close template gallery">✕</button>
     </div>
     <div class="template-gallery-body" id="templateGalleryBody"></div>
+  </div>
+</div>
+
+<!-- SAVE AS TEMPLATE MODAL (v3.63.35) -->
+<div class="finish-modal-overlay" id="saveTemplateModal" onclick="if(event.target===this)closeSaveTemplateModal()">
+  <div class="finish-modal save-template-modal">
+    <h2 class="finish-modal-title">&#x2B50; Save as Template</h2>
+    <p class="save-template-sub">Save this project's setup as a reusable recipe &mdash; your Goal fields, reference scaffold, length guard, and the hive that ran it. The finished document and round history are <strong>not</strong> saved.</p>
+    <label class="save-template-label" for="saveTemplateName">Template name</label>
+    <input type="text" id="saveTemplateName" class="save-template-input" maxlength="60" placeholder="e.g. Tight 1-page cover letter">
+    <label class="save-template-label" for="saveTemplateIcon">Icon (optional)</label>
+    <input type="text" id="saveTemplateIcon" class="save-template-input save-template-input--icon" maxlength="4" placeholder="&#x1F4C1;">
+    <label class="save-template-label" for="saveTemplateDesc">Description (optional)</label>
+    <textarea id="saveTemplateDesc" class="save-template-input save-template-textarea" maxlength="240" rows="2" placeholder="What makes this recipe work / when to use it"></textarea>
+    <p class="save-template-hive" id="saveTemplateHive"></p>
+    <div class="save-template-actions">
+      <button class="finish-modal-cancel" onclick="closeSaveTemplateModal()">Cancel</button>
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="confirmSaveTemplate()">&#x2B50; Save Template</button>
+    </div>
   </div>
 </div>
 
@@ -2463,22 +2485,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.34';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.35';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.34"></script>
-<script src="lib/jszip.min.js?v=3.63.34"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.34"></script>
-<script src="js/version.js?v=3.63.34"></script>
-<script src="js/storage.js?v=3.63.34"></script>
-<script src="js/theme.js?v=3.63.34"></script>
-<script src="js/audio.js?v=3.63.34"></script>
-<script src="js/scenes.js?v=3.63.34"></script>
-<script src="js/wf-debug.js?v=3.63.34"></script>
-<script src="js/api.js?v=3.63.34"></script>
-<script src="js/templates.js?v=3.63.34"></script>
-<script src="js/api-links.js?v=3.63.34"></script>
-<script src="js/app.js?v=3.63.34"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.35"></script>
+<script src="lib/jszip.min.js?v=3.63.35"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.35"></script>
+<script src="js/version.js?v=3.63.35"></script>
+<script src="js/storage.js?v=3.63.35"></script>
+<script src="js/theme.js?v=3.63.35"></script>
+<script src="js/audio.js?v=3.63.35"></script>
+<script src="js/scenes.js?v=3.63.35"></script>
+<script src="js/wf-debug.js?v=3.63.35"></script>
+<script src="js/api.js?v=3.63.35"></script>
+<script src="js/templates.js?v=3.63.35"></script>
+<script src="js/api-links.js?v=3.63.35"></script>
+<script src="js/app.js?v=3.63.35"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2541,6 +2563,7 @@
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
+    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
     <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
     <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
