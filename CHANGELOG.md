@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.26
+**Build:** `20260528-026` · **Released:** May 28, 2026
+
+### UX — AI setup cards now mirror the .wf-card border pattern
+
+v3.63.25 added colored left edges (gray / green / red) to the AI
+setup cards on the Worker Bees screen, but the cards still carried
+the legacy amber-on-hover and amber-on-expand border treatment from
+v3.31.0. The amber chrome competed with the colored validation
+edge for visual attention — both wanted to be "the thing the user
+notices about this card."
+
+This release retrofits the cards to match the `.wf-card` border
+pattern used elsewhere in the app (api-details.html and other
+explanatory pages): a 1px solid gray border on three sides, a 4px
+gray left edge by default that state classes recolor. The hover
+and expanded states keep their background tint as the user
+affordance but no longer touch border colors.
+
+Net effect: the colored left edge is now the only chrome carrying
+state information. Cards read as neutral containers; the edge alone
+says "this AI's key is good / bad / unset."
+
+The chevron rotation (▶ → ▼) and the visible expanded panel below
+the summary row remain the affordances for collapsed-vs-expanded
+state. The amber-tinted background on hover stays as the "you're
+about to click me" affordance.
+
+### Files changed
+
+- `style.css` — three rule blocks rewritten:
+  - `.ai-setup-row` (base) — `1px dashed var(--border2)` → `1px solid
+    var(--border2)` plus a default `border-left: 4px solid var(--border2)`
+  - `.ai-setup-row.is-collapsed:hover` — dropped the
+    `border-color: var(--accent)` override; background tint preserved
+  - `.ai-setup-row.is-expanded` — dropped the `border-color` and
+    `border-style` overrides
+  - `.ai-setup-row.key-valid` / `.key-invalid` — simplified to a
+    single `border-left-color` swap (base now owns the geometry, so
+    no padding compensation or `.is-expanded` override needed)
+- `js/version.js` — APP_VERSION bump to v3.63.26 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v85.txt`
+
 ## v3.63.25
 **Build:** `20260528-025` · **Released:** May 28, 2026
 

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-025
+   Build: 20260528-026
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -752,7 +752,16 @@ html, body {
   flex-direction: column;
   gap: var(--space-4);
   padding: var(--space-8) var(--space-12);
-  border: 1px dashed var(--border2);
+  /* v3.63.26 — Match the .wf-card pattern from api-details.html:
+     1px solid gray border all around, plus a 4px gray left edge that
+     state classes (.key-valid / .key-invalid) recolor without
+     touching the other three sides. Pre-v3.63.26 the cards used a
+     1px dashed border that flipped to solid amber on hover and on
+     expand — heavy visual emphasis on chrome that competed with the
+     colored validation edge for attention. The card itself is now a
+     neutral container; the colored edge alone carries state. */
+  border: 1px solid var(--border2);
+  border-left: 4px solid var(--border2);
   border-radius: var(--radius-sm);
   background: var(--surface);
   transition: all 0.12s;
@@ -11994,12 +12003,17 @@ kbd {
   overflow: hidden;
 }
 .ai-setup-row.is-collapsed:hover {
-  border-color: var(--accent);
+  /* v3.63.26 — Drop the amber border-color override that paired with
+     this background tint. Background change alone is enough hover
+     affordance and lets the colored validation edge stay visible. */
   background: var(--accent-dim);
 }
 .ai-setup-row.is-expanded {
-  border-color: var(--accent);
-  border-style: solid;
+  /* v3.63.26 — Drop the amber border-color + border-style overrides.
+     The chevron rotation (▶ → ▼) and the visible expanded panel
+     below the summary row are sufficient signal that the card is
+     open; we don't need to also recolor the chrome. Background
+     tweak preserved for subtle distinction from collapsed rows. */
   background: var(--surface);
 }
 /* Greyed-out state for no-key rows. Applies on the summary line only;
@@ -12019,28 +12033,15 @@ kbd {
   opacity: 1;
 }
 
-/* v3.63.25 — Card-edge state colors. Gray dashed default already
-   handles the unset / unvalidated cases via the base .ai-setup-row
-   rule. .key-valid and .key-invalid add a thicker colored left edge
-   for at-a-glance health scanning of all the AI cards on the Worker
-   Bees screen. Compensating left padding keeps the row contents
-   aligned with rows that don't have the colored edge. */
+/* v3.63.25 — Card-edge state colors. v3.63.26: simplified — the
+   base .ai-setup-row now owns the 4px gray left edge and the
+   compensating padding, so state classes only need to swap the
+   border-left color. No more is-expanded override needed since
+   .is-expanded no longer touches border-color. */
 .ai-setup-row.key-valid {
-  border-left: 4px solid var(--green);
-  padding-left: calc(var(--space-12) - 3px);
-}
-.ai-setup-row.key-invalid {
-  border-left: 4px solid var(--red);
-  padding-left: calc(var(--space-12) - 3px);
-}
-/* The expanded-row solid border style would otherwise override the
-   key-state left color since that rule sets all four borders via
-   border-color/border-style. Explicit left-side override keeps the
-   colored edge visible even on the expanded card. */
-.ai-setup-row.is-expanded.key-valid {
   border-left-color: var(--green);
 }
-.ai-setup-row.is-expanded.key-invalid {
+.ai-setup-row.key-invalid {
   border-left-color: var(--red);
 }
 
