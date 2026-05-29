@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260529-002
+//  Build: 20260529-003
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -754,7 +754,19 @@ function renderTroubleshootingCard(entry, ctx) {
         recBtn.textContent = 'Recommend Models';
         recBtn.onclick = async () => {
           recBtn.disabled = true;
-          recBtn.textContent = 'Recommending…';
+          // v3.63.30 — climbing-seconds counter ("Recommending… 8s"), mirroring
+          // the Worker Bees per-AI Recommend Models button. wfBtnElapsed is a
+          // global from app.js (loaded after this file, but resolved here at
+          // click time). Guarded so a missing helper degrades to the old static
+          // label rather than throwing. Stopped in finally before renderPicker
+          // rebuilds this button.
+          let _stopTick;
+          if (typeof wfBtnElapsed === 'function') {
+            _stopTick = wfBtnElapsed(recBtn, () => 'Recommending…');
+          } else {
+            recBtn.textContent = 'Recommending…';
+            _stopTick = () => {};
+          }
           try {
             if (typeof recheckModelForAI === 'function') {
               await recheckModelForAI(ctx.aiId);
@@ -763,6 +775,8 @@ function renderTroubleshootingCard(entry, ctx) {
             // Swallow — re-render below will surface whatever state we end
             // up in (markers present or absent), and recheckModelForAI does
             // its own user-facing toasts/console logging on failure.
+          } finally {
+            _stopTick();
           }
           renderPicker();
         };

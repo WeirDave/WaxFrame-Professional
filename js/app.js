@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-002
+//  Build: 20260529-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-002';         // build stamp — update each session
+const BUILD       = '20260529-003';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3616,6 +3616,22 @@ function _aiListAlpha(arr) {
   );
 }
 
+// v3.63.30 — Default-first grouping for the work-screen bee surfaces (status
+// grid + dot strip). The six first-class default providers sort alphabetically
+// first; any custom AIs the user added sort alphabetically below them. Mirrors
+// the Worker Bees setup screen's "Default providers / Custom AIs" segmentation
+// so live-hive card order matches setup order. Returns a COPY — same contract
+// as _aiListAlpha; data order (activeAIs/aiList iteration, convergence counting,
+// Builder fallback) is untouched.
+function _aiListGrouped(arr) {
+  const list  = Array.isArray(arr) ? arr : [];
+  const isDef = a => !!DEFAULT_AIS.find(d => d.id === (a && a.id));
+  return [
+    ..._aiListAlpha(list.filter(isDef)),
+    ..._aiListAlpha(list.filter(a => !isDef(a)))
+  ];
+}
+
 function renderAISetupGrid() {
   const grid = document.getElementById('aiSetupGrid');
   if (!grid) return;
@@ -4321,9 +4337,15 @@ async function recommendModelsForAll() {
 
   const btn = document.getElementById('recommendAllBtn');
   const origLabel = btn ? btn.textContent : null;
+  // v3.63.30 — aggregate progress: completed/total + elapsed ("Asking… 3/6 ·
+  // 12s"). `done` is bumped in each AI's .finally below; wfBtnElapsed reads it
+  // live each tick. Each row's own button also tickers independently.
+  const total = eligible.length;
+  let done = 0;
+  let _stopAllTick = () => {};
   if (btn) {
     btn.disabled = true;
-    btn.textContent = `Asking ${eligible.length} AI${eligible.length !== 1 ? 's' : ''} in parallel…`;
+    _stopAllTick = wfBtnElapsed(btn, () => `Asking… ${done}/${total} ·`);
   }
 
   // v3.32.10 — parallel execution. Previously sequential with 400ms inter-AI
@@ -4333,7 +4355,10 @@ async function recommendModelsForAll() {
   // typically 5-15s for 6 default AIs, even with 12 underlying API calls.
   let succeeded = 0;
   let failed = 0;
-  const results = await Promise.allSettled(eligible.map(ai => recheckModelForAI(ai.id)));
+  const results = await Promise.allSettled(
+    eligible.map(ai => recheckModelForAI(ai.id).finally(() => { done++; }))
+  );
+  _stopAllTick();
   results.forEach((r, idx) => {
     if (r.status === 'fulfilled') {
       succeeded++;
@@ -5776,7 +5801,10 @@ async function recheckModelForAI(id) {
 
   const btn = document.getElementById(`recheckbtn-${id}`);
   const origLabel = btn ? btn.innerHTML : null;
-  if (btn) { btn.disabled = true; btn.innerHTML = 'Asking…'; }
+  // v3.63.30 — climbing-seconds progress ("Asking… 8s"). Stopped on every
+  // exit path below (catch, restore, no-result) before the row re-renders.
+  let _stopBtnTick = () => {};
+  if (btn) { btn.disabled = true; _stopBtnTick = wfBtnElapsed(btn, () => 'Asking…'); }
 
   toast(`🤖 ${ai.name}: asking for best model…`, 3000);
   const previousModel = cfg.model;
@@ -5832,11 +5860,13 @@ async function recheckModelForAI(id) {
     }
   } catch(e) {
     console.warn('[recheck] custom AI fetch failed:', e);
+    _stopBtnTick();
     if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
     toast(`⚠️ ${ai.name}: ${e.message || 'recommend failed'}`, 6000);
     return;
   }
 
+  _stopBtnTick();
   if (btn) { btn.disabled = false; btn.innerHTML = origLabel; }
 
   console.info(`[recheck] ${ai.name}:`, {
@@ -8053,6 +8083,24 @@ function _startStatusHeartbeat(el, baseMsg) {
     const s = Math.round((Date.now() - t0) / 1000);
     el.textContent = `${base()} ${s}s…`;
     if (typeof setFileStatusState === 'function') setFileStatusState(el, 'loading');
+  };
+  paint();
+  const id = setInterval(paint, 1000);
+  return () => clearInterval(id);
+}
+
+// v3.63.30 — Climbing-seconds ticker for action buttons (Recommend Models:
+// per-AI and for-all, plus the same button inside the Troubleshooting card).
+// Sibling of _startStatusHeartbeat but for a <button>: no setFileStatusState
+// side effect, and the label is rebuilt from labelFn(secs) each tick so the
+// for-all variant can fold a live completed/total count into the text
+// ("Asking… 3/6 · 12s"). Returns stop(); always call it on every exit path.
+function wfBtnElapsed(el, labelFn) {
+  if (!el) return () => {};
+  const t0 = Date.now();
+  const paint = () => {
+    const s = Math.round((Date.now() - t0) / 1000);
+    el.textContent = `${labelFn(s)} ${s}s`;
   };
   paint();
   const id = setInterval(paint, 1000);
@@ -11065,10 +11113,12 @@ function renderBeeStatusGrid() {
   const grid = document.getElementById('beeStatusGrid');
   if (!grid) return;
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
-  grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
+  grid.innerHTML = _aiListGrouped(activeAIs).map(ai => {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     const iconEl = resolveAiIcon(ai, 'hex-icon');
+    // v3.63.30 — default-provider marker (the six first-class providers).
+    const isDefault = !!DEFAULT_AIS.find(d => d.id === ai.id);
     // v3.32.20 — Two-row card layout (#8). Row 1 carries identity:
     // checkbox slot (BUILDER text pill on the Builder card, since the
     // builder is always-on and can't be toggled — same slot, different
@@ -11115,6 +11165,7 @@ function renderBeeStatusGrid() {
           }
           ${iconEl}
           <span class="hex-name" title="${escapeHtml(ai.name)}">${esc(displayAiName(ai.name))}</span>
+          ${isDefault ? `<span class="hex-default-badge" title="Default provider">D</span>` : ''}
         </div>
         <div class="hex-row hex-row-status">
           <span class="hex-status" id="blive-${ai.id}">Idle</span>
@@ -11978,7 +12029,7 @@ function renderBeeDotStrip() {
   const strip = document.getElementById('beeDotStrip');
   if (!strip) return;
   if (!window.sessionAIs) window.sessionAIs = new Set(activeAIs.map(a => a.id));
-  strip.innerHTML = _aiListAlpha(activeAIs).map(ai => {
+  strip.innerHTML = _aiListGrouped(activeAIs).map(ai => {
     const isB  = ai.id === builder;
     const isOn = isB || window.sessionAIs.has(ai.id);
     const stateClass = isB ? 'is-builder' : isOn ? 'is-active' : 'is-inactive';
