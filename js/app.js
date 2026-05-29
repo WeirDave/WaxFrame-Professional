@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-018
+//  Build: 20260528-019
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-018';         // build stamp — update each session
+const BUILD       = '20260528-019';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3956,44 +3956,103 @@ function saveKeyForAI(id, val, inputEl) {
   }
 }
 
-// v3.63.19 — Lightweight background validation fired by saveKeyForAI. Uses
-// the existing fetchModelsFromEndpoint machinery which throws "HTTP {status}"
-// on non-OK responses. Auth-class errors flip the in-memory _invalidKeys
-// flag for this AI and re-render the row so the ❌ indicator appears on
-// the key-status badge. Race-protected: if the user changes the key again
-// between fire and resolve, the stale result is ignored.
+// v3.63.19 — Lightweight background validation fired by saveKeyForAI.
+// Uses per-provider routing so each of the six default providers hits
+// the right /v1/models endpoint with the right auth headers. Auth-class
+// failures (HTTP 401 / 403) flip the in-memory _invalidKeys flag for
+// this AI and re-render the row so the ❌ indicator appears on the
+// key-status badge.
+//
+// Per-provider routing rationale: the generic fetchModelsFromEndpoint
+// derive path (strip /v1/.* then append /v1/models) breaks for
+// Perplexity (endpoint has no /v1/ segment, derive yields
+// /chat/completions/v1/models → 404 instead of clean 401) and Claude
+// (direct Anthropic endpoint CORS-fails from browser). This function
+// mirrors the per-provider dispatch already in fetchModelsForProvider
+// (api.js ~376) so all six defaults get a real auth signal. Custom
+// AIs go through fetchModelsFromEndpoint since we don't curate
+// validation paths for arbitrary endpoints.
+//
+// Race-protected: if the user changes the key between fire and resolve,
+// the stale result is ignored (stillCurrent() guard at every callback).
+//
+// Network errors and CORS failures leave status unknown — better than
+// a false ❌ on a key that's actually valid but the user is offline.
 function validateKeyOnSave(aiId, keyAtFire) {
   const ai = aiList.find(a => a.id === aiId);
   if (!ai) return;
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg?._key) return;
   const stillCurrent = () => API_CONFIGS[ai.provider]?._key === keyAtFire;
+  const isDefault = !!DEFAULT_AIS.find(d => d.id === ai.id);
+
+  const onAuthFail = (status) => {
+    if (!stillCurrent()) return;
+    window._invalidKeys = window._invalidKeys || {};
+    window._invalidKeys[aiId] = true;
+    if (typeof consoleLog === 'function') {
+      consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${status}). Double-check the key you just saved.`, 'warn');
+    }
+    renderAIRow(aiId);
+  };
+  const onSuccess = () => {
+    if (!stillCurrent()) return;
+    if (window._invalidKeys && window._invalidKeys[aiId]) {
+      delete window._invalidKeys[aiId];
+      renderAIRow(aiId);
+    }
+  };
+
+  if (isDefault) {
+    // Per-provider URL + headers (mirrors api.js fetchModelsForProvider).
+    let url, headers;
+    const provider = ai.provider;
+    if (provider === 'claude') {
+      // Route through the CF Worker proxy (cfg.endpoint is the proxy base
+      // URL). The proxy passes /v1/models through to Anthropic and returns
+      // a real HTTP status — no CORS surprises.
+      url = `${cfg.endpoint}/v1/models`;
+      headers = { 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' };
+    } else if (provider === 'gemini') {
+      url = 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=10';
+      headers = { 'x-goog-api-key': cfg._key };
+    } else if (provider === 'chatgpt' || provider === 'grok' || provider === 'perplexity' || provider === 'deepseek') {
+      // Origin-based derive — handles Perplexity correctly (endpoint has no
+      // /v1/ segment, so the older regex-strip path produced a broken URL).
+      try {
+        url = `${new URL(cfg.endpoint).origin}/v1/models`;
+      } catch { return; }
+      headers = cfg.headersFn(cfg._key);
+    } else if (provider === 'mistral') {
+      url = 'https://api.mistral.ai/v1/models';
+      headers = { 'Authorization': `Bearer ${cfg._key}` };
+    } else {
+      // Unknown default provider — skip validation rather than risk a
+      // false ❌ on a path we don't curate.
+      return;
+    }
+    fetch(url, { headers })
+      .then(resp => {
+        if (!stillCurrent()) return;
+        if (resp.status === 401 || resp.status === 403) onAuthFail(resp.status);
+        else if (resp.ok) onSuccess();
+        // 4xx (non-auth), 5xx, and other statuses: leave status unknown.
+      })
+      .catch(() => { /* network error / CORS / DNS — leave status unknown */ });
+    return;
+  }
+
+  // Custom AI — use the existing fetchModelsFromEndpoint derive path. Its
+  // throws are "HTTP {status}" strings so the regex catches auth errors.
   const format = cfg.format || 'openai';
   fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint)
-    .then(() => {
-      if (!stillCurrent()) return;
-      // Success — make sure the invalid flag is cleared (defensive; we
-      // already clear in saveKeyForAI, but this catches the rare case
-      // where validation lands after another save attempt).
-      if (window._invalidKeys && window._invalidKeys[aiId]) {
-        delete window._invalidKeys[aiId];
-        renderAIRow(aiId);
-      }
-    })
+    .then(onSuccess)
     .catch(err => {
-      if (!stillCurrent()) return;
       const msg = err?.message || '';
-      // Only auth-class failures flip the invalid flag. Network errors
-      // (Failed to fetch / CORS) leave status unknown — we can't reliably
-      // distinguish bad-key from offline-network in those cases.
-      if (/HTTP 401|HTTP 403/i.test(msg)) {
-        window._invalidKeys = window._invalidKeys || {};
-        window._invalidKeys[aiId] = true;
-        if (typeof consoleLog === 'function') {
-          consoleLog(`⚠️ ${ai.name}: API key looks invalid (${msg}). Double-check the key you just saved.`, 'warn');
-        }
-        renderAIRow(aiId);
-      }
+      const m = msg.match(/HTTP (\d+)/i);
+      const status = m ? parseInt(m[1], 10) : 0;
+      if (status === 401 || status === 403) onAuthFail(status);
+      // Network errors and non-auth HTTP statuses: leave unknown.
     });
 }
 
@@ -4530,6 +4589,39 @@ async function clearKeyForAI(id) {
   if (!await wfConfirm('Remove API Key', `Remove the saved API key for ${ai.name}?`, { okText: 'Remove', destructive: true })) return;
   const cfg = API_CONFIGS[ai.provider];
   if (cfg) delete cfg._key;
+  // v3.63.19 — Clear everything keyed to this AI alongside the key itself.
+  // Pre-v3.63.19, removing a key left the model-list cache and recommendation
+  // caches behind, so the next user flow (X Key → paste a new key → expand
+  // the dropdown) showed stale models from whichever key had been there
+  // before. The cached models also misled validate-on-save's UX — a bogus
+  // new key would surface ❌, but the stale dropdown next to it looked
+  // populated and "live," confusing the signal.
+  //
+  // Cleared:
+  //   - waxframe_models_{provider}  / waxframe_models_{id}  — model list cache
+  //   - waxframe_recommend_*-reviewer / -builder            — recommendation caches
+  //   - window._invalidKeys[id]                              — validate-on-save flag
+  //
+  // NOT cleared:
+  //   - cfg.model — keep the last-picked model name; it's just a label
+  //     until a key is back, and re-picking would lose the user's choice.
+  //     If the new key doesn't actually offer that model, the deprecation
+  //     watchdog surfaces it.
+  const isDefault = !!DEFAULT_AIS.find(d => d.id === id);
+  try {
+    if (isDefault) {
+      localStorage.removeItem(`waxframe_models_${ai.provider}`);
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-reviewer`);
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}-builder`);
+      localStorage.removeItem(`waxframe_recommend_default-${ai.provider}`); // legacy single-pick
+    } else {
+      localStorage.removeItem(`waxframe_models_${id}`);
+      localStorage.removeItem(`waxframe_recommend_custom-${id}-reviewer`);
+      localStorage.removeItem(`waxframe_recommend_custom-${id}-builder`);
+      localStorage.removeItem(`waxframe_recommend_custom-${id}`); // legacy single-pick
+    }
+  } catch (e) { /* quota / privacy mode — accept */ }
+  if (window._invalidKeys && window._invalidKeys[id]) delete window._invalidKeys[id];
   saveSettings();
   renderAISetupGrid();
   toast(`🗑 ${ai.name} API key removed`);
