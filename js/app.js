@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-015
+//  Build: 20260529-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-015';         // build stamp — update each session
+const BUILD       = '20260529-016';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3920,6 +3920,68 @@ async function applyTemplate(templateId, path) {
   // one against a different template.
   _sourceSizeCheckDismissed = false;
   if (typeof renderSourceSizeCheck === 'function') renderSourceSizeCheck();
+
+  // v3.63.43 (Phase 1b) — reconcile the template's saved hive against what
+  // the user actually has keyed. Custom templates only; built-ins have none.
+  await reconcileTemplateHive(tpl);
+}
+
+// v3.63.43 — Phase 1b: hive reconcile on apply. A custom template stores the
+// lineup that produced its result (hive.aiIds + builder + hiveMode). The user
+// running it may have a different set of AIs keyed, so the choice happens HERE,
+// at apply time, where we know their keyed AIs. Offer "use this template's
+// hive" vs "keep mine"; pre-select the saved AIs they have, skip the ones they
+// don't, never block. clearProject() (run earlier in applyTemplate) leaves the
+// hive untouched, so activeAIs/builder/_hiveMode are intact when we get here.
+async function reconcileTemplateHive(tpl) {
+  if (!tpl || !tpl.custom || !tpl.hive || !Array.isArray(tpl.hive.aiIds) || !tpl.hive.aiIds.length) return;
+  const want = tpl.hive.aiIds;
+  const keyedNow = (Array.isArray(aiList) ? aiList : []).filter(ai => API_CONFIGS[ai.provider] && API_CONFIGS[ai.provider]._key);
+  const keyedIds = new Set(keyedNow.map(a => a.id));
+  const nameFor  = (id) => { const a = (aiList || []).find(x => x.id === id); return a ? displayAiName(a.name) : id; };
+  const have    = want.filter(id => keyedIds.has(id));
+  const missing = want.filter(id => !keyedIds.has(id));
+  const wantNames = want.map(nameFor).join(', ');
+  const bName = tpl.hive.builder ? nameFor(tpl.hive.builder) : null;
+
+  // Can't form a 2+ AI hive from what they have — inform, keep their hive.
+  if (have.length < 2) {
+    const haveTxt = have.length ? `you have ${have.map(nameFor).join(', ')} keyed` : `you don't have any of them keyed`;
+    toast(`\u2139\ufe0f This template ran on ${wantNames} \u2014 ${haveTxt}, so your current hive stays. Add keys on Worker Bees to match it.`, 7000);
+    return;
+  }
+
+  // Already matches? Don't nag.
+  const curIds = new Set((Array.isArray(activeAIs) ? activeAIs : []).map(a => a.id));
+  const sameSet = have.length === curIds.size && have.every(id => curIds.has(id));
+  const sameBuilder = !tpl.hive.builder || builder === tpl.hive.builder || !have.includes(tpl.hive.builder);
+  const sameMode = !tpl.hive.hiveMode || _hiveMode === tpl.hive.hiveMode;
+  if (sameSet && sameBuilder && sameMode) return;
+
+  const missTxt = missing.length ? `\n\nYou don't have ${missing.map(nameFor).join(', ')} keyed \u2014 those are skipped.` : '';
+  const useTheirs = await wfConfirm(
+    '\u2b50 Use this template\'s hive?',
+    `This template produced its result with: ${wantNames}${bName ? ` (Builder: ${bName})` : ''}.${missTxt}\n\nUse this template's lineup, or keep your current hive?`,
+    { okText: 'Use this hive', cancelText: 'Keep mine' }
+  );
+  if (!useTheirs) return;
+
+  // Apply the template's lineup (limited to what the user has keyed).
+  activeAIs = keyedNow.filter(ai => have.includes(ai.id));
+  if (tpl.hive.builder && have.includes(tpl.hive.builder)) {
+    builder = tpl.hive.builder;
+  } else if (!have.includes(builder)) {
+    const first = (typeof _aiListAlpha === 'function' ? _aiListAlpha(activeAIs)[0] : activeAIs[0]);
+    builder = first ? first.id : null;
+  }
+  if (tpl.hive.hiveMode) _hiveMode = tpl.hive.hiveMode;
+  if (typeof saveHive === 'function') saveHive();
+  // Belt-and-suspenders re-renders; the work screen also repaints from
+  // activeAIs on entry, so these just keep any already-rendered surface fresh.
+  try { if (typeof renderBeeStatusGrid === 'function') renderBeeStatusGrid(); } catch (e) {}
+  try { if (typeof renderBeeDotStrip === 'function') renderBeeDotStrip(); } catch (e) {}
+  try { if (typeof updateProjectRequirements === 'function') updateProjectRequirements(); } catch (e) {}
+  toast(`\u2705 Hive set to this template's lineup: ${have.map(nameFor).join(', ')}`, 5000);
 }
 
 // v3.32.1 — Dismiss handler for the template hint banner. Hides the
