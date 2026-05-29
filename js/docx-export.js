@@ -1,232 +1,497 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-//  Build: 20260529-018
-//  Real .docx export for the help pages. Replaces the fragile
-//  HTML-as-.doc approach (which only LINKED images, so Word showed
-//  broken-image boxes). Builds a true OOXML .docx via the vendored
-//  `docx` library (lib/docx.min.js → window.docx), walking the page's
-//  content DOM into Word elements and EMBEDDING image bytes so the
-//  file works offline and survives emailing. Dependency-free at
-//  runtime (docx lib + JSZip are bundled in lib/docx.min.js).
-//
-//  Public: downloadPageAsDocx()  — wired to the help-page button.
-//  Walks .doc-main (sidebar pages) or .page-main (simple pages).
+//  Build: 20260529-019
+//  Real .docx export for helper/document pages. Builds a true
+//  OOXML document through the vendored `docx` library, walking
+//  WaxFrame's page primitives into Word paragraphs, tables,
+//  callouts, and embedded images.
 // ============================================================
 
 (function () {
   'use strict';
 
-  // Page-content width to scale images into (px @ ~96dpi ≈ 6.25in usable).
-  var MAX_IMG_W = 600;
+  var MAX_IMG_W = 560;
+  var COLOR_TEXT = '111111';
+  var COLOR_DIM = '444444';
+  var COLOR_ACCENT = 'B87A00';
+  var COLOR_BLUE = '1E5BB0';
+  var COLOR_BORDER = 'C9A23A';
 
-  // ── Inline runs: text + bold/italic/code/links/breaks ──────────────
+  function docxLib() { return window.docx; }
+
+  function push(arr, items) {
+    for (var i = 0; i < items.length; i++) arr.push(items[i]);
+  }
+
+  function textOf(el) {
+    return (el && el.textContent ? el.textContent : '').replace(/\s+/g, ' ').trim();
+  }
+
+  function normalizeSpace(s) {
+    return String(s || '').replace(/\s+/g, ' ');
+  }
+
+  function hasText(el) {
+    return !!textOf(el);
+  }
+
+  function hasBlockChild(el) {
+    if (!el || !el.children) return false;
+    for (var i = 0; i < el.children.length; i++) {
+      if (isBlockish(el.children[i])) return true;
+    }
+    return false;
+  }
+
+  function isBlockish(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var tag = el.tagName.toLowerCase();
+    if (/^(div|section|article|aside|header|footer|main|p|h[1-6]|ul|ol|li|table|tr|td|th|pre|blockquote|textarea|hr)$/.test(tag)) return true;
+    var cl = el.classList;
+    return !!(cl && (
+      cl.contains('hp-section') ||
+      cl.contains('hp-section-header') ||
+      cl.contains('hp-section-body') ||
+      cl.contains('wf-card') ||
+      cl.contains('wf-tip') ||
+      cl.contains('wh-section') ||
+      cl.contains('wh-block') ||
+      cl.contains('goal-info-row') ||
+      cl.contains('kyh-card') ||
+      cl.contains('kyh-section') ||
+      cl.contains('prompt-block')
+    ));
+  }
+
+  function isHidden(el) {
+    if (!el || el.nodeType !== 1) return false;
+    var st = (el.getAttribute('style') || '').replace(/\s+/g, '').toLowerCase();
+    if (st.indexOf('display:none') !== -1 || st.indexOf('visibility:hidden') !== -1) return true;
+    if (el.hasAttribute('hidden') || el.getAttribute('aria-hidden') === 'true') return true;
+    var cl = el.classList;
+    return !!(cl && (
+      cl.contains('doc-sidebar') ||
+      cl.contains('wh-back-top') ||
+      cl.contains('nav-panel') ||
+      cl.contains('nav-backdrop') ||
+      cl.contains('page-footer') ||
+      cl.contains('finish-modal-overlay') ||
+      cl.contains('license-modal-overlay') ||
+      cl.contains('modal-overlay')
+    ));
+  }
+
+  function para(options) {
+    var docx = docxLib();
+    return new docx.Paragraph(Object.assign({
+      spacing: { after: 120 },
+      children: []
+    }, options || {}));
+  }
+
+  function textRun(text, opts) {
+    var docx = docxLib();
+    return new docx.TextRun(Object.assign({
+      text: text || '',
+      color: COLOR_TEXT
+    }, opts || {}));
+  }
+
   function inlineRuns(el, opts) {
-    var docx = window.docx;
-    var TextRun = docx.TextRun;
+    var docx = docxLib();
     var runs = [];
+    opts = opts || {};
     if (!el || !el.childNodes) return runs;
+
     el.childNodes.forEach(function (n) {
       if (n.nodeType === 3) {
-        var t = n.textContent;
-        if (t && t.length) {
-          var cfg = Object.assign({ text: t }, opts);
-          runs.push(new TextRun(cfg));
-        }
+        var t = normalizeSpace(n.textContent);
+        if (t) runs.push(textRun(t, opts));
         return;
       }
-      if (n.nodeType !== 1) return;
+      if (n.nodeType !== 1 || isHidden(n)) return;
+
       var tag = n.tagName.toLowerCase();
-      if (tag === 'br') { runs.push(new TextRun({ break: 1 })); return; }
-      if (tag === 'script' || tag === 'style' || tag === 'button') return;
-      if (tag === 'strong' || tag === 'b') { push(runs, inlineRuns(n, Object.assign({}, opts, { bold: true }))); return; }
-      if (tag === 'em' || tag === 'i') { push(runs, inlineRuns(n, Object.assign({}, opts, { italics: true }))); return; }
+      if (tag === 'script' || tag === 'style' || tag === 'button' || tag === 'noscript') return;
+      if (tag === 'br') { runs.push(new docx.TextRun({ break: 1 })); return; }
+      if (tag === 'img') {
+        var alt = n.getAttribute('alt') || '';
+        if (alt) runs.push(textRun(alt, opts));
+        return;
+      }
+      if (tag === 'textarea') {
+        var value = n.value || n.textContent || '';
+        if (value) runs.push(textRun(value, Object.assign({}, opts, { font: 'Courier New' })));
+        return;
+      }
+      if (tag === 'strong' || tag === 'b') {
+        push(runs, inlineRuns(n, Object.assign({}, opts, { bold: true })));
+        return;
+      }
+      if (tag === 'em' || tag === 'i') {
+        push(runs, inlineRuns(n, Object.assign({}, opts, { italics: true })));
+        return;
+      }
       if (tag === 'code' || tag === 'kbd' || tag === 'samp') {
         push(runs, inlineRuns(n, Object.assign({}, opts, { font: 'Courier New', shading: { fill: 'F0F0F0' } })));
         return;
       }
-      // anchors, spans, and any other inline wrapper: keep the text.
+      if (tag === 'a') {
+        var labelRuns = inlineRuns(n, Object.assign({}, opts, { color: COLOR_BLUE, underline: {} }));
+        push(runs, labelRuns);
+        var href = n.getAttribute('href') || '';
+        if (href && href.charAt(0) !== '#') {
+          try { href = new URL(href, document.baseURI).href; } catch (e) {}
+          runs.push(textRun(' (' + href + ')', Object.assign({}, opts, { color: COLOR_BLUE })));
+        }
+        return;
+      }
       push(runs, inlineRuns(n, opts));
     });
+
     return runs;
   }
-  function push(arr, items) { for (var i = 0; i < items.length; i++) arr.push(items[i]); }
 
-  function textOf(el) { return (el && el.textContent ? el.textContent : '').replace(/\s+/g, ' ').trim(); }
-
-  function isHidden(el) {
-    var st = (el.getAttribute && el.getAttribute('style') || '').replace(/\s+/g, '').toLowerCase();
-    if (st.indexOf('display:none') !== -1 || st.indexOf('visibility:hidden') !== -1) return true;
-    if (el.classList && (el.classList.contains('doc-sidebar') || el.classList.contains('wh-back-top') ||
-        el.classList.contains('nav-panel') || el.classList.contains('nav-backdrop'))) return true;
-    return false;
+  function paragraphFromInline(el, out, opts) {
+    var runs = inlineRuns(el, opts || {});
+    if (runs.length) out.push(para({ children: runs }));
   }
 
-  // ── Table → docx Table ─────────────────────────────────────────────
+  function imageKey(imgEl) {
+    try { return new URL(imgEl.getAttribute('src'), document.baseURI).href; } catch (e) { return ''; }
+  }
+
+  function emitImage(imgEl, out, imgMap) {
+    var docx = docxLib();
+    var key = imageKey(imgEl);
+    if (!key) return;
+    var info = imgMap.get(key);
+    if (!info) {
+      var alt = imgEl.getAttribute('alt') || '';
+      if (alt) out.push(para({ children: [textRun(alt, { italics: true, color: COLOR_DIM })] }));
+      return;
+    }
+    out.push(para({
+      children: [new docx.ImageRun({
+        type: info.type,
+        data: info.data,
+        transformation: { width: info.width, height: info.height },
+        altText: { title: imgEl.getAttribute('alt') || 'WaxFrame image', description: imgEl.getAttribute('alt') || '' }
+      })],
+      spacing: { after: 160 }
+    }));
+  }
+
+  function calloutBlocks(el, out, imgMap, fill, border) {
+    var inner = [];
+    blocksFromNode(el, inner, imgMap, {});
+    inner.forEach(function (block) { out.push(block); });
+    if (inner.length) out.push(para({ text: '' }));
+  }
+
   function buildTable(tableEl, imgMap) {
-    var docx = window.docx;
+    var docx = docxLib();
     var b = { style: docx.BorderStyle.SINGLE, size: 4, color: '999999' };
     var borders = { top: b, bottom: b, left: b, right: b, insideHorizontal: b, insideVertical: b };
     var rows = [];
+
     Array.prototype.forEach.call(tableEl.querySelectorAll('tr'), function (tr) {
       var cells = [];
-      Array.prototype.forEach.call(tr.querySelectorAll('th,td'), function (td) {
+      Array.prototype.forEach.call(tr.children, function (td) {
+        if (!td.tagName || !/^(th|td)$/i.test(td.tagName)) return;
         var isHead = td.tagName.toLowerCase() === 'th';
         var cellBlocks = [];
-        blocksFromNode(td, cellBlocks, imgMap, { bold: isHead });
-        if (!cellBlocks.length) cellBlocks.push(new docx.Paragraph({ children: inlineRuns(td, { bold: isHead }) }));
+        if (hasBlockChild(td)) blocksFromNode(td, cellBlocks, imgMap, { bold: isHead });
+        else paragraphFromInline(td, cellBlocks, { bold: isHead });
+        if (!cellBlocks.length) cellBlocks.push(para({ text: '' }));
         cells.push(new docx.TableCell({
           children: cellBlocks,
           shading: isHead ? { fill: 'EFEFEF' } : undefined,
-          margins: { top: 40, bottom: 40, left: 80, right: 80 }
+          margins: { top: 80, bottom: 80, left: 100, right: 100 }
         }));
       });
       if (cells.length) rows.push(new docx.TableRow({ children: cells }));
     });
+
     if (!rows.length) return null;
-    return new docx.Table({ width: { size: 100, type: docx.WidthType.PERCENTAGE }, borders: borders, rows: rows });
+    return new docx.Table({
+      width: { size: 100, type: docx.WidthType.PERCENTAGE },
+      borders: borders,
+      rows: rows
+    });
   }
 
-  // ── Block-level walk: emit Paragraph/Table/Image elements ──────────
+  function emitDefinitionRow(el, out) {
+    var label = el.querySelector('.info-label, .goal-info-phase, .kyh-section-title, .prompt-block-label');
+    var desc = el.querySelector('.goal-info-desc, .prompt-block-desc');
+    if (!label || !desc) return false;
+    var runs = inlineRuns(label, { bold: true });
+    runs.push(textRun(': ', { bold: true }));
+    push(runs, inlineRuns(desc, {}));
+    out.push(para({ children: runs }));
+    return true;
+  }
+
+  function emitBadgeLine(el, out) {
+    if (!hasText(el)) return false;
+    out.push(para({
+      children: [textRun(textOf(el), { italics: true, color: COLOR_DIM })],
+      spacing: { after: 60 }
+    }));
+    return true;
+  }
+
   function blocksFromNode(node, out, imgMap, ctx) {
-    var docx = window.docx;
+    var docx = docxLib();
     var H = docx.HeadingLevel;
+    ctx = ctx || {};
     if (!node || !node.childNodes) return;
+
     node.childNodes.forEach(function (el) {
       if (el.nodeType === 3) {
-        var t = el.textContent;
-        if (t && t.trim()) out.push(new docx.Paragraph({ children: [new docx.TextRun(Object.assign({ text: t.trim() }, ctx))] }));
+        var t = normalizeSpace(el.textContent).trim();
+        if (t) out.push(para({ children: [textRun(t, ctx)] }));
         return;
       }
-      if (el.nodeType !== 1) return;
+      if (el.nodeType !== 1 || isHidden(el)) return;
+
       var tag = el.tagName.toLowerCase();
-      if (tag === 'script' || tag === 'style' || tag === 'button' || tag === 'noscript') return;
-      if (isHidden(el)) return;
+      if (tag === 'script' || tag === 'style' || tag === 'button' || tag === 'noscript' || tag === 'input') return;
       var cl = el.classList || { contains: function () { return false; } };
 
-      // Class-driven headings (WaxFrame help-page primitives).
-      if (cl.contains('wh-section-icon')) return; // icon glyph; folded into title text elsewhere
-      if (cl.contains('wh-section-title')) { out.push(new docx.Paragraph({ text: textOf(el), heading: H.HEADING_1 })); return; }
-      if (cl.contains('wh-block-title')) { out.push(new docx.Paragraph({ text: textOf(el), heading: H.HEADING_2 })); return; }
+      if (cl.contains('print-header') || cl.contains('page-header-controls') || cl.contains('prompt-editor-actions')) return;
+      if (cl.contains('wh-section-icon')) return;
+      if (cl.contains('wf-tip-icon')) return;
+
+      if (cl.contains('hp-section-bee') || tag === 'img') { emitImage(el, out, imgMap); return; }
+      if (cl.contains('hp-section-title')) { out.push(para({ children: inlineRuns(el, ctx), heading: tag === 'h1' ? H.HEADING_1 : H.HEADING_2 })); return; }
+      if (cl.contains('wh-section-title')) { out.push(para({ text: textOf(el), heading: H.HEADING_2 })); return; }
+      if (cl.contains('wh-block-title') || cl.contains('wf-card-title') || cl.contains('kyh-card-name') || cl.contains('prompt-group-title')) {
+        out.push(para({ text: textOf(el), heading: H.HEADING_3 }));
+        return;
+      }
+      if (cl.contains('kyh-card-model') || cl.contains('prompt-group-sub') || cl.contains('prompt-block-desc')) {
+        out.push(para({ children: [textRun(textOf(el), { italics: true, color: COLOR_DIM })] }));
+        return;
+      }
+      if (cl.contains('goal-info-row') || cl.contains('prompt-block-header')) {
+        if (emitDefinitionRow(el, out)) return;
+      }
+      if (cl.contains('kyh-badges') || cl.contains('kyh-pills')) {
+        if (emitBadgeLine(el, out)) return;
+      }
+      if (cl.contains('wf-tip') || cl.contains('wh-tip')) { calloutBlocks(el, out, imgMap, 'FFFBEA', 'E5C84A'); return; }
+      if (cl.contains('wh-warn') || cl.contains('is-amber')) { calloutBlocks(el, out, imgMap, 'FFF4E5', 'C99A2B'); return; }
+      if (cl.contains('is-green')) { calloutBlocks(el, out, imgMap, 'ECFDF3', '5CB85C'); return; }
+      if (cl.contains('is-blue')) { calloutBlocks(el, out, imgMap, 'EEF6FF', '5AA2E8'); return; }
+      if (cl.contains('is-red')) { calloutBlocks(el, out, imgMap, 'FFF0F0', 'D99A9A'); return; }
+      if (cl.contains('wf-card') || cl.contains('kyh-card') || cl.contains('prompt-group') || cl.contains('prompt-block')) {
+        blocksFromNode(el, out, imgMap, ctx);
+        out.push(para({ text: '' }));
+        return;
+      }
 
       switch (tag) {
-        case 'h1': out.push(new docx.Paragraph({ children: inlineRuns(el, ctx), heading: H.HEADING_1 })); return;
-        case 'h2': out.push(new docx.Paragraph({ children: inlineRuns(el, ctx), heading: H.HEADING_2 })); return;
-        case 'h3': out.push(new docx.Paragraph({ children: inlineRuns(el, ctx), heading: H.HEADING_3 })); return;
-        case 'h4': case 'h5': case 'h6': out.push(new docx.Paragraph({ children: inlineRuns(el, ctx), heading: H.HEADING_4 })); return;
-        case 'p': out.push(new docx.Paragraph({ children: inlineRuns(el, ctx), spacing: { after: 120 } })); return;
+        case 'h1': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_1 })); return;
+        case 'h2': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_2 })); return;
+        case 'h3': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_3 })); return;
+        case 'h4':
+        case 'h5':
+        case 'h6': out.push(para({ children: inlineRuns(el, ctx), heading: H.HEADING_4 })); return;
+        case 'p':
+          paragraphFromInline(el, out, ctx);
+          return;
         case 'ul':
           Array.prototype.forEach.call(el.children, function (li) {
-            if (li.tagName && li.tagName.toLowerCase() === 'li')
-              out.push(new docx.Paragraph({ children: inlineRuns(li, ctx), bullet: { level: 0 } }));
+            if (li.tagName && li.tagName.toLowerCase() === 'li') {
+              out.push(para({ children: inlineRuns(li, ctx), bullet: { level: 0 } }));
+            }
           });
           return;
         case 'ol':
           var i = 1;
           Array.prototype.forEach.call(el.children, function (li) {
             if (li.tagName && li.tagName.toLowerCase() === 'li') {
-              var runs = [new docx.TextRun({ text: (i++) + '.  ', bold: true })];
+              var runs = [textRun((i++) + '.  ', { bold: true })];
               push(runs, inlineRuns(li, ctx));
-              out.push(new docx.Paragraph({ children: runs, indent: { left: 360, hanging: 360 } }));
+              out.push(para({ children: runs, indent: { left: 360, hanging: 360 } }));
             }
           });
           return;
         case 'table':
           var tbl = buildTable(el, imgMap);
-          if (tbl) { out.push(tbl); out.push(new docx.Paragraph({ text: '' })); }
+          if (tbl) {
+            out.push(tbl);
+            out.push(para({ text: '' }));
+          }
           return;
         case 'pre':
-          out.push(new docx.Paragraph({
-            children: [new docx.TextRun({ text: el.textContent || '', font: 'Courier New' })],
-            shading: { fill: 'F4F4F4' }, spacing: { after: 120 }
+        case 'textarea':
+          out.push(para({
+            children: [textRun(el.value || el.textContent || '', { font: 'Courier New' })],
+            shading: { fill: 'F4F4F4' },
+            spacing: { after: 160 }
           }));
           return;
         case 'blockquote':
-          out.push(new docx.Paragraph({ children: inlineRuns(el, Object.assign({}, ctx, { italics: true })), indent: { left: 360 } }));
+          out.push(para({ children: inlineRuns(el, Object.assign({}, ctx, { italics: true })), indent: { left: 360 } }));
           return;
-        case 'img':
-          emitImage(el, out, imgMap);
+        case 'hr':
+          out.push(para({ text: '' }));
           return;
-        case 'br': case 'hr': return;
+        case 'br':
+          return;
         default:
-          // Container (div/section/header/span/etc.): recurse, but capture
-          // a leading inline image inside an otherwise-block element.
-          if (cl.contains('wh-warn') || cl.contains('wh-tip')) {
-            // Callout: render its inner blocks with a light shaded paragraph feel.
-            blocksFromNode(el, out, imgMap, ctx);
+          if (!hasBlockChild(el) && hasText(el)) {
+            paragraphFromInline(el, out, ctx);
             return;
           }
-          // If this node has a direct <img> child plus text, emitImage handles imgs in recursion.
           blocksFromNode(el, out, imgMap, ctx);
-          return;
       }
     });
   }
 
-  function emitImage(imgEl, out, imgMap) {
-    var docx = window.docx;
-    var src;
-    try { src = new URL(imgEl.getAttribute('src'), document.baseURI).href; } catch (e) { return; }
-    var info = imgMap.get(src);
-    if (!info) return;
-    out.push(new docx.Paragraph({
-      children: [new docx.ImageRun({ type: info.type, data: info.data, transformation: { width: info.width, height: info.height } })],
-      spacing: { after: 120 }
-    }));
+  function imageTypeFromMime(mime, src) {
+    mime = (mime || '').toLowerCase();
+    if (mime.indexOf('jpeg') !== -1 || mime.indexOf('jpg') !== -1) return 'jpg';
+    if (mime.indexOf('png') !== -1) return 'png';
+    if (mime.indexOf('gif') !== -1) return 'gif';
+    if (mime.indexOf('bmp') !== -1) return 'bmp';
+    if (mime.indexOf('svg') !== -1) return 'svg';
+    if (/\.jpe?g(\?|#|$)/i.test(src)) return 'jpg';
+    if (/\.gif(\?|#|$)/i.test(src)) return 'gif';
+    if (/\.bmp(\?|#|$)/i.test(src)) return 'bmp';
+    if (/\.svg(\?|#|$)/i.test(src)) return 'svg';
+    return 'png';
   }
 
-  // ── Pre-fetch + embed all images (async) ───────────────────────────
+  function dimensionsFor(img, widthFallback) {
+    var nw = img.naturalWidth || widthFallback || MAX_IMG_W;
+    var nh = img.naturalHeight || Math.round(nw * 0.6);
+    var w = nw;
+    var h = nh;
+    if (w > MAX_IMG_W) {
+      h = Math.round(h * (MAX_IMG_W / w));
+      w = MAX_IMG_W;
+    }
+    return { width: Math.max(1, Math.round(w)), height: Math.max(1, Math.round(h)) };
+  }
+
+  function imageFromCanvas(img) {
+    return new Promise(function (resolve) {
+      try {
+        var dims = dimensionsFor(img, img.naturalWidth || MAX_IMG_W);
+        var canvas = document.createElement('canvas');
+        canvas.width = dims.width;
+        canvas.height = dims.height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, dims.width, dims.height);
+        canvas.toBlob(function (blob) {
+          if (!blob) { resolve(null); return; }
+          blob.arrayBuffer().then(function (ab) {
+            resolve({ data: new Uint8Array(ab), type: 'png', width: dims.width, height: dims.height });
+          }).catch(function () { resolve(null); });
+        }, 'image/png');
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  }
+
+  function fetchImage(img, src) {
+    return fetch(src).then(function (r) {
+      if (!r.ok) return null;
+      var mime = r.headers.get('content-type') || '';
+      return r.arrayBuffer().then(function (ab) {
+        var dims = dimensionsFor(img, MAX_IMG_W);
+        return {
+          data: new Uint8Array(ab),
+          type: imageTypeFromMime(mime, src),
+          width: dims.width,
+          height: dims.height
+        };
+      });
+    }).catch(function () {
+      return imageFromCanvas(img);
+    });
+  }
+
   function prefetchImages(root) {
-    var imgs = Array.prototype.slice.call(root.querySelectorAll('img[src]'));
+    var imgs = Array.prototype.slice.call(root.querySelectorAll('img[src]')).filter(function (img) {
+      return !isHidden(img);
+    });
     var map = new Map();
-    return Promise.all(imgs.map(function (img) {
-      var src;
-      try { src = new URL(img.getAttribute('src'), document.baseURI).href; } catch (e) { return Promise.resolve(); }
-      if (map.has(src)) return Promise.resolve();
-      return fetch(src).then(function (r) { return r.ok ? r.arrayBuffer() : null; }).then(function (ab) {
-        if (!ab) return;
-        var type = /\.png(\?|$)/i.test(src) ? 'png'
-                 : /\.jpe?g(\?|$)/i.test(src) ? 'jpg'
-                 : /\.gif(\?|$)/i.test(src) ? 'gif'
-                 : /\.bmp(\?|$)/i.test(src) ? 'bmp'
-                 : 'png';
-        var nw = img.naturalWidth || 0, nh = img.naturalHeight || 0;
-        var w = nw || MAX_IMG_W, h = nh || Math.round((nw ? nw : MAX_IMG_W) * 0.6);
-        if (w > MAX_IMG_W) { h = Math.round(h * (MAX_IMG_W / w)); w = MAX_IMG_W; }
-        map.set(src, { data: new Uint8Array(ab), type: type, width: w, height: h });
-      }).catch(function () { /* skip unfetchable image */ });
-    })).then(function () { return map; });
+    var jobs = imgs.map(function (img) {
+      var src = imageKey(img);
+      if (!src || map.has(src)) return Promise.resolve();
+      map.set(src, null);
+      return fetchImage(img, src).then(function (info) {
+        if (info) map.set(src, info);
+        else map.delete(src);
+      });
+    });
+    return Promise.all(jobs).then(function () { return map; });
   }
 
-  // ── Public entry point ─────────────────────────────────────────────
+  function exportRoot() {
+    return document.querySelector('.page-main') || document.querySelector('.doc-main') || document.body;
+  }
+
   window.downloadPageAsDocx = async function downloadPageAsDocx() {
     if (!window.docx || !window.docx.Document) {
-      if (typeof toast === 'function') toast('\u26a0\ufe0f Word export library not loaded \u2014 reload and try again');
+      if (typeof toast === 'function') toast('\u26a0\ufe0f Word export library not loaded - reload and try again');
       return;
     }
-    var root = document.querySelector('.doc-main') || document.querySelector('.page-main');
-    if (!root) { if (typeof toast === 'function') toast('\u26a0\ufe0f Nothing to export'); return; }
-    if (typeof toast === 'function') toast('\u23f3 Building Word document\u2026');
+
+    var root = exportRoot();
+    if (!root) {
+      if (typeof toast === 'function') toast('\u26a0\ufe0f Nothing to export');
+      return;
+    }
+
+    if (typeof toast === 'function') toast('\u23f3 Building Word document...');
     try {
-      var docx = window.docx;
+      var docx = docxLib();
       var imgMap = await prefetchImages(root);
-      var blocks = [new docx.Paragraph({ text: document.title || 'WaxFrame', heading: docx.HeadingLevel.TITLE })];
+      var blocks = [];
       blocksFromNode(root, blocks, imgMap, {});
-      if (blocks.length < 2) blocks.push(new docx.Paragraph({ text: '' }));
+      if (!blocks.length) {
+        blocks.unshift(para({ text: document.title || 'WaxFrame', heading: docx.HeadingLevel.TITLE }));
+      }
+      if (blocks.length < 2) blocks.push(para({ text: '' }));
+
       var doc = new docx.Document({
-        styles: { default: { document: { run: { font: 'Calibri', size: 22 } } } },
-        sections: [{ properties: {}, children: blocks }]
+        styles: {
+          default: {
+            document: { run: { font: 'Calibri', size: 22, color: COLOR_TEXT } }
+          }
+        },
+        sections: [{
+          properties: {
+            page: {
+              margin: { top: 720, right: 720, bottom: 720, left: 720 }
+            }
+          },
+          children: blocks
+        }]
       });
+
       var blob = await docx.Packer.toBlob(doc);
       var safe = (document.title || 'WaxFrame').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '') || 'WaxFrame';
       var url = URL.createObjectURL(blob);
       var a = document.createElement('a');
-      a.href = url; a.download = safe + '.docx';
-      document.body.appendChild(a); a.click();
-      setTimeout(function () { try { document.body.removeChild(a); } catch (e) {} URL.revokeObjectURL(url); }, 1000);
+      a.href = url;
+      a.download = safe + '.docx';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () {
+        try { document.body.removeChild(a); } catch (e) {}
+        URL.revokeObjectURL(url);
+      }, 1000);
       if (typeof toast === 'function') toast('\u2705 Word document downloaded');
     } catch (e) {
       console.error('[docx-export] failed:', e);
-      if (typeof toast === 'function') toast('\u26a0\ufe0f Word export failed \u2014 see console');
+      if (typeof toast === 'function') toast('\u26a0\ufe0f Word export failed - see console');
     }
   };
 })();

@@ -1,9 +1,10 @@
 WaxFrame Professional — Project Rules Reference
-Last updated: 2026-05-27 (current production: v3.63.5)
+Last updated: 2026-05-29 (current production: v3.63.45)
 
 Living reference of the conventions and hard rules this project runs under.
 Update when a rule changes; this is the onboarding/consistency anchor for any
-AI or collaborator working on WaxFrame.
+AI or collaborator working on WaxFrame, and the recovery anchor if a chat is
+lost or corrupted.
 
 
 ====================================================================
@@ -21,7 +22,8 @@ CORE CODE CONSTRAINTS
 - Monospace is Courier New only (--font-mono = 'Courier New'). Never
   JetBrains Mono.
 - Token-based CSS values (--fs-*, --space-*, --modal-w-*). No hardcoded hex.
-  No !important except legitimate uses.
+  No !important except legitimate uses. (Text-on-accent buttons use the
+  existing #0a0c12 convention — match it, don't invent new hex.)
 - Surgical changes only. Warn before anything risky. Big-bang changes cause
   regressions (ref v3.21.26 CSS deletion incident).
 - Reconcile all straggler code when removing functions/snippets.
@@ -32,6 +34,9 @@ CORE CODE CONSTRAINTS
 - Desktop-only. Minimum viewport 1366x768 (enforced via min-screen-overlay).
   Modal max-widths stay inside 1366 - 48px overlay padding = 1318px usable.
 - Code comments can lie. Read the actual runtime behavior, not the comments.
+- node --check every modified .js before output. For files with unicode/emoji
+  in template-literal strings, edit via Python open(path,'r',encoding='utf-8')
+  — direct str_replace often fails on those.
 
 
 ====================================================================
@@ -52,6 +57,22 @@ FILE HANDLING
   project multiple times). Never suggest moving it. The occasional
   "fatal: Unable to write new index file" error is a known Dropbox/.git/index
   race condition; workaround is retry or briefly pause Dropbox sync.
+
+- AI-SIDE FILE-WRITE FOOTGUNS (recurring; mitigations are mandatory):
+    (1) Python open(path,'w') TRUNCATES to zero bytes BEFORE writing. An
+        encode error mid-write leaves the file EMPTY. ALWAYS write to
+        path+".tmp" then os.replace(tmp, path) so the real file is never
+        truncated. (version.js getting blanked is the classic casualty.)
+    (2) Astral (non-BMP) emoji as lone surrogate escapes (e.g. the trash and
+        folder glyphs) cannot be UTF-8 encoded by Python. Use 8-digit
+        \U-style code points, HTML entities, or plain words. BMP emoji are
+        fine.
+    (3) re.sub() replacement strings interpret backslashes — a \u sequence in
+        the replacement raises "bad escape". Use plain string-index splicing
+        for text blocks that contain backslashes, not re.sub.
+  Recovery when a backlog/notes write fails: the CHANGELOG (written first)
+  usually succeeded; regenerate the backlog + notes, then REBUILD the ZIP
+  (it captured the stale file).
 
 
 ====================================================================
@@ -76,30 +97,45 @@ RELEASE CEREMONY (every release)
    - BUILD constant in js/app.js
    - app.js?v= cache-bust query string in index.html
 
-2. Full cache-bust + build-stamp sweep:
-   - 9 HTML (index + 5 helpers + privacy + terms + help)
-   - 10 JS-with-headers (NOT templates.js — it has no header)
+2. Full cache-bust + build-stamp sweep, run EVERY release even on unchanged
+   files (they drift silently):
+   - 9 HTML (index + api-details + document-playbooks + help +
+     prompt-editor + waxframe-user-manual + what-are-tokens + privacy + terms)
+   - ALL 14 JS — including version.js AND templates.js
    - style.css
-   These drift silently, so the sweep runs every release even on unchanged
-   files. Cache-bust ?v=X.Y.Z on all 9 HTML covers every CSS/JS/lib reference.
+   RETIRED RULE (v3.63.45): the old "sweep 10 JS, NOT templates.js" exclusion
+   is GONE. version.js and templates.js now each carry a "//  Build:
+   20260529-NNN" header line and are swept like every other file, so an audit
+   reads ONE identical build stamp across all 24 source files. Leaving any
+   file off the sweep is what produced the version-drift Codex flagged.
+   Cache-bust ?v=X.Y.Z on all 9 HTML covers every CSS/JS/lib reference.
+   Build stamp format: 20260529-NNN (date + zero-padded session sequence).
 
-3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line).
+3. CHANGELOG.md entry prepended (every commit gets a CHANGELOG line). The
+   Build/Released metadata lives HERE, not in the release notes.
 
-4. Backlog version bump.
+4. Backlog version bump (docs/WaxFrame_Backlog_Master_vN.txt).
 
-5. Single ZIP of ALL deployment files (~32) preserving directory structure:
-   9 HTML, style.css, CHANGELOG, README, 13 js/*, 5 lib/* vendor files
-   (pdf.min, pdf.worker.min, mammoth.browser.min, jszip.min, xlsx.full.min),
-   plus the docs/ folder. Never individual files.
+5. Single ZIP of ALL deployment files (~34) preserving directory structure:
+   9 HTML, style.css, CHANGELOG.md, README.md, 14 js/*, 6 lib/* vendor files
+   (docx.min, jszip.min, mammoth.browser.min, pdf.min.mjs, pdf.worker.min.mjs,
+   xlsx.full.min), plus the docs/ folder. Never individual files. images/ and
+   fonts/ are NOT in the zip — they overlay onto the repo and rarely change.
+   Zip cmd pattern:
+     zip -rq <out>/WaxFrame-Professional-vX.Y.Z.zip *.html style.css \
+       CHANGELOG.md README.md js/ lib/ docs/ -x "_*.py" "*.tmp"
 
-6. docs/ ships IN the zip — current backlog + prior 2 versions (3-version
-   rollback margin). Delete older-than-3 from local docs/ after extraction
-   (zip overlay can't remove files).
+6. docs/ ships IN the zip: the LATEST backlog only + WaxFrame_Rules_Reference
+   .txt. NOT older backlogs. (David may keep a few prior backlog versions
+   locally for rollback; the zip carries just the latest + this reference.)
 
 7. Sibling release-notes-vX.Y.Z.md — EXCLUDED from the ZIP, presented as a
    separate artifact for pasting into the GitHub Release body.
 
-8. GitHub release timing: commit and push FIRST, verify the new version
+8. present_files with the ZIP FIRST, then the release notes. End the message
+   with the commit summary + description as plain code blocks.
+
+9. GitHub release timing: commit and push FIRST, verify the new version
    appears in version.js on GitHub web, THEN create the release. Creating the
    release before pushing produces wrong-version archives.
 
@@ -110,9 +146,9 @@ RELEASE NOTES RULES
 
 - GitHub Flavored Markdown: ## headings, **bold** titles, `backticks` for
   code/filenames, --- horizontal rules.
-- Do NOT lead with "# WaxFrame vX.Y.Z — Title" H1. GitHub already shows the
-  release name. Lead with a descriptive subtitle H1 only, then Build/Released
-  metadata, then --- divider, then ## Overview.
+- Lead with a descriptive subtitle H1 only (e.g. "# Custom Templates: Share
+  Them"). Do NOT lead with "# WaxFrame vX.Y.Z — Title" — GitHub already shows
+  the release name. No Build/Released metadata block (that's in the CHANGELOG).
 - No "Deployment" / "Right-click -> Extract Here" section. Those are dev-side
   instructions, not public release content.
 - Release notes END on the Files Changed section.
@@ -122,8 +158,8 @@ RELEASE NOTES RULES
 GITHUB DESKTOP COMMIT FORMAT
 ====================================================================
 
-- Summary: VERSION-FIRST, ~80 chars max. "v3.63.5 — Short description"
-  (NOT description-first, NOT "...(v3.63.5)").
+- Summary: VERSION-FIRST, ~80 chars max. "v3.63.45 — Short description"
+  (NOT description-first, NOT "...(v3.63.45)").
 - Description: short paragraph or short bullet list, NOT a press-release.
   Detail belongs in the CHANGELOG and release notes; the commit message is a
   navigation aid for git history.
@@ -181,17 +217,51 @@ UI CONVENTIONS
 
 
 ====================================================================
+TEMPLATES (built-in + custom)
+====================================================================
+
+- BUILT-IN document templates live in js/templates.js — the source of truth.
+  Each entry maps to the Project Goal fields + Reference Material. Adding a
+  built-in template = paste a new object; no other code changes needed.
+- CUSTOM templates live in localStorage (key 'waxframe_custom_templates').
+  Full lifecycle, all in js/app.js:
+    - Create: save the current project as a template, OR start a blank one
+      (newBlankTemplate -> setup screens as the editor).
+    - Edit: editCustomTemplate(id) loads the template into the setup screens
+      and flags it so the next save UPDATES in place (preserves id/createdTs).
+    - Apply: applyTemplate routes via getTemplateById; reconcileTemplateHive
+      restores the captured hive, limited to AIs the user has keyed.
+    - Delete / Export / Import.
+  Editing reuses the real setup screens as the editor — there is no separate
+  template form. A template is just a project setup you can revisit.
+- Export/Import format: a JSON envelope
+  {_waxframe_template:true, _waxframe_template_version:1, ..., template:{...}}.
+  Filename: {project}-{version}-{YYYYMMDD}-{HHmm}-template.json. Saving stays
+  library-only (no auto file download); export is an explicit per-card action.
+- Imported templates ALWAYS get a fresh local id and field-sanitized contents
+  (their strings reach element ids / onclick / visible card text). Never trust
+  an imported id or pass imported structure through unsanitized.
+
+
+====================================================================
 ARCHITECTURE NOTES (load-bearing)
 ====================================================================
 
-- JS lives in js/: app.js, version.js, api-links.js, nav-helper.js,
-  license-helper.js, plus storage, api, audio, scenes, theme, wf-debug,
-  docs-scrollspy, templates. 5 vendor libs in lib/ (self-hosted for air-gap).
+- JS lives in js/ (14 files): app.js, version.js, templates.js, storage.js,
+  api.js, api-links.js, audio.js, scenes.js, theme.js, nav-helper.js,
+  license-helper.js, wf-debug.js, docs-scrollspy.js, docx-export.js.
+  6 vendor libs in lib/ (self-hosted for air-gap): docx.min.js, jszip.min.js,
+  mammoth.browser.min.js, pdf.min.mjs, pdf.worker.min.mjs, xlsx.full.min.js.
 - Session storage: IndexedDB (waxframe_v2_db / session store, key 'current').
   navigator.storage.persist() at DOMContentLoaded. localStorage LS_SESSION
-  kept as defense-in-depth fallback only.
+  kept as defense-in-depth fallback only. LS_PROJECT holds the project recipe.
 - Typography: DM Sans self-hosted (fonts/, @font-face in style.css, no Google
   Fonts CDN). Monospace = system Courier New.
+- Help-page document export: the old window.print "Save as PDF" was flaky
+  (blank page; root cause never isolated) and was REPLACED with real .docx
+  export — js/docx-export.js (downloadPageAsDocx, a DOM->DOCX mapper that
+  pre-fetches and EMBEDS images) backed by vendored lib/docx.min.js. The old
+  @media print rules remain (harmless; manual Ctrl+P still works).
 - Builder hallucination defense ships in TWO layers (both needed):
   (1) ANTI-HALLUCINATION RULES block in BUILDER_INSTRUCTIONS.refine;
   (2) validateUserDecisions() runtime verification after extractConflicts().
@@ -227,6 +297,8 @@ COMMUNICATION & TONE (David's preferences)
   artifacts), and wants confident calls with assumptions stated inline when
   he can't answer mid-task (e.g., when driving).
 - Hates invented scope, over-explanation, and getting ahead of decisions.
+- Fix everything; don't ask on safe fixes. Never over-bundle risky and safe
+  fixes. Capture mid-session ideas the same turn.
 
 
 ====================================================================
@@ -249,5 +321,8 @@ ENVIRONMENT
   job, though he also uses it at work via the Anduril AI gateway "Alfredo"
   (Open WebUI proxy). Air-gapped work laptop requires manual file transfer via
   GitHub releases — which is part of why docs/ now ships in the zip.
-- Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, sold via
-  weirdave.gumroad.com) and Free (weirdave.github.io/WaxFrame-Free/).
+- Two editions: Pro (github.com/WeirDave/WaxFrame-Professional, live at
+  waxframe.com, sold via weirdave.gumroad.com/l/aihive-pro) and Free
+  (weirdave.github.io/WaxFrame-Free/).
+- IP/legal: AGPL-3.0. Multi-AI workflow is not patentable (Alice + prior art);
+  shipping velocity and brand are the practical moat.
