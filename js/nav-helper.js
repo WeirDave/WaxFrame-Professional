@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — nav-helper.js
-//  Build: 20260529-013
+//  Build: 20260529-014
 //  Shared hamburger-menu open/close functions for helper pages
 //  (api-details, document-playbooks, prompt-editor, what-are-tokens,
 //   waxframe-user-manual). Mirrors the work-screen openNavMenu /
@@ -47,6 +47,18 @@ function downloadAsWord() {
     var st = (el.getAttribute('style') || '').replace(/\s+/g,'').toLowerCase();
     if (st.indexOf('display:none') !== -1 || st.indexOf('visibility:hidden') !== -1) el.remove();
   });
+  // v3.63.41 — resolve relative image + link URLs to absolute against the
+  // page's own origin. Relative src like "images/foo.png" breaks once the
+  // .doc is opened outside the site directory (Word/Docs/LibreOffice can't
+  // resolve it), so images went missing. Absolute URLs load wherever the
+  // file is opened (online). Drop srcset/loading so Word takes the src.
+  clone.querySelectorAll('img[src]').forEach(function(img){
+    try { img.setAttribute('src', new URL(img.getAttribute('src'), document.baseURI).href); } catch(e){}
+    img.removeAttribute('srcset'); img.removeAttribute('loading');
+  });
+  clone.querySelectorAll('a[href]').forEach(function(a){
+    try { a.setAttribute('href', new URL(a.getAttribute('href'), document.baseURI).href); } catch(e){}
+  });
   var docTitle = document.title || 'WaxFrame';
   var css =
     "body{font-family:Calibri,Arial,sans-serif;font-size:11pt;color:#000;line-height:1.4;}" +
@@ -72,7 +84,8 @@ function downloadAsWord() {
     ".wh-table{border-collapse:collapse;width:100%;margin:8pt 0;}" +
     ".wh-table th{background:#efefef;color:#000;font-weight:bold;text-align:left;border:1pt solid #999;padding:4pt 8pt;}" +
     ".wh-table td{color:#222;border:1pt solid #999;padding:4pt 8pt;}" +
-    "code{font-family:Consolas,'Courier New',monospace;background:#f0f0f0;color:#222;padding:0 2pt;}";
+    "code{font-family:Consolas,'Courier New',monospace;background:#f0f0f0;color:#222;padding:0 2pt;}" +
+    "img{max-width:100%;height:auto;}";
   var head =
     "<html xmlns:o='urn:schemas-microsoft-com:office:office' " +
     "xmlns:w='urn:schemas-microsoft-com:office:word' " +

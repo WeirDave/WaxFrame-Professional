@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-013
+//  Build: 20260529-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-013';         // build stamp — update each session
+const BUILD       = '20260529-014';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -966,48 +966,30 @@ function resetSuppressedPrompts() {
 //  prefix and clears the whole class in one pass.
 // ============================================================
 
+// v3.63.41 — First-run offer (merged). Was two stacked modals on first
+// work-screen entry (checkpoint backup, then a separate save-as-template
+// prompt). David: they should live in the same space. Now one modal with
+// both options side by side + a single "Not now". No "don't ask again" —
+// it's one-shot per session already (the dismissed flag below), so always
+// ask. Picking an action closes the offer and runs that flow; both remain
+// available afterward from the Tools menu / Finish panel.
 async function maybeShowCheckpointBackupNudge() {
-  // Session-only "Not now" dismissal — handles Back-from-work →
-  // Continue round-trips without re-prompting. Reload resets it.
   if (window._checkpointNudgeDismissedThisSession) return;
-  const ok = await wfConfirm(
-    '💾 Save a checkpoint backup?',
-    "Your project is set up and ready to run. Before you burn any tokens, save a checkpoint backup so you can restore this exact starting state if something goes sideways later — a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one.\n\nIt's free, takes a second, and the backup includes your hive setup, project goal, reference material, and starting document.",
-    {
-      okText: '💾 Save Backup',
-      cancelText: 'Not now'
-    }
-  );
-  if (!ok) {
-    window._checkpointNudgeDismissedThisSession = true;
-    return;
-  }
-  // Route through the existing backupSession() flow. That flow has
-  // its own "Sensitive backup" confirm (also dismiss-permanently from
-  // v3.62.2) — if the user has already dismissed it, the backup runs
-  // immediately without a second modal.
-  if (typeof backupSession === 'function') {
-    try { await backupSession(); } catch (e) { /* download flow owns its own errors */ }
-  }
-  // v3.63.36 — same first-entry moment also offers to bank the setup as a
-  // reusable template. Independent suppressKey so power users can silence
-  // just this one. Fires whether or not they took the backup.
-  await maybeOfferSaveTemplateOnEntry();
+  const m = document.getElementById('firstRunOfferModal');
+  if (!m) return;
+  m.classList.add('active');
 }
-
-// v3.63.36 — Save-as-Template offer, paired with the checkpoint backup nudge
-// on first post-setup work-screen entry. Separate suppressKey from the backup
-// nudge. Opening the save modal is all this does; the modal owns the capture.
-async function maybeOfferSaveTemplateOnEntry() {
-  try {
-    if (localStorage.getItem('waxframe_suppress_template_nudge') === 'true') return;
-  } catch (e) {}
-  const want = await wfConfirm(
-    '⭐ Save this project as a template?',
-    "You've got a setup worth reusing? Save it as a template now and you can apply the same recipe — goal, starting document, reference material, length guard, and this hive — to future documents in one click. You can also do this anytime from the Finish panel or the Tools menu.",
-    { okText: '⭐ Save as Template', cancelText: 'Not now', suppressKey: 'waxframe_suppress_template_nudge' }
-  );
-  if (want && typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
+function closeFirstRunOffer() {
+  document.getElementById('firstRunOfferModal')?.classList.remove('active');
+  window._checkpointNudgeDismissedThisSession = true;
+}
+function firstRunDoBackup() {
+  closeFirstRunOffer();
+  if (typeof backupSession === 'function') backupSession();
+}
+function firstRunDoTemplate() {
+  closeFirstRunOffer();
+  if (typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
 }
 
 // Internal: refresh ONE AI's model list without disturbing the picked
