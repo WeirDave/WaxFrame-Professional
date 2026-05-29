@@ -2,6 +2,17 @@
 
 ---
 
+## v3.63.42
+**Build:** `20260529-015` · **Released:** May 29, 2026
+
+### Changed — Help pages now export a real Word document (with images)
+
+- **Download as Word** now produces a true `.docx` with images **embedded** — they travel inside the file, so they display in Word, Google Docs, and LibreOffice and survive being emailed or opened offline. The previous version generated Word-flavored HTML that only linked images, which showed up as broken-image boxes.
+- The exporter walks the page's content into real Word elements: headings, paragraphs, bold/italic, lists, tables, code, and embedded images — scaled to fit the page.
+- Built on the `docx` library, self-hosted in `lib/` (no CDN, works offline), consistent with WaxFrame's other vendored libraries.
+
+---
+
 ## v3.63.41
 **Build:** `20260529-014` · **Released:** May 29, 2026
 
