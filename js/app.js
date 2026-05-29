@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-014
+//  Build: 20260528-015
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -462,7 +462,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-014';         // build stamp — update each session
+const BUILD       = '20260528-015';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -892,6 +892,16 @@ function resetSuppressedPrompts() {
 
 // ============================================================
 //  v3.63.0 — Checkpoint Backup Nudge
+//  v3.63.18 — Simplified: removed "Don't ask again for this project"
+//             checkbox and the per-project localStorage suppression key.
+//             Modal already fires only via initWorkScreen(true), which
+//             skips on session restore — so in practice the checkbox
+//             was suppressing an edge case (Back-from-work → Continue
+//             round-trip in the same browser session) at the cost of
+//             confusing copy in the modal ("Don't ask again" implied
+//             the modal was a repeat offender; it isn't). Replaced
+//             with a lightweight in-memory session flag that handles
+//             the round-trip case without persistent state.
 //
 //  Fires ONCE PER PROJECT on the post-setup transition into the work
 //  screen (initWorkScreen(true) only — never on session restore). The
@@ -900,78 +910,44 @@ function resetSuppressedPrompts() {
 //  later (credit hiccup, unexpected drift, a different direction the
 //  user wants to try without losing this one) the user can restore.
 //
-//  Three outcomes from the user's perspective:
-//   1. Save Backup            → runs the existing backupSession() flow
-//   2. Not now (unchecked)    → in-memory dismissal, re-nudges next
-//                                session if user comes back to this
-//                                project before backing up
-//   3. Don't ask again        → per-project localStorage flag, no
-//                                further nudges for this project
+//  Two outcomes from the user's perspective:
+//   1. Save Backup → runs the existing backupSession() flow
+//   2. Not now    → in-memory dismissal for the rest of this browser
+//                   session; the modal stays out of the way if the
+//                   user does a Back-from-work → Continue round-trip
+//                   that re-calls initWorkScreen(true). Closing and
+//                   reopening WaxFrame resets the flag.
 //
-//  IMPORTANT semantic difference from the v3.62.2 informational-confirm
-//  pattern: here the checkbox ALWAYS persists when checked, regardless
-//  of whether the user clicked Save or Not now. The v3.62.2 pattern
-//  treats cancel-with-suppress as "I want to see it next time"; this
-//  nudge treats the checkbox as a feature opt-out, decoupled from the
-//  immediate action. Documented in the user manual.
+//  Orphan localStorage keys: any pre-v3.63.18 users who ticked the
+//  removed "Don't ask again for this project" checkbox have
+//  `waxframe_suppress_checkpoint_nudge__*` keys still in localStorage.
+//  They are inert (no code reads them). Users who hit
+//  resetSuppressedPrompts() ("Reset Dismissed Prompts" in settings)
+//  will sweep them up — that function matches any `waxframe_suppress_`
+//  prefix and clears the whole class in one pass.
 // ============================================================
 
-// Per-project suppress key. Slugifies project name + version into a
-// stable, ASCII-safe localStorage key. Renaming the project effectively
-// resets the suppression (treated as a feature: "fresh project, fresh
-// nudge"). Two projects with identical name + version will share
-// suppression — minor edge case, acceptable.
-function getProjectCheckpointSuppressKey() {
-  const name    = document.getElementById('projectName')?.value.trim()    || '';
-  const version = document.getElementById('projectVersion')?.value.trim() || '';
-  if (!name) return null;  // no project name → no suppression possible
-  const slug = (name + '__' + version)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 80);
-  return `waxframe_suppress_checkpoint_nudge__${slug}`;
-}
-
 async function maybeShowCheckpointBackupNudge() {
-  // Session-only "Not now" dismissal — re-nudge next session.
+  // Session-only "Not now" dismissal — handles Back-from-work →
+  // Continue round-trips without re-prompting. Reload resets it.
   if (window._checkpointNudgeDismissedThisSession) return;
-  // Per-project permanent dismissal.
-  const suppressKey = getProjectCheckpointSuppressKey();
-  if (suppressKey) {
-    try {
-      if (localStorage.getItem(suppressKey) === 'true') return;
-    } catch (e) { /* fall through and nudge */ }
-  }
-  const res = await wfConfirm(
+  const ok = await wfConfirm(
     '💾 Save a checkpoint backup?',
     "Your project is set up and ready to run. Before you burn any tokens, save a checkpoint backup so you can restore this exact starting state if something goes sideways later — a credit hiccup, an unexpected drift in the document, or a new direction you want to try without losing this one.\n\nIt's free, takes a second, and the backup includes your hive setup, project goal, reference material, and starting document.",
     {
       okText: '💾 Save Backup',
-      cancelText: 'Not now',
-      checkbox: { label: "Don't ask again for this project", checked: false }
+      cancelText: 'Not now'
     }
   );
-  // wfConfirm with opts.checkbox returns { ok, checked } instead of a
-  // bare boolean. Persist the "don't ask again" preference whenever the
-  // checkbox is checked, regardless of which button was clicked.
-  if (res.checked && suppressKey) {
-    try { localStorage.setItem(suppressKey, 'true'); } catch (e) {}
-    if (typeof consoleLog === 'function') {
-      consoleLog('💾 Checkpoint Backup Nudge dismissed permanently for this project.', 'info');
-    }
-  } else if (!res.checked && !res.ok) {
-    // Not-now without persist → session-only dismissal, re-nudge next
-    // time the user launches into this project.
+  if (!ok) {
     window._checkpointNudgeDismissedThisSession = true;
+    return;
   }
-  if (res.ok) {
-    // Route through the existing backupSession() flow. That flow has
-    // its own "Sensitive backup" confirm (also dismiss-permanently from
-    // v3.62.2) — if the user has already dismissed it, the backup runs
-    // immediately without a second modal.
-    if (typeof backupSession === 'function') backupSession();
-  }
+  // Route through the existing backupSession() flow. That flow has
+  // its own "Sensitive backup" confirm (also dismiss-permanently from
+  // v3.62.2) — if the user has already dismissed it, the backup runs
+  // immediately without a second modal.
+  if (typeof backupSession === 'function') backupSession();
 }
 
 // Internal: refresh ONE AI's model list without disturbing the picked
@@ -7255,13 +7231,29 @@ function handleFileSelect(e) {
 function clearUploadedFile() {
   docText = '';
   saveSession();
-  try { localStorage.removeItem('waxframe_v2_filename'); } catch(e) { console.warn('[v2-filename:clear] remove failed:', e); }
+  try {
+    localStorage.removeItem('waxframe_v2_filename');
+    // v3.63.18 — also wipe the PDF-import metadata. Pre-v3.63.18 this
+    // function only cleared the filename, leaving `waxframe_v2_source_type`
+    // and `waxframe_v2_has_pdf_pages` (along with the in-memory
+    // `window._lastPDFPages` rasterized page images) behind. That left the
+    // PDF re-extract banner showing on the work screen with stale state
+    // and kept the rasterized images alive in memory after the user
+    // thought they had cleared the upload. clearProject() already does
+    // all four of these wipes; clearUploadedFile() now matches.
+    localStorage.removeItem('waxframe_v2_source_type');
+    localStorage.removeItem('waxframe_v2_has_pdf_pages');
+  } catch(e) { console.warn('[v2-filename:clear] remove failed:', e); }
+  window._lastPDFPages = null;
   const status = document.getElementById('fileStatus');
   if (status) { status.style.display = 'none'; status.textContent = ''; }
   const clearRow = document.getElementById('fileClearRow');
   if (clearRow) clearRow.style.display = 'none';
   const fileInput = document.getElementById('fileInput');
   if (fileInput) fileInput.value = '';
+  // Hide the now-stale re-extract banner if the work screen is mounted.
+  // No-op if the function isn't defined or the banner isn't in the DOM.
+  if (typeof showReExtractBanner === 'function') showReExtractBanner();
   updateLaunchRequirements();
 }
 
