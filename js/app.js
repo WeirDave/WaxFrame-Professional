@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-013
+//  Build: 20260528-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -462,7 +462,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-013';         // build stamp — update each session
+const BUILD       = '20260528-014';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3791,7 +3791,6 @@ function renderAISetupGrid() {
 //   expanded:           the above + key field, model selector, etc.
 // Greyed-name class fires when the AI has no saved key.
 function buildAISetupRowHTML(ai) {
-  const isActive  = !!activeAIs.find(a => a.id === ai.id);
   const isCustom  = !DEFAULT_AIS.find(d => d.id === ai.id);
   const cfg       = API_CONFIGS[ai.provider];
   const key       = cfg?._key || '';
@@ -3850,7 +3849,6 @@ function buildAISetupRowHTML(ai) {
           <input type="password" class="ai-setup-key" id="key-${ai.id}"
             placeholder="Paste key — Enter to save…"
             value="${escapeHtml(key)}"
-            ${!isActive ? 'disabled' : ''}
             onkeydown="if(event.key==='Enter'){saveKeyForAI('${ai.id}',this.value,this);}"
             onclick="event.stopPropagation();">
           <button class="ai-eye-btn" onclick="toggleKeyVis('${ai.id}'); event.stopPropagation();" title="Show/hide key">👁️</button>
