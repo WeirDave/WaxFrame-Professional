@@ -1,5 +1,5 @@
 WaxFrame Professional — Project Rules Reference
-Last updated: 2026-05-29 (current production: v3.63.45)
+Last updated: 2026-05-29 (current production: v3.63.47)
 
 Living reference of the conventions and hard rules this project runs under.
 Update when a rule changes; this is the onboarding/consistency anchor for any
