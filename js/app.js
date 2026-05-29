@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-015
+//  Build: 20260528-016
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -242,122 +242,22 @@ function ensureOriginalModelBaseline() {
   });
   if (!migrated) return;
   saveHive();
-  if (!localStorage.getItem('waxframe_v330_baseline_migrated')) {
-    try { localStorage.setItem('waxframe_v330_baseline_migrated', '1'); } catch(e) { /* quota — fine */ }
-    setTimeout(() => {
-      toast(
-        `💡 v3.30.2: Captured reset-to-original baselines for ${migrated} custom AI${migrated !== 1 ? 's' : ''}. ` +
-        `If you ran Recommend before this version, re-pick the model now to update the baseline.`,
-        9000
-      );
-    }, 1500);
-  }
+  // v3.63.18 — pre-v3.30.2 upgrade toast removed (33 releases ago, no
+  // returning users at that age would still benefit). The waxframe_v330
+  // _baseline_migrated localStorage sentinel is swept in the orphan-key
+  // cleanup at the top of DOMContentLoaded.
 }
 
-// v3.32.10 — One-time migration: clear stale single-pick recommendation
-// caches from pre-v3.32.10 installs. The old format stored
-// {model, why, labels: {tag: 'Best Overall'|'Fastest'|'Budget', why}}
-// under a single per-provider/per-AI key. v3.32.10 splits into
-// role-suffixed -reviewer and -builder keys with a different label shape.
-// The legacy keys won't render usefully with the new buildModelSelector
-// (no role markers, missing why text), so we wipe them on first load to
-// force a clean re-recommend on next button click. Silent — no toast.
-// The migration flag prevents re-clearing on every page load.
-function migrateRecommendationCachesV33210() {
-  if (localStorage.getItem('waxframe_v33210_recommend_migrated')) return;
-  let cleared = 0;
-  try {
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k) continue;
-      // Match pre-v3.32.10 single-pick recommendation cache keys.
-      // The new role-suffixed keys end in -reviewer or -builder, so we
-      // explicitly skip those to avoid wiping fresh v3.32.10 data on a
-      // user who somehow runs the migration twice.
-      if (/^waxframe_recommend_(default|custom)-/.test(k)
-          && !/-(reviewer|builder)$/.test(k)) {
-        keysToRemove.push(k);
-      }
-    }
-    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
-    localStorage.setItem('waxframe_v33210_recommend_migrated', '1');
-  } catch(e) { /* quota / privacy mode — accept and move on */ }
-  if (cleared > 0) {
-    console.info(`[migrate-v3.32.10] Cleared ${cleared} stale recommendation cache key(s) from pre-v3.32.10 format.`);
-  }
-}
-
-// v3.60.5 — Together AI's /v1/models response includes a `running` boolean
-// per entry; `running: false` means "in the catalog but no longer currently-
-// serverless" (Qwen2-72B-Instruct is the canonical case, demoted from
-// serverless to dedicated-only). The fetchModelsFromEndpoint parse path
-// now filters those out on every fresh fetch (filter added in v3.60.5),
-// but cached lists from before v3.60.5 still contain the unfiltered ~200+
-// entries. This migration clears the cached model list for any AI whose
-// endpoint is a Together URL, so the next dropdown read triggers a fresh
-// fetch through the now-filtered code path. Runs once, then never again.
-// Provider-aware via endpoint URL inspection — no other provider's caches
-// are touched. (Other providers may grow their own staleness problems
-// later; that's the Auto-Update Models work planned for v3.61.0, not this
-// migration's scope.)
-function migrateTogetherModelCachesV3605() {
-  if (localStorage.getItem('waxframe_v3605_together_models_migrated')) return;
-  let cleared = 0;
-  try {
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k || !/^waxframe_models_/.test(k)) continue;
-      // The cache key is waxframe_models_${aiId}. Look up the AI in
-      // API_CONFIGS by stripping the prefix and matching against an entry
-      // whose endpoint is a Together URL.
-      const aiId = k.replace(/^waxframe_models_/, '');
-      const cfg  = (typeof API_CONFIGS !== 'undefined') ? API_CONFIGS[aiId] : null;
-      const ep   = cfg?.endpoint || cfg?._modelsEndpoint || '';
-      if (/api\.together\.xyz/i.test(ep)) {
-        keysToRemove.push(k);
-      }
-    }
-    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
-    localStorage.setItem('waxframe_v3605_together_models_migrated', '1');
-  } catch(e) { /* quota / privacy mode — accept and move on */ }
-  if (cleared > 0) {
-    console.info(`[migrate-v3.60.5] Cleared ${cleared} Together model-list cache(s). Next dropdown render will refetch with the new serverless-only filter applied.`);
-  }
-}
-
-// v3.60.7 — fetchModelsFromEndpoint now appends `?serverless=true` for
-// Together endpoints (see comment block there for the diagnostic history).
-// Existing v3.60.6 caches still contain the unfiltered ~257-entry list, so
-// this migration clears them once on first v3.60.7 load to force a fresh
-// fetch through the new URL. The v3.60.5 migration above is left in place
-// as a no-op for users who never loaded v3.60.5 / v3.60.6 — its sentinel
-// is separate from this one, so this one runs on every browser that
-// hasn't yet seen v3.60.7. Same provider-aware, same one-shot, same
-// localStorage-sentinel pattern.
-function migrateTogetherModelCachesV3607() {
-  if (localStorage.getItem('waxframe_v3607_together_models_migrated')) return;
-  let cleared = 0;
-  try {
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k || !/^waxframe_models_/.test(k)) continue;
-      const aiId = k.replace(/^waxframe_models_/, '');
-      const cfg  = (typeof API_CONFIGS !== 'undefined') ? API_CONFIGS[aiId] : null;
-      const ep   = cfg?.endpoint || cfg?._modelsEndpoint || '';
-      if (/api\.together\.xyz/i.test(ep)) {
-        keysToRemove.push(k);
-      }
-    }
-    keysToRemove.forEach(k => { try { localStorage.removeItem(k); cleared++; } catch(e) {} });
-    localStorage.setItem('waxframe_v3607_together_models_migrated', '1');
-  } catch(e) { /* quota / privacy mode — accept and move on */ }
-  if (cleared > 0) {
-    console.info(`[migrate-v3.60.7] Cleared ${cleared} Together model-list cache(s). Next dropdown render will refetch with ?serverless=true applied at the API.`);
-  }
-}
+// v3.63.18 — Three one-shot migrations removed (V33210 recommendation cache
+// reshuffle, V3605 Together model-list filter change, V3607 Together
+// serverless-only URL change). All three shipped between v3.32.10 and v3.60.7
+// and finished their job within one page-load of each user. Their localStorage
+// sentinels (waxframe_v33210_recommend_migrated, waxframe_v3605_together
+// _models_migrated, waxframe_v3607_together_models_migrated) are now swept in
+// the orphan-key cleanup at the top of DOMContentLoaded. If a returning user
+// somehow reaches v3.63.18+ without ever loading v3.60.7 (extremely unlikely),
+// their next dropdown read will trigger a fresh fetch through the current
+// parse path and self-heal — no migration needed.
 
 
 // (both removed in v3.31.0) and the recovery from the legacy removeAI
@@ -462,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-015';         // build stamp — update each session
+const BUILD       = '20260528-016';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -16668,20 +16568,21 @@ document.addEventListener('DOMContentLoaded', async () => {
   // hive is in memory. Defaults snapshot at module-eval time, so this
   // call only catches user-added customs.
   ensureOriginalModelBaseline();
-  // v3.32.10 — one-time clear of pre-v3.32.10 single-pick recommendation
-  // caches. New role-suffixed format is incompatible with old cache shape,
-  // so we wipe legacy keys to force a clean re-recommend. Silent — no toast.
-  migrateRecommendationCachesV33210();
-  // v3.60.5 — one-time clear of pre-v3.60.5 Together model-list caches so
-  // the new `running !== false` filter applies on the next dropdown read.
-  // Same pattern as the v3.32.10 migration above. Provider-aware via
-  // endpoint URL — only Together AI caches are cleared, no other provider
-  // is affected.
-  migrateTogetherModelCachesV3605();
-  // v3.60.7 — one-time clear of v3.60.6 Together model-list caches so the
-  // newly-appended `?serverless=true` URL param takes effect on the next
-  // dropdown read. Independent sentinel from v3.60.5 above; both run idempotently.
-  migrateTogetherModelCachesV3607();
+  // v3.63.18 — One-time orphan-sentinel sweep. The three migration functions
+  // these sentinels controlled (V33210 recommend-cache reshuffle, V3605/V3607
+  // Together model-list filter + URL changes, and the v3.30.2 baseline
+  // upgrade toast) were all removed in v3.63.18. The sentinels themselves
+  // would otherwise sit inert in every user's localStorage forever. removeItem
+  // is idempotent — running on already-absent keys is a no-op, so we can run
+  // this unconditionally on every load without tracking a new sentinel of our
+  // own (which would just become the next generation of cruft). Costs four
+  // removeItem calls per page load: negligible.
+  try {
+    localStorage.removeItem('waxframe_v330_baseline_migrated');
+    localStorage.removeItem('waxframe_v33210_recommend_migrated');
+    localStorage.removeItem('waxframe_v3605_together_models_migrated');
+    localStorage.removeItem('waxframe_v3607_together_models_migrated');
+  } catch (e) { /* quota / privacy mode — harmless to skip */ }
   // v3.41.0 — initMuteBtn() removed. theme.js auto-fires _updateMuteBtn
   // on DOMContentLoaded; since theme.js loads before app.js, theme.js's
   // listener fires first when DOMContentLoaded triggers.
