@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.29
+**Build:** `20260529-002` · **Released:** May 29, 2026
+
+### Fixed — Custom decision box prefilled the wrong text
+
+When resolving a USER DECISION, clicking **Custom — type your own**
+without first selecting a numbered option seeded the edit box with
+**option 1's** text instead of the **current** sentence. The expected
+behavior (and the long-standing one) is that Custom starts from the text
+you're replacing so you can tweak it. The textarea was already rendered
+with the current text, but the click handler overwrote it with the first
+option as a "never blank" fallback.
+
+Now the Custom box seeds from: the option you had selected (if any),
+otherwise the **current** text. If you've already typed in the box, your
+text is never clobbered.
+
+### Files changed
+
+- `js/app.js` — `selectCustomDecision`: prefill fallback changed from
+  `optionTexts[0]` to `_conflictCurrentTexts[decisionIdx]` (the current
+  sentence); removed the now-dead `data-option-texts` card attribute
+  (its only reader was the line being fixed)
+- `js/version.js` — APP_VERSION bump to v3.63.29 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust
+  sweep to `20260529-002` / `3.63.29`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v89.txt`
+
 ## v3.63.28
 **Build:** `20260529-001` · **Released:** May 29, 2026
 
