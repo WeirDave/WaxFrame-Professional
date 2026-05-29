@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-003
+//  Build: 20260529-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-003';         // build stamp — update each session
+const BUILD       = '20260529-004';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -5076,6 +5076,8 @@ const BUILDER_DISALLOWED_PATTERN =
 function filterModelsForRole(models, role) {
   if (!Array.isArray(models)) return [];
   return models.filter(m => {
+    // v3.63.31 — never recommend a quarantined (incapable) model.
+    if (typeof isModelIncapable === 'function' && isModelIncapable(m)) return false;
     if (NEVER_ALLOWED_PATTERN.test(m)) return false;
     if (role === 'builder' && BUILDER_DISALLOWED_PATTERN.test(m)) return false;
     return true;
