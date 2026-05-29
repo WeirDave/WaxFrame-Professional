@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-027
+   Build: 20260529-001
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4190,6 +4190,14 @@ html, body {
 .model-select-note-line + .model-select-note-line {
   margin-top: 2px;
 }
+/* Role-color the recommendation note lines so the picks are distinguishable
+   at a glance: Reviewer = gold (matches the ✨ marker), Builder = blue
+   (matches the Recommend action color). Native <select> options can’t be
+   background-tinted cross-browser, so the color lives here on the note lines,
+   paired with the words "Reviewer"/"Builder" in the option text. Emoji glyphs
+   keep their own colors regardless of the text color. */
+.model-select-note-line.is-reviewer { color: var(--accent); }
+.model-select-note-line.is-builder  { color: var(--blue); }
 /* .ai-remove-btn rules removed in v3.30.4 — the trash button it
    styled was replaced by a persistent checkbox (.ai-select-check)
    plus the bulk-select toolbar above the list. */
@@ -11353,6 +11361,12 @@ kbd {
 .helper-body .wf-tip-good {
   background: var(--green-dim);
   border-color: var(--green);
+}
+
+/* Red variant — for critical warnings the user must not miss (one-time secrets, irreversible steps) */
+.helper-body .wf-tip-warn {
+  background: var(--red-dim);
+  border-color: var(--red);
 }
 
 /* ── Section divider ─────────────────────────────────────────── */

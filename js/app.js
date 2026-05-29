@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260528-027
+//  Build: 20260529-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -119,9 +119,9 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
 
   const options = models.map(m => {
     const markers = [];
-    if (m === reviewerModel) markers.push('✨'); // Reviewer pick
-    if (m === builderModel)  markers.push('🔨'); // Builder pick
-    const markerPart = markers.length ? markers.join(' ') + ' ' : '';
+    if (m === reviewerModel) markers.push('✨ Reviewer'); // Reviewer pick
+    if (m === builderModel)  markers.push('🔨 Builder');  // Builder pick
+    const markerPart = markers.length ? markers.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
     const baseDisplay = `${markerPart}${m}${reasoningBadge}`;
     const selected = m === currentModel ? 'selected' : '';
@@ -144,17 +144,17 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
   // (Gemini, Grok, Mistral all hit this on the v3.32.11 first run).
   const noteParts = [];
   if (reviewerModel && reviewerWhy) {
-    noteParts.push(`<span class="model-select-note-line">✨ Reviewer (${esc(reviewerModel)}): ${esc(reviewerWhy)}</span>`);
+    noteParts.push(`<span class="model-select-note-line is-reviewer">✨ Reviewer (${esc(reviewerModel)}): ${esc(reviewerWhy)}</span>`);
   }
   if (builderModel && builderWhy) {
-    noteParts.push(`<span class="model-select-note-line">🔨 Builder (${esc(builderModel)}): ${esc(builderWhy)}</span>`);
+    noteParts.push(`<span class="model-select-note-line is-builder">🔨 Builder (${esc(builderModel)}): ${esc(builderWhy)}</span>`);
   }
   // NONE handling — if the AI flagged NONE for Builder (no model on its
   // lineup is suitable as a Builder), surface that so users know why no
   // 🔨 marker appears in the dropdown. Only show when no actual Builder
   // pick is cached.
   if (!builderModel && builderCache?.none && builderCache?.why) {
-    noteParts.push(`<span class="model-select-note-line">🔨 Builder: ${esc(builderCache.why)}</span>`);
+    noteParts.push(`<span class="model-select-note-line is-builder">🔨 Builder: ${esc(builderCache.why)}</span>`);
   }
   const noteHtml = noteParts.length ? `<span class="model-select-note">${noteParts.join('')}</span>` : '';
 
@@ -362,7 +362,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260528-027';         // build stamp — update each session
+const BUILD       = '20260529-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
