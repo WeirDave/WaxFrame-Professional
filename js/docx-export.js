@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-//  Build: 20260529-017
+//  Build: 20260529-018
 //  Real .docx export for the help pages. Replaces the fragile
 //  HTML-as-.doc approach (which only LINKED images, so Word showed
 //  broken-image boxes). Builds a true OOXML .docx via the vendored
