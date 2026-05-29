@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.35
+**Build:** `20260529-008` · **Released:** May 29, 2026
+
+### New — Custom templates (Phase 1)
+
+You can now save a project's setup as a reusable template and apply it to future documents.
+
+- **Save as Template** — available from the **Tools** menu and the **Finish** modal. Captures the *recipe*: your Goal fields, reference scaffold, length guard, and the hive that ran it (AI lineup + Builder). The finished document and round history are deliberately **not** saved.
+- **My Templates** — saved templates appear in the template gallery under a new *My Templates* section, alongside the built-ins, on both the *from scratch* and *refine* paths.
+- **Apply** — custom templates run through the same proven apply path as built-ins (Goal fields, length, reference scaffold). The captured hive is stored and shown.
+- **Delete** — hover a custom card for a delete (🗑) affordance with a confirm.
+
+Storage is local only (`waxframe_custom_templates`); API keys never travel — only the AI ids are captured.
+
+> Phase 1b (auto-reconciling a template's saved hive against your keyed AIs — "use theirs vs. keep mine"), the blank-form editor (Phase 2), and export/import (Phase 3) are on the roadmap.
+
+---
+
 ## v3.63.34
 **Build:** `20260529-007` · **Released:** May 29, 2026
 
