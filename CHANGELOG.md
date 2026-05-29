@@ -2,6 +2,15 @@
 
 ---
 
+## v3.63.38
+**Build:** `20260529-011` · **Released:** May 29, 2026
+
+### Fixed — Save as PDF on the sidebar help pages
+
+- **Save as PDF** now works on the **User Manual**, **API Details**, and **Document Playbooks** pages. These use a two-column layout with a sticky table-of-contents sidebar that the print styles never accounted for, so the PDF came out as a clipped narrow column with the TOC wasting a gutter on every page. Printing now collapses to a clean single-column document, drops the on-screen-only TOC, and renders tables legibly.
+
+---
+
 ## v3.63.37
 **Build:** `20260529-010` · **Released:** May 29, 2026
 
