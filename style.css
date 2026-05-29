@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-013
+   Build: 20260528-014
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -854,10 +854,14 @@ html, body {
   background: var(--surface3);
   border-color: var(--accent);
 }
-.ai-setup-key:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+/* .ai-setup-key:disabled rule removed in v3.63.17 — was load-bearing in
+   the pre-v3.31.0 single-list era when switching to Server mode needed
+   to hide Internet defaults in the combined hive (via isActive=false).
+   The v3.31.0 two-tab split made it dead code; the matching disabled
+   attribute on the input in buildAISetupRowHTML (app.js) was removed at
+   the same time. Removing this rule prevents future regressions where a
+   stale isActive gate could re-introduce the chicken-and-egg lock on
+   the Worker Bees paste-key input. */
 /* .ai-info-btn rules removed in v3.31.0 — the small ↗ circle button
    on every AI row was replaced by the .ai-getkey-link inside the
    expanded panel (only renders when the AI has no key yet). */
