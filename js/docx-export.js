@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-//  Build: 20260529-019
+//  Build: 20260529-020
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
@@ -175,8 +175,7 @@
       children: [new docx.ImageRun({
         type: info.type,
         data: info.data,
-        transformation: { width: info.width, height: info.height },
-        altText: { title: imgEl.getAttribute('alt') || 'WaxFrame image', description: imgEl.getAttribute('alt') || '' }
+        transformation: { width: info.width, height: info.height }
       })],
       spacing: { after: 160 }
     }));
@@ -215,7 +214,7 @@
 
     if (!rows.length) return null;
     return new docx.Table({
-      width: { size: 100, type: docx.WidthType.PERCENTAGE },
+      width: { size: 9000, type: docx.WidthType.DXA },
       borders: borders,
       rows: rows
     });
@@ -385,13 +384,15 @@
         canvas.width = dims.width;
         canvas.height = dims.height;
         var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, dims.width, dims.height);
         ctx.drawImage(img, 0, 0, dims.width, dims.height);
         canvas.toBlob(function (blob) {
           if (!blob) { resolve(null); return; }
           blob.arrayBuffer().then(function (ab) {
-            resolve({ data: new Uint8Array(ab), type: 'png', width: dims.width, height: dims.height });
+            resolve({ data: new Uint8Array(ab), type: 'jpg', width: dims.width, height: dims.height });
           }).catch(function () { resolve(null); });
-        }, 'image/png');
+        }, 'image/jpeg', 0.92);
       } catch (e) {
         resolve(null);
       }
@@ -399,20 +400,23 @@
   }
 
   function fetchImage(img, src) {
-    return fetch(src).then(function (r) {
-      if (!r.ok) return null;
-      var mime = r.headers.get('content-type') || '';
-      return r.arrayBuffer().then(function (ab) {
-        var dims = dimensionsFor(img, MAX_IMG_W);
-        return {
-          data: new Uint8Array(ab),
-          type: imageTypeFromMime(mime, src),
-          width: dims.width,
-          height: dims.height
-        };
+    return imageFromCanvas(img).then(function (canvasInfo) {
+      if (canvasInfo) return canvasInfo;
+      return fetch(src).then(function (r) {
+        if (!r.ok) return null;
+        var mime = r.headers.get('content-type') || '';
+        return r.arrayBuffer().then(function (ab) {
+          var dims = dimensionsFor(img, MAX_IMG_W);
+          return {
+            data: new Uint8Array(ab),
+            type: imageTypeFromMime(mime, src),
+            width: dims.width,
+            height: dims.height
+          };
+        });
+      }).catch(function () {
+        return null;
       });
-    }).catch(function () {
-      return imageFromCanvas(img);
     });
   }
 
