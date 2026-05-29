@@ -3,9 +3,9 @@
 ---
 
 ## v3.63.19
-**Build:** `20260528-018` · **Released:** May 28, 2026
+**Build:** `20260528-019` · **Released:** May 28, 2026
 
-### Three improvements shipped in one release
+### Four improvements shipped in one release
 
 **1. Recommend Models — green success state**
 
@@ -47,26 +47,27 @@ the moment of save, on the same screen the user is already looking at.
 
 Implementation notes:
 
-- The validation uses the existing `fetchModelsFromEndpoint` call —
-  the same lightweight `/v1/models` GET that the Auto-Update model
-  refresh already fires periodically. Cheap, no chat-completion tokens
-  burned, no UI modal opened.
+- Provider-aware routing covers all six default providers correctly.
+  Each provider hits its proper `/v1/models` (or equivalent) endpoint
+  with the proper auth header — ChatGPT/Grok/Perplexity/DeepSeek use
+  origin-based URL derivation, Claude routes through the existing CF
+  Worker proxy (no CORS surprises), Gemini uses Google's API with the
+  `x-goog-api-key` header, Mistral hits `api.mistral.ai/v1/models`
+  with Bearer auth.
+- Cost: one lightweight `/v1/models` GET per save. No chat-completion
+  tokens burned, no UI modal opened.
 - Only auth-class errors (HTTP 401 / 403) flip the invalid flag.
   Network errors, CORS failures, and other transient conditions leave
   the badge at 🔑 — we cannot reliably distinguish "bad key" from
-  "offline network" or "CORS preflight" in those cases, and a false
-  ❌ on a genuinely-good key would be worse than no signal.
-- Claude's direct-endpoint model-list call CORS-fails from a browser
-  origin, so its bad-key signal looks identical to a network failure
-  and the badge will not flip even with a bogus Claude key.
-  Documented in the backlog as a follow-up — likely needs routing
-  through the CF Worker proxy for validation parity with the chat
-  path.
+  "offline network" in those cases, and a false ❌ on a genuinely-good
+  key would be worse than no signal.
 - Race-protected: if the user edits the key again between save and
   validation response, the stale result is ignored.
 - Invalid flag is cleared on every save attempt — fixing a bad key
   makes the ❌ disappear immediately (then reappears if the new key
   also 401s).
+- Custom AIs use `fetchModelsFromEndpoint` (the generic derive path)
+  since we don't curate validation paths for arbitrary endpoints.
 - The flag is in-memory only (`window._invalidKeys`). Reload clears
   it; subsequent Auto-Update or Test runs will re-discover any
   persistent bad keys.
@@ -85,13 +86,43 @@ action to take. Only auth-class errors get the translation — rate
 limits, 5xx responses, and network conditions stay as their raw
 messages since the right action depends on the specific condition.
 
+**4. Remove Key wipes stale caches**
+
+The X Key button (per-row "Remove API Key") now also clears the model-
+list cache and the recommendation caches keyed to that AI. Pre-v3.63.19
+the model dropdown next to a freshly-removed key would still show the
+last-cached list of models from the prior key, so the next user flow
+(remove → paste a new key → expand the dropdown) showed stale models
+that didn't reflect the new key's actual access. The cached models
+also misled validate-on-save's UX — a bogus new key would surface ❌,
+but the stale dropdown next to it looked populated and "live,"
+confusing the signal.
+
+Cleared on remove:
+
+- `waxframe_models_{provider}` / `waxframe_models_{id}` (model list)
+- `waxframe_recommend_*-reviewer` / `-builder` (recommendation caches,
+  both current and legacy single-pick keys)
+- `window._invalidKeys[id]` (validate-on-save flag — no key means the
+  AI can't be in an "invalid key" state)
+
+NOT cleared on remove:
+
+- `cfg.model` — the previously-picked model name persists as a label.
+  When a new key is added, the same model may still be available; if
+  not, the deprecation watchdog flags it on next refresh.
+
 ### Files changed
 
-- `js/app.js` — six function bodies modified:
+- `js/app.js` — seven function bodies modified:
   - `saveKeyForAI` — added `validateKeyOnSave` call after save, plus
     invalid-flag clearing before save
-  - `validateKeyOnSave` — new function (race-protected background
-    validation via `fetchModelsFromEndpoint`)
+  - `validateKeyOnSave` — new function with per-provider routing
+    (mirrors `fetchModelsForProvider`'s correct dispatch for the six
+    default providers; falls back to `fetchModelsFromEndpoint` for
+    customs)
+  - `clearKeyForAI` — wipes model-list cache + recommendation caches
+    + `_invalidKeys` flag alongside the key itself
   - `buildAISetupRowHTML` — key-status badge reads `window._invalidKeys`
     and surfaces ❌ + updated title when invalid
   - `recheckModelForAI` — green-flash on success (both "model
