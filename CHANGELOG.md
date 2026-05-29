@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.31
+**Build:** `20260529-004` · **Released:** May 29, 2026
+
+### Fixed — Models that can't run a WaxFrame round are now filtered out and self-quarantine
+
+Some models show up in a provider's catalog but can never actually run a
+round — they reject the developer/system instructions every WaxFrame prompt
+depends on. Gemini's `antigravity-preview-05-2026` is the one that surfaced
+this: a round using it failed with *"Developer instruction is not enabled."*
+
+Two layers of defense:
+
+- **Known offender filtered at the source.** `antigravity` is now in the
+  structural non-chat filter, so it's stripped from the model list before it
+  can ever be shown or recommended.
+- **Self-healing quarantine for the unknown ones.** There's no naming pattern
+  that flags "this model rejects instructions" ahead of time — so WaxFrame now
+  learns from the failure. When a round dies with that signature, the failing
+  model id (read straight from the provider's `models/<id>` error) is recorded
+  and excluded from every future model list and recommendation. No hardcoded
+  blocklist to maintain.
+
+The error card is also clearer: instead of the generic "Something went wrong,"
+this failure now reads **"This model won't accept WaxFrame's instructions"**
+with Pick-a-different-model and Retry, and the offending model is removed from
+your lineup automatically.
+
+### Files changed
+
+- `js/api.js` — `antigravity` added to `STRUCTURAL_NON_CHAT_RE`; new runtime
+  quarantine store (`waxframe_incapable_models`) with `isModelIncapable` /
+  `quarantineModel`; `getModelsForProvider` excludes quarantined ids on read
+- `js/app.js` — `filterModelsForRole` excludes quarantined ids from recommend
+  candidates
+- `js/wf-debug.js` — new `MODEL_REJECTS_INSTRUCTIONS` error-catalog entry;
+  `showCard` quarantines the failing model on that class (and on
+  `MODEL_NEEDS_DIFFERENT_ENDPOINT`)
+- `js/version.js` — APP_VERSION bump to v3.63.31 Pro
+- All HTML, all JS with headers, `style.css` — build stamp + cache-bust sweep
+  to `20260529-004` / `3.63.31`
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v93.txt`
+
 ## v3.63.30
 **Build:** `20260529-003` · **Released:** May 29, 2026
 

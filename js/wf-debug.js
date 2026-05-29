@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260529-003
+//  Build: 20260529-004
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -139,6 +139,20 @@ window.WF_DEBUG = {
   // user wants the old terse-red-line behavior, so no toggle is needed.
   showCard(entry, ctx = {}) {
     this.captureFailure({ code: entry.code, ...ctx });
+    // v3.63.31 — Self-healing quarantine. If this failure means the model can
+    // never run a WaxFrame round (rejects our instruction shape, or needs an
+    // endpoint we don't speak), record the failing model id so it is excluded
+    // from every future list + recommendation (api.js quarantineModel). The
+    // provider usually names the model in the error ("models/<id>"); fall back
+    // to the AI's configured model.
+    if (entry && (entry.code === 'MODEL_REJECTS_INSTRUCTIONS' || entry.code === 'MODEL_NEEDS_DIFFERENT_ENDPOINT')) {
+      let bad = null;
+      const mm = (ctx.message || '').match(/models\/([^\s"')]+)/i);
+      if (mm) bad = mm[1];
+      if (!bad && ctx.model) bad = ctx.model;
+      if (!bad && typeof API_CONFIGS !== 'undefined' && ctx.provider && API_CONFIGS[ctx.provider]) bad = API_CONFIGS[ctx.provider].model;
+      if (bad && typeof quarantineModel === 'function') quarantineModel(bad, entry.code);
+    }
     if (typeof renderTroubleshootingCard === 'function') {
       renderTroubleshootingCard(entry, ctx);
     }
@@ -352,6 +366,27 @@ window.WF_ERROR_CATALOG = [
       // v3.60.2 — was { kind: 'link', href: '#' } — a dead placeholder. Now
       // uses fix-bee which the renderer swaps for an inline model dropdown
       // when ctx.aiId/provider are available.
+      { label: 'Pick a different model', kind: 'fix-bee' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.31 — A model that exists in the provider catalog but rejects
+    // WaxFrame's developer/system-instruction shape (e.g. Gemini's
+    // antigravity-preview-05-2026 -> "Developer instruction is not enabled
+    // for models/..."). The round can never succeed on it, so same fix as
+    // MODEL_NEEDS_DIFFERENT_ENDPOINT (pick a different model). showCard also
+    // quarantines the failing model so it stops being listed/recommended.
+    code: 'MODEL_REJECTS_INSTRUCTIONS',
+    matches: (err, ctx, msg) =>
+      msg.includes('developer instruction') ||
+      msg.includes('instruction is not enabled') ||
+      msg.includes('instructions are not enabled') ||
+      msg.includes('does not support system instruction') ||
+      msg.includes('system instruction is not'),
+    title: '{ai} — This model won\'t accept WaxFrame\'s instructions',
+    meaning: 'The provider rejected this model because it does not accept the developer/system instructions every WaxFrame prompt relies on (some preview and special-purpose models disable them). A round can never succeed on this model. Pick a different one from the dropdown — WaxFrame has automatically removed this model from your lists and recommendations so it will not be suggested again.',
+    actions: [
       { label: 'Pick a different model', kind: 'fix-bee' },
       { label: 'Retry round', kind: 'retry' }
     ]
