@@ -2,6 +2,15 @@
 
 ---
 
+## v3.63.39
+**Build:** `20260529-012` · **Released:** May 29, 2026
+
+### Fixed — Save as PDF produced a blank page
+
+- The real fix for **Save as PDF** on the help pages. The page body is a flex column with `min-height:100vh` and `overflow:auto`; in the print view that clipped the entire document down to a single, nearly blank page. Printing now lets the content flow and paginate normally across as many pages as it needs, and drops the dark honeycomb background so it prints clean on white. (v3.63.38 corrected the sidebar layout but the body clip was hiding the content underneath it.)
+
+---
+
 ## v3.63.38
 **Build:** `20260529-011` · **Released:** May 29, 2026
 

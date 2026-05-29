@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-011
+   Build: 20260529-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9686,7 +9686,20 @@ kbd {
 }
 
 @media print {
-  body { background:#fff !important; color:#111 !important; }
+  /* v3.63.39 — the real blank-page cause: .helper-body is a flex column with
+     min-height:100vh + overflow:auto. In print that clips the flow to roughly
+     one viewport and collapses the content, yielding a single near-blank page.
+     Neutralize the flex/height/overflow so content paginates normally, and
+     drop the dark honeycomb background image + gradient overlay. */
+  html, body, .helper-body {
+    display:block !important;
+    min-height:0 !important;
+    height:auto !important;
+    overflow:visible !important;
+    background:#fff !important;
+    background-image:none !important;
+    color:#111 !important;
+  }
   .page-header, .page-footer, .wh-back-top { display:none !important; }
   .page-main { padding:0 !important; max-width:100% !important; }
   /* v3.63.38 — user manual print. The manual uses .doc-layout (a 2-col grid
