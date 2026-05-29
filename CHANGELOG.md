@@ -2,6 +2,114 @@
 
 ---
 
+## v3.63.25
+**Build:** `20260528-025` · **Released:** May 28, 2026
+
+### Auto-validate on screen entry + colored card edges + green success banner
+
+This release closes out the key-validation UX loop. Three changes
+shipped together because each one only really pays off with the
+others in place.
+
+**1. Auto-validate every saved key on Worker Bees screen entry**
+
+`renderAISetupGrid` now calls a new `validateAllSavedKeys()` function
+on screen entry, which fires the same chat-completion probe as
+`validateKeyOnSave` for every AI that has a saved key. Returning to
+the Worker Bees screen — whether from the work screen, from setup,
+or after a page reload — refreshes the validation status for every
+key on the screen.
+
+Throttled to one validation per AI per 90 seconds, so the repeated
+`renderAISetupGrid` calls that happen during a single screen visit
+(mode toggle, bulk-select changes, model picks) don't fire redundant
+probes. Returning after a meaningful gap re-validates fresh.
+
+The throttle is shared with `saveKeyForAI`'s direct validation fire,
+so the typical user flow (save a key → screen re-renders → auto-
+validator wants to run) doesn't double-fire on the same AI.
+
+Cost: one chat-completion probe per saved key per real screen visit,
+~5-10 tokens each. With six keys saved that's well under a cent
+across all providers combined.
+
+**2. Colored card edges — gray / green / red at a glance**
+
+Each AI card on the Worker Bees screen now has a left-edge color
+that reflects its key state:
+
+- **Gray (dashed)** — no key saved, or saved but not yet validated
+  (this release's auto-validator clears the "not yet validated" case
+  on every screen visit)
+- **Green (4px solid)** — `validateKeyOnSave` got a 2xx response
+- **Red (4px solid)** — `validateKeyOnSave` got HTTP 401 or 403
+
+Scanning the screen now gives an instant read of which keys are
+working without having to click into each card. Pairs with the
+already-shipped manage-account banner colors (red for invalid /
+green for valid) and the `--green` / `--red` theme tokens so light
+and dark modes both swap automatically.
+
+**3. Symmetric green success banner when a key validates clean**
+
+The bad-key banner (v3.63.22 → v3.63.24) made validation failures
+loud and clear, but the success case stayed silent — keys that
+validated clean just got the key icon and the default amber
+"Manage account?" banner.
+
+This release adds a parallel green success banner. When
+`validateKeyOnSave` gets a 2xx back, the manage-account banner now:
+
+- Flips its background to `var(--green-dim)` (mode-aware)
+- Flips its border to solid `var(--green)`
+- Appends a green message: **✓ API key works — ready to use**
+
+Three banner states now:
+
+- **Neutral amber** — no key yet, or a key was saved but hasn't been
+  validated yet (rare with the new auto-validator)
+- **Red** — validation got HTTP 401 / 403
+- **Green** — validation got 2xx
+
+### Files changed
+
+- `js/app.js`:
+  - `validateAllSavedKeys` — new function, iterates `aiList` and
+    fires `validateKeyOnSave` for every AI with a saved key,
+    throttled by `_lastKeyValidationAt`
+  - `renderAISetupGrid` — now calls `validateAllSavedKeys()` at the
+    top of every render
+  - `validateKeyOnSave` — stamps `_lastKeyValidationAt[aiId]` at
+    function entry so all callers participate in the throttle; on
+    successful 2xx, sets `_validKeys[aiId]`; on 401/403 clears any
+    prior `_validKeys[aiId]`
+  - `saveKeyForAI` — clears both `_invalidKeys[id]` and
+    `_validKeys[id]` before re-validating, so the banner returns to
+    neutral until the new result lands
+  - `clearKeyForAI` — also clears `_validKeys[id]` and
+    `_lastKeyValidationAt[id]` so a re-added key validates without
+    waiting for the throttle window
+  - `buildAISetupRowHTML` — computes the `key-valid` / `key-invalid`
+    state class and adds it to the row's class list; adds the
+    `validMsg` snippet + `has-valid` / `is-valid-only` banner
+    variants
+- `style.css` — three new rule blocks:
+  - `.ai-setup-row.key-valid` / `.key-invalid` — 4px solid colored
+    left border with compensating left padding; explicit override
+    when the row is also `.is-expanded` so the expanded state
+    doesn't clobber the colored edge
+  - `.ai-key-valid-msg` — `var(--green)` text, same weight/size as
+    the invalid message
+  - `.ai-getkey-link-wrap.has-valid` / `.is-valid-only` —
+    `var(--green-dim)` background + `var(--green)` border, prompt
+    and link forced to `var(--text)` for legibility in both modes
+- `js/version.js` — APP_VERSION bump to v3.63.25 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v84.txt`
+
 ## v3.63.24
 **Build:** `20260528-024` · **Released:** May 28, 2026
 

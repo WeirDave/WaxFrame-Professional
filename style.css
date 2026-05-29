@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-024
+   Build: 20260528-025
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -12019,6 +12019,31 @@ kbd {
   opacity: 1;
 }
 
+/* v3.63.25 — Card-edge state colors. Gray dashed default already
+   handles the unset / unvalidated cases via the base .ai-setup-row
+   rule. .key-valid and .key-invalid add a thicker colored left edge
+   for at-a-glance health scanning of all the AI cards on the Worker
+   Bees screen. Compensating left padding keeps the row contents
+   aligned with rows that don't have the colored edge. */
+.ai-setup-row.key-valid {
+  border-left: 4px solid var(--green);
+  padding-left: calc(var(--space-12) - 3px);
+}
+.ai-setup-row.key-invalid {
+  border-left: 4px solid var(--red);
+  padding-left: calc(var(--space-12) - 3px);
+}
+/* The expanded-row solid border style would otherwise override the
+   key-state left color since that rule sets all four borders via
+   border-color/border-style. Explicit left-side override keeps the
+   colored edge visible even on the expanded card. */
+.ai-setup-row.is-expanded.key-valid {
+  border-left-color: var(--green);
+}
+.ai-setup-row.is-expanded.key-invalid {
+  border-left-color: var(--red);
+}
+
 /* Summary line — clickable to expand/collapse. Whole row is the
    click target except the action button (custom checkbox). */
 .ai-setup-row-summary {
@@ -12093,10 +12118,21 @@ kbd {
    the light-mode pinkish background).
    .has-invalid kicks in when the manage-account link is present and
    the key is invalid; .is-invalid-only is the standalone-banner
-   variant used when the AI has no console URL. */
+   variant used when the AI has no console URL.
+   v3.63.25 — Parallel green success banner. Same structural logic,
+   --green / --green-dim palette. .has-valid is the inline variant,
+   .is-valid-only is the standalone fallback. Both reuse the same
+   theme-token approach so light/dark mode swap is automatic. */
 .ai-key-invalid-msg {
   margin-left: auto;
   color: var(--red);
+  font-weight: 600;
+  font-size: 13px;
+  white-space: nowrap;
+}
+.ai-key-valid-msg {
+  margin-left: auto;
+  color: var(--green);
   font-weight: 600;
   font-size: 13px;
   white-space: nowrap;
@@ -12107,18 +12143,28 @@ kbd {
   border-color: var(--red);
   border-style: solid;
 }
-/* Force prompt + link to the mode-aware text token. The default rules
-   set prompt to --text-dim (washes out on red bg) and link to --accent
-   (amber — clashes with red). Override both to --text so they're
-   legible in both modes against the red wash. */
+.ai-getkey-link-wrap.has-valid,
+.ai-getkey-link-wrap.is-valid-only {
+  background: var(--green-dim);
+  border-color: var(--green);
+  border-style: solid;
+}
+/* Force prompt + link to the mode-aware text token in both invalid
+   and valid states. The default rules set prompt to --text-dim and
+   link to --accent (amber); neither plays well against red OR green
+   washes, so we override to --text for legibility. */
 .ai-getkey-link-wrap.has-invalid .ai-getkey-prompt,
-.ai-getkey-link-wrap.has-invalid .ai-getkey-link {
+.ai-getkey-link-wrap.has-invalid .ai-getkey-link,
+.ai-getkey-link-wrap.has-valid .ai-getkey-prompt,
+.ai-getkey-link-wrap.has-valid .ai-getkey-link {
   color: var(--text);
 }
-.ai-getkey-link-wrap.is-invalid-only {
+.ai-getkey-link-wrap.is-invalid-only,
+.ai-getkey-link-wrap.is-valid-only {
   justify-content: flex-start;
 }
-.ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg {
+.ai-getkey-link-wrap.is-invalid-only .ai-key-invalid-msg,
+.ai-getkey-link-wrap.is-valid-only .ai-key-valid-msg {
   margin-left: 0;
 }
 
