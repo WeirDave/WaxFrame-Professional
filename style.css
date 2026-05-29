@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-010
+   Build: 20260529-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9689,6 +9689,17 @@ kbd {
   body { background:#fff !important; color:#111 !important; }
   .page-header, .page-footer, .wh-back-top { display:none !important; }
   .page-main { padding:0 !important; max-width:100% !important; }
+  /* v3.63.38 — user manual print. The manual uses .doc-layout (a 2-col grid
+     with a sticky, overflow-y:auto TOC sidebar) which the print rules never
+     neutralized — it printed as a clipped narrow column with the TOC eating
+     a 240px gutter on every page. Collapse to a single linear column, drop
+     the on-screen-only TOC, and let .doc-main use the full width. */
+  .doc-layout { display:block !important; }
+  .doc-sidebar { display:none !important; }
+  .doc-main { width:100% !important; max-width:100% !important; min-width:0 !important; }
+  .wh-table { border-color:#ccc !important; }
+  .wh-table th, .wh-table td { background:#fff !important; color:#333 !important; border-color:#ccc !important; }
+  .wh-table th { background:#f0f0f0 !important; }
   .wh-intro { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; }
   .wh-section { background:#fff !important; border:1px solid #ccc !important; box-shadow:none !important; break-inside:avoid; }
   .wh-section-hdr { background:#fff !important; backdrop-filter:none !important; border-bottom:1px solid #ccc !important; }
