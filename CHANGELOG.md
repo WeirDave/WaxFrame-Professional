@@ -2,6 +2,120 @@
 
 ---
 
+## v3.63.19
+**Build:** `20260528-018` · **Released:** May 28, 2026
+
+### Three improvements shipped in one release
+
+**1. Recommend Models — green success state**
+
+The per-row Recommend Models button (and the header Recommend Models
+for All button) now flip green for 5 seconds after a successful
+recommendation, with a check-mark label confirming the state change.
+
+Before this release the button color did not change after success —
+the user got a toast notification but the button itself stayed blue,
+giving no persistent visual signal that the action had completed. The
+new behavior:
+
+- Idle: blue "Recommend Models" / "Recommend Models for All"
+- In flight: "Asking…" or "Asking N AIs in parallel…" (unchanged)
+- Success: green "✓ Recommended Model Picked" /
+  "✓ Recommended N Models" for 5 seconds
+- After 5 seconds: reverts to blue idle state
+
+The header All button shows the count of AIs that succeeded, so a
+partial-success run (e.g., 5 of 6 keys good) still gets clear positive
+acknowledgment for the ones that worked. Race-protected: if the user
+clicks Recommend again during the 5-second green window, the next
+click's "Asking…" state takes priority and the revert timeout becomes
+a no-op.
+
+**2. Validate-on-save for Worker Bees keys**
+
+When a user types an API key on the Worker Bees screen and presses
+Enter, the key is now lightly validated in the background. If the
+validation request returns HTTP 401 or HTTP 403 (the auth-class
+failures), the AI's key-status badge flips from 🔑 (saved) to ❌
+(invalid) and a console line surfaces the problem in plain language.
+
+Before this release a user could type any string into the key field,
+hit Enter, and walk all the way to the work screen before learning
+that the key was bad — at which point the failure surfaced as raw
+HTTP error spam in the console. The new behavior catches bad keys at
+the moment of save, on the same screen the user is already looking at.
+
+Implementation notes:
+
+- The validation uses the existing `fetchModelsFromEndpoint` call —
+  the same lightweight `/v1/models` GET that the Auto-Update model
+  refresh already fires periodically. Cheap, no chat-completion tokens
+  burned, no UI modal opened.
+- Only auth-class errors (HTTP 401 / 403) flip the invalid flag.
+  Network errors, CORS failures, and other transient conditions leave
+  the badge at 🔑 — we cannot reliably distinguish "bad key" from
+  "offline network" or "CORS preflight" in those cases, and a false
+  ❌ on a genuinely-good key would be worse than no signal.
+- Claude's direct-endpoint model-list call CORS-fails from a browser
+  origin, so its bad-key signal looks identical to a network failure
+  and the badge will not flip even with a bogus Claude key.
+  Documented in the backlog as a follow-up — likely needs routing
+  through the CF Worker proxy for validation parity with the chat
+  path.
+- Race-protected: if the user edits the key again between save and
+  validation response, the stale result is ignored.
+- Invalid flag is cleared on every save attempt — fixing a bad key
+  makes the ❌ disappear immediately (then reappears if the new key
+  also 401s).
+- The flag is in-memory only (`window._invalidKeys`). Reload clears
+  it; subsequent Auto-Update or Test runs will re-discover any
+  persistent bad keys.
+
+**3. Bad-key console message**
+
+When background API calls (Auto-Update model refresh, deprecation
+watchdog) error with HTTP 401 / 403 / authentication-class messages,
+the console now follows the raw `HTTP 401` line with a plain-language
+tip: `💡 Please check the API key for {Provider} — it may be invalid,
+expired, or rotated.`
+
+The raw HTTP status is kept (still useful for engineers debugging the
+exact failure), but the tip line gives a non-technical user a clear
+action to take. Only auth-class errors get the translation — rate
+limits, 5xx responses, and network conditions stay as their raw
+messages since the right action depends on the specific condition.
+
+### Files changed
+
+- `js/app.js` — six function bodies modified:
+  - `saveKeyForAI` — added `validateKeyOnSave` call after save, plus
+    invalid-flag clearing before save
+  - `validateKeyOnSave` — new function (race-protected background
+    validation via `fetchModelsFromEndpoint`)
+  - `buildAISetupRowHTML` — key-status badge reads `window._invalidKeys`
+    and surfaces ❌ + updated title when invalid
+  - `recheckModelForAI` — green-flash on success (both "model
+    unchanged" and "model changed" branches), 5-second timed revert
+  - `recommendModelsForAll` — green-flash on partial/full success with
+    count of succeeded AIs
+  - `refreshAllModelLists` — added auth-class friendly-tip line after
+    raw HTTP error
+- `style.css` — `.ai-recheck-btn` transition extended to cover color
+  and border-color; new `.ai-recheck-btn.is-recommended-success` and
+  `#recommendAllBtn.is-recommended-success` rules with green palette
+  using existing `--green` / `--green-dim` tokens
+- `js/version.js` — APP_VERSION bump to v3.63.19 Pro
+- All HTML — build stamp + cache-bust sweep
+- All JS with headers — build stamp sweep
+- `style.css` — build stamp sweep
+- `CHANGELOG.md` (this entry)
+- `docs/WaxFrame_Backlog_Master_v77.txt` (carried forward)
+
+---
+
+
+---
+
 ## v3.63.18
 **Build:** `20260528-016` · **Released:** May 28, 2026
 

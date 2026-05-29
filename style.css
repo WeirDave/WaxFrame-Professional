@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260528-016
+   Build: 20260528-018
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -3489,10 +3489,27 @@ html, body {
   border-radius: 6px;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 .ai-recheck-btn:hover { background: var(--blue-dim); }
 .ai-recheck-btn:disabled { opacity: 0.6; cursor: wait; }
+/* v3.63.18 — Post-success "you picked it" state for both the per-row
+   Recommend Models button (.ai-recheck-btn) and the header
+   Recommend Models for All button (#recommendAllBtn). Flips the blue
+   palette to green using the existing --green / --green-dim tokens so
+   the state change reads at a glance. JS adds the class, flips the
+   label to a checkmark + "Recommended Model Picked" / "Recommended N
+   Models" message, and reverts both via setTimeout after 5 seconds. */
+.ai-recheck-btn.is-recommended-success,
+#recommendAllBtn.is-recommended-success {
+  color: var(--green);
+  border-color: var(--green);
+  background: var(--green-dim);
+}
+.ai-recheck-btn.is-recommended-success:hover,
+#recommendAllBtn.is-recommended-success:hover {
+  background: var(--green-dim);
+}
 
 .custom-ai-key-wrap {
   display: flex;
