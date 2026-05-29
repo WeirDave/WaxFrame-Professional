@@ -2,6 +2,16 @@
 
 ---
 
+## v3.63.41
+**Build:** `20260529-014` · **Released:** May 29, 2026
+
+### Fixed & Changed — Word export images + merged first-run prompt
+
+- **Word export images** — images now appear in the downloaded Word document. They were referenced by relative path, which broke once the file was opened outside the site folder; image and link URLs are now resolved to absolute, and images are capped to the page width so large screenshots fit.
+- **One first-run prompt** — the checkpoint-backup and save-as-template prompts that fired back-to-back on first entry to the work screen are now a single modal offering both, with one **Not now**. The separate "don't ask again" on the template prompt is gone — it only fires once per session, so it always asks.
+
+---
+
 ## v3.63.40
 **Build:** `20260529-013` · **Released:** May 29, 2026
 

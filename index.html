@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260529-013
+     Build: 20260529-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260529-013">
+  <meta name="waxframe-build" content="20260529-014">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.40">
+  <link rel="stylesheet" href="style.css?v=3.63.41">
 </head>
 <body>
 
@@ -1869,6 +1869,25 @@
   </div>
 </div>
 
+<!-- FIRST-RUN OFFER MODAL (v3.63.41) — merged checkpoint-backup + save-as-template -->
+<div class="finish-modal-overlay" id="firstRunOfferModal" onclick="if(event.target===this)closeFirstRunOffer()">
+  <div class="finish-modal">
+    <h2 class="finish-modal-title">&#x1F3C1; Set up and ready to run</h2>
+    <p class="finish-modal-msg">Before you burn any tokens, two quick things you can do &mdash; both optional, and both available later from the menu.</p>
+    <div class="finish-modal-actions">
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="firstRunDoBackup()">&#x1F4BE; Save a checkpoint backup
+        <span class="finish-modal-btn-sub">Restore this exact starting point if a round goes sideways &mdash; includes hive, goal, reference, and starting document</span>
+      </button>
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="firstRunDoTemplate()">&#x2B50; Save as a template
+        <span class="finish-modal-btn-sub">Reuse this setup &mdash; goal, starting document, reference material, length guard, and hive &mdash; on future projects</span>
+      </button>
+    </div>
+    <div class="finish-modal-footer-btns">
+      <button class="finish-modal-cancel" onclick="closeFirstRunOffer()">Not now</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -2486,22 +2505,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.40';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.41';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.40"></script>
-<script src="lib/jszip.min.js?v=3.63.40"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.40"></script>
-<script src="js/version.js?v=3.63.40"></script>
-<script src="js/storage.js?v=3.63.40"></script>
-<script src="js/theme.js?v=3.63.40"></script>
-<script src="js/audio.js?v=3.63.40"></script>
-<script src="js/scenes.js?v=3.63.40"></script>
-<script src="js/wf-debug.js?v=3.63.40"></script>
-<script src="js/api.js?v=3.63.40"></script>
-<script src="js/templates.js?v=3.63.40"></script>
-<script src="js/api-links.js?v=3.63.40"></script>
-<script src="js/app.js?v=3.63.40"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.41"></script>
+<script src="lib/jszip.min.js?v=3.63.41"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.41"></script>
+<script src="js/version.js?v=3.63.41"></script>
+<script src="js/storage.js?v=3.63.41"></script>
+<script src="js/theme.js?v=3.63.41"></script>
+<script src="js/audio.js?v=3.63.41"></script>
+<script src="js/scenes.js?v=3.63.41"></script>
+<script src="js/wf-debug.js?v=3.63.41"></script>
+<script src="js/api.js?v=3.63.41"></script>
+<script src="js/templates.js?v=3.63.41"></script>
+<script src="js/api-links.js?v=3.63.41"></script>
+<script src="js/app.js?v=3.63.41"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
