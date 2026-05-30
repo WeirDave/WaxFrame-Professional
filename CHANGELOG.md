@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.52
+**Build:** `20260529-025` · **Released:** May 29, 2026
+
+### Fixed — PDF import broke on the 4.x worker path
+
+- The PDF.js worker was registered with a bare specifier (`lib/pdf.worker.min.mjs`). When PDF.js fell back to its main-thread worker path it did a dynamic `import()` of that string, which the browser rejected because module specifiers must start with `./`, `../`, or `/`. Result: `Could not read <file>.pdf: Setting up fake worker failed`. The worker path now uses `./lib/pdf.worker.min.mjs`, matching the `./lib/pdf.min.mjs` import already used in `index.html`.
+- Also completes the v3.63.51 orphan-library removal and version stamps, which a packaging issue had left only partially applied to the deployed tree.
+
+### Files Changed
+
+- `js/app.js` — worker path prefixed with `./`.
+- Version and build stamps swept to `v3.63.52 Pro` / `20260529-025` across all 9 HTML files, all 14 JS files, and `style.css`.
+
+---
+
+## v3.63.51
+**Build:** `20260529-024` · **Released:** May 29, 2026
+
+### Removed — orphaned PDF.js 3.x library files
+
+- Deleted `lib/pdf.min.js` and `lib/pdf.worker.min.js` (both PDF.js `3.11.174`), left behind by the `4.10.38` upgrade in v3.63.16. The app loads only the `.mjs` (ESM 4.x) builds via `index.html`, so these two files had zero references anywhere in the repo.
+- Removes roughly 1.4 MB of dead weight and eliminates a latent footgun: the orphaned 3.x build carried the CVE-2024-4367 vulnerability that the 4.x upgrade already fixed at runtime. Deleting the files also clears the misleading on-disk signal for anyone auditing `lib/`.
+- No code paths changed. PDF text extraction continues to run on the live `4.10.38` ESM build with `isEvalSupported: false` retained as defense-in-depth.
+
+### Files Changed
+
+- Deleted `lib/pdf.min.js`, `lib/pdf.worker.min.js`.
+- Version and build stamps swept to `v3.63.51 Pro` / `20260529-024` across all 9 HTML files, all 14 JS files, and `style.css`, plus all helper-page cache-bust URLs.
+
+---
+
 ## v3.63.50
 **Build:** `20260529-023` · **Released:** May 29, 2026
 
