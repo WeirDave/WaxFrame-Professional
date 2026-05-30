@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-//  Build: 20260529-021
+//  Build: 20260529-022
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
@@ -11,6 +11,8 @@
   'use strict';
 
   var MAX_IMG_W = 560;
+  var MAX_SECTION_IMG_W = 220;
+  var MAX_ICON_IMG_W = 42;
   var COLOR_TEXT = '111111';
   var COLOR_DIM = '444444';
   var COLOR_ACCENT = 'B87A00';
@@ -81,15 +83,31 @@
     ));
   }
 
-  function isDecorativeImage(img) {
+  function imageRole(img) {
     if (!img || img.nodeType !== 1 || img.tagName.toLowerCase() !== 'img') return false;
     var cl = img.classList;
     var alt = img.getAttribute('alt');
-    return !alt || !!(cl && (
-      cl.contains('hp-section-bee') ||
+    var src = img.getAttribute('src') || '';
+    if (cl && (
       cl.contains('helper-tip-icon-img') ||
-      cl.contains('wf-tip-icon-img')
-    ));
+      cl.contains('wf-tip-icon-img') ||
+      cl.contains('helper-info-img')
+    )) return 'decorative';
+    if (cl && cl.contains('hp-section-bee')) return 'section';
+    if (cl && (
+      cl.contains('kyh-card-icon') ||
+      cl.contains('nav-panel-logo') ||
+      cl.contains('page-header-logo') ||
+      cl.contains('about-modal-logo') ||
+      cl.contains('license-modal-logo')
+    )) return 'icon';
+    if (/\/icon-[^/]+\.png(\?|#|$)/i.test(src) || /google\.com\/s2\/favicons/i.test(src)) return 'icon';
+    if (!alt && cl && cl.contains('wf-tip-icon')) return 'decorative';
+    return alt ? 'content' : 'content';
+  }
+
+  function isDecorativeImage(img) {
+    return imageRole(img) === 'decorative';
   }
 
   function para(options) {
@@ -211,7 +229,8 @@
         data: info.data,
         transformation: { width: info.width, height: info.height }
       })],
-      spacing: { after: 160 }
+      alignment: docx.AlignmentType.CENTER,
+      spacing: { before: 60, after: 160 }
     }));
   }
 
@@ -402,14 +421,22 @@
     return 'png';
   }
 
+  function maxWidthForImage(img) {
+    var role = imageRole(img);
+    if (role === 'section') return MAX_SECTION_IMG_W;
+    if (role === 'icon') return MAX_ICON_IMG_W;
+    return MAX_IMG_W;
+  }
+
   function dimensionsFor(img, widthFallback) {
     var nw = img.naturalWidth || widthFallback || MAX_IMG_W;
     var nh = img.naturalHeight || Math.round(nw * 0.6);
     var w = nw;
     var h = nh;
-    if (w > MAX_IMG_W) {
-      h = Math.round(h * (MAX_IMG_W / w));
-      w = MAX_IMG_W;
+    var maxW = maxWidthForImage(img);
+    if (w > maxW) {
+      h = Math.round(h * (maxW / w));
+      w = maxW;
     }
     return { width: Math.max(1, Math.round(w)), height: Math.max(1, Math.round(h)) };
   }
