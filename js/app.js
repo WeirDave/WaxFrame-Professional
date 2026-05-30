@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260530-004
+//  Build: 20260530-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-004';         // build stamp — update each session
+const BUILD       = '20260530-005';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1001,6 +1001,15 @@ function resetSuppressedPrompts() {
 // it's one-shot per session already (the dismissed flag below), so always
 // ask. Picking an action closes the offer and runs that flow; both remain
 // available afterward from the Tools menu / Finish panel.
+// v3.63.62 — Don't auto-close on action click. Previous behavior:
+// clicking Backup OR Template closed the modal, forcing the user to
+// re-open Tools / Finish to do the OTHER one. Real intent is almost
+// always "I want both, in sequence." Modal now stays up; clicking
+// Backup runs the backup flow on top, clicking Template runs the
+// template flow on top; the user dismisses the modal via "I'm done"
+// (or the X) when they've taken whichever actions they want. Each
+// child flow (sensitive-backup confirm, save-template modal) closes
+// independently when done, returning the user to this modal.
 async function maybeShowCheckpointBackupNudge() {
   if (window._checkpointNudgeDismissedThisSession) return;
   const m = document.getElementById('firstRunOfferModal');
@@ -1012,11 +1021,11 @@ function closeFirstRunOffer() {
   window._checkpointNudgeDismissedThisSession = true;
 }
 function firstRunDoBackup() {
-  closeFirstRunOffer();
+  // v3.63.62 — Do NOT close the modal. User may want template after.
   if (typeof backupSession === 'function') backupSession();
 }
 function firstRunDoTemplate() {
-  closeFirstRunOffer();
+  // v3.63.62 — Do NOT close the modal. User may want backup after.
   if (typeof openSaveTemplateModal === 'function') openSaveTemplateModal();
 }
 
@@ -3730,7 +3739,13 @@ function confirmSaveTemplate() {
   // worth backing up (post-Round-1) so we don't pester users who saved a
   // template right after setup. Uses wfConfirm with no suppressKey since
   // this is a one-off contextual nudge, not a recurring warning.
+  // v3.63.62 — Skip when firstRunOfferModal is active. In that flow the
+  // user can see the Backup option already, so prompting again would be
+  // redundant. The firstRunOfferModal stays open and the user clicks
+  // Backup themselves if they want it.
   setTimeout(async () => {
+    const firstRunActive = document.getElementById('firstRunOfferModal')?.classList.contains('active');
+    if (firstRunActive) return;
     const hasSessionContent = (Array.isArray(history) && history.length > 0) ||
                               (typeof docText === 'string' && docText.trim().length > 0);
     if (!hasSessionContent) return;
