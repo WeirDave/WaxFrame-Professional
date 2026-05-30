@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260530-008
+     Build: 20260530-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-008">
+  <meta name="waxframe-build" content="20260530-009">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.65">
+  <link rel="stylesheet" href="style.css?v=3.63.66">
 </head>
 <body>
 
@@ -171,6 +171,11 @@
         <div class="hp-section-body">
           <p class="gold-tip-card"><img src="images/WaxFrame_TipButton_v1.png" alt="💡" class="tip-icon-img"> Claude, ChatGPT, Gemini, and DeepSeek all handle large documents well — DeepSeek in particular is extremely cost-effective as a Builder (though it's the slowest responder in the hive, so rounds take longer). Avoid free-tier AIs as Builder — they run out of tokens fast. If a round fails with a missing output structure error, try switching to ChatGPT or Gemini. <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">Learn about tokens and how to save money →</a></p>
           <div class="builder-pick-grid-large" id="builderPickGrid"></div>
+          <!-- v3.63.66 — model selector for the chosen Builder. Reuses the same
+               custom combobox as Worker Bees + Change Builder modal. Populated
+               by setBuilder() once a Builder tile is selected; hidden until then. -->
+          <div class="builder-screen-model-wrap" id="builderScreenModelWrap" style="display:none;"></div>
+
         </div>
       </div>
     </div>
@@ -2505,22 +2510,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.65';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.66';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.65"></script>
-<script src="lib/jszip.min.js?v=3.63.65"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.65"></script>
-<script src="js/version.js?v=3.63.65"></script>
-<script src="js/storage.js?v=3.63.65"></script>
-<script src="js/theme.js?v=3.63.65"></script>
-<script src="js/audio.js?v=3.63.65"></script>
-<script src="js/scenes.js?v=3.63.65"></script>
-<script src="js/wf-debug.js?v=3.63.65"></script>
-<script src="js/api.js?v=3.63.65"></script>
-<script src="js/templates.js?v=3.63.65"></script>
-<script src="js/api-links.js?v=3.63.65"></script>
-<script src="js/app.js?v=3.63.65"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.66"></script>
+<script src="lib/jszip.min.js?v=3.63.66"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.66"></script>
+<script src="js/version.js?v=3.63.66"></script>
+<script src="js/storage.js?v=3.63.66"></script>
+<script src="js/theme.js?v=3.63.66"></script>
+<script src="js/audio.js?v=3.63.66"></script>
+<script src="js/scenes.js?v=3.63.66"></script>
+<script src="js/wf-debug.js?v=3.63.66"></script>
+<script src="js/api.js?v=3.63.66"></script>
+<script src="js/templates.js?v=3.63.66"></script>
+<script src="js/api-links.js?v=3.63.66"></script>
+<script src="js/app.js?v=3.63.66"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
