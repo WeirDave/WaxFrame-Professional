@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-030
+//  Build: 20260530-001
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-030';         // build stamp — update each session
+const BUILD       = '20260530-001';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -4923,7 +4923,7 @@ async function recommendModelsForAll() {
 
   const btn = document.getElementById('recommendAllBtn');
   const origLabel = btn ? btn.textContent : null;
-  // v3.63.30 — aggregate progress: completed/total + elapsed ("Asking… 3/6 ·
+  // v3.63.30 — aggregate progress: completed/total + elapsed ("Recommending… 3/6 ·
   // 12s"). `done` is bumped in each AI's .finally below; wfBtnElapsed reads it
   // live each tick. Each row's own button also tickers independently.
   const total = eligible.length;
@@ -4931,7 +4931,7 @@ async function recommendModelsForAll() {
   let _stopAllTick = () => {};
   if (btn) {
     btn.disabled = true;
-    _stopAllTick = wfBtnElapsed(btn, () => `Asking… ${done}/${total} ·`);
+    _stopAllTick = wfBtnElapsed(btn, () => `Recommending… ${done}/${total} ·`);
   }
 
   // v3.32.10 — parallel execution. Previously sequential with 400ms inter-AI
@@ -6389,10 +6389,10 @@ async function recheckModelForAI(id) {
 
   const btn = document.getElementById(`recheckbtn-${id}`);
   const origLabel = btn ? btn.innerHTML : null;
-  // v3.63.30 — climbing-seconds progress ("Asking… 8s"). Stopped on every
+  // v3.63.30 — climbing-seconds progress ("Recommending… 8s"). Stopped on every
   // exit path below (catch, restore, no-result) before the row re-renders.
   let _stopBtnTick = () => {};
-  if (btn) { btn.disabled = true; _stopBtnTick = wfBtnElapsed(btn, () => 'Asking…'); }
+  if (btn) { btn.disabled = true; _stopBtnTick = wfBtnElapsed(btn, () => 'Recommending…'); }
 
   toast(`🤖 ${ai.name}: asking for best model…`, 3000);
   const previousModel = cfg.model;
@@ -6475,7 +6475,7 @@ async function recheckModelForAI(id) {
   // protection: the revert only fires if the button is still in the
   // success state at timeout — if the user clicked Recommend again within
   // the 5s window, the new click will have cleared the class (via the
-  // "Asking…" path), and the timeout becomes a no-op.
+  // "Recommending…" path), and the timeout becomes a no-op.
   const flashGreen = () => {
     const fresh = document.getElementById(`recheckbtn-${id}`);
     if (!fresh) return;
@@ -8682,7 +8682,7 @@ function _startStatusHeartbeat(el, baseMsg) {
 // Sibling of _startStatusHeartbeat but for a <button>: no setFileStatusState
 // side effect, and the label is rebuilt from labelFn(secs) each tick so the
 // for-all variant can fold a live completed/total count into the text
-// ("Asking… 3/6 · 12s"). Returns stop(); always call it on every exit path.
+// ("Recommending… 3/6 · 12s"). Returns stop(); always call it on every exit path.
 function wfBtnElapsed(el, labelFn) {
   if (!el) return () => {};
   const t0 = Date.now();
