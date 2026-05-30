@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260530-003
+//  Build: 20260530-004
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -919,14 +919,24 @@ function renderTroubleshootingCard(entry, ctx) {
         // _slowAlertsSilenced gate in the round-end emit). Session-scoped: it
         // resets on a new project or page reload. The footer "Slow alerts"
         // pill remains the persistent (cross-session) control.
+        // v3.63.61 — Per-AI suppression. The previous global boolean wiped
+        // out all slow-AI alerts when the user clicked "don't alert me this
+        // session" on ONE card — too blunt. Now _slowAlertsSilenced is a
+        // Set<aiId>; clicking the button only silences alerts for THIS AI
+        // for the rest of the session. Other slow AIs still alert normally.
         btn.onclick = () => {
           closeTroubleshootingCard();
-          window._slowAlertsSilenced = true;
+          // Initialize as Set if it's still the legacy boolean shape.
+          if (!(window._slowAlertsSilenced instanceof Set)) {
+            window._slowAlertsSilenced = new Set();
+          }
+          if (ctx.aiId) window._slowAlertsSilenced.add(ctx.aiId);
+          const aiLabel = ctx.aiName || 'this AI';
           if (typeof consoleLog === 'function') {
-            consoleLog('🔕 Slow-AI alerts off for this session — re-enable via the footer "Slow alerts" pill or a new project', 'info');
+            consoleLog(`🔕 Slow-AI alerts for ${aiLabel} silenced for this session — other slow AIs will still alert. Use the footer "Slow alerts" pill to disable globally, or start a new project to reset.`, 'info');
           }
           if (typeof toast === 'function') {
-            toast('🔕 Slow-AI alerts off for this session');
+            toast(`🔕 ${aiLabel} slow-alerts off for this session`);
           }
         };
       } else if (a.kind === 'dismiss') {

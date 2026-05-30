@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.61
+**Build:** `20260530-004` · **Released:** May 30, 2026
+
+### Added — Product Review template
+
+- New built-in **Product Review** template in the Reviews & Recommendations category. Platform-agnostic (Amazon, Best Buy, Target, Walmart, Newegg, manufacturer site, blog post — pick where you'll post and set Length accordingly via the hint). 23-field reference-material scaffold covering purchase context, use over time, build quality, what worked, what didn't, value, and final recommendation. Both `scratch` and `refine` paths supported.
+
+### Added — backup nudge after saving a template (mid-session)
+
+- After successfully saving a custom template while there's real session content (post-Round-1 history or a non-empty working document), WaxFrame now offers a follow-up **"Also save a session backup?"** prompt. Templates capture the setup recipe but NOT the session state — without this nudge, users had to manually hunt for the menu after saving. The prompt fires ~800ms after the success toast, uses `wfConfirm` (no `suppressKey` — contextual one-off, not a recurring warning), and runs the existing `backupSession()` flow on confirm.
+
+### Changed — slow-AI alerts are now per-AI, not global
+
+- Clicking **"Don't alert me this session"** on a slow-AI troubleshooting card previously silenced ALL slow-AI alerts for the rest of the tab session — a single click wiped out the entire alert system. Real intent is almost always "stop alerting me about *this specific* AI." Fixed: `window._slowAlertsSilenced` is now a `Set<aiId>` rather than a boolean. Clicking the button adds only the affected AI's id to the set; other slow AIs still alert normally. Wording on the resulting console + toast updated to make the per-AI scope explicit. Legacy boolean `true` value still globally suppresses for any pre-upgrade tab mid-session.
+
+### Changed — Apply My Decisions no longer silently fails
+
+- When a user locks a decision via the Lock button (which writes to `_resolvedDecisions`) and then clicks **Apply My Decisions to Document** with no other decisions to resolve — or when they're in "edit document directly" mode where no `_decisionChoices` entries get populated — the button previously did nothing visible (alert sound only, early-return with no feedback). Replaced the silent return with a clear toast: `"ℹ️ No decisions to apply yet — pick an option (or Bypass) on at least one decision card first. If you locked a decision but want the lock applied to the document, unlock it, pick the same option, then click Apply."`
+
+### Changed — export footer URL updated to waxframe.com
+
+- The byline footer appended to exported documents and transcripts (`Crafted by WaxFrame vX.Y.Z in N rounds and M minutes.`) now ends with `waxframe.com` instead of the old `weirdave.github.io/WaxFrame-Professional`. Both call sites in `js/app.js` updated.
+
+### Added — round-counter forensic instrumentation
+
+- New `_logRoundBump(siteTag)` helper in `js/app.js` wraps every one of the 5 `round++` increment sites (`builder_only_complete`, `convergence_unanimous`, `convergence_majority`, `round_complete_main`, `apply_decisions_all_bypassed`). Each bump emits a `console.warn('[round-bump] <site>: N → M')` and pushes a structured entry to `WF_DEBUG.ringBuffer` with timestamp, phase, history length, and call site. Symptom we're tracking: occasional non-monotonic jumps (observed: round 6 → 13 with no intervening rounds in `history`). Cheap to leave in place; the next occurrence will leave a forensic trail in the diagnostic bundle showing which sites fired in the gap. Remove once root cause is fixed.
+
+### Files Changed
+
+- Updated: `js/templates.js` (new Product Review entry), `js/app.js` (slow-alerts Set + apply-decisions toast + footer URL × 2 sites + template-save backup nudge + `_logRoundBump` helper + 5 instrumented round++ sites), `js/wf-debug.js` (per-AI slow-alert handler), `CHANGELOG.md`
+- Version/build stamps to `v3.63.61 Pro` / `20260530-004` across 9 HTML files, 14 JS files, `style.css`
+- Backlog bumped to `v126` (5 items shipped + round-skip moved from Open Bugs to forensic-watch list)
+
+---
+
 ## v3.63.60
 **Build:** `20260530-003` · **Released:** May 30, 2026
 

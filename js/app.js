@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260530-003
+//  Build: 20260530-004
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,35 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-003';         // build stamp — update each session
+const BUILD       = '20260530-004';         // build stamp — update each session
+
+// v3.63.61 — Round-counter forensic instrumentation. Every increment site
+// is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
+// Symptom we're tracking: rounds occasionally jump non-monotonically
+// (e.g. 6 -> 13 with no intervening rounds in history). When the bug
+// recurs, the ringBuffer + console.warn trail will show which site(s)
+// fired in the gap. Cheap; can be removed once the root cause is fixed.
+function _logRoundBump(siteTag) {
+  try {
+    const from = typeof round === 'number' ? round : null;
+    const to = (from == null) ? null : from + 1;
+    const msg = `[round-bump] ${siteTag}: ${from} \u2192 ${to}`;
+    if (typeof console !== 'undefined' && console.warn) console.warn(msg);
+    if (typeof WF_DEBUG !== 'undefined' && Array.isArray(WF_DEBUG.ringBuffer)) {
+      WF_DEBUG.ringBuffer.push({
+        ts: Date.now(),
+        kind: 'round-bump',
+        site: siteTag,
+        from: from,
+        to: to,
+        phase: (typeof phase === 'string') ? phase : null,
+        historyLen: (typeof history !== 'undefined' && Array.isArray(history)) ? history.length : null
+      });
+      if (WF_DEBUG.ringBuffer.length > 200) WF_DEBUG.ringBuffer.shift();
+    }
+  } catch (e) { /* never let instrumentation throw */ }
+}
+
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3207,7 +3235,7 @@ async function clearProject() {
   window._flatHoldoutSuggestions = null;
   window._lastAppliedChanges     = null;
   window._lastValidationFailures = null;
-  window._slowAlertsSilenced     = false; // v3.56.14 — clear the per-session "don't alert me" opt-out on a new project
+  window._slowAlertsSilenced     = new Set(); // v3.63.61 — per-AI suppression Set. Replaces the v3.56.14 boolean — clicking "don't alert me this session" on a slow-AI card now only silences THAT AI for the session, not all of them.
   window._checkpointNudgeDismissedThisSession = false; // v3.63.0 — clear the per-session "Not now" so a brand new project still gets the nudge
   localStorage.removeItem('waxframe_ai_warnings');
   window._lastPDFPages = null;
@@ -3693,6 +3721,27 @@ function confirmSaveTemplate() {
   closeSaveTemplateModal();
   toast(`\u2b50 Saved "${tpl.name}" to My Templates`, 5000);
   if (typeof consoleLog === 'function') consoleLog(`Saved custom template "${tpl.name}" (${tpl.hive.aiIds.length}-AI hive captured).`, 'info');
+  // v3.63.61 — Customer-experience fix: after successfully saving a template
+  // from the work screen (where the user is mid-session with real round
+  // history), offer to also save a backup. Saving a template captures the
+  // setup recipe but NOT the session state (rounds, working document, console
+  // log) — the user often wants both. Without this prompt they had to
+  // hunt for the menu themselves. Only fires when there's session content
+  // worth backing up (post-Round-1) so we don't pester users who saved a
+  // template right after setup. Uses wfConfirm with no suppressKey since
+  // this is a one-off contextual nudge, not a recurring warning.
+  setTimeout(async () => {
+    const hasSessionContent = (Array.isArray(history) && history.length > 0) ||
+                              (typeof docText === 'string' && docText.trim().length > 0);
+    if (!hasSessionContent) return;
+    if (typeof wfConfirm !== 'function' || typeof backupSession !== 'function') return;
+    const alsoBackup = await wfConfirm(
+      'Also save a session backup?',
+      "Your template captured the setup recipe (project goal, hive lineup, reference material). Your current round history and working document are NOT in the template — they only live in this browser. Save a session backup now so you can restore this exact session later if anything drifts.",
+      { okText: '💾 Save Backup', cancelText: 'Not now' }
+    );
+    if (alsoBackup) backupSession();
+  }, 800);
 }
 
 // v3.63.44 (Phase 2) — edit an existing custom template: load it into the
@@ -13596,6 +13645,7 @@ async function runBuilderOnly() {
     // BEFORE round++ so the suffix reflects the round that just
     // finished, not the next-up round.
     _setLastCompletedLabel(round, phase, 'builder_only_complete');
+    _logRoundBump('builder_only_complete');
     round++;
     window._roundUiState = 'idle';
     updateRoundBadge();
@@ -13917,7 +13967,11 @@ async function runRound() {
       // suppress BOTH the card and the console line for the rest of the tab
       // session. Otherwise the console logs every slow round (the user can
       // stop it any time from the card).
-      if (window._slowAlertsSilenced) return;
+      // v3.63.61 — _slowAlertsSilenced is now a Set<aiId> (per-AI). Legacy
+      // boolean true still suppresses globally for backward-compat with
+      // pre-upgrade tabs mid-session.
+      if (window._slowAlertsSilenced === true) return;
+      if (window._slowAlertsSilenced instanceof Set && window._slowAlertsSilenced.has(ai.id)) return;
       consoleLog(`⚠️ ${ai.name} — slow ${_slowStreak[ai.id]} rounds running (${_t.toFixed(0)}s vs round avg ${_avg.toFixed(0)}s) — consider toggling off`, 'warn');
       // v3.38.0 — Gate card surfacing on the user's Slow-AI alerts
       // preference. Detection + console log run unconditionally above
@@ -14069,6 +14123,7 @@ async function runRound() {
     // v3.36.15 — Round-counter state: stamp converged label BEFORE
     // round++ so the badge reads "Round N — Phase ✓ Converged".
     _setLastCompletedLabel(round, phase, 'unanimous_convergence');
+    _logRoundBump('convergence_unanimous');
     round++;
     window._roundUiState = 'idle';
     if (phase === 'draft') { phase = 'refine'; consoleLog(`📍 Phase advanced to Refine Text`, 'info'); }
@@ -14209,6 +14264,7 @@ async function runRound() {
     // v3.36.15 — Round-counter state: stamp majority label BEFORE
     // round++ so the badge reads "Round N — Phase ✓ Majority".
     _setLastCompletedLabel(round, phase, 'majority_convergence');
+    _logRoundBump('convergence_majority');
     round++;
     window._roundUiState = 'idle';
     if (phase === 'draft') { phase = 'refine'; consoleLog(`📍 Phase advanced to Refine Text`, 'info'); }
@@ -14584,6 +14640,7 @@ async function runRound() {
   // v3.36.15 — Round-counter state: stamp continuing label BEFORE
   // round++ so the badge reads "Round N — Phase ✓ Complete".
   _setLastCompletedLabel(round, phase, 'continuing');
+  _logRoundBump('round_complete_main');
   round++;
   window._roundUiState = 'idle';
 
@@ -16490,6 +16547,15 @@ function applyDecisions(opts) {
 
   if (lines.length === 0 && !allBypassed) {
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
+    // v3.63.61 — Replace silent return with an explanatory toast. The previous
+    // version returned with only an alert sound (browser default on a no-op
+    // button click) and no feedback — users hit this when they'd locked a
+    // decision via the Lock button (which writes to _resolvedDecisions, not
+    // _decisionChoices) and then clicked Apply with no other decisions to
+    // resolve, or when they were in "edit document directly" mode where no
+    // _decisionChoices entries get populated. Toast tells them what's missing
+    // so they can act on it.
+    toast('ℹ️ No decisions to apply yet — pick an option (or Bypass) on at least one decision card first. If you locked a decision but want the lock applied to the document, unlock it, pick the same option, then click Apply.', 9000);
     return;
   }
 
@@ -16563,6 +16629,7 @@ function applyDecisions(opts) {
   if (allBypassed) {
     if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
     toast('✏️ All conflicts bypassed — document edits applied directly. Starting next round…');
+    _logRoundBump('apply_decisions_all_bypassed');
     round++;
     updateRoundBadge();
     renderWorkPhaseBar();
@@ -17254,7 +17321,7 @@ function exportDocument() {
   const totalMins   = Math.round(_projClockSeconds / 60);
   const timeStr     = totalMins < 1 ? 'less than a minute' : `${totalMins} minute${totalMins !== 1 ? 's' : ''}`;
   const verb        = (docTab === 'scratch') ? 'Crafted' : 'Refined';
-  const byline      = `\n\n---\n${verb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nweirdave.github.io/WaxFrame-Professional`;
+  const byline      = `\n\n---\n${verb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\nwaxframe.com`;
 
   const out      = doc + byline;
   const filename = buildExportName();
@@ -17447,7 +17514,7 @@ function exportTranscript() {
     const transcriptVerb = (docTab === 'scratch') ? 'Crafted' : 'Refined';
     out += `${sep}\n${transcriptVerb} by WaxFrame ${APP_VERSION} in ${totalRounds} round${totalRounds !== 1 ? 's' : ''} and ${timeStr}.\n`;
     if (finalOutcome) out += `Final outcome: ${finalOutcome}\n`;
-    out += `weirdave.github.io/WaxFrame-Professional\n`;
+    out += `waxframe.com\n`;
   }
 
   const blob = new Blob([out], { type: 'text/plain' });
