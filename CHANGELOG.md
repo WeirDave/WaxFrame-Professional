@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.49
+**Build:** `20260529-022` · **Released:** May 29, 2026
+
+### Improved — Word exports get visual anchors back
+
+- Restored useful imagery to helper-page Word exports while keeping the v3.63.48 Word-valid image path.
+- Section artwork now exports as centered, capped visual breaks instead of being dropped entirely or inserted at full page-filling size.
+- Provider icons in the API guide now export as small icon-sized images, including classless `icon-*.png` images and Google favicon URLs.
+- Tip/info button artwork remains skipped so callouts stay clean shaded notes instead of repeating tiny UI chrome.
+
+### Validation
+
+- Re-ran the browser Download as Word flow for all seven helper pages and opened every generated `.docx` with installed Microsoft Word.
+- Verified image counts after the sizing pass: User Manual 1, Document Playbooks 1, API Details 14, Prompt Editor 1, What Are Tokens 1, Privacy 0, Terms 0.
+- Confirmed image dimensions are capped as intended: section artwork about 2.29 inches wide and provider icons about 0.44 inches wide.
+- Swept the full release stamp set to `20260529-022` / `v3.63.49 Pro`, including all 9 HTML files, all 14 JS files, `style.css`, and helper-page cache-bust URLs.
+
+---
+
 ## v3.63.48
 **Build:** `20260529-021` · **Released:** May 29, 2026
 
