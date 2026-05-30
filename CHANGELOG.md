@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.64
+**Build:** `20260530-007` · **Released:** May 30, 2026
+
+### Changed — every review template now requires a real headline
+
+All four review templates in the Reviews & Recommendations category — **Product Review**, **Restaurant Review**, **Hotel Review**, and **Business / Service Review** — now instruct the Builder to open with a one-line headline that captures the actual verdict from the specific review, not a generic `[Product Name] Review` or `Review of [thing]` stub.
+
+Each template's `goalNotes` (both `scratch` and `refine` paths) now includes contextual headline examples appropriate to that review type:
+
+- **Product Review:** *"Flimsy after three months — looks good but won't last"*, *"Crushes cans fine, falls apart fast"*
+- **Restaurant Review:** *"Great food, terrible service — go on a weekday"*, *"Hidden gem hiding behind a bad sign"*
+- **Hotel Review:** *"Spotless rooms, walls like paper"*, *"Worth every penny for the location"*
+- **Business / Service Review:** *"Quick response, sloppy workmanship"*, *"Pricey but they actually finished on time"*
+
+The directive explicitly bans quote marks and the `Review:` prefix, and on the refine path tells the Builder to keep a strong existing headline or sharpen a generic one to reflect the verdict. Existing guardrails ("do not invent dishes/prices/dates/etc.", "do not soften legitimate criticism", etc.) are preserved verbatim — the headline directive is prepended, not a replacement.
+
+Platform-specific reshape templates (Trim to TripAdvisor / Google Maps / Rewrite as Yelp) are untouched — those platforms have their own headline conventions (or none, in the case of Google Maps and Yelp) and reshape existing copy rather than building from scratch.
+
+### Files Changed
+
+- Updated: `js/templates.js` (8 `goalNotes` edits across 4 review templates × 2 paths), `CHANGELOG.md`
+- Version/build stamps to `v3.63.64 Pro` / `20260530-007` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.63
 **Build:** `20260530-006` · **Released:** May 30, 2026
 
