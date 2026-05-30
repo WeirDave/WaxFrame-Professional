@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-//  Build: 20260530-005
+//  Build: 20260530-006
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -494,6 +494,28 @@ window.WF_ERROR_CATALOG = [
     ]
   },
   {
+    // v3.63.63 — Match BEFORE the generic EMPTY_RESPONSE so users with a real
+    // content-filter block get a specific, actionable diagnosis instead of
+    // the generic "filter blocked OR truncated" text. Triggers when the empty
+    // response is accompanied by a blockReason field in the raw provider
+    // payload (Gemini's promptFeedback.blockReason; same shape works for any
+    // future provider that surfaces blockReason verbatim).
+    code: 'CONTENT_FILTERED',
+    matches: (err, ctx, msg) => {
+      if (!(msg === 'empty response' || (msg || '').includes('empty response'))) return false;
+      try {
+        const raw = ctx && ctx.raw;
+        return typeof raw === 'string' && raw.includes('blockReason');
+      } catch { return false; }
+    },
+    title: '{ai} — Content filter blocked this prompt ({blockReason})',
+    meaning: "{ai}'s safety filter blocked the request (the provider returned 200 OK with no text and a blockReason of {blockReason}). This is often a false positive on words like 'crush', 'kill', 'broken', or 'fail' that appear innocuously in product reviews, technical writing, or troubleshooting docs — Gemini in particular is aggressive here. The simplest fix is to switch Builder to another provider (Claude, ChatGPT, Grok, Mistral); the rest of the hive can still include {ai} as a reviewer if you want. Alternatively, rephrase the reference material to use less filter-prone language.",
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      { label: 'Retry round',    kind: 'retry' }
+    ]
+  },
+  {
     code: 'EMPTY_RESPONSE',
     matches: (err, ctx, msg) => msg === 'empty response' || msg.includes('empty response'),
     title: '{ai} — Provider returned an empty response',
@@ -658,15 +680,33 @@ function renderTroubleshootingCard(entry, ctx) {
   // v3.29.2 — added {filename} and {warnings} for the IMPORT_WARNINGS card.
   // {warnings} expects ctx.warnings as an array of strings; renders as a
   // bulleted list so multi-line meaning content stays readable.
+  // v3.63.63 — added {blockReason} for the CONTENT_FILTERED card. Parses
+  // Gemini-style promptFeedback.blockReason out of ctx.raw (JSON string)
+  // best-effort; falls back to the literal string "unknown" if not found.
   const fmtWarnings = (arr) => Array.isArray(arr) && arr.length
     ? arr.map(w => '• ' + w).join('\n')
     : '';
+  const parseBlockReason = (raw) => {
+    if (typeof raw !== 'string' || !raw) return 'unknown';
+    // Cheap regex first — avoids JSON.parse cost when the field isn't present.
+    const m = raw.match(/"blockReason"\s*:\s*"([^"]+)"/);
+    if (m) return m[1];
+    // Fallback: parse + walk (handles nested structures other providers may use).
+    try {
+      const j = JSON.parse(raw);
+      if (j && j.promptFeedback && typeof j.promptFeedback.blockReason === 'string') {
+        return j.promptFeedback.blockReason;
+      }
+    } catch { /* not JSON — fine */ }
+    return 'unknown';
+  };
   const subst = (s) => String(s || '')
-    .replace(/\{ai\}/g,       ctx.aiName   ?? 'AI')
-    .replace(/\{elapsed\}/g,  ctx.elapsed  ?? '?')
-    .replace(/\{avg\}/g,      ctx.avg      ?? '?')
-    .replace(/\{filename\}/g, ctx.filename ?? 'this file')
-    .replace(/\{warnings\}/g, fmtWarnings(ctx.warnings));
+    .replace(/\{ai\}/g,          ctx.aiName   ?? 'AI')
+    .replace(/\{elapsed\}/g,     ctx.elapsed  ?? '?')
+    .replace(/\{avg\}/g,         ctx.avg      ?? '?')
+    .replace(/\{filename\}/g,    ctx.filename ?? 'this file')
+    .replace(/\{warnings\}/g,    fmtWarnings(ctx.warnings))
+    .replace(/\{blockReason\}/g, parseBlockReason(ctx.raw));
 
   if (titleEl)   titleEl.textContent   = subst(entry.title) || 'Something went wrong';
   if (meaningEl) meaningEl.textContent = subst(entry.meaning) || '';
