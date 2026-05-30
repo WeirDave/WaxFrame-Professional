@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260530-001
+//  Build: 20260530-002
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-001';         // build stamp — update each session
+const BUILD       = '20260530-002';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -17076,6 +17076,80 @@ function copyActiveHistTab() {
 }
 
 
+// ============================================================
+// restoreRound — rolls back the working document and per-round
+// state to a previous round in history, discarding all later
+// rounds.
+//
+// SCOPE OF RESTORE (rolls back vs persists)
+// ────────────────────────────────────────────────────────────
+//
+// ROLLS BACK (state moves to the chosen historical round):
+//   • history                  — truncated to [0..idx]; rounds
+//                                after idx are discarded
+//   • round                    — set to h.round
+//   • phase                    — set to h.phase || 'draft'
+//   • docText                  — set to h.doc || ''
+//   • window._resolvedDecisions — set to h.resolvedDecisions
+//                                (deep-copied) + persisted to
+//                                localStorage['waxframe_resolved_decisions']
+//   • #workDocument value      — set to docText (re-renders line numbers)
+//   • #workNotes value         — set to h.notes || ''
+//   • #phaseSelect value       — set to phase
+//
+// PERSISTS (state stays at its current value — restore does NOT touch):
+//   • hive — activeAIs, builder, _hiveMode (LS_HIVE).
+//     Rationale: hive is session-level configuration that
+//     survives across rounds and across restores.
+//   • project setup — projectName/Version, goalDocType,
+//     goalAudience, goalOutcome, goalScope, goalTone,
+//     goalNotes, exportMask, lengthMode/Limit/Min/Unit
+//     (LS_PROJECT). Rationale: same as hive.
+//   • reference material — referenceDocs array (LS_PROJECT.referenceDocs)
+//   • license — LS_LICENSE
+//   • settings — theme, mute state, dev toolbar, every
+//     suppressKey flag, all 'waxframe_*' settings keys
+//   • project clock — _projClockSeconds (running time
+//     accumulates straight through a restore — describes
+//     overall session, not a specific round)
+//   • standing notes — #workStandingNotes value (cross-round
+//     notes the user keeps for the whole project)
+//   • current-round satisfaction — _cleanThisRound Set
+//   • length guard override — window.lengthGuardOverride flag
+//   • PDF + conflict state — window._lastPDFPages,
+//     window._lastConflicts, window._lastAppliedChanges
+//   • sessionAIs — per-session checkbox state (separate
+//     from hive; describes "which AIs to use right now")
+//   • forensic ring buffer — WF_DEBUG.ringBuffer (Deep Dive
+//     per-round captures); historical entries from later
+//     rounds remain in the buffer for forensic inspection
+//     even after their rounds are discarded
+//   • orphan-sentinel keys — none should exist post-v3.63.18
+//     sweep, but if any did they'd persist (they're not
+//     keyed on round state)
+//
+// RATIONALE
+// ────────────────────────────────────────────────────────────
+// restoreRound is a "rewind the document and the decisions
+// that produced it" operation. The hive, project goal, and
+// reference material are session-level configuration that
+// survive across rounds (and across restores). Standing
+// notes and the project clock are deliberately not rolled
+// back: they describe the user's overall session, not a
+// specific round's state. The resolved-decisions ledger IS
+// rolled back because decisions made in discarded rounds
+// must not silently carry forward into the continuation.
+//
+// SIDE EFFECTS AFTER STATE RESTORE
+// ────────────────────────────────────────────────────────────
+//   • saveSession() persists the truncated history + new
+//     in-memory state to IDB
+//   • UI re-renders: updateRoundBadge, renderRoundHistory,
+//     renderWorkPhaseBar, renderConflicts
+//   • Open modals: closeRoundHistoryModal();
+//     #histDocModal removed if present
+//   • Toast: "↩ Restored to Round N — M later rounds discarded"
+// ============================================================
 function restoreRound(idx) {
   const h = history[idx];
   if (!h) return;
