@@ -2,6 +2,41 @@
 
 ---
 
+## v3.63.54
+**Build:** `20260529-027` · **Released:** May 29, 2026
+
+### Added — theme-aware documentation screenshots
+
+- `tools/capture-screenshots.ps1` now captures **both light and dark** sets in one run (`-Theme both`, the default), writing `screenshot_<name>_dark.png` and `screenshot_<name>_light.png` for welcome, the five setup steps, settings, and the work screen.
+- New `.ss-shot` figure component in `style.css` swaps the screenshot to match the reader's theme — dark by default, light under an explicit light theme or `auto` + OS-light — using the same `[data-theme]` / `prefers-color-scheme` convention as the rest of the app.
+- The User Manual now embeds eight screenshots at their matching sections (welcome, Setup Steps 1–5, the Work Screen, and Settings), breaking up the long text sections with visuals.
+
+### Files Changed
+
+- `tools/capture-screenshots.ps1` — dual-theme capture.
+- `style.css` — `.ss-shot` theme-aware figure component.
+- `waxframe-user-manual.html` — eight screenshot figures placed.
+- Version/build stamps to `v3.63.54 Pro` / `20260529-027` across all 9 HTML files, all 14 JS files, and `style.css`.
+
+---
+
+## v3.63.53
+**Build:** `20260529-026` · **Released:** May 29, 2026
+
+### Added — screenshot capture tooling for documentation
+
+- New `tools/capture-screenshots.ps1` drives a headless Edge/Chrome through the public app screens at a fixed viewport in dark theme and writes one clean PNG per screen to `screenshots/`, matching the existing `screenshot_<name>_dark.png` convention. No npm, no dependencies — renders the local repo over `file://`, so it is air-gap safe.
+- `index.html` now accepts `?cap=<screen>&theme=<light|dark|auto>` (handled by a small hook in the `DOMContentLoaded` dispatcher) to land directly on a screen for capture. The hook is inert for normal users — it only does anything when `?cap=` is present — and doubles as a deep-link into any screen.
+- Captures cold (no sign-in): welcome, the five setup steps, settings, and the work-screen chrome. Live-round states and a populated work screen still need a seeded session and are captured manually for now.
+
+### Files Changed
+
+- Added `tools/capture-screenshots.ps1`.
+- `js/app.js` — capture hook added to the load dispatcher.
+- Version/build stamps swept to `v3.63.53 Pro` / `20260529-026` across all 9 HTML files, all 14 JS files, and `style.css`.
+
+---
+
 ## v3.63.52
 **Build:** `20260529-025` · **Released:** May 29, 2026
 
