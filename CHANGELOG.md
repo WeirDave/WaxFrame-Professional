@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.63
+**Build:** `20260530-006` · **Released:** May 30, 2026
+
+### Added — content-filter blocks now diagnose themselves
+
+- When a Gemini (or other provider) round returns 200 OK with an empty body **AND** a `blockReason` in the raw payload, the troubleshooting card no longer shows the generic "filter blocked OR truncated" message. It now identifies the failure as a content-filter block, names the specific block reason (e.g. `PROHIBITED_CONTENT`, `SAFETY`, `OTHER`, `MAX_TOKENS`, `RECITATION`), and points the user at the actual fix — switching Builder to a different provider for that round.
+- New `CONTENT_FILTERED` catalog entry in `js/wf-debug.js` matches before the generic `EMPTY_RESPONSE` so the specific diagnosis wins when applicable. New `Change Builder` action is offered alongside Retry — Gemini is by far the most aggressive content filter, and the rest of the hive (Claude/ChatGPT/Grok/Mistral) almost always passes the same content.
+- New `{blockReason}` placeholder supported in catalog title/meaning strings. Renderer parses `promptFeedback.blockReason` out of `ctx.raw` via cheap regex with a JSON.parse fallback (handles nested shapes).
+
+### Context
+
+Real failure that triggered this: a product review of a metal can crusher tripped Gemini's `PROHIBITED_CONTENT` filter — a classic false positive on words like "crush" / "broken" / "fail" / "destroyed" in a product or troubleshooting context. The generic message left the user guessing whether to shorten the document, retry, or do something else. The specific message names the actual culprit and proposes the fastest fix.
+
+### Files Changed
+
+- Updated: `js/wf-debug.js` (CONTENT_FILTERED catalog entry + `{blockReason}` placeholder parser in renderTroubleshootingCard), `CHANGELOG.md`
+- Version/build stamps to `v3.63.63 Pro` / `20260530-006` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.62
 **Build:** `20260530-005` · **Released:** May 30, 2026
 
