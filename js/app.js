@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-029
+//  Build: 20260529-030
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-029';         // build stamp — update each session
+const BUILD       = '20260529-030';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -17651,35 +17651,3 @@ document.addEventListener('DOMContentLoaded', async () => {
     }, 50);
   }
 });
-
-
-// v3.63.56 — Screenshot-capture driver for tools/capture-screenshots.ps1.
-// Fires ONLY when ?cap=<screen> is in the URL — completely inert for normal users.
-// Lives at top level (not inside the async DOMContentLoaded handler) and RE-ASSERTS
-// the target screen on an interval, so a headless screenshot can't snap the welcome
-// screen during early async init. The headless process is killed after capture, so
-// the interval is short-lived; it also self-clears after 15s as a safety net.
-(function () {
-  try {
-    var _p = new URLSearchParams(window.location.search);
-    var _cap = _p.get('cap');
-    if (!_cap) return;
-    var _map = {
-      welcome: 'screen-welcome', bees: 'screen-bees', builder: 'screen-builder',
-      project: 'screen-project', reference: 'screen-reference',
-      document: 'screen-document', work: 'screen-work', settings: 'screen-settings'
-    };
-    var _target = _map[_cap];
-    if (!_target) return;
-    var _th = _p.get('theme');
-    var _apply = function () {
-      try { if (_th && typeof setTheme === 'function') setTheme(_th); } catch (e) {}
-      try { if (typeof goToScreen === 'function') goToScreen(_target); } catch (e) {}
-    };
-    var _iv = setInterval(_apply, 100);
-    setTimeout(function () { clearInterval(_iv); }, 15000);
-    if (document.readyState !== 'loading') _apply();
-    document.addEventListener('DOMContentLoaded', _apply);
-    window.addEventListener('load', _apply);
-  } catch (e) {}
-})();
