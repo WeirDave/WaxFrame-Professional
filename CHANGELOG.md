@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.67
+**Build:** `20260530-010` · **Released:** May 30, 2026
+
+### Changed — Builder screen (Setup Step 2) redesigned for large hives
+
+With a full 9-AI hive, the Builder picker grid plus the new model selector (v3.63.66) overflowed the viewport — the selector and the Continue button dropped below the fold and the page turned into a scroll marathon, especially on laptops. The screen now holds everything in view regardless of hive size:
+
+- **Card grid is capped and scrolls internally.** Past roughly two rows the grid scrolls on its own; the header, model selector, and Continue button stay pinned and visible. A 9-, 12-, or 20-AI hive no longer pushes the controls off-screen.
+- **Cards tightened.** Flatter aspect ratio (3.2/1 desktop, 4.2/1 laptop) and reduced padding so more of the hive is visible in the same vertical band, while keeping the established 3-column card look and icon+name language.
+- **Duplicate paragraph removed.** The header carried a second paragraph about the Builder's handyman/Notes-drawer role that was already covered in full by the ⓘ info modal. Removed the on-page duplicate (the ⓘ button beside the title still has it), reclaiming header height.
+- **Model selector promoted to a connected panel.** The selector now sits in a subtle surface panel with an accent top edge and a 🔨 label, directly under the grid — so it reads as "the model for the Builder you just picked," not a floating control at the page bottom.
+
+No logic changes — the selector still reuses `buildModelSelector` and persists through the same save path. The Working Document 80ch column is untouched.
+
+### Files Changed
+
+- Updated: `index.html` (removed duplicate header paragraph), `js/app.js` (🔨 glyph on the model-panel label), `style.css` (capped/scrolling card grid, tighter card sizing, connected model-selector panel — all token-based), `CHANGELOG.md`
+- Version/build stamps to `v3.63.67 Pro` / `20260530-010` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.66
 **Build:** `20260530-009` · **Released:** May 30, 2026
 

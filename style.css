@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-009
+   Build: 20260530-010
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -898,12 +898,32 @@ html, body {
 .cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
 /* v3.63.66 — Model selector on Setup 2 (Builder screen), below the pick grid.
    Reuses the same .model-select combobox + .cb-model-empty fallback as the
-   Change Builder modal. Mirrors .cb-model-wrap sizing. Token-based; touches
-   nothing on work-main / the 80ch column. */
-.builder-screen-model-wrap { width: 100%; max-width: var(--modal-w-base); margin: var(--space-16) auto 0; text-align: left; }
+   Change Builder modal. Token-based; touches nothing on work-main / 80ch.
+   v3.63.67 — promoted to a connected panel (subtle surface + accent top edge)
+   so it reads as "the model for the Builder you just picked," not a floating
+   element at the page bottom. Sits directly under the (now capped) grid. */
+.builder-screen-model-wrap {
+  width: 100%;
+  max-width: var(--modal-w-base);
+  margin: var(--space-8) auto 0;
+  text-align: left;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-top: 2px solid var(--accent);
+  border-radius: var(--radius-md);
+  padding: var(--space-14) var(--space-16) var(--space-16);
+}
 .builder-screen-model-wrap .model-select { width: 100%; }
 .builder-screen-model-wrap .model-select-note { padding-left: 0; }
-.builder-screen-model-label { font-size: var(--fs-13); font-weight: 600; color: var(--text-dim); margin: 0 0 var(--space-8); }
+.builder-screen-model-label {
+  font-size: var(--fs-13);
+  font-weight: 700;
+  color: var(--accent);
+  margin: 0 0 var(--space-10);
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+}
 .cb-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); justify-content: center; align-items: center; }
 .cb-confirm-btn {
   background: var(--accent);
@@ -2933,77 +2953,63 @@ html, body {
   display: grid;
   /* v3.27.7: explicit 3 columns instead of auto-fill, minmax(175px, 1fr).
      With the default 6 AIs this produces a 3+3 layout (two balanced rows)
-     and the cards flex to fill horizontal space — so they grow to ~500px
-     each at typical desktop widths and feel substantial against the tall
-     amber header band. For non-multiple-of-3 hive counts (4, 5, 7, 8…) the
-     last row may be partial; that's an acceptable trade for the balanced
-     visual the default 6-AI hive produces. */
+     and the cards flex to fill horizontal space.
+     v3.63.67: capped grid height + internal scroll. With 7-9+ AIs the grid
+     used to push the model selector and Continue button below the fold. Now
+     the grid scrolls internally past ~2 rows; the header, model selector, and
+     CTA stay pinned and visible regardless of hive size. */
   grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-14);
-  margin-bottom: var(--space-8);
+  gap: var(--space-12);
+  margin-bottom: var(--space-12);
+  max-height: 42vh;
+  overflow-y: auto;
+  /* a hair of right padding so the scrollbar never overlaps card borders */
+  padding-right: var(--space-4);
 }
 .builder-pick-grid-large .builder-pick-btn {
   flex-direction: column;
   align-items: center;
-  gap: var(--space-14);
-  /* v3.27.7: bumped padding 20px 12px 14px → 28px 16px 22px for more
-     vertical presence to fill the wider card width. */
-  padding: var(--space-28) var(--space-16) 22px;
+  gap: var(--space-10);
+  /* v3.63.67: pulled padding down (was 28/16/22) so 3 rows of 3 fit inside
+     the capped grid height without feeling cramped. */
+  padding: var(--space-16) var(--space-14) var(--space-14);
   font-size: var(--fs-15);
   text-align: center;
   justify-content: center;
-  /* v3.27.9: lock aspect-ratio so cards grow proportionally in both
-     dimensions as the viewport widens, instead of stretching only
-     horizontally and progressively letterboxing. 2:1 keeps cards a
-     deliberate landscape shape that scales naturally — at laptop widths
-     each card is ~470×235, at full desktop ~540×270, with content
-     centered in the available space at every size. */
-  /* v3.34.1: aspect-ratio 2/1 → 2.6/1. At desktop-tier widths above
-     the laptop compaction trigger (1872×938 in particular), the prior
-     2:1 ratio made cards ~215px tall apiece, and two rows + bee mascot
-     + amber band + Continue button overflowed the viewport, forcing
-     scroll. 2.6:1 keeps cards feeling substantial while pulling height
-     down enough that the full Setup 2 page fits in 938+ tall viewports
-     without scroll. Cards remain landscape and visually grounded. */
-  aspect-ratio: 2.6 / 1;
+  /* v3.63.67: aspect 2.6/1 → 3.2/1. Flatter cards = more rows visible in the
+     same vertical band, which is what a 9-AI hive needs. Cards stay landscape
+     and keep the established visual language. */
+  aspect-ratio: 3.2 / 1;
 }
 /* v3.27.7: scoped icon + name overrides for the large variant only. The
    small builder-pick-grid (used in the change-builder modal) retains
    36px / 13px sizing.
-   v3.34.2: moved ABOVE the @media compaction block. Previously these
-   were declared after the @media, so they stomped the compaction's
-   icon/name overrides (cascade-order bug — same pattern as the
-   work-right-logo fix in v3.34.0). At laptop tier the compaction's
-   icon: 32px and name: 13px were silently overridden by the 56px and
-   15px values here. Now compaction properly wins inside its tier. */
+   v3.34.2: moved ABOVE the @media compaction block (cascade-order). */
 .builder-pick-grid-large .builder-pick-icon {
-  width: 56px;
-  height: 56px;
+  width: 44px;
+  height: 44px;
 }
 .builder-pick-grid-large .builder-pick-name {
   font-size: var(--fs-15);
 }
-/* v3.27.10: shrink Builder cards at laptop widths (≤1421px = the project's
-   established laptop threshold) and when vertically compact (≤900px tall =
-   devtools open, smaller laptops). Cards at full desktop (1422px+ wide AND
-   900px+ tall) keep the v3.27.7/v3.27.9 sizing — at laptop sizes those
-   numbers eat too much vertical space, especially with devtools open.
-   v3.27.11: pulled cards down significantly further — aspect 2.6→3.2,
-   icon 42→32, padding 20/14/16→14/12/12, font 14→13. The v3.27.10 numbers
-   were still too tall at 1422×811. Target ~⅔ of v3.27.10 height.
-   v3.34.1: width trigger updated from non-canonical 1421px → canonical
-   Laptop boundary 1600px. Now fires across the full Laptop tier instead
-   of just the bottom 55px of it. Height trigger 900px unchanged (canonical
-   Short tier). Logic: compact whenever in Laptop tier OR Short tier. */
+/* v3.27.10: shrink Builder cards at laptop widths (≤1600px) and when
+   vertically compact (≤900px tall = devtools open, smaller laptops).
+   v3.63.67: tightened further for the capped-grid layout — flatter aspect
+   and smaller icons so a full 9-AI hive shows ~2.5 rows before scroll even
+   on a laptop, keeping the selector + CTA on-screen. */
 @media (max-width: 1600px), (max-height: 900px) {
+  .builder-pick-grid-large {
+    max-height: 38vh;
+    gap: var(--space-10);
+  }
   .builder-pick-grid-large .builder-pick-btn {
-    padding: var(--space-12) var(--space-12) var(--space-10);
+    padding: var(--space-10) var(--space-12) var(--space-10);
     gap: var(--space-6);
-    aspect-ratio: 3.8 / 1;
+    aspect-ratio: 4.2 / 1;
   }
   .builder-pick-grid-large .builder-pick-icon {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
   }
   .builder-pick-grid-large .builder-pick-name {
     font-size: var(--fs-13);

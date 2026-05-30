@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260530-009
+     Build: 20260530-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-009">
+  <meta name="waxframe-build" content="20260530-010">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.66">
+  <link rel="stylesheet" href="style.css?v=3.63.67">
 </head>
 <body>
 
@@ -165,7 +165,6 @@
           <div class="hp-section-title-block">
             <h1 class="hp-section-title">Choose Your Builder <button class="goal-info-btn" onclick="document.getElementById('infoBuilderModal').classList.add('active')" title="About the Builder"><img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="info-btn-img-lg"></button></h1>
             <p class="hp-section-sub">The Builder is the AI that actually rewrites your document each round. While your reviewers give numbered suggestions, the Builder reads all of those suggestions plus the full document, then produces the updated version. Because it handles the entire document every single round, the Builder uses significantly more tokens than reviewers — it <strong>must have a paid API subscription with enough capacity</strong>. Choose an AI you trust with large documents. You can change your Builder any time from the work screen.</p>
-            <p class="hp-section-sub">Think of the Builder as a <strong>handyman as well as a synthesizer</strong>. Between full rounds, you can write a quick directive in the Notes drawer — <em>"rewrite the first paragraph,"</em> <em>"stop using the word 'refine' so much,"</em> <em>"tighten paragraph three"</em> — and click <strong>Send to Builder</strong> to have it perform just that one task without running the full hive. Saves tokens and time. Then click <strong>Smoke the Hive</strong> when you want the reviewers to weigh in on the change.</p>
           </div>
         </div>
         <div class="hp-section-body">
@@ -2510,22 +2509,22 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.66';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.67';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.66"></script>
-<script src="lib/jszip.min.js?v=3.63.66"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.66"></script>
-<script src="js/version.js?v=3.63.66"></script>
-<script src="js/storage.js?v=3.63.66"></script>
-<script src="js/theme.js?v=3.63.66"></script>
-<script src="js/audio.js?v=3.63.66"></script>
-<script src="js/scenes.js?v=3.63.66"></script>
-<script src="js/wf-debug.js?v=3.63.66"></script>
-<script src="js/api.js?v=3.63.66"></script>
-<script src="js/templates.js?v=3.63.66"></script>
-<script src="js/api-links.js?v=3.63.66"></script>
-<script src="js/app.js?v=3.63.66"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.67"></script>
+<script src="lib/jszip.min.js?v=3.63.67"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.67"></script>
+<script src="js/version.js?v=3.63.67"></script>
+<script src="js/storage.js?v=3.63.67"></script>
+<script src="js/theme.js?v=3.63.67"></script>
+<script src="js/audio.js?v=3.63.67"></script>
+<script src="js/scenes.js?v=3.63.67"></script>
+<script src="js/wf-debug.js?v=3.63.67"></script>
+<script src="js/api.js?v=3.63.67"></script>
+<script src="js/templates.js?v=3.63.67"></script>
+<script src="js/api-links.js?v=3.63.67"></script>
+<script src="js/app.js?v=3.63.67"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
