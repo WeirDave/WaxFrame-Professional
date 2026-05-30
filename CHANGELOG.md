@@ -2,6 +2,16 @@
 
 ---
 
+## v3.63.50
+**Build:** `20260529-023` · **Released:** May 29, 2026
+
+### Fixed — Custom Templates view was unreachable
+
+- Clicking **Custom Templates** in the template gallery did nothing. The path handler accepted only the built-in `scratch` and `refine` paths and silently rejected `custom`, so the view never opened and saved templates never appeared. The handler now accepts `custom`.
+- This makes the entire custom-templates feature reachable for the first time: save, apply, edit, export, and import. The view had been unreachable since the custom path-card shipped in v3.63.36. Saved templates were never lost — they appear as soon as the view opens.
+
+---
+
 ## v3.63.49
 **Build:** `20260529-022` · **Released:** May 29, 2026
 
