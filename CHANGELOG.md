@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.62
+**Build:** `20260530-005` · **Released:** May 30, 2026
+
+### Fixed — first-run offer modal closes only when YOU say it should
+
+- The work-screen entry modal (the "Set up and ready to run — pick Backup or Template" offer) previously closed immediately when you clicked either action button, forcing you to hunt through Tools or Finish to do the OTHER one. Real intent is almost always "I want both, in sequence."
+- Now the modal **stays open** until you dismiss it. Clicking **💾 Save a checkpoint backup** runs the backup flow on top; when that finishes you're back at the offer modal. Clicking **⭐ Save as a template** runs the template flow on top; when that finishes you're back at the offer modal. Do one, do the other, do both, do neither — your call. Dismiss with the renamed **"I'm done"** button (was "Not now") or the background-click / X.
+- The redundant backup-nudge that v3.63.61 added after template save now skips when the first-run offer modal is still active (the user can see the Backup option right there — no need to prompt again).
+
+### Files Changed
+
+- Updated: `js/app.js` (firstRunDoBackup + firstRunDoTemplate no longer close the modal; backup-after-template nudge gates on firstRunOfferModal not active), `index.html` ("Not now" → "I'm done"), `CHANGELOG.md`
+- Version/build stamps to `v3.63.62 Pro` / `20260530-005` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.61
 **Build:** `20260530-004` · **Released:** May 30, 2026
 
