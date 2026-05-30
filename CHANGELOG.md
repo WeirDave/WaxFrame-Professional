@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.65
+**Build:** `20260530-008` · **Released:** May 30, 2026
+
+### Fixed — Gemini Builder model state could desync from endpoint URL
+
+`Recommend Models` (manual and startup-migration paths) was writing `cfg.model` without also recomputing `cfg.endpoint`, leaving Gemini in a split state where the configured model name disagreed with the URL path the request was actually routed to. Google's API honors the URL path, so requests silently went to whichever model the endpoint was last set to — observable only by inspecting `modelVersion` in the response (or trapping `cfg.model` writes via a console watcher, which is how this was found).
+
+Two write sites in `js/app.js` were missing the endpoint sync:
+
+- `recommendModels()` (~line 6567) — manual Recommend Models click on a Worker Bees row
+- `migrateRecommendOnStartup()` (~line 6614) — first-load migration that runs once per session for default AIs with cached recommendations
+
+Both now mirror the same two-line endpoint recompute already present in `saveModelForAI` (~line 324) and `loadHive` (`js/storage.js` ~line 754). Symmetry rule going forward: every write to `cfg.model` from any source must recompute `cfg.endpoint` if the provider has an `endpointFn`.
+
+### Fixed — Product Review template cited wrong Amazon character limit
+
+The `Length Constraint` field hint on both `scratch` and `refine` paths of the Product Review template cited *"Amazon: Range · 500–4,000 characters (Amazon's own limit)"* — that 4,000 figure is the recommended guidance Amazon publishes, not the actual enforced ceiling. Empirically, Amazon's review form accepts up to **20,000 characters** on submission. The hint now reflects the verified ceiling and distinguishes recommended guidance from the hard cap.
+
+The character figures for Best Buy / Newegg / Target / Walmart are now hedged ("~5,000", "~4,000") rather than presented as hard guarantees — those numbers are reasonable working figures but have not been empirically verified post-by-post the way Amazon's was.
+
+### Added — Star rating field on Product Review (scratch path)
+
+The Product Review template's `refMaterial` scaffold (scratch path) now includes a `Star rating (0–5):` field between `Value for the money:` and `Who should buy it:`. Every major retailer review form — Amazon, Best Buy, Walmart, Target, Newegg, eBay — uses a 0–5 star scale, so this is universally relevant rather than Amazon-specific. The refine path's hint also notes the star-rating context for users polishing an existing draft.
+
+### Files Changed
+
+- Updated: `js/app.js` (Gemini endpoint sync at recommendModels + migrateRecommendOnStartup), `js/templates.js` (Amazon character limit + star rating field on Product Review template), `CHANGELOG.md`
+- Version/build stamps to `v3.63.65 Pro` / `20260530-008` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.64
 **Build:** `20260530-007` · **Released:** May 30, 2026
 
