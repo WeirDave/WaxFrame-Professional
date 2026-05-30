@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-009
+// Build: 20260530-010
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-009';         // build stamp — update each session
+const BUILD       = '20260530-010';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4837,12 +4837,12 @@ function renderBuilderScreenModel() {
   if (!sel) {
     // No cached model list for this provider yet — guide the user, don't show an empty box.
     wrap.style.display = 'block';
-    wrap.innerHTML = `<div class="builder-screen-model-label">Model for ${escapeHtml(ai.name)}</div>`
+    wrap.innerHTML = `<div class="builder-screen-model-label">🔨 Model for ${escapeHtml(ai.name)}</div>`
       + `<p class="cb-model-empty">No model list cached yet — run <strong>Recommend Models</strong> on the Worker Bees screen (Setup 1) to populate it, or this Builder will use its provider default.</p>`;
     return;
   }
   wrap.style.display = 'block';
-  wrap.innerHTML = `<div class="builder-screen-model-label">Model for ${escapeHtml(ai.name)} (Builder)</div>` + sel;
+  wrap.innerHTML = `<div class="builder-screen-model-label">🔨 Model for ${escapeHtml(ai.name)} (Builder)</div>` + sel;
   // If the dropdown defaulted to the cached 🔨 pick and that differs from the
   // AI's currently-saved model, persist it now so the shown model and the
   // committed model never diverge — same guarantee the modal gives via its
