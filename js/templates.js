@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-//  Build: 20260530-006
+//  Build: 20260530-007
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -780,7 +780,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Create a fair, honest, useful review that explains how the product actually performed over time, what worked, what didn't, whether the price made sense, and who should (or should not) buy it.",
         "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, use over time (how long, how often, what for), build quality, what worked well, what didn't, any defects or failures, accuracy of the product description, customer support or return experience if relevant, value for money, who should buy it, who should avoid it, and whether you'd buy it again. Build only from the facts in my Reference Material \u2014 do not invent specs, prices, dates, or features.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
-        "goalNotes": "End with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally', 'Crushes cans fine, falls apart fast'). No quotes around it, no 'Review:' prefix. Then end with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
         "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: \nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -796,7 +796,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Polish my existing review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise or complaints, make sure the final recommendation lands clearly.",
         "goalScope": "Preserve all my factual details \u2014 model, price, dates, specs, use patterns. Sharpen vague language. Make sure the review covers purchase context, use over time, build quality, what worked, what didn't, value, and a clear bottom-line recommendation.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
-        "goalNotes": "Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally'). No quotes around it, no 'Review:' prefix. If my draft already has a strong headline, keep it; if it has a generic one, sharpen it to reflect the verdict. Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
         "refMaterial": "",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -827,7 +827,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Create a useful, honest review that explains what the experience was actually like, what was ordered, what was good, what was disappointing, whether the price made sense, and whether I would return.",
         "goalScope": "Include visit context, food and drinks ordered, pricing if known, service, atmosphere, cleanliness, parking or location notes, standout items, disappointments, and final recommendation. Build only from the visit details in my Reference Material — do not invent dishes, prices, staff names, dates, or facts.",
         "goalTone": "Conversational, detailed, fair, practical, and direct. Preserve the reviewer's natural voice. Honest criticism is fine, but avoid making it sound like a rant unless the source material genuinely supports that tone.",
-        "goalNotes": "End with a clear bottom line: whether I would return, who this restaurant is best for, and any specific warning, recommendation, or timing advice for future visitors.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic '[Restaurant Name] Review' or 'Review of [restaurant]' stub. The headline should hint at the real conclusion (e.g. 'Great food, terrible service — go on a weekday', 'Hidden gem hiding behind a bad sign', 'Three visits in, still our favorite Italian'). No quotes around it, no 'Review:' prefix. Then end with a clear bottom line: whether I would return, who this restaurant is best for, and any specific warning, recommendation, or timing advice for future visitors.",
         "refMaterial": "Restaurant: \nLocation: \nDate/time: \nWho was there (solo / couple / family / group / business): \nDine-in / takeout / delivery / patio / bar: \nReservation or walk-in: \nParking notes: \nFirst impression of exterior/interior: \nNoise / lighting / seating / cleanliness: \nWhat was ordered (drinks, apps, entrées, sides, dessert): \nPrices remembered: \nFood quality (flavor, temperature, portion, freshness, presentation): \nBest item: \nWorst item or disappointment: \nService quality: \nProblems and how staff handled them: \nWould you return: \nWho is this restaurant best for: ",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -843,7 +843,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Polish my existing review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise/complaints, make sure the final recommendation lands clearly.",
         "goalScope": "Preserve all my factual details — dishes, prices, dates, staff interactions. Cut vagueness, sharpen specifics. End with a clear bottom line.",
         "goalTone": "Conversational, detailed, fair, practical, and direct. Preserve the reviewer's natural voice. Honest criticism is fine, but avoid making it sound like a rant unless the source material genuinely supports that tone.",
-        "goalNotes": "Do not invent dishes, prices, staff names, dates, or facts. Do not soften legitimate criticism.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict — not a generic '[Restaurant Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Great food, terrible service — go on a weekday', 'Hidden gem hiding behind a bad sign'). No quotes around it, no 'Review:' prefix. If my draft already has a strong headline, keep it; if it has a generic one, sharpen it to reflect the verdict. Do not invent dishes, prices, staff names, dates, or facts. Do not soften legitimate criticism.",
         "refMaterial": "",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -874,7 +874,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Create a detailed, practical hotel review that helps readers understand the room, sleep quality, location, amenities, service, value, and any problems that affected the stay.",
         "goalScope": "Cover trip context, room type or room number if provided, rate/value, check-in, room layout, cleanliness, bed, bathroom, HVAC, noise, darkness, internet, breakfast, gym, pool, bar, parking, location, staff, and final recommendation. Build only from the stay details in my Reference Material — do not invent amenities, prices, loyalty benefits, room numbers, or facts.",
         "goalTone": "Practical, detailed, fair, and conversational. Preserve useful personal observations and specific traveler-focused details.",
-        "goalNotes": "Include whether I would stay again and what type of traveler this hotel is best suited for. Mention dealbreakers clearly.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific stay — not a generic '[Hotel Name] Review' or 'Review of [hotel]' stub. The headline should hint at the real conclusion (e.g. 'Spotless rooms, walls like paper', 'Worth every penny for the location', 'Beautiful pictures, disappointing reality'). No quotes around it, no 'Review:' prefix. Then include whether I would stay again and what type of traveler this hotel is best suited for. Mention dealbreakers clearly.",
         "refMaterial": "Hotel: \nLocation: \nDates of stay: \nTrip type (business / vacation / family / event / road trip): \nWho was there (solo / couple / family / group): \nRoom type and number if relevant: \nRate / points / resort fee / parking fee / other fees: \nCheck-in experience: \nStaff interactions: \nRoom size, layout, furniture, outlets, desk: \nCleanliness and maintenance: \nBed and pillows: \nNoise (hallway, street, airport, neighbors, elevators, kids): \nRoom darkness / blackout curtains: \nHVAC / temperature control: \nBathroom layout, shower pressure, hot water, towels, toiletries: \nWi-Fi speed and reliability: \nBreakfast quality and variety: \nGym / pool / bar / lounge / laundry / shuttle / parking: \nNearby restaurants / walkability / transit / airport / attractions / work site: \nProblems and how staff handled them: \nWould you stay again: \nWho is this hotel best for: ",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -890,7 +890,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Polish my existing hotel review so it's detailed, practical, and traveler-useful. Surface the friction points (noise, HVAC, hot water, Wi-Fi, parking, fees) that lobby marketing won't.",
         "goalScope": "Preserve my factual details — dates, room number, rates, staff interactions, problems. Strengthen the practical detail. End with a clear recommendation for type of traveler.",
         "goalTone": "Practical, detailed, fair, and conversational. Preserve useful personal observations and specific traveler-focused details.",
-        "goalNotes": "Do not invent amenities, prices, loyalty benefits, room numbers, or facts. Do not soften legitimate dealbreakers.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict — not a generic '[Hotel Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Spotless rooms, walls like paper', 'Worth every penny for the location'). No quotes around it, no 'Review:' prefix. If my draft already has a strong headline, keep it; if it has a generic one, sharpen it to reflect the verdict. Do not invent amenities, prices, loyalty benefits, room numbers, or facts. Do not soften legitimate dealbreakers.",
         "refMaterial": "",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -921,7 +921,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Create a fair but useful review that explains why I used the business, what happened, what went well, what went wrong, how the business handled it, and whether I would recommend them.",
         "goalScope": "Include reason for using the business, booking or arrival process, staff behavior, service quality, pricing/value, problems, resolution attempts, observed business practices, and final recommendation. Build only from the experience details in my Reference Material — do not exaggerate, speculate beyond facts, or invent details.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports it.",
-        "goalNotes": "End with practical advice: who should use this business, who should avoid it, and what to watch out for. Do not add legal conclusions, accusations, or claims beyond the facts provided.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific experience — not a generic '[Business Name] Review' or 'Review of [business]' stub. The headline should hint at the real conclusion (e.g. 'Quick response, sloppy workmanship', 'Save your money — there's a reason it's cheap', 'Pricey but they actually finished on time'). No quotes around it, no 'Review:' prefix. Then end with practical advice: who should use this business, who should avoid it, and what to watch out for. Do not add legal conclusions, accusations, or claims beyond the facts provided.",
         "refMaterial": "Business: \nLocation: \nType of service or product: \nWhy you used them: \nDate/time: \nBooking process (app / website / phone / walk-in / reservation / estimate / quote): \nPrice quoted vs. price paid: \nArrival/check-in process: \nStaff behavior and communication: \nWhat went well: \nWhat went wrong: \nDelays / confusion / unexpected charges / damage / poor workmanship / service failures: \nHow the business responded when a problem came up: \nWhether they fixed the issue: \nObserved practices future customers should know about: \nWould you use them again: \nWho should use them and who should avoid them: ",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -937,7 +937,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Polish my existing review so it's fair, useful, and specific. Strengthen the concrete details, cut vagueness, sharpen the recommendation.",
         "goalScope": "Preserve all my factual details — dates, prices, staff interactions, what went wrong. Replace vague language with specifics. End with practical advice for future customers.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports it.",
-        "goalNotes": "Do not add legal conclusions, accusations, or claims beyond facts provided. Do not invent prices, dates, or interactions.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict — not a generic '[Business Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Quick response, sloppy workmanship', 'Pricey but they actually finished on time'). No quotes around it, no 'Review:' prefix. If my draft already has a strong headline, keep it; if it has a generic one, sharpen it to reflect the verdict. Do not add legal conclusions, accusations, or claims beyond facts provided. Do not invent prices, dates, or interactions.",
         "refMaterial": "",
         "lengthMode": "none",
         "lengthLimit": "",
