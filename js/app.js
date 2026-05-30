@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-008
+// Build: 20260530-009
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-008';         // build stamp — update each session
+const BUILD       = '20260530-009';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4813,6 +4813,43 @@ function renderBuilderPicker() {
     </button>
   `;
   }).join('');
+  // v3.63.66 — render the model selector for the currently-selected Builder.
+  renderBuilderScreenModel();
+}
+
+// v3.63.66 — Model selector for the chosen Builder on Setup Step 2. Mirrors the
+// Change Builder modal's selectBuilderCandidate flow: reuse buildModelSelector
+// (the same custom combobox as Worker Bees + the modal), default to the cached
+// 🔨 Builder pick when one exists, fall back to the AI's configured model. The
+// dropdown's pick is persisted on change via wfModelSelectPick -> saveModelForAI,
+// exactly like the other three surfaces — no separate confirm needed here since
+// the Builder screen has no modal commit step. Hidden until a Builder is chosen.
+function renderBuilderScreenModel() {
+  const wrap = document.getElementById('builderScreenModelWrap');
+  if (!wrap) return;
+  const ai = builder && activeAIs.find(a => a.id === builder);
+  if (!ai) { wrap.style.display = 'none'; wrap.innerHTML = ''; return; }
+  const cfg = API_CONFIGS[ai.provider];
+  const builderRec = getBuilderRecommendation(ai.id);
+  const cur = (cfg && cfg.model) || '';
+  const defaultModel = (builderRec && builderRec.model) ? builderRec.model : cur;
+  const sel = buildModelSelector(ai.id, ai.provider, defaultModel, false);
+  if (!sel) {
+    // No cached model list for this provider yet — guide the user, don't show an empty box.
+    wrap.style.display = 'block';
+    wrap.innerHTML = `<div class="builder-screen-model-label">Model for ${escapeHtml(ai.name)}</div>`
+      + `<p class="cb-model-empty">No model list cached yet — run <strong>Recommend Models</strong> on the Worker Bees screen (Setup 1) to populate it, or this Builder will use its provider default.</p>`;
+    return;
+  }
+  wrap.style.display = 'block';
+  wrap.innerHTML = `<div class="builder-screen-model-label">Model for ${escapeHtml(ai.name)} (Builder)</div>` + sel;
+  // If the dropdown defaulted to the cached 🔨 pick and that differs from the
+  // AI's currently-saved model, persist it now so the shown model and the
+  // committed model never diverge — same guarantee the modal gives via its
+  // confirm step. saveModelForAI also recomputes the Gemini endpoint (v3.63.65).
+  if (defaultModel && cfg && defaultModel !== cfg.model) {
+    saveModelForAI(ai.id, defaultModel);
+  }
 }
 
 function setBuilder(id) {

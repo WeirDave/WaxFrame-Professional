@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.66
+**Build:** `20260530-009` · **Released:** May 30, 2026
+
+### Added — Model selector on the Builder screen (Setup Step 2)
+
+Choosing a Builder on Setup Step 2 now shows a model dropdown for the selected AI, directly below the picker grid. Previously the only place to see or change a Builder's model was the Worker Bees screen or the in-work Change Builder modal — so picking an AI as Builder gave you no visibility into *which model* it would run, and no way to change it without leaving the setup flow.
+
+The selector reuses the same custom combobox that powers the Worker Bees row and the Change Builder modal (now its fourth surface), including the ✨ Reviewer / 🔨 Builder recommendation markers and row tinting. When a Builder is selected, the dropdown defaults to that AI's cached 🔨 Builder recommendation (falling back to its configured model), and the pick is persisted on change — the shown model and the committed model can't diverge.
+
+This directly addresses the friction where, for example, Gemini's Builder duty wants the cheaper, less filter-aggressive Flash model but the shared recommendation had set Pro Preview — you can now correct that on the Builder screen itself instead of bouncing back to Worker Bees.
+
+If a provider's model list isn't cached yet, the selector shows a short prompt to run Recommend Models on the Worker Bees screen rather than an empty control.
+
+### Files Changed
+
+- Updated: `index.html` (model-wrap container on Setup 2), `js/app.js` (`renderBuilderScreenModel()` + `renderBuilderPicker` hook), `style.css` (`.builder-screen-model-wrap` / `.builder-screen-model-label`, token-based), `CHANGELOG.md`
+- Version/build stamps to `v3.63.66 Pro` / `20260530-009` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.65
 **Build:** `20260530-008` · **Released:** May 30, 2026
 
