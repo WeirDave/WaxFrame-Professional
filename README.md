@@ -20,7 +20,10 @@ Multi-AI document refinement in your browser. No server, no account, no install.
 </div>
 
 <p align="center">
-  <img src="screenshots/screenshot_welcome_dark.png" width="820" alt="WaxFrame welcome screen">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_welcome_light.png">
+    <img src="screenshots/screenshot_welcome_dark.png" width="820" alt="WaxFrame welcome screen">
+  </picture>
 </p>
 
 ---
@@ -71,7 +74,10 @@ A WaxFrame session has two AI roles and one document, processed in rounds. Every
 ### 1. Build your hive
 
 <p align="center">
-  <img src="screenshots/screenshot_setup1_dark.png" width="820" alt="Setup 1 — Worker Bees">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup1_light.png">
+    <img src="screenshots/screenshot_setup1_dark.png" width="820" alt="Setup 1 — Worker Bees">
+  </picture>
 </p>
 
 Each AI with a saved API key becomes a reviewer. You need at least two distinct model families to proceed — a hive of six AIs that are all near-identical fine-tunes of the same family is functionally one reviewer with six voices. Three or more reviewers is recommended so the hive can break ties without your input.
@@ -81,7 +87,10 @@ AIs without a saved key remain visible in the hive and skip automatically each r
 ### 2. Choose your Builder
 
 <p align="center">
-  <img src="screenshots/screenshot_setup2_dark.png" width="820" alt="Setup 2 — Builder">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup2_light.png">
+    <img src="screenshots/screenshot_setup2_dark.png" width="820" alt="Setup 2 — Builder">
+  </picture>
 </p>
 
 The Builder rewrites the entire document every round and uses significantly more tokens than any reviewer. It needs a paid API plan with real capacity — free-tier accounts run out mid-round. Claude, ChatGPT, Gemini, and DeepSeek all handle large documents reliably; DeepSeek is the most cost-effective by a wide margin, though it is the slowest responder in the hive, so expect longer rounds.
@@ -93,7 +102,10 @@ The Builder also acts as your handyman. Write a directive in the **Notes drawer*
 ### 3. Define your project
 
 <p align="center">
-  <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 3 — Your Project">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup3_light.png">
+    <img src="screenshots/screenshot_setup3_dark.png" width="820" alt="Setup 3 — Your Project">
+  </picture>
 </p>
 
 The Project screen is the most important page in setup. Every reviewer and the Builder read these six fields on every round — it's their entire understanding of what you're trying to build.
@@ -112,7 +124,10 @@ Built-in templates cover cover letters, résumés, RFP responses, executive summ
 ### 4. Add Reference Material (optional)
 
 <p align="center">
-  <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 4 — Reference Material">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup4_light.png">
+    <img src="screenshots/screenshot_setup4_dark.png" width="820" alt="Setup 4 — Reference Material">
+  </picture>
 </p>
 
 Reference Material is source content the hive **consults but never edits** — distinct from the Notes drawer and from your Starting Document. Use it for source recipes, RFP requirements, interview transcripts, style guides, scoring rubrics, prior consensus decisions, or competitor material you want to outflank.
@@ -122,7 +137,10 @@ It's the lever behind the biggest convergence-speed gains we've measured. A blog
 ### 5. Provide your starting document
 
 <p align="center">
-  <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 5 — Starting Document">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_setup5_light.png">
+    <img src="screenshots/screenshot_setup5_dark.png" width="820" alt="Setup 5 — Starting Document">
+  </picture>
 </p>
 
 Three modes:
@@ -142,7 +160,10 @@ Every reviewer reads the document simultaneously and returns structured suggesti
 ### 7. Resolve conflicts
 
 <p align="center">
-  <img src="screenshots/screenshot_work_dark.png" width="820" alt="Work screen — USER DECISION conflict and Builder-Applied changes">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="screenshots/screenshot_work_light.png">
+    <img src="screenshots/screenshot_work_dark.png" width="820" alt="Work screen — USER DECISION conflict and Builder-Applied changes">
+  </picture>
 </p>
 
 When reviewers disagree, WaxFrame surfaces a conflict card instead of silently averaging. You pick one of the options, type your own resolution, bypass if you've already fixed it directly inline, or decline to suppress the conflict entirely. Decisions are applied immediately and locked.

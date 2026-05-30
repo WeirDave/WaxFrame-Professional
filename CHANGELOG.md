@@ -2,6 +2,42 @@
 
 ---
 
+## v3.63.56
+**Build:** `20260529-029` · **Released:** May 29, 2026
+
+### Fixed — screenshot capture lands the correct screen
+
+- The `?cap=<screen>` capture driver moved out of the async `DOMContentLoaded` handler into a top-level block that re-asserts the target screen on a short interval, so a headless capture can no longer snap the welcome screen during early init. Still inert for normal users (only acts when `?cap=` is present).
+- `tools/capture-screenshots.ps1` now serves the repo over a local Node HTTP server and polls for each PNG to finish writing before reporting success — fixing both the wrong-screen captures and the false `FAILED` reports. Output is a single 1920×1080 in light and dark; the tool auto-prefers 64-bit Chrome.
+- Regenerated all setup, welcome, and settings screenshots at 1920×1080 in both themes; README screenshots use the theme-swapping `<picture>` pattern.
+
+### Files Changed
+
+- `js/app.js` — capture driver re-asserts the target screen.
+- `tools/capture-screenshots.ps1` — Node HTTP server, write-poll, 1920×1080.
+- `screenshots/` — regenerated at 1920×1080, light + dark.
+- Version/build stamps to `v3.63.56 Pro` / `20260529-029` across all 9 HTML files, all 14 JS files, and `style.css`.
+
+---
+
+## v3.63.55
+**Build:** `20260529-028` · **Released:** May 29, 2026
+
+### Fixed — screenshot capture now reliable; README screenshots theme-aware
+
+- The `?cap=<screen>` capture hook in `index.html` now switches screens **immediately** instead of after a 60 ms delay, so a headless browser no longer captures the welcome screen during the brief load flicker. Inert for normal users (only fires with `?cap=`).
+- `tools/capture-screenshots.ps1` now launches each capture with an **isolated temporary browser profile** so headless Edge cannot hand off to an already-running browser and exit without capturing — the cause of every shot reporting `FAILED` in a batch run. Capture resolution is now a single crisp **1920×1080** (light + dark).
+- README screenshots converted to a `<picture>` + `prefers-color-scheme` pattern so the welcome, setup, and work-screen images swap with the viewer's GitHub theme. (The two live-round shots remain dark-only until a demo session can be seeded.)
+
+### Files Changed
+
+- `js/app.js` — capture hook switches screen immediately.
+- `tools/capture-screenshots.ps1` — isolated profile, blocking launch, 1920×1080.
+- `README.md` — theme-swapping `<picture>` screenshots.
+- Version/build stamps to `v3.63.55 Pro` / `20260529-028` across all 9 HTML files, all 14 JS files, and `style.css`.
+
+---
+
 ## v3.63.54
 **Build:** `20260529-027` · **Released:** May 29, 2026
 
