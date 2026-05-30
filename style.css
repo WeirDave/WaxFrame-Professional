@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260529-025
+   Build: 20260529-027
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13345,3 +13345,35 @@ kbd {
 .template-card-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .template-import-btn { background: var(--surface3); color: var(--text); border-color: var(--border2); }
 .template-import-btn:hover { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+
+/* ============================================================
+   Screenshot figures (.ss-shot) — theme-aware.
+   Dark image is the default; the light image swaps in under an
+   explicit light theme, or auto + OS-light — mirroring the app's
+   [data-theme] / prefers-color-scheme convention used throughout.
+   Generate both sets with: tools/capture-screenshots.ps1 -Theme both
+   ============================================================ */
+.ss-shot { margin: var(--space-5, 20px) auto; max-width: 920px; }
+.ss-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border2);
+  box-shadow: var(--shadow-md);
+}
+.ss-shot figcaption {
+  margin-top: var(--space-2, 8px);
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+  text-align: center;
+  font-style: italic;
+}
+.ss-shot .ss-light { display: none; }
+.ss-shot .ss-dark  { display: block; }
+[data-theme="light"] .ss-shot .ss-dark  { display: none; }
+[data-theme="light"] .ss-shot .ss-light { display: block; }
+@media (prefers-color-scheme: light) {
+  [data-theme="auto"] .ss-shot .ss-dark  { display: none; }
+  [data-theme="auto"] .ss-shot .ss-light { display: block; }
+}
