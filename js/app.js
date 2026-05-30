@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-010
+// Build: 20260530-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-010';         // build stamp — update each session
+const BUILD       = '20260530-011';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4795,35 +4795,37 @@ function renderBuilderPicker() {
   if (!builder || !activeAIs.find(a => a.id === builder)) {
     builder = _aiListAlpha(activeAIs)[0].id;
   }
-  // v3.32.16 — was bare `<img src="${ai.icon}" onerror="this.style.display='none'">`,
-  // which bypassed the brand-match catalog AND silently hid the icon when
-  // the PNG failed to load. Now routes through resolveAiIcon so the same
-  // three-tier chain applies: brand match → ai.icon → letter avatar (with
-  // v3.32.15's first-alphanumeric pickup). 56px matches the .builder-pick-icon
-  // sizing inside .builder-pick-grid-large (Setup 2 variant).
+  // v3.63.68 — "Roster + Spotlight" layout. A 3×3 grid of big landscape cards
+  // overflowed at laptop sizes once the model selector was added. Instead we
+  // render a compact horizontal roster of AI chips (wraps to ≤2 rows even with
+  // 9-20 AIs), and a separate Spotlight panel below shows the SELECTED Builder
+  // large with its model selector integrated. Fixed vertical footprint that
+  // fits 1366×768 with room to spare. Keeps the card surface, amber header, and
+  // Builder bee — just a smarter shape for many AIs.
   grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
-    const iconEl = resolveAiIcon(ai, 'builder-pick-icon', 56);
+    const iconEl = resolveAiIcon(ai, 'builder-chip-icon', 28);
+    const isSel = builder === ai.id;
     return `
-    <button class="builder-pick-btn ${builder === ai.id ? 'selected' : ''}"
+    <button class="builder-chip${isSel ? ' is-selected' : ''}"
       title="${escapeHtml(ai.name)}"
       onclick="setBuilder('${ai.id}'); return false;">
       ${iconEl}
-      <span class="builder-pick-name">${escapeHtml(ai.name)}</span>
-      ${builder === ai.id ? '<img src="images/WaxFrame_Builder_v3.png" class="builder-selected-badge" onerror="this.style.display=\'none\'">' : ''}
+      <span class="builder-chip-name">${escapeHtml(ai.name)}</span>
+      ${isSel ? '<span class="builder-chip-check">🔨</span>' : ''}
     </button>
   `;
   }).join('');
-  // v3.63.66 — render the model selector for the currently-selected Builder.
+  // v3.63.68 — render the Spotlight panel for the currently-selected Builder.
   renderBuilderScreenModel();
 }
 
-// v3.63.66 — Model selector for the chosen Builder on Setup Step 2. Mirrors the
-// Change Builder modal's selectBuilderCandidate flow: reuse buildModelSelector
-// (the same custom combobox as Worker Bees + the modal), default to the cached
-// 🔨 Builder pick when one exists, fall back to the AI's configured model. The
-// dropdown's pick is persisted on change via wfModelSelectPick -> saveModelForAI,
-// exactly like the other three surfaces — no separate confirm needed here since
-// the Builder screen has no modal commit step. Hidden until a Builder is chosen.
+// v3.63.68 — Spotlight panel for the chosen Builder on Setup Step 2. Shows the
+// selected AI large (big icon, name, "Your Builder" treatment) with the model
+// selector integrated INSIDE the panel — so the model picker lives WITH the
+// chosen Builder, not as a disconnected box below the whole grid. Reuses
+// buildModelSelector (the same combobox as Worker Bees + Change Builder modal),
+// defaults to the cached 🔨 Builder pick, persists on change via
+// wfModelSelectPick -> saveModelForAI.
 function renderBuilderScreenModel() {
   const wrap = document.getElementById('builderScreenModelWrap');
   if (!wrap) return;
@@ -4834,20 +4836,30 @@ function renderBuilderScreenModel() {
   const cur = (cfg && cfg.model) || '';
   const defaultModel = (builderRec && builderRec.model) ? builderRec.model : cur;
   const sel = buildModelSelector(ai.id, ai.provider, defaultModel, false);
-  if (!sel) {
-    // No cached model list for this provider yet — guide the user, don't show an empty box.
-    wrap.style.display = 'block';
-    wrap.innerHTML = `<div class="builder-screen-model-label">🔨 Model for ${escapeHtml(ai.name)}</div>`
-      + `<p class="cb-model-empty">No model list cached yet — run <strong>Recommend Models</strong> on the Worker Bees screen (Setup 1) to populate it, or this Builder will use its provider default.</p>`;
-    return;
-  }
+  const iconEl = resolveAiIcon(ai, 'builder-spotlight-icon', 52);
+
+  // Body: either the model selector, or a guide when no model list is cached.
+  const body = sel
+    ? `<div class="builder-spotlight-model-label">Pick the model this Builder runs</div>${sel}`
+    : `<p class="cb-model-empty">No model list cached yet — run <strong>Recommend Models</strong> on the Worker Bees screen (Setup 1) to populate it, or this Builder will use its provider default.</p>`;
+
   wrap.style.display = 'block';
-  wrap.innerHTML = `<div class="builder-screen-model-label">🔨 Model for ${escapeHtml(ai.name)} (Builder)</div>` + sel;
-  // If the dropdown defaulted to the cached 🔨 pick and that differs from the
-  // AI's currently-saved model, persist it now so the shown model and the
-  // committed model never diverge — same guarantee the modal gives via its
-  // confirm step. saveModelForAI also recomputes the Gemini endpoint (v3.63.65).
-  if (defaultModel && cfg && defaultModel !== cfg.model) {
+  wrap.innerHTML = `
+    <div class="builder-spotlight-head">
+      ${iconEl}
+      <div class="builder-spotlight-id">
+        <div class="builder-spotlight-role">🔨 Your Builder</div>
+        <div class="builder-spotlight-name">${escapeHtml(ai.name)}</div>
+      </div>
+      <img src="images/WaxFrame_Builder_v3.png" class="builder-spotlight-bee" alt="" onerror="this.style.display='none'">
+    </div>
+    <div class="builder-spotlight-body">${body}</div>
+  `;
+
+  // Keep shown model and committed model in lockstep — persist the defaulted 🔨
+  // pick if it differs from what's saved (saveModelForAI also recomputes the
+  // Gemini endpoint, v3.63.65).
+  if (sel && defaultModel && cfg && defaultModel !== cfg.model) {
     saveModelForAI(ai.id, defaultModel);
   }
 }

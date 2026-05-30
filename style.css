@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-010
+   Build: 20260530-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -896,35 +896,30 @@ html, body {
 .cb-model-wrap .model-select { width: 100%; }
 .cb-model-wrap .model-select-note { padding-left: 0; }
 .cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
-/* v3.63.66 — Model selector on Setup 2 (Builder screen), below the pick grid.
-   Reuses the same .model-select combobox + .cb-model-empty fallback as the
-   Change Builder modal. Token-based; touches nothing on work-main / 80ch.
-   v3.63.67 — promoted to a connected panel (subtle surface + accent top edge)
-   so it reads as "the model for the Builder you just picked," not a floating
-   element at the page bottom. Sits directly under the (now capped) grid. */
+/* v3.63.68 — SPOTLIGHT container (Setup 2 Builder screen). Wraps the selected
+   Builder's head (icon + name + bee) and the integrated model selector. Reuses
+   the same .model-select combobox as Worker Bees + Change Builder modal. Subtle
+   surface with an accent top edge so it reads as a distinct "your Builder" card.
+   Token-based; touches nothing on work-main / the 80ch column. */
 .builder-screen-model-wrap {
   width: 100%;
-  max-width: var(--modal-w-base);
-  margin: var(--space-8) auto 0;
+  max-width: var(--modal-w-lg);
+  margin: 0 auto;
   text-align: left;
   background: var(--surface2);
   border: 1px solid var(--border);
-  border-top: 2px solid var(--accent);
+  border-top: 3px solid var(--accent);
   border-radius: var(--radius-md);
-  padding: var(--space-14) var(--space-16) var(--space-16);
+  padding: var(--space-18) var(--space-20) var(--space-20);
 }
 .builder-screen-model-wrap .model-select { width: 100%; }
 .builder-screen-model-wrap .model-select-note { padding-left: 0; }
-.builder-screen-model-label {
-  font-size: var(--fs-13);
-  font-weight: 700;
-  color: var(--accent);
-  margin: 0 0 var(--space-10);
-  display: flex;
-  align-items: center;
-  gap: var(--space-6);
+/* laptop / short-viewport compaction */
+@media (max-width: 1600px), (max-height: 900px) {
+  .builder-screen-model-wrap {
+    padding: var(--space-12) var(--space-16) var(--space-14);
+  }
 }
-.cb-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); justify-content: center; align-items: center; }
 .cb-confirm-btn {
   background: var(--accent);
   border: 1px solid var(--accent);
@@ -2948,72 +2943,105 @@ html, body {
   flex-wrap: wrap;
 }
 
-/* ── BUILDER PICK GRID LARGE ── */
+/* ════════════════════════════════════════════════════════════════
+   BUILDER SCREEN (Setup 2) — "Roster + Spotlight" layout (v3.63.68)
+   ────────────────────────────────────────────────────────────────
+   #builderPickGrid is now a ROSTER: a compact flex-wrap row of AI chips
+   that stays ≤2 rows even at 9-20 AIs. The selected chip is highlighted.
+   Below it, #builderScreenModelWrap is the SPOTLIGHT panel showing the
+   chosen Builder large with its model selector integrated. Fixed vertical
+   footprint that fits 1366×768. No nested scroll. 80ch column untouched.
+   ════════════════════════════════════════════════════════════════ */
+
+/* ── ROSTER (chips) ── */
 .builder-pick-grid-large {
-  display: grid;
-  /* v3.27.7: explicit 3 columns instead of auto-fill, minmax(175px, 1fr).
-     With the default 6 AIs this produces a 3+3 layout (two balanced rows)
-     and the cards flex to fill horizontal space.
-     v3.63.67: capped grid height + internal scroll. With 7-9+ AIs the grid
-     used to push the model selector and Continue button below the fold. Now
-     the grid scrolls internally past ~2 rows; the header, model selector, and
-     CTA stay pinned and visible regardless of hive size. */
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-12);
-  margin-bottom: var(--space-12);
-  max-height: 42vh;
-  overflow-y: auto;
-  /* a hair of right padding so the scrollbar never overlaps card borders */
-  padding-right: var(--space-4);
-}
-.builder-pick-grid-large .builder-pick-btn {
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-10);
-  /* v3.63.67: pulled padding down (was 28/16/22) so 3 rows of 3 fit inside
-     the capped grid height without feeling cramped. */
-  padding: var(--space-16) var(--space-14) var(--space-14);
-  font-size: var(--fs-15);
-  text-align: center;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
-  /* v3.63.67: aspect 2.6/1 → 3.2/1. Flatter cards = more rows visible in the
-     same vertical band, which is what a 9-AI hive needs. Cards stay landscape
-     and keep the established visual language. */
-  aspect-ratio: 3.2 / 1;
+  gap: var(--space-10);
+  margin-bottom: var(--space-16);
 }
-/* v3.27.7: scoped icon + name overrides for the large variant only. The
-   small builder-pick-grid (used in the change-builder modal) retains
-   36px / 13px sizing.
-   v3.34.2: moved ABOVE the @media compaction block (cascade-order). */
-.builder-pick-grid-large .builder-pick-icon {
-  width: 44px;
-  height: 44px;
+.builder-chip {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-14);
+  background: var(--surface);
+  border: 1.5px solid var(--border2);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: var(--fs-14);
+  font-weight: 600;
+  color: var(--text);
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
 }
-.builder-pick-grid-large .builder-pick-name {
-  font-size: var(--fs-15);
+.builder-chip:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
 }
-/* v3.27.10: shrink Builder cards at laptop widths (≤1600px) and when
-   vertically compact (≤900px tall = devtools open, smaller laptops).
-   v3.63.67: tightened further for the capped-grid layout — flatter aspect
-   and smaller icons so a full 9-AI hive shows ~2.5 rows before scroll even
-   on a laptop, keeping the selector + CTA on-screen. */
+.builder-chip.is-selected {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.builder-chip-icon { width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px; }
+.builder-chip-name { white-space: nowrap; }
+.builder-chip-check { font-size: var(--fs-14); margin-left: var(--space-4); }
+
+/* ── SPOTLIGHT panel (selected Builder + integrated model selector) ── */
+.builder-spotlight-head {
+  display: flex;
+  align-items: center;
+  gap: var(--space-14);
+  padding-bottom: var(--space-14);
+  margin-bottom: var(--space-14);
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.builder-spotlight-icon {
+  width: 52px; height: 52px; flex-shrink: 0; border-radius: 10px;
+}
+.builder-spotlight-id { flex: 1; min-width: 0; }
+.builder-spotlight-role {
+  font-size: var(--fs-12);
+  font-weight: 700;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: var(--space-4);
+}
+.builder-spotlight-name {
+  font-size: var(--fs-22);
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.1;
+}
+.builder-spotlight-bee {
+  width: 56px; height: 56px; flex-shrink: 0; object-fit: contain;
+  opacity: 0.9;
+}
+.builder-spotlight-model-label {
+  font-size: var(--fs-13);
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-bottom: var(--space-10);
+}
+
+/* Laptop (≤1600px wide) OR short (≤900px tall): tighten the spotlight head so
+   the whole Setup 2 page clears the fixed footer at 1366×768. Roster chips are
+   already compact and need no change. */
 @media (max-width: 1600px), (max-height: 900px) {
-  .builder-pick-grid-large {
-    max-height: 38vh;
-    gap: var(--space-10);
+  .builder-pick-grid-large { gap: var(--space-8); margin-bottom: var(--space-12); }
+  .builder-spotlight-head {
+    gap: var(--space-12);
+    padding-bottom: var(--space-10);
+    margin-bottom: var(--space-10);
   }
-  .builder-pick-grid-large .builder-pick-btn {
-    padding: var(--space-10) var(--space-12) var(--space-10);
-    gap: var(--space-6);
-    aspect-ratio: 4.2 / 1;
-  }
-  .builder-pick-grid-large .builder-pick-icon {
-    width: 30px;
-    height: 30px;
-  }
-  .builder-pick-grid-large .builder-pick-name {
-    font-size: var(--fs-13);
-  }
+  .builder-spotlight-icon { width: 44px; height: 44px; }
+  .builder-spotlight-name { font-size: var(--fs-18); }
+  .builder-spotlight-bee { width: 44px; height: 44px; }
+  .builder-spotlight-model-label { margin-bottom: var(--space-6); }
 }
 
 /* ── SECTION BEE IMAGE ── */
