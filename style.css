@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-008
+   Build: 20260530-009
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -896,6 +896,14 @@ html, body {
 .cb-model-wrap .model-select { width: 100%; }
 .cb-model-wrap .model-select-note { padding-left: 0; }
 .cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
+/* v3.63.66 — Model selector on Setup 2 (Builder screen), below the pick grid.
+   Reuses the same .model-select combobox + .cb-model-empty fallback as the
+   Change Builder modal. Mirrors .cb-model-wrap sizing. Token-based; touches
+   nothing on work-main / the 80ch column. */
+.builder-screen-model-wrap { width: 100%; max-width: var(--modal-w-base); margin: var(--space-16) auto 0; text-align: left; }
+.builder-screen-model-wrap .model-select { width: 100%; }
+.builder-screen-model-wrap .model-select-note { padding-left: 0; }
+.builder-screen-model-label { font-size: var(--fs-13); font-weight: 600; color: var(--text-dim); margin: 0 0 var(--space-8); }
 .cb-actions { display: flex; flex-wrap: wrap; gap: var(--space-10); justify-content: center; align-items: center; }
 .cb-confirm-btn {
   background: var(--accent);
