@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-//  Build: 20260530-001
+//  Build: 20260530-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -998,6 +998,131 @@ async function backupSession() {
 }
 
 
+// v3.63.59 — Backup scrubber. Strips credentials from a backup object so
+// it can be shared safely (with support, a collaborator, or for archival
+// without secrets). PURE function — takes a backup object (the in-memory
+// shape backupSession assembles), returns a deep-cloned copy with
+// credentials blanked. The caller drives the download flow.
+//
+// What's stripped:
+//   • LS_HIVE.keys (and any nested *key*/*token*/*secret*/*auth*/*password*
+//     /*credential* field at any depth) — uses the same _redactSecretsDeep
+//     walker the diagnostic-bundle redaction uses, so a scrubbed backup
+//     and a diagnostic bundle can never disagree on what counts as a secret.
+//   • LS_LICENSE — set to null (license key removed entirely)
+//   • IDB_SESSION — same deep redaction walk catches anything secret-shaped
+//     that leaked into the session (custom-AI auth headers, etc.)
+//
+// What's preserved:
+//   • Project metadata, document text, round history, reference material,
+//     AI responses, console transcript, ringBuffer entries (already
+//     redacted on capture per v3.63.7), and the rest of the backup shape.
+//
+// The output carries _waxframe_backup_scrubbed: true so importSession (and
+// any future analyzer) can recognize and adapt to it.
+function scrubBackup(backupObj) {
+  if (!backupObj || typeof backupObj !== 'object') return backupObj;
+  // Deep clone first so we never mutate the caller's reference.
+  const clean = JSON.parse(JSON.stringify(backupObj));
+
+  // LS_HIVE is stored as a JSON string inside the backup — parse, redact, restringify.
+  if (clean.LS_HIVE) {
+    try {
+      const hive = JSON.parse(clean.LS_HIVE);
+      clean.LS_HIVE = JSON.stringify(_redactSecretsDeep(hive));
+    } catch (e) {
+      console.warn('[scrubBackup] LS_HIVE parse failed; dropping rather than shipping corrupted hive:', e);
+      clean.LS_HIVE = null;
+    }
+  }
+  // IDB_SESSION is a live object, not a JSON string — walk it directly.
+  if (clean.IDB_SESSION && typeof clean.IDB_SESSION === 'object') {
+    clean.IDB_SESSION = _redactSecretsDeep(clean.IDB_SESSION);
+  }
+  // License: blank the field entirely. importSession will preserve the
+  // receiver's existing license when it sees a scrubbed backup (rather
+  // than wiping it), so this null reads as "no license to import" not
+  // "remove the receiver's license".
+  clean.LS_LICENSE = null;
+
+  // Self-identify so importers / analyzers can branch on it.
+  clean._waxframe_backup_scrubbed    = true;
+  clean._waxframe_backup_scrubbed_ts = Date.now();
+
+  return clean;
+}
+
+
+// v3.63.59 — Scrubbed backup export. Same flow as backupSession but runs
+// the assembled backup through scrubBackup() before download. Lighter
+// confirm copy (the scrubbed file is safer to share) and filename carries
+// a -Scrubbed suffix so the two flavors are distinguishable at a glance.
+async function backupSessionScrubbed() {
+  const proceed = await wfConfirm(
+    'Export scrubbed backup',
+    "A scrubbed backup includes your project, document, AI responses, and round history — but every API key and your license key are stripped. Safe to share with collaborators or attach to a support ticket. The recipient adds their own keys to continue running rounds.",
+    { okText: 'Save scrubbed backup' }
+  );
+  if (!proceed) { closeNavMenu(); return; }
+
+  // Flush in-memory state to IDB first so the snapshot is fresh. Mirrors
+  // backupSession's v3.35.2 fix — without this, a backup right after
+  // setup but before Round 1 captured an empty IDB.
+  try { await saveSession({ force: true }); } catch (e) { console.warn('[backupScrubbed] saveSession flush failed:', e); }
+
+  const hive    = localStorage.getItem(LS_HIVE)    || null;
+  const project = localStorage.getItem(LS_PROJECT) || null;
+  const license = localStorage.getItem(LS_LICENSE) || null;
+  const sessionLS = localStorage.getItem(LS_SESSION) || null;
+  let sessionIDB = null;
+  try { sessionIDB = await idbGet(); } catch (e) { /* ignore */ }
+
+  if (!hive && !project && !license && !sessionLS && !sessionIDB) {
+    toast('⚠️ Nothing to back up'); return;
+  }
+
+  // Same shape backupSession produces, then scrubbed.
+  const raw = {
+    _waxframe_backup:         true,
+    _waxframe_backup_version: 4,
+    _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
+    _waxframe_backup_ts:      Date.now(),
+    LS_HIVE:           hive,
+    LS_PROJECT:        project,
+    LS_LICENSE:        license,
+    LS_SESSION:        sessionLS,
+    IDB_SESSION:       sessionIDB,
+  };
+  const backup = scrubBackup(raw);
+
+  // Filename: same baseName pattern as backupSession + -Scrubbed marker.
+  const proj    = (() => { try { return JSON.parse(project || '{}'); } catch (e) { return {}; } })();
+  const safeName = (proj.projectName    || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
+  const d = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+  const filename = `${baseName}-WaxFrame-Backup-Scrubbed-${stamp}`;
+
+  // Same download dance + 30s deferred revoke as backupSession.
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${filename}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+  closeNavMenu();
+  const sessionMsg = sessionIDB
+    ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
+    : ' (project setup only — no session data)';
+  toast(`🧼 Scrubbed backup downloaded — API keys + license stripped${sessionMsg}`, 6000);
+}
+
+
 /* =============================================================
    DIAGNOSTIC REDACTION HELPERS (support-safe)
    ─────────────────────────────────────────────────────────────
@@ -1178,13 +1303,49 @@ async function importSession() {
           return;
         }
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
+        // v3.63.59 — scrubbed-backup detection. A scrubbed backup carries
+        // _waxframe_backup_scrubbed: true and has LS_LICENSE: null +
+        // every secret-shaped field in LS_HIVE/IDB_SESSION blanked. If we
+        // imported one with the default (overwrite-everything) flow, the
+        // receiver would lose their license and any keys they had for AIs
+        // that overlap with the sender's hive. Instead: preserve the
+        // receiver's license, and merge the receiver's keys into the
+        // imported hive (everything else — activeAIIds, builder, models,
+        // customAIs — takes the imported value, since the sender's choices
+        // about who's in the hive ARE what the receiver is opting into).
+        const isScrubbed = !!data._waxframe_backup_scrubbed;
         // ── Restore localStorage layers ──
-        if (data.LS_HIVE)    localStorage.setItem(LS_HIVE,    data.LS_HIVE);
+        if (data.LS_HIVE) {
+          if (isScrubbed) {
+            // Merge: imported hive structure + receiver's existing keys.
+            try {
+              const importedHive = JSON.parse(data.LS_HIVE);
+              const existingRaw  = localStorage.getItem(LS_HIVE);
+              const existingHive = existingRaw ? JSON.parse(existingRaw) : null;
+              if (existingHive && existingHive.keys && typeof existingHive.keys === 'object') {
+                importedHive.keys = existingHive.keys;
+              }
+              localStorage.setItem(LS_HIVE, JSON.stringify(importedHive));
+            } catch (mergeErr) {
+              console.warn('[importSession] scrubbed-hive merge failed; falling back to direct overwrite:', mergeErr);
+              localStorage.setItem(LS_HIVE, data.LS_HIVE);
+            }
+          } else {
+            localStorage.setItem(LS_HIVE, data.LS_HIVE);
+          }
+        }
         if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
         if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
         if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
-          if (data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-          else localStorage.removeItem(LS_LICENSE);
+          if (data.LS_LICENSE) {
+            localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
+          } else if (isScrubbed) {
+            // Scrubbed backup intentionally nulls LS_LICENSE — preserve the
+            // receiver's existing license rather than wiping it.
+            // (No-op: leave existing license in place.)
+          } else {
+            localStorage.removeItem(LS_LICENSE);
+          }
         }
         // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
         // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
@@ -1235,6 +1396,14 @@ async function importSession() {
           toast('✅ Backup restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
         } else {
           toast('✅ Project setup restored — reloading…', 6000);
+        }
+        // v3.63.59 — extra heads-up if the imported backup was scrubbed,
+        // so the user understands why their existing keys/license were
+        // preserved (instead of being overwritten) and that the imported
+        // hive lineup needs keys filled in for any AIs they don't already
+        // have set up.
+        if (isScrubbed) {
+          setTimeout(() => toast('🧼 Scrubbed backup — your existing API keys and license were preserved. Add keys to any new AIs in the imported hive.', 10000), 500);
         }
         setTimeout(() => location.reload(), 1500);
       } catch(e) {

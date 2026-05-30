@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.59
+**Build:** `20260530-002` · **Released:** May 30, 2026
+
+### Added — scrubbed backup export
+
+- New nav menu item: **🧼 Backup Session (Scrubbed)**. Same backup format and content as a regular backup, but every API key (in `LS_HIVE` and any custom-AI auth header at any depth) and the license key are blanked out. Output carries `_waxframe_backup_scrubbed: true` and the filename suffix `-Backup-Scrubbed-<stamp>` so the two flavors are unmistakable. Safe to share with collaborators or attach to a support ticket.
+- New `scrubBackup(backupObj)` pure helper in `storage.js`. Reuses the existing `_redactSecretsDeep` walker so a scrubbed backup and a diagnostic bundle can never disagree on what counts as a secret.
+- `importSession` is now scrubbed-backup-aware: when a scrubbed backup is imported, the receiver's existing license is **preserved** (not wiped by the null in the file), and the receiver's existing keys are **merged** into the imported hive (the sender's choice of which AIs to use is honored, but the receiver's keys for those AIs survive). An extra heads-up toast fires post-reload explaining what was preserved.
+
+### Changed — `restoreRound` documented
+
+- Added a comprehensive scope-mapping doc-comment above `restoreRound` (`js/app.js:17079`) enumerating every piece of session state and whether it rolls back or persists, plus the rationale and side-effects. No behavior change — pure documentation.
+
+### Files Changed
+
+- Updated: `js/storage.js` (added `scrubBackup` + `backupSessionScrubbed` + scrubbed-aware `importSession`), `js/app.js` (restoreRound doc-comment block), `index.html` (nav menu button)
+- Version/build stamps to `v3.63.59 Pro` / `20260530-002` across 9 HTML files, 14 JS files, `style.css`
+- Backlog bumped to `v124` (Backup scrubber + restoreRound scope clarification both swept from Open Features)
+
+---
+
 ## v3.63.58
 **Build:** `20260530-001` · **Released:** May 30, 2026
 
