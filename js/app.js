@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260530-007
+// Build: 20260530-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-007';         // build stamp — update each session
+const BUILD       = '20260530-008';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -6565,6 +6565,15 @@ async function recheckModelForAI(id) {
   }
 
   cfg.model = result.model;
+  // v3.63.65 — mirror the endpoint-recompute symmetry from saveModelForAI
+  // (app.js:324) and loadHive (storage.js:754). Recommend Models was writing
+  // cfg.model without also recomputing cfg.endpoint, which left Gemini in a
+  // split state (model says X, endpoint URL routes to Y). Google's API honors
+  // the URL path, so requests silently went to whichever model the endpoint
+  // was last set to. Watcher-trapped in v3.63.64 live debugging session.
+  if (ai.provider === 'gemini' && cfg.endpointFn) {
+    cfg.endpoint = cfg.endpointFn(result.model);
+  }
   saveSettings();
   renderAIRow(id);
   flashGreen();
@@ -6612,6 +6621,14 @@ async function migrateRecommendOnStartup() {
       const cfg = API_CONFIGS[ai.provider];
       if (result?.model && cfg && result.model !== cfg.model) {
         cfg.model = result.model;
+        // v3.63.65 — same endpoint-recompute symmetry as recommendModels above
+        // and saveModelForAI. Startup migration was the second cfg.model write
+        // site missing the endpoint sync. Without this, a Gemini user who had
+        // a stale recommendation cached (or none) would boot with cfg.model
+        // recommending one model but cfg.endpoint routing to the loaded one.
+        if (ai.provider === 'gemini' && cfg.endpointFn) {
+          cfg.endpoint = cfg.endpointFn(result.model);
+        }
         changed++;
         renderAIRow(ai.id);
         console.info(`[recommend-migrate] ${ai.name}: ${result.model} — ${result.why}`);

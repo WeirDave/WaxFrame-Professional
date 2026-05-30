@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-//  Build: 20260530-007
+// Build: 20260530-008
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -781,12 +781,12 @@ const WAXFRAME_TEMPLATES = [
         "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, use over time (how long, how often, what for), build quality, what worked well, what didn't, any defects or failures, accuracy of the product description, customer support or return experience if relevant, value for money, who should buy it, who should avoid it, and whether you'd buy it again. Build only from the facts in my Reference Material \u2014 do not invent specs, prices, dates, or features.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
         "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally', 'Crushes cans fine, falls apart fast'). No quotes around it, no 'Review:' prefix. Then end with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
-        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: \nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: \nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nStar rating (0\u20135): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
         "lengthMode": "none",
         "lengthLimit": "",
         "lengthUnit": "",
         "hint": [
-          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: Range \u00b7 500\u20134,000 characters (Amazon's own limit). Best Buy: Hard cap \u00b7 5,000 characters. Target / Walmart: Hard cap \u00b7 4,000 characters. Newegg: Hard cap \u00b7 5,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time." }
+          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: hard cap \u00b7 20,000 characters (empirically verified; their stated guidance of 500\u20134,000 is recommended, not enforced). Best Buy / Newegg: ~5,000 characters. Target / Walmart: ~4,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time. Most retailers also use a 0\u20135 star rating \u2014 include yours in Reference Material so the review reads consistently with the score." }
         ]
       },
       "refine": {
@@ -802,7 +802,7 @@ const WAXFRAME_TEMPLATES = [
         "lengthLimit": "",
         "lengthUnit": "",
         "hint": [
-          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: Range \u00b7 500\u20134,000 characters (Amazon's own limit). Best Buy: Hard cap \u00b7 5,000 characters. Target / Walmart: Hard cap \u00b7 4,000 characters. Newegg: Hard cap \u00b7 5,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time." },
+          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: hard cap \u00b7 20,000 characters (empirically verified; their stated guidance of 500\u20134,000 is recommended, not enforced). Best Buy / Newegg: ~5,000 characters. Target / Walmart: ~4,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time. Most retailers also use a 0\u20135 star rating \u2014 if your draft mentions one, the review will land more consistently." },
           { "field": "Starting Document", "text": "Paste your draft review on Setup \u2014 Step 5 of 5 \u2014 Starting Document" }
         ]
       }
