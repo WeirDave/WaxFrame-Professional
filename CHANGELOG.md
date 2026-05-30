@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.68
+**Build:** `20260530-011` · **Released:** May 30, 2026
+
+### Changed — Builder screen rebuilt as "Roster + Spotlight"
+
+The v3.63.66/67 attempts kept the 3×3 card grid and tried to shrink it to fit, which broke at laptop sizes (the model selector overlapped the cards, then got pushed under the footer at 1366×768). This is a ground-up rethink of the layout that fits any viewport and scales cleanly to large hives.
+
+- **Roster** — the AI picker is now a compact horizontal row of pill chips (icon + name) instead of big landscape cards. Nine AIs fit in a single row at desktop and wrap to at most two rows at laptop width; a 15–20-AI hive stays tidy. The selected Builder's chip is highlighted gold with a 🔨 marker.
+- **Spotlight** — below the roster, a panel shows the selected Builder large: its icon, name, a "🔨 Your Builder" label, and the Builder bee. The **model selector is integrated inside this panel**, so the model picker lives *with* the chosen Builder rather than floating as a disconnected box below the whole grid.
+- **Fixed vertical footprint** — roster (≤2 rows) + spotlight panel = predictable height that fits 1366×768 with the Continue button clear and no internal scroll.
+
+Verified by rendering the page headless at both 1366×768 (laptop) and 1920×1080 (desktop): no overlap, model panel fully above the footer at both sizes.
+
+Required elements preserved: the overall card surface, the amber header band, and the Builder bee. The model selector still reuses `buildModelSelector` and persists through the same save path. The Working Document 80ch column is untouched.
+
+### Files Changed
+
+- Updated: `js/app.js` (`renderBuilderPicker` → roster chips, `renderBuilderScreenModel` → spotlight panel), `style.css` (roster/chip + spotlight styles replacing the old grid CSS, all token-based), `CHANGELOG.md`
+- Version/build stamps to `v3.63.68 Pro` / `20260530-011` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.67
 **Build:** `20260530-010` · **Released:** May 30, 2026
 
