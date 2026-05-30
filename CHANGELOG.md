@@ -2,21 +2,21 @@
 
 ---
 
-## v3.63.56
-**Build:** `20260529-029` · **Released:** May 29, 2026
+## v3.63.57
+**Build:** `20260529-030` · **Released:** May 29, 2026
 
-### Fixed — screenshot capture lands the correct screen
+### Added — automated screenshot capture for the user manual
 
-- The `?cap=<screen>` capture driver moved out of the async `DOMContentLoaded` handler into a top-level block that re-asserts the target screen on a short interval, so a headless capture can no longer snap the welcome screen during early init. Still inert for normal users (only acts when `?cap=` is present).
-- `tools/capture-screenshots.ps1` now serves the repo over a local Node HTTP server and polls for each PNG to finish writing before reporting success — fixing both the wrong-screen captures and the false `FAILED` reports. Output is a single 1920×1080 in light and dark; the tool auto-prefers 64-bit Chrome.
-- Regenerated all setup, welcome, and settings screenshots at 1920×1080 in both themes; README screenshots use the theme-swapping `<picture>` pattern.
+- New `tools/` directory containing a Chrome DevTools Protocol-based capture pipeline that regenerates all 16 documentation screenshots (welcome, setup steps 1–5, settings, work — light and dark) in a single command. The driver injects a sanitized hive and the canonical Cookies session into a disposable headless Chrome profile, drives the app to each screen, and captures only after a per-screen readiness handshake confirms the target state is rendered. No capture logic lives in the app itself.
+- `tools/README.txt` documents what's in the folder, how to run the tool, requirements (Chrome + Node 22+), and the seed-data approach.
+- 16 PNGs regenerated at 1920×1080.
+- User manual embeds 8 `.ss-shot` figures with light/dark theme swap; README uses `<picture>` + `prefers-color-scheme` for 7 cover screens (the two live-round shots remain dark-only).
 
 ### Files Changed
 
-- `js/app.js` — capture driver re-asserts the target screen.
-- `tools/capture-screenshots.ps1` — Node HTTP server, write-poll, 1920×1080.
-- `screenshots/` — regenerated at 1920×1080, light + dark.
-- Version/build stamps to `v3.63.56 Pro` / `20260529-029` across all 9 HTML files, all 14 JS files, and `style.css`.
+- New: `tools/capture.mjs`, `tools/capture-screenshots.ps1`, `tools/README.txt`
+- Updated: `waxframe-user-manual.html` (8 figures), `README.md` (`<picture>` blocks), `screenshots/` regenerated
+- Version/build stamps to `v3.63.57 Pro` / `20260529-030` across 9 HTML files, 14 JS files, `style.css`
 
 ---
 
