@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.58
+**Build:** `20260530-001` · **Released:** May 30, 2026
+
+### Fixed — api-details air-gap leak
+
+- Replaced 7 Google `s2/favicons` hot-links on the API Details provider cards with local `images/icon-*.png` assets, bringing the page in line with `index.html` (which has never used the external service). Eliminates the offline-broken-image case, stops leaking which providers the page references to Google's servers, and removes the only external image fetch in the codebase.
+- Affected providers: Gemini, Grok, and DeepSeek now use their local catalog icons (each appears twice on the page — top spec table + Key-Your-Hive card). The Copilot card icon was dropped entirely since no local icon exists and the card is a "Ready when keys ship" placeholder; flex layout collapses the slot cleanly.
+- `alt=` attributes added to each swapped `<img>`; the existing `onerror="this.style.display='none'"` fallback is preserved as defense in depth.
+
+### Changed — recommend buttons now say "Recommending…"
+
+- Per-AI Recommend Models button and the Recommend-for-All header button now show `Recommending… 8s` and `Recommending… 3/6 · 12s` during in-flight (was `Asking…`). The original feature ask in the backlog used "Recommending…"; the v3.63.30 implementation shipped with "Asking…". Cosmetic relabel, no behavior change.
+
+### Files Changed
+
+- Updated: `api-details.html` (7 favicon swaps), `js/app.js` (2 live strings + 4 doc-comment touchups)
+- Version/build stamps to `v3.63.58 Pro` / `20260530-001` across 9 HTML files, 14 JS files, `style.css`
+- Backlog bumped to `v122` (favicon bug swept from Open Bugs; 4 partial-ship-rot items swept from Open Features during the same-session audit: Screenshot capture tooling, Custom templates Phase 2, Custom templates Phase 3, Work-screen "D" badge — all verified shipped against live code)
+
+---
+
 ## v3.63.57
 **Build:** `20260529-030` · **Released:** May 29, 2026
 
