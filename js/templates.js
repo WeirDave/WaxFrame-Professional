@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-//  Build: 20260530-003
+//  Build: 20260530-004
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -750,6 +750,60 @@ const WAXFRAME_TEMPLATES = [
         "hint": [
           { "field": "Target audience", "text": "Replace [bracketed audience] with your specific peers/recruiters/former colleagues — be specific about who you're writing for" },
           { "field": "Starting Document", "text": "Paste your draft post on Setup — Step 5 of 5 — Starting Document" }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — both paths (v3.63.61)
+  //
+  // Platform-agnostic: works for Amazon, Best Buy, Target, Walmart,
+  // manufacturer site, blog post, etc. The user picks where to post
+  // and tunes Length on the Project screen accordingly (see hint).
+  // Scaffold mirrors the dimensions that drive useful product reviews
+  // — purchase context, use over time, build quality, what worked,
+  // what didn't, value, recommendation.
+  // ============================================================
+  {
+    "id": "product-review",
+    "name": "Product Review",
+    "icon": "\ud83d\udce6",
+    "category": "Reviews & Recommendations",
+    "description": "Create or refine a useful product review covering purchase context, use over time, build quality, value, and final recommendation.",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "A useful product review covering purchase context, use over time, what worked, what didn't, value, and whether you'd buy it again.",
+        "goalDocType": "Product review",
+        "goalAudience": "People deciding whether to purchase this product. They want practical, specific details about real-world use — not generic praise or vague complaints.",
+        "goalOutcome": "Create a fair, honest, useful review that explains how the product actually performed over time, what worked, what didn't, whether the price made sense, and who should (or should not) buy it.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, use over time (how long, how often, what for), build quality, what worked well, what didn't, any defects or failures, accuracy of the product description, customer support or return experience if relevant, value for money, who should buy it, who should avoid it, and whether you'd buy it again. Build only from the facts in my Reference Material \u2014 do not invent specs, prices, dates, or features.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
+        "goalNotes": "End with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: \nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "lengthMode": "none",
+        "lengthLimit": "",
+        "lengthUnit": "",
+        "hint": [
+          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: Range \u00b7 500\u20134,000 characters (Amazon's own limit). Best Buy: Hard cap \u00b7 5,000 characters. Target / Walmart: Hard cap \u00b7 4,000 characters. Newegg: Hard cap \u00b7 5,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing product review draft \u2014 sharpen specifics, fairly weight pros and cons, make the recommendation land.",
+        "goalDocType": "Product review",
+        "goalAudience": "People deciding whether to purchase this product. They want practical, specific details about real-world use \u2014 not generic praise or vague complaints.",
+        "goalOutcome": "Polish my existing review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise or complaints, make sure the final recommendation lands clearly.",
+        "goalScope": "Preserve all my factual details \u2014 model, price, dates, specs, use patterns. Sharpen vague language. Make sure the review covers purchase context, use over time, build quality, what worked, what didn't, value, and a clear bottom-line recommendation.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
+        "goalNotes": "Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
+        "refMaterial": "",
+        "lengthMode": "none",
+        "lengthLimit": "",
+        "lengthUnit": "",
+        "hint": [
+          { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: Range \u00b7 500\u20134,000 characters (Amazon's own limit). Best Buy: Hard cap \u00b7 5,000 characters. Target / Walmart: Hard cap \u00b7 4,000 characters. Newegg: Hard cap \u00b7 5,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup \u2014 Step 5 of 5 \u2014 Starting Document" }
         ]
       }
     }
