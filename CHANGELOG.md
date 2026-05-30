@@ -2,6 +2,21 @@
 
 ---
 
+## v3.63.60
+**Build:** `20260530-003` · **Released:** May 30, 2026
+
+### Docs — scrubbed backup added to the user manual
+
+- New "Scrubbed backup (share-safe, importable)" section in the User Manual's Reference area, right after the diagnostic-bundle block. Explains what's stripped, when to use it vs the regular Backup Session vs the Diagnostic Bundle, how import preserves the receiver's license + merges keys, and gives a one-line rule-of-thumb for picking the right export. Updated the adjacent diagnostic-bundle paragraph so it points at scrubbed backup as the importable share-safe option.
+- No code changes — pure documentation follow-up to the v3.63.59 feature ship.
+
+### Files Changed
+
+- Updated: `waxframe-user-manual.html` (new Scrubbed Backup wh-block + adjacent diagnostic-bundle paragraph wording), `CHANGELOG.md`
+- Version/build stamps to `v3.63.60 Pro` / `20260530-003` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.59
 **Build:** `20260530-002` · **Released:** May 30, 2026
 

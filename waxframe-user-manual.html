@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260529-030
+     Build: 20260530-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260529-030">
+  <meta name="waxframe-build" content="20260530-003">
   <title>WaxFrame User Manual</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and advanced features.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.59">
+  <link rel="stylesheet" href="style.css?v=3.63.60">
 </head>
 <body class="helper-body">
 
@@ -1983,7 +1983,15 @@
     <div class="wh-block">
       <div class="wh-block-title">The diagnostic bundle</div>
       <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
-      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be imported to restore a session. For that, use Backup Session instead, which keeps your keys and is importable.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be imported to restore a session. For an importable share-safe file, use the Scrubbed Backup option below instead. For a private restorable copy of your full session, use the regular Backup Session — it keeps your keys and is importable, but should only be stored somewhere you trust.</p>
+    </div>
+
+    <div class="wh-block">
+      <div class="wh-block-title">Scrubbed backup (share-safe, importable)</div>
+      <p>From the <strong>☰</strong> menu, choose <strong>🧼 Backup Session (Scrubbed)</strong>. Same shape as a regular Backup Session — project setup, hive lineup, working document, round history, AI responses, console transcript, ring-buffer captures — but every API key (yours and any custom-AI auth header at any nesting depth) and your license key are blanked out before the file is written. Filename gets a <code>-Backup-Scrubbed-</code> stamp so it is unmistakable next to a regular backup. Use this when you want to share a project with a collaborator, attach a working session to a support ticket, or archive a project without exposing secrets.</p>
+      <p>The scrubber uses the same redactor that powers the diagnostic bundle, so the two exports can never disagree on what counts as a secret.</p>
+      <p>When someone imports a scrubbed backup, WaxFrame recognizes the file as scrubbed and protects the receiver's existing state: <strong>your license is preserved</strong> (the file's <code>null</code> license does not wipe yours), and <strong>your existing API keys are merged into the imported hive</strong> — the sender's choice of which AIs to use is honored, but you keep the keys you already have for those AIs. After the reload completes, a follow-up toast reminds you that scrubbing was detected, and that any AI in the imported hive without a local key still needs one before you can run a round.</p>
+      <p>Quick rule of thumb: <strong>Backup Session</strong> for your own offline copy (sensitive — keep private), <strong>Backup Session (Scrubbed)</strong> for sharing with anyone else, <strong>Diagnostic Bundle</strong> for sending to support only (export-only, cannot restore).</p>
     </div>
 
     <div class="wh-block">
@@ -2082,13 +2090,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.59"></script>
-<script src="lib/docx.min.js?v=3.63.59"></script>
-<script src="js/docx-export.js?v=3.63.59"></script>
-<script src="js/nav-helper.js?v=3.63.59"></script>
-<script src="js/license-helper.js?v=3.63.59"></script>
-<script src="js/version.js?v=3.63.59"></script>
-<script src="js/docs-scrollspy.js?v=3.63.59"></script>
+<script src="js/theme.js?v=3.63.60"></script>
+<script src="lib/docx.min.js?v=3.63.60"></script>
+<script src="js/docx-export.js?v=3.63.60"></script>
+<script src="js/nav-helper.js?v=3.63.60"></script>
+<script src="js/license-helper.js?v=3.63.60"></script>
+<script src="js/version.js?v=3.63.60"></script>
+<script src="js/docs-scrollspy.js?v=3.63.60"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
