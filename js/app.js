@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-//  Build: 20260529-022
+//  Build: 20260529-023
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260529-022';         // build stamp — update each session
+const BUILD       = '20260529-023';         // build stamp — update each session
 // ── localStorage KEYS (extracted) ──
 // v3.45.0 — LS_HIVE / LS_PROJECT / LS_SESSION / LS_SETTINGS /
 // LS_LICENSE constants moved to js/storage.js. References in app.js
@@ -3327,7 +3327,7 @@ async function clearProject() {
 // pick a path first, then pick a template. The path determines which
 // pathContent block applyTemplate() reads from. _selectedTemplatePath
 // is the module-level state for the picker; reset on every open.
-let _selectedTemplatePath = null;  // 'scratch' | 'refine' | null
+let _selectedTemplatePath = null;  // 'scratch' | 'refine' | 'custom' | null
 
 // Open the gallery modal and render its content. Path picker resets
 // on every open — fresh state, no carryover between opens.
@@ -3343,7 +3343,7 @@ function showTemplateGallery() {
 // the two big path cards. Sets module state and re-renders the gallery
 // in template-grid mode.
 function selectTemplatePath(path) {
-  if (path !== 'scratch' && path !== 'refine') return;
+  if (path !== 'scratch' && path !== 'refine' && path !== 'custom') return;  // v3.63.50 — 'custom' was rejected here, making the Custom Templates view unreachable since v3.63.36
   _selectedTemplatePath = path;
   renderTemplateGalleryBody();
 }
