@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-018
+  Build: 20260530-019
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-018">
+  <meta name="waxframe-build" content="20260530-019">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.75"></script>
-  <script src="js/storage.js?v=3.63.75"></script>
+  <script src="js/version.js?v=3.63.76"></script>
+  <script src="js/storage.js?v=3.63.76"></script>
   <script>
   (function () {
     'use strict';
@@ -425,16 +425,24 @@
     var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity/i;
     var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
     var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
+    // v3.63.76 — these are the DEFAULT 6 only, matching DEFAULT_AIS in app.js
+    // (chatgpt, claude, gemini, grok, perplexity, mistral). DeepSeek, Together,
+    // Cohere, Ollama, etc. are ADDITIONAL providers — added via Quick Add /
+    // custom AI, stored in hive.customAIConfigs with their own ids (e.g.
+    // cohere_1779690241686), and discovered by getProviderEntries from there.
+    // Previously this table also hardcoded deepseek/together/cohere as built-in,
+    // which collided with the user's additional configs and produced duplicate
+    // dropdown rows (one keyless built-in copy + one keyed additional copy) and
+    // a wrong cache-key read for the built-in copy. The app's canonical rule is
+    // isDefault = DEFAULT_AIS.has(id); defaults cache by provider, additionals
+    // cache by id (app.js ~1048). The dump tool now mirrors that exactly.
     var BUILT_IN_MODEL_PROVIDERS = {
       claude:     { label: 'Anthropic (Claude)', endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev', format: 'anthropic' },
       chatgpt:    { label: 'OpenAI (ChatGPT)', endpoint: 'https://api.openai.com/v1/chat/completions', format: 'openai' },
       gemini:     { label: 'Google (Gemini)', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', format: 'google' },
       grok:       { label: 'xAI (Grok)', endpoint: 'https://api.x.ai/v1/chat/completions', format: 'openai' },
       perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
-      mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' },
-      deepseek:   { label: 'DeepSeek', endpoint: 'https://api.deepseek.com/v1/chat/completions', format: 'openai' },
-      together:   { label: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', format: 'openai' },
-      cohere:     { label: 'Cohere', endpoint: 'https://api.cohere.ai/compatibility/v1/chat/completions', format: 'openai' }
+      mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' }
     };
     var _lastCachedDump = null;
     var _lastLiveDump = null;
@@ -470,64 +478,37 @@
     function getProviderEntries() {
       var hive = readHiveRaw();
       var entries = [];
-      var byId = {};
-      // v3.63.75 — fixes duplicate dropdown entries (two "Together AI", two
-      // "Cohere") where one copy showed "(no key saved)". Root cause: the same
-      // provider was added from more than one source (built-in list, custom
-      // configs, aiList) under slightly different ids, and the second copy's
-      // key lookup missed. Now: (a) we resolve a canonical key for dedup so the
-      // same provider can't appear twice, and (b) if a later source carries a
-      // key/endpoint the existing entry lacks, we MERGE it in rather than
-      // discarding the better-populated copy.
-      function resolveKey(id, aiId) {
-        var k = hive.keys || {};
-        return k[id] || k[aiId] || '';
-      }
-      function add(id, label, cfg, aiId) {
-        if (!id) return;
+      var seen = {};
+      // v3.63.76 — provider list reflects the app's real architecture:
+      //   • the DEFAULT 6 (BUILT_IN_MODEL_PROVIDERS) — cached by provider id
+      //   • ADDITIONAL providers (hive.customAIConfigs) — DeepSeek, Together,
+      //     Cohere, Ollama, etc., each with its own id (e.g. cohere_1779…) and
+      //     its own key — cached by that id (mirrors app.js ~1048).
+      // No more hardcoded 9-provider table colliding with the user's additionals,
+      // so the duplicate "(no key saved)" rows are gone at the source.
+      function keyFor(id) { return (hive.keys && hive.keys[id]) || ''; }
+      function add(id, label, cfg) {
+        if (!id || seen[id]) return;
+        seen[id] = true;
         cfg = cfg || {};
-        var key = resolveKey(id, aiId);
-        var existing = byId[id];
-        if (existing) {
-          // Merge: don't lose a key or endpoint a duplicate copy supplies.
-          if (!existing.key && key) existing.key = key;
-          if (!existing.endpoint && cfg.endpoint) existing.endpoint = cfg.endpoint;
-          if (!existing.modelsEndpoint && (cfg._modelsEndpoint || cfg.modelsEndpoint)) {
-            existing.modelsEndpoint = cfg._modelsEndpoint || cfg.modelsEndpoint;
-          }
-          return;
-        }
-        var entry = {
+        entries.push({
           id: id,
-          aiId: aiId || id,
+          aiId: id,
           label: label || cfg.label || id,
           endpoint: cfg.endpoint || '',
           modelsEndpoint: cfg._modelsEndpoint || cfg.modelsEndpoint || '',
           format: cfg.format || 'openai',
-          key: key
-        };
-        byId[id] = entry;
-        entries.push(entry);
+          key: keyFor(id)
+        });
       }
+      // 1) the default 6
       Object.keys(BUILT_IN_MODEL_PROVIDERS).forEach(function (id) {
-        add(id, BUILT_IN_MODEL_PROVIDERS[id].label, BUILT_IN_MODEL_PROVIDERS[id], id);
+        add(id, BUILT_IN_MODEL_PROVIDERS[id].label, BUILT_IN_MODEL_PROVIDERS[id]);
       });
+      // 2) additionals (custom configs) — keyed by their own id
       var customs = hive.customAIConfigs || {};
       Object.keys(customs).forEach(function (id) {
-        add(id, customs[id].label || id, customs[id], id);
-      });
-      (hive.aiList || []).forEach(function (ai) {
-        // Resolve to the base provider id when it's a known built-in, so an
-        // aiList row for e.g. Together doesn't create a second "together_x"
-        // entry that misses the key stored under "together".
-        var pid = ai.provider || ai.id;
-        if (pid && !BUILT_IN_MODEL_PROVIDERS[pid] && !customs[pid]) {
-          // Unknown provider id — fall back to matching by id alias if a
-          // built-in/custom already owns the key under ai.id.
-          if (BUILT_IN_MODEL_PROVIDERS[ai.id] || customs[ai.id]) pid = ai.id;
-        }
-        var cfg = customs[pid] || customs[ai.id] || BUILT_IN_MODEL_PROVIDERS[pid] || BUILT_IN_MODEL_PROVIDERS[ai.id] || {};
-        add(pid, ai.name || cfg.label, cfg, ai.id);
+        add(id, customs[id].label || id, customs[id]);
       });
       return entries.sort(function (a, b) { return a.label.localeCompare(b.label); });
     }
