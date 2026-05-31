@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-031
+// Build: 20260531-032
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-031';         // build stamp — update each session
+const BUILD       = '20260531-032';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4766,7 +4766,7 @@ function validateKeyOnSave(aiId, keyAtFire) {
         if (typeof consoleLog === 'function') {
           consoleLog(`⚠️ ${ai.name}: API key looks invalid (HTTP ${resp.status}). Double-check the key you just saved.`, 'warn');
         }
-        renderAIRow(aiId);
+        renderAIRow(aiId, false);
       } else if (resp.ok) {
         // Success — clear any prior invalid flag.
         if (window._invalidKeys && window._invalidKeys[aiId]) {
@@ -4780,7 +4780,7 @@ function validateKeyOnSave(aiId, keyAtFire) {
         // after the provider may have rotated it.
         window._validKeys = window._validKeys || {};
         window._validKeys[aiId] = true;
-        renderAIRow(aiId);
+        renderAIRow(aiId, false);
       }
       // 4xx (non-auth), 5xx, and other statuses: leave status unknown.
       // Could be model-not-available, rate-limit, server hiccup — none of
@@ -4797,14 +4797,21 @@ function validateKeyOnSave(aiId, keyAtFire) {
 // path: re-render the whole row via buildAISetupRowHTML, which respects
 // _expandedAIIds (so an open row stays open). The user is mid-flow on
 // this row — ensure it's expanded so they can see the result.
-function renderAIRow(id) {
+function renderAIRow(id, keepExpanded = true) {
   const ai = aiList.find(a => a.id === id);
   const rowEl = document.getElementById('airow-' + id);
   if (!ai || !rowEl) return;
-  // Make sure the row stays open after the re-render — the user just
-  // interacted with its key field; collapsing it would be jarring.
-  _expandedAIIds.add(id);
-  _persistExpandedRows();
+  // v3.63.89 — `keepExpanded` is true for user-initiated re-renders (paste a
+  // key, pick a model, click Recommend) so the panel stays open mid-flow.
+  // It is FALSE for background callers (auto key validation, startup
+  // recommend migration) — those used to cascade the entire grid open on
+  // every screen entry because each async validation callback added its
+  // row to _expandedAIIds and persisted it. Now background re-renders
+  // respect the user's existing collapsed/expanded state.
+  if (keepExpanded) {
+    _expandedAIIds.add(id);
+    _persistExpandedRows();
+  }
   rowEl.outerHTML = buildAISetupRowHTML(ai);
 }
 
@@ -6737,7 +6744,7 @@ async function migrateRecommendOnStartup() {
           cfg.endpoint = cfg.endpointFn(result.model);
         }
         changed++;
-        renderAIRow(ai.id);
+        renderAIRow(ai.id, false);
         console.info(`[recommend-migrate] ${ai.name}: ${result.model} — ${result.why}`);
       }
     } catch(e) {

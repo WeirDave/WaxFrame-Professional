@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260531-031
+  Build: 20260531-032
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260531-031">
+  <meta name="waxframe-build" content="20260531-032">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -113,6 +113,14 @@
       background: transparent; color: var(--honey); border-color: var(--border);
     }
     .btn-ghost:hover { background: var(--panel-2); }
+    /* Matches the license-modal-btn-danger pattern in style.css:
+       transparent with red outline, red fill + glow on hover. */
+    .btn-danger {
+      background: transparent; color: #e8ecf4; border-color: #c0152a;
+    }
+    .btn-danger:hover {
+      background: #c0152a; color: #fff; box-shadow: 0 0 10px rgba(192,21,42,0.4);
+    }
 
     .step { margin: 0 0 18px; }
     .step:last-child { margin-bottom: 0; }
@@ -296,8 +304,26 @@
         <li><b>Hard refresh.</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Windows/Linux) or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac). Clears a stale cached file after an update.</li>
         <li><b>Check your window size.</b> WaxFrame is desktop-only and needs at least <b>1366×768</b>. A narrow or zoomed window triggers the minimum-size overlay.</li>
         <li><b>Try another browser.</b> A recent Chrome, Edge, or Firefox. Private/incognito windows can block the storage WaxFrame needs.</li>
-        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, clearing WaxFrame's site data forces a clean start. <b>This wipes your local hive, project, and session</b> — back up first (or import a backup afterward). Do this in your browser's site-settings for this page.</li>
+        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, see the <b>Wipe local data</b> section below for a one-click reset.</li>
       </ul>
+    </section>
+
+    <!-- 4b. Wipe local data ------------------------------------------------ -->
+    <section>
+      <h2>🧹 Wipe local data</h2>
+      <p class="sub">An escape hatch — for users uninstalling, or for fixing a wedged state from accumulated stale data.</p>
+      <p>WaxFrame stores everything locally in your browser: your AI list, API keys, projects, session state, recommendations, and settings. <b>Nothing leaves your machine.</b> This button removes all of it from this browser. After it runs the page reloads and you start fresh, exactly like a first install.</p>
+      <p><b>What this does:</b></p>
+      <ul class="fixes">
+        <li>Removes every <code>waxframe_*</code> key from <code>localStorage</code> (hive, API keys, projects, session, license, settings, recommendation caches, model caches, all of it).</li>
+        <li>Reloads the page so the app initializes fresh.</li>
+      </ul>
+      <p><b>What this does NOT touch:</b> any data on the AI provider's servers (your API account, your keys, your usage history). To revoke an API key, do that in the provider's console (<a href="api-details.html">API Key Guide</a>).</p>
+      <p><b>This is irreversible from inside the app.</b> If you have a hive or project worth keeping, use Export first (Settings → Backup) before wiping.</p>
+      <div class="links">
+        <button id="wipeLocalDataBtn" type="button" class="btn-danger">🧹 Wipe all WaxFrame data from this browser</button>
+      </div>
+      <p id="wipeStatus" class="sub" style="display:none;margin-top:8px;"></p>
     </section>
 
     <!-- 5. Links ------------------------------------------------------------ -->
@@ -314,9 +340,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.88"></script>
-  <script src="js/storage.js?v=3.63.88"></script>
-  <script src="js/provider-models.js?v=3.63.88"></script>
+  <script src="js/version.js?v=3.63.89"></script>
+  <script src="js/storage.js?v=3.63.89"></script>
+  <script src="js/provider-models.js?v=3.63.89"></script>
   <script>
   (function () {
     'use strict';
@@ -871,6 +897,68 @@
         setBundleStatus('⚠ Could not build the bundle: ' + (e && e.message ? e.message : e), 'err');
       } finally {
         bundleBtn.disabled = false;
+      }
+    });
+
+    // ── Wipe local data ────────────────────────────────────────────────
+    // Two-click confirm pattern: first click flips the button to a confirm
+    // state; a second click within 5 seconds actually wipes. Prevents an
+    // accidental click from destroying the user's hive. The status line
+    // narrates each step so the user knows what just happened.
+    var wipeBtn = document.getElementById('wipeLocalDataBtn');
+    var wipeStatus = document.getElementById('wipeStatus');
+    var wipeConfirmTimer = null;
+    function setWipeStatus(msg, cls) {
+      if (!wipeStatus) return;
+      wipeStatus.textContent = msg;
+      wipeStatus.style.display = msg ? '' : 'none';
+      wipeStatus.style.color = cls === 'warn' ? '#c5832a' : cls === 'err' ? '#b94a3a' : cls === 'ok' ? '#3a7a4a' : '';
+    }
+    if (wipeBtn) wipeBtn.addEventListener('click', function () {
+      // First click — arm confirmation
+      if (wipeBtn.dataset.armed !== '1') {
+        wipeBtn.dataset.armed = '1';
+        wipeBtn.textContent = '⚠ Click again within 5s to confirm — this cannot be undone';
+        setWipeStatus('Confirmation required. Click the button again to wipe, or wait 5 seconds to cancel.', 'warn');
+        wipeConfirmTimer = setTimeout(function () {
+          wipeBtn.dataset.armed = '0';
+          wipeBtn.textContent = '🧹 Wipe all WaxFrame data from this browser';
+          setWipeStatus('Cancelled — no data was removed.', '');
+        }, 5000);
+        return;
+      }
+      // Second click — actually wipe
+      clearTimeout(wipeConfirmTimer);
+      wipeBtn.disabled = true;
+      var removed = 0;
+      try {
+        // Snapshot the key list first — modifying localStorage mid-iteration
+        // shifts indices and would skip entries.
+        var keys = [];
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (k && k.indexOf('waxframe_') === 0) keys.push(k);
+        }
+        for (var j = 0; j < keys.length; j++) {
+          localStorage.removeItem(keys[j]);
+          removed++;
+        }
+        // Also clear sessionStorage just in case anything ephemeral lives there.
+        try {
+          var skeys = [];
+          for (var s = 0; s < sessionStorage.length; s++) {
+            var sk = sessionStorage.key(s);
+            if (sk && sk.indexOf('waxframe_') === 0) skeys.push(sk);
+          }
+          for (var t = 0; t < skeys.length; t++) sessionStorage.removeItem(skeys[t]);
+        } catch (e) { /* sessionStorage may be unavailable in some contexts */ }
+        setWipeStatus('✓ Removed ' + removed + ' WaxFrame entr' + (removed === 1 ? 'y' : 'ies') + '. Reloading in 2 seconds…', 'ok');
+        setTimeout(function () { window.location.href = 'index.html'; }, 2000);
+      } catch (e) {
+        wipeBtn.disabled = false;
+        wipeBtn.dataset.armed = '0';
+        wipeBtn.textContent = '🧹 Wipe all WaxFrame data from this browser';
+        setWipeStatus('⚠ Wipe failed: ' + (e && e.message ? e.message : e) + ' — try clearing site data via your browser settings instead.', 'err');
       }
     });
 
