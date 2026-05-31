@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-019
+  Build: 20260530-020
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-019">
+  <meta name="waxframe-build" content="20260530-020">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.76"></script>
-  <script src="js/storage.js?v=3.63.76"></script>
+  <script src="js/version.js?v=3.63.77"></script>
+  <script src="js/storage.js?v=3.63.77"></script>
   <script>
   (function () {
     'use strict';
@@ -613,14 +613,21 @@
           .map(function (m) { return String(m.name || '').replace('models/', ''); })
           .sort().reverse();
       } else {
+        // OpenAI-compatible shape: { data: [ { id, created, ... } ] }.
+        // v3.63.77 — mirror the app's fetchModelsForProvider EXACTLY: map ids,
+        // sort by `created` (newest first) for everyone EXCEPT Perplexity (whose
+        // entries all carry created:0, making the sort meaningless — keep API
+        // order). The previous `m.type === 'chat'` filter was a fabrication that
+        // does not exist in the app and zeroed Mistral and Perplexity, both of
+        // which return entries without a type==='chat' field. Filtering is done
+        // solely by filterModelForProvider below (structural + per-provider),
+        // matching MODEL_FILTERS in api.js.
         var arr = Array.isArray(data) ? data : ((data && data.data) || []);
+        if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
         if (provider !== 'perplexity') {
           arr = arr.slice().sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
         }
-        if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
-        models = arr
-          .filter(function (m) { return !m.type || m.type === 'chat'; })
-          .map(function (m) { return m.id || m.name || m.model; });
+        models = arr.map(function (m) { return m.id || m.name || m.model; });
       }
       return dedup(models).filter(function (id) { return filterModelForProvider(provider, id); });
     }

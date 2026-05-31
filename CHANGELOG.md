@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.77
+**Build:** `20260530-020` · **Released:** May 30, 2026
+
+### Fixed — Model dump returned 0 models for Mistral and Perplexity
+
+The Dump Provider Models tool (and Dump ALL) returned `count: 0` for Mistral and Perplexity even though both fetches succeeded (HTTP 200) and both providers return full model lists. The dump's response parser carried a fabricated filter — `m.type === 'chat'` — that does not exist in the app's real model-fetch path (`fetchModelsForProvider` in `api.js`). Mistral and Perplexity entries don't carry a `type: "chat"` field, so every model was dropped before the real filters ran.
+
+The parser now mirrors `fetchModelsForProvider` exactly: map model ids, sort by `created` (newest first, except Perplexity whose entries all report `created: 0`), and filter solely through `filterModelForProvider` (the same structural + per-provider rules as `MODEL_FILTERS`). Perplexity's `/v1/models` returns a gateway catalog of proxied frontier models plus its own Sonar line; the `^sonar` whitelist correctly surfaces the Sonar models. Verified with unit tests against realistic Mistral and Perplexity response shapes: Mistral yields its chat models (embeddings dropped), Perplexity yields its sonar models (proxied + embeddings dropped).
+
+### Files Changed
+
+- Updated: `help.html` (`parseModelsResponse` — removed the fabricated `type === 'chat'` filter, aligned with the app's fetch logic), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v143.txt`
+- Version/build stamps to `v3.63.77 Pro` / `20260530-020` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.76
 **Build:** `20260530-019` · **Released:** May 30, 2026
 
