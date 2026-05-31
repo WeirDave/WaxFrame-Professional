@@ -239,9 +239,11 @@ WaxFrame also works with any OpenAI-compatible endpoint via **Add Custom AI** (s
 | **LM Studio** | Local runtime | Desktop GUI for serving local models. No API key needed. |
 | **Open WebUI** | Self-hosted gateway | Aggregates multiple model backends behind one OpenAI-compatible API. |
 | **Alfredo** | Enterprise gateway | Anduril's internal Open WebUI deployment — example of the enterprise gateway pattern WaxFrame supports out of the box. |
-| **Together AI** | Hosted | OpenAI-compatible inference cloud. |
+| **AI21 (Jamba)** | Hosted | First-party AI21 API. Hybrid Transformer-Mamba (SSM) models, 256K context, OpenAI-compatible. Quick Add preset. |
+| **DeepSeek** | Hosted | First-party DeepSeek API. OpenAI-compatible; the most cost-effective Builder option. Quick Add preset. |
+| **Together AI** | Hosted | OpenAI-compatible inference cloud. Quick Add preset. |
 | **Mistral** | Hosted | First-party Mistral API. |
-| **Cohere** | Hosted | First-party Cohere API. |
+| **Cohere** | Hosted | First-party Cohere API. Quick Add preset. |
 
 Anything else that speaks the OpenAI chat-completions shape will work too — point WaxFrame at the endpoint and it'll fetch the model list.
 

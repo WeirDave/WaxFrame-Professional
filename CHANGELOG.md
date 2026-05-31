@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.85
+**Build:** `20260531-028` · **Released:** May 31, 2026
+
+### Fixed — AI21 (Jamba) now appears in the Quick Add dropdown
+
+v3.63.84 added the Jamba preset to `QUICK_ADD_PROVIDERS` and wired its icon, but the Quick Add `<select>` menu in `index.html` is a separate hardcoded `<option>` list that was not updated — so the preset existed but had no menu entry to trigger it. Added `<option value="jamba">AI21 (Jamba)</option>` as the first provider in the dropdown, matching the preset key. Selecting it now auto-fills the AI21 endpoint and format as intended.
+
+### Fixed — README provider table completeness
+
+While verifying doc consistency, found DeepSeek was missing from the README "Supported AI Providers" table despite being a Quick Add preset (and the recommended cost-effective Builder elsewhere in the README). Added DeepSeek, and labeled which table entries are Quick Add presets. Confirmed the Import Server gateway family (Open WebUI / Ollama / LM Studio) is consistent across code, manual, and README — Alfredo correctly rides the Open WebUI preset (it is Anduril's internal Open WebUI deployment), so it needs no preset of its own.
+
+### Files Changed
+
+- Updated: `index.html` (Quick Add `<option>` for AI21/Jamba), `README.md` (Supported AI Providers table), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v151.txt`
+- Version/build stamps to `v3.63.85 Pro` / `20260531-028` across 9 HTML files, 15 JS files, `style.css`
+- Note: the user manual's Quick Add list was already updated in v3.63.84. `help.html` needs no change — its model dump discovers additional providers from your hive at runtime, never from a hardcoded list.
+
+---
+
 ## v3.63.84
 **Build:** `20260531-027` · **Released:** May 31, 2026
 
