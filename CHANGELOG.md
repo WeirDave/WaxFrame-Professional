@@ -2,6 +2,20 @@
 
 ---
 
+## v3.63.86
+**Build:** `20260531-029` · **Released:** May 31, 2026
+
+### Changed — Jamba tile renamed from "AI21 (Jamba)" to "Jamba"
+
+Cosmetic consistency: every AI tile uses the model/product name, not the company (ChatGPT not OpenAI, Claude not Anthropic, Gemini not Google, Grok not xAI). AI21's tile now reads "Jamba" to match. Display label only — the internal preset key (`jamba`), dropdown option value (`jamba`), icon catalog keys (`jamba`/`ai21`), and picker id (`ai21`) are unchanged, so the icon match and autofill still work.
+
+### Files Changed
+
+- Updated: `js/app.js` (preset + icon-picker display name), `index.html` (dropdown option label), `waxframe-user-manual.html` (Quick Add list), `README.md` (provider table), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v152.txt`
+- Version/build stamps to `v3.63.86 Pro` / `20260531-029` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.85
 **Build:** `20260531-028` · **Released:** May 31, 2026
 
