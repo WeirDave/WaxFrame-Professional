@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260530-021
+// Build: 20260530-022
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -323,7 +323,7 @@ window.MODEL_FALLBACKS = {
   mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
   together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
   cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
-  perplexity: ['sonar-pro', 'sonar-reasoning-pro', 'sonar-reasoning', 'sonar-deep-research', 'sonar'],
+  perplexity: ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'],
 };
 
 // v3.26.4: shared structural filter — only blocks models whose API contract
@@ -365,6 +365,18 @@ const MODEL_FILTERS = {
   // MODEL_FALLBACKS); now goes live.
   perplexity: id => !STRUCTURAL_NON_CHAT_RE.test(id) && /^sonar/i.test(id),
 };
+
+function normalizePerplexityModels(models) {
+  const list = [...new Set((models || [])
+    .map(id => String(id || '').replace(/^perplexity\//i, ''))
+    .filter(MODEL_FILTERS.perplexity))];
+  // Perplexity's current GET /v1/models is the Agent API catalog; it may return
+  // only `perplexity/sonar`, while the Sonar chat-completion endpoint documents
+  // the broader usable model enum. Keep the dump/recommend path useful by using
+  // that documented Sonar list when the live endpoint gives only the agent base.
+  if (list.length === 1 && list[0] === 'sonar') return MODEL_FALLBACKS.perplexity.slice();
+  return list;
+}
 
 // Custom AI Add flow uses the same structural filter — naming was previously
 // duplicated as NON_CHAT_RE, now an alias of STRUCTURAL_NON_CHAT_RE.
@@ -461,9 +473,9 @@ async function fetchModelsForProvider(provider) {
       if (provider !== 'perplexity') {
         entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
       }
-      models = entries
-        .map(m => provider === 'perplexity' ? String(m.id || '').replace(/^perplexity\//i, '') : m.id)
-        .filter(filter);
+      models = entries.map(m => m.id);
+      if (provider === 'perplexity') models = normalizePerplexityModels(models);
+      else models = models.filter(filter);
 
     } else if (provider === 'claude') {
       // v3.32.13 — route through the same CF Worker proxy that handles
@@ -602,9 +614,9 @@ async function fetchModelsForProviderLive(provider) {
       if (provider !== 'perplexity') {
         entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
       }
-      models = entries
-        .map(m => provider === 'perplexity' ? String(m.id || '').replace(/^perplexity\//i, '') : m.id)
-        .filter(filter);
+      models = entries.map(m => m.id);
+      if (provider === 'perplexity') models = normalizePerplexityModels(models);
+      else models = models.filter(filter);
 
     } else if (provider === 'claude') {
       // Route through the CF Worker proxy for the same CORS reason as

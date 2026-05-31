@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-021
+  Build: 20260530-022
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-021">
+  <meta name="waxframe-build" content="20260530-022">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.78"></script>
-  <script src="js/storage.js?v=3.63.78"></script>
+  <script src="js/version.js?v=3.63.79"></script>
+  <script src="js/storage.js?v=3.63.79"></script>
   <script>
   (function () {
     'use strict';
@@ -444,6 +444,7 @@
       perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
       mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' }
     };
+    var PERPLEXITY_SONAR_MODELS = ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
     var _lastCachedDump = null;
     var _lastLiveDump = null;
     var _lastAllDump = null;
@@ -464,6 +465,14 @@
       if (provider === 'chatgpt' && (CHATGPT_RESPONSES_ONLY_RE.test(id) || DATED_SNAPSHOT_RE.test(id))) return false;
       if (provider === 'perplexity' && !/^sonar/i.test(id)) return false;
       return true;
+    }
+
+    function normalizePerplexityModels(models) {
+      var list = dedup((models || [])
+        .map(function (id) { return String(id || '').replace(/^perplexity\//i, ''); })
+        .filter(function (id) { return filterModelForProvider('perplexity', id); }));
+      if (list.length === 1 && list[0] === 'sonar') return PERPLEXITY_SONAR_MODELS.slice();
+      return list;
     }
 
     function dedup(arr) {
@@ -614,11 +623,10 @@
           .sort().reverse();
       } else {
         // OpenAI-compatible shape: { data: [ { id, created, ... } ] }.
-        // v3.63.78 — Perplexity's current /v1/models response is the Agent API
-        // catalog and prefixes its own Sonar ids as `perplexity/sonar...`.
-        // WaxFrame's Perplexity integration uses the Sonar model ids directly
-        // (`sonar`, `sonar-pro`, etc.), so normalize that provider prefix before
-        // the ^sonar filter runs. Without this, HTTP 200 still produced 0 models.
+        // Perplexity's current /v1/models response is the Agent API catalog and
+        // may only return `perplexity/sonar`. The Sonar chat-completion endpoint
+        // documents the broader usable enum, so if the live list collapses to
+        // only base Sonar, expand it to that documented Sonar model family.
         var arr = Array.isArray(data) ? data : ((data && data.data) || []);
         if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
         if (provider !== 'perplexity') {
@@ -628,6 +636,7 @@
           var id = m.id || m.name || m.model;
           return provider === 'perplexity' ? String(id || '').replace(/^perplexity\//i, '') : id;
         });
+        if (provider === 'perplexity') return normalizePerplexityModels(models);
       }
       return dedup(models).filter(function (id) { return filterModelForProvider(provider, id); });
     }

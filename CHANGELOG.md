@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.79
+**Build:** `20260530-022` · **Released:** May 30, 2026
+
+### Fixed — Perplexity live list no longer collapses to base Sonar only
+
+Perplexity's `GET /v1/models` endpoint can return only the Agent API base model (`perplexity/sonar`) even though the Sonar chat-completion endpoint supports the broader Sonar family.
+
+When Perplexity's live model response normalizes down to only `sonar`, WaxFrame now expands that result to the documented Sonar chat model family: `sonar`, `sonar-pro`, `sonar-deep-research`, and `sonar-reasoning-pro`. This keeps the Help page model dump, provider cache refresh, and recommendation path aligned with the models WaxFrame can actually send to the Sonar chat endpoint.
+
+### Files Changed
+
+- Updated: `help.html` (Dump Provider Models Perplexity Sonar-family expansion), `js/api.js` (Perplexity Sonar-family expansion in cached and live model fetches), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v145.txt`
+- Version/build stamps to `v3.63.79 Pro` / `20260530-022` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.78
 **Build:** `20260530-021` · **Released:** May 30, 2026
 
