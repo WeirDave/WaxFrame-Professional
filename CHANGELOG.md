@@ -2,6 +2,23 @@
 
 ---
 
+## v3.63.70
+**Build:** `20260530-013` · **Released:** May 30, 2026
+
+### Changed — Selected Builder card simplified
+
+Removed the small Builder bee from the selected Builder card on Setup Step 2. The full-size Builder mascot already appears in the page header, and the tiny duplicate inside the card did not read well at reduced size.
+
+- **Cleaner selected Builder card** — the card now focuses on the provider icon, Builder name, and model selector.
+- **No layout behavior change** — the two-zone Builder Console, roster chips, long-name handling, and responsive collapse from v3.63.69 remain intact.
+
+### Files Changed
+
+- Updated: `js/app.js` (removed the card-level Builder bee markup), `style.css` (removed now-unused tiny bee styling), `CHANGELOG.md`
+- Version/build stamps to `v3.63.70 Pro` / `20260530-013` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.69
 **Build:** `20260530-012` · **Released:** May 30, 2026
 
