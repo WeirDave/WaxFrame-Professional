@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-024
+  Build: 20260530-025
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-024">
+  <meta name="waxframe-build" content="20260530-025">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.81"></script>
-  <script src="js/storage.js?v=3.63.81"></script>
+  <script src="js/version.js?v=3.63.82"></script>
+  <script src="js/storage.js?v=3.63.82"></script>
+  <script src="js/provider-models.js?v=3.63.82"></script>
   <script>
   (function () {
     'use strict';
@@ -422,26 +423,24 @@
 
     // ── provider model dump ──
     var MODEL_CACHE_PREFIX = 'waxframe_models_';
-    // v3.63.81 — kept in sync with STRUCTURAL_NON_CHAT_RE in js/api.js. Added
-    // image/video/audio/TTS/OCR/embedding model families (FLUX, Seedream/Seedance,
-    // Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic, Kokoro, Orpheus, Parakeet,
-    // HiDream, Ideogram, Juggernaut, DreamShaper, pixtral, voxtral, ocr, e5, …)
-    // that Together AI and Mistral surface in /v1/models. Verified zero false
-    // positives on real chat models (sonar*, command-r*, Coder, codestral, …).
-    var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
-    var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
-    var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
-    // v3.63.76 — these are the DEFAULT 6 only, matching DEFAULT_AIS in app.js
-    // (chatgpt, claude, gemini, grok, perplexity, mistral). DeepSeek, Together,
-    // Cohere, Ollama, etc. are ADDITIONAL providers — added via Quick Add /
-    // custom AI, stored in hive.customAIConfigs with their own ids (e.g.
-    // cohere_1779690241686), and discovered by getProviderEntries from there.
-    // Previously this table also hardcoded deepseek/together/cohere as built-in,
-    // which collided with the user's additional configs and produced duplicate
-    // dropdown rows (one keyless built-in copy + one keyed additional copy) and
-    // a wrong cache-key read for the built-in copy. The app's canonical rule is
-    // isDefault = DEFAULT_AIS.has(id); defaults cache by provider, additionals
-    // cache by id (app.js ~1048). The dump tool now mirrors that exactly.
+    // v3.63.82 — model-filtering / parsing / fallback logic now lives in the
+    // shared js/provider-models.js module (loaded above), so the Help page and
+    // the main app use ONE definition and can't drift. These bindings alias the
+    // shared pieces under the names the dump code below already uses.
+    var _WFPM = (window.WFProviderModels) || {};
+    var STRUCTURAL_NON_CHAT_RE    = _WFPM.STRUCTURAL_NON_CHAT_RE;
+    var CHATGPT_RESPONSES_ONLY_RE = _WFPM.CHATGPT_RESPONSES_ONLY_RE;
+    var DATED_SNAPSHOT_RE         = _WFPM.DATED_SNAPSHOT_RE;
+    var MODEL_FALLBACKS           = _WFPM.MODEL_FALLBACKS;
+    var filterModelForProvider    = _WFPM.filterModelForProvider;
+    var normalizePerplexityModels = _WFPM.normalizePerplexityModels;
+    var parseModelsResponse       = _WFPM.parseModelsResponse;
+    var baseProviderId            = _WFPM.baseProviderId;
+    var dedup                     = _WFPM.dedup;
+    var PERPLEXITY_SONAR_MODELS   = (MODEL_FALLBACKS && MODEL_FALLBACKS.perplexity) || ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
+    // v3.63.76 — DEFAULT 6 only, matching DEFAULT_AIS in app.js. DeepSeek,
+    // Together, Cohere, etc. are ADDITIONAL providers discovered from
+    // hive.customAIConfigs by getProviderEntries (with their own ids).
     var BUILT_IN_MODEL_PROVIDERS = {
       claude:     { label: 'Anthropic (Claude)', endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev', format: 'anthropic' },
       chatgpt:    { label: 'OpenAI (ChatGPT)', endpoint: 'https://api.openai.com/v1/chat/completions', format: 'openai' },
@@ -450,7 +449,6 @@
       perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
       mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' }
     };
-    var PERPLEXITY_SONAR_MODELS = ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
     var _lastCachedDump = null;
     var _lastLiveDump = null;
     var _lastAllDump = null;
@@ -464,37 +462,6 @@
         var key = (typeof LS_HIVE === 'string') ? LS_HIVE : 'waxframe_v2_hive';
         return safeJsonParse(localStorage.getItem(key) || '{}', {});
       } catch (e) { return {}; }
-    }
-
-    function filterModelForProvider(provider, id) {
-      if (!id || STRUCTURAL_NON_CHAT_RE.test(id)) return false;
-      if (provider === 'chatgpt' && (CHATGPT_RESPONSES_ONLY_RE.test(id) || DATED_SNAPSHOT_RE.test(id))) return false;
-      if (provider === 'perplexity' && !/^sonar/i.test(id)) return false;
-      return true;
-    }
-
-    function normalizePerplexityModels(models) {
-      var list = dedup((models || [])
-        .map(function (id) { return String(id || '').replace(/^perplexity\//i, ''); })
-        .filter(function (id) { return filterModelForProvider('perplexity', id); }));
-      if (list.length === 1 && list[0] === 'sonar') {
-        return {
-          models: PERPLEXITY_SONAR_MODELS.slice(),
-          modelsSource: 'documented-sonar-fallback',
-          sourceDetail: 'Raw Perplexity /v1/models returned only base Sonar; expanded using Perplexity Sonar API documented model enum.',
-          rawLiveModels: dedup(models || [])
-        };
-      }
-      return { models: list, modelsSource: 'live', rawLiveModels: dedup(models || []) };
-    }
-
-    function dedup(arr) {
-      var out = [], seen = {};
-      (arr || []).forEach(function (id) {
-        id = String(id || '').trim();
-        if (id && !seen[id]) { seen[id] = true; out.push(id); }
-      });
-      return out;
     }
 
     function getProviderEntries() {
@@ -625,42 +592,9 @@
       return url;
     }
 
-    function parseModelsResponse(provider, format, data) {
-      var models = [];
-      var rawLiveModels = [];
-      if (format === 'anthropic' || provider === 'claude') {
-        models = (data && data.data ? data.data : [])
-          .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); })
-          .map(function (m) { return m.id; });
-      } else if (format === 'google' || provider === 'gemini') {
-        models = (data && data.models ? data.models : [])
-          .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
-          .map(function (m) { return String(m.name || '').replace('models/', ''); })
-          .sort().reverse();
-      } else {
-        // OpenAI-compatible shape: { data: [ { id, created, ... } ] }.
-        // Perplexity's current /v1/models response is the Agent API catalog and
-        // may only return `perplexity/sonar`. The Sonar chat-completion endpoint
-        // documents the broader usable enum, so if the live list collapses to
-        // only base Sonar, expand it to that documented Sonar model family.
-        var arr = Array.isArray(data) ? data : ((data && data.data) || []);
-        if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
-        if (provider !== 'perplexity') {
-          arr = arr.slice().sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
-        }
-        models = arr.map(function (m) {
-          var id = m.id || m.name || m.model;
-          return provider === 'perplexity' ? String(id || '').replace(/^perplexity\//i, '') : id;
-        });
-        rawLiveModels = arr.map(function (m) { return m.id || m.name || m.model; });
-        if (provider === 'perplexity') return normalizePerplexityModels(rawLiveModels);
-      }
-      return {
-        models: dedup(models).filter(function (id) { return filterModelForProvider(provider, id); }),
-        modelsSource: 'live',
-        rawLiveModels: dedup(rawLiveModels.length ? rawLiveModels : models)
-      };
-    }
+    // parseModelsResponse + normalizePerplexityModels + filterModelForProvider
+    // + dedup + baseProviderId are provided by js/provider-models.js (aliased at
+    // the top of this script). No local copies — single source of truth.
 
     async function fetchLiveModelsNoCache(entry) {
       if (!entry || !entry.endpoint) throw new Error('No endpoint saved for this provider.');
