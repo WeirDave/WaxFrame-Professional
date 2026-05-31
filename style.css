@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-012
+   Build: 20260530-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -3061,10 +3061,6 @@ html, body {
   line-height: 1.15;
   overflow-wrap: anywhere;
 }
-.builder-spotlight-bee {
-  width: 56px; height: 56px; flex-shrink: 0; object-fit: contain;
-  opacity: 0.9;
-}
 .builder-spotlight-model-label {
   font-size: var(--fs-13);
   font-weight: 600;
@@ -3085,7 +3081,6 @@ html, body {
   }
   .builder-spotlight-icon { width: 44px; height: 44px; }
   .builder-spotlight-name { font-size: var(--fs-18); }
-  .builder-spotlight-bee { width: 44px; height: 44px; }
   .builder-spotlight-model-label { margin-bottom: var(--space-6); }
 }
 
