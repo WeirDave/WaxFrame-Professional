@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-030
+// Build: 20260531-031
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-030';         // build stamp — update each session
+const BUILD       = '20260531-031';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4471,22 +4471,42 @@ function buildAISetupRowHTML(ai) {
 // Per-session expand/collapse state — set of AI ids that are expanded.
 // Per-session only: clears on page reload by design (David's call —
 // power users don't need persisted expand state across reloads).
-const _expandedAIIds = new Set();
+// v3.63.88 — Per-row expand/collapse state now PERSISTS across page loads.
+// Previously _expandedAIIds was an in-memory Set that reset every load, so a
+// tidy all-collapsed layout wouldn't survive a refresh. Now it hydrates from
+// localStorage on init and writes back on every change, so the page reopens
+// exactly as the user left it (each row open or closed individually).
+const _EXPANDED_LS_KEY = 'waxframe_bee_expanded_rows';
+const _expandedAIIds = (() => {
+  try {
+    const raw = localStorage.getItem(_EXPANDED_LS_KEY);
+    const arr = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(arr) ? arr : []);
+  } catch (e) { return new Set(); }
+})();
+
+function _persistExpandedRows() {
+  try { localStorage.setItem(_EXPANDED_LS_KEY, JSON.stringify([..._expandedAIIds])); }
+  catch (e) { /* storage full / disabled — non-fatal, just won't persist */ }
+}
 
 function toggleAISetupRow(aiId) {
   if (_expandedAIIds.has(aiId)) _expandedAIIds.delete(aiId);
   else _expandedAIIds.add(aiId);
+  _persistExpandedRows();
   renderAISetupGrid();
 }
 
 function expandAllAISetupRows() {
   aiList.forEach(ai => _expandedAIIds.add(ai.id));
+  _persistExpandedRows();
   renderAISetupGrid();
 }
 
 function collapseAllAISetupRows() {
   if (!_expandedAIIds.size) return;
   _expandedAIIds.clear();
+  _persistExpandedRows();
   renderAISetupGrid();
 }
 
@@ -4784,6 +4804,7 @@ function renderAIRow(id) {
   // Make sure the row stays open after the re-render — the user just
   // interacted with its key field; collapsing it would be jarring.
   _expandedAIIds.add(id);
+  _persistExpandedRows();
   rowEl.outerHTML = buildAISetupRowHTML(ai);
 }
 
@@ -7059,54 +7080,26 @@ async function fetchCustomAIModels() {
   fetchBtn.disabled = true;
 
   try {
-    let modelsEndpoint, headers;
-    if (format === 'anthropic') {
-      modelsEndpoint = 'https://api.anthropic.com/v1/models';
-      headers = { 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-    } else if (format === 'google') {
-      // v3.53.0 — API key moved from query string to header (see comment
-      // in fetchModelsFromEndpoint above).
-      modelsEndpoint = `https://generativelanguage.googleapis.com/v1beta/models?pageSize=100`;
-      headers = { 'x-goog-api-key': key };
-    } else {
-      const base = url.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
-      modelsEndpoint = `${base}/v1/models`;
-      headers = key ? { 'Authorization': `Bearer ${key}` } : {};
+    // v3.63.88 — Consolidated: the modal now uses the SAME fetcher the Bee
+    // page uses (fetchModelsFromEndpoint above), so Together's serverless
+    // filter, OpenWebUI/Alfredo explicit-endpoint support, and the canonical
+    // STRUCTURAL_NON_CHAT_RE are all applied here automatically. Previously
+    // this function reimplemented URL-building, header-setting, response-
+    // parsing, and non-chat filtering inline — a duplicate that lagged the
+    // Bee-page fixes. Fixes one place now fixes both surfaces.
+    let models;
+    try {
+      models = await fetchModelsFromEndpoint(url, format, key);
+    } catch (e) {
+      // Preserve the HTTP-N error shape downstream classification expects.
+      throw e;
     }
+    if (!models || !models.length) throw new Error('No chat-compatible models returned');
 
-    const resp = await fetch(modelsEndpoint, { headers });
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const data = await resp.json();
-
-    let models = [];
-    if (format === 'anthropic') {
-      models = (data?.data || []).map(m => m.id);
-    } else if (format === 'google') {
-      models = (data?.models || [])
-        .filter(m => m.supportedGenerationMethods?.includes('generateContent'))
-        .map(m => m.name.replace('models/', ''));
-    } else {
-      // v3.56.28 — accept both shapes: OpenAI returns {data:[...]}, Together AI
-      // (and some gateways) return a bare array tagging each entry with a `type`
-      // (chat/image/video/audio/…). Keep only chat when that field is present;
-      // providers without it (OpenAI, Mistral, DeepSeek) fall through unaffected.
-      const _arr = Array.isArray(data) ? data : (data?.data || []);
-      models = _arr.filter(m => !m.type || m.type === 'chat').map(m => m.id).sort();
-    }
-
-    if (!models.length) throw new Error('No models returned');
-
-    // ── v3.25.6: filter non-chat models ────────────────────────────────────
-    // Strip embeddings, moderation, speech, audio, real-time, image-gen,
-    // reranking models — none are valid Hive reviewers. Track count for
-    // the toast so users know we did something on their behalf.
+    // Dedup safety net (fetchModelsFromEndpoint already dedups; harmless double-check)
     const rawCount = models.length;
-    models = models.filter(m => !NON_CHAT_RE.test(m));
-    // v3.32.11 — dedup. Mistral and some self-hosted servers return duplicate
-    // ids; Set preserves insertion order so first occurrence wins.
     models = [...new Set(models)];
-    const filteredOutCount = rawCount - models.length;
-    if (!models.length) throw new Error('No chat-compatible models returned (all results were embeddings/audio/image)');
+    const filteredOutCount = 0; // structural filter already applied upstream
 
     // ── #11: already-in-hive markers ───────────────────────────────────────
     // Don't filter already-added models out of the dropdown — that creates the
@@ -7343,6 +7336,20 @@ function addCustomAI() {
   renderAISetupGrid();
   saveHive();
   toast(`🐝 ${name} added to the hive`);
+
+  // v3.63.88 — Persist the recommend work under the AI's real id, so the
+  // Bee page row immediately shows ✨ Reviewer / 🔨 Builder marks without
+  // the user having to click Recommend Models again. The modal's auto-
+  // recommend cached under the URL; recheckModelForAI re-runs the recommend
+  // through the canonical engine and caches under `custom-{id}-reviewer`
+  // and `-builder` — the exact keys getReviewerRecommendation /
+  // getBuilderRecommendation read on the Bee row. Fire-and-forget;
+  // renderAIRow lights up the picks when each role's result lands.
+  if (key && format === 'openai') {
+    setTimeout(() => {
+      try { recheckModelForAI(id); } catch (e) { /* non-fatal — user can manually run Recommend on the row */ }
+    }, 50);
+  }
 }
 
 // ── IMPORT FROM MODEL SERVER ──

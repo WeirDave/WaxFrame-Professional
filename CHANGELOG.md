@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.88
+**Build:** `20260531-031` · **Released:** May 31, 2026
+
+### Fixed — Add Custom AI modal: full set-up persists to the Worker Bee page
+
+Pasting an API key into the Add Custom AI modal and pressing Enter did nothing. The modal also reimplemented its own model fetcher (`fetchCustomAIModels`), duplicating logic that lives in the Bee page's `fetchModelsFromEndpoint` — and lagging it (no Together `?serverless=true`, no explicit Open WebUI / Alfredo models-endpoint support). And after the user picked a model and clicked Add to Hive, the reviewer/builder recommendations didn't persist into the keys the Bee page reads, so the row showed up un-recommended and the user had to click Recommend again.
+
+This release ties the whole flow together:
+
+- **Enter in the API key field** now triggers `fetchCustomAIModels()` directly, matching the Worker Bee row's muscle memory.
+- **`fetchCustomAIModels` is now a thin UI wrapper around `fetchModelsFromEndpoint`** — the same fetcher the Bee page uses. One source of truth: fixes to URL-building, headers, parsing, the Together serverless filter, the explicit-models-endpoint path, and `STRUCTURAL_NON_CHAT_RE` now apply to both surfaces automatically.
+- **`addCustomAI` now fires `recheckModelForAI(id)`** after the AI is created (fire-and-forget, 50ms after the modal closes). That re-runs the recommend through the exact engine the Bee page uses, caching reviewer + builder picks under the correct `waxframe_recommend_custom-{id}-reviewer` / `-builder` keys. When the user lands on the Worker Bee page the row is fully set up — model picked, reviewer/builder marks visible in the dropdown — with no extra clicks.
+
+### Fixed — Worker Bee row expand/collapse state now persists across page loads
+
+The per-row open/closed state was an in-memory Set that reset on every page load. A tidy all-collapsed view didn't survive a refresh. The state now hydrates from localStorage on init and writes back on every change (toggle, expand-all, collapse-all, and the auto-open-on-save after pasting a key). The auto key-test on screen entry runs in place — collapsed rows stay collapsed; their border color (gray / red / green) reflects validation state in either expanded or collapsed form.
+
+### Files Changed
+
+- Updated: `js/app.js` (`_expandedAIIds` hydrates from localStorage + persists on every state change; `fetchCustomAIModels` consolidated to call `fetchModelsFromEndpoint`; `addCustomAI` fires `recheckModelForAI` post-add), `index.html` (Enter handler on `customAIKey`), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v154.txt`
+- Version/build stamps to `v3.63.88 Pro` / `20260531-031` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.87
 **Build:** `20260531-030` · **Released:** May 31, 2026
 

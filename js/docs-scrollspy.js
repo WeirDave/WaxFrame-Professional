@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docs-scrollspy.js
-// Build: 20260531-030
+// Build: 20260531-031
 //  Shared scroll-spy for documentation pages (manual + playbooks).
 //  Watches every section the sidebar links to and highlights the
 //  link for the section nearest the top of the viewport.
