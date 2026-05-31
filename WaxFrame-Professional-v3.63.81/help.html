@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<!--
+  WaxFrame Professional — Support (break-glass page)
+  Build: 20260530-024
+
+  DESIGN CONTRACT (intentional, audited exception to the usual rules):
+  This page must work even when the main app is broken — corrupt style.css,
+  a thrown error in app.js, a bad deploy. So it is FULLY SELF-CONTAINED:
+  inline <style> + inline page <script>, no dependency on style.css or app.js.
+  Hardcoded hex / inline CSS here are deliberate (the no-hardcoded-hex and
+  no-inline-CSS rules assume style.css is healthy; this page can't assume that).
+
+  The ONLY external scripts are js/version.js and js/storage.js — both small,
+  stable, and definition-only at load. storage.js gives us idbGet() and the
+  pure redaction functions (_redactHiveKeys / _redactSessionContent) so the
+  diagnostic bundle reuses the SAME redaction as the in-app path (single source
+  of truth — no duplicated secret-stripping logic to drift). Everything is
+  feature-detected: if storage.js fails to load, the page still renders, still
+  captures the environment, and still opens the GitHub issue — only the bundle
+  button degrades with a clear message.
+-->
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260530-024">
+  <title>WaxFrame — Help</title>
+  <style>
+    /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
+       break-glass page must render correctly even if style.css is broken, so it
+       can't pull the live tokens. Keep in sync with style.css :root. */
+    :root {
+      --bg:        #0a0c12;
+      --panel:     #111318;
+      --panel-2:   #181b24;
+      --border:    #252838;
+      --honey:     #f5a623;
+      --amber:     #f5a623;
+      --amber-dk:  #f7b84a;
+      --text:      #e8ecf4;
+      --text-dim:  #9aa3b8;
+      --text-mute: #6b7494;
+      --ok:        #00b300;
+      --warn:      #fbbf24;
+      --err:       #f87171;
+      --mono:      'Courier New', Courier, monospace;
+      --sans:      'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    }
+    /* Self-hosted DM Sans to match the app; degrades to system-ui if fonts/ is gone. */
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:400; font-display:swap; src:url('fonts/dm-sans-v17-latin-regular.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:600; font-display:swap; src:url('fonts/dm-sans-v17-latin-600.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:700; font-display:swap; src:url('fonts/dm-sans-v17-latin-700.woff2') format('woff2'); }
+    @font-face { font-family:'DM Sans'; font-style:normal; font-weight:800; font-display:swap; src:url('fonts/dm-sans-v17-latin-800.woff2') format('woff2'); }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+      padding: 32px 20px 64px;
+    }
+    main { max-width: 860px; margin: 0 auto; }
+
+    .hdr { text-align: center; margin-bottom: 8px; }
+    .logo {
+      height: 88px; width: auto; display: block; margin: 0 auto 12px;
+    }
+    h1 { font-size: 26px; margin: 0 0 4px; color: var(--text); }
+    .tagline { color: var(--text-dim); font-size: 15px; margin: 0 0 6px; }
+    .verline {
+      font-family: var(--mono); font-size: 12px; color: var(--text-mute);
+      margin: 0 0 28px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+    section > h2 {
+      font-size: 16px; margin: 0 0 4px; color: var(--honey);
+      display: flex; align-items: center; gap: 8px;
+    }
+    section > .sub { color: var(--text-dim); font-size: 13.5px; margin: 0 0 14px; }
+    .step-num {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: var(--amber); color: #1a1208; font-weight: 800;
+      font-size: 13px; flex: none;
+    }
+
+    pre.env {
+      font-family: var(--mono); font-size: 12.5px;
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 14px; margin: 0 0 12px;
+      white-space: pre-wrap; word-break: break-word;
+      color: var(--text-dim); max-height: 280px; overflow: auto;
+    }
+
+    button, .btn {
+      font-family: var(--sans); font-size: 14px; font-weight: 600;
+      border-radius: 8px; padding: 10px 16px; cursor: pointer;
+      border: 1px solid var(--amber); background: var(--amber); color: #1a1208;
+      transition: background .15s, opacity .15s; text-decoration: none;
+      display: inline-flex; align-items: center; gap: 7px;
+    }
+    button:hover, .btn:hover { background: var(--amber-dk); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost {
+      background: transparent; color: var(--honey); border-color: var(--border);
+    }
+    .btn-ghost:hover { background: var(--panel-2); }
+
+    .step { margin: 0 0 18px; }
+    .step:last-child { margin-bottom: 0; }
+    .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+    .step-head .t { font-weight: 700; font-size: 14.5px; }
+    .step-body { padding-left: 32px; }
+    .step-body p { margin: 6px 0; font-size: 13.5px; color: var(--text-dim); }
+
+    label.chk {
+      display: flex; align-items: flex-start; gap: 9px;
+      font-size: 13px; color: var(--text-dim); margin: 10px 0;
+      cursor: pointer;
+    }
+    label.chk input { margin-top: 3px; flex: none; }
+
+    .note {
+      font-size: 12.5px; color: var(--text-mute);
+      border-left: 2px solid var(--border); padding-left: 10px; margin: 10px 0 0;
+    }
+    .status { font-family: var(--mono); font-size: 12.5px; margin: 10px 0 0; min-height: 16px; }
+    .status.ok  { color: var(--ok); }
+    .status.warn{ color: var(--warn); }
+    .status.err { color: var(--err); }
+
+    .model-dump-controls {
+      display: grid; grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 10px; align-items: end; margin: 10px 0 12px;
+    }
+    .field label {
+      display: block; font-size: 12px; font-weight: 800;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--text-mute); margin-bottom: 5px;
+    }
+    select {
+      width: 100%; font-family: var(--sans); font-size: 14px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .dump-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px; margin-top: 12px;
+    }
+    .dump-panel {
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg); overflow: hidden;
+    }
+    .dump-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    }
+    .dump-title { font-size: 13px; font-weight: 800; color: var(--text); }
+    .dump-meta { font-family: var(--mono); font-size: 11.5px; color: var(--text-mute); }
+    .dump-copy { font-size: 12px; padding: 6px 10px; border-radius: 7px; }
+    .dump-list {
+      font-family: var(--mono); font-size: 12px; line-height: 1.45;
+      color: var(--text-dim); margin: 0; padding: 12px;
+      min-height: 160px; max-height: 320px; overflow: auto;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .dump-diff {
+      display: none; border-left: 2px solid var(--warn);
+      background: rgba(251, 191, 36, .08); color: var(--warn);
+      padding: 9px 11px; margin-top: 12px; border-radius: 6px;
+      font-size: 13px;
+    }
+    .dump-diff.show { display: block; }
+
+    ul.fixes { margin: 6px 0 0; padding-left: 0; list-style: none; }
+    ul.fixes li {
+      padding: 9px 0; border-bottom: 1px solid var(--border);
+      font-size: 13.5px; color: var(--text-dim);
+    }
+    ul.fixes li:last-child { border-bottom: none; }
+    ul.fixes b { color: var(--text); }
+    kbd {
+      font-family: var(--mono); font-size: 12px; background: var(--bg);
+      border: 1px solid var(--border); border-radius: 4px; padding: 1px 6px;
+      color: var(--honey);
+    }
+
+    .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+    .footer { text-align: center; color: var(--text-mute); font-size: 12px; margin-top: 28px; }
+    a { color: var(--honey); }
+    @media (max-width: 720px) {
+      .model-dump-controls, .dump-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+
+    <div class="hdr">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="logo">
+      <h1>Help</h1>
+      <p class="tagline">Something went wrong, or the app won't load? You're in the right place.</p>
+      <p class="verline" id="verline">WaxFrame · loading version…</p>
+    </div>
+
+    <!-- 1. Environment ------------------------------------------------------ -->
+    <section>
+      <h2>📋 Your environment</h2>
+      <p class="sub">This is gathered automatically — no personal data, no document text. Copy it into your bug report so support knows what you're running.</p>
+      <pre class="env" id="envBlock">Gathering…</pre>
+      <button class="btn-ghost" id="copyEnvBtn" type="button">⧉ Copy environment</button>
+      <p class="status" id="copyStatus"></p>
+    </section>
+
+    <!-- 2. Report a bug ----------------------------------------------------- -->
+    <section>
+      <h2>🐝 Report a bug</h2>
+      <p class="sub">Two quick steps. Your API keys and license are <strong>always</strong> stripped from anything this page produces.</p>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">1</span><span class="t">Open a pre-filled bug report</span></div>
+        <div class="step-body">
+          <p>Opens a new GitHub issue with your environment already filled in. Add what happened and the steps to reproduce it.</p>
+          <button id="openIssueBtn" type="button">↗ Open bug report on GitHub</button>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">2</span><span class="t">Attach a diagnostic bundle</span></div>
+        <div class="step-body">
+          <p>A support-safe snapshot of your setup and session. Download it, then <strong>drag the file into your GitHub issue</strong>.</p>
+          <label class="chk">
+            <input type="checkbox" id="includeContent">
+            <span>Include my document &amp; reference text. <strong>Leave this off</strong> for a public issue — document text is redacted by default. (Keys are always removed either way.)</span>
+          </label>
+          <button id="bundleBtn" type="button">⬇ Download diagnostic bundle</button>
+          <p class="status" id="bundleStatus"></p>
+        </div>
+      </div>
+
+      <p class="note">Found a <strong>security</strong> issue instead? Please don't post it publicly — use GitHub's private vulnerability reporting on the <a id="securityLink" href="#" target="_blank" rel="noopener">Security tab</a>.</p>
+    </section>
+
+    <!-- 3. Provider model dump --------------------------------------------- -->
+    <section>
+      <h2>🧪 Dump Provider Models</h2>
+      <p class="sub">Compare WaxFrame's cached model list against a fresh provider fetch. The live fetch does not write to your cache.</p>
+      <div class="model-dump-controls">
+        <div class="field">
+          <label for="modelDumpProvider">Provider</label>
+          <select id="modelDumpProvider"></select>
+        </div>
+        <button id="modelDumpBtn" type="button">Dump models</button>
+        <button id="modelDumpAllBtn" class="btn-ghost" type="button" title="Fetch live models for every provider with a saved key into one JSON">⧉ Dump ALL (live) → JSON</button>
+      </div>
+      <p class="status" id="modelDumpStatus"></p>
+      <div class="dump-diff" id="modelDumpDiff"></div>
+      <div class="dump-grid">
+        <div class="dump-panel">
+          <div class="dump-head">
+            <div>
+              <div class="dump-title">Cached</div>
+              <div class="dump-meta" id="cachedDumpMeta">No dump yet</div>
+            </div>
+            <button class="btn-ghost dump-copy" id="copyCachedDump" type="button">⧉ Copy JSON</button>
+          </div>
+          <pre class="dump-list" id="cachedDumpList">Pick a provider, then dump models.</pre>
+        </div>
+        <div class="dump-panel">
+          <div class="dump-head">
+            <div>
+              <div class="dump-title">Live</div>
+              <div class="dump-meta" id="liveDumpMeta">No dump yet</div>
+            </div>
+            <button class="btn-ghost dump-copy" id="copyLiveDump" type="button">⧉ Copy JSON</button>
+          </div>
+          <pre class="dump-list" id="liveDumpList">Live fetch waits until you click Dump models.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Common fixes ----------------------------------------------------- -->
+    <section>
+      <h2>🔧 Try these first</h2>
+      <p class="sub">Most issues clear with one of these.</p>
+      <ul class="fixes">
+        <li><b>Hard refresh.</b> <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Windows/Linux) or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (Mac). Clears a stale cached file after an update.</li>
+        <li><b>Check your window size.</b> WaxFrame is desktop-only and needs at least <b>1366×768</b>. A narrow or zoomed window triggers the minimum-size overlay.</li>
+        <li><b>Try another browser.</b> A recent Chrome, Edge, or Firefox. Private/incognito windows can block the storage WaxFrame needs.</li>
+        <li><b>Last resort — reset local data.</b> If the app is stuck in a bad state, clearing WaxFrame's site data forces a clean start. <b>This wipes your local hive, project, and session</b> — back up first (or import a backup afterward). Do this in your browser's site-settings for this page.</li>
+      </ul>
+    </section>
+
+    <!-- 5. Links ------------------------------------------------------------ -->
+    <section>
+      <h2>↩ Get back to it</h2>
+      <div class="links">
+        <a class="btn-ghost" href="index.html">← Back to WaxFrame</a>
+        <a class="btn-ghost" href="waxframe-user-manual.html">📖 User Manual</a>
+      </div>
+    </section>
+
+    <p class="footer">WaxFrame Professional · Many minds, one refined result.</p>
+
+  </main>
+
+  <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
+  <script src="js/version.js?v=3.63.81"></script>
+  <script src="js/storage.js?v=3.63.81"></script>
+  <script>
+  (function () {
+    'use strict';
+
+    var REPO = 'https://github.com/WeirDave/WaxFrame-Professional';
+    var APP_VER  = (typeof APP_VERSION !== 'undefined') ? APP_VERSION : 'unknown';
+    // BUILD lives in app.js, which this break-glass page deliberately doesn't
+    // load. Fall back to the build stamp baked into this page's own <meta>
+    // (the release ceremony updates that on every HTML file, so it tracks).
+    var APP_BLD  = (function () {
+      if (typeof BUILD !== 'undefined') return BUILD;
+      var m = document.querySelector('meta[name="waxframe-build"]');
+      return (m && m.content) || 'unknown';
+    })();
+
+    // ── version line ──
+    var verEl = document.getElementById('verline');
+    if (verEl) verEl.textContent = 'WaxFrame ' + APP_VER + ' · build ' + APP_BLD;
+
+    // ── security link ──
+    var secLink = document.getElementById('securityLink');
+    if (secLink) secLink.href = REPO + '/security/advisories/new';
+
+    // ── environment capture ──
+    var envText = 'gathering…';
+    function buildEnvText(extra) {
+      var nav = window.navigator || {};
+      var lines = [
+        'WaxFrame version : ' + APP_VER,
+        'Build            : ' + APP_BLD,
+        'Page URL         : ' + location.href,
+        'Browser (UA)     : ' + (nav.userAgent || 'unknown'),
+        'Platform         : ' + (nav.platform || (nav.userAgentData && nav.userAgentData.platform) || 'unknown'),
+        'Language         : ' + (nav.language || 'unknown'),
+        'Screen           : ' + (screen.width + '×' + screen.height) +
+                                 '  ·  window ' + window.innerWidth + '×' + window.innerHeight +
+                                 '  ·  DPR ' + (window.devicePixelRatio || 1),
+        'Online           : ' + (nav.onLine ? 'yes' : 'no'),
+        'localStorage     : ' + (extra.lsOk ? 'available' : 'BLOCKED'),
+        'Storage persisted: ' + extra.persisted,
+        'Last recorded err: ' + (extra.lastErr || 'none on record'),
+        'Captured         : ' + new Date().toISOString()
+      ];
+      return lines.join('\n');
+    }
+
+    function lsAvailable() {
+      try { var k = '__wf_probe__'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return true; }
+      catch (e) { return false; }
+    }
+
+    var envEl = document.getElementById('envBlock');
+
+    (async function gatherEnv() {
+      var persisted = 'unknown';
+      try { if (navigator.storage && navigator.storage.persisted) persisted = (await navigator.storage.persisted()) ? 'yes' : 'no'; }
+      catch (e) { persisted = 'unavailable'; }
+
+      // lastFailure is persisted inside the IDB session, so we can surface it
+      // even though the app's in-memory WF_DEBUG is gone on this separate page.
+      var lastErr = '';
+      try {
+        if (typeof idbGet === 'function') {
+          var s = await idbGet();
+          if (s && s.lastFailure) {
+            var lf = s.lastFailure;
+            lastErr = (lf.code || lf.status || 'error') + (lf.message ? (' — ' + String(lf.message).slice(0, 160)) : '');
+          }
+        }
+      } catch (e) { /* ignore — best effort */ }
+
+      envText = buildEnvText({ lsOk: lsAvailable(), persisted: persisted, lastErr: lastErr });
+      if (envEl) envEl.textContent = envText;
+    })();
+
+    // ── copy environment ──
+    var copyBtn = document.getElementById('copyEnvBtn');
+    var copyStatus = document.getElementById('copyStatus');
+    if (copyBtn) copyBtn.addEventListener('click', function () {
+      var done = function (ok) {
+        if (!copyStatus) return;
+        copyStatus.textContent = ok ? '✓ Copied to clipboard' : '⚠ Couldn\u2019t copy — select the text above and copy manually';
+        copyStatus.className = 'status ' + (ok ? 'ok' : 'warn');
+      };
+      try {
+        navigator.clipboard.writeText(envText).then(function () { done(true); }, function () { done(false); });
+      } catch (e) { done(false); }
+    });
+
+    // ── open pre-filled GitHub issue using the bug_report.yml form ──
+    // The form auto-applies labels (bug, auto-reported), enforces required
+    // fields, and is pre-filled via field-id query params (?environment=…).
+    // The legacy ?labels= param is intentionally NOT used — labels on the
+    // form's own frontmatter avoid the 404 it caused for non-collaborators.
+    var issueBtn = document.getElementById('openIssueBtn');
+    if (issueBtn) issueBtn.addEventListener('click', function () {
+      var title = '[Bug] ' + APP_VER + ' — ';
+      var url = REPO + '/issues/new'
+              + '?template=bug_report.yml'
+              + '&title='       + encodeURIComponent(title)
+              + '&environment=' + encodeURIComponent(envText);
+      window.open(url, '_blank', 'noopener');
+    });
+
+    // ── provider model dump ──
+    var MODEL_CACHE_PREFIX = 'waxframe_models_';
+    // v3.63.81 — kept in sync with STRUCTURAL_NON_CHAT_RE in js/api.js. Added
+    // image/video/audio/TTS/OCR/embedding model families (FLUX, Seedream/Seedance,
+    // Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic, Kokoro, Orpheus, Parakeet,
+    // HiDream, Ideogram, Juggernaut, DreamShaper, pixtral, voxtral, ocr, e5, …)
+    // that Together AI and Mistral surface in /v1/models. Verified zero false
+    // positives on real chat models (sonar*, command-r*, Coder, codestral, …).
+    var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
+    var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
+    var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
+    // v3.63.76 — these are the DEFAULT 6 only, matching DEFAULT_AIS in app.js
+    // (chatgpt, claude, gemini, grok, perplexity, mistral). DeepSeek, Together,
+    // Cohere, Ollama, etc. are ADDITIONAL providers — added via Quick Add /
+    // custom AI, stored in hive.customAIConfigs with their own ids (e.g.
+    // cohere_1779690241686), and discovered by getProviderEntries from there.
+    // Previously this table also hardcoded deepseek/together/cohere as built-in,
+    // which collided with the user's additional configs and produced duplicate
+    // dropdown rows (one keyless built-in copy + one keyed additional copy) and
+    // a wrong cache-key read for the built-in copy. The app's canonical rule is
+    // isDefault = DEFAULT_AIS.has(id); defaults cache by provider, additionals
+    // cache by id (app.js ~1048). The dump tool now mirrors that exactly.
+    var BUILT_IN_MODEL_PROVIDERS = {
+      claude:     { label: 'Anthropic (Claude)', endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev', format: 'anthropic' },
+      chatgpt:    { label: 'OpenAI (ChatGPT)', endpoint: 'https://api.openai.com/v1/chat/completions', format: 'openai' },
+      gemini:     { label: 'Google (Gemini)', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', format: 'google' },
+      grok:       { label: 'xAI (Grok)', endpoint: 'https://api.x.ai/v1/chat/completions', format: 'openai' },
+      perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
+      mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' }
+    };
+    var PERPLEXITY_SONAR_MODELS = ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'];
+    var _lastCachedDump = null;
+    var _lastLiveDump = null;
+    var _lastAllDump = null;
+
+    function safeJsonParse(str, fallback) {
+      try { return JSON.parse(str); } catch (e) { return fallback; }
+    }
+
+    function readHiveRaw() {
+      try {
+        var key = (typeof LS_HIVE === 'string') ? LS_HIVE : 'waxframe_v2_hive';
+        return safeJsonParse(localStorage.getItem(key) || '{}', {});
+      } catch (e) { return {}; }
+    }
+
+    function filterModelForProvider(provider, id) {
+      if (!id || STRUCTURAL_NON_CHAT_RE.test(id)) return false;
+      if (provider === 'chatgpt' && (CHATGPT_RESPONSES_ONLY_RE.test(id) || DATED_SNAPSHOT_RE.test(id))) return false;
+      if (provider === 'perplexity' && !/^sonar/i.test(id)) return false;
+      return true;
+    }
+
+    function normalizePerplexityModels(models) {
+      var list = dedup((models || [])
+        .map(function (id) { return String(id || '').replace(/^perplexity\//i, ''); })
+        .filter(function (id) { return filterModelForProvider('perplexity', id); }));
+      if (list.length === 1 && list[0] === 'sonar') {
+        return {
+          models: PERPLEXITY_SONAR_MODELS.slice(),
+          modelsSource: 'documented-sonar-fallback',
+          sourceDetail: 'Raw Perplexity /v1/models returned only base Sonar; expanded using Perplexity Sonar API documented model enum.',
+          rawLiveModels: dedup(models || [])
+        };
+      }
+      return { models: list, modelsSource: 'live', rawLiveModels: dedup(models || []) };
+    }
+
+    function dedup(arr) {
+      var out = [], seen = {};
+      (arr || []).forEach(function (id) {
+        id = String(id || '').trim();
+        if (id && !seen[id]) { seen[id] = true; out.push(id); }
+      });
+      return out;
+    }
+
+    function getProviderEntries() {
+      var hive = readHiveRaw();
+      var entries = [];
+      var seen = {};
+      // v3.63.76 — provider list reflects the app's real architecture:
+      //   • the DEFAULT 6 (BUILT_IN_MODEL_PROVIDERS) — cached by provider id
+      //   • ADDITIONAL providers (hive.customAIConfigs) — DeepSeek, Together,
+      //     Cohere, Ollama, etc., each with its own id (e.g. cohere_1779…) and
+      //     its own key — cached by that id (mirrors app.js ~1048).
+      // No more hardcoded 9-provider table colliding with the user's additionals,
+      // so the duplicate "(no key saved)" rows are gone at the source.
+      function keyFor(id) { return (hive.keys && hive.keys[id]) || ''; }
+      function add(id, label, cfg) {
+        if (!id || seen[id]) return;
+        seen[id] = true;
+        cfg = cfg || {};
+        entries.push({
+          id: id,
+          aiId: id,
+          label: label || cfg.label || id,
+          endpoint: cfg.endpoint || '',
+          modelsEndpoint: cfg._modelsEndpoint || cfg.modelsEndpoint || '',
+          format: cfg.format || 'openai',
+          key: keyFor(id)
+        });
+      }
+      // 1) the default 6
+      Object.keys(BUILT_IN_MODEL_PROVIDERS).forEach(function (id) {
+        add(id, BUILT_IN_MODEL_PROVIDERS[id].label, BUILT_IN_MODEL_PROVIDERS[id]);
+      });
+      // 2) additionals (custom configs) — keyed by their own id
+      var customs = hive.customAIConfigs || {};
+      Object.keys(customs).forEach(function (id) {
+        add(id, customs[id].label || id, customs[id]);
+      });
+      return entries.sort(function (a, b) { return a.label.localeCompare(b.label); });
+    }
+
+    function readModelCache(cacheId) {
+      var out = { cacheKey: MODEL_CACHE_PREFIX + cacheId, ts: null, models: [], raw: null, error: '' };
+      try {
+        out.raw = localStorage.getItem(out.cacheKey);
+        var parsed = safeJsonParse(out.raw || 'null', null);
+        if (Array.isArray(parsed)) out.models = dedup(parsed);
+        else if (parsed && Array.isArray(parsed.models)) {
+          out.ts = parsed.ts || null;
+          out.models = dedup(parsed.models);
+        }
+      } catch (e) { out.error = e && e.message ? e.message : String(e); }
+      return out;
+    }
+
+    function readAllModelCaches() {
+      var caches = {};
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var key = localStorage.key(i);
+          if (!key || key.indexOf(MODEL_CACHE_PREFIX) !== 0) continue;
+          var id = key.slice(MODEL_CACHE_PREFIX.length);
+          var cache = readModelCache(id);
+          caches[id] = { ts: cache.ts, count: cache.models.length, models: cache.models };
+        }
+      } catch (e) {
+        caches._error = e && e.message ? e.message : String(e);
+      }
+      return caches;
+    }
+
+    function formatList(models) {
+      if (!models || !models.length) return '(none)';
+      return models.map(function (id, i) { return String(i + 1).padStart(2, '0') + '. ' + id; }).join('\n');
+    }
+
+    function setDumpStatus(msg, cls) {
+      var el = document.getElementById('modelDumpStatus');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'status ' + (cls || '');
+    }
+
+    function setDumpPanel(kind, dump) {
+      var meta = document.getElementById(kind + 'DumpMeta');
+      var list = document.getElementById(kind + 'DumpList');
+      if (meta) {
+        var parts = [dump.models.length + ' model' + (dump.models.length === 1 ? '' : 's')];
+        if (dump.ts) parts.push(new Date(dump.ts).toLocaleString());
+        if (dump.elapsedMs) parts.push(dump.elapsedMs + ' ms');
+        if (dump.status) parts.push(dump.status);
+        if (dump.modelsSource === 'documented-sonar-fallback') parts.push('documented Sonar fallback');
+        else if (dump.modelsSource === 'live') parts.push('live provider list');
+        meta.textContent = parts.join(' · ');
+      }
+      if (list) list.textContent = dump.error ? ('ERROR: ' + dump.error) : formatList(dump.models);
+    }
+
+    function copyDump(dump, statusLabel) {
+      var text = JSON.stringify(dump || {}, null, 2);
+      try {
+        navigator.clipboard.writeText(text).then(function () {
+          setDumpStatus('✓ Copied ' + statusLabel + ' model dump JSON', 'ok');
+        }, function () {
+          setDumpStatus('⚠ Could not copy ' + statusLabel + ' dump — select the list manually', 'warn');
+        });
+      } catch (e) {
+        setDumpStatus('⚠ Could not copy ' + statusLabel + ' dump — select the list manually', 'warn');
+      }
+    }
+
+    function compareDumps(cachedModels, liveModels) {
+      var cached = {}, live = {}, onlyCached = [], onlyLive = [];
+      (cachedModels || []).forEach(function (id) { cached[id] = true; });
+      (liveModels || []).forEach(function (id) { live[id] = true; });
+      Object.keys(cached).forEach(function (id) { if (!live[id]) onlyCached.push(id); });
+      Object.keys(live).forEach(function (id) { if (!cached[id]) onlyLive.push(id); });
+      return { onlyCached: onlyCached, onlyLive: onlyLive, same: !onlyCached.length && !onlyLive.length };
+    }
+
+    function deriveModelsEndpoint(entry) {
+      if (entry.modelsEndpoint) return entry.modelsEndpoint;
+      if (entry.id === 'claude') return entry.endpoint.replace(/\/$/, '') + '/v1/models';
+      if (entry.id === 'gemini' || entry.format === 'google') return 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100';
+      if (/^(chatgpt|grok|deepseek|perplexity|mistral)$/i.test(entry.id)) return new URL(entry.endpoint).origin + '/v1/models';
+      var base = entry.endpoint.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+      var url = base + '/v1/models';
+      if (/api\.together\.xyz/i.test(url)) url += '?serverless=true';
+      return url;
+    }
+
+    function parseModelsResponse(provider, format, data) {
+      var models = [];
+      var rawLiveModels = [];
+      if (format === 'anthropic' || provider === 'claude') {
+        models = (data && data.data ? data.data : [])
+          .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); })
+          .map(function (m) { return m.id; });
+      } else if (format === 'google' || provider === 'gemini') {
+        models = (data && data.models ? data.models : [])
+          .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+          .map(function (m) { return String(m.name || '').replace('models/', ''); })
+          .sort().reverse();
+      } else {
+        // OpenAI-compatible shape: { data: [ { id, created, ... } ] }.
+        // Perplexity's current /v1/models response is the Agent API catalog and
+        // may only return `perplexity/sonar`. The Sonar chat-completion endpoint
+        // documents the broader usable enum, so if the live list collapses to
+        // only base Sonar, expand it to that documented Sonar model family.
+        var arr = Array.isArray(data) ? data : ((data && data.data) || []);
+        if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
+        if (provider !== 'perplexity') {
+          arr = arr.slice().sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
+        }
+        models = arr.map(function (m) {
+          var id = m.id || m.name || m.model;
+          return provider === 'perplexity' ? String(id || '').replace(/^perplexity\//i, '') : id;
+        });
+        rawLiveModels = arr.map(function (m) { return m.id || m.name || m.model; });
+        if (provider === 'perplexity') return normalizePerplexityModels(rawLiveModels);
+      }
+      return {
+        models: dedup(models).filter(function (id) { return filterModelForProvider(provider, id); }),
+        modelsSource: 'live',
+        rawLiveModels: dedup(rawLiveModels.length ? rawLiveModels : models)
+      };
+    }
+
+    async function fetchLiveModelsNoCache(entry) {
+      if (!entry || !entry.endpoint) throw new Error('No endpoint saved for this provider.');
+      var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
+      if (!entry.key && keyRequired) throw new Error('No API key saved for this provider in this browser.');
+      var endpoint = deriveModelsEndpoint(entry);
+      var headers = {};
+      if (entry.format === 'anthropic' || entry.id === 'claude') {
+        headers = { 'x-api-key': entry.key, 'anthropic-version': '2023-06-01' };
+      } else if (entry.format === 'google' || entry.id === 'gemini') {
+        headers = { 'x-goog-api-key': entry.key };
+      } else {
+        if (entry.key) headers = { 'Authorization': 'Bearer ' + entry.key };
+      }
+      var started = Date.now();
+      var resp = await fetch(endpoint, { headers: headers });
+      var elapsedMs = Date.now() - started;
+      var data = null;
+      try { data = await resp.json(); } catch (e) {}
+      if (!resp.ok) {
+        var msg = data && (data.error && (data.error.message || data.error)) || ('HTTP ' + resp.status);
+        throw new Error(String(msg));
+      }
+      var parsed = parseModelsResponse(entry.id, entry.format, data);
+      return {
+        provider: entry.id,
+        label: entry.label,
+        fetchedAt: Date.now(),
+        elapsedMs: elapsedMs,
+        status: 'HTTP ' + resp.status,
+        models: parsed.models,
+        modelsSource: parsed.modelsSource,
+        sourceDetail: parsed.sourceDetail,
+        rawLiveModels: parsed.rawLiveModels
+      };
+    }
+
+    function populateModelDumpProviders() {
+      var select = document.getElementById('modelDumpProvider');
+      if (!select) return;
+      var entries = getProviderEntries();
+      select.innerHTML = entries.map(function (entry) {
+        var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
+        return '<option value="' + entry.id.replace(/"/g, '&quot;') + '">' +
+               entry.label.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+               (entry.key || !keyRequired ? '' : ' (no key saved)') +
+               '</option>';
+      }).join('');
+      var hive = readHiveRaw();
+      var preferred = (hive.builder && (hive.builder.provider || hive.builder.id)) || (hive.activeAIs && hive.activeAIs[0] && hive.activeAIs[0].provider);
+      if (preferred) select.value = preferred;
+      if (!entries.length) setDumpStatus('No providers found in local storage.', 'warn');
+    }
+
+    var modelDumpBtn = document.getElementById('modelDumpBtn');
+    if (modelDumpBtn) modelDumpBtn.addEventListener('click', async function () {
+      var select = document.getElementById('modelDumpProvider');
+      var id = select && select.value;
+      var entry = getProviderEntries().filter(function (e) { return e.id === id; })[0];
+      if (!entry) { setDumpStatus('Pick a provider first.', 'warn'); return; }
+      modelDumpBtn.disabled = true;
+      setDumpStatus('Fetching live model list without touching the cache...', '');
+      var diffEl = document.getElementById('modelDumpDiff');
+      if (diffEl) { diffEl.className = 'dump-diff'; diffEl.textContent = ''; }
+      try {
+        var cache = readModelCache(entry.id);
+        _lastCachedDump = {
+          source: 'localStorage',
+          provider: entry.id,
+          label: entry.label,
+          cacheKey: cache.cacheKey,
+          ts: cache.ts,
+          models: cache.models,
+          error: cache.error
+        };
+        setDumpPanel('cached', _lastCachedDump);
+        try {
+          _lastLiveDump = await fetchLiveModelsNoCache(entry);
+        } catch (e) {
+          _lastLiveDump = {
+            source: 'live',
+            provider: entry.id,
+            label: entry.label,
+            fetchedAt: Date.now(),
+            models: [],
+            error: e && e.message ? e.message : String(e)
+          };
+        }
+        setDumpPanel('live', _lastLiveDump);
+        var cmp = compareDumps(_lastCachedDump.models, _lastLiveDump.models);
+        if (_lastLiveDump.error) {
+          setDumpStatus('⚠ Live fetch failed; cached list is still shown for inspection.', 'warn');
+        } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback' && cmp.same) {
+          setDumpStatus('⚠ Cached list matches the documented Sonar fallback. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
+        } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback') {
+          setDumpStatus('⚠ Cached list differs from the documented Sonar fallback. Only in cache: ' + (cmp.onlyA.join(', ') || 'none') + '. Only in fallback: ' + (cmp.onlyB.join(', ') || 'none') + '. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
+        } else if (cmp.same) {
+          setDumpStatus('✓ Cached and live model lists match.', 'ok');
+        } else {
+          setDumpStatus('⚠ Cached and live model lists differ.', 'warn');
+          if (diffEl) {
+            diffEl.className = 'dump-diff show';
+            diffEl.textContent = 'Only cached: ' + cmp.onlyCached.length + ' · only live: ' + cmp.onlyLive.length;
+          }
+        }
+      } finally {
+        modelDumpBtn.disabled = false;
+      }
+    });
+
+    var copyCachedDump = document.getElementById('copyCachedDump');
+    if (copyCachedDump) copyCachedDump.addEventListener('click', function () { copyDump(_lastCachedDump, 'cached'); });
+    var copyLiveDump = document.getElementById('copyLiveDump');
+    if (copyLiveDump) copyLiveDump.addEventListener('click', function () { copyDump(_lastLiveDump, 'live'); });
+
+    // v3.63.75 — Dump ALL providers: live-fetch every provider that has a saved
+    // key (and any keyless provider with a public models endpoint) into one
+    // combined JSON, copied to the clipboard. Same no-cache-write guarantee as
+    // the single dump. Sequential to stay gentle on rate limits.
+    var modelDumpAllBtn = document.getElementById('modelDumpAllBtn');
+    if (modelDumpAllBtn) modelDumpAllBtn.addEventListener('click', async function () {
+      var entries = getProviderEntries();
+      // Eligible = has a key, OR has a public models endpoint that needs none.
+      var eligible = entries.filter(function (e) {
+        var keyRequired = !e.modelsEndpoint || e.format === 'anthropic' || e.format === 'google' || e.id === 'claude' || e.id === 'gemini';
+        return e.key || !keyRequired;
+      });
+      if (!eligible.length) { setDumpStatus('No providers with a saved key (or keyless model endpoint) to dump.', 'warn'); return; }
+      modelDumpAllBtn.disabled = true;
+      var combined = {
+        kind: 'waxframe-all-provider-models',
+        generatedAt: new Date().toISOString(),
+        appVersion: (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+        providerCount: eligible.length,
+        providers: {}
+      };
+      var okN = 0, failN = 0;
+      for (var i = 0; i < eligible.length; i++) {
+        var e = eligible[i];
+        setDumpStatus('Dumping ALL — ' + (i + 1) + ' of ' + eligible.length + ': ' + e.label + '…', '');
+        try {
+          var live = await fetchLiveModelsNoCache(e);
+          combined.providers[e.id] = {
+            label: e.label, status: live.status, elapsedMs: live.elapsedMs,
+            modelsSource: live.modelsSource,
+            sourceDetail: live.sourceDetail,
+            rawLiveModels: live.rawLiveModels,
+            count: live.models.length, models: live.models
+          };
+          okN++;
+        } catch (err) {
+          combined.providers[e.id] = {
+            label: e.label, error: (err && err.message) ? err.message : String(err),
+            models: []
+          };
+          failN++;
+        }
+      }
+      _lastAllDump = combined;
+      var text = JSON.stringify(combined, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        setDumpStatus('✓ Dumped ALL — ' + okN + ' ok, ' + failN + ' failed · combined JSON copied to clipboard.', failN ? 'warn' : 'ok');
+      } catch (e2) {
+        // Clipboard blocked — surface the JSON in the live panel so it's selectable.
+        setDumpPanel('live', { source: 'all-providers', models: [], note: 'clipboard blocked — JSON below' });
+        var liveList = document.getElementById('liveDumpList');
+        if (liveList) liveList.textContent = text;
+        setDumpStatus('⚠ Dumped ALL — ' + okN + ' ok, ' + failN + ' failed · clipboard blocked, JSON shown in Live panel (select + copy).', 'warn');
+      }
+      modelDumpAllBtn.disabled = false;
+    });
+
+    populateModelDumpProviders();
+
+    // ── diagnostic bundle (reuses storage.js redaction; own assembly) ──
+    var bundleBtn = document.getElementById('bundleBtn');
+    var bundleStatus = document.getElementById('bundleStatus');
+
+    function setBundleStatus(msg, cls) {
+      if (!bundleStatus) return;
+      bundleStatus.textContent = msg;
+      bundleStatus.className = 'status ' + (cls || '');
+    }
+
+    // Feature-detect the storage layer. If storage.js didn't load, degrade.
+    var storageReady = (typeof idbGet === 'function') &&
+                       (typeof _redactHiveKeys === 'function') &&
+                       (typeof _redactSessionContent === 'function') &&
+                       (typeof LS_HIVE === 'string') && (typeof LS_PROJECT === 'string');
+
+    if (!storageReady && bundleBtn) {
+      bundleBtn.disabled = true;
+      setBundleStatus('Bundle generator needs storage.js, which didn\u2019t load. Use the in-app Diagnostic button if you can reach the app, or copy the environment above into your issue.', 'warn');
+    }
+
+    function redactProjectContent(projectStr) {
+      // Mirrors the in-app LS_PROJECT content redaction: mask document/reference
+      // text, keep setup fields. (Credentials don't live in LS_PROJECT.)
+      try {
+        var p = JSON.parse(projectStr);
+        var mark = function (str) {
+          return (typeof str === 'string') ? ('[REDACTED — ' + str.length.toLocaleString() + ' chars]') : str;
+        };
+        if (typeof p.pastedDocument === 'string') p.pastedDocument = mark(p.pastedDocument);
+        if (Array.isArray(p.referenceDocs)) {
+          p.referenceDocs = p.referenceDocs.map(function (d) {
+            var c = Object.assign({}, d);
+            if (typeof c.text === 'string') c.text = mark(c.text);
+            if (typeof c.content === 'string') c.content = mark(c.content);
+            return c;
+          });
+        }
+        return JSON.stringify(p);
+      } catch (e) {
+        return '[REDACTED — project blob unparseable]';
+      }
+    }
+
+    if (bundleBtn && storageReady) bundleBtn.addEventListener('click', async function () {
+      bundleBtn.disabled = true;
+      setBundleStatus('Building…', '');
+      try {
+        var includeContent = !!document.getElementById('includeContent').checked;
+        var redactContent = !includeContent;
+
+        var hiveRaw = null, projectRaw = null, sessionIDB = null;
+        try { hiveRaw = localStorage.getItem(LS_HIVE); } catch (e) {}
+        try { projectRaw = localStorage.getItem(LS_PROJECT); } catch (e) {}
+        try { sessionIDB = await idbGet(); } catch (e) {}
+
+        if (!hiveRaw && !projectRaw && !sessionIDB) {
+          setBundleStatus('Nothing to export — no WaxFrame data found in this browser.', 'warn');
+          bundleBtn.disabled = false;
+          return;
+        }
+
+        // Always strip credentials from the hive.
+        var hiveOut = _redactHiveKeys(hiveRaw);
+        // Content redaction (default ON for the public-issue path).
+        var sessionOut = (redactContent && sessionIDB) ? _redactSessionContent(sessionIDB) : sessionIDB;
+        var projectOut = (redactContent && projectRaw) ? redactProjectContent(projectRaw) : projectRaw;
+
+        var bundle = {
+          _waxframe_diagnostic: true,
+          _waxframe_diagnostic_version: 1,
+          _waxframe_diagnostic_source: 'techsupport-page',
+          _waxframe_app_version: APP_VER,
+          _waxframe_build: APP_BLD,
+          _waxframe_diagnostic_ts: Date.now(),
+          _waxframe_content_redacted: redactContent,
+          LS_HIVE: hiveOut,
+          LS_PROJECT: projectOut,
+          IDB_SESSION: sessionOut,
+          MODEL_CACHES: readAllModelCaches()
+        };
+
+        var projName = 'session';
+        try { var pj = JSON.parse(projectRaw || '{}'); if (pj.projectName) projName = pj.projectName; } catch (e) {}
+        var safeName = projName.replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'session';
+        var d = new Date(), pad = function (n) { return String(n).padStart(2, '0'); };
+        var stamp = '' + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+        var filename = safeName + '-' + stamp + '-Diagnostic-Safe.json';
+
+        var blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a');
+        a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(function () { URL.revokeObjectURL(url); }, 30000);
+
+        setBundleStatus('✓ Downloaded ' + filename + ' — keys removed' + (redactContent ? ', content redacted' : '') + '. Now drag it into your GitHub issue.', 'ok');
+      } catch (e) {
+        setBundleStatus('⚠ Could not build the bundle: ' + (e && e.message ? e.message : e), 'err');
+      } finally {
+        bundleBtn.disabled = false;
+      }
+    });
+
+  })();
+  </script>
+</body>
+</html>

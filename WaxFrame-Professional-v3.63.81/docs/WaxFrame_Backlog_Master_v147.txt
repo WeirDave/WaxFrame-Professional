@@ -1,11 +1,11 @@
-WaxFrame Backlog Master v140
+WaxFrame Backlog Master v147
 2026-05-30
 
-State: v3.63.74 shipped — Help page now has a Dump Provider Models diagnostic that compares cached provider model lists against a fresh no-write live fetch, supports copy-as-JSON for cached/live lists, handles imported model-server endpoints including no-key local/server setups, and appends cached model lists (names only, no keys) to Help-page diagnostic bundles. Today's ships: v3.63.65 (Gemini endpoint-sync + Amazon char-limit + star rating), v3.63.66 (Builder-screen model selector), v3.63.67 (Builder grid redesign — superseded), v3.63.68 (Roster+Spotlight), v3.63.69 (Builder Console), v3.63.70 (remove tiny selected-card bee), v3.63.71 (count-aware Builder roster tiles), v3.63.72 (three-column normal roster), v3.63.73 (Builder-only envelope softening), v3.63.74 (Dump Provider Models diagnostic). Next planned: filter-aware recommend warning. Then Hive Profiles. Pending on David: post-deploy gut-check browser walk; CodeQL/Dependabot triage (Security tab).
+State: v3.63.81 shipped — STRUCTURAL_NON_CHAT_RE extended to filter image/video/audio/TTS/OCR/embedding models (FLUX, Seedream/Seedance, Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic, Kokoro, Orpheus, Parakeet, HiDream, Ideogram, Juggernaut, DreamShaper, pixtral, voxtral, ocr, e5, generic -image/-i2v/-t2v/-r2v) that Together AI (~60) and Mistral (pixtral/voxtral/ocr) surface in /v1/models and that hard-fail if picked as Builder/Reviewer. Applied to BOTH js/api.js (real filter) and help.html (dump copy), byte-identical. Verified against full live Together (85→23 chat) + Mistral (51→40 chat) lists: pure-chat kept sets, ZERO false positives (sonar/command-r/Coder/codestral all survive). Prior today: v3.63.80 (dump Perplexity provenance labeling), v3.63.79 (Perplexity normalize-then-filter + Sonar-family expansion — fixes the filter-before-normalize bug), v3.63.78 (dump fallback parity), v3.63.77 (Mistral/Perplexity type-filter), v3.63.76 (dump architecture), v3.63.74 (Dump Provider Models), v3.63.73 (envelope softening).
 
 Next Up
 
-- v3.63.69 candidate cluster (carried from prior plan; v3.63.65–68 and v3.63.73–74 shipped):
+- v3.63.76+ candidate cluster (carried; the v3.63.73 envelope softening and v3.63.74 model-dump both shipped):
 
   (1) SHIPPED v3.63.74 — Dump Provider Models diagnostic. Troubleshooting page (`help.html`) now has a "Dump Provider Models" section. Pick a provider, compare CACHED (`waxframe_models_{provider}` localStorage) vs LIVE (fresh fetch from the provider's models endpoint, bypassing and not writing the cache), copy either side as JSON, and see a diff indicator when cached/live disagree. Help-page diagnostic bundles also include all cached model lists automatically (model names only, no keys). Supports imported model-server endpoints, including no-key local/server setups.
 
