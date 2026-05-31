@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260530-024
+// Build: 20260530-025
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -314,83 +314,20 @@ Object.keys(API_CONFIGS).forEach(p => {
 // safety net for provider model lists when /v1/models fetch fails.
 
 // Static fallback model lists per provider — used when dynamic fetch fails or is offline
-window.MODEL_FALLBACKS = {
-  chatgpt:    ['gpt-4.1', 'gpt-4.1-mini', 'gpt-5.4', 'gpt-5.4-mini'],
-  claude:     ['claude-sonnet-4-6', 'claude-opus-4-6', 'claude-haiku-4-5'],
-  gemini:     ['gemini-2.5-flash', 'gemini-2.5-pro'],
-  grok:       ['grok-4-fast-non-reasoning', 'grok-4-fast-reasoning', 'grok-4', 'grok-4.20-0309-non-reasoning', 'grok-4.20-0309-reasoning', 'grok-3', 'grok-3-mini'],
-  deepseek:   ['deepseek-chat'],
-  mistral:    ['mistral-large-latest', 'mistral-small-latest', 'ministral-8b-latest'],
-  together:   ['meta-llama/Llama-3.3-70B-Instruct-Turbo', 'Qwen/Qwen2.5-72B-Instruct-Turbo', 'mistralai/Mixtral-8x7B-Instruct-v0.1'],
-  cohere:     ['command-r-plus', 'command-r', 'command-a-03-2025'],
-  perplexity: ['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro'],
-};
-
-// v3.26.4: shared structural filter — only blocks models whose API contract
-// fundamentally differs from chat-completion (different request shape,
-// different response shape, requires special tooling). Stops there.
-//
-// Per-provider naming heuristics removed. We can't keep regex patterns
-// current with 6 providers' release cadences, and AIs make better
-// decisions from a full live list than from our pruned subset.
-//
-// "nano-banana" is Google's image-gen model — no naming pattern catches it,
-// but the AI knows what it is and won't recommend it. Trust the AI.
-//
-// v3.63.81 — Together AI's /v1/models surfaces ~60 image/video/audio/TTS models
-// (FLUX, Seedream/Seedance, Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic,
-// Kokoro, Orpheus, Parakeet, HiDream, Ideogram, Juggernaut, DreamShaper, …) and
-// Mistral lists pixtral (image) / voxtral (audio) / OCR models. None are chat
-// and several would hard-fail as a Builder/Reviewer if picked. Added their
-// families plus generic markers (-image, image-, -i2v/-t2v/-r2v video tags,
-// e5- embeddings, ocr). Verified against the full Together (85) and Mistral (51)
-// live lists: pure-chat kept sets, zero false positives on every provider's
-// real chat models (incl. sonar*, command-r*, Coder, codestral/devstral).
-const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
-
-// v3.28.1 — ChatGPT-specific exclusions:
-// (a) -pro / -codex variants are Responses-API-only on OpenAI as of GPT-5.5 —
-//     they 404 on /v1/chat/completions with "This is not a chat model".
-//     WaxFrame doesn't speak the Responses API yet (queued for v3.29).
-// (b) Dated snapshots like gpt-5.5-2026-04-23 clutter the dropdown — the
-//     undated alias always points at the latest snapshot anyway.
-const CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
-const DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
-
-// MODEL_FILTERS — null means "this provider has no /v1/models endpoint, use
-// MODEL_FALLBACKS instead". Otherwise everyone shares the same structural
-// filter, plus per-provider extras.
-const MODEL_FILTERS = {
-  chatgpt:    id => !STRUCTURAL_NON_CHAT_RE.test(id) && !CHATGPT_RESPONSES_ONLY_RE.test(id) && !DATED_SNAPSHOT_RE.test(id),
-  claude:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
-  gemini:     id => !STRUCTURAL_NON_CHAT_RE.test(id),
-  grok:       id => !STRUCTURAL_NON_CHAT_RE.test(id),
-  deepseek:   id => !STRUCTURAL_NON_CHAT_RE.test(id),
-  // v3.56.48 — Perplexity's /v1/models is a gateway that also resells frontier
-  // models (anthropic/claude-*, gpt-5.x, gemini-3.x, grok-4.x, nvidia/*) plus
-  // pplx-embed-* embeddings. Those frontier models duplicate Worker Bees that
-  // already run directly (markup + an extra hop), and embeddings aren't chat.
-  // Perplexity's unique hive value is the Sonar line — real-time web-grounded
-  // review w/ citations — so whitelist ^sonar only. Was null (forced to
-  // MODEL_FALLBACKS); now goes live.
-  perplexity: id => !STRUCTURAL_NON_CHAT_RE.test(id) && /^sonar/i.test(id),
-};
-
-function normalizePerplexityModels(models) {
-  const list = [...new Set((models || [])
-    .map(id => String(id || '').replace(/^perplexity\//i, ''))
-    .filter(MODEL_FILTERS.perplexity))];
-  // Perplexity's current GET /v1/models is the Agent API catalog; it may return
-  // only `perplexity/sonar`, while the Sonar chat-completion endpoint documents
-  // the broader usable model enum. Keep the dump/recommend path useful by using
-  // that documented Sonar list when the live endpoint gives only the agent base.
-  if (list.length === 1 && list[0] === 'sonar') return MODEL_FALLBACKS.perplexity.slice();
-  return list;
-}
-
-// Custom AI Add flow uses the same structural filter — naming was previously
-// duplicated as NON_CHAT_RE, now an alias of STRUCTURAL_NON_CHAT_RE.
-const NON_CHAT_RE = STRUCTURAL_NON_CHAT_RE;
+// v3.63.82 — provider/model logic moved to the shared js/provider-models.js
+// module (loaded before api.js) so the main app and the standalone Help page
+// share ONE definition and can never drift. These bindings re-expose the shared
+// pieces under the names the rest of api.js / app.js already use.
+var WFPM = (typeof window !== 'undefined' && window.WFProviderModels) || {};
+window.MODEL_FALLBACKS        = WFPM.MODEL_FALLBACKS;
+const MODEL_FALLBACKS         = window.MODEL_FALLBACKS;
+const STRUCTURAL_NON_CHAT_RE  = WFPM.STRUCTURAL_NON_CHAT_RE;
+const CHATGPT_RESPONSES_ONLY_RE = WFPM.CHATGPT_RESPONSES_ONLY_RE;
+const DATED_SNAPSHOT_RE       = WFPM.DATED_SNAPSHOT_RE;
+const MODEL_FILTERS           = WFPM.MODEL_FILTERS;
+const normalizePerplexityModels = WFPM.normalizePerplexityModels;
+// Custom AI Add flow uses the same structural filter (was duplicated as NON_CHAT_RE).
+const NON_CHAT_RE             = STRUCTURAL_NON_CHAT_RE;
 
 // v3.63.31 — Runtime model quarantine (self-healing incapable-model filter).
 //
