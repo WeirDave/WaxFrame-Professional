@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.74
+**Build:** `20260530-017` · **Released:** May 30, 2026
+
+### Added — Dump Provider Models diagnostic
+
+The Help page now includes a support-focused model-list dump tool for the "is this model real, stale, or hallucinated?" debugging loop.
+
+- **Cached vs live comparison** — pick a provider and compare `waxframe_models_{provider}` against a fresh provider model fetch.
+- **No cache mutation** — the live fetch deliberately bypasses the cached list and does not write back to localStorage.
+- **Copyable evidence** — cached and live results each have a copy-as-JSON button for bug reports or support triage.
+- **Server imports supported** — imported model servers with explicit model endpoints can be dumped too, including no-key local/server setups.
+- **Better diagnostic bundles** — Help-page diagnostic bundles now include all cached model lists by model name only, with API keys still stripped.
+
+### Files Changed
+
+- Updated: `help.html` (Dump Provider Models card, no-write live fetch, model cache bundle attachment), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v140.txt`
+- Version/build stamps to `v3.63.74 Pro` / `20260530-017` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.73
 **Build:** `20260530-016` · **Released:** May 30, 2026
 
