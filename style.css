@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260531-034
+   Build: 20260531-035
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7677,15 +7677,18 @@ kbd {
   flex-shrink: 0;
   white-space: nowrap;
 }
-/* v3.63.90 — Shared danger-button styling. Same pattern as
-   .license-modal-btn-danger: transparent with red border, fill + glow on
-   hover. Used by the Settings → Storage wipe buttons (settings-reset-btn
-   also applies for layout). help.html has its own inline copy of these
-   rules since that page doesn't load style.css. */
+/* v3.63.92 — Shared danger-button styling. Dashed red border + light red
+   tinted background + red text so the button is clearly visible at rest
+   on any panel background (the prior transparent + near-white text pattern
+   was invisible against the light Settings card). Hover fills solid red
+   with white text and a glow. Used by Settings → Storage wipe buttons
+   (settings-reset-btn also applies for layout). help.html keeps its own
+   inline copy of these rules since that page doesn't load style.css —
+   adjusted there for its dark amber background. */
 .btn-danger {
-  background: transparent;
-  border: 1px solid #c0152a;
-  color: #e8ecf4;
+  background: rgba(192, 21, 42, 0.10);
+  border: 1px dashed #c0152a;
+  color: #c0152a;
 }
 .btn-danger:hover {
   background: #c0152a;

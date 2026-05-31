@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.92
+**Build:** `20260531-035` · **Released:** May 31, 2026
+
+### Fix — Settings → Storage wipe buttons invisible at rest
+
+The four Wipe buttons in **Settings → Storage** (`🗂 Wipe localStorage`, `📜 Wipe IndexedDB`, `⏱ Wipe sessionStorage`, `🧹 Wipe EVERYTHING`) were rendering near-invisible — only a faint red 1px outline visible until hover. Root cause: `.btn-danger` was set to `background: transparent` + `color: #e8ecf4` (near-white text). On the light Settings card that's white-on-white. The intent was "transparent ghost button, fills red on hover" — borrowed from the `.license-modal-btn-danger` pattern — but `license-modal-btn-danger` lives inside a *dark* modal where the light text reads fine. The Settings card is a different surface.
+
+Rewrote `.btn-danger` to be visible at rest: **dashed red border** (`1px dashed #c0152a`), **light red tinted background** (`rgba(192, 21, 42, 0.10)`), **dark red text** (`#c0152a`). Hover still fills solid red with white text + glow — unchanged. The dashed border signals "destructive, handle with care" without needing hover discovery.
+
+Same fix mirrored into `help.html`'s inline copy of the rule (help is a break-glass page with all CSS inline, no external dependency), tuned for that page's dark navy background: lighter red text (`#ff5566`) on a slightly stronger red tint (`0.15`), same dashed red border, same hover behavior. The comment in both files now flags the intentional divergence between the two surfaces.
+
+### Files Changed
+
+- Updated: `style.css` (`.btn-danger` rule rewritten for visibility on light surface), `help.html` (inline `.btn-danger` rule mirrored with dark-bg-tuned text color)
+- Version/build stamps to `v3.63.92 Pro` / `20260531-035` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.91
 **Build:** `20260531-034` · **Released:** May 31, 2026
 
