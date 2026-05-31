@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260531-033
+  Build: 20260531-034
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260531-033">
+  <meta name="waxframe-build" content="20260531-034">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -312,20 +312,20 @@
     <section>
       <h2>🧹 Wipe local data</h2>
       <p class="sub">An escape hatch — for users uninstalling, or for fixing a wedged state from accumulated stale data.</p>
-      <p>WaxFrame stores everything locally in your browser across three storage layers. <b>Nothing leaves your machine.</b> Each button below targets one layer; the last wipes everything. After any wipe the page reloads so the app starts fresh.</p>
+      <p>WaxFrame stores everything locally in your browser across three storage layers. <b>Nothing leaves your machine.</b> The buttons below are stacked in storage-layer order — the first three each wipe one layer, and the last wipes everything. After any wipe the page reloads so the app starts fresh.</p>
       <p><b>What each layer holds:</b></p>
       <ul class="fixes">
         <li><b>localStorage</b> — your AI list, API keys, custom-AI configs, project fields, license, Auto-mode settings, recommendation caches, model caches, UI prefs (collapsed/expanded rows, etc.).</li>
         <li><b>IndexedDB</b> — your session data: round history, working document text, console history, conflict ledger snapshots. This is where the document and rounds you can see right now actually live (localStorage has a 5MB cap, IndexedDB is much larger).</li>
-        <li><b>sessionStorage</b> — currently unused by WaxFrame; cleared defensively in case a future feature adds ephemeral state here.</li>
+        <li><b>sessionStorage</b> — per-tab storage the browser clears automatically when you close the tab. WaxFrame doesn't currently use it — this button is here as a thorough cleanup in case a future feature does.</li>
       </ul>
       <p><b>What this does NOT touch:</b> any data on the AI provider's servers (your API account, your keys, your usage history). To revoke an API key, do that in the provider's console (<a href="api-details.html">API Key Guide</a>).</p>
       <p><b>Wipes are irreversible from inside the app.</b> If you have a hive or project worth keeping, export it first (Settings → Backup) before wiping.</p>
-      <div class="links" style="flex-wrap:wrap;gap:8px;">
-        <button id="wipeLocalStorageBtn" type="button" class="btn-danger">🗂 Wipe localStorage (hive, keys, settings)</button>
-        <button id="wipeIndexedDBBtn"    type="button" class="btn-danger">📜 Wipe IndexedDB (session, rounds, document)</button>
-        <button id="wipeSessionStorageBtn" type="button" class="btn-danger">⏱ Wipe sessionStorage (ephemeral)</button>
-        <button id="wipeAllStorageBtn"   type="button" class="btn-danger">🧹 Wipe EVERYTHING (full reset)</button>
+      <div class="links" style="flex-direction:column;align-items:stretch;gap:10px;max-width:560px;">
+        <button id="wipeLocalStorageBtn"   type="button" class="btn-danger">🗂 Wipe localStorage (hive, keys, settings)</button>
+        <button id="wipeIndexedDBBtn"      type="button" class="btn-danger">📜 Wipe IndexedDB (session, rounds, document)</button>
+        <button id="wipeSessionStorageBtn" type="button" class="btn-danger">⏱ Wipe sessionStorage (per-tab, usually empty)</button>
+        <button id="wipeAllStorageBtn"     type="button" class="btn-danger">🧹 Wipe EVERYTHING (full reset)</button>
       </div>
       <p id="wipeStatus" class="sub" style="display:none;margin-top:8px;"></p>
     </section>
@@ -344,9 +344,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.90"></script>
-  <script src="js/storage.js?v=3.63.90"></script>
-  <script src="js/provider-models.js?v=3.63.90"></script>
+  <script src="js/version.js?v=3.63.91"></script>
+  <script src="js/storage.js?v=3.63.91"></script>
+  <script src="js/provider-models.js?v=3.63.91"></script>
   <script>
   (function () {
     'use strict';
@@ -969,7 +969,7 @@
     }
     wireWipeButton('wipeLocalStorageBtn',   '🗂 Wipe localStorage (hive, keys, settings)',         '⚠ Click again within 5s to confirm localStorage wipe',   window.wipeLocalStorage,   'localStorage');
     wireWipeButton('wipeIndexedDBBtn',      '📜 Wipe IndexedDB (session, rounds, document)',       '⚠ Click again within 5s to confirm IndexedDB wipe',      window.wipeIndexedDB,      'IndexedDB');
-    wireWipeButton('wipeSessionStorageBtn', '⏱ Wipe sessionStorage (ephemeral)',                   '⚠ Click again within 5s to confirm sessionStorage wipe', window.wipeSessionStorage, 'sessionStorage');
+    wireWipeButton('wipeSessionStorageBtn', '⏱ Wipe sessionStorage (per-tab, usually empty)',      '⚠ Click again within 5s to confirm sessionStorage wipe', window.wipeSessionStorage, 'sessionStorage');
     wireWipeButton('wipeAllStorageBtn',     '🧹 Wipe EVERYTHING (full reset)',                     '⚠ Click again within 5s to confirm FULL WIPE',           window.wipeAllStorage,     'all storage');
 
   })();
