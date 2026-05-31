@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-032
+// Build: 20260531-033
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-032';         // build stamp — update each session
+const BUILD       = '20260531-033';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -705,6 +705,72 @@ function closeSettings() {
 // Populate the Backup Builder dropdown from the live hive and sync every
 // control to its stored value. Called from goToScreen when entering the
 // Settings screen, so it always reflects the current hive + saved prefs.
+// v3.63.90 — Settings Storage section: four wipe buttons (localStorage,
+// IndexedDB, sessionStorage, all) that call the shared wipe functions in
+// storage.js. Each button uses the same two-click confirm pattern help.html
+// uses. Idempotent — guards via dataset.wired so re-opening Settings doesn't
+// stack listeners. The status line is shown inline below the four rows.
+function wireSettingsWipeButtons() {
+  const statusRow = document.getElementById('setWipeStatusRow');
+  const statusEl  = document.getElementById('setWipeStatus');
+  function setStatus(msg, cls) {
+    if (!statusEl || !statusRow) return;
+    statusEl.textContent = msg;
+    statusRow.style.display = msg ? '' : 'none';
+    statusEl.style.color = cls === 'warn' ? '#c5832a' : cls === 'err' ? '#b94a3a' : cls === 'ok' ? '#3a7a4a' : '';
+  }
+  function wire(btnId, origLabel, armedLabel, wipeFn, layerName) {
+    const btn = document.getElementById(btnId);
+    if (!btn || btn.dataset.wired === '1') return;
+    btn.dataset.wired = '1';
+    let armTimer = null;
+    btn.addEventListener('click', async () => {
+      if (btn.dataset.armed !== '1') {
+        btn.dataset.armed = '1';
+        btn.textContent = armedLabel;
+        setStatus(`Click "${origLabel}" again within 5 seconds to wipe ${layerName}.`, 'warn');
+        armTimer = setTimeout(() => {
+          btn.dataset.armed = '0';
+          btn.textContent = origLabel;
+          setStatus('Cancelled — no data was removed.', '');
+        }, 5000);
+        return;
+      }
+      clearTimeout(armTimer);
+      btn.disabled = true;
+      try {
+        const result = await wipeFn();
+        if (result && typeof result.totalRemoved === 'number') {
+          const bits = [];
+          if (result.localStorage)   bits.push(`localStorage: ${result.localStorage.removed || 0}`);
+          if (result.indexedDB)      bits.push(`IndexedDB: ${result.indexedDB.removed ? 'cleared' : 'failed'}`);
+          if (result.sessionStorage) bits.push(`sessionStorage: ${result.sessionStorage.removed || 0}`);
+          setStatus(`✓ Wiped everything (${bits.join(' · ')}). Reloading in 2 seconds…`, 'ok');
+        } else if (result && result.error) {
+          btn.disabled = false;
+          btn.dataset.armed = '0';
+          btn.textContent = origLabel;
+          setStatus(`⚠ Wipe failed: ${result.error}`, 'err');
+          return;
+        } else {
+          const n = result.removed || 0;
+          setStatus(`✓ Cleared ${layerName} (${n} entr${n === 1 ? 'y' : 'ies'}). Reloading in 2 seconds…`, 'ok');
+        }
+        setTimeout(() => { window.location.href = 'index.html'; }, 2000);
+      } catch (e) {
+        btn.disabled = false;
+        btn.dataset.armed = '0';
+        btn.textContent = origLabel;
+        setStatus(`⚠ Wipe failed: ${e && e.message ? e.message : e}`, 'err');
+      }
+    });
+  }
+  wire('setWipeLocalStorageBtn',   '🗂 Wipe localStorage',   '⚠ Click again within 5s to confirm', window.wipeLocalStorage,   'localStorage');
+  wire('setWipeIndexedDBBtn',      '📜 Wipe IndexedDB',      '⚠ Click again within 5s to confirm', window.wipeIndexedDB,      'IndexedDB');
+  wire('setWipeSessionStorageBtn', '⏱ Wipe sessionStorage',  '⚠ Click again within 5s to confirm', window.wipeSessionStorage, 'sessionStorage');
+  wire('setWipeAllStorageBtn',     '🧹 Wipe EVERYTHING',     '⚠ Click again within 5s to confirm FULL WIPE', window.wipeAllStorage, 'all storage');
+}
+
 function renderSettings() {
   // Backup Builder dropdown — list every configured AI except the current
   // Builder (a backup that IS the builder is meaningless). Falls back to the
@@ -720,6 +786,11 @@ function renderSettings() {
     sel.value = eligible.some(a => a.id === saved) ? saved : '';
     if (sel.value !== saved) localStorage.setItem(AUTO_SETTINGS.backupBuilder.key, sel.value);
   }
+  // v3.63.90 — wire the Storage wipe buttons. Idempotent; guards against
+  // double-binding when Settings is re-opened. Same shared wipe functions
+  // help.html uses (window.wipeLocalStorage etc.), so behavior is identical
+  // across both surfaces.
+  wireSettingsWipeButtons();
   const toggle = document.getElementById('setAutoNeverDisableBuilder');
   if (toggle) toggle.checked = getAutoNeverDisableBuilder();
   const streak = document.getElementById('setAutoStreakLimit');
