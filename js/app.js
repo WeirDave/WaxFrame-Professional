@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-013
+// Build: 20260530-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-013';         // build stamp — update each session
+const BUILD       = '20260530-014';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4798,6 +4798,13 @@ function renderBuilderPicker() {
   // v3.63.69 — Builder Console layout. The selected Builder is now the primary
   // control surface beside the roster, so the chips stay compact while the
   // chosen AI and model picker remain visually anchored.
+  const builderCountClass = activeAIs.length <= 3 ? 'builder-count-small'
+    : activeAIs.length <= 6 ? 'builder-count-medium'
+    : activeAIs.length <= 9 ? 'builder-count-normal'
+    : activeAIs.length <= 12 ? 'builder-count-dozen'
+    : 'builder-count-many';
+  grid.className = `builder-pick-grid-large ${builderCountClass}`;
+
   grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
     const iconEl = resolveAiIcon(ai, 'builder-chip-icon', 28);
     const isSel = builder === ai.id;

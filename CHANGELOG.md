@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.71
+**Build:** `20260530-014` · **Released:** May 30, 2026
+
+### Changed — Available Builder roster now scales by hive size
+
+Setup Step 2 keeps the same overall Builder Console shell from v3.63.69/70, but the Available Builders area now uses count-aware responsive tiles instead of one fixed chip treatment.
+
+- **Default hives look richer** — 6-9 AIs now get roomier roster tiles with larger icons, making better use of the available panel space on desktop without changing the setup card width.
+- **Small hives avoid looking sparse** — 1-3 Builders expand into larger tiles so the roster does not feel underbuilt.
+- **Larger hives stay tidy** — 10-12 Builders tighten automatically, while 13+ switches to a compact mode for model-server clutter.
+- **Long names remain controlled** — roster labels clamp to two lines for normal modes and fall back to single-line ellipsis in compact many-AI mode.
+
+The page frame, setup card max-width, selected Builder column, footer, and Working Document 80ch column are untouched.
+
+### Files Changed
+
+- Updated: `js/app.js` (adds Builder roster count classes), `style.css` (count-aware responsive Builder roster grid), `CHANGELOG.md`
+- Version/build stamps to `v3.63.71 Pro` / `20260530-014` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.70
 **Build:** `20260530-013` · **Released:** May 30, 2026
 
