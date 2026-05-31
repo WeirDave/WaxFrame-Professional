@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260531-032
+// Build: 20260531-033
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -118,6 +118,88 @@ async function idbClear() {
     tx.onerror    = e => reject(e.target.error);
   });
 }
+
+// ── STORAGE WIPE HELPERS ──
+// v3.63.90 — Granular storage-wipe functions exposed via the Help page and
+// Settings. Each function targets ONE storage layer and reports a count so
+// callers can show "✓ Removed N entries" feedback. wipeAllStorage runs all
+// three. All functions are no-throw: they return {removed, error?} instead
+// of bubbling exceptions, so a partial failure (e.g. IDB locked by another
+// tab) still surfaces useful info to the user.
+//
+// What each layer holds in WaxFrame:
+//   localStorage   → hive (AI list + API keys + custom configs), project
+//                    fields, license, Auto-mode settings, recommendation
+//                    caches, model caches, UI prefs (expanded rows, etc.)
+//   IndexedDB      → session/round data: history, working document text,
+//                    console HTML, conflict ledger snapshots. Stored under
+//                    waxframe_v2_db / session / current. Bigger than
+//                    localStorage's 5MB cap — that's why rounds live here.
+//   sessionStorage → currently unused by WaxFrame. Cleared defensively in
+//                    case a future feature adds ephemeral state here.
+async function wipeLocalStorage() {
+  try {
+    const keys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.indexOf('waxframe_') === 0) keys.push(k);
+    }
+    for (const k of keys) localStorage.removeItem(k);
+    return { removed: keys.length };
+  } catch (e) {
+    return { removed: 0, error: e && e.message ? e.message : String(e) };
+  }
+}
+
+async function wipeSessionStorage() {
+  try {
+    const keys = [];
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const k = sessionStorage.key(i);
+      if (k && k.indexOf('waxframe_') === 0) keys.push(k);
+    }
+    for (const k of keys) sessionStorage.removeItem(k);
+    return { removed: keys.length };
+  } catch (e) {
+    return { removed: 0, error: e && e.message ? e.message : String(e) };
+  }
+}
+
+async function wipeIndexedDB() {
+  // Full deleteDatabase rather than per-key delete: callers asking for a
+  // "wipe" want the database gone, not just the current key cleared. The
+  // next idbOpen() will recreate the schema fresh.
+  return new Promise(resolve => {
+    try {
+      // Close any open handle first so deleteDatabase isn't blocked.
+      try { if (_idb) { _idb.close(); _idb = null; } } catch (_) {}
+      const req = indexedDB.deleteDatabase(IDB_NAME);
+      req.onsuccess = () => resolve({ removed: 1 });
+      req.onerror   = e => resolve({ removed: 0, error: (e.target.error && e.target.error.message) || 'deleteDatabase error' });
+      req.onblocked = () => resolve({ removed: 0, error: 'IndexedDB delete blocked — close other WaxFrame tabs and try again.' });
+    } catch (e) {
+      resolve({ removed: 0, error: e && e.message ? e.message : String(e) });
+    }
+  });
+}
+
+async function wipeAllStorage() {
+  const [ls, ss, idb] = await Promise.all([wipeLocalStorage(), wipeSessionStorage(), wipeIndexedDB()]);
+  return {
+    localStorage: ls,
+    sessionStorage: ss,
+    indexedDB: idb,
+    totalRemoved: (ls.removed || 0) + (ss.removed || 0) + (idb.removed || 0),
+    anyError: !!(ls.error || ss.error || idb.error)
+  };
+}
+
+// Expose globally so help.html (loaded as its own page with storage.js
+// included as a <script src>) and Settings (in app.js) can both reach them.
+window.wipeLocalStorage   = wipeLocalStorage;
+window.wipeSessionStorage = wipeSessionStorage;
+window.wipeIndexedDB      = wipeIndexedDB;
+window.wipeAllStorage     = wipeAllStorage;
 
 async function checkStorageQuota() {
   if (!navigator.storage?.estimate) return;

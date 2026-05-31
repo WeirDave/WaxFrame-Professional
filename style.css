@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260531-032
+   Build: 20260531-033
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -7676,6 +7676,21 @@ kbd {
 .settings-reset-btn {
   flex-shrink: 0;
   white-space: nowrap;
+}
+/* v3.63.90 — Shared danger-button styling. Same pattern as
+   .license-modal-btn-danger: transparent with red border, fill + glow on
+   hover. Used by the Settings → Storage wipe buttons (settings-reset-btn
+   also applies for layout). help.html has its own inline copy of these
+   rules since that page doesn't load style.css. */
+.btn-danger {
+  background: transparent;
+  border: 1px solid #c0152a;
+  color: #e8ecf4;
+}
+.btn-danger:hover {
+  background: #c0152a;
+  color: #fff;
+  box-shadow: 0 0 10px rgba(192,21,42,0.4);
 }
 
 /* ══════════════════════════════════════

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260531-032
+     Build: 20260531-033
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260531-032">
+  <meta name="waxframe-build" content="20260531-033">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.89">
+  <link rel="stylesheet" href="style.css?v=3.63.90">
 </head>
 <body>
 
@@ -966,6 +966,49 @@
                 <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), Sensitive Backup warning, per-project Checkpoint Backup Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore-from-backup warning is intentionally NOT dismissable — it's a security trust gate that fires every time.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2 class="settings-section-title">🧹 Storage</h2>
+            <p class="settings-section-desc">WaxFrame stores everything locally in your browser across three storage layers — nothing leaves your machine. Each button below targets one layer; the last wipes everything. Wipes are irreversible from inside the app; export anything worth keeping first (use Backup, below this section in a future release, or your existing export buttons on the work screen). Each wipe needs a two-click confirm. After a wipe the page reloads so the app starts fresh.</p>
+
+            <div class="settings-row settings-row-actions">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Wipe localStorage</span>
+                <span class="settings-row-help">Removes your AI list, API keys, custom-AI configs, project fields, license, Auto-mode settings, recommendation caches, model caches, and UI prefs (collapsed/expanded rows, etc.). Leaves IndexedDB (rounds + document) intact.</span>
+              </div>
+              <button class="btn settings-reset-btn btn-danger" id="setWipeLocalStorageBtn" title="Clear all localStorage data">🗂 Wipe localStorage</button>
+            </div>
+
+            <div class="settings-row settings-row-actions">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Wipe IndexedDB</span>
+                <span class="settings-row-help">Removes your session data: round history, working document text, console history, conflict ledger. This is where the document and rounds you can see right now actually live. Leaves localStorage (hive, keys, settings) intact.</span>
+              </div>
+              <button class="btn settings-reset-btn btn-danger" id="setWipeIndexedDBBtn" title="Clear all IndexedDB data">📜 Wipe IndexedDB</button>
+            </div>
+
+            <div class="settings-row settings-row-actions">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Wipe sessionStorage</span>
+                <span class="settings-row-help">Currently unused by WaxFrame. Cleared defensively in case a future feature adds ephemeral state here.</span>
+              </div>
+              <button class="btn settings-reset-btn btn-danger" id="setWipeSessionStorageBtn" title="Clear all sessionStorage data">⏱ Wipe sessionStorage</button>
+            </div>
+
+            <div class="settings-row settings-row-actions">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Wipe EVERYTHING (full reset)</span>
+                <span class="settings-row-help">Clears all three layers at once. Equivalent to a fresh install — your hive, keys, license, projects, rounds, document, settings, all gone. Use this for an uninstall, or to fully reset after troubleshooting failed.</span>
+              </div>
+              <button class="btn settings-reset-btn btn-danger" id="setWipeAllStorageBtn" title="Clear everything — full reset">🧹 Wipe EVERYTHING</button>
+            </div>
+
+            <div class="settings-row" id="setWipeStatusRow" style="display:none;">
+              <div class="settings-row-label" style="width:100%;">
+                <span class="settings-row-help" id="setWipeStatus" style="font-weight:600;"></span>
+              </div>
             </div>
           </div>
 
@@ -2517,23 +2560,23 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.89';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.90';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.89"></script>
-<script src="lib/jszip.min.js?v=3.63.89"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.89"></script>
-<script src="js/version.js?v=3.63.89"></script>
-<script src="js/storage.js?v=3.63.89"></script>
-<script src="js/theme.js?v=3.63.89"></script>
-<script src="js/audio.js?v=3.63.89"></script>
-<script src="js/scenes.js?v=3.63.89"></script>
-<script src="js/wf-debug.js?v=3.63.89"></script>
-<script src="js/provider-models.js?v=3.63.89"></script>
-<script src="js/api.js?v=3.63.89"></script>
-<script src="js/templates.js?v=3.63.89"></script>
-<script src="js/api-links.js?v=3.63.89"></script>
-<script src="js/app.js?v=3.63.89"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.90"></script>
+<script src="lib/jszip.min.js?v=3.63.90"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.90"></script>
+<script src="js/version.js?v=3.63.90"></script>
+<script src="js/storage.js?v=3.63.90"></script>
+<script src="js/theme.js?v=3.63.90"></script>
+<script src="js/audio.js?v=3.63.90"></script>
+<script src="js/scenes.js?v=3.63.90"></script>
+<script src="js/wf-debug.js?v=3.63.90"></script>
+<script src="js/provider-models.js?v=3.63.90"></script>
+<script src="js/api.js?v=3.63.90"></script>
+<script src="js/templates.js?v=3.63.90"></script>
+<script src="js/api-links.js?v=3.63.90"></script>
+<script src="js/app.js?v=3.63.90"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

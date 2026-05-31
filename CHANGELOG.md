@@ -2,6 +2,30 @@
 
 ---
 
+## v3.63.90
+**Build:** `20260531-033` · **Released:** May 31, 2026
+
+### Added — Granular storage-wipe controls (Help + Settings)
+
+The v3.63.89 wipe button only cleared `localStorage`. Your document and round history live in `IndexedDB` (where bigger session data is kept), so a "wipe" left them behind — confusing if you were actually trying to reset.
+
+This release replaces the single button with four granular wipe controls, exposed on both the Help page and the Settings screen:
+
+- **🗂 Wipe localStorage** — hive, API keys, custom-AI configs, project fields, license, Auto-mode settings, recommendation caches, model caches, UI prefs.
+- **📜 Wipe IndexedDB** — session: round history, working document text, console history, conflict ledger snapshots.
+- **⏱ Wipe sessionStorage** — currently unused; cleared defensively.
+- **🧹 Wipe EVERYTHING** — all three layers at once, equivalent to a fresh install.
+
+Each button uses the same two-click confirm: first click arms (5s window), second click executes, auto-cancels otherwise. The shared `wipeLocalStorage()` / `wipeIndexedDB()` / `wipeSessionStorage()` / `wipeAllStorage()` functions live in `storage.js` and return `{removed, error?}` so both surfaces report the same way. The IndexedDB wipe uses `deleteDatabase()` (not per-key delete) so the database is gone, not just emptied.
+
+### Files Changed
+
+- Added: storage wipe functions in `js/storage.js` (`wipeLocalStorage`, `wipeIndexedDB`, `wipeSessionStorage`, `wipeAllStorage`), all exposed on `window`.
+- Updated: `help.html` (four buttons + handler using the shared functions), `index.html` (new Storage section in Settings with four buttons), `js/app.js` (`wireSettingsWipeButtons()` helper called from `renderSettings`), `style.css` (`.btn-danger` matching the existing `.license-modal-btn-danger` pattern), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v156.txt`
+- Version/build stamps to `v3.63.90 Pro` / `20260531-033` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.89
 **Build:** `20260531-032` · **Released:** May 31, 2026
 
