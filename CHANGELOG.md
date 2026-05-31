@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.83
+**Build:** `20260530-026` · **Released:** May 30, 2026
+
+### Fixed — Five more non-chat models filtered (verified against official docs)
+
+A review of every provider's live `/v1/models` against official documentation surfaced five models that still appeared as selectable chat models but cannot run on a chat-completion request. The structural filter now blocks them:
+
+- **OpenAI legacy completion models** — `babbage-002`, `davinci-002`, `gpt-3.5-turbo-instruct` (and its dated snapshot). OpenAI's docs confirm these are compatible with the legacy Completions endpoint and not Chat Completions; picked as a Builder they reject the request. Anchored on `turbo-instruct`, so the real `gpt-3.5-turbo` chat variants (`-0125`, `-16k`, etc.) are unaffected.
+- **Gemini Live** — `gemini-3.1-flash-live-preview`, the bidirectional Live API model, not the `generateContent` path WaxFrame uses.
+- **Gemini AQA** — `aqa`, the Attributed-Question-Answering retrieval model.
+
+This was scoped deliberately: the verified rule is hard-filter by modality/endpoint/category first, then optionally soft-rank specialized-but-chat-capable models later. Models that are merely specialized but still run on the chat endpoint — search-preview, robotics-ER, deep-research, CLI-tuned, code-tuned, and tiny models — are intentionally left selectable; a soft-rank/warn treatment for those is a separate future task, not a structural filter.
+
+Verified against the full live model lists with zero false positives: legacy/Live/AQA drop, while every genuine chat model survives.
+
+### Files Changed
+
+- Updated: `js/provider-models.js` (`STRUCTURAL_NON_CHAT_RE` — five verified additions; single source of truth shared by the app and the Help page), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v149.txt`
+- Version/build stamps to `v3.63.83 Pro` / `20260530-026` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.82
 **Build:** `20260530-025` · **Released:** May 30, 2026
 

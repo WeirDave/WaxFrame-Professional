@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — shared provider/model logic
-// Build: 20260530-025
+// Build: 20260530-026
 // ============================================================
 // provider-models.js — shared "brain" for provider model logic (v3.63.82)
 // ════════════════════════════════════════════════════════════════════════
@@ -48,7 +48,22 @@
   // from chat-completion. See the full history in the changelog; the v3.63.81
   // additions cover Together AI's image/video/audio families and Mistral's
   // pixtral/voxtral/ocr.
-  var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
+  //
+  // v3.63.83 — verified hard-filter additions (official-docs-confirmed wrong
+  // endpoint/modality, NOT preferences):
+  //   • babbage|davinci|turbo-instruct — OpenAI legacy Completions endpoint
+  //     (babbage-002, davinci-002, gpt-3.5-turbo-instruct). Reject /v1/chat/
+  //     completions with "not a chat model". Anchored on turbo-instruct so the
+  //     real gpt-3.5-turbo / -0125 / -16k chat variants survive.
+  //   • flash-live | -live-preview — Gemini Live API (bidirectional streaming),
+  //     not the generateContent path WaxFrame uses.
+  //   • ^aqa$ — Gemini Attributed-QA specialized retrieval model (exact-match
+  //     only; the token is too short for a loose match).
+  // Specialized-but-chat-capable models (search-preview, robotics-er, deep-
+  // research, vibe-cli, codestral/devstral/Coder, tiny-*) are deliberately NOT
+  // hard-filtered — they run on the chat endpoint and belong to a future soft-
+  // rank/warn pass, not this structural filter.
+  var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-|babbage|davinci|turbo-instruct|flash-live|-live-preview|^aqa$/i;
 
   // ChatGPT extras: -pro / -codex are Responses-API-only; dated snapshots clutter.
   var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
