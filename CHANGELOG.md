@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.78
+**Build:** `20260530-021` · **Released:** May 30, 2026
+
+### Fixed — Perplexity model ids normalized before filtering
+
+Perplexity's current `/v1/models` response can return its Sonar models with the Agent API prefix, such as `perplexity/sonar` and `perplexity/sonar-pro`. WaxFrame uses the direct chat-completion ids (`sonar`, `sonar-pro`, etc.), and the model filter intentionally keeps only ids that begin with `sonar`.
+
+The live model fetch now strips the `perplexity/` prefix before filtering. This fixes both the Help page Dump Provider Models tool and the main app's provider model cache/recommendation path, so a successful Perplexity `/v1/models` response no longer turns into an empty list.
+
+### Files Changed
+
+- Updated: `help.html` (Dump Provider Models Perplexity id normalization), `js/api.js` (`fetchModelsForProvider` and `fetchModelsForProviderLive` Perplexity id normalization), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v144.txt`
+- Version/build stamps to `v3.63.78 Pro` / `20260530-021` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.77
 **Build:** `20260530-020` · **Released:** May 30, 2026
 

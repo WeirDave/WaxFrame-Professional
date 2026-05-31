@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260530-020
+// Build: 20260530-021
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -457,11 +457,13 @@ async function fetchModelsForProvider(provider) {
       // *viable* model as the asker. No `created` ⇒ insertion order preserved.
       // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
       // meaningless there; keep the API's own order (like Gemini, no usable date).
-      let entries = (data?.data || []).filter(m => filter(m.id));
+      let entries = (data?.data || []);
       if (provider !== 'perplexity') {
         entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
       }
-      models = entries.map(m => m.id);
+      models = entries
+        .map(m => provider === 'perplexity' ? String(m.id || '').replace(/^perplexity\//i, '') : m.id)
+        .filter(filter);
 
     } else if (provider === 'claude') {
       // v3.32.13 — route through the same CF Worker proxy that handles
@@ -596,11 +598,13 @@ async function fetchModelsForProviderLive(provider) {
       // *viable* model as the asker. No `created` ⇒ insertion order preserved.
       // v3.56.48 — Perplexity returns created:0 on every entry, so the sort is
       // meaningless there; keep the API's own order (like Gemini, no usable date).
-      let entries = (data?.data || []).filter(m => filter(m.id));
+      let entries = (data?.data || []);
       if (provider !== 'perplexity') {
         entries = entries.sort((a, b) => (b.created || 0) - (a.created || 0));
       }
-      models = entries.map(m => m.id);
+      models = entries
+        .map(m => provider === 'perplexity' ? String(m.id || '').replace(/^perplexity\//i, '') : m.id)
+        .filter(filter);
 
     } else if (provider === 'claude') {
       // Route through the CF Worker proxy for the same CORS reason as
