@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — api.js
-// Build: 20260530-023
+// Build: 20260530-024
 //
 //  API provider configurations + model discovery helpers.
 //  Pulled out of app.js in v3.44.0 as part of the cross-cutting
@@ -336,7 +336,17 @@ window.MODEL_FALLBACKS = {
 //
 // "nano-banana" is Google's image-gen model — no naming pattern catches it,
 // but the AI knows what it is and won't recommend it. Trust the AI.
-const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity/i;
+//
+// v3.63.81 — Together AI's /v1/models surfaces ~60 image/video/audio/TTS models
+// (FLUX, Seedream/Seedance, Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic,
+// Kokoro, Orpheus, Parakeet, HiDream, Ideogram, Juggernaut, DreamShaper, …) and
+// Mistral lists pixtral (image) / voxtral (audio) / OCR models. None are chat
+// and several would hard-fail as a Builder/Reviewer if picked. Added their
+// families plus generic markers (-image, image-, -i2v/-t2v/-r2v video tags,
+// e5- embeddings, ocr). Verified against the full Together (85) and Mistral (51)
+// live lists: pure-chat kept sets, zero false positives on every provider's
+// real chat models (incl. sonar*, command-r*, Coder, codestral/devstral).
+const STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
 
 // v3.28.1 — ChatGPT-specific exclusions:
 // (a) -pro / -codex variants are Responses-API-only on OpenAI as of GPT-5.5 —
