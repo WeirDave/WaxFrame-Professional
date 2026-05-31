@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260531-034
+  Build: 20260531-035
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260531-034">
+  <meta name="waxframe-build" content="20260531-035">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -113,10 +113,13 @@
       background: transparent; color: var(--honey); border-color: var(--border);
     }
     .btn-ghost:hover { background: var(--panel-2); }
-    /* Matches the license-modal-btn-danger pattern in style.css:
-       transparent with red outline, red fill + glow on hover. */
+    /* v3.63.92 — Matches the .btn-danger pattern in style.css: dashed red
+       border + light red tinted background + red text, visible at rest.
+       Text color is brighter here than in style.css because help.html
+       runs on a dark navy background where dark red would have poor
+       contrast. Hover fills solid red with white text and a glow. */
     .btn-danger {
-      background: transparent; color: #e8ecf4; border-color: #c0152a;
+      background: rgba(192, 21, 42, 0.15); color: #ff5566; border: 1px dashed #c0152a;
     }
     .btn-danger:hover {
       background: #c0152a; color: #fff; box-shadow: 0 0 10px rgba(192,21,42,0.4);
@@ -344,9 +347,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.91"></script>
-  <script src="js/storage.js?v=3.63.91"></script>
-  <script src="js/provider-models.js?v=3.63.91"></script>
+  <script src="js/version.js?v=3.63.92"></script>
+  <script src="js/storage.js?v=3.63.92"></script>
+  <script src="js/provider-models.js?v=3.63.92"></script>
   <script>
   (function () {
     'use strict';
