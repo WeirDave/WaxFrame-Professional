@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.73
+**Build:** `20260530-016` · **Released:** May 30, 2026
+
+### Changed — Builder-only prompt envelope softened
+
+Builder-only rounds now include a short editing-frame paragraph before the user's directive and document. This gives tiny "replace X with Y" envelopes more benign context, reducing the chance that isolated product-review words or short replacement strings trip provider content filters.
+
+- **Builder-only only** — full hive reviewer + Builder rounds are unchanged.
+- **Clearer edit framing** — the Builder is told it is editing a user-provided document in place, that quoted words are document text, and that it should apply only the requested edits.
+- **Legitimate content context** — the frame explicitly covers consumer products, workplace material, personal writing, adult products, household items, and other legitimate document categories.
+- **Backlog title corrected** — the copied backlog header now matches the current backlog version.
+
+### Files Changed
+
+- Updated: `js/app.js` (`runBuilderOnly()` prompt assembly), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v139.txt`
+- Version/build stamps to `v3.63.73 Pro` / `20260530-016` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.72
 **Build:** `20260530-015` · **Released:** May 30, 2026
 
