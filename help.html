@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-022
+  Build: 20260530-023
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-022">
+  <meta name="waxframe-build" content="20260530-023">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.79"></script>
-  <script src="js/storage.js?v=3.63.79"></script>
+  <script src="js/version.js?v=3.63.80"></script>
+  <script src="js/storage.js?v=3.63.80"></script>
   <script>
   (function () {
     'use strict';
@@ -471,8 +471,15 @@
       var list = dedup((models || [])
         .map(function (id) { return String(id || '').replace(/^perplexity\//i, ''); })
         .filter(function (id) { return filterModelForProvider('perplexity', id); }));
-      if (list.length === 1 && list[0] === 'sonar') return PERPLEXITY_SONAR_MODELS.slice();
-      return list;
+      if (list.length === 1 && list[0] === 'sonar') {
+        return {
+          models: PERPLEXITY_SONAR_MODELS.slice(),
+          modelsSource: 'documented-sonar-fallback',
+          sourceDetail: 'Raw Perplexity /v1/models returned only base Sonar; expanded using Perplexity Sonar API documented model enum.',
+          rawLiveModels: dedup(models || [])
+        };
+      }
+      return { models: list, modelsSource: 'live', rawLiveModels: dedup(models || []) };
     }
 
     function dedup(arr) {
@@ -572,6 +579,8 @@
         if (dump.ts) parts.push(new Date(dump.ts).toLocaleString());
         if (dump.elapsedMs) parts.push(dump.elapsedMs + ' ms');
         if (dump.status) parts.push(dump.status);
+        if (dump.modelsSource === 'documented-sonar-fallback') parts.push('documented Sonar fallback');
+        else if (dump.modelsSource === 'live') parts.push('live provider list');
         meta.textContent = parts.join(' · ');
       }
       if (list) list.textContent = dump.error ? ('ERROR: ' + dump.error) : formatList(dump.models);
@@ -612,6 +621,7 @@
 
     function parseModelsResponse(provider, format, data) {
       var models = [];
+      var rawLiveModels = [];
       if (format === 'anthropic' || provider === 'claude') {
         models = (data && data.data ? data.data : [])
           .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); })
@@ -636,9 +646,14 @@
           var id = m.id || m.name || m.model;
           return provider === 'perplexity' ? String(id || '').replace(/^perplexity\//i, '') : id;
         });
-        if (provider === 'perplexity') return normalizePerplexityModels(models);
+        rawLiveModels = arr.map(function (m) { return m.id || m.name || m.model; });
+        if (provider === 'perplexity') return normalizePerplexityModels(rawLiveModels);
       }
-      return dedup(models).filter(function (id) { return filterModelForProvider(provider, id); });
+      return {
+        models: dedup(models).filter(function (id) { return filterModelForProvider(provider, id); }),
+        modelsSource: 'live',
+        rawLiveModels: dedup(rawLiveModels.length ? rawLiveModels : models)
+      };
     }
 
     async function fetchLiveModelsNoCache(entry) {
@@ -663,13 +678,17 @@
         var msg = data && (data.error && (data.error.message || data.error)) || ('HTTP ' + resp.status);
         throw new Error(String(msg));
       }
+      var parsed = parseModelsResponse(entry.id, entry.format, data);
       return {
         provider: entry.id,
         label: entry.label,
         fetchedAt: Date.now(),
         elapsedMs: elapsedMs,
         status: 'HTTP ' + resp.status,
-        models: parseModelsResponse(entry.id, entry.format, data)
+        models: parsed.models,
+        modelsSource: parsed.modelsSource,
+        sourceDetail: parsed.sourceDetail,
+        rawLiveModels: parsed.rawLiveModels
       };
     }
 
@@ -728,6 +747,10 @@
         var cmp = compareDumps(_lastCachedDump.models, _lastLiveDump.models);
         if (_lastLiveDump.error) {
           setDumpStatus('⚠ Live fetch failed; cached list is still shown for inspection.', 'warn');
+        } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback' && cmp.same) {
+          setDumpStatus('⚠ Cached list matches the documented Sonar fallback. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
+        } else if (_lastLiveDump.modelsSource === 'documented-sonar-fallback') {
+          setDumpStatus('⚠ Cached list differs from the documented Sonar fallback. Only in cache: ' + (cmp.onlyA.join(', ') || 'none') + '. Only in fallback: ' + (cmp.onlyB.join(', ') || 'none') + '. Raw Perplexity live list had ' + ((_lastLiveDump.rawLiveModels || []).length) + ' model(s).', 'warn');
         } else if (cmp.same) {
           setDumpStatus('✓ Cached and live model lists match.', 'ok');
         } else {
@@ -776,6 +799,9 @@
           var live = await fetchLiveModelsNoCache(e);
           combined.providers[e.id] = {
             label: e.label, status: live.status, elapsedMs: live.elapsedMs,
+            modelsSource: live.modelsSource,
+            sourceDetail: live.sourceDetail,
+            rawLiveModels: live.rawLiveModels,
             count: live.models.length, models: live.models
           };
           okN++;
