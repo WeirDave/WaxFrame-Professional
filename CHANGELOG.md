@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.80
+**Build:** `20260530-023` · **Released:** May 30, 2026
+
+### Fixed — Model dump now labels documented Perplexity fallback
+
+The Help page Dump Provider Models output now distinguishes true live provider results from WaxFrame's documented Perplexity Sonar fallback. When Perplexity's live `/v1/models` response only returns the Agent API base model (`perplexity/sonar`), the UI now labels the expanded Sonar family as a documented fallback instead of presenting it as if the provider returned all four models live.
+
+- **Visible provenance** — the Live panel metadata shows `documented Sonar fallback` when the expansion path was used.
+- **Clear status text** — the status line says the cached list matches the documented fallback and reports how many raw live models Perplexity returned.
+- **Copyable proof** — copied JSON now includes `modelsSource`, `sourceDetail`, and `rawLiveModels`, so support can see the exact raw provider response versus WaxFrame's documented model list.
+
+### Files Changed
+
+- Updated: `help.html` (Perplexity dump provenance metadata), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v146.txt`
+- Version/build stamps to `v3.63.80 Pro` / `20260530-023` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.79
 **Build:** `20260530-022` · **Released:** May 30, 2026
 
