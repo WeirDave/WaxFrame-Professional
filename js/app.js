@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-029
+// Build: 20260531-030
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-029';         // build stamp — update each session
+const BUILD       = '20260531-030';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5638,6 +5638,33 @@ function getActivePreset(currentUrl) {
   return key ? QUICK_ADD_PROVIDERS[key] : null;
 }
 
+// v3.63.87 — Clean provider IDs. Custom AIs used to get a timestamped id
+// (name_1779690241686). That guaranteed uniqueness but produced ugly,
+// opaque ids and inconsistency with the clean default ids (chatgpt, claude).
+// Now: derive a clean slug from the provider/model name, and only append a
+// (2), (3)... suffix when that id ACTUALLY collides with an existing AI.
+// First of a kind stays clean (cohere, jamba, together); a real duplicate
+// reads like a familiar copy: cohere(2). Collision is checked against the
+// live aiList ids AND API_CONFIGS keys so we never clobber a default or an
+// existing custom.
+function makeCleanProviderId(name) {
+  let base = String(name || 'custom')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')   // non-alphanumerics -> single dash
+    .replace(/^-+|-+$/g, '')        // trim leading/trailing dashes
+    || 'custom';
+  const taken = id =>
+    (Array.isArray(aiList) && aiList.some(a => a.id === id)) ||
+    (typeof API_CONFIGS === 'object' && API_CONFIGS && Object.prototype.hasOwnProperty.call(API_CONFIGS, id));
+  if (!taken(base)) return base;
+  for (let n = 2; n < 1000; n++) {
+    const candidate = `${base}(${n})`;
+    if (!taken(candidate)) return candidate;
+  }
+  // Pathological fallback — keeps uniqueness without the old date-stamp ugliness.
+  return `${base}(${Date.now().toString().slice(-4)})`;
+}
+
 // ── v3.25.7: Custom AI decision aids — see updateModelAids() ───────────────
 // (v3.25.7 originally defined updateChooseModelLink here; v3.26.1 unified the
 // recommend + browse-models visibility into updateModelAids and converted this
@@ -7207,7 +7234,7 @@ function addCustomAI() {
     } catch(e) { name = 'Custom AI'; }
   }
 
-  const id     = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Date.now();
+  const id     = makeCleanProviderId(name);
   const origin = (() => { try { return new URL(url).origin; } catch(e) { return url; } })();
   // v3.29.13 — read whatever icon the preview is currently showing. This
   // is the source of truth: if preview shows the user's upload (data URL),
@@ -8001,7 +8028,7 @@ function addImportServerModels() {
     const nameInput = document.getElementById(`isn-${i}`);
     const name      = (nameInput?.value.trim()) || modelId;
 
-    const id = name.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + ts + '_' + idx;
+    const id = makeCleanProviderId(name);
 
     // v3.30.2 — per-row icon takes precedence over the group fallback
     const rowIcon = _importRowIcons[parseInt(i, 10)] || groupFallbackIcon;

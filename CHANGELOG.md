@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.87
+**Build:** `20260531-030` · **Released:** May 31, 2026
+
+### Changed — Clean provider IDs for custom AIs (no more timestamps)
+
+Custom AIs (added via Quick Add or Import from Model Server) used to get a timestamped internal id like `cohere_1779690241686` or `ai21__jamba__1780256643064`. That guaranteed uniqueness but was ugly and inconsistent with the clean default ids (`chatgpt`, `claude`, etc.).
+
+Now a custom AI gets a clean slug from its name — `cohere`, `jamba`, `together-ai` — and a numeric suffix is appended **only on an actual collision**: a second Cohere becomes `cohere(2)`, a third `cohere(3)`, reading like a familiar duplicate. Collisions are checked against both the live AI list and existing provider configs, so a custom can never silently clobber a default or another custom. This applies to newly added AIs going forward.
+
+No migration of existing hives is included (pre-launch, no installed base to protect). Any hive still holding old timestamped ids should clear and re-add those custom providers to pick up clean ids.
+
+### Files Changed
+
+- Updated: `js/app.js` (new `makeCleanProviderId()` helper; `addCustomAI` and the import-server path now use it instead of `name_timestamp`), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v153.txt`
+- Also includes the v3.63.86 Jamba tile rename ("AI21 (Jamba)" → "Jamba") if deploying straight from v3.63.85.
+- Version/build stamps to `v3.63.87 Pro` / `20260531-030` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.86
 **Build:** `20260531-029` · **Released:** May 31, 2026
 
