@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260531-032
+  Build: 20260531-033
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260531-032">
+  <meta name="waxframe-build" content="20260531-033">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -312,16 +312,20 @@
     <section>
       <h2>🧹 Wipe local data</h2>
       <p class="sub">An escape hatch — for users uninstalling, or for fixing a wedged state from accumulated stale data.</p>
-      <p>WaxFrame stores everything locally in your browser: your AI list, API keys, projects, session state, recommendations, and settings. <b>Nothing leaves your machine.</b> This button removes all of it from this browser. After it runs the page reloads and you start fresh, exactly like a first install.</p>
-      <p><b>What this does:</b></p>
+      <p>WaxFrame stores everything locally in your browser across three storage layers. <b>Nothing leaves your machine.</b> Each button below targets one layer; the last wipes everything. After any wipe the page reloads so the app starts fresh.</p>
+      <p><b>What each layer holds:</b></p>
       <ul class="fixes">
-        <li>Removes every <code>waxframe_*</code> key from <code>localStorage</code> (hive, API keys, projects, session, license, settings, recommendation caches, model caches, all of it).</li>
-        <li>Reloads the page so the app initializes fresh.</li>
+        <li><b>localStorage</b> — your AI list, API keys, custom-AI configs, project fields, license, Auto-mode settings, recommendation caches, model caches, UI prefs (collapsed/expanded rows, etc.).</li>
+        <li><b>IndexedDB</b> — your session data: round history, working document text, console history, conflict ledger snapshots. This is where the document and rounds you can see right now actually live (localStorage has a 5MB cap, IndexedDB is much larger).</li>
+        <li><b>sessionStorage</b> — currently unused by WaxFrame; cleared defensively in case a future feature adds ephemeral state here.</li>
       </ul>
       <p><b>What this does NOT touch:</b> any data on the AI provider's servers (your API account, your keys, your usage history). To revoke an API key, do that in the provider's console (<a href="api-details.html">API Key Guide</a>).</p>
-      <p><b>This is irreversible from inside the app.</b> If you have a hive or project worth keeping, use Export first (Settings → Backup) before wiping.</p>
-      <div class="links">
-        <button id="wipeLocalDataBtn" type="button" class="btn-danger">🧹 Wipe all WaxFrame data from this browser</button>
+      <p><b>Wipes are irreversible from inside the app.</b> If you have a hive or project worth keeping, export it first (Settings → Backup) before wiping.</p>
+      <div class="links" style="flex-wrap:wrap;gap:8px;">
+        <button id="wipeLocalStorageBtn" type="button" class="btn-danger">🗂 Wipe localStorage (hive, keys, settings)</button>
+        <button id="wipeIndexedDBBtn"    type="button" class="btn-danger">📜 Wipe IndexedDB (session, rounds, document)</button>
+        <button id="wipeSessionStorageBtn" type="button" class="btn-danger">⏱ Wipe sessionStorage (ephemeral)</button>
+        <button id="wipeAllStorageBtn"   type="button" class="btn-danger">🧹 Wipe EVERYTHING (full reset)</button>
       </div>
       <p id="wipeStatus" class="sub" style="display:none;margin-top:8px;"></p>
     </section>
@@ -340,9 +344,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.89"></script>
-  <script src="js/storage.js?v=3.63.89"></script>
-  <script src="js/provider-models.js?v=3.63.89"></script>
+  <script src="js/version.js?v=3.63.90"></script>
+  <script src="js/storage.js?v=3.63.90"></script>
+  <script src="js/provider-models.js?v=3.63.90"></script>
   <script>
   (function () {
     'use strict';
@@ -901,66 +905,72 @@
     });
 
     // ── Wipe local data ────────────────────────────────────────────────
-    // Two-click confirm pattern: first click flips the button to a confirm
-    // state; a second click within 5 seconds actually wipes. Prevents an
-    // accidental click from destroying the user's hive. The status line
-    // narrates each step so the user knows what just happened.
-    var wipeBtn = document.getElementById('wipeLocalDataBtn');
+    // Four buttons → four storage layers (localStorage, IndexedDB,
+    // sessionStorage, all). Each button uses the same two-click confirm
+    // pattern: first click arms (button label flips to a confirmation, 5s
+    // timer starts); second click within 5 seconds actually wipes; if no
+    // second click, the button reverts and reports cancellation. The
+    // storage logic itself lives in storage.js (wipeLocalStorage /
+    // wipeIndexedDB / wipeSessionStorage / wipeAllStorage) so Settings
+    // can reuse the same functions.
     var wipeStatus = document.getElementById('wipeStatus');
-    var wipeConfirmTimer = null;
     function setWipeStatus(msg, cls) {
       if (!wipeStatus) return;
       wipeStatus.textContent = msg;
       wipeStatus.style.display = msg ? '' : 'none';
       wipeStatus.style.color = cls === 'warn' ? '#c5832a' : cls === 'err' ? '#b94a3a' : cls === 'ok' ? '#3a7a4a' : '';
     }
-    if (wipeBtn) wipeBtn.addEventListener('click', function () {
-      // First click — arm confirmation
-      if (wipeBtn.dataset.armed !== '1') {
-        wipeBtn.dataset.armed = '1';
-        wipeBtn.textContent = '⚠ Click again within 5s to confirm — this cannot be undone';
-        setWipeStatus('Confirmation required. Click the button again to wipe, or wait 5 seconds to cancel.', 'warn');
-        wipeConfirmTimer = setTimeout(function () {
-          wipeBtn.dataset.armed = '0';
-          wipeBtn.textContent = '🧹 Wipe all WaxFrame data from this browser';
-          setWipeStatus('Cancelled — no data was removed.', '');
-        }, 5000);
-        return;
-      }
-      // Second click — actually wipe
-      clearTimeout(wipeConfirmTimer);
-      wipeBtn.disabled = true;
-      var removed = 0;
-      try {
-        // Snapshot the key list first — modifying localStorage mid-iteration
-        // shifts indices and would skip entries.
-        var keys = [];
-        for (var i = 0; i < localStorage.length; i++) {
-          var k = localStorage.key(i);
-          if (k && k.indexOf('waxframe_') === 0) keys.push(k);
+    function wireWipeButton(btnId, origLabel, armedLabel, wipeFn, layerName) {
+      var btn = document.getElementById(btnId);
+      if (!btn) return;
+      var armTimer = null;
+      btn.addEventListener('click', async function () {
+        // First click — arm confirmation
+        if (btn.dataset.armed !== '1') {
+          btn.dataset.armed = '1';
+          btn.textContent = armedLabel;
+          setWipeStatus('Confirmation required. Click "' + origLabel + '" again to wipe ' + layerName + ', or wait 5 seconds to cancel.', 'warn');
+          armTimer = setTimeout(function () {
+            btn.dataset.armed = '0';
+            btn.textContent = origLabel;
+            setWipeStatus('Cancelled — no data was removed.', '');
+          }, 5000);
+          return;
         }
-        for (var j = 0; j < keys.length; j++) {
-          localStorage.removeItem(keys[j]);
-          removed++;
-        }
-        // Also clear sessionStorage just in case anything ephemeral lives there.
+        // Second click — execute
+        clearTimeout(armTimer);
+        btn.disabled = true;
         try {
-          var skeys = [];
-          for (var s = 0; s < sessionStorage.length; s++) {
-            var sk = sessionStorage.key(s);
-            if (sk && sk.indexOf('waxframe_') === 0) skeys.push(sk);
+          var result = await wipeFn();
+          // wipeAllStorage returns a different shape than the single-layer ones
+          if (result && typeof result.totalRemoved === 'number') {
+            var bits = [];
+            if (result.localStorage)   bits.push('localStorage: ' + (result.localStorage.removed || 0));
+            if (result.indexedDB)      bits.push('IndexedDB: ' + (result.indexedDB.removed ? 'cleared' : 'failed'));
+            if (result.sessionStorage) bits.push('sessionStorage: ' + (result.sessionStorage.removed || 0));
+            setWipeStatus('✓ Wiped everything (' + bits.join(' · ') + '). Reloading in 2 seconds…', 'ok');
+          } else if (result && result.error) {
+            btn.disabled = false;
+            btn.dataset.armed = '0';
+            btn.textContent = origLabel;
+            setWipeStatus('⚠ Wipe failed: ' + result.error, 'err');
+            return;
+          } else {
+            setWipeStatus('✓ Cleared ' + layerName + ' (' + (result.removed || 0) + ' entr' + ((result.removed || 0) === 1 ? 'y' : 'ies') + '). Reloading in 2 seconds…', 'ok');
           }
-          for (var t = 0; t < skeys.length; t++) sessionStorage.removeItem(skeys[t]);
-        } catch (e) { /* sessionStorage may be unavailable in some contexts */ }
-        setWipeStatus('✓ Removed ' + removed + ' WaxFrame entr' + (removed === 1 ? 'y' : 'ies') + '. Reloading in 2 seconds…', 'ok');
-        setTimeout(function () { window.location.href = 'index.html'; }, 2000);
-      } catch (e) {
-        wipeBtn.disabled = false;
-        wipeBtn.dataset.armed = '0';
-        wipeBtn.textContent = '🧹 Wipe all WaxFrame data from this browser';
-        setWipeStatus('⚠ Wipe failed: ' + (e && e.message ? e.message : e) + ' — try clearing site data via your browser settings instead.', 'err');
-      }
-    });
+          setTimeout(function () { window.location.href = 'index.html'; }, 2000);
+        } catch (e) {
+          btn.disabled = false;
+          btn.dataset.armed = '0';
+          btn.textContent = origLabel;
+          setWipeStatus('⚠ Wipe failed: ' + (e && e.message ? e.message : e), 'err');
+        }
+      });
+    }
+    wireWipeButton('wipeLocalStorageBtn',   '🗂 Wipe localStorage (hive, keys, settings)',         '⚠ Click again within 5s to confirm localStorage wipe',   window.wipeLocalStorage,   'localStorage');
+    wireWipeButton('wipeIndexedDBBtn',      '📜 Wipe IndexedDB (session, rounds, document)',       '⚠ Click again within 5s to confirm IndexedDB wipe',      window.wipeIndexedDB,      'IndexedDB');
+    wireWipeButton('wipeSessionStorageBtn', '⏱ Wipe sessionStorage (ephemeral)',                   '⚠ Click again within 5s to confirm sessionStorage wipe', window.wipeSessionStorage, 'sessionStorage');
+    wireWipeButton('wipeAllStorageBtn',     '🧹 Wipe EVERYTHING (full reset)',                     '⚠ Click again within 5s to confirm FULL WIPE',           window.wipeAllStorage,     'all storage');
 
   })();
   </script>
