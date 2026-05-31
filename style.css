@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-013
+   Build: 20260530-014
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -2989,19 +2989,33 @@ html, body {
 
 /* ── ROSTER (chips) ── */
 .builder-pick-grid-large {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: var(--space-10);
   margin-bottom: 0;
+}
+.builder-pick-grid-large.builder-count-small {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.builder-pick-grid-large.builder-count-medium {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.builder-pick-grid-large.builder-count-normal {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+.builder-pick-grid-large.builder-count-dozen {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+}
+.builder-pick-grid-large.builder-count-many {
+  grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
 }
 .builder-chip {
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  max-width: min(100%, 320px);
+  width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: 52px;
   padding: var(--space-8) var(--space-14);
   background: var(--surface);
   border: 1.5px solid var(--border2);
@@ -3027,10 +3041,27 @@ html, body {
 .builder-chip-name {
   min-width: 0;
   overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.2;
+}
+.builder-chip-check { font-size: var(--fs-14); margin-left: auto; flex-shrink: 0; }
+.builder-count-small .builder-chip { min-height: 68px; padding: var(--space-12) var(--space-16); font-size: var(--fs-15); }
+.builder-count-small .builder-chip-icon { width: 40px; height: 40px; }
+.builder-count-medium .builder-chip { min-height: 60px; padding: var(--space-10) var(--space-14); }
+.builder-count-medium .builder-chip-icon { width: 34px; height: 34px; }
+.builder-count-normal .builder-chip { min-height: 54px; }
+.builder-count-normal .builder-chip-icon { width: 32px; height: 32px; }
+.builder-count-dozen .builder-chip { min-height: 48px; padding: var(--space-8) var(--space-12); font-size: var(--fs-13); }
+.builder-count-dozen .builder-chip-icon { width: 28px; height: 28px; }
+.builder-count-many .builder-chip { min-height: 42px; padding: var(--space-6) var(--space-10); font-size: var(--fs-12); }
+.builder-count-many .builder-chip-icon { width: 24px; height: 24px; }
+.builder-count-many .builder-chip-name {
+  display: block;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.builder-chip-check { font-size: var(--fs-14); margin-left: auto; flex-shrink: 0; }
 
 /* ── SPOTLIGHT panel (selected Builder + integrated model selector) ── */
 .builder-spotlight-head {
@@ -3073,7 +3104,10 @@ html, body {
 @media (max-width: 1600px), (max-height: 900px) {
   .builder-console-shell { gap: var(--space-14); }
   .builder-console-roster { padding: var(--space-14); }
-  .builder-pick-grid-large { gap: var(--space-8); }
+  .builder-pick-grid-large {
+    gap: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  }
   .builder-spotlight-head {
     gap: var(--space-12);
     padding-bottom: var(--space-10);
@@ -3095,7 +3129,6 @@ html, body {
     padding: var(--space-12);
   }
   .builder-chip {
-    width: 100%;
     justify-content: flex-start;
   }
 }
