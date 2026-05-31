@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.76
+**Build:** `20260530-019` · **Released:** May 30, 2026
+
+### Fixed — Model-dump picker now matches the real 6-defaults + additionals architecture
+
+This is the proper fix for the duplicate "(no key saved)" provider rows that v3.63.75 only partially addressed. The root cause was not in the picker's dedup logic — it was that the Help page's provider table hardcoded **nine** providers as "built-in," including DeepSeek, Together AI, and Cohere. In the actual app those three are **additional** providers (added via Quick Add / custom AI), stored in `hive.customAIConfigs` with their own ids (e.g. `cohere_1779690241686`) and their keys stored under those ids — not under a bare `cohere`. The dump tool therefore listed each of the three twice: once as a keyless phantom built-in and once as the real keyed additional.
+
+The provider table now contains only the canonical **default 6** (ChatGPT, Claude, Gemini, Grok, Perplexity, Mistral), matching `DEFAULT_AIS` in `app.js`. Additional providers are discovered solely from `customAIConfigs`, each appearing once with its real key. This also corrects the cached-model lookup, which now follows the app's own rule (defaults cache by provider id, additionals by their own id).
+
+The v3.63.75 endpoint/key-merge workaround has been removed in favor of this source-level fix. Verified headless against the real hive shape (6 keyed defaults + 3 keyed additionals): exactly 9 entries, no duplicates, no false "no key saved".
+
+### Files Changed
+
+- Updated: `help.html` (`BUILT_IN_MODEL_PROVIDERS` trimmed to the default 6; `getProviderEntries` simplified to defaults + custom-config additionals), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v142.txt`
+- Version/build stamps to `v3.63.76 Pro` / `20260530-019` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.75
 **Build:** `20260530-018` · **Released:** May 30, 2026
 
