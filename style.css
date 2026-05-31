@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-011
+   Build: 20260530-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -896,15 +896,12 @@ html, body {
 .cb-model-wrap .model-select { width: 100%; }
 .cb-model-wrap .model-select-note { padding-left: 0; }
 .cb-model-empty { font-size: var(--fs-13); color: var(--text-dim); margin: var(--space-8) 0 0; }
-/* v3.63.68 — SPOTLIGHT container (Setup 2 Builder screen). Wraps the selected
+/* v3.63.69 — SELECTED BUILDER container (Setup 2 Builder screen). Wraps the selected
    Builder's head (icon + name + bee) and the integrated model selector. Reuses
-   the same .model-select combobox as Worker Bees + Change Builder modal. Subtle
-   surface with an accent top edge so it reads as a distinct "your Builder" card.
-   Token-based; touches nothing on work-main / the 80ch column. */
+   the same .model-select combobox as Worker Bees + Change Builder modal. */
 .builder-screen-model-wrap {
   width: 100%;
-  max-width: var(--modal-w-lg);
-  margin: 0 auto;
+  margin: 0;
   text-align: left;
   background: var(--surface2);
   border: 1px solid var(--border);
@@ -2944,31 +2941,71 @@ html, body {
 }
 
 /* ════════════════════════════════════════════════════════════════
-   BUILDER SCREEN (Setup 2) — "Roster + Spotlight" layout (v3.63.68)
+   BUILDER SCREEN (Setup 2) — "Builder Console" layout (v3.63.69)
    ────────────────────────────────────────────────────────────────
-   #builderPickGrid is now a ROSTER: a compact flex-wrap row of AI chips
-   that stays ≤2 rows even at 9-20 AIs. The selected chip is highlighted.
-   Below it, #builderScreenModelWrap is the SPOTLIGHT panel showing the
-   chosen Builder large with its model selector integrated. Fixed vertical
-   footprint that fits 1366×768. No nested scroll. 80ch column untouched.
+   The selected Builder is now the primary control surface, with the roster
+   as a compact adjacent picker on desktop and a stacked picker on laptops.
+   No nested scroll. 80ch column untouched.
    ════════════════════════════════════════════════════════════════ */
+
+.builder-console-shell {
+  display: grid;
+  grid-template-columns: minmax(340px, 430px) minmax(0, 1fr);
+  gap: var(--space-18);
+  align-items: start;
+  min-height: 0;
+}
+
+.builder-console-primary,
+.builder-console-roster {
+  min-width: 0;
+}
+
+.builder-console-primary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-12);
+}
+
+.builder-console-roster {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-18);
+}
+
+.builder-roster-kicker {
+  font-size: var(--fs-12);
+  font-weight: 800;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: var(--space-12);
+}
+
+.builder-console-tip {
+  margin: 0;
+}
 
 /* ── ROSTER (chips) ── */
 .builder-pick-grid-large {
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  justify-content: flex-start;
   gap: var(--space-10);
-  margin-bottom: var(--space-16);
+  margin-bottom: 0;
 }
 .builder-chip {
   display: flex;
   align-items: center;
   gap: var(--space-8);
+  max-width: min(100%, 320px);
+  min-width: 0;
+  min-height: 44px;
   padding: var(--space-8) var(--space-14);
   background: var(--surface);
   border: 1.5px solid var(--border2);
-  border-radius: 999px;
+  border-radius: var(--radius-sm);
   cursor: pointer;
   font-family: var(--font);
   font-size: var(--fs-14);
@@ -2984,10 +3021,16 @@ html, body {
   border-color: var(--accent);
   background: var(--accent-dim);
   color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
 }
 .builder-chip-icon { width: 28px; height: 28px; flex-shrink: 0; border-radius: 6px; }
-.builder-chip-name { white-space: nowrap; }
-.builder-chip-check { font-size: var(--fs-14); margin-left: var(--space-4); }
+.builder-chip-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.builder-chip-check { font-size: var(--fs-14); margin-left: auto; flex-shrink: 0; }
 
 /* ── SPOTLIGHT panel (selected Builder + integrated model selector) ── */
 .builder-spotlight-head {
@@ -3015,7 +3058,8 @@ html, body {
   font-size: var(--fs-22);
   font-weight: 800;
   color: var(--text);
-  line-height: 1.1;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
 }
 .builder-spotlight-bee {
   width: 56px; height: 56px; flex-shrink: 0; object-fit: contain;
@@ -3028,11 +3072,12 @@ html, body {
   margin-bottom: var(--space-10);
 }
 
-/* Laptop (≤1600px wide) OR short (≤900px tall): tighten the spotlight head so
-   the whole Setup 2 page clears the fixed footer at 1366×768. Roster chips are
-   already compact and need no change. */
+/* Laptop (≤1600px wide) OR short (≤900px tall): tighten the console so the
+   whole Setup 2 page clears the fixed footer at 1366×768. */
 @media (max-width: 1600px), (max-height: 900px) {
-  .builder-pick-grid-large { gap: var(--space-8); margin-bottom: var(--space-12); }
+  .builder-console-shell { gap: var(--space-14); }
+  .builder-console-roster { padding: var(--space-14); }
+  .builder-pick-grid-large { gap: var(--space-8); }
   .builder-spotlight-head {
     gap: var(--space-12);
     padding-bottom: var(--space-10);
@@ -3042,6 +3087,22 @@ html, body {
   .builder-spotlight-name { font-size: var(--fs-18); }
   .builder-spotlight-bee { width: 44px; height: 44px; }
   .builder-spotlight-model-label { margin-bottom: var(--space-6); }
+}
+
+@media (max-width: 1100px) {
+  .builder-console-shell {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .builder-console-roster {
+    padding: var(--space-12);
+  }
+  .builder-chip {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 
 /* ── SECTION BEE IMAGE ── */
