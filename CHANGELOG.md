@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.84
+**Build:** `20260531-027` · **Released:** May 31, 2026
+
+### Added — AI21 (Jamba) as a Quick Add provider
+
+AI21's Jamba models are now a one-click Quick Add preset. Jamba is a hybrid Transformer-Mamba-MoE architecture (a structured state-space model blended with attention), which makes it a genuinely different kind of Builder/Reviewer to test alongside the transformer lineup, with a 256K context window and low token cost.
+
+Integration is fully native — no proxy, no special-casing:
+
+- Endpoint: `https://api.ai21.com/studio/v1/chat/completions`, OpenAI-compatible format, `Authorization: Bearer` auth.
+- AI21 exposes a standard `/studio/v1/models` list, so models are fetched live (no hardcoded fallback). Current models: Jamba Large and Jamba Mini, both 256K context.
+- AI21's API sends permissive CORS headers for `waxframe.com`, so the browser calls it directly like OpenAI, Together, and Cohere.
+
+Validated end-to-end against the live API before shipping: chat completion (both models), the live model-list fetch, key validation via the chat endpoint, and the exact OpenAI-shaped request WaxFrame sends (system + user messages, temperature, max_tokens) all return clean results.
+
+Provider icon to follow (credit: Kai); an interim placeholder `images/icon-jamba.png` ships now and is wired as a known provider — the icon auto-matches on Quick Add (catalog keys `jamba`/`ai21`) and appears in the icon picker's Providers section, identical to how DeepSeek/Cohere/Together resolve. Kai's final logo drops in over the placeholder file with no code change.
+
+### Files Changed
+
+- Updated: `js/app.js` (`QUICK_ADD_PROVIDERS` AI21/Jamba preset; `_CATALOG` icon matchers x2; `ICON_PICKER_BUNDLED` Providers entry), `waxframe-user-manual.html` (Quick Add provider list), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v150.txt`
+- Added: `images/icon-jamba.png` (interim placeholder, pending Kai)
+- Version/build stamps to `v3.63.84 Pro` / `20260531-027` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.83
 **Build:** `20260530-026` · **Released:** May 30, 2026
 
