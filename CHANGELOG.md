@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.91
+**Build:** `20260531-034` · **Released:** May 31, 2026
+
+### Cleanup — Help-page storage card + Quick Add dropdown sort
+
+Two small UX fixes on the same release.
+
+**1. Help page storage section.** The v3.63.90 ship laid out the four Wipe buttons with `flex-wrap` so they reflowed into a 2×2 grid — but the intro prose described them as "three storage layers, each button targets one layer, the last wipes everything," implying a vertical stack. The 2×2 wrap put IndexedDB in the top-right and sessionStorage in the bottom-left, breaking the layer-order reading flow the prose set up. Stacked the buttons vertically (single column, capped at 560px wide) so the visual matches the prose.
+
+Also killed the **"ephemeral"** jargon. The sessionStorage layer description was *"currently unused by WaxFrame; cleared defensively in case a future feature adds ephemeral state here"* and the button label was *"⏱ Wipe sessionStorage (ephemeral)"*. End users (including David) don't know what "ephemeral" means in this context. Rewrote in plain English: layer description is now *"per-tab storage the browser clears automatically when you close the tab"*, button label is *"⏱ Wipe sessionStorage (per-tab, usually empty)"*. The `wireWipeButton` call's status-toast label was updated to match.
+
+**2. Quick Add provider dropdown** (Add Custom AI modal). The six known-provider presets were in an arbitrary order: Jamba, DeepSeek, Together AI, Cohere, Ollama, LM Studio. Sorted alphabetically: Cohere, DeepSeek, Jamba, LM Studio (local), Ollama (local), Together AI.
+
+### Files Changed
+
+- Updated: `help.html` (storage section restructure: tighter intro, plain-English sessionStorage description, vertical-stack button layout via inline flex-direction override — `help.html` is the break-glass page where inline CSS is appropriate), `index.html` (Quick Add `<select>` options alpha-sorted)
+- Removed: `storage.js` (root-level orphan — 1417-line stale predecessor of `js/storage.js`, no refs anywhere), `WaxFrame_Backlog_Master_v123.txt` (root-level orphan, only `.git/index` referenced it), `sounds/232450__timbre__purely-synthesised-metal-clang-with-long-reverb.flac` (orphan — `js/scenes.js` only loads the `.mp3` sibling; the `.flac` is the freesound.org master, unused at runtime)
+- Version/build stamps to `v3.63.91 Pro` / `20260531-034` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.90
 **Build:** `20260531-033` · **Released:** May 31, 2026
 
