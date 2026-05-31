@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-011
+// Build: 20260530-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-011';         // build stamp — update each session
+const BUILD       = '20260530-012';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4795,13 +4795,9 @@ function renderBuilderPicker() {
   if (!builder || !activeAIs.find(a => a.id === builder)) {
     builder = _aiListAlpha(activeAIs)[0].id;
   }
-  // v3.63.68 — "Roster + Spotlight" layout. A 3×3 grid of big landscape cards
-  // overflowed at laptop sizes once the model selector was added. Instead we
-  // render a compact horizontal roster of AI chips (wraps to ≤2 rows even with
-  // 9-20 AIs), and a separate Spotlight panel below shows the SELECTED Builder
-  // large with its model selector integrated. Fixed vertical footprint that
-  // fits 1366×768 with room to spare. Keeps the card surface, amber header, and
-  // Builder bee — just a smarter shape for many AIs.
+  // v3.63.69 — Builder Console layout. The selected Builder is now the primary
+  // control surface beside the roster, so the chips stay compact while the
+  // chosen AI and model picker remain visually anchored.
   grid.innerHTML = _aiListAlpha(activeAIs).map(ai => {
     const iconEl = resolveAiIcon(ai, 'builder-chip-icon', 28);
     const isSel = builder === ai.id;
@@ -4815,14 +4811,13 @@ function renderBuilderPicker() {
     </button>
   `;
   }).join('');
-  // v3.63.68 — render the Spotlight panel for the currently-selected Builder.
+  // v3.63.69 — render the selected Builder panel.
   renderBuilderScreenModel();
 }
 
-// v3.63.68 — Spotlight panel for the chosen Builder on Setup Step 2. Shows the
+// v3.63.69 — Selected Builder panel for Setup Step 2. Shows the
 // selected AI large (big icon, name, "Your Builder" treatment) with the model
-// selector integrated INSIDE the panel — so the model picker lives WITH the
-// chosen Builder, not as a disconnected box below the whole grid. Reuses
+// selector integrated inside the panel. Reuses
 // buildModelSelector (the same combobox as Worker Bees + Change Builder modal),
 // defaults to the cached 🔨 Builder pick, persists on change via
 // wfModelSelectPick -> saveModelForAI.
