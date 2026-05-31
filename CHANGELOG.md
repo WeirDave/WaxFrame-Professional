@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.82
+**Build:** `20260530-025` · **Released:** May 30, 2026
+
+### Changed — Provider/model logic centralized into one shared module
+
+The model-filtering, parsing, and fallback logic was duplicated in two places — `js/api.js` (the main app) and `help.html` (the standalone diagnostic page) — and kept in sync by hand. That meant every model-filter change had to be made twice, and the day the two drifted, the Help-page model dump would silently disagree with what the app actually offers.
+
+That logic now lives in one new module, `js/provider-models.js`, loaded by both the app and the Help page. It owns the provider fallback lists, the structural non-chat filter, the per-provider keep rules, the Perplexity normalize/fallback behavior, the response parser, and the cache-key/base-provider helpers. The Help page keeps all of its own UI — dump panels, copy buttons, the no-cache diagnostic fetch — so the emergency page stays self-contained; only the shared "brain" is centralized. Shared logic, separate UI.
+
+No behavior change: the model dump, Worker Bees dropdowns, recommendations, and Perplexity Sonar handling all produce the same results as before, now from a single definition that cannot drift. Verified headless (Help page renders, 9 clean providers, no errors) and unit-tested across Together, Mistral, and Perplexity response shapes with zero false positives on real chat models.
+
+### Release-ceremony note
+
+A new JS file was added, so the per-release sweep counts changed: **15 JS files** (was 14), **25 `Build:` stamps** (9 HTML + 15 JS + `style.css`), **73 `?v=` cache-busts** (provider-models.js is referenced in both `index.html` and `help.html`). It loads **before** `api.js` in `index.html`.
+
+### Files Changed
+
+- Added: `js/provider-models.js` (shared provider/model logic)
+- Updated: `js/api.js` (binds the shared module instead of defining its own copies), `help.html` (aliases the shared module; local filter/parse/fallback copies removed; loads the module), `index.html` (loads the module before `api.js`), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v148.txt`
+- Version/build stamps to `v3.63.82 Pro` / `20260530-025` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.81
 **Build:** `20260530-024` · **Released:** May 30, 2026
 

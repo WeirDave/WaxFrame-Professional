@@ -1,0 +1,44 @@
+WaxFrame Backlog Master v122
+2026-05-30
+
+State: v3.63.58 shipped (api-details favicon air-gap fix; recommend-button relabel Asking->Recommending). Pending on David: post-deploy gut-check browser walk; CodeQL/Dependabot triage (Security tab).
+
+Next Up
+
+- Post-deploy gut checks: v3.63.19 — (a) save a bogus key on Worker Bees for each of the six default providers in turn, confirm the key-status badge flips from 🔑 to ❌ within 1-2 seconds and a friendly console line appears for each. Perplexity and Claude specifically need verification (those were the two providers the initial v3.63.19 build missed before the per-provider routing rewrite). (b) Save a valid key, confirm badge stays/becomes 🔑 and no console error. (c) Click X Key on any AI with a saved key — confirm the model-list cache + recommendation caches are cleared via DevTools (the waxframe_models_{provider} and waxframe_recommend_*-reviewer/-builder keys should disappear from localStorage). Then paste a new key and confirm the model dropdown is no longer showing stale cached models from the prior key. (d) Click Recommend Models on a row, confirm button flips to green "✓ Recommended Model Picked" for ~5 seconds then reverts to blue. (e) Click Recommend Models for All with 2+ keys, confirm header button flips to green "✓ Recommended N Models" then reverts. v3.63.18 — (f) verify the re-extract banner now renders as a proper panel (dark background, amber border, matches Working Document strip weight) and only appears when a real PDF was imported; clear the starting doc with a PDF loaded and confirm the banner hides immediately. (g) Confirm the checkpoint backup nudge no longer has the "Don't ask again for this project" checkbox; modal still fires once per project on first work-screen entry. (h) Verify Re-extract with AI Vision still works after re-uploading a PDF (the cleanup includes `window._lastPDFPages = null` — re-upload must repopulate it). (i) Open DevTools -> Application -> Local Storage on a browser that previously visited a pre-v3.63.18 build; confirm the four orphan sentinels (waxframe_v330_baseline_migrated, waxframe_v33210_recommend_migrated, waxframe_v3605_together_models_migrated, waxframe_v3607_together_models_migrated) are gone after one page load. Earlier pending checks: v3.63.3 suppressKey paths, v3.63.5 license modal, v3.63.6 restore warning, v3.63.7 redaction completeness. STATUS: code paths verified present in live main; pending David's in-browser walk.
+
+- Triage CodeQL + Dependabot findings once first scans complete. CodeQL on a vanilla innerHTML/template-literal app will likely flag some patterns — some real (the ref-doc XSS class fixed in v3.63.7), some false positives on audited patterns. Walk the list together. STATUS: blocked — David to pull Security tab findings (or confirm scans not yet run).
+
+Open Bugs
+
+(none open)
+
+Open Features
+
+- Capture-hook demo seed (enhancement) — extend ?cap= to optionally load a canned demo session so the headless tool can also grab the populated work screen + building/convergence live-round states (currently manual-only). Would make the User Manual fully regenerable from one PowerShell run.
+
+- docs/ folder bloat (repo) — repo docs/ currently holds 10 backlog versions (v103-v113), 3 playbooks (v29/v30/v35), audit files (Findings + Methodology), Prompts Reference v3, User_Manual.txt, and 4 getting-started/readme .docx (v2 + v3.0). Rule: ZIP ships latest backlog + Rules Reference only; keep 3-version rollback margin locally. Trim repo docs/ to current margin (v111/v112/v113) OR confirm intentional retention. NOT done in v3.63.51 — deleting David's historical repo notes is his call, flagged not presumed.
+
+- User Manual restructure — current manual is a wall of text; restructure into walkthrough format with screenshots. Subsumes the API Key Walkthrough above as one section. Triggered same session (May 28, 2026) when David and Candy reviewed the existing manual while planning the API walkthrough. Screenshot refresh must happen before/with this work — current screenshots/ folder is stale (referenced in README and possibly elsewhere; run grep -rn "screenshots/" --include="*.md" --include="*.html" before shipping). Naming convention proposal: page-state-purpose with numbered prefix on flow sequences (setup-01-bees.png, setup-02-builder.png, ..., api-walkthrough-01-signin.png, etc.) so files sort in narrative order in the folder.
+
+- GitHub Actions release-ceremony consistency check (deferred from the GitHub-tour session) — workflow that runs node --check on all JS, verifies build stamps match across files, validates no dead local asset links, on every push. Automates the manual verification. Needs iteration (can't test a workflow from chat), so build it when there's runway to watch it run green.
+
+- restoreRound scope clarification — define what should and should not roll back when restoring a round. Map every piece of session state to "rolls back" or "persists" and document the rule.
+
+- Custom templates: hive auto-reconcile on apply. A custom template stores hive.aiIds + builder + hiveMode. On apply, reconcile against the user's keyed AIs: pre-select the ones they have, flag the ones they're missing, and offer "use this template's hive" vs "keep my current hive". RISKIEST contained item — mutates setup-flow state (activeAIs/builder/_hiveMode + saveHive + re-render). clearProject() does NOT touch the hive, so reconcile runs after recipe apply. Build + test in isolation. (Capture/Phase-2/Phase-3 all shipped.)
+
+- Backup scrubber — utility to strip secrets from a backup file before sharing. NOTE: re-examined this session — the real need behind it was making projects portable, which Phase 3 export/import largely covers. Backup scrubber is a credential-stripper (blank LS_HIVE.keys + null LS_LICENSE on a backup obj, keep the rest). backupSession is in storage.js ~877; backup v4 fields = LS_HIVE/LS_PROJECT/LS_LICENSE/LS_SESSION/IDB_SESSION. Lower priority now that template export is the cleaner share path.
+
+- Deep Dive ring buffer — circular history of last N rounds of full reviewer responses, separate from main history for deep debugging.
+
+- Pause/resume at reviewer seam — finer-grained pause point inside a round.
+
+- File System Access API exploration — investigate replacing download-only backups with true file persistence.
+
+- Two-layer AI management — separate the server/source layer from the selection layer. Currently fused.
+
+- Hive Profiles — saved checkbox-state configurations (research/draft/polish hives).
+
+- Sources view formalizing servers as first-class entities.
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors, SOME CONFIRMED LIVE by Codex. Static grep insufficient (display:contents load-bearing; JS template-literal class names evade grep; ref v3.21.26). Dedicated branch, phased deletion, visual smoke test on every screen as pre-deploy gate. Flagged clusters: welcome-card, save-bar, goal-modal-refine-*, ai-bfb-*, autosave/verify-panel remnants. Reference style.css ~598.
