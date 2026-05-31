@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260530-026
+// Build: 20260531-027
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260530-026';         // build stamp — update each session
+const BUILD       = '20260531-027';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5568,6 +5568,15 @@ function hideCustomAIInfoModal() {
 
 // ── Custom AI Quick Add provider presets ──
 const QUICK_ADD_PROVIDERS = {
+  jamba: {
+    name: 'AI21 (Jamba)',
+    url: 'https://api.ai21.com/studio/v1/chat/completions',
+    format: 'openai',
+    keyLink: 'https://studio.ai21.com/account/api-key',
+    keyLinkLabel: 'Get your AI21 API key →',
+    defaultModel: 'jamba-mini',
+    chooseModelLink: 'https://docs.ai21.com/docs/jamba-foundation-models'
+  },
   deepseek: {
     name: 'DeepSeek',
     url: 'https://api.deepseek.com/v1/chat/completions',
@@ -12123,6 +12132,7 @@ const wfIconUpload = (() => {
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
     { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
+    { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
   ];
   const GENERIC_ICON = 'images/icon-generic.png';
 
@@ -12203,6 +12213,7 @@ const wfIconUpload = (() => {
 const ICON_PICKER_BUNDLED = [
   { section: 'Providers', items: [
     { id: 'generic',    name: 'Generic',     src: 'images/icon-generic.png' },
+    { id: 'ai21',       name: 'AI21 (Jamba)', src: 'images/icon-jamba.png' },
     { id: 'chatgpt',    name: 'ChatGPT',     src: 'images/icon-chatgpt.png' },
     { id: 'claude',     name: 'Claude',      src: 'images/icon-claude.png' },
     { id: 'cohere',     name: 'Cohere',      src: 'images/icon-cohere.png' },
@@ -12561,6 +12572,7 @@ function resolveAiIcon(ai, cssClass, size) {
     { keys: ['llama', 'meta'],                  src: 'images/icon-llama.png' },
     { keys: ['cohere', 'command'],              src: 'images/icon-cohere.png' },
     { keys: ['together', 'togetherai'],       src: 'images/icon-together.png' },
+    { keys: ['jamba', 'ai21'],                  src: 'images/icon-jamba.png' },
   ];
 
   // Shared builder for the safe <img> tag. `src` is the only call-site
