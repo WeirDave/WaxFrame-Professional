@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.69
+**Build:** `20260530-012` · **Released:** May 30, 2026
+
+### Changed — Builder screen promoted to a two-zone console
+
+Setup Step 2 keeps the v3.63.68 compact Builder roster, but the selected Builder is now treated as the main control surface instead of sitting below the picker. The screen reads left-to-right on desktop: chosen Builder and model selector first, available Builders second.
+
+- **Selected Builder first** — the Builder spotlight and model selector now live in a primary console column, so the user can immediately see what is selected and which model will run.
+- **Roster as picker** — available Builders now sit in a bordered roster panel beside the selected Builder on desktop, then stack below it on laptop/narrow layouts.
+- **Cost guidance compacted** — the long full-width token note is now a shorter advisory under the selected Builder, keeping the warning close to the decision it affects without dominating the page.
+- **Responsive layout** — the console uses a two-column grid above 1100px and collapses to a single column below that, with full-width chips on narrow screens.
+
+Required elements preserved: the setup shell, amber header band, Builder bee, compact AI chips, selected Builder model selector, and Continue footer. The Working Document 80ch column is untouched.
+
+### Files Changed
+
+- Updated: `index.html` (Builder console body structure), `style.css` (two-zone Builder console, roster panel, selected-chip treatment, responsive collapse), `js/app.js` (comments aligned with the new console layout), `CHANGELOG.md`
+- Version/build stamps to `v3.63.69 Pro` / `20260530-012` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.68
 **Build:** `20260530-011` · **Released:** May 30, 2026
 
