@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-016
+  Build: 20260530-017
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-016">
+  <meta name="waxframe-build" content="20260530-017">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -137,6 +137,50 @@
     .status.warn{ color: var(--warn); }
     .status.err { color: var(--err); }
 
+    .model-dump-controls {
+      display: grid; grid-template-columns: minmax(220px, 1fr) auto;
+      gap: 10px; align-items: end; margin: 10px 0 12px;
+    }
+    .field label {
+      display: block; font-size: 12px; font-weight: 800;
+      letter-spacing: .04em; text-transform: uppercase;
+      color: var(--text-mute); margin-bottom: 5px;
+    }
+    select {
+      width: 100%; font-family: var(--sans); font-size: 14px;
+      background: var(--bg); color: var(--text);
+      border: 1px solid var(--border); border-radius: 8px;
+      padding: 10px 12px;
+    }
+    .dump-grid {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px; margin-top: 12px;
+    }
+    .dump-panel {
+      border: 1px solid var(--border); border-radius: 10px;
+      background: var(--bg); overflow: hidden;
+    }
+    .dump-head {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border);
+    }
+    .dump-title { font-size: 13px; font-weight: 800; color: var(--text); }
+    .dump-meta { font-family: var(--mono); font-size: 11.5px; color: var(--text-mute); }
+    .dump-copy { font-size: 12px; padding: 6px 10px; border-radius: 7px; }
+    .dump-list {
+      font-family: var(--mono); font-size: 12px; line-height: 1.45;
+      color: var(--text-dim); margin: 0; padding: 12px;
+      min-height: 160px; max-height: 320px; overflow: auto;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .dump-diff {
+      display: none; border-left: 2px solid var(--warn);
+      background: rgba(251, 191, 36, .08); color: var(--warn);
+      padding: 9px 11px; margin-top: 12px; border-radius: 6px;
+      font-size: 13px;
+    }
+    .dump-diff.show { display: block; }
+
     ul.fixes { margin: 6px 0 0; padding-left: 0; list-style: none; }
     ul.fixes li {
       padding: 9px 0; border-bottom: 1px solid var(--border);
@@ -153,6 +197,9 @@
     .links { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
     .footer { text-align: center; color: var(--text-mute); font-size: 12px; margin-top: 28px; }
     a { color: var(--honey); }
+    @media (max-width: 720px) {
+      .model-dump-controls, .dump-grid { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
@@ -203,7 +250,44 @@
       <p class="note">Found a <strong>security</strong> issue instead? Please don't post it publicly — use GitHub's private vulnerability reporting on the <a id="securityLink" href="#" target="_blank" rel="noopener">Security tab</a>.</p>
     </section>
 
-    <!-- 3. Common fixes ----------------------------------------------------- -->
+    <!-- 3. Provider model dump --------------------------------------------- -->
+    <section>
+      <h2>🧪 Dump Provider Models</h2>
+      <p class="sub">Compare WaxFrame's cached model list against a fresh provider fetch. The live fetch does not write to your cache.</p>
+      <div class="model-dump-controls">
+        <div class="field">
+          <label for="modelDumpProvider">Provider</label>
+          <select id="modelDumpProvider"></select>
+        </div>
+        <button id="modelDumpBtn" type="button">Dump models</button>
+      </div>
+      <p class="status" id="modelDumpStatus"></p>
+      <div class="dump-diff" id="modelDumpDiff"></div>
+      <div class="dump-grid">
+        <div class="dump-panel">
+          <div class="dump-head">
+            <div>
+              <div class="dump-title">Cached</div>
+              <div class="dump-meta" id="cachedDumpMeta">No dump yet</div>
+            </div>
+            <button class="btn-ghost dump-copy" id="copyCachedDump" type="button">⧉ Copy JSON</button>
+          </div>
+          <pre class="dump-list" id="cachedDumpList">Pick a provider, then dump models.</pre>
+        </div>
+        <div class="dump-panel">
+          <div class="dump-head">
+            <div>
+              <div class="dump-title">Live</div>
+              <div class="dump-meta" id="liveDumpMeta">No dump yet</div>
+            </div>
+            <button class="btn-ghost dump-copy" id="copyLiveDump" type="button">⧉ Copy JSON</button>
+          </div>
+          <pre class="dump-list" id="liveDumpList">Live fetch waits until you click Dump models.</pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Common fixes ----------------------------------------------------- -->
     <section>
       <h2>🔧 Try these first</h2>
       <p class="sub">Most issues clear with one of these.</p>
@@ -215,7 +299,7 @@
       </ul>
     </section>
 
-    <!-- 4. Links ------------------------------------------------------------ -->
+    <!-- 5. Links ------------------------------------------------------------ -->
     <section>
       <h2>↩ Get back to it</h2>
       <div class="links">
@@ -229,8 +313,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.73"></script>
-  <script src="js/storage.js?v=3.63.73"></script>
+  <script src="js/version.js?v=3.63.74"></script>
+  <script src="js/storage.js?v=3.63.74"></script>
   <script>
   (function () {
     'use strict';
@@ -335,6 +419,303 @@
       window.open(url, '_blank', 'noopener');
     });
 
+    // ── provider model dump ──
+    var MODEL_CACHE_PREFIX = 'waxframe_models_';
+    var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity/i;
+    var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
+    var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
+    var BUILT_IN_MODEL_PROVIDERS = {
+      claude:     { label: 'Anthropic (Claude)', endpoint: 'https://waxframe-claude-proxy.weirdave.workers.dev', format: 'anthropic' },
+      chatgpt:    { label: 'OpenAI (ChatGPT)', endpoint: 'https://api.openai.com/v1/chat/completions', format: 'openai' },
+      gemini:     { label: 'Google (Gemini)', endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent', format: 'google' },
+      grok:       { label: 'xAI (Grok)', endpoint: 'https://api.x.ai/v1/chat/completions', format: 'openai' },
+      perplexity: { label: 'Perplexity', endpoint: 'https://api.perplexity.ai/chat/completions', format: 'openai' },
+      mistral:    { label: 'Mistral', endpoint: 'https://api.mistral.ai/v1/chat/completions', format: 'openai' },
+      deepseek:   { label: 'DeepSeek', endpoint: 'https://api.deepseek.com/v1/chat/completions', format: 'openai' },
+      together:   { label: 'Together AI', endpoint: 'https://api.together.xyz/v1/chat/completions', format: 'openai' },
+      cohere:     { label: 'Cohere', endpoint: 'https://api.cohere.ai/compatibility/v1/chat/completions', format: 'openai' }
+    };
+    var _lastCachedDump = null;
+    var _lastLiveDump = null;
+
+    function safeJsonParse(str, fallback) {
+      try { return JSON.parse(str); } catch (e) { return fallback; }
+    }
+
+    function readHiveRaw() {
+      try {
+        var key = (typeof LS_HIVE === 'string') ? LS_HIVE : 'waxframe_v2_hive';
+        return safeJsonParse(localStorage.getItem(key) || '{}', {});
+      } catch (e) { return {}; }
+    }
+
+    function filterModelForProvider(provider, id) {
+      if (!id || STRUCTURAL_NON_CHAT_RE.test(id)) return false;
+      if (provider === 'chatgpt' && (CHATGPT_RESPONSES_ONLY_RE.test(id) || DATED_SNAPSHOT_RE.test(id))) return false;
+      if (provider === 'perplexity' && !/^sonar/i.test(id)) return false;
+      return true;
+    }
+
+    function dedup(arr) {
+      var out = [], seen = {};
+      (arr || []).forEach(function (id) {
+        id = String(id || '').trim();
+        if (id && !seen[id]) { seen[id] = true; out.push(id); }
+      });
+      return out;
+    }
+
+    function getProviderEntries() {
+      var hive = readHiveRaw();
+      var entries = [];
+      var seen = {};
+      function add(id, label, cfg, aiId) {
+        if (!id || seen[id]) return;
+        cfg = cfg || {};
+        seen[id] = true;
+        entries.push({
+          id: id,
+          aiId: aiId || id,
+          label: label || cfg.label || id,
+          endpoint: cfg.endpoint || '',
+          modelsEndpoint: cfg._modelsEndpoint || cfg.modelsEndpoint || '',
+          format: cfg.format || 'openai',
+          key: (hive.keys && (hive.keys[id] || hive.keys[aiId])) || ''
+        });
+      }
+      Object.keys(BUILT_IN_MODEL_PROVIDERS).forEach(function (id) {
+        add(id, BUILT_IN_MODEL_PROVIDERS[id].label, BUILT_IN_MODEL_PROVIDERS[id], id);
+      });
+      var customs = hive.customAIConfigs || {};
+      Object.keys(customs).forEach(function (id) {
+        add(id, customs[id].label || id, customs[id], id);
+      });
+      (hive.aiList || []).forEach(function (ai) {
+        var cfg = customs[ai.provider] || customs[ai.id] || BUILT_IN_MODEL_PROVIDERS[ai.provider] || {};
+        add(ai.provider || ai.id, ai.name || cfg.label, cfg, ai.id);
+      });
+      return entries.sort(function (a, b) { return a.label.localeCompare(b.label); });
+    }
+
+    function readModelCache(cacheId) {
+      var out = { cacheKey: MODEL_CACHE_PREFIX + cacheId, ts: null, models: [], raw: null, error: '' };
+      try {
+        out.raw = localStorage.getItem(out.cacheKey);
+        var parsed = safeJsonParse(out.raw || 'null', null);
+        if (Array.isArray(parsed)) out.models = dedup(parsed);
+        else if (parsed && Array.isArray(parsed.models)) {
+          out.ts = parsed.ts || null;
+          out.models = dedup(parsed.models);
+        }
+      } catch (e) { out.error = e && e.message ? e.message : String(e); }
+      return out;
+    }
+
+    function readAllModelCaches() {
+      var caches = {};
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var key = localStorage.key(i);
+          if (!key || key.indexOf(MODEL_CACHE_PREFIX) !== 0) continue;
+          var id = key.slice(MODEL_CACHE_PREFIX.length);
+          var cache = readModelCache(id);
+          caches[id] = { ts: cache.ts, count: cache.models.length, models: cache.models };
+        }
+      } catch (e) {
+        caches._error = e && e.message ? e.message : String(e);
+      }
+      return caches;
+    }
+
+    function formatList(models) {
+      if (!models || !models.length) return '(none)';
+      return models.map(function (id, i) { return String(i + 1).padStart(2, '0') + '. ' + id; }).join('\n');
+    }
+
+    function setDumpStatus(msg, cls) {
+      var el = document.getElementById('modelDumpStatus');
+      if (!el) return;
+      el.textContent = msg;
+      el.className = 'status ' + (cls || '');
+    }
+
+    function setDumpPanel(kind, dump) {
+      var meta = document.getElementById(kind + 'DumpMeta');
+      var list = document.getElementById(kind + 'DumpList');
+      if (meta) {
+        var parts = [dump.models.length + ' model' + (dump.models.length === 1 ? '' : 's')];
+        if (dump.ts) parts.push(new Date(dump.ts).toLocaleString());
+        if (dump.elapsedMs) parts.push(dump.elapsedMs + ' ms');
+        if (dump.status) parts.push(dump.status);
+        meta.textContent = parts.join(' · ');
+      }
+      if (list) list.textContent = dump.error ? ('ERROR: ' + dump.error) : formatList(dump.models);
+    }
+
+    function copyDump(dump, statusLabel) {
+      var text = JSON.stringify(dump || {}, null, 2);
+      try {
+        navigator.clipboard.writeText(text).then(function () {
+          setDumpStatus('✓ Copied ' + statusLabel + ' model dump JSON', 'ok');
+        }, function () {
+          setDumpStatus('⚠ Could not copy ' + statusLabel + ' dump — select the list manually', 'warn');
+        });
+      } catch (e) {
+        setDumpStatus('⚠ Could not copy ' + statusLabel + ' dump — select the list manually', 'warn');
+      }
+    }
+
+    function compareDumps(cachedModels, liveModels) {
+      var cached = {}, live = {}, onlyCached = [], onlyLive = [];
+      (cachedModels || []).forEach(function (id) { cached[id] = true; });
+      (liveModels || []).forEach(function (id) { live[id] = true; });
+      Object.keys(cached).forEach(function (id) { if (!live[id]) onlyCached.push(id); });
+      Object.keys(live).forEach(function (id) { if (!cached[id]) onlyLive.push(id); });
+      return { onlyCached: onlyCached, onlyLive: onlyLive, same: !onlyCached.length && !onlyLive.length };
+    }
+
+    function deriveModelsEndpoint(entry) {
+      if (entry.modelsEndpoint) return entry.modelsEndpoint;
+      if (entry.id === 'claude') return entry.endpoint.replace(/\/$/, '') + '/v1/models';
+      if (entry.id === 'gemini' || entry.format === 'google') return 'https://generativelanguage.googleapis.com/v1beta/models?pageSize=100';
+      if (/^(chatgpt|grok|deepseek|perplexity|mistral)$/i.test(entry.id)) return new URL(entry.endpoint).origin + '/v1/models';
+      var base = entry.endpoint.replace(/\/$/, '').replace(/\/v1\/.*$/, '');
+      var url = base + '/v1/models';
+      if (/api\.together\.xyz/i.test(url)) url += '?serverless=true';
+      return url;
+    }
+
+    function parseModelsResponse(provider, format, data) {
+      var models = [];
+      if (format === 'anthropic' || provider === 'claude') {
+        models = (data && data.data ? data.data : [])
+          .sort(function (a, b) { return (Date.parse(b.created_at) || 0) - (Date.parse(a.created_at) || 0); })
+          .map(function (m) { return m.id; });
+      } else if (format === 'google' || provider === 'gemini') {
+        models = (data && data.models ? data.models : [])
+          .filter(function (m) { return (m.supportedGenerationMethods || []).indexOf('generateContent') !== -1; })
+          .map(function (m) { return String(m.name || '').replace('models/', ''); })
+          .sort().reverse();
+      } else {
+        var arr = Array.isArray(data) ? data : ((data && data.data) || []);
+        if (provider !== 'perplexity') {
+          arr = arr.slice().sort(function (a, b) { return (b.created || 0) - (a.created || 0); });
+        }
+        if (!arr.length && data && Array.isArray(data.models)) arr = data.models;
+        models = arr
+          .filter(function (m) { return !m.type || m.type === 'chat'; })
+          .map(function (m) { return m.id || m.name || m.model; });
+      }
+      return dedup(models).filter(function (id) { return filterModelForProvider(provider, id); });
+    }
+
+    async function fetchLiveModelsNoCache(entry) {
+      if (!entry || !entry.endpoint) throw new Error('No endpoint saved for this provider.');
+      var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
+      if (!entry.key && keyRequired) throw new Error('No API key saved for this provider in this browser.');
+      var endpoint = deriveModelsEndpoint(entry);
+      var headers = {};
+      if (entry.format === 'anthropic' || entry.id === 'claude') {
+        headers = { 'x-api-key': entry.key, 'anthropic-version': '2023-06-01' };
+      } else if (entry.format === 'google' || entry.id === 'gemini') {
+        headers = { 'x-goog-api-key': entry.key };
+      } else {
+        if (entry.key) headers = { 'Authorization': 'Bearer ' + entry.key };
+      }
+      var started = Date.now();
+      var resp = await fetch(endpoint, { headers: headers });
+      var elapsedMs = Date.now() - started;
+      var data = null;
+      try { data = await resp.json(); } catch (e) {}
+      if (!resp.ok) {
+        var msg = data && (data.error && (data.error.message || data.error)) || ('HTTP ' + resp.status);
+        throw new Error(String(msg));
+      }
+      return {
+        provider: entry.id,
+        label: entry.label,
+        fetchedAt: Date.now(),
+        elapsedMs: elapsedMs,
+        status: 'HTTP ' + resp.status,
+        models: parseModelsResponse(entry.id, entry.format, data)
+      };
+    }
+
+    function populateModelDumpProviders() {
+      var select = document.getElementById('modelDumpProvider');
+      if (!select) return;
+      var entries = getProviderEntries();
+      select.innerHTML = entries.map(function (entry) {
+        var keyRequired = !entry.modelsEndpoint || entry.format === 'anthropic' || entry.format === 'google' || entry.id === 'claude' || entry.id === 'gemini';
+        return '<option value="' + entry.id.replace(/"/g, '&quot;') + '">' +
+               entry.label.replace(/&/g, '&amp;').replace(/</g, '&lt;') +
+               (entry.key || !keyRequired ? '' : ' (no key saved)') +
+               '</option>';
+      }).join('');
+      var hive = readHiveRaw();
+      var preferred = (hive.builder && (hive.builder.provider || hive.builder.id)) || (hive.activeAIs && hive.activeAIs[0] && hive.activeAIs[0].provider);
+      if (preferred) select.value = preferred;
+      if (!entries.length) setDumpStatus('No providers found in local storage.', 'warn');
+    }
+
+    var modelDumpBtn = document.getElementById('modelDumpBtn');
+    if (modelDumpBtn) modelDumpBtn.addEventListener('click', async function () {
+      var select = document.getElementById('modelDumpProvider');
+      var id = select && select.value;
+      var entry = getProviderEntries().filter(function (e) { return e.id === id; })[0];
+      if (!entry) { setDumpStatus('Pick a provider first.', 'warn'); return; }
+      modelDumpBtn.disabled = true;
+      setDumpStatus('Fetching live model list without touching the cache...', '');
+      var diffEl = document.getElementById('modelDumpDiff');
+      if (diffEl) { diffEl.className = 'dump-diff'; diffEl.textContent = ''; }
+      try {
+        var cache = readModelCache(entry.id);
+        _lastCachedDump = {
+          source: 'localStorage',
+          provider: entry.id,
+          label: entry.label,
+          cacheKey: cache.cacheKey,
+          ts: cache.ts,
+          models: cache.models,
+          error: cache.error
+        };
+        setDumpPanel('cached', _lastCachedDump);
+        try {
+          _lastLiveDump = await fetchLiveModelsNoCache(entry);
+        } catch (e) {
+          _lastLiveDump = {
+            source: 'live',
+            provider: entry.id,
+            label: entry.label,
+            fetchedAt: Date.now(),
+            models: [],
+            error: e && e.message ? e.message : String(e)
+          };
+        }
+        setDumpPanel('live', _lastLiveDump);
+        var cmp = compareDumps(_lastCachedDump.models, _lastLiveDump.models);
+        if (_lastLiveDump.error) {
+          setDumpStatus('⚠ Live fetch failed; cached list is still shown for inspection.', 'warn');
+        } else if (cmp.same) {
+          setDumpStatus('✓ Cached and live model lists match.', 'ok');
+        } else {
+          setDumpStatus('⚠ Cached and live model lists differ.', 'warn');
+          if (diffEl) {
+            diffEl.className = 'dump-diff show';
+            diffEl.textContent = 'Only cached: ' + cmp.onlyCached.length + ' · only live: ' + cmp.onlyLive.length;
+          }
+        }
+      } finally {
+        modelDumpBtn.disabled = false;
+      }
+    });
+
+    var copyCachedDump = document.getElementById('copyCachedDump');
+    if (copyCachedDump) copyCachedDump.addEventListener('click', function () { copyDump(_lastCachedDump, 'cached'); });
+    var copyLiveDump = document.getElementById('copyLiveDump');
+    if (copyLiveDump) copyLiveDump.addEventListener('click', function () { copyDump(_lastLiveDump, 'live'); });
+    populateModelDumpProviders();
+
     // ── diagnostic bundle (reuses storage.js redaction; own assembly) ──
     var bundleBtn = document.getElementById('bundleBtn');
     var bundleStatus = document.getElementById('bundleStatus');
@@ -413,7 +794,8 @@
           _waxframe_content_redacted: redactContent,
           LS_HIVE: hiveOut,
           LS_PROJECT: projectOut,
-          IDB_SESSION: sessionOut
+          IDB_SESSION: sessionOut,
+          MODEL_CACHES: readAllModelCaches()
         };
 
         var projName = 'session';
