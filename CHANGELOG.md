@@ -2,6 +2,24 @@
 
 ---
 
+## v3.63.81
+**Build:** `20260530-024` · **Released:** May 30, 2026
+
+### Fixed — Image, video, audio, and OCR models no longer appear as selectable chat models
+
+Together AI's `/v1/models` returns roughly 60 non-chat models — image (FLUX, Seedream, Qwen-Image, HiDream, Ideogram, Juggernaut, DreamShaper), video (Seedance, Wan, Kling, Vidu, Pixverse, Hailuo, Sora, HappyHorse), and audio/TTS (Sonic, Kokoro, Orpheus, Parakeet) — and Mistral lists its image (`pixtral`), audio (`voxtral`), and OCR (`mistral-ocr-*`) models alongside its chat models. None of these can run a WaxFrame round; picked as a Builder or Reviewer they would hard-fail every round.
+
+The shared structural filter (`STRUCTURAL_NON_CHAT_RE`) now recognizes these families, plus generic non-chat markers (`-image`, `image-`, `flash-image`, video `-i2v`/`-t2v`/`-r2v` tags, `e5-` embeddings, `ocr`). They're filtered out of the model dropdowns, recommendations, and the Help-page model dump everywhere the filter runs.
+
+Verified against the full live Together (85) and Mistral (51) model lists: the kept sets are pure chat (Together 85 → 23 chat, Mistral 51 → 40 chat), with zero false positives on any provider's real chat models — `sonar`/`sonar-pro` (not caught by `sonic`/`sora`), `command-r` (not caught by `ocr`), `Qwen3-Coder`, `codestral`/`devstral`/`magistral`, and the full default-6 lineups all survive.
+
+### Files Changed
+
+- Updated: `js/api.js` (`STRUCTURAL_NON_CHAT_RE` extended), `help.html` (same regex kept in sync for the dump), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v147.txt`
+- Version/build stamps to `v3.63.81 Pro` / `20260530-024` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.80
 **Build:** `20260530-023` · **Released:** May 30, 2026
 

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-023
+  Build: 20260530-024
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-023">
+  <meta name="waxframe-build" content="20260530-024">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -314,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.80"></script>
-  <script src="js/storage.js?v=3.63.80"></script>
+  <script src="js/version.js?v=3.63.81"></script>
+  <script src="js/storage.js?v=3.63.81"></script>
   <script>
   (function () {
     'use strict';
@@ -422,7 +422,13 @@
 
     // ── provider model dump ──
     var MODEL_CACHE_PREFIX = 'waxframe_models_';
-    var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity/i;
+    // v3.63.81 — kept in sync with STRUCTURAL_NON_CHAT_RE in js/api.js. Added
+    // image/video/audio/TTS/OCR/embedding model families (FLUX, Seedream/Seedance,
+    // Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic, Kokoro, Orpheus, Parakeet,
+    // HiDream, Ideogram, Juggernaut, DreamShaper, pixtral, voxtral, ocr, e5, …)
+    // that Together AI and Mistral surface in /v1/models. Verified zero false
+    // positives on real chat models (sonar*, command-r*, Coder, codestral, …).
+    var STRUCTURAL_NON_CHAT_RE = /embed|moderation|whisper|tts|speech|transcribe|rerank|audio|realtime|guard|dall-e|imagen|imagine|veo|lyria|stable-diffusion|safety|computer-use|nano-banana|antigravity|flux|seedream|seedance|happyhorse|pixverse|vidu|wan2|sonic|kokoro|sora|hailuo|video-0|kling|qwen-image|hidream|juggernaut|ideogram|dreamshaper|voxtral|orpheus|parakeet|pixtral|ocr|-image\b|\bimage-|flash-image|-i2v|-t2v|-r2v|e5-/i;
     var CHATGPT_RESPONSES_ONLY_RE = /-pro(\b|-)|-codex(\b|-)/i;
     var DATED_SNAPSHOT_RE = /-\d{4}-\d{2}-\d{2}$/;
     // v3.63.76 — these are the DEFAULT 6 only, matching DEFAULT_AIS in app.js

@@ -1,7 +1,7 @@
-WaxFrame Backlog Master v144
+WaxFrame Backlog Master v147
 2026-05-30
 
-State: v3.63.78 shipped — Perplexity's current `/v1/models` response can return Sonar ids with the Agent API prefix (`perplexity/sonar`, `perplexity/sonar-pro`). WaxFrame's chat-completion path and filters expect direct Sonar ids (`sonar`, `sonar-pro`). Normalized that prefix before filtering in both Help-page Dump Provider Models and the main `js/api.js` fetch paths, so successful Perplexity model fetches no longer collapse into an empty list. Prior today: v3.63.77 (dump parser removed fabricated type filter), v3.63.76 (dump 6-defaults+additionals architecture fix), v3.63.75 (dedup band-aid — superseded), v3.63.74 (Dump Provider Models), v3.63.73 (envelope softening), v3.63.69-72 (Builder console iterations).
+State: v3.63.81 shipped — STRUCTURAL_NON_CHAT_RE extended to filter image/video/audio/TTS/OCR/embedding models (FLUX, Seedream/Seedance, Wan, Kling, Vidu, Pixverse, Hailuo, Sora, Sonic, Kokoro, Orpheus, Parakeet, HiDream, Ideogram, Juggernaut, DreamShaper, pixtral, voxtral, ocr, e5, generic -image/-i2v/-t2v/-r2v) that Together AI (~60) and Mistral (pixtral/voxtral/ocr) surface in /v1/models and that hard-fail if picked as Builder/Reviewer. Applied to BOTH js/api.js (real filter) and help.html (dump copy), byte-identical. Verified against full live Together (85→23 chat) + Mistral (51→40 chat) lists: pure-chat kept sets, ZERO false positives (sonar/command-r/Coder/codestral all survive). Prior today: v3.63.80 (dump Perplexity provenance labeling), v3.63.79 (Perplexity normalize-then-filter + Sonar-family expansion — fixes the filter-before-normalize bug), v3.63.78 (dump fallback parity), v3.63.77 (Mistral/Perplexity type-filter), v3.63.76 (dump architecture), v3.63.74 (Dump Provider Models), v3.63.73 (envelope softening).
 
 Next Up
 
