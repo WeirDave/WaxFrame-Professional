@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.72
+**Build:** `20260530-015` · **Released:** May 30, 2026
+
+### Changed — 9-AI Builder roster gets true three-column tiles
+
+The Available Builders roster now makes the 7-9 AI case visibly roomier instead of only subtly different from the compact chip layout.
+
+- **Three columns for normal hives** — 7-9 active Builders now render as exactly three columns.
+- **Larger icons and tiles** — normal roster tiles now use larger 42px provider icons, taller tiles, and slightly roomier padding.
+- **Laptop override fixed** — the 1366×768 / ≤1600px media rule now preserves the three-column normal roster instead of reverting to the tighter auto-fit grid.
+
+The setup card width, page shell, selected Builder column, footer, 10-12 tighter mode, and 13+ compact mode are unchanged.
+
+### Files Changed
+
+- Updated: `style.css` (normal Builder roster columns/icon sizing plus laptop override), `CHANGELOG.md`
+- Version/build stamps to `v3.63.72 Pro` / `20260530-015` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.71
 **Build:** `20260530-014` · **Released:** May 30, 2026
 

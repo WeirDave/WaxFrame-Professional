@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260530-014
+   Build: 20260530-015
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -3001,7 +3001,7 @@ html, body {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 .builder-pick-grid-large.builder-count-normal {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .builder-pick-grid-large.builder-count-dozen {
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -3051,8 +3051,8 @@ html, body {
 .builder-count-small .builder-chip-icon { width: 40px; height: 40px; }
 .builder-count-medium .builder-chip { min-height: 60px; padding: var(--space-10) var(--space-14); }
 .builder-count-medium .builder-chip-icon { width: 34px; height: 34px; }
-.builder-count-normal .builder-chip { min-height: 54px; }
-.builder-count-normal .builder-chip-icon { width: 32px; height: 32px; }
+.builder-count-normal .builder-chip { min-height: 66px; padding: var(--space-12) var(--space-16); font-size: var(--fs-15); }
+.builder-count-normal .builder-chip-icon { width: 42px; height: 42px; }
 .builder-count-dozen .builder-chip { min-height: 48px; padding: var(--space-8) var(--space-12); font-size: var(--fs-13); }
 .builder-count-dozen .builder-chip-icon { width: 28px; height: 28px; }
 .builder-count-many .builder-chip { min-height: 42px; padding: var(--space-6) var(--space-10); font-size: var(--fs-12); }
@@ -3107,6 +3107,9 @@ html, body {
   .builder-pick-grid-large {
     gap: var(--space-8);
     grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  }
+  .builder-pick-grid-large.builder-count-normal {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .builder-spotlight-head {
     gap: var(--space-12);
