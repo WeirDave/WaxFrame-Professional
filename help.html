@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260530-017
+  Build: 20260530-018
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260530-017">
+  <meta name="waxframe-build" content="20260530-018">
   <title>WaxFrame — Help</title>
   <style>
     /* Palette mirrors style.css :root (dark theme), hardcoded ON PURPOSE — this
@@ -260,6 +260,7 @@
           <select id="modelDumpProvider"></select>
         </div>
         <button id="modelDumpBtn" type="button">Dump models</button>
+        <button id="modelDumpAllBtn" class="btn-ghost" type="button" title="Fetch live models for every provider with a saved key into one JSON">⧉ Dump ALL (live) → JSON</button>
       </div>
       <p class="status" id="modelDumpStatus"></p>
       <div class="dump-diff" id="modelDumpDiff"></div>
@@ -313,8 +314,8 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.74"></script>
-  <script src="js/storage.js?v=3.63.74"></script>
+  <script src="js/version.js?v=3.63.75"></script>
+  <script src="js/storage.js?v=3.63.75"></script>
   <script>
   (function () {
     'use strict';
@@ -437,6 +438,7 @@
     };
     var _lastCachedDump = null;
     var _lastLiveDump = null;
+    var _lastAllDump = null;
 
     function safeJsonParse(str, fallback) {
       try { return JSON.parse(str); } catch (e) { return fallback; }
@@ -468,20 +470,44 @@
     function getProviderEntries() {
       var hive = readHiveRaw();
       var entries = [];
-      var seen = {};
+      var byId = {};
+      // v3.63.75 — fixes duplicate dropdown entries (two "Together AI", two
+      // "Cohere") where one copy showed "(no key saved)". Root cause: the same
+      // provider was added from more than one source (built-in list, custom
+      // configs, aiList) under slightly different ids, and the second copy's
+      // key lookup missed. Now: (a) we resolve a canonical key for dedup so the
+      // same provider can't appear twice, and (b) if a later source carries a
+      // key/endpoint the existing entry lacks, we MERGE it in rather than
+      // discarding the better-populated copy.
+      function resolveKey(id, aiId) {
+        var k = hive.keys || {};
+        return k[id] || k[aiId] || '';
+      }
       function add(id, label, cfg, aiId) {
-        if (!id || seen[id]) return;
+        if (!id) return;
         cfg = cfg || {};
-        seen[id] = true;
-        entries.push({
+        var key = resolveKey(id, aiId);
+        var existing = byId[id];
+        if (existing) {
+          // Merge: don't lose a key or endpoint a duplicate copy supplies.
+          if (!existing.key && key) existing.key = key;
+          if (!existing.endpoint && cfg.endpoint) existing.endpoint = cfg.endpoint;
+          if (!existing.modelsEndpoint && (cfg._modelsEndpoint || cfg.modelsEndpoint)) {
+            existing.modelsEndpoint = cfg._modelsEndpoint || cfg.modelsEndpoint;
+          }
+          return;
+        }
+        var entry = {
           id: id,
           aiId: aiId || id,
           label: label || cfg.label || id,
           endpoint: cfg.endpoint || '',
           modelsEndpoint: cfg._modelsEndpoint || cfg.modelsEndpoint || '',
           format: cfg.format || 'openai',
-          key: (hive.keys && (hive.keys[id] || hive.keys[aiId])) || ''
-        });
+          key: key
+        };
+        byId[id] = entry;
+        entries.push(entry);
       }
       Object.keys(BUILT_IN_MODEL_PROVIDERS).forEach(function (id) {
         add(id, BUILT_IN_MODEL_PROVIDERS[id].label, BUILT_IN_MODEL_PROVIDERS[id], id);
@@ -491,8 +517,17 @@
         add(id, customs[id].label || id, customs[id], id);
       });
       (hive.aiList || []).forEach(function (ai) {
-        var cfg = customs[ai.provider] || customs[ai.id] || BUILT_IN_MODEL_PROVIDERS[ai.provider] || {};
-        add(ai.provider || ai.id, ai.name || cfg.label, cfg, ai.id);
+        // Resolve to the base provider id when it's a known built-in, so an
+        // aiList row for e.g. Together doesn't create a second "together_x"
+        // entry that misses the key stored under "together".
+        var pid = ai.provider || ai.id;
+        if (pid && !BUILT_IN_MODEL_PROVIDERS[pid] && !customs[pid]) {
+          // Unknown provider id — fall back to matching by id alias if a
+          // built-in/custom already owns the key under ai.id.
+          if (BUILT_IN_MODEL_PROVIDERS[ai.id] || customs[ai.id]) pid = ai.id;
+        }
+        var cfg = customs[pid] || customs[ai.id] || BUILT_IN_MODEL_PROVIDERS[pid] || BUILT_IN_MODEL_PROVIDERS[ai.id] || {};
+        add(pid, ai.name || cfg.label, cfg, ai.id);
       });
       return entries.sort(function (a, b) { return a.label.localeCompare(b.label); });
     }
@@ -714,6 +749,62 @@
     if (copyCachedDump) copyCachedDump.addEventListener('click', function () { copyDump(_lastCachedDump, 'cached'); });
     var copyLiveDump = document.getElementById('copyLiveDump');
     if (copyLiveDump) copyLiveDump.addEventListener('click', function () { copyDump(_lastLiveDump, 'live'); });
+
+    // v3.63.75 — Dump ALL providers: live-fetch every provider that has a saved
+    // key (and any keyless provider with a public models endpoint) into one
+    // combined JSON, copied to the clipboard. Same no-cache-write guarantee as
+    // the single dump. Sequential to stay gentle on rate limits.
+    var modelDumpAllBtn = document.getElementById('modelDumpAllBtn');
+    if (modelDumpAllBtn) modelDumpAllBtn.addEventListener('click', async function () {
+      var entries = getProviderEntries();
+      // Eligible = has a key, OR has a public models endpoint that needs none.
+      var eligible = entries.filter(function (e) {
+        var keyRequired = !e.modelsEndpoint || e.format === 'anthropic' || e.format === 'google' || e.id === 'claude' || e.id === 'gemini';
+        return e.key || !keyRequired;
+      });
+      if (!eligible.length) { setDumpStatus('No providers with a saved key (or keyless model endpoint) to dump.', 'warn'); return; }
+      modelDumpAllBtn.disabled = true;
+      var combined = {
+        kind: 'waxframe-all-provider-models',
+        generatedAt: new Date().toISOString(),
+        appVersion: (typeof APP_VERSION === 'string' ? APP_VERSION : ''),
+        providerCount: eligible.length,
+        providers: {}
+      };
+      var okN = 0, failN = 0;
+      for (var i = 0; i < eligible.length; i++) {
+        var e = eligible[i];
+        setDumpStatus('Dumping ALL — ' + (i + 1) + ' of ' + eligible.length + ': ' + e.label + '…', '');
+        try {
+          var live = await fetchLiveModelsNoCache(e);
+          combined.providers[e.id] = {
+            label: e.label, status: live.status, elapsedMs: live.elapsedMs,
+            count: live.models.length, models: live.models
+          };
+          okN++;
+        } catch (err) {
+          combined.providers[e.id] = {
+            label: e.label, error: (err && err.message) ? err.message : String(err),
+            models: []
+          };
+          failN++;
+        }
+      }
+      _lastAllDump = combined;
+      var text = JSON.stringify(combined, null, 2);
+      try {
+        await navigator.clipboard.writeText(text);
+        setDumpStatus('✓ Dumped ALL — ' + okN + ' ok, ' + failN + ' failed · combined JSON copied to clipboard.', failN ? 'warn' : 'ok');
+      } catch (e2) {
+        // Clipboard blocked — surface the JSON in the live panel so it's selectable.
+        setDumpPanel('live', { source: 'all-providers', models: [], note: 'clipboard blocked — JSON below' });
+        var liveList = document.getElementById('liveDumpList');
+        if (liveList) liveList.textContent = text;
+        setDumpStatus('⚠ Dumped ALL — ' + okN + ' ok, ' + failN + ' failed · clipboard blocked, JSON shown in Live panel (select + copy).', 'warn');
+      }
+      modelDumpAllBtn.disabled = false;
+    });
+
     populateModelDumpProviders();
 
     // ── diagnostic bundle (reuses storage.js redaction; own assembly) ──

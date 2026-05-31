@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.75
+**Build:** `20260530-018` · **Released:** May 30, 2026
+
+### Fixed — Duplicate providers (and false "no key saved") in the model-dump picker
+
+The Dump Provider Models picker on the Help page could list the same provider twice — e.g. two **Cohere** and two **Together AI** entries, with one copy of each wrongly labeled **(no key saved)** even though a key was present. The provider list was assembled from three sources (built-in list, custom configs, the saved AI list) and the same provider arriving under slightly different ids produced a second entry whose key lookup missed.
+
+The picker now resolves a canonical id per provider so each appears exactly once, and when a later source supplies a key or endpoint the existing entry lacks, that value is **merged in** rather than the better-populated copy being dropped. Verified headless: a 9-AI hive that previously produced 11 options with two false "(no key saved)" entries now produces exactly 9, all correctly keyed.
+
+### Added — Dump ALL providers to one combined JSON
+
+Next to the per-provider **Dump models** button, a new **⧉ Dump ALL (live) → JSON** button live-fetches every provider that has a saved key (plus any keyless provider with a public model endpoint) and assembles a single combined JSON — provider label, status, latency, model count, and the full model list per provider — copied straight to the clipboard for support and triage. Same no-cache-write guarantee as the single dump; runs sequentially to stay gentle on provider rate limits. If the clipboard is blocked, the combined JSON is shown in the Live panel for manual selection.
+
+### Files Changed
+
+- Updated: `help.html` (provider-entry dedup + key merge, Dump ALL button and handler), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v141.txt`
+- Version/build stamps to `v3.63.75 Pro` / `20260530-018` across 9 HTML files, 14 JS files, `style.css`
+
+---
+
 ## v3.63.74
 **Build:** `20260530-017` · **Released:** May 30, 2026
 
