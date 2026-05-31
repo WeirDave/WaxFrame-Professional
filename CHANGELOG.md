@@ -2,6 +2,26 @@
 
 ---
 
+## v3.63.89
+**Build:** `20260531-032` · **Released:** May 31, 2026
+
+### Fixed — Worker Bee rows cascading open on screen entry
+
+Navigating back to the Worker Bees screen mid-session (e.g. F5 lands you on Work, then click back to Bees) triggered every provider row to expand one after another. Root cause: `renderAIRow` unconditionally added its row to `_expandedAIIds` on every re-render — and `validateAllSavedKeys` (the auto key probe that fires on screen entry) calls `renderAIRow` per AI as each async validation result returns. The v3.63.88 persistence change made it worse by saving that cascaded-open state to localStorage, so the damage survived reloads.
+
+Fix: `renderAIRow(id, keepExpanded = true)` now takes a flag. User-initiated re-renders (pasting a key, picking a model, clicking Recommend) keep the default `true` so the panel stays open mid-flow. The three background callers — both `validateKeyOnSave` callbacks and the startup recommend-migrate sweep — pass `false`, so background work no longer mutates user-controlled row state. Collapsed stays collapsed; the border colors (gray/red/green) still reflect validation in either form.
+
+### Added — "Wipe local data" escape hatch on the Help page
+
+New dedicated section on `help.html` with a red-outlined "Wipe all WaxFrame data from this browser" button. Removes every `waxframe_*` key from `localStorage` and `sessionStorage`, then reloads the app for a clean start. Two-click confirm pattern (first click arms; second click within 5 seconds executes; auto-cancels otherwise) so an accidental click can't destroy a hive. Use cases: a user uninstalling the product and wanting to feel confident nothing's left behind, or an existing user whose local state has accumulated stale data and needs an unconditional reset. Styling matches the established `.license-modal-btn-danger` pattern (transparent with red border, red fill + glow on hover).
+
+### Files Changed
+
+- Updated: `js/app.js` (`renderAIRow` adds `keepExpanded` parameter; background validation + recommend-migrate callers pass `false`), `help.html` (new Wipe local data section + handler + `.btn-danger` style), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v155.txt`
+- Version/build stamps to `v3.63.89 Pro` / `20260531-032` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.88
 **Build:** `20260531-031` · **Released:** May 31, 2026
 
