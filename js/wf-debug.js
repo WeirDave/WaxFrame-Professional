@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260531-038
+// Build: 20260531-039
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -877,7 +877,16 @@ function renderTroubleshootingCard(entry, ctx) {
         // v3.52.8 — noopener feature added (audit follow-up)
         btn.onclick = () => { window.open(a.href, '_blank', 'noopener,noreferrer'); };
       } else if (a.kind === 'console-link') {
-        const url = ctx?.aiConsoleUrl || null;
+        // v3.63.96 — URL split. For RATE_LIMITED cards, prefer the provider's
+        // usage/limits page over its API-key page — the user landing here
+        // needs to check quotas or upgrade their plan, not rotate a key. Falls
+        // back to ctx.aiConsoleUrl when no usage URL is registered for the
+        // provider (custom AIs without a known provider mapping, etc.).
+        let url = ctx?.aiConsoleUrl || null;
+        if (entry?.code === 'RATE_LIMITED' && ctx?.provider && window.API_USAGE_URLS) {
+          const usageUrl = window.API_USAGE_URLS[ctx.provider];
+          if (usageUrl) url = usageUrl;
+        }
         if (!url) { btn.style.display = 'none'; }
         else      { btn.onclick = () => window.open(url, '_blank', 'noopener,noreferrer'); }
       } else if (a.kind === 'docs-link') {

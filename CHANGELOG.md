@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.96
+**Build:** `20260531-039` · **Released:** May 31, 2026
+
+### Bug fix — In-modal apply button now does the right thing when all decisions are bypassed
+
+When you opened the conflicts panel with one or more user decisions and chose **"I edited the document directly — skip this conflict"** for every decision, the in-modal button stayed labelled "✅ Apply My Decisions to Document" and the in-flight state read "⏳ Sending to Builder…" — neither was true. With all decisions bypassed, no Builder pass actually fires (`applyDecisions`' all-bypassed branch just bumps the round counter and returns). The label was misleading and the next step ("smoke the hive for a fresh review round") was hidden behind the work-screen footer button instead of being one click in the modal.
+
+`checkAllDecisionsMade` now detects the all-bypassed case and re-labels the apply button to **"🔥 Smoke the Hive"** with a tooltip that explains why. `applyDecisions` mirrors the contextual label during its in-flight state ("🔥 Smoking the hive…"). The all-bypassed branch now also auto-fires `runRound()` after a 400 ms delay so the next review round starts immediately — no more "what do I click now" gap.
+
+### Feature — API console URL split: rate-limit cards now open the right page
+
+When a 429 / rate-limit troubleshooting card fired, its "Open provider console" button opened the provider's **API-key page** — wrong destination for the user's actual problem (checking usage / upgrading a plan). Adding a new key doesn't fix a quota.
+
+New `window.API_USAGE_URLS` catalog in `js/api-links.js` mapping providers to their usage / limits pages: OpenAI `/account/limits`, Anthropic `/settings/limits`, Gemini `ai.google.dev/gemini-api/docs/rate-limits`, Mistral `admin.mistral.ai/plateforme/limits`, DeepSeek `/usage`, Cohere `/billing`, Together AI `/settings/billing`, Jamba `studio.ai21.com/account/usage`, Grok `console.x.ai/team/default/usage`, Perplexity `/account/api/usage`.
+
+`wf-debug.js`'s `console-link` action handler now checks the firing card's code: when `entry.code === 'RATE_LIMITED'` AND a usage URL exists for the AI's provider, the button uses it. Otherwise falls back to `ctx.aiConsoleUrl` (the API-key page) — preserving correct behavior for all non-rate-limit cards.
+
+### Feature — Inline rename for custom AIs
+
+The only way to fix an ugly custom AI label (e.g. "AI21 (Jamba)" → "Jamba") used to be remove + re-add. Now there's a ✏️ button next to each custom AI's name in the Manage AIs panel. Click it, edit inline, hit Enter to save or Escape to cancel. Updates `ai.name` and `customAIConfigs[id].label` without changing the ID — zero cross-reference churn anywhere downstream. Default AIs are correctly blocked from rename (their names are part of provider identity).
+
+The pencil button sits at 0.45 opacity by default so it doesn't visually compete with the provider name, rises to 0.85 on row hover, and 1.0 on its own hover. Matches the existing template-row rename pattern (✏️ on Custom Templates rows).
+
+### Docs — Product Review playbook entry
+
+New deep-dive section in `document-playbooks.html` under **Reviews & Recommendations**, placed between Restaurant Review and Hotel Review. Covers the full Setup 3–5 flow, includes the 23-field detail scaffold ready to paste into Reference Material, and five platform-specific length recipes (Amazon ≤100 char title / 100–1000 word body, Walmart ≤50 char title / 50–500 words, Best Buy 75–500 words, Google Shopping 50–300 words, blog long-form). Convergence section is currently marked "Measurement pending" — will be backfilled with real run data once a product-review session is logged to the Playbook test history.
+
+### Files changed
+
+- `js/app.js` — `checkAllDecisionsMade` contextual labels, `applyDecisions` in-flight label and auto-smoke, `buildAISetupRowHTML` rename button, `startCustomAIRename`/`commitCustomAIRename` helpers
+- `js/api-links.js` — added `window.API_USAGE_URLS` catalog
+- `js/wf-debug.js` — `console-link` handler prefers usage URL on `RATE_LIMITED`
+- `style.css` — `.ai-setup-rename-btn` and `.ai-setup-rename-input` styling
+- `document-playbooks.html` — Product Review deep-dive section
+- All 4 version stamps (`index.html` meta, `version.js`, `app.js` BUILD, `app.js?v=`) bumped to `v3.63.96` / `20260531-039`
+- Full cache-bust sweep across 9 HTML files
+- Build-stamp sweep across 15 JS files + `style.css`
+
+---
+
 ## v3.63.95
 **Build:** `20260531-038` · **Released:** May 31, 2026
 

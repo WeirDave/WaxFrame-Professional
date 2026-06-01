@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-038
+// Build: 20260531-039
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-038';         // build stamp — update each session
+const BUILD       = '20260531-039';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -4527,7 +4527,8 @@ function buildAISetupRowHTML(ai) {
       <div class="ai-setup-row-summary" onclick="toggleAISetupRow('${ai.id}')" role="button" tabindex="0" aria-expanded="${isExpanded}">
         <span class="ai-setup-chevron">${isExpanded ? '▼' : '▶'}</span>
         ${resolveAiIcon(ai, 'ai-setup-icon', 24)}
-        <span class="ai-setup-name" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
+        <span class="ai-setup-name" id="ainame-${ai.id}" title="${escapeHtml(ai.name)}">${escapeHtml(ai.name)}</span>
+        ${isCustom ? `<button class="ai-setup-rename-btn" onclick="event.stopPropagation(); startCustomAIRename('${ai.id}')" title="Rename ${escapeHtml(ai.name)}">✏️</button>` : ''}
         ${cfg?.model ? `<span class="ai-setup-model" title="${escapeHtml(cfg.model)}">— ${escapeHtml(cfg.model)}</span>` : ''}
         ${(window._deprecatedModelFlags && window._deprecatedModelFlags.has(ai.id))
           ? `<span class="ai-setup-deprecation-flag" title="The saved model for ${escapeHtml(ai.name)} is no longer available from the provider. Click Recommend Models below to pick a current model.">⚠</span>`
@@ -4578,6 +4579,75 @@ function collapseAllAISetupRows() {
   if (!_expandedAIIds.size) return;
   _expandedAIIds.clear();
   _persistExpandedRows();
+  renderAISetupGrid();
+}
+
+// v3.63.96 — Inline rename for custom AIs.
+// The default AIs are not renameable (their names are part of provider identity:
+// "Claude", "ChatGPT", etc.). Custom AIs CAN be renamed because the row label is
+// just a display string — neither the row's id nor its provider key changes,
+// so no cross-reference churn anywhere in the codebase. Renaming updates ai.name
+// (in-memory list) AND customAIConfigs[id].label (the persisted hive shape),
+// then writes the hive snapshot via saveHive(). The button placement (next to
+// the name, before the model badge) mirrors the existing template-row rename
+// pattern (✏️ on Custom Templates rows at line ~3601).
+function startCustomAIRename(aiId) {
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  const isCustom = !DEFAULT_AIS.find(d => d.id === aiId);
+  if (!isCustom) { toast('⚠️ Default AIs cannot be renamed'); return; }
+  const nameEl = document.getElementById(`ainame-${aiId}`);
+  if (!nameEl) return;
+  const oldName = ai.name;
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'ai-setup-rename-input';
+  input.value = oldName;
+  input.maxLength = 60;
+  input.setAttribute('aria-label', 'Rename AI');
+  // Stop click bubbling so editing the field doesn't toggle the row open/closed.
+  input.onclick     = (e) => e.stopPropagation();
+  input.onmousedown = (e) => e.stopPropagation();
+  let _committed = false;
+  const commit = (val) => {
+    if (_committed) return;
+    _committed = true;
+    commitCustomAIRename(aiId, val);
+  };
+  const cancel = () => {
+    if (_committed) return;
+    _committed = true;
+    renderAISetupGrid();
+  };
+  input.onkeydown = (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter')       { e.preventDefault(); commit(input.value); }
+    else if (e.key === 'Escape') { e.preventDefault(); cancel(); }
+  };
+  input.onblur = () => commit(input.value);
+  nameEl.replaceWith(input);
+  input.focus();
+  input.select();
+}
+
+function commitCustomAIRename(aiId, newName) {
+  const trimmed = String(newName || '').trim();
+  const ai = aiList.find(a => a.id === aiId);
+  if (!ai) return;
+  // Empty / unchanged → silent revert (re-render restores the original label).
+  if (!trimmed || trimmed === ai.name) { renderAISetupGrid(); return; }
+  // Cap at the same 60-char ceiling as the input field's maxLength so the
+  // display doesn't blow out narrow row layouts.
+  const finalName = trimmed.slice(0, 60);
+  const oldName = ai.name;
+  ai.name = finalName;
+  // Persisted customAIConfigs entry — its .label is the label shown in places
+  // that read from API_CONFIGS rather than aiList (some legacy surfaces).
+  if (window.customAIConfigs && window.customAIConfigs[aiId]) {
+    window.customAIConfigs[aiId].label = finalName;
+  }
+  if (typeof saveHive === 'function') saveHive();
+  toast(`✏️ Renamed "${oldName}" → "${finalName}"`);
   renderAISetupGrid();
 }
 
@@ -16718,7 +16788,21 @@ function updateCustomDecision(decisionIdx, total) {
 function checkAllDecisionsMade(total) {
   const allMade = Object.keys(window._decisionChoices).length === total;
   const applyBtn = document.getElementById('applyDecisionsBtn');
-  if (applyBtn) applyBtn.disabled = !allMade;
+  if (applyBtn) {
+    applyBtn.disabled = !allMade;
+    // v3.63.96 — Contextual label. When ALL outstanding decisions are
+    // "I edited the document directly" bypasses, no Builder pass is needed —
+    // the next action is a fresh review round. Re-label the button to reflect
+    // what clicking it actually does (Smoke the Hive instead of Apply
+    // Decisions / Send to Builder, neither of which is true when all bypassed).
+    if (allMade && Object.values(window._decisionChoices).every(c => c && c.type === 'bypass')) {
+      applyBtn.textContent = '🔥 Smoke the Hive';
+      applyBtn.title = 'Document already edited directly — smoke the hive for a fresh review round';
+    } else {
+      applyBtn.textContent = '✅ Apply My Decisions to Document';
+      applyBtn.removeAttribute('title');
+    }
+  }
   // v3.56.15 — keep the churn "Apply without locking" escape hatch in sync.
   const nlBtn = document.getElementById('applyNoLockBtn');
   if (nlBtn) nlBtn.disabled = !allMade;
@@ -16750,7 +16834,11 @@ function applyDecisions(opts) {
   const applyBtn = document.getElementById('applyDecisionsBtn');
   if (applyBtn) {
     applyBtn.disabled = true;
-    applyBtn.textContent = '⏳ Sending to Builder…';
+    // v3.63.96 — Contextual in-flight label. The next branch decides whether
+    // we're sending to the Builder (some non-bypass decisions present) or just
+    // smoking the hive (all decisions bypassed = user fixed doc directly).
+    const _inFlightAllBypassed = Object.values(window._decisionChoices).every(c => c && c.type === 'bypass');
+    applyBtn.textContent = _inFlightAllBypassed ? '🔥 Smoking the hive…' : '⏳ Sending to Builder…';
   }
   const nlBtn = document.getElementById('applyNoLockBtn');
   if (nlBtn) nlBtn.disabled = true;
@@ -16862,14 +16950,25 @@ function applyDecisions(opts) {
 
   toast('📋 Decisions queued — sending to Builder…');
   if (allBypassed) {
-    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '✅ Apply My Decisions to Document'; }
-    toast('✏️ All conflicts bypassed — document edits applied directly. Starting next round…');
+    // v3.63.96 — Button readback. The button now reads "🔥 Smoke the Hive"
+    // when all-bypassed (set by checkAllDecisionsMade); preserve that wording
+    // on the brief pre-smoke flash before runRound starts the next round.
+    if (applyBtn) { applyBtn.disabled = false; applyBtn.textContent = '🔥 Smoke the Hive'; }
+    toast('✏️ All conflicts bypassed — smoking the hive for a fresh review…');
     _logRoundBump('apply_decisions_all_bypassed');
     round++;
     updateRoundBadge();
     renderWorkPhaseBar();
     saveSession();
     playRosieSound();
+    // v3.63.96 — When all conflicts are bypassed (user fixed doc directly),
+    // automatically fire a fresh review round. The next action is always
+    // Smoke; do it for the user so it's one click, not two. runRound() bumps
+    // round itself at round-end, so the round++ above plus runRound's own
+    // bump produces the same net advancement as the user manually clicking
+    // Smoke after applyDecisions returned. setTimeout lets the toast +
+    // Rosie sound resolve visually before the round-start console line fires.
+    setTimeout(() => { if (typeof runRound === 'function') runRound(); }, 400);
     return;
   }
   runBuilderOnly();
