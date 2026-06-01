@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260531-038
+   Build: 20260531-039
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -797,6 +797,42 @@ html, body {
   overflow: hidden;
   text-overflow: ellipsis;
   font-family: var(--font-mono);
+}
+/* v3.63.96 — Inline rename ✏️ button for custom AI rows. Sits next to the
+   provider name; opacity-faded by default so it doesn't visually compete with
+   the name, full-opacity on row hover so it's still discoverable. Stop-prop on
+   click is handled in JS; CSS only needs to make it tappable and not eat the
+   row's toggle handler. */
+.ai-setup-rename-btn {
+  flex: 0 0 auto;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  margin-left: 2px;
+  cursor: pointer;
+  font-size: var(--fs-12);
+  line-height: 1;
+  opacity: 0.45;
+  border-radius: 3px;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.ai-setup-row:hover .ai-setup-rename-btn { opacity: 0.85; }
+.ai-setup-rename-btn:hover { opacity: 1; background: var(--surface-hover, rgba(255,255,255,0.06)); }
+/* Input swapped in for the name span during rename. Matches the name's
+   typography (mono, fs-13, weight 600) so the row layout doesn't shift. */
+.ai-setup-rename-input {
+  flex: 0 1 auto;
+  min-width: 80px;
+  max-width: 320px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: var(--fs-13);
+  color: var(--text-bright, #fff);
+  background: var(--surface-elev, rgba(255,255,255,0.08));
+  border: 1px solid var(--accent, #ffb84d);
+  border-radius: 3px;
+  padding: 2px 6px;
+  outline: none;
 }
 /* v3.63.13 — Model badge appended to the AI card header so the chosen
    model is visible at a glance without expanding the card. Mono font +
