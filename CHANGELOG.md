@@ -2,6 +2,29 @@
 
 ---
 
+## v3.63.93
+**Build:** `20260531-036` · **Released:** May 31, 2026
+
+### Polish — Strip unreadable emojis from wipe buttons + size help-page buttons to content + backlog architectural consolidation
+
+Two follow-up cleanups to the v3.63.92 `.btn-danger` visibility fix, plus a planning-doc consolidation.
+
+**1. Emoji prefixes removed from all four wipe buttons.** Each Wipe button on the Settings → Storage section AND on the help page was prefixed with an emoji (`🗂 Wipe localStorage`, `📜 Wipe IndexedDB`, `⏱ Wipe sessionStorage`, `🧹 Wipe EVERYTHING`). At the size and color rendered, the emojis were illegible — you couldn't actually identify which one belonged to which layer at a glance. Stripped them entirely. Labels are now plain text. The section headings (`🧹 Storage` on Settings, `🧹 Wipe local data` on help) keep their emojis since those render at heading size on dark bands and read fine.
+
+The strip touched four places to stay consistent: button markup in `index.html` (4 buttons), post-confirm restoration labels in `js/app.js` (4 `wire()` calls — these restore button text after the 5-second confirm window auto-cancels), button markup in `help.html` (4 buttons), and matching restoration labels in `help.html`'s inline `wireWipeButton` calls (4 calls). Same label everywhere, no emojis anywhere.
+
+**2. Help-page wipe button widths constrained to content.** On the help page, the four buttons sat inside a flex container with `align-items: stretch`, which made each button span the full container width (up to the 560px cap) regardless of label length. The buttons looked like a stack of horizontal slabs. Changed to `align-items: flex-start` so each button is now only as wide as its label + padding, left-aligned within the 560px column. The Settings page already used the right pattern; only the help page needed the fix.
+
+**3. Backlog architectural consolidation (v158 → v159).** Three related-but-fragmented backlog entries — `Hive Profiles`, `Two-layer AI management`, and `Sources view` — were the same underlying arc described from three different angles. Consolidated into a single, properly scoped item: **Provider Catalog + Hive Profiles Foundation**, with a four-phase sequence (starter flag → catalog modal → cloud/local-server provider expansion in two batches → Profiles), explicit `kind` schema (`cloud` / `local-server` / `router-aggregator`), and a hard rule that the catalog contains only providers verified end-to-end in WaxFrame's workflow — not aspirational entries. Also stripped a stale Observations section from v158 that didn't belong in the working-notepad format.
+
+### Files Changed
+
+- Updated: `index.html` (emoji-strip on 4 wipe button labels), `js/app.js` (emoji-strip on 4 `wire()` restoration labels), `help.html` (emoji-strip on 4 button labels + 4 `wireWipeButton` restoration labels; container `align-items: stretch` → `flex-start`), `docs/WaxFrame_Backlog_Master_v158.txt` (Observations section removed), `docs/WaxFrame_Backlog_Master_v159.txt` (new — consolidated Provider Catalog + Hive Profiles entry replacing three subsumed bullets)
+- Removed: `docs/WaxFrame_Backlog_Master_v156.txt` (3-version rollback margin: ship keeps v159 + v158 + v157)
+- Version/build stamps to `v3.63.93 Pro` / `20260531-036` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.92
 **Build:** `20260531-035` · **Released:** May 31, 2026
 
