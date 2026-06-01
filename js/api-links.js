@@ -1,5 +1,5 @@
 // api-links.js — Canonical API console URL list + opener
-// Build: 20260531-038
+// Build: 20260531-039
 // SINGLE SOURCE OF TRUTH for the default AI API-console (key / sign-up) URLs.
 // Loaded by index.html *before* app.js (which reads API_CONSOLE_URLS into
 // DEFAULT_AIS) and by standalone helper pages such as api-details.html that
@@ -15,6 +15,28 @@ window.API_CONSOLE_URLS = {
   grok:       'https://console.x.ai',
   perplexity: 'https://console.perplexity.ai',
   mistral:    'https://console.mistral.ai/api-keys'
+};
+
+// v3.63.96 — Parallel catalog for USAGE/RATE-LIMIT pages, keyed by provider.
+// The troubleshooting card's "Open provider console" button prefers a usage
+// URL when the firing card is RATE_LIMITED — the API-key page (above) is the
+// wrong place to land when you need to check quotas, see limits, or upgrade
+// a plan. Falls back to API_CONSOLE_URLS when no usage URL exists for the
+// provider. Keyed by provider id so it covers both default and custom AIs
+// that resolve to a known provider.
+window.API_USAGE_URLS = {
+  // Default providers (id === provider for built-ins)
+  chatgpt:     'https://platform.openai.com/account/limits',
+  claude:      'https://console.anthropic.com/settings/limits',
+  gemini:      'https://ai.google.dev/gemini-api/docs/rate-limits',
+  grok:        'https://console.x.ai/team/default/usage',
+  perplexity:  'https://www.perplexity.ai/account/api/usage',
+  mistral:     'https://admin.mistral.ai/plateforme/limits',
+  // Common custom providers
+  deepseek:    'https://platform.deepseek.com/usage',
+  cohere:      'https://dashboard.cohere.com/billing',
+  'together-ai': 'https://api.together.ai/settings/billing',
+  jamba:       'https://studio.ai21.com/account/usage'
 };
 
 // ── "Get an API key" drawer ───────────────────────────────────────────
