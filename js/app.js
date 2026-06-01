@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260531-037
+// Build: 20260531-038
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260531-037';         // build stamp — update each session
+const BUILD       = '20260531-038';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -5752,9 +5752,23 @@ function makeCleanProviderId(name) {
     .replace(/[^a-z0-9]+/g, '-')   // non-alphanumerics -> single dash
     .replace(/^-+|-+$/g, '')        // trim leading/trailing dashes
     || 'custom';
-  const taken = id =>
-    (Array.isArray(aiList) && aiList.some(a => a.id === id)) ||
-    (typeof API_CONFIGS === 'object' && API_CONFIGS && Object.prototype.hasOwnProperty.call(API_CONFIGS, id));
+  // v3.63.95 — A "taken" id is one already claimed by a user: present as an
+  // aiList row, OR present in API_CONFIGS with a user _key set. Pre-registered
+  // "skeleton" entries in API_CONFIGS (e.g. deepseek/together/cohere from api.js)
+  // that have NEITHER an aiList row NOR a key are NOT taken — they are templates
+  // the user is free to claim with a clean id. Prior to this fix, fresh
+  // Quick-Adds of Cohere/DeepSeek were forced into "cohere(2)"/"deepseek(2)"
+  // because the skeleton occupied the slot. See addCustomAI's API_CONFIGS[id]
+  // assignment for the merge logic that preserves a skeleton's specialized
+  // bodyFn/extractFn/headersFn when a user claims its slot.
+  const taken = id => {
+    if (Array.isArray(aiList) && aiList.some(a => a.id === id)) return true;
+    if (typeof API_CONFIGS === 'object' && API_CONFIGS && Object.prototype.hasOwnProperty.call(API_CONFIGS, id)) {
+      const cfg = API_CONFIGS[id];
+      if (cfg && cfg._key) return true;
+    }
+    return false;
+  };
   if (!taken(base)) return base;
   for (let n = 2; n < 1000; n++) {
     const candidate = `${base}(${n})`;
@@ -7364,7 +7378,22 @@ function addCustomAI() {
   const formatLabels = { openai: 'OpenAI compatible', anthropic: 'Anthropic', google: 'Google' };
   const base = baseConfigs[format] || baseConfigs.openai;
 
+  // v3.63.95 — Skeleton-merge. If the id already exists in API_CONFIGS as a
+  // pre-registered skeleton (e.g. deepseek/together/cohere from api.js), its
+  // specialized bodyFn / extractFn / headersFn route system/user message
+  // splits properly for Builder vs Reviewer — better than the generic
+  // baseConfigs[format] fallback. Preserve those when claiming the slot;
+  // user fields (label, model, endpoint, note, format, _key) overlay on top.
+  // No skeleton present → behaves identically to pre-fix (uses baseConfigs).
+  const existingSkeleton = API_CONFIGS[id] || null;
+  const skeletonHasFns   = !!(existingSkeleton && existingSkeleton.bodyFn);
   API_CONFIGS[id] = {
+    ...base,
+    ...(skeletonHasFns ? {
+      headersFn: existingSkeleton.headersFn,
+      bodyFn:    existingSkeleton.bodyFn,
+      extractFn: existingSkeleton.extractFn,
+    } : {}),
     label: name,
     model,
     // v3.30.2 — capture the originally-picked model. The Reset button
@@ -7378,7 +7407,6 @@ function addCustomAI() {
     // v3.27.1: store format so recheckModelForAI can rebuild the recommend
     // call without going through the Add modal form fields.
     format,
-    ...base
   };
   if (key) API_CONFIGS[id]._key = key;
 
