@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.94
+**Build:** `20260531-037` · **Released:** May 31, 2026
+
+### Feature — Amazon-specific Product Review template
+
+The generic `product-review` template had no platform awareness and no headline character cap. A v3.63.92 production run (BAGAIL Packing Cubes, 10-AI hive, logged in Playbook v35 HISTORICAL RUNS) produced a 134-character headline against Amazon's 100-character title limit. The hive happily produced a long, verdict-rich title because nothing in the template knew Amazon caps titles. The fix:
+
+**New `product-review-amazon` template** (icon 🛒). Amazon-specific fork of the generic Product Review template with platform constraints baked in:
+
+- **Headline hard cap: 100 characters** — stated explicitly in `goalNotes` (both `scratch` and `refine` paths), with the cap repeated and the rationale called out. The hive is told this is Amazon's title limit and not to exceed it.
+- **Body length recipe pre-set to Amazon's Normal tier**: `lengthMode: "range"`, `lengthMin: "1500"`, `lengthLimit: "3500"`, `lengthUnit: "characters"`. The Length Constraint hint documents the full recipe — Minimum 500 / Normal 1,500–3,500 (default) / Detailed 4,000–7,500 / Hard cap 20,000 — and the user can switch tiers if the source material warrants it.
+- **refMaterial scaffold pre-populates `Where purchased: Amazon`** so the field starts platform-correct.
+
+**Generic `product-review` template updated** with a soft 100-character headline ceiling in `goalNotes` as a safe upper bound for any retailer (Amazon at 100, others typically tighter). The generic stays as the default for blogs, manufacturer sites, and undecided cases.
+
+**Architectural note:** This establishes the per-platform template pattern. The earlier "platform-aware length recipe overlay" approach (one generic template with conditional platform behavior) was tried and failed in the BAGAIL run — the template couldn't enforce constraints it didn't know about at template-selection time. Per-platform templates (Amazon ✓, Best Buy / Walmart / Target / Newegg pending) put the constraints where they can be enforced. Backlog v160 has the consolidated entry.
+
+### Doc — Playbook v35 first 10-AI HISTORICAL RUN logged
+
+The BAGAIL Packing Cubes v1.0 run (Product Review template, Amazon target, 10-AI hive with DeepSeek as builder) extends the measured hive-size data from the prior 6-AI sweep ceiling to 10-AI. Result: 9 rounds (5 review + 3 builder-only + 1 draft) in 25.6 minutes engaged, majority convergence at R9 with 4 holdouts. Full forensic entry in `docs/WaxFrame_Playbook_Test_Master_v35.txt` HISTORICAL RUNS section, including the over-cap headline that drove this release.
+
+### Files Changed
+
+- Updated: `js/templates.js` — generic `product-review` goalNotes gets the 100-char headline ceiling (both paths); new `product-review-amazon` template added (23 total templates, was 22)
+- Updated: `docs/WaxFrame_Backlog_Master_v160.txt` — new backlog version replacing the "platform-aware length recipe surface" entry with "Product Review per-platform templates" entry (Amazon ✓ done, Best Buy / Walmart / Target / Newegg pending)
+- Updated: `docs/WaxFrame_Playbook_Test_Master_v35.txt` — Last updated header, tracking table row at top, full HISTORICAL RUNS forensic entry for the BAGAIL run
+- Removed: `docs/WaxFrame_Backlog_Master_v157.txt` (3-version rollback margin: ship keeps v160 + v159 + v158)
+- Version/build stamps to `v3.63.94 Pro` / `20260531-037` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.93
 **Build:** `20260531-036` · **Released:** May 31, 2026
 
