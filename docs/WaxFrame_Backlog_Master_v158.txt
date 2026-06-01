@@ -45,8 +45,3 @@ Open Features
 - Repo housekeeping — `docs/` folder in the repo holds older backlog versions, prior playbooks, audit files, prompts reference, getting-started/readme `.docx` variants. ZIP ships latest backlog + Rules Reference + 3-version rollback margin only. Trim repo `docs/` to current margin OR confirmed intentional retention.
 
 - Triage CodeQL + Dependabot findings once first scans complete. Vanilla innerHTML/template-literal patterns will likely flag — some real, some false positives on audited patterns. Walk the list together. Blocked on David pulling Security tab findings.
-Observations
-
-- v3.63.92 release surfaced three stale entries in Claude's session memory worth correcting going forward: (1) JS file count is 15, not 13 — additions since the memory baseline are docs-scrollspy.js and docx-export.js; (2) HTML deployment file count is 9, not 8 — addition is prompt-editor.html; (3) lib/ count is 6, not 5 — addition is docx.min.js (supports docx-export.js). Also: nav-helper.js and license-helper.js are NOT pinned at v3.22.6 anymore — they are build-stamped normally along with the other JS files. The build-stamp sweep now covers ALL 15 JS files (templates.js included), not "10 excluding templates.js" as memory implied.
-
-- Settings → Storage .btn-danger pattern was inherited from .license-modal-btn-danger (transparent + light text + red outline) which works inside a dark modal but rendered invisible on the light Settings card. Future destructive-button patterns: check the target surface's background before reusing a working pattern from a different surface. Same root cause as the v3.63.91 "ephemeral" jargon issue — a pattern that read fine in its original context degraded when relocated.
