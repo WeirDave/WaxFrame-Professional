@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.95
+**Build:** `20260531-038` · **Released:** May 31, 2026
+
+### Fix — Cohere / DeepSeek Quick Add no longer forced into `(2)` suffix
+
+When you Quick-Added Cohere or DeepSeek from the Custom AI modal, the resulting ID came out as `cohere(2)` or `deepseek(2)` instead of the expected clean `cohere`/`deepseek`. Together AI escaped because its cleaned name had a dash (`together-ai`) which didn't collide with the skeleton key. Jamba escaped because no skeleton was registered for it.
+
+Root cause: `api.js` pre-registers `deepseek`, `together`, and `cohere` as fully-formed `API_CONFIGS` skeleton entries at lines 218 / 244 / 266. These exist BEFORE the user adds the AI because their specialized `bodyFn` routes `system` vs `user` messages properly for Builder vs Reviewer prompts — better than the generic OpenAI fallback in `addCustomAI`'s `baseConfigs.openai`. The collision check in `makeCleanProviderId` treated these skeleton entries as "taken," forcing fresh adds into the duplicate suffix loop.
+
+Just removing the skeletons would have worsened Cohere/DeepSeek Builder performance (no more system/user split). The fix preserves the skeleton's specialized functions while letting the user claim the clean slot.
+
+Two surgical edits in `js/app.js`:
+
+**1. `makeCleanProviderId` collision check (line 5749).** The `taken()` predicate now requires either an actual `aiList` row claiming the id, OR an `API_CONFIGS` entry with a `_key` set. Skeleton entries (no row + no key) no longer count as taken. Adding a second copy of an already-keyed provider still correctly gets the `(N)` suffix.
+
+**2. `addCustomAI`'s `API_CONFIGS[id]` write (line 7381).** When the user claims a skeleton slot, the merge now preserves the skeleton's `headersFn`/`bodyFn`/`extractFn` while overlaying the user's `label`/`model`/`endpoint`/`format`/`_key`. If no skeleton exists, behavior is identical to pre-fix — the standard `baseConfigs[format]` fills in.
+
+### Behavior delta
+
+| Quick Add | Before | After |
+| --- | --- | --- |
+| Cohere | `cohere(2)` | `cohere` |
+| DeepSeek | `deepseek(2)` | `deepseek` |
+| Together AI | `together-ai` | `together-ai` (unchanged) |
+| Jamba | `jamba` | `jamba` (unchanged) |
+| Adding a second Cohere | `cohere(2)` | `cohere(2)` (correct — second copy still suffixed) |
+
+### Existing legacy entries
+
+Users who already have ugly-suffixed IDs from earlier code (`cohere_1779690241686`, `ai21__jamba__1780256643064`, or current-code `cohere(2)`/`deepseek(2)`) will still see them after upgrading — the fix only affects FUTURE adds. To clean up, delete the ugly-ID entries from Manage AIs and Quick-Add fresh; the new add will land with a clean ID.
+
+### Files Changed
+
+- `js/app.js` — `makeCleanProviderId.taken()` updated to skip skeleton entries; `addCustomAI` API_CONFIGS write now merges skeleton-preserved functions when claiming a pre-registered slot
+- Version/build stamps to `v3.63.95 Pro` / `20260531-038` across 9 HTML files, 15 JS files, `style.css`
+
+---
+
 ## v3.63.94
 **Build:** `20260531-037` · **Released:** May 31, 2026
 
