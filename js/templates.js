@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260531-036
+// Build: 20260531-037
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -780,7 +780,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Create a fair, honest, useful review that explains how the product actually performed over time, what worked, what didn't, whether the price made sense, and who should (or should not) buy it.",
         "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, use over time (how long, how often, what for), build quality, what worked well, what didn't, any defects or failures, accuracy of the product description, customer support or return experience if relevant, value for money, who should buy it, who should avoid it, and whether you'd buy it again. Build only from the facts in my Reference Material \u2014 do not invent specs, prices, dates, or features.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
-        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally', 'Crushes cans fine, falls apart fast'). No quotes around it, no 'Review:' prefix. Then end with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally', 'Crushes cans fine, falls apart fast'). No quotes around it, no 'Review:' prefix. Keep the headline at or under 100 characters — Amazon caps review titles at 100, and most other retailers (Best Buy, Walmart, Target, Newegg) enforce headline limits that are tighter still. Staying ≤100 is safe for Amazon and a reasonable target across the board. Then end with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
         "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: \nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nStar rating (0\u20135): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -796,7 +796,7 @@ const WAXFRAME_TEMPLATES = [
         "goalOutcome": "Polish my existing review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise or complaints, make sure the final recommendation lands clearly.",
         "goalScope": "Preserve all my factual details \u2014 model, price, dates, specs, use patterns. Sharpen vague language. Make sure the review covers purchase context, use over time, build quality, what worked, what didn't, value, and a clear bottom-line recommendation.",
         "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
-        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally'). No quotes around it, no 'Review:' prefix. If my draft already has a strong headline, keep it; if it has a generic one, sharpen it to reflect the verdict. Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally'). No quotes around it, no 'Review:' prefix. Keep the headline at or under 100 characters — Amazon caps review titles at 100, and most other retailers (Best Buy, Walmart, Target, Newegg) enforce headline limits that are tighter still. Staying ≤100 is safe for Amazon and a reasonable target across the board. If my draft already has a strong headline that fits, keep it; if it's generic or too long, sharpen and trim. Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
         "refMaterial": "",
         "lengthMode": "none",
         "lengthLimit": "",
@@ -804,6 +804,59 @@ const WAXFRAME_TEMPLATES = [
         "hint": [
           { "field": "Length Constraint", "text": "Length is platform-dependent \u2014 set it where you'll post. Amazon: hard cap \u00b7 20,000 characters (empirically verified; their stated guidance of 500\u20134,000 is recommended, not enforced). Best Buy / Newegg: ~5,000 characters. Target / Walmart: ~4,000 characters. Manufacturer site or blog: leave No limit. If you're undecided, leave No limit and pick at publish time. Most retailers also use a 0\u20135 star rating \u2014 if your draft mentions one, the review will land more consistently." },
           { "field": "Starting Document", "text": "Paste your draft review on Setup \u2014 Step 5 of 5 \u2014 Starting Document" }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — AMAZON — both paths
+  // ============================================================
+  // Platform-specific fork of product-review with Amazon's constraints
+  // baked in: 100-char title hard cap, body length recipe (Min 500 /
+  // Normal 1,500–3,500 / Detailed 4,000–7,500 / Hard cap 20,000),
+  // with Normal pre-selected as the default range.
+  {
+    "id": "product-review-amazon",
+    "name": "Product Review — Amazon",
+    "icon": "🛒",
+    "category": "Reviews & Recommendations",
+    "description": "Amazon-specific product review with the 100-character title cap and Amazon's body length recipe (Min 500 / Normal 1,500–3,500 / Detailed 4,000–7,500 / Hard cap 20,000) baked in. Normal pre-selected.",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "An Amazon product review with platform constraints baked in: 100-char title cap, body length recipe (Normal 1,500–3,500 chars pre-selected, switchable to Min / Detailed / Hard cap tiers).",
+        "goalDocType": "Amazon product review",
+        "goalAudience": "Amazon shoppers deciding whether to purchase this product. They want practical, specific details about real-world use — not generic praise or vague complaints.",
+        "goalOutcome": "Create a fair, honest, useful Amazon review that explains how the product actually performed over time, what worked, what didn't, whether the price made sense, and who should (or should not) buy it.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, use over time (how long, how often, what for), build quality, what worked well, what didn't, any defects or failures, accuracy of the product description, customer support or return experience if relevant, value for money, who should buy it, who should avoid it, and whether you'd buy it again. Build only from the facts in my Reference Material — do not invent specs, prices, dates, or features.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally', 'Crushes cans fine, falls apart fast'). No quotes around it, no 'Review:' prefix. HEADLINE HARD CAP: 100 characters — this is Amazon's review title limit, do not exceed it. Body length recipe for Amazon: Minimum 500 chars, Normal 1,500–3,500 chars (sweet spot, pre-selected as the default range), Detailed 4,000–7,500 chars, Hard cap 20,000 chars (Amazon's actual ceiling). The Length Constraint field defaults to Normal; switch to Detailed if the source material warrants deeper coverage, or to a tighter range for a thin source. Then end with a clear bottom line: who this product is best for, who should avoid it, and any specific advice or warning for future buyers.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: Amazon\nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nBuild quality: \nEase of use: \nPerformance over time: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nAccuracy of product description: \nCustomer support or return experience: \nValue for the money: \nStar rating (0–5): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "lengthMode": "range",
+        "lengthMin": "1500",
+        "lengthLimit": "3500",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Amazon's Normal tier (1,500–3,500 characters). Switch ranges if the source material warrants it: Minimum 500 (thin source), Normal 1,500–3,500 (default sweet spot), Detailed 4,000–7,500 (deep source), Hard cap 20,000 (Amazon's actual ceiling). HEADLINE cap of 100 characters is enforced via goalNotes — keep it short and verdict-driven." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing Amazon review draft — sharpen specifics, fairly weight pros and cons, enforce the 100-character title cap, and fit Amazon's body length tier.",
+        "goalDocType": "Amazon product review",
+        "goalAudience": "Amazon shoppers deciding whether to purchase this product. They want practical, specific details about real-world use — not generic praise or vague complaints.",
+        "goalOutcome": "Polish my existing Amazon review so it's useful, honest, and actionable. Strengthen the specific details, cut vague praise or complaints, make sure the final recommendation lands clearly, and bring the headline and body within Amazon's limits.",
+        "goalScope": "Preserve all my factual details — model, price, dates, specs, use patterns. Sharpen vague language. Make sure the review covers purchase context, use over time, build quality, what worked, what didn't, value, and a clear bottom-line recommendation.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed, but avoid sounding like a rant unless the source material genuinely supports that tone. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the actual verdict from this specific review — not a generic 'Review of [product]' or '[Product Name] Review' stub. The headline should hint at the real conclusion (e.g. 'Flimsy after three months — looks good but won't last', 'Solid value if you only need it occasionally'). No quotes around it, no 'Review:' prefix. HEADLINE HARD CAP: 100 characters — this is Amazon's review title limit. If my draft's headline exceeds 100 chars, trim it; if it's generic, sharpen it to reflect the verdict. Body length recipe for Amazon: Minimum 500 chars, Normal 1,500–3,500 chars (sweet spot, pre-selected), Detailed 4,000–7,500 chars, Hard cap 20,000 chars. The Length Constraint field defaults to Normal. Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
+        "refMaterial": "",
+        "lengthMode": "range",
+        "lengthMin": "1500",
+        "lengthLimit": "3500",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Amazon's Normal tier (1,500–3,500 characters). Switch if your draft is naturally longer or shorter: Minimum 500 (thin), Normal 1,500–3,500 (default), Detailed 4,000–7,500 (deep), Hard cap 20,000 (Amazon's actual ceiling). HEADLINE cap of 100 characters is enforced via goalNotes — keep it short and verdict-driven." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document" }
         ]
       }
     }

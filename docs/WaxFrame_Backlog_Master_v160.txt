@@ -1,0 +1,68 @@
+WaxFrame Backlog Master v160
+2026-05-31
+
+Open Bugs
+
+(none open)
+
+Open Features
+
+- Model recommender filter-awareness warning — when the recommender's pick has been flagged in the current session's ringBuffer with CONTENT_FILTERED, surface a ⚠️ next to that model in the Change Builder dropdown and in the recommend toast: e.g. "This model has triggered content filters this session — Flash variants are less aggressive". Doesn't block the pick. Self-learning from actual session history.
+
+- Builder Failover — primary Builder hits CONTENT_FILTERED / EMPTY_RESPONSE → auto-failover to a configured Secondary Builder for that one round only, then snap back to primary next round. Mirrors how the hive already handles a single reviewer failing. Implementation: "Secondary Builder" pick on the Builder screen, interceptor in runBuilderOnly() that swaps to secondary on CONTENT_FILTERED, completes the round, resets. Lets users stay on cheap providers (Gemini Flash, DeepSeek) as primary with a reliable but pricier secondary (Claude/ChatGPT) ONLY firing on blocked rounds.
+
+- Document-playbooks deep-dive entry for Product Review template — currently has table-row entry only. Full ~200-line deep-dive section (like the existing entries for Refine / Tighten / Expand) needs writing. Cover: when to use, refMaterial field strategy (the 23-field scaffold), category-specific platform reshapes, headline-directive behavior, expected convergence rounds, and platform-specific length recipes.
+
+  Amazon length recipe (canonical):
+    Minimum:  500 chars
+    Normal:   1,500–3,500 chars (sweet spot)
+    Detailed: 4,000–7,500 chars (long-form, thorough)
+    Hard cap: 20,000 chars (Amazon's actual ceiling; 4K is recommended)
+
+  Other platform caps for reference:
+    Best Buy: 5,000 chars (hard)
+    Target / Walmart: 4,000 chars (hard)
+    Newegg: 5,000 chars (hard)
+    Manufacturer site / blog: no limit
+  Equivalent recipes TBD; gather from live runs.
+
+- Product Review per-platform templates — extend the per-platform template pattern (established in v3.63.94 with `product-review-amazon`: 100-char title cap + Amazon body length recipe Min/Normal/Detailed/HardCap baked into the template). Pending platforms with known constraints: Best Buy (~5,000 char body cap; verify title cap), Walmart (~4,000 char body cap; verify title cap), Target (~4,000 char body cap; verify title cap), Newegg (~5,000 char body cap; verify title cap), Yelp (separate template already exists in the "Manly Bikes Yelp" lineage — confirm coverage). Each platform gets its own template, not an overlay on a generic one — the overlay approach was tried and failed in practice (v3.63.92 generic Product Review run produced a 134-char headline on a 100-char Amazon target). The generic `product-review` template stays as the no-platform default for blogs, manufacturer sites, and undecided cases; it carries a soft 100-char headline ceiling as a safe upper bound. Replaces the prior "platform-aware length recipe surface" entry.
+
+- GitHub Actions release-ceremony consistency check — workflow under .github/workflows/ that runs `node --check` on all JS, verifies the four version stamps match across files (meta waxframe-build / APP_VERSION / BUILD / app.js?v=), and validates no dead local asset links, on every push. Automates the manual release verification.
+
+- Pause/resume at reviewer seam — finer-grained pause point INSIDE a round, between reviewers finishing and the builder firing. Current pause/halt mechanics all operate at round boundaries. The reviewer-seam pause would let the user inspect reviewer outputs, edit notes, and decide whether to run the Builder for this round — without having to wait for the Builder to finish + then halt.
+
+- File System Access API exploration — investigate replacing download-only backups with true file persistence via window.showSaveFilePicker / showOpenFilePicker / FileSystemHandle. Would let a user "Save backup" once and then "Save" repeatedly to the same file without the download-folder pile-up. Browser-support check (Chrome/Edge yes, Safari/Firefox no) gates whether this is additive or a hard cutover.
+
+- Provider Catalog + Hive Profiles Foundation — introduce a two-layer provider model using API_CONFIGS as the verified provider catalog and the user hive Set as the active selection. Subsumes the prior "Hive Profiles", "Two-layer AI management", and "Sources view" backlog entries — they're the same arc, scoped together.
+
+  Sequencing (most-conservative first; don't skip steps):
+    (1) Add `starter: true` flag directly to API_CONFIGS entries — current six get the flag, no UI change. First-run Worker Bees screen filters to `starter:true` entries plus anything the user has already activated. Establishes catalog/hive distinction without visible disruption. Migration-risk phase: renderWorkerBees(), _selectedCustomIds, saveSession shape, backup import path (older backups lack catalog metadata — handle gracefully), license-bound round counting if hive size affects entitlement. If phase 1 lands clean, phases 2-4 are additive.
+    (2) Build "+ Add from Catalog" modal on Worker Bees — grouped sections: Cloud API / Local Server / Router-Aggregator. Each entry shows icon + description + auth requirements. Activating a catalog entry flips it into the visible hive. Surface light "two AIs is valid, four or more is usually stronger, three can be less stable depending on the mix" copy — permission to start small without overexplaining the convergence data.
+    (3) Catalog expansion in two batches (different setup/failure stories — don't mix into one PR unless plumbing is already very clean):
+        Batch 1 — Cloud API: Perplexity, Cohere, Together AI
+        Batch 2 — Local Server: LM Studio, Ollama, Alfredo, Open WebUI
+    (4) Hive Profiles as saved snapshots of { activeProviders: Set, perProviderModelChoice: Map, roles: Map }. Presets to ship: Starter (current 6), Cheap 2-AI, Cheap 4-AI, Power (Starter + Perplexity + Cohere + Together), Local-only (LM Studio + Ollama + Alfredo + Open WebUI), Custom (user-named). Default load on first run = Starter.
+
+  Catalog entry schema must carry `kind`: "cloud" (needs API key) | "local-server" (needs reachable base URL, model discovery, maybe no key) | "router-aggregator" (proxies to many models). Not taxonomy theater — it changes setup flow, testing approach, failure modes, support copy, and onboarding question ("have a key?" vs "have a server running?").
+
+  Hard rule for catalog inclusion: "known AND verified end-to-end in WaxFrame's workflow," not "exists in the world." Each new catalog entry requires: chat-completion endpoint validated against real auth (NOT just /v1/models which is often public), conflict-extraction parser tested on actual responses, model-list endpoint working, per-provider model picker behavior verified, and for local-server: CORS/reachability discovery + reasonable error messaging when the server is down. Aspirational entries (e.g. OpenRouter as a name we recognize without having validated all of the above) poison the catalog's trust signal. Ship 7 that all work, not 14 with two flaky ones.
+
+  Custom AI unchanged. Always-available escape hatch for genuinely unknown / OpenAI-compatible / hand-rolled endpoints. NOT subsumed by catalog — catalog is "we know this provider," Custom AI is "we don't, here's the raw config."
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors, some confirmed live. Static grep insufficient: display:contents is load-bearing; JS template-literal class names evade grep. Dedicated branch, phased deletion, visual smoke test on every screen as pre-deploy gate. Flagged clusters: welcome-card, save-bar, goal-modal-refine-*, ai-bfb-*, autosave/verify-panel remnants.
+
+- CSS rule consolidation sweep — Codex read-only audit (post-v3.63.92) flagged 6 cases of same-component-language-multiple-custom-classes worth consolidating. Stats: style.css has 2,330 parsed CSS rules, 221 declaration sets duplicated somewhere; most repeats are harmless but these are real consolidation targets:
+    (1) .btn-danger (style.css ~7685) + .license-modal-btn-danger (style.css ~7861): same red outline/fill/glow idea. Keep modal-specific sizing/layout on .license-modal-btn-danger, let .btn-danger own danger colors.
+    (2) #wfConfirmOkBtn.wf-confirm-danger (style.css ~7030) + .length-guard-continue (style.css ~7154): identical soft-red base + hover colors. Candidate: new .btn-soft-danger.
+    (3) .length-guard-indicator (style.css ~7351) + .slow-responder-indicator (style.css ~7419): nearly identical 15-property footer pill shells. Candidate: new .footer-status-pill.
+    (4) .work-line-numbers (style.css ~2311) + .proj-ta-nums (style.css ~5252): exact same 20-property gutter styles. Candidate: new .line-number-gutter.
+    (5) .custom-ai-modal-overlay (style.css ~3198) + .license-modal-overlay (style.css ~7727): same overlay shell. Candidate: new .modal-overlay.
+    (6) .btn-accent:hover (style.css ~359) + .footer-btn-smoke:hover (style.css ~2863): same hover flip/glow.
+  Intentional exception that stays as-is: help.html inline .btn-danger copy (help.html ~116) — break-glass page, no external CSS dependency, divergence is documented in both the help.html and style.css comments.
+  Approach: introduce shared base classes, migrate callsites one cluster at a time, keep original classes only when they carry unique extras beyond the shared pattern. Risk surface is visual regression — full screen-by-screen smoke test (every modal, every screen, both themes) as pre-deploy gate, same discipline as the dead-selector cleanup branch.
+
+- Repo housekeeping — `docs/` folder in the repo holds older backlog versions, prior playbooks, audit files, prompts reference, getting-started/readme `.docx` variants. ZIP ships latest backlog + Rules Reference + 3-version rollback margin only. Trim repo `docs/` to current margin OR confirmed intentional retention.
+
+- Triage CodeQL + Dependabot findings once first scans complete. Vanilla innerHTML/template-literal patterns will likely flag — some real, some false positives on audited patterns. Walk the list together. Blocked on David pulling Security tab findings.
+
