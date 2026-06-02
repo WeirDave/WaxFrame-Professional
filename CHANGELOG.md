@@ -2,9 +2,9 @@
 
 ---
 
-## v3.63.97
+## v3.63.98
 
-**Templates promoted to a first-class page**
+**Templates promoted to a first-class page** — supersedes the unshipped v3.63.97. Two pre-release bugs caught in browser testing folded into the final ship: the Template Library cards now render correctly (the page-local code was reading `WAXFRAME_TEMPLATES` off `window`, but the `const` declaration in `templates.js` is lexically scoped and not exposed as a window property — fix references the binding directly, same pattern `APP_VERSION` uses), and the About modal stays hidden by default (the helper-page boilerplate I copied invented a non-existent `.about-modal-overlay` class — replaced with the canonical `.finish-modal-overlay` + `.finish-modal goal-info-modal` markup other helper pages use, matching the working pattern).
 
 - NEW `templates.html` — dedicated Template Library page replacing the modal-only discovery surface. Browse all 23 built-in templates grouped by category (Quick Start, Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations) plus a "My Templates" section listing every custom template saved to this browser. Each card shows name, icon, supported paths (Scratch / Refine pills), and one-line description; Apply buttons deep-link straight into the app with the template pre-applied.
 - NEW `?template=ID&path=PATH` query-string handler in `app.js` DOMContentLoaded — mirrors the existing `#settings` hash handler. Allows the new page (and any future external link) to deep-link into a populated Project screen without going through the in-app gallery modal. `setTimeout(80ms)` defer matches the existing pattern; `history.replaceState` scrubs the query after apply so reload doesn't re-trigger.
