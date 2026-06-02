@@ -2,6 +2,23 @@
 
 ---
 
+## v3.63.97
+
+**Templates promoted to a first-class page**
+
+- NEW `templates.html` — dedicated Template Library page replacing the modal-only discovery surface. Browse all 23 built-in templates grouped by category (Quick Start, Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations) plus a "My Templates" section listing every custom template saved to this browser. Each card shows name, icon, supported paths (Scratch / Refine pills), and one-line description; Apply buttons deep-link straight into the app with the template pre-applied.
+- NEW `?template=ID&path=PATH` query-string handler in `app.js` DOMContentLoaded — mirrors the existing `#settings` hash handler. Allows the new page (and any future external link) to deep-link into a populated Project screen without going through the in-app gallery modal. `setTimeout(80ms)` defer matches the existing pattern; `history.replaceState` scrubs the query after apply so reload doesn't re-trigger.
+- NEW Phase 2/3 scaffolds on the new page — "Create Blank Template" and "Import Template File" buttons render a "Coming Soon" modal. Real implementations land in future releases. The existing "Save Current Setup as Template" path (finish-modal ⭐ button) is surfaced as the third action callout.
+- NEW per-card Export and Delete on custom templates rendered on the new page — JSON download, browser-styled wfConfirm-pattern delete confirmation. Mirrors the inline custom-template management already available in the in-app gallery modal.
+- NEW documentation accordion at the bottom of `templates.html` — explains the data model (id, name, icon, category, description, paths, pathContent + per-path fields) for power users hand-editing exported `.json` files.
+- `index.html` template-gallery modal intro gains a "Browse the full Template Library ↗" cross-link to the new page so mid-setup users discover the dedicated surface.
+- ⭐ Templates menu entry added to the in-app helper-page nav and to every existing helper page (api-details, document-playbooks, help, prompt-editor, privacy, terms, waxframe-user-manual, what-are-tokens). `help.html` gets a Templates backlink in its footer-style button row.
+- Apply behavior is unconditional — the user opted in by clicking the link from a curated browse surface, same destructive semantics as in-app template application. Existing in-app gallery modal still works exactly as before; this release augments rather than replaces.
+
+**Files changed:** `templates.html` (new), `index.html`, `style.css`, `js/app.js`, `js/version.js`, all 8 other HTML files (nav menu + cache-bust sweep), all 14 JS file headers (build stamp sweep).
+
+---
+
 ## v3.63.96
 **Build:** `20260531-039` · **Released:** May 31, 2026
 
