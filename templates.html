@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-001
+     Build: 20260602-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -18,7 +18,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-001">
+  <meta name="waxframe-build" content="20260602-002">
   <title>WaxFrame Templates</title>
   <meta name="description" content="Browse WaxFrame's built-in document templates and manage your custom template library — Cover Letters, Resumes, Business Proposals, Product Reviews, and more.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -32,7 +32,7 @@
   <meta name="twitter:description" content="Browse WaxFrame's built-in document templates and manage your custom template library.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.97">
+  <link rel="stylesheet" href="style.css?v=3.63.98">
 </head>
 <body class="helper-body">
 
@@ -252,22 +252,27 @@
 <div class="tpl-toast" id="tplToast"></div>
 
 <!-- ============================================================
-     LICENSE + ABOUT MODALS — helper-page boilerplate
+     LICENSE + ABOUT MODALS — helper-page boilerplate.
+     About modal uses the canonical finish-modal-overlay pattern
+     established on the other helper pages — invented classes
+     like .about-modal-overlay have no CSS rules and would render
+     visible by default.
      ============================================================ -->
-<div class="about-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
-  <div class="about-modal">
-    <button class="about-modal-close" onclick="document.getElementById('aboutModalHelper').classList.remove('active')" aria-label="Close">✕</button>
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
-    <h2 class="about-modal-title">WaxFrame Professional</h2>
-    <p class="about-modal-version"><span class="app-version-stamp"></span></p>
-    <p class="about-modal-tagline">Many minds, one refined result.</p>
-    <div class="about-modal-credits">
-      <p><strong>Author:</strong> R. David Paine III (WeirDave)</p>
-      <p><strong>Tester:</strong> Candy</p>
-      <p><strong>Asset Contributor:</strong> Kai</p>
-      <p><strong>License:</strong> AGPL-3.0</p>
-      <p><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional ↗</a></p>
+    <h2 class="finish-modal-title">WaxFrame</h2>
+    <p class="about-modal-subtitle">About</p>
+    <div class="goal-info-body">
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
     </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
   </div>
 </div>
 
@@ -301,11 +306,11 @@
 <!-- ============================================================
      SCRIPT IMPORTS
      ============================================================ -->
-<script src="js/theme.js?v=3.63.97"></script>
-<script src="js/nav-helper.js?v=3.63.97"></script>
-<script src="js/license-helper.js?v=3.63.97"></script>
-<script src="js/version.js?v=3.63.97"></script>
-<script src="js/templates.js?v=3.63.97"></script>
+<script src="js/theme.js?v=3.63.98"></script>
+<script src="js/nav-helper.js?v=3.63.98"></script>
+<script src="js/license-helper.js?v=3.63.98"></script>
+<script src="js/version.js?v=3.63.98"></script>
+<script src="js/templates.js?v=3.63.98"></script>
 
 <script>
 // ============================================================
@@ -404,7 +409,10 @@ function renderTemplateCard(t, opts) {
 
 function renderBuiltIn() {
   const body = document.getElementById('tplBuiltInBody');
-  const tpls = Array.isArray(window.WAXFRAME_TEMPLATES) ? window.WAXFRAME_TEMPLATES : [];
+  // WAXFRAME_TEMPLATES is declared with `const` in templates.js, which makes
+  // it a lexical binding in the global script scope but NOT a property of
+  // window. Reference it bare (same as APP_VERSION from version.js).
+  const tpls = (typeof WAXFRAME_TEMPLATES !== 'undefined' && Array.isArray(WAXFRAME_TEMPLATES)) ? WAXFRAME_TEMPLATES : [];
 
   // Group by category, preserving CATEGORY_ORDER
   const byCat = {};
