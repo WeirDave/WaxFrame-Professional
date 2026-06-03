@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260602-006
+   Build: 20260602-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -8292,7 +8292,7 @@ kbd {
 
 /* ── Helper page layout ── */
 .page-main { flex: 1; display: flex; flex-direction: column; }
-.helper-body .page-main { padding: var(--space-24) var(--space-32) var(--space-48); max-width: 1200px; width: 100%; margin: 0 auto; }
+.helper-body .page-main { padding: var(--space-24) var(--space-32) var(--space-48); max-width: 1200px; width: 100%; margin: 0 auto; scroll-margin-top: 90px; }
 .api-intro-strip {
   display: flex;
   align-items: center;
