@@ -2,7 +2,52 @@
 
 ---
 
+## v3.63.105
+
+**Critical mobile-render fix + mobile-overlay branding + Web Share API button**
+
+Walk-through of v3.63.104 on a Galaxy S25 emulator surfaced three issues. All three fixed here.
+
+**🚨 CRITICAL: Helper pages were broken on mobile (pre-existing bug, exposed by v3.63.104 testing)**
+
+The CSS rule `body > *:not(.mobile-overlay) { display: none !important; }` lived inside the `@media (max-width: 768px)` block in `style.css`. Because `style.css` is loaded by every helper page but the `.mobile-overlay` element only exists in `index.html`, the rule was firing globally on every helper page at ≤768px and hiding every body child — so `templates.html`, `waxframe-user-manual.html`, `document-playbooks.html`, `what-are-tokens.html`, `api-details.html`, `prompt-editor.html`, `privacy.html`, `terms.html`, `help.html` all rendered as just the honeycomb background pattern on mobile, with no content visible. This bug pre-dates v3.63.104 — the rule has been there for a while — but v3.63.104 is the first release where anyone tested helper pages on a mobile viewport.
+
+Scoped the rule with `:has()` so it only fires on pages that actually contain a `.mobile-overlay` element:
+
+```css
+body:has(> .mobile-overlay) > *:not(.mobile-overlay) {
+  display: none !important;
+}
+```
+
+On helper pages → `body:has(> .mobile-overlay)` is false → rule doesn't fire → body content renders normally. On `index.html` → rule fires as intended → mobile overlay covers everything. `:has()` is supported on every browser ≥2022 (Chrome 105, Safari 15.4, Firefox 121, Edge 105, iOS Safari 15.4, Android Chrome 105) — well past the WaxFrame baseline.
+
+**Mobile-overlay branding boost — actually looks like WaxFrame now**
+
+v3.63.104 mobile overlay shipped with a single small hex logo and no other brand identity, sitting on a flat white card in light mode. Visitor wasn't sure they were on WaxFrame.
+
+Added a proper brand block at the top of the card: hex logo (with gold drop-shadow), `WaxFrame` wordmark in `--accent` gold, and the `MANY MINDS, ONE REFINED RESULT.` tagline in dimmed all-caps — same identity visitors see on the desktop. Separator border underneath so it reads as a header. The value-prop paragraph now has the Worker Bee mascot beside it (matches the bee mascot used on every helper page hero). Card itself now has `var(--surface)` background, `var(--border2)` border, larger radius, and a soft drop-shadow — feels like a WaxFrame surface in both light and dark theme.
+
+Title rewritten from `Thanks for finding WaxFrame` (redundant — the brand block already says WaxFrame) to `Thanks for finding us 👋` (warmer, more conversational, doesn't repeat what the brand block already shows).
+
+**Web Share API "Save or share this page" button**
+
+You asked: "Is there a universal add-to-bookmarks link?" Short answer: no — browsers killed the direct `window.external.AddFavorite()` JS API years ago for security reasons. But the modern equivalent is the Web Share API (`navigator.share()`), which on mobile opens the native OS share sheet — and the share sheet on iOS / Android / Samsung Internet includes **Add Bookmark, Send via Mail, Save to Notes, Send to a contact, AirDrop / Quick Share, and a dozen other useful actions**. Way better than a single Add-Bookmark button.
+
+Added a `📤 Save or share this page` button inside the bookmark callout. Three-tier fallback chain:
+
+1. **Modern mobile / desktop**: `navigator.share({title, text, url})` opens the native share sheet
+2. **Browsers without Share API but with Clipboard API**: copies `waxframe.com` URL + shows a "Link copied! Open your browser menu to bookmark it" toast
+3. **Neither API available**: shows a "Tap your browser menu → Bookmark this page" toast as final fallback
+
+Inline `<script>` so it works even if `app.js` fails to load (the overlay is a pre-app surface). Toast styled to match the WaxFrame visual identity (gold border, surface background, fade in/out).
+
+**Files changed:** `index.html` (mobile-overlay markup with brand block + bee row + share button + inline Web Share JS; cache-bust; JSON-LD softwareVersion bump), `style.css` (`:has()` scope fix on the hide rule; mobile-overlay-card / brand block / bee row / share button / toast CSS), `js/version.js`, `js/app.js` (build stamps only), all 15 JS file headers (build stamp sweep), all 10 HTML files (cache-bust + meta build sweep).
+
+---
+
 ## v3.63.104
+
 
 **Mobile funnel + H1 hierarchy + footer cleanup + helper-page cross-links — every deferred item from v3.63.103 closed**
 

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260602-008
+     Build: 20260602-009
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-008">
+  <meta name="waxframe-build" content="20260602-009">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.104">
+  <link rel="stylesheet" href="style.css?v=3.63.105">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -43,7 +43,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.104",
+    "softwareVersion": "3.63.105",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2616,11 +2616,21 @@
      reasoning. -->
 <div class="mobile-overlay" id="mobileOverlay">
   <div class="mobile-overlay-card">
-    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="mobile-overlay-logo">
-    <h1 class="mobile-overlay-title">Thanks for finding WaxFrame</h1>
-    <p class="mobile-overlay-msg"><strong>WaxFrame puts a team of AI Worker Bees on your document at the same time</strong> — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and others all reviewing and refining in iterative rounds, with a Builder AI synthesizing their feedback.</p>
+    <div class="mobile-overlay-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="mobile-overlay-logo">
+      <div class="mobile-overlay-brand-name">WaxFrame</div>
+      <div class="mobile-overlay-brand-tag">Many minds, one refined result.</div>
+    </div>
+    <h1 class="mobile-overlay-title">Thanks for finding us 👋</h1>
+    <div class="mobile-overlay-bee-row">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="mobile-overlay-bee">
+      <p class="mobile-overlay-msg"><strong>WaxFrame puts a team of AI Worker Bees on your document at the same time</strong> — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and others all reviewing and refining in iterative rounds, with a Builder AI synthesizing their feedback.</p>
+    </div>
     <p class="mobile-overlay-sub">It's built to run on a desktop or laptop where you can see your Worker Bees, the document, and the Builder's output side by side. A phone screen can't fit all that at once, and editing a document while it's bouncing between multiple AIs is hard enough without squinting at it.</p>
-    <p class="mobile-overlay-bookmark">📌 <strong>Bookmark <a href="https://waxframe.com/" class="mobile-overlay-link-inline">waxframe.com</a></strong> and open it from your laptop when you're ready.</p>
+    <div class="mobile-overlay-bookmark">
+      <div class="mobile-overlay-bookmark-text">📌 <strong>Bookmark <a href="https://waxframe.com/" class="mobile-overlay-link-inline">waxframe.com</a></strong> and open it from your laptop when you're ready.</div>
+      <button type="button" class="mobile-overlay-share-btn" onclick="wfMobileShare()">📤 Save or share this page</button>
+    </div>
     <div class="mobile-overlay-section-label">While you're here, here's what works on mobile:</div>
     <div class="mobile-overlay-links">
       <a href="templates.html" class="mobile-overlay-link">
@@ -2659,28 +2669,71 @@
   </div>
 </div>
 
+<!-- Web Share API helper for the mobile-overlay share button. Pure
+     inline so it works even if app.js fails to load (the overlay is a
+     pre-app surface). On mobile, navigator.share() opens the native
+     share sheet which includes Add Bookmark, Send via Mail, Save to
+     Notes, etc. — way more useful than a single Add-Bookmark action
+     (and the only Add-Bookmark JS API was killed by browsers years
+     ago for security reasons). Falls back to clipboard copy + a
+     short instruction toast if navigator.share isn't available. -->
+<script>
+function wfMobileShare() {
+  var url = 'https://waxframe.com/';
+  var data = {
+    title: 'WaxFrame — Multi-AI Document Refinement',
+    text: 'A browser-based multi-AI tool where AI Worker Bees review and refine your documents in iterative rounds.',
+    url: url
+  };
+  if (navigator.share) {
+    navigator.share(data).catch(function(){ /* user cancelled — ignore */ });
+    return;
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(url).then(function() {
+      wfMobileShareToast('Link copied! Open your browser menu to bookmark it.');
+    }).catch(function() {
+      wfMobileShareToast('Tap your browser menu → Bookmark this page');
+    });
+    return;
+  }
+  wfMobileShareToast('Tap your browser menu → Bookmark this page');
+}
+function wfMobileShareToast(msg) {
+  var t = document.createElement('div');
+  t.className = 'mobile-overlay-toast';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.classList.add('is-visible'); }, 10);
+  setTimeout(function(){
+    t.classList.remove('is-visible');
+    setTimeout(function(){ t.remove(); }, 300);
+  }, 3200);
+}
+</script>
+
 <!-- Self-hosted file ingestion libraries (v3.25.0) — boot-loaded so air-gap deployments work end-to-end with no CDN dependency. ~3.4MB total. -->
 <!-- v3.63.16 — pdf.js upgraded to 4.10.38 (closes CVE-2024-4367). 4.x ships ESM only,
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.104';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.105';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.104"></script>
-<script src="lib/jszip.min.js?v=3.63.104"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.104"></script>
-<script src="js/version.js?v=3.63.104"></script>
-<script src="js/storage.js?v=3.63.104"></script>
-<script src="js/theme.js?v=3.63.104"></script>
-<script src="js/audio.js?v=3.63.104"></script>
-<script src="js/scenes.js?v=3.63.104"></script>
-<script src="js/wf-debug.js?v=3.63.104"></script>
-<script src="js/provider-models.js?v=3.63.104"></script>
-<script src="js/api.js?v=3.63.104"></script>
-<script src="js/templates.js?v=3.63.104"></script>
-<script src="js/api-links.js?v=3.63.104"></script>
-<script src="js/app.js?v=3.63.104"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.105"></script>
+<script src="lib/jszip.min.js?v=3.63.105"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.105"></script>
+<script src="js/version.js?v=3.63.105"></script>
+<script src="js/storage.js?v=3.63.105"></script>
+<script src="js/theme.js?v=3.63.105"></script>
+<script src="js/audio.js?v=3.63.105"></script>
+<script src="js/scenes.js?v=3.63.105"></script>
+<script src="js/wf-debug.js?v=3.63.105"></script>
+<script src="js/provider-models.js?v=3.63.105"></script>
+<script src="js/api.js?v=3.63.105"></script>
+<script src="js/templates.js?v=3.63.105"></script>
+<script src="js/api-links.js?v=3.63.105"></script>
+<script src="js/app.js?v=3.63.105"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
