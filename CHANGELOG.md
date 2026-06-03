@@ -2,7 +2,28 @@
 
 ---
 
+## v3.63.102
+
+**Templates page polish — sidebar label, footer redundancy, section CTAs, card tokens, anchor positioning**
+
+Five targeted fixes after a real walk-through of the v3.63.101 catalog:
+
+- **Sidebar label corrected.** "External Guides" renamed to "Related Guides" — the User Manual / API Key Guide / Document Playbooks / What Are Tokens links all live on the same site, not external destinations. The `↗` arrows stay because they correctly signal "opens in a new tab" (WaxFrame convention since v3.22.7), but the heading no longer suggests visitors are leaving the site.
+
+- **Redundant footer version pill removed from templates.html.** The version stamp already appears at the top of the page under the tagline (`.helper-version-stamp` inside `.page-header-brand-text`). The footer-center `.footer-version-pill` was a copy-paste from the User Manual chassis where the same redundancy exists. Removed from this page; flagged in the backlog as a candidate cleanup for the other helper pages where the same pattern still ships.
+
+- **Section-end CTA added at the bottom of every catalog section.** A prominent `Start a project in WaxFrame →` button (or `Open WaxFrame and apply one of these →` on the customs section) appears at the end of every category section body. Funnel hook for visitors landing on the catalog from a search engine — every natural stopping point now has a clear path back into the app. Button uses `var(--accent)` background with dark text, hover brightens, active depresses 1px. Specificity bump (`.helper-body .tpl-section-cta-btn`) defeats the `.helper-body a { color: var(--accent) }` rule that bit us in v3.63.97 — same lesson, this time caught proactively.
+
+- **Card design tokens aligned with the WaxFrame card system.** `.tpl-card` was using `var(--surface)` + `var(--border)` + hardcoded `10px` border-radius. Updated to `var(--surface2)` + `var(--border2)` + `var(--radius-md)` matching the `.ai-card` and `.template-card` patterns used in-app. Added a hover border-color transition consistent with the rest of the system. Side-by-side with in-app cards now reads as the same vocabulary.
+
+- **Sidebar anchor jumps now land correctly on section headers.** v3.63.101 put section ids on the `<div class="hp-section">` wrappers, but `style.css` line ~11400 sets `scroll-margin-top: 116px` on `.hp-section-title` (the inner H2), so the existing offset wasn't being triggered by my id placement. Moved all category-section ids from the wrapping div to the inner H2 element — same pattern the rest of the codebase uses. Jumps now clear the sticky page header and land on the section title, not behind it.
+
+**Files changed:** `templates.html` (sidebar label + footer + CTA + id-on-h2), `style.css` (`.tpl-card` token alignment + `.tpl-section-cta` styling + specificity bump), `js/version.js`, `js/app.js` (build stamp only), all 14 JS file headers (build stamp sweep), all 10 HTML files (cache-bust + meta build sweep).
+
+---
+
 ## v3.63.101
+
 
 **Sticky sidebar TOC + back-to-top links added to templates.html**
 
