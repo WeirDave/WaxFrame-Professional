@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-004
+     Build: 20260602-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-004">
+  <meta name="waxframe-build" content="20260602-005">
   <title>Document Templates Catalog — WaxFrame Professional</title>
   <meta name="description" content="WaxFrame ships with curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more. Browse the full catalog of project scaffolds used by the WaxFrame multi-AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Curated document templates for the documents you actually write.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.100">
+  <link rel="stylesheet" href="style.css?v=3.63.101">
 </head>
 <body class="helper-body">
 
@@ -125,43 +125,76 @@
     </div>
   </div>
 
-  <!-- BUILT-IN CATALOG (rendered by JS into the body) -->
-  <div id="tplBuiltInBody"></div>
+  <!-- TWO-COLUMN LAYOUT: sticky sidebar + main content -->
+  <div class="doc-layout">
 
-  <!-- CUSTOM TEMPLATES (rendered by JS only if localStorage has any) -->
-  <div id="tplCustomBody"></div>
+    <aside class="doc-sidebar">
+      <div class="doc-sidebar-inner">
+        <div class="doc-sidebar-category">Built-in Templates</div>
+        <a href="#cat-quick-start"          class="doc-sidebar-link">🐝 Quick Start</a>
+        <a href="#cat-career-hiring"        class="doc-sidebar-link">💼 Career &amp; Hiring</a>
+        <a href="#cat-business-sales"       class="doc-sidebar-link">📈 Business &amp; Sales</a>
+        <a href="#cat-content-marketing"    class="doc-sidebar-link">✍️ Content &amp; Marketing</a>
+        <a href="#cat-personal-everyday"    class="doc-sidebar-link">🏡 Personal &amp; Everyday</a>
+        <a href="#cat-reviews-recommendations" class="doc-sidebar-link">⭐ Reviews &amp; Recommendations</a>
 
-  <!-- KNOWLEDGE-BASE DOCS — data model reference for power users -->
-  <div class="hp-section">
-    <div class="hp-section-header is-bare">
-      <div class="hp-section-title-block">
-        <h2 class="hp-section-title">Template Data Model</h2>
-        <p class="hp-section-sub">For power users editing exported <code>.json</code> template files — every template is a JSON object with these fields.</p>
+        <div class="doc-sidebar-category" id="sbCustomCategory" style="display:none">Your Templates</div>
+        <a href="#cat-custom" class="doc-sidebar-link" id="sbCustomLink" style="display:none">⭐ Saved Templates</a>
+
+        <div class="doc-sidebar-category">Reference</div>
+        <a href="#data-model" class="doc-sidebar-link">📐 Template Data Model</a>
+
+        <div class="doc-sidebar-category">External Guides</div>
+        <a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📖 User Manual ↗</a>
+        <a href="api-details.html"          target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
+        <a href="document-playbooks.html"   target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📋 Document Playbooks ↗</a>
+        <a href="what-are-tokens.html"      target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🪙 What Are Tokens? ↗</a>
       </div>
-    </div>
-    <div class="hp-section-body">
-      <p><strong>Top-level fields:</strong></p>
-      <table class="tpl-docs-table">
-        <tr><td><code>id</code></td><td>Unique slug. Used as a storage key and DOM id.</td></tr>
-        <tr><td><code>name</code></td><td>Short display name.</td></tr>
-        <tr><td><code>icon</code></td><td>Single emoji shown on the card.</td></tr>
-        <tr><td><code>category</code></td><td>One of: Quick Start, Career &amp; Hiring, Business &amp; Sales, Content &amp; Marketing, Personal &amp; Everyday, Reviews &amp; Recommendations.</td></tr>
-        <tr><td><code>description</code></td><td>One-line summary.</td></tr>
-        <tr><td><code>paths</code></td><td>Array of supported modes: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
-        <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields.</td></tr>
-      </table>
-      <p style="margin-top: var(--space-16);"><strong>Inside each <code>pathContent[path]</code>:</strong></p>
-      <table class="tpl-docs-table">
-        <tr><td><code>goalDocType</code></td><td>What kind of document this is.</td></tr>
-        <tr><td><code>goalAudience</code></td><td>Who the document is for.</td></tr>
-        <tr><td><code>goalOutcome</code></td><td>What the document should accomplish.</td></tr>
-        <tr><td><code>goalScope</code></td><td>What's in scope and what's not.</td></tr>
-        <tr><td><code>goalTone</code></td><td>Voice and tone guidance.</td></tr>
-        <tr><td><code>goalNotes</code></td><td>Hard constraints — things the hive must not do.</td></tr>
-        <tr><td><code>refMaterial</code></td><td>Reference scaffold — fielded structure the user fills in with their specifics.</td></tr>
-        <tr><td><code>lengthMode</code> / <code>lengthLimit</code> / <code>lengthUnit</code></td><td>Optional length parameters.</td></tr>
-      </table>
-      <p style="margin-top: var(--space-16);"><strong>Scratch vs Refine:</strong> a single template can support both modes. <em>Scratch</em> means the user has no draft yet — the hive writes one from the reference scaffold. <em>Refine</em> means the user has an existing draft — the hive polishes and tightens it without rewriting wholesale. Some templates are single-path by design: the platform-specific Review templates (TripAdvisor, Google Maps, Yelp) are refine-only because the input is always an existing review being rewritten for a different platform.</p>
+    </aside>
+
+    <div class="doc-main">
+
+      <!-- BUILT-IN CATALOG (rendered by JS into the body) -->
+      <div id="tplBuiltInBody"></div>
+
+      <!-- CUSTOM TEMPLATES (rendered by JS only if localStorage has any) -->
+      <div id="tplCustomBody"></div>
+
+      <!-- KNOWLEDGE-BASE DOCS — data model reference for power users -->
+      <div class="hp-section" id="data-model">
+        <div class="hp-section-header is-bare">
+          <div class="hp-section-title-block">
+            <h2 class="hp-section-title">Template Data Model</h2>
+            <p class="hp-section-sub">For power users editing exported <code>.json</code> template files — every template is a JSON object with these fields.</p>
+          </div>
+        </div>
+        <div class="hp-section-body">
+          <p><strong>Top-level fields:</strong></p>
+          <table class="tpl-docs-table">
+            <tr><td><code>id</code></td><td>Unique slug. Used as a storage key and DOM id.</td></tr>
+            <tr><td><code>name</code></td><td>Short display name.</td></tr>
+            <tr><td><code>icon</code></td><td>Single emoji shown on the card.</td></tr>
+            <tr><td><code>category</code></td><td>One of: Quick Start, Career &amp; Hiring, Business &amp; Sales, Content &amp; Marketing, Personal &amp; Everyday, Reviews &amp; Recommendations.</td></tr>
+            <tr><td><code>description</code></td><td>One-line summary.</td></tr>
+            <tr><td><code>paths</code></td><td>Array of supported modes: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
+            <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields.</td></tr>
+          </table>
+          <p style="margin-top: var(--space-16);"><strong>Inside each <code>pathContent[path]</code>:</strong></p>
+          <table class="tpl-docs-table">
+            <tr><td><code>goalDocType</code></td><td>What kind of document this is.</td></tr>
+            <tr><td><code>goalAudience</code></td><td>Who the document is for.</td></tr>
+            <tr><td><code>goalOutcome</code></td><td>What the document should accomplish.</td></tr>
+            <tr><td><code>goalScope</code></td><td>What's in scope and what's not.</td></tr>
+            <tr><td><code>goalTone</code></td><td>Voice and tone guidance.</td></tr>
+            <tr><td><code>goalNotes</code></td><td>Hard constraints — things the hive must not do.</td></tr>
+            <tr><td><code>refMaterial</code></td><td>Reference scaffold — fielded structure the user fills in with their specifics.</td></tr>
+            <tr><td><code>lengthMode</code> / <code>lengthLimit</code> / <code>lengthUnit</code></td><td>Optional length parameters.</td></tr>
+          </table>
+          <p style="margin-top: var(--space-16);"><strong>Scratch vs Refine:</strong> a single template can support both modes. <em>Scratch</em> means the user has no draft yet — the hive writes one from the reference scaffold. <em>Refine</em> means the user has an existing draft — the hive polishes and tightens it without rewriting wholesale. Some templates are single-path by design: the platform-specific Review templates (TripAdvisor, Google Maps, Yelp) are refine-only because the input is always an existing review being rewritten for a different platform.</p>
+          <a href="#top" class="wh-back-top">↑ Back to top</a>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -237,11 +270,12 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.100"></script>
-<script src="js/nav-helper.js?v=3.63.100"></script>
-<script src="js/license-helper.js?v=3.63.100"></script>
-<script src="js/version.js?v=3.63.100"></script>
-<script src="js/templates.js?v=3.63.100"></script>
+<script src="js/theme.js?v=3.63.101"></script>
+<script src="js/nav-helper.js?v=3.63.101"></script>
+<script src="js/license-helper.js?v=3.63.101"></script>
+<script src="js/version.js?v=3.63.101"></script>
+<script src="js/templates.js?v=3.63.101"></script>
+<script src="js/docs-scrollspy.js?v=3.63.101"></script>
 
 <script>
 // ============================================================
@@ -353,10 +387,15 @@ function renderTemplateCard(t) {
   `;
 }
 
+function catSlug(category) {
+  return 'cat-' + String(category).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
 function renderCategorySection(category, list) {
   const blurb = CATEGORY_BLURBS[category] || '';
+  const id = catSlug(category);
   return `
-    <div class="hp-section">
+    <div class="hp-section" id="${id}">
       <div class="hp-section-header is-bare">
         <div class="hp-section-title-block">
           <h2 class="hp-section-title">${escapeHtml(category)} <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
@@ -365,6 +404,7 @@ function renderCategorySection(category, list) {
       </div>
       <div class="hp-section-body">
         <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+        <a href="#top" class="wh-back-top">↑ Back to top</a>
       </div>
     </div>
   `;
@@ -403,7 +443,7 @@ function renderCustom() {
 
   const list = customs.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   body.innerHTML = `
-    <div class="hp-section">
+    <div class="hp-section" id="cat-custom">
       <div class="hp-section-header is-bare">
         <div class="hp-section-title-block">
           <h2 class="hp-section-title">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
@@ -412,9 +452,18 @@ function renderCustom() {
       </div>
       <div class="hp-section-body">
         <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+        <a href="#top" class="wh-back-top">↑ Back to top</a>
       </div>
     </div>
   `;
+
+  // Reveal the "Your Templates" sidebar group now that the section exists.
+  // Inline display: '' clears the inline style="display:none" defaults
+  // set in the hardcoded sidebar markup. Audited inline-style exception.
+  const sbCat = document.getElementById('sbCustomCategory');
+  const sbLink = document.getElementById('sbCustomLink');
+  if (sbCat)  sbCat.style.display  = '';
+  if (sbLink) sbLink.style.display = '';
 }
 
 document.addEventListener('DOMContentLoaded', () => {
