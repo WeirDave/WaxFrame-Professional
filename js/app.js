@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260602-002
+// Build: 20260602-003
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -501,7 +501,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260602-002';         // build stamp — update each session
+const BUILD       = '20260602-003';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -18125,30 +18125,4 @@ document.addEventListener('DOMContentLoaded', async () => {
       try { history.replaceState(null, '', window.location.pathname + window.location.search); } catch (e) {}
     }, 50);
   }
-
-  // v3.63.97 — Deep-link query handler. templates.html links Apply
-  // buttons to `index.html?template=<id>&path=<scratch|refine>`, so a
-  // user browsing the Template Library on its dedicated page can jump
-  // straight into a populated Project screen without re-opening the
-  // gallery modal. setTimeout matches the #settings handler so the
-  // initial screen paints first. replaceState scrubs the query string
-  // after apply so reload doesn't re-trigger. Apply is unconditional
-  // (the user opted in by clicking the link) — same destructive
-  // semantics as in-app template application.
-  try {
-    const params = new URLSearchParams(window.location.search);
-    const tplId = params.get('template');
-    const tplPath = params.get('path');
-    if (tplId && typeof applyTemplate === 'function') {
-      setTimeout(async () => {
-        try {
-          if (typeof goToScreen === 'function') goToScreen('project');
-          await applyTemplate(tplId, tplPath || 'scratch');
-        } catch (e) {
-          console.warn('Deep-link applyTemplate failed:', e);
-        }
-        try { history.replaceState(null, '', window.location.pathname); } catch (e) {}
-      }, 80);
-    }
-  } catch (e) { /* URLSearchParams parse failure — ignore */ }
 });

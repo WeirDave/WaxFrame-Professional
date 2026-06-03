@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260602-002
+     Build: 20260602-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-002">
+  <meta name="waxframe-build" content="20260602-003">
   <title>WaxFrame</title>
   <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.98">
+  <link rel="stylesheet" href="style.css?v=3.63.99">
 </head>
 <body>
 
@@ -1896,7 +1896,7 @@
       <img src="images/WaxFrame_Project_Bee_v2.png" alt="" class="template-gallery-bee">
       <div>
         <h2 class="finish-modal-title">Project Templates</h2>
-        <p class="template-gallery-intro">Templates fill in your Project fields with proven starting content for common document types. Pick one matching what you're writing, review the filled-in fields, and edit anything that doesn't fit your specific situation. <a href="templates.html" target="_blank" rel="noopener noreferrer" class="link-accent">Browse the full Template Library ↗</a></p>
+        <p class="template-gallery-intro">Templates fill in your Project fields with proven starting content for common document types. Pick one matching what you're writing, review the filled-in fields, and edit anything that doesn't fit your specific situation.</p>
       </div>
       <button class="template-gallery-close" onclick="document.getElementById('templateGalleryModal').classList.remove('active')" title="Close" aria-label="Close template gallery">✕</button>
     </div>
@@ -2560,23 +2560,23 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.98';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.99';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.98"></script>
-<script src="lib/jszip.min.js?v=3.63.98"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.98"></script>
-<script src="js/version.js?v=3.63.98"></script>
-<script src="js/storage.js?v=3.63.98"></script>
-<script src="js/theme.js?v=3.63.98"></script>
-<script src="js/audio.js?v=3.63.98"></script>
-<script src="js/scenes.js?v=3.63.98"></script>
-<script src="js/wf-debug.js?v=3.63.98"></script>
-<script src="js/provider-models.js?v=3.63.98"></script>
-<script src="js/api.js?v=3.63.98"></script>
-<script src="js/templates.js?v=3.63.98"></script>
-<script src="js/api-links.js?v=3.63.98"></script>
-<script src="js/app.js?v=3.63.98"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.99"></script>
+<script src="lib/jszip.min.js?v=3.63.99"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.99"></script>
+<script src="js/version.js?v=3.63.99"></script>
+<script src="js/storage.js?v=3.63.99"></script>
+<script src="js/theme.js?v=3.63.99"></script>
+<script src="js/audio.js?v=3.63.99"></script>
+<script src="js/scenes.js?v=3.63.99"></script>
+<script src="js/wf-debug.js?v=3.63.99"></script>
+<script src="js/provider-models.js?v=3.63.99"></script>
+<script src="js/api.js?v=3.63.99"></script>
+<script src="js/templates.js?v=3.63.99"></script>
+<script src="js/api-links.js?v=3.63.99"></script>
+<script src="js/app.js?v=3.63.99"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2650,9 +2650,7 @@
     <div class="nav-section-label">Help & Support</div>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
-    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-    <a class="nav-item" href="templates.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Templates</a>
-    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
