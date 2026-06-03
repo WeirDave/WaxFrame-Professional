@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.99
+
+**Templates page repositioned as a standalone SEO/marketing catalog**
+
+After shipping v3.63.98's dedicated `templates.html` and stress-testing it against actual user need, the page didn't earn its place in the workflow: existing users have the in-app gallery modal (one click, contextual), and a dedicated page opening in a new tab fragments attention without adding utility. The page belongs to funnel — first-time visitors landing on `waxframe.com/templates`, marketing/social link targets, SEO surface for searches like "cover letter template" or "RFP response template" — not to existing users mid-flow.
+
+- `templates.html` rewritten as a pure catalog. No Apply buttons, no Export/Delete actions, no Save/Create/Import callouts. Read-only showcase tailored for visitors who've never used WaxFrame.
+- Per-card content expanded: lead description + Document type + Length + a collapsible "See the reference scaffold" preview that shows the actual `refMaterial` field as the visitor would see it inside the app.
+- Category sections now use a banner-card header pattern (icon + title + count + marketing-voice blurb explaining what kinds of documents the category covers) — consistent with the visual hierarchy other helper pages use.
+- "My Templates" section only renders when the visitor's `localStorage` actually contains custom templates. Visitors (the primary audience) never see a dead empty-state; existing users who happen to land on the page see their customs as additional context. No CRUD on this surface — all template management stays in the in-app modal.
+- Knowledge-base docs accordion preserved at the bottom — explains the template data model for power users and search engines.
+- REMOVED the in-app menu link to `templates.html` from `index.html` and all 8 helper pages — workflow users have the modal and shouldn't be sent out of the app to a marketing surface mid-flow.
+- REMOVED the "Browse the full Template Library ↗" cross-link from the in-app gallery modal intro — same reasoning.
+- REMOVED the `?template=ID&path=PATH` deep-link handler from `app.js` `DOMContentLoaded` — no longer needed since the catalog page doesn't link back into the app at the card level. The `#settings` hash handler is unchanged.
+- REMOVED stats bar, Save Current Setup / Create Blank / Import Template action callouts, delete-confirm modal, and Coming Soon modal from `templates.html`. All actions previously surfaced are now strictly in-app (modal-based) operations.
+- SEO: meta description updated to enumerate key document types ("cover letters, résumés, business proposals, RFP responses, product reviews"), canonical URL set, Open Graph + Twitter cards configured, H1/H2/H3 hierarchy aligned with categories and templates for organic search ranking.
+- Full cache-bust + build-stamp sweep across 10 HTML, 14 JS, `style.css`.
+
+**Files changed:** `templates.html` (rewritten), `index.html`, `style.css` (old `.tpl-*` block removed; new catalog block added), `js/app.js` (deep-link handler removed), `js/version.js`, 8 helper HTML (Templates link removed from nav menus), all 14 JS file headers (build stamp sweep).
+
+---
+
 ## v3.63.98
 
 **Templates promoted to a first-class page** — supersedes the unshipped v3.63.97. Two pre-release bugs caught in browser testing folded into the final ship: the Template Library cards now render correctly (the page-local code was reading `WAXFRAME_TEMPLATES` off `window`, but the `const` declaration in `templates.js` is lexically scoped and not exposed as a window property — fix references the binding directly, same pattern `APP_VERSION` uses), and the About modal stays hidden by default (the helper-page boilerplate I copied invented a non-existent `.about-modal-overlay` class — replaced with the canonical `.finish-modal-overlay` + `.finish-modal goal-info-modal` markup other helper pages use, matching the working pattern).
