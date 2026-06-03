@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-005
+     Build: 20260602-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-005">
+  <meta name="waxframe-build" content="20260602-006">
   <title>Document Templates Catalog — WaxFrame Professional</title>
   <meta name="description" content="WaxFrame ships with curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more. Browse the full catalog of project scaffolds used by the WaxFrame multi-AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Curated document templates for the documents you actually write.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.101">
+  <link rel="stylesheet" href="style.css?v=3.63.102">
 </head>
 <body class="helper-body">
 
@@ -144,7 +144,7 @@
         <div class="doc-sidebar-category">Reference</div>
         <a href="#data-model" class="doc-sidebar-link">📐 Template Data Model</a>
 
-        <div class="doc-sidebar-category">External Guides</div>
+        <div class="doc-sidebar-category">Related Guides</div>
         <a href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📖 User Manual ↗</a>
         <a href="api-details.html"          target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">🔑 API Key Guide ↗</a>
         <a href="document-playbooks.html"   target="_blank" rel="noopener noreferrer" class="doc-sidebar-link">📋 Document Playbooks ↗</a>
@@ -161,10 +161,10 @@
       <div id="tplCustomBody"></div>
 
       <!-- KNOWLEDGE-BASE DOCS — data model reference for power users -->
-      <div class="hp-section" id="data-model">
+      <div class="hp-section">
         <div class="hp-section-header is-bare">
           <div class="hp-section-title-block">
-            <h2 class="hp-section-title">Template Data Model</h2>
+            <h2 class="hp-section-title" id="data-model">Template Data Model</h2>
             <p class="hp-section-sub">For power users editing exported <code>.json</code> template files — every template is a JSON object with these fields.</p>
           </div>
         </div>
@@ -207,9 +207,7 @@
      ============================================================ -->
 <div class="page-footer page-footer-unified">
   <div class="page-footer-actions"></div>
-  <div class="page-footer-center">
-    <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
-  </div>
+  <div class="page-footer-center"></div>
   <div class="page-footer-right">
     <span class="license-badge" id="licenseBadge" title="License status"></span>
     <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
@@ -270,12 +268,12 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.101"></script>
-<script src="js/nav-helper.js?v=3.63.101"></script>
-<script src="js/license-helper.js?v=3.63.101"></script>
-<script src="js/version.js?v=3.63.101"></script>
-<script src="js/templates.js?v=3.63.101"></script>
-<script src="js/docs-scrollspy.js?v=3.63.101"></script>
+<script src="js/theme.js?v=3.63.102"></script>
+<script src="js/nav-helper.js?v=3.63.102"></script>
+<script src="js/license-helper.js?v=3.63.102"></script>
+<script src="js/version.js?v=3.63.102"></script>
+<script src="js/templates.js?v=3.63.102"></script>
+<script src="js/docs-scrollspy.js?v=3.63.102"></script>
 
 <script>
 // ============================================================
@@ -395,15 +393,18 @@ function renderCategorySection(category, list) {
   const blurb = CATEGORY_BLURBS[category] || '';
   const id = catSlug(category);
   return `
-    <div class="hp-section" id="${id}">
+    <div class="hp-section">
       <div class="hp-section-header is-bare">
         <div class="hp-section-title-block">
-          <h2 class="hp-section-title">${escapeHtml(category)} <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
+          <h2 class="hp-section-title" id="${id}">${escapeHtml(category)} <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
           ${blurb ? `<p class="hp-section-sub">${escapeHtml(blurb)}</p>` : ''}
         </div>
       </div>
       <div class="hp-section-body">
         <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+        <div class="tpl-section-cta">
+          <a href="index.html" class="tpl-section-cta-btn">Start a project in WaxFrame →</a>
+        </div>
         <a href="#top" class="wh-back-top">↑ Back to top</a>
       </div>
     </div>
@@ -443,15 +444,18 @@ function renderCustom() {
 
   const list = customs.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   body.innerHTML = `
-    <div class="hp-section" id="cat-custom">
+    <div class="hp-section">
       <div class="hp-section-header is-bare">
         <div class="hp-section-title-block">
-          <h2 class="hp-section-title">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
+          <h2 class="hp-section-title" id="cat-custom">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
           <p class="hp-section-sub">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
         </div>
       </div>
       <div class="hp-section-body">
         <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+        <div class="tpl-section-cta">
+          <a href="index.html" class="tpl-section-cta-btn">Open WaxFrame and apply one of these →</a>
+        </div>
         <a href="#top" class="wh-back-top">↑ Back to top</a>
       </div>
     </div>
