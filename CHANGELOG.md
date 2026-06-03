@@ -2,6 +2,36 @@
 
 ---
 
+## v3.63.107
+
+**Mobile landing footer controls + SEO heading polish**
+
+Build: `20260602-010`<br>
+Released: `2026-06-02`
+
+Small follow-up release after v3.63.106.
+
+**Mobile landing polish**
+
+The mobile landing on `index.html` now uses the WaxFrame honeycomb background instead of a flat gray field. It follows the existing theme system: light mode uses `WaxFrame_Honeycomb_BG_Light.png`, dark mode uses `WaxFrame_Honeycomb_BG_Dark.png`, and auto mode follows the operating system preference.
+
+The mobile landing also now shows the live WaxFrame version in the brand block and moves the theme controls down into the footer next to the page-level utility links. That keeps the top of the mobile landing focused on identity and the core message, while leaving theme/source/purchase controls together as page chrome.
+
+**SEO heading cleanup**
+
+`api-details.html` had three visible section-level `<h1>` elements. The main page title remains an `<h1>`, while the two later section headers (`Know Your Hive`, `General Tips`) are now `<h2>` elements using the same visual class. This keeps the page hierarchy cleaner without changing the visual design.
+
+**Verification**
+
+- SEO metadata audit passed across all public HTML pages.
+- Local asset/link audit passed.
+- Static JSON-LD audit passed.
+- Mobile width check passed at `390 × 844` for `index.html`, `templates.html`, `waxframe-user-manual.html`, `document-playbooks.html`, and `what-are-tokens.html`.
+
+**Files changed:** `index.html`, `style.css`, `api-details.html`, `js/version.js`, `js/app.js`, all JS file headers, all public HTML cache-bust/build stamps, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v175.txt`.
+
+---
+
 ## v3.63.106
 
 **Mobile helper pages become actual phone pages**
