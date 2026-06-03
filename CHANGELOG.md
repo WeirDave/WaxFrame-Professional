@@ -2,6 +2,33 @@
 
 ---
 
+## v3.63.106
+
+**Mobile helper pages become actual phone pages**
+
+Build: `20260603-001`<br>
+Released: `2026-06-03`
+
+Follow-up polish after the v3.63.105 emergency mobile-render fix. v3.63.105 made the helper pages visible again on mobile, but the catalog/manual/playbooks/tokens pages were still using the desktop two-column reference layout at phone widths. On a 390px viewport that meant visitors saw the left slice of a desktop page instead of a readable mobile page.
+
+**Single-column helper-page mobile layout**
+
+Added a mobile breakpoint for helper pages at `max-width: 820px`. The desktop `doc-layout` grid now collapses into a normal single-column flow, the sticky sidebar becomes an in-page jump list, the header compacts, and the sticky footer is constrained so it no longer forces horizontal scroll. Shared helper components now use mobile-safe padding, boxed sizing, and table overflow behavior.
+
+Verified with Chrome DevTools Protocol device metrics at `390 × 844`: `index.html`, `templates.html`, `waxframe-user-manual.html`, `document-playbooks.html`, and `what-are-tokens.html` all report `scrollWidth: 390`.
+
+**Mobile overlay width guard**
+
+The mobile landing overlay on `index.html` now uses explicit viewport-bounded sizing (`100vw` overlay cap and `calc(100vw - gutter)` card width) plus local `box-sizing: border-box` on the card, share button, toast, bookmark callout, and link cards. This prevents padding and borders from pushing the overlay wider than the phone viewport.
+
+**Template catalog card tightening**
+
+The template catalog gets catalog-specific mobile rules: one-column grid, smaller card headings, stacked fact rows, full-width section CTA buttons, and scaffold previews that scroll horizontally only when needed. The catalog now reads as a deliberate mobile reference page instead of a desktop catalog squeezed into a phone.
+
+**Files changed:** `style.css` (mobile overlay width guard, helper-page mobile breakpoint, template-catalog mobile rules), `js/version.js`, `js/app.js` (build stamps), all JS file headers, all root HTML cache-bust/build stamps, `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v174.txt`, `release-notes-v3.63.106.md`.
+
+---
+
 ## v3.63.105
 
 **Critical mobile-render fix + mobile-overlay branding + Web Share API button**
