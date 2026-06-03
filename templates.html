@@ -1,26 +1,21 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-003
+     Build: 20260602-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
-     SEO / marketing showcase page (v3.63.99).
+     SEO / marketing showcase page (v3.63.100).
      Standalone catalog of the document templates WaxFrame ships
-     with. No app links from cards, no Apply buttons, no flow back
-     into the working surface. Reads template data from templates.js
-     and renders it as a knowledge-base catalog tailored for first-
-     time visitors and search-engine indexing.
-
-     The in-app template gallery modal remains the canonical
-     workflow surface for existing users. This page is funnel
-     content, not workflow content.
+     with. Built on the helper-page chassis (hp-section primitive,
+     unified footer, .license-badge in footer-right) — structurally
+     matches waxframe-user-manual.html, api-details.html, etc.
      ============================================================ -->
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-003">
+  <meta name="waxframe-build" content="20260602-004">
   <title>Document Templates Catalog — WaxFrame Professional</title>
   <meta name="description" content="WaxFrame ships with curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more. Browse the full catalog of project scaffolds used by the WaxFrame multi-AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -34,14 +29,13 @@
   <meta name="twitter:description" content="Curated document templates for the documents you actually write.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.99">
+  <link rel="stylesheet" href="style.css?v=3.63.100">
 </head>
 <body class="helper-body">
 
 <!-- ============================================================
      SLIM HELPER-PAGE NAV MENU — strict subset of in-app menu
-     Templates link intentionally absent: the page is a catalog
-     surface for funnel/SEO, not a workflow destination.
+     Templates link intentionally absent (standalone catalog).
      ============================================================ -->
 <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
 
@@ -73,10 +67,6 @@
     <a class="nav-item" href="index.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Tools</div>
-    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
-
-    <div class="nav-divider"></div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
 
     <div class="nav-divider"></div>
@@ -87,7 +77,9 @@
 </div>
 
 <!-- ============================================================
-     PAGE HEADER — unified brand block + theme controls
+     PAGE HEADER — matches the helper-page pattern. License
+     badge does NOT live here; it lives in the unified footer
+     where every other helper page puts it.
      ============================================================ -->
 <div class="page-header">
   <div class="page-header-left">
@@ -106,64 +98,93 @@
     <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
     <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
     <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
-    <div class="license-pill" id="licensePill" onclick="showLicenseModal()" title="Manage license">🔓 Trial</div>
   </div>
 </div>
 
 <!-- ============================================================
-     MAIN CONTENT
+     MAIN CONTENT — wrapped in .page-main with hp-section primitive
+     used for every content section. This is the same chassis the
+     User Manual, API Key Guide, and Document Playbooks use.
      ============================================================ -->
-<main class="tpl-page">
+<div class="page-main" id="top">
+
+  <div class="print-header">
+    <div class="print-header-title">WaxFrame Document Templates Catalog</div>
+    <div class="print-header-sub">waxframe.com — Many minds, one refined result.</div>
+  </div>
 
   <!-- HERO -->
-  <section class="tpl-hero">
-    <h1 class="tpl-hero-title">Document Templates Catalog</h1>
-    <p class="tpl-hero-lead">WaxFrame ships with curated templates for the documents people actually write — cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, and more. Each template is a project scaffold: the document type, the audience, the outcome the document should achieve, the tone, the scope, and a reference structure the multi-AI hive uses to write or refine the document.</p>
-    <p class="tpl-hero-sub">This page is a reference catalog of what WaxFrame ships with. Templates are applied <em>inside the WaxFrame app</em> from the Project setup screen, not from this page. Use this catalog to see what's available before you start.</p>
-  </section>
+  <div class="hp-section">
+    <div class="hp-section-header">
+      <img src="images/WaxFrame_Worker_Bee_v2.png" alt="" class="hp-section-bee">
+      <div class="hp-section-title-block">
+        <h1 class="hp-section-title">Document Templates Catalog</h1>
+        <p class="hp-section-sub">WaxFrame ships with curated templates for the documents people actually write — cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, and more. Each template is a project scaffold: the document type, the audience, the outcome the document should achieve, the tone, the scope, and a reference structure the multi-AI hive uses to write or refine the document.</p>
+        <p class="hp-section-sub">This page is a <strong>reference catalog</strong> of what WaxFrame ships with. Templates are applied <em>inside the WaxFrame app</em> from the Project setup screen, not from this page. Use this catalog to see what's available before you start.</p>
+      </div>
+    </div>
+  </div>
 
-  <!-- BUILT-IN CATALOG (rendered by JS) -->
+  <!-- BUILT-IN CATALOG (rendered by JS into the body) -->
   <div id="tplBuiltInBody"></div>
 
-  <!-- CUSTOM TEMPLATES — only renders if visitor has saved customs in localStorage -->
+  <!-- CUSTOM TEMPLATES (rendered by JS only if localStorage has any) -->
   <div id="tplCustomBody"></div>
 
-  <!-- KNOWLEDGE-BASE DOCS ACCORDION -->
-  <section class="tpl-section">
-    <details class="tpl-docs-accordion">
-      <summary class="tpl-docs-summary">📐 How a WaxFrame template is structured</summary>
-      <div class="tpl-docs-body">
-        <p>A WaxFrame template is a JSON object that captures the shape of a project: the document type, who it's for, what it should accomplish, the tone, the scope, and a reference scaffold the hive reads when writing or refining. Applying a template in the app pre-populates the Project setup screen — the user can edit any field before starting.</p>
-        <p><strong>Top-level fields:</strong></p>
-        <table class="tpl-docs-table">
-          <tr><td><code>id</code></td><td>Unique slug. Used as a storage key and DOM id.</td></tr>
-          <tr><td><code>name</code></td><td>Short display name.</td></tr>
-          <tr><td><code>icon</code></td><td>Single emoji shown on the card.</td></tr>
-          <tr><td><code>category</code></td><td>One of: Quick Start, Career &amp; Hiring, Business &amp; Sales, Content &amp; Marketing, Personal &amp; Everyday, Reviews &amp; Recommendations.</td></tr>
-          <tr><td><code>description</code></td><td>One-line summary.</td></tr>
-          <tr><td><code>paths</code></td><td>Array of supported modes: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
-          <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields.</td></tr>
-        </table>
-        <p><strong>Inside each <code>pathContent[path]</code>:</strong></p>
-        <table class="tpl-docs-table">
-          <tr><td><code>goalDocType</code></td><td>What kind of document this is.</td></tr>
-          <tr><td><code>goalAudience</code></td><td>Who the document is for.</td></tr>
-          <tr><td><code>goalOutcome</code></td><td>What the document should accomplish.</td></tr>
-          <tr><td><code>goalScope</code></td><td>What's in scope and what's not.</td></tr>
-          <tr><td><code>goalTone</code></td><td>Voice and tone guidance.</td></tr>
-          <tr><td><code>goalNotes</code></td><td>Hard constraints — things the hive must not do.</td></tr>
-          <tr><td><code>refMaterial</code></td><td>Reference scaffold — fielded structure the user fills in with their specifics.</td></tr>
-          <tr><td><code>lengthMode</code> / <code>lengthLimit</code> / <code>lengthUnit</code></td><td>Optional length parameters.</td></tr>
-        </table>
-        <p><strong>About Scratch vs Refine:</strong> a single template can support both modes. <em>Scratch</em> means the user has no draft yet — the hive writes one from the reference scaffold. <em>Refine</em> means the user has an existing draft — the hive polishes and tightens it without rewriting wholesale. Some templates are single-path by design: the platform-specific Review templates (TripAdvisor, Google Maps, Yelp, etc.) are refine-only because the input is always an existing review being rewritten for a different platform.</p>
+  <!-- KNOWLEDGE-BASE DOCS — data model reference for power users -->
+  <div class="hp-section">
+    <div class="hp-section-header is-bare">
+      <div class="hp-section-title-block">
+        <h2 class="hp-section-title">Template Data Model</h2>
+        <p class="hp-section-sub">For power users editing exported <code>.json</code> template files — every template is a JSON object with these fields.</p>
       </div>
-    </details>
-  </section>
+    </div>
+    <div class="hp-section-body">
+      <p><strong>Top-level fields:</strong></p>
+      <table class="tpl-docs-table">
+        <tr><td><code>id</code></td><td>Unique slug. Used as a storage key and DOM id.</td></tr>
+        <tr><td><code>name</code></td><td>Short display name.</td></tr>
+        <tr><td><code>icon</code></td><td>Single emoji shown on the card.</td></tr>
+        <tr><td><code>category</code></td><td>One of: Quick Start, Career &amp; Hiring, Business &amp; Sales, Content &amp; Marketing, Personal &amp; Everyday, Reviews &amp; Recommendations.</td></tr>
+        <tr><td><code>description</code></td><td>One-line summary.</td></tr>
+        <tr><td><code>paths</code></td><td>Array of supported modes: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
+        <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields.</td></tr>
+      </table>
+      <p style="margin-top: var(--space-16);"><strong>Inside each <code>pathContent[path]</code>:</strong></p>
+      <table class="tpl-docs-table">
+        <tr><td><code>goalDocType</code></td><td>What kind of document this is.</td></tr>
+        <tr><td><code>goalAudience</code></td><td>Who the document is for.</td></tr>
+        <tr><td><code>goalOutcome</code></td><td>What the document should accomplish.</td></tr>
+        <tr><td><code>goalScope</code></td><td>What's in scope and what's not.</td></tr>
+        <tr><td><code>goalTone</code></td><td>Voice and tone guidance.</td></tr>
+        <tr><td><code>goalNotes</code></td><td>Hard constraints — things the hive must not do.</td></tr>
+        <tr><td><code>refMaterial</code></td><td>Reference scaffold — fielded structure the user fills in with their specifics.</td></tr>
+        <tr><td><code>lengthMode</code> / <code>lengthLimit</code> / <code>lengthUnit</code></td><td>Optional length parameters.</td></tr>
+      </table>
+      <p style="margin-top: var(--space-16);"><strong>Scratch vs Refine:</strong> a single template can support both modes. <em>Scratch</em> means the user has no draft yet — the hive writes one from the reference scaffold. <em>Refine</em> means the user has an existing draft — the hive polishes and tightens it without rewriting wholesale. Some templates are single-path by design: the platform-specific Review templates (TripAdvisor, Google Maps, Yelp) are refine-only because the input is always an existing review being rewritten for a different platform.</p>
+    </div>
+  </div>
 
-</main>
+</div>
 
 <!-- ============================================================
-     LICENSE + ABOUT MODALS — helper-page boilerplate.
+     UNIFIED FOOTER — matches helper-page footer pattern.
+     License badge id is "licenseBadge" so license-helper.js's
+     updateLicenseBadge() can find and update it dynamically.
+     ============================================================ -->
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions"></div>
+  <div class="page-footer-center">
+    <span class="footer-version-pill"><span class="app-version-stamp"></span></span>
+  </div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     ABOUT MODAL — canonical helper-page version
      ============================================================ -->
 <div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
@@ -183,6 +204,9 @@
   </div>
 </div>
 
+<!-- ============================================================
+     LICENSE MODALS — canonical helper-page versions
+     ============================================================ -->
 <div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
@@ -211,21 +235,20 @@
 </div>
 
 <!-- ============================================================
-     SCRIPT IMPORTS
+     SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.99"></script>
-<script src="js/nav-helper.js?v=3.63.99"></script>
-<script src="js/license-helper.js?v=3.63.99"></script>
-<script src="js/version.js?v=3.63.99"></script>
-<script src="js/templates.js?v=3.63.99"></script>
+<script src="js/theme.js?v=3.63.100"></script>
+<script src="js/nav-helper.js?v=3.63.100"></script>
+<script src="js/license-helper.js?v=3.63.100"></script>
+<script src="js/version.js?v=3.63.100"></script>
+<script src="js/templates.js?v=3.63.100"></script>
 
 <script>
 // ============================================================
 //  Catalog rendering — read-only showcase, no actions.
-//  WAXFRAME_TEMPLATES is declared `const` in templates.js which
-//  makes it a lexical binding in the global script scope but NOT
-//  a property of window — reference it bare (same pattern
-//  APP_VERSION uses).
+//  Uses .hp-section primitives for category sections (matching
+//  user-manual.html visual system); .tpl-card for the catalog
+//  cards inside each section's body.
 // ============================================================
 'use strict';
 
@@ -239,31 +262,19 @@ const CATEGORY_ORDER = [
   'Reviews & Recommendations'
 ];
 
-// Marketing-page category blurbs — explain what each category covers
-// to a visitor who's never used WaxFrame before. Keyed by category name.
 const CATEGORY_BLURBS = {
   'Quick Start':
     'A low-stakes starter project for first-time WaxFrame users. Runs the same full hive flow as any other document — multi-AI rounds, hive convergence, Builder synthesis — on a small, comfortable subject so you can see the engine work end-to-end before committing to something important.',
   'Career & Hiring':
-    'Job-search and hiring documents that have to land on a busy reader\'s desk and earn 30 seconds of real attention. Cover letters, résumés, job descriptions, LinkedIn About sections, thank-you notes — each scaffold is built around the actual decision the reader makes when they finish reading.',
+    "Job-search and hiring documents that have to land on a busy reader's desk and earn 30 seconds of real attention. Cover letters, résumés, job descriptions, LinkedIn About sections, thank-you notes — each scaffold is built around the actual decision the reader makes when they finish reading.",
   'Business & Sales':
     'B2B documents where credibility and clarity decide the outcome. Business proposals, executive summaries, cold outreach emails, RFP responses — written to be read by busy decision-makers who reward specificity and tune out marketing language.',
   'Content & Marketing':
     'Publishing-class long-form content with voice intact. Blog posts and articles that earn the click and the share, LinkedIn posts that read as expert peer-talk not thought-leader pose, presentation outlines where every slide carries weight.',
   'Personal & Everyday':
-    'Lower-stakes personal projects where the hive\'s multi-AI review still earns its keep — anything you\'d rather not send as a first draft. Useful for one-off documents that don\'t fit a corporate or career template but deserve a careful read.',
+    "Lower-stakes personal projects where the hive's multi-AI review still earns its keep — anything you'd rather not send as a first draft. Useful for one-off documents that don't fit a corporate or career template but deserve a careful read.",
   'Reviews & Recommendations':
-    'Review and recommendation documents calibrated for the platform they\'ll publish on. Generic review templates handle the writing-from-scratch case; platform-specific templates (TripAdvisor, Google Maps, Yelp, Trustpilot, Amazon) take an existing review and rewrite it for that platform\'s voice, length, and convention.'
-};
-
-// Category icon emoji — purely decorative on the section banner.
-const CATEGORY_ICONS = {
-  'Quick Start': '🐝',
-  'Career & Hiring': '💼',
-  'Business & Sales': '📈',
-  'Content & Marketing': '✍️',
-  'Personal & Everyday': '🏡',
-  'Reviews & Recommendations': '⭐'
+    "Review and recommendation documents calibrated for the platform they'll publish on. Generic review templates handle the writing-from-scratch case; platform-specific templates (TripAdvisor, Google Maps, Yelp, Trustpilot, Amazon) take an existing review and rewrite it for that platform's voice, length, and convention."
 };
 
 function escapeHtml(s) {
@@ -291,8 +302,6 @@ function loadCustomTemplates() {
   } catch (e) { return []; }
 }
 
-// Render one template card — read-only showcase.
-// Lead description + document type + length + scaffold accordion.
 function renderTemplateCard(t) {
   const paths = Array.isArray(t.paths) && t.paths.length ? t.paths : ['scratch'];
   const primaryPath = paths[0];
@@ -311,7 +320,6 @@ function renderTemplateCard(t) {
     lengthLabel = `${escapeHtml(lengthMin)}–${escapeHtml(lengthLimit)} ${escapeHtml(lengthUnit || '')}`.trim();
   }
 
-  // Scaffold preview (refMaterial from primary path) — collapsed by default.
   const scaffold = primaryContent.refMaterial || '';
   const scaffoldBlock = scaffold ? `
     <details class="tpl-scaffold">
@@ -345,18 +353,20 @@ function renderTemplateCard(t) {
   `;
 }
 
-function renderCategoryBanner(category, count) {
-  const icon = CATEGORY_ICONS[category] || '📂';
+function renderCategorySection(category, list) {
   const blurb = CATEGORY_BLURBS[category] || '';
   return `
-    <header class="tpl-cat-banner">
-      <div class="tpl-cat-banner-row">
-        <span class="tpl-cat-banner-icon" aria-hidden="true">${escapeHtml(icon)}</span>
-        <h2 class="tpl-cat-banner-title">${escapeHtml(category)}</h2>
-        <span class="tpl-cat-banner-count">${count} template${count === 1 ? '' : 's'}</span>
+    <div class="hp-section">
+      <div class="hp-section-header is-bare">
+        <div class="hp-section-title-block">
+          <h2 class="hp-section-title">${escapeHtml(category)} <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
+          ${blurb ? `<p class="hp-section-sub">${escapeHtml(blurb)}</p>` : ''}
+        </div>
       </div>
-      ${blurb ? `<p class="tpl-cat-banner-blurb">${escapeHtml(blurb)}</p>` : ''}
-    </header>
+      <div class="hp-section-body">
+        <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+      </div>
+    </div>
   `;
 }
 
@@ -365,11 +375,10 @@ function renderBuiltIn() {
   const tpls = (typeof WAXFRAME_TEMPLATES !== 'undefined' && Array.isArray(WAXFRAME_TEMPLATES)) ? WAXFRAME_TEMPLATES : [];
 
   if (tpls.length === 0) {
-    body.innerHTML = '<p class="tpl-empty-msg">Template data failed to load. Refresh the page or report the issue.</p>';
+    body.innerHTML = '<div class="hp-section"><div class="hp-section-body"><p>Template data failed to load. Refresh the page or report the issue.</p></div></div>';
     return;
   }
 
-  // Group by category, preserving CATEGORY_ORDER
   const byCat = {};
   for (const t of tpls) {
     const cat = t.category || 'Other';
@@ -381,41 +390,30 @@ function renderBuiltIn() {
     ...Object.keys(byCat).filter(c => !CATEGORY_ORDER.includes(c)).sort()
   ];
 
-  let html = '';
-  for (const cat of orderedCats) {
+  body.innerHTML = orderedCats.map(cat => {
     const list = byCat[cat].slice().sort((a, b) => a.name.localeCompare(b.name));
-    html += `<section class="tpl-cat-section">
-      ${renderCategoryBanner(cat, list.length)}
-      <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
-    </section>`;
-  }
-  body.innerHTML = html;
+    return renderCategorySection(cat, list);
+  }).join('');
 }
 
 function renderCustom() {
   const body = document.getElementById('tplCustomBody');
   const customs = loadCustomTemplates();
-
-  // Visitors don't have customs — keep the section absent rather than
-  // showing an empty-state that means nothing to them.
-  if (customs.length === 0) {
-    body.innerHTML = '';
-    return;
-  }
+  if (customs.length === 0) { body.innerHTML = ''; return; }
 
   const list = customs.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   body.innerHTML = `
-    <section class="tpl-cat-section">
-      <header class="tpl-cat-banner tpl-cat-banner-custom">
-        <div class="tpl-cat-banner-row">
-          <span class="tpl-cat-banner-icon" aria-hidden="true">⭐</span>
-          <h2 class="tpl-cat-banner-title">Your Saved Templates</h2>
-          <span class="tpl-cat-banner-count">${list.length} template${list.length === 1 ? '' : 's'}</span>
+    <div class="hp-section">
+      <div class="hp-section-header is-bare">
+        <div class="hp-section-title-block">
+          <h2 class="hp-section-title">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
+          <p class="hp-section-sub">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
         </div>
-        <p class="tpl-cat-banner-blurb">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
-      </header>
-      <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
-    </section>
+      </div>
+      <div class="hp-section-body">
+        <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+      </div>
+    </div>
   `;
 }
 
