@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260603-001
+     Build: 20260602-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-001">
+  <meta name="waxframe-build" content="20260602-010">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.106">
+  <link rel="stylesheet" href="style.css?v=3.63.107">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -43,7 +43,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.106",
+    "softwareVersion": "3.63.107",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2620,6 +2620,7 @@
       <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="mobile-overlay-logo">
       <div class="mobile-overlay-brand-name">WaxFrame</div>
       <div class="mobile-overlay-brand-tag">Many minds, one refined result.</div>
+      <span class="app-version-stamp mobile-overlay-version"></span>
     </div>
     <h1 class="mobile-overlay-title">Thanks for finding us 👋</h1>
     <div class="mobile-overlay-bee-row">
@@ -2663,6 +2664,11 @@
       </a>
     </div>
     <p class="mobile-overlay-footer">
+      <span class="mobile-overlay-theme" aria-label="Theme">
+        <button type="button" class="mobile-overlay-theme-btn theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button type="button" class="mobile-overlay-theme-btn theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto mode">⚙️</button>
+        <button type="button" class="mobile-overlay-theme-btn theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+      </span>
       <a href="https://github.com/WeirDave/WaxFrame-Professional" class="mobile-overlay-footer-link">View source on GitHub</a> ·
       <a href="https://weirdave.gumroad.com/l/WaxFrame" class="mobile-overlay-footer-link">Buy WaxFrame Pro</a>
     </p>
@@ -2717,23 +2723,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.106';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.107';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.106"></script>
-<script src="lib/jszip.min.js?v=3.63.106"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.106"></script>
-<script src="js/version.js?v=3.63.106"></script>
-<script src="js/storage.js?v=3.63.106"></script>
-<script src="js/theme.js?v=3.63.106"></script>
-<script src="js/audio.js?v=3.63.106"></script>
-<script src="js/scenes.js?v=3.63.106"></script>
-<script src="js/wf-debug.js?v=3.63.106"></script>
-<script src="js/provider-models.js?v=3.63.106"></script>
-<script src="js/api.js?v=3.63.106"></script>
-<script src="js/templates.js?v=3.63.106"></script>
-<script src="js/api-links.js?v=3.63.106"></script>
-<script src="js/app.js?v=3.63.106"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.107"></script>
+<script src="lib/jszip.min.js?v=3.63.107"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.107"></script>
+<script src="js/version.js?v=3.63.107"></script>
+<script src="js/storage.js?v=3.63.107"></script>
+<script src="js/theme.js?v=3.63.107"></script>
+<script src="js/audio.js?v=3.63.107"></script>
+<script src="js/scenes.js?v=3.63.107"></script>
+<script src="js/wf-debug.js?v=3.63.107"></script>
+<script src="js/provider-models.js?v=3.63.107"></script>
+<script src="js/api.js?v=3.63.107"></script>
+<script src="js/templates.js?v=3.63.107"></script>
+<script src="js/api-links.js?v=3.63.107"></script>
+<script src="js/app.js?v=3.63.107"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
