@@ -2,7 +2,51 @@
 
 ---
 
+## v3.63.104
+
+**Mobile funnel + H1 hierarchy + footer cleanup + helper-page cross-links — every deferred item from v3.63.103 closed**
+
+All four items I previously deferred to backlog are shipped in this release.
+
+**Mobile funnel landing — replaces both desktop-required walls**
+
+The `mobile-overlay` (≤768px) and `min-screen-overlay` (≤1365px / ≤767px tall) were curt "go away, we need desktop" walls. Now they're warm funnel landings that explain what WaxFrame is, why a phone or narrow window can't host the work flow, and surface the mobile-readable pages as a "while you're here" rail.
+
+The mobile landing now has: a welcoming heading (`Thanks for finding WaxFrame`), a one-paragraph value prop (multi-AI Worker Bees + Builder synthesis), a one-paragraph explanation of why a phone screen can't fit the multi-panel work surface, a bookmark callout with an accent-bordered card, and a "while you're here" rail of four link cards (Template Catalog, User Manual, Document Playbooks, What Are Tokens?) — each styled like the in-app templates with icon + title + description. Footer with GitHub and Buy Pro links. Scrollable container so the funnel works on small phones.
+
+The narrow-window overlay (tablet / dev-tools-docked) got the same treatment scaled down — warmer copy (`A little more room, please`), the same explanation of the multi-panel work screen, and a three-link rail to the mobile-readable surfaces.
+
+Why this matters: roughly 60-70% of search traffic is mobile. A mobile visitor who lands on `templates.html` from a Google search, browses the catalog, and clicks `Start a project in WaxFrame →` was hitting a "go away" wall and bouncing. Now they get a friendly explanation, a bookmark ask, and obvious next steps that work on their device. Conversion is partially recoverable on mobile traffic — the visitor is warm rather than blocked.
+
+**H1 hierarchy fixed on index.html (9 → 3)**
+
+Before: 9 `<h1>` tags — one page-level brand h1, six setup-screen titles (Worker Bees, Builder, Project, Reference Material, Starting Document, Settings), and two overlay h1s. HTML5 sectioning content technically permits multiple H1s but Google still prefers one canonical H1 per page for ranking-signal clarity.
+
+After: 3 H1s — page-level `WaxFrame` brand h1 + the two alternate-page-state overlay h1s (min-screen and mobile, only one ever visible at a time). The six setup-screen titles became H2s. The `.hp-section-title` class styles them identically for either element, so visual rendering is unchanged.
+
+**Footer-version-pill cleanup across 7 helper pages**
+
+v3.63.102 removed the redundant `.footer-version-pill` from `templates.html` (version already shown top-right under the tagline; pill in footer-center was a duplicate). The same redundancy was still shipping on seven other helper pages. Removed from all of them in this pass: `api-details.html`, `document-playbooks.html`, `prompt-editor.html`, `privacy.html`, `terms.html`, `waxframe-user-manual.html`, `what-are-tokens.html`. Empty `.page-footer-center` div retained to preserve the three-column footer grid alignment, matching what `templates.html` already does.
+
+**Helper-page internal linking sweep**
+
+Audit revealed that every helper page already links to every other helper page — except `templates.html`, which is brand-new (v3.63.99) and was written after the older pages. Added natural body cross-links to it from two high-leverage spots:
+
+- `waxframe-user-manual.html` — the first mention of the template gallery now links to the catalog with descriptions of every template and its reference scaffold.
+- `document-playbooks.html` — the existing "every playbook is also available as a template inside the app" tip now ends with a "browse the full Template Catalog" link.
+
+These give Google body-context inbound links to `templates.html` from the two most-trafficked helper pages, instead of relying on sidebar/menu chrome.
+
+**provider-models.js — fixing a stale handoff doc**
+
+While auditing the JS import order in `index.html`, found that `js/provider-models.js` is referenced by `index.html` but wasn't in the handoff doc's "14 JS files" inventory. File exists on `main` (HTTP 200), so pulled it into the release ZIP and stamped its `// Build:` header. JS file count is now correctly 15, not 14. Handoff doc needs updating.
+
+**Files changed:** `index.html` (mobile-overlay + min-screen-overlay rewritten, 6 H1s → H2s, JSON-LD softwareVersion bump, cache-bust), `style.css` (mobile-overlay CSS reworked for funnel landing, min-screen-links rail appended, build stamp), 7 helper pages (footer-version-pill removed: api-details, document-playbooks, prompt-editor, privacy, terms, waxframe-user-manual, what-are-tokens), `waxframe-user-manual.html` + `document-playbooks.html` (templates.html body cross-link added), `js/provider-models.js` (pulled from main, build stamp set), `js/version.js`, `js/app.js` (build stamp only), all 15 JS file headers (build stamp sweep), all 10 HTML files (cache-bust + meta build sweep).
+
+---
+
 ## v3.63.103
+
 
 
 **Full SEO sweep across the site**
