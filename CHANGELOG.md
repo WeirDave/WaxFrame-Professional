@@ -2,6 +2,62 @@
 
 ---
 
+## v3.63.108
+
+**Schema.org FAQPage + HowTo + helper-page body-copy linking continuation**
+
+Build: `20260603-001`<br>
+Released: `2026-06-03`
+
+Batched helper-page SEO release. Adds structured data on the two highest-traffic reference pages and continues the body-copy internal-linking sweep started in v3.63.104. No app-side code changes.
+
+**FAQPage JSON-LD on `what-are-tokens.html`**
+
+The page is already structured as plain-language Q&A on six topics. Four of the existing `<h3>` headings were rephrased into question form so each FAQ entry mirrors a visible heading + answer pair exactly (Google penalizes JSON-LD that doesn't match on-page content):
+
+- `A practical example` → `How many tokens does a typical WaxFrame round use?`
+- `Gemini's free tier vs. paid tier — read this if you've added a credit card` → `Does Gemini stay free after I enable billing on AI Studio?`
+- `Tips for managing token costs` → `How do I keep AI token costs under control?`
+- `Reference material and your token budget` → `How does Reference Material affect my token budget?`
+
+The existing `What is a token?` and `Why does this matter for your Builder?` (lightly retitled to `Why does token usage matter for your Builder?` for consistency) were already Q-shaped. Six total entries land in the new `<script type="application/ld+json">` FAQPage block in `<head>`.
+
+**HowTo JSON-LD on `api-details.html`**
+
+Each of the nine provider setup blocks (ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, Cohere, DeepSeek, Together AI) gets its own `HowTo` entry in a single `@graph` JSON-LD script in `<head>`. Each `HowToStep` mirrors the visible `<ol class="steps">` content of its provider section. Each block's first step carries the provider's console `url` so the structured data points back at the authoritative source.
+
+**Body-copy internal linking continuation**
+
+The v3.63.104 sweep added template-catalog cross-links from `waxframe-user-manual.html` and `document-playbooks.html`. This release closes the remaining gaps that page-context allows:
+
+- `what-are-tokens.html` → `api-details.html` — the "Bottom line: use a paid API key for your Builder" tip in the practical-example card now points at the API Key Guide.
+- `api-details.html` → `what-are-tokens.html` — the "Your Builder is the most important choice" general-tips paragraph now points at What Are Tokens? for the cost detail.
+- `document-playbooks.html` → specific template anchors on `templates.html` — five high-SEO-value playbooks (`cover-letter`, `resume`, `business-proposal`, `rfp`, `product-review`) gain inline "Apply it directly in WaxFrame from the X template ↗" links in their description blocks.
+
+**Per-template anchors on `templates.html`**
+
+`renderTemplateCard` now stamps `id="tpl-${t.id}"` on every `<article class="tpl-card">`, so deep-links like `templates.html#tpl-cover-letter` resolve directly to the matching template card. Enables the five playbook → template links above and makes the existing `ItemList` JSON-LD's per-template URLs land on a real anchor instead of falling back to the category section.
+
+**Backlog hygiene (v177)**
+
+Two stale entries removed from the backlog:
+
+- `Mobile bridge landing page` (Open Features) — shipped as the themed `mobile-overlay` block in `index.html` during the v3.63.104 → v3.63.107 mobile arc.
+- Redundant `.footer-version-pill` (Open Bugs) — shipped in v3.63.104 across all seven helper pages (verified: every helper page now has an empty `.page-footer-center` div).
+
+Remaining 17 of 22 playbook → template anchor links flagged in v177 as a v3.63.109 batch — mechanical, identical pattern, ready to run on the next helper-page touch.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files.
+- JSON-LD blocks validated as well-formed JSON.
+- FAQPage Q strings match visible H3 text on `what-are-tokens.html` exactly.
+- HowTo step text closely mirrors visible `<ol class="steps">` content on `api-details.html`.
+
+**Files changed:** `what-are-tokens.html` (FAQPage JSON-LD added, 5 H3 rephrases, 1 body-prose link), `api-details.html` (HowTo `@graph` JSON-LD added with 9 entries, 1 body-prose link), `document-playbooks.html` (5 inline template-anchor links inside `.dp-playbook-desc`), `templates.html` (`renderTemplateCard` adds `id="tpl-${t.id}"`), `js/version.js` (APP_VERSION → `v3.63.108 Pro`, build header), `js/app.js` (`BUILD` constant, build header), all 13 other JS file headers (build stamp sweep), `style.css` (build header), all 10 HTML files (`meta name="waxframe-build"` stamp + `?v=` cache-bust sweep), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v177.txt`, `release-notes-v3.63.108.md`.
+
+---
+
 ## v3.63.107
 
 **Mobile landing footer controls + SEO heading polish**
