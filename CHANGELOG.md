@@ -2,7 +2,54 @@
 
 ---
 
+## v3.63.103
+
+
+**Full SEO sweep across the site**
+
+Single-release batch of every SEO fix surfaced in the v3.63.102 audit. Mechanical changes, low risk surface, high cumulative impact.
+
+**Sitemap and crawlability**
+
+- `sitemap.xml` rebuilt: added `templates.html` (priority 0.9) and `help.html` (priority 0.5). The catalog page is now actually discoverable by search engines — previously it was a live, fully-styled page that Google couldn't find because it wasn't advertised.
+- All sitemap `lastmod` dates updated from `2026-05-25` to current release date. Search engines use this signal to decide what to re-crawl; six releases of stale dates were a wasted opportunity.
+
+**Title pattern alignment (keyword-first)**
+
+- Every helper page title rewritten to put the keyword first, matching the `templates.html` pattern from v3.63.99. Google weights early words more heavily, so `"API Key Guide for AI Providers — WaxFrame"` ranks better than `"WaxFrame — API Key Guide"` for the search query that matters.
+- `index.html` title rewritten from `"WaxFrame"` (8 chars, zero keyword signal) to `"WaxFrame — Multi-AI Document Refinement in Your Browser"` (55 chars, full keyword density, fits Google's 50-60 char display window).
+- All other pages updated proportionally: API Key Guide for AI Providers — WaxFrame; Document Playbooks &amp; Multi-AI Strategies — WaxFrame; What Are AI Tokens? — WaxFrame Reference; WaxFrame User Manual — Multi-AI Document Refinement Guide; etc.
+
+**Meta description tightening**
+
+- `templates.html` description trimmed from 217 chars (Google truncated mid-sentence) to 147 chars (clean).
+- `index.html` description trimmed from 195 chars to 139 chars.
+- `api-details.html`, `privacy.html` also tightened to under 160 chars.
+- All descriptions kept keyword-rich — "multi-AI", "document refinement", "Worker Bees", "cover letter", "résumé", "RFP response", "business proposal", "product review" all naturally placed.
+
+**help.html meta sweep**
+
+- Added missing `canonical`, `meta description`, full `Open Graph` (5 tags), and `Twitter Card` (4 tags). Was the only HTML file without these. If the page ever ranks for "WaxFrame help" or "WaxFrame troubleshooting" or "WaxFrame export diagnostic bundle", it now does so with proper preview cards and meta context.
+
+**Structured data — JSON-LD**
+
+- `index.html` gets a `schema.org/SoftwareApplication` block: name, alternate name, description, application category, operating system, browser requirements, software version, license, author, two offers (Free Trial + Pro License), and an 8-item `featureList` enumerating the actual product capabilities. Eligible for Google rich-snippet treatment — software-product carousel with pricing, ratings (if we ever collect them), and feature highlights directly in search results.
+- `templates.html` gets a runtime-rendered `schema.org/ItemList` of all built-in templates. Each entry is a `CreativeWork` with name, description, genre (category), and a deep-link URL to its section anchor on the catalog page. Eligible for rich-snippet carousel ("Document templates from WaxFrame: Cover Letter, Résumé, Business Proposal..."). Rendered by JS on `DOMContentLoaded` so it stays in sync with `templates.js` automatically — no parallel static list to maintain.
+
+**Back-to-top anchor jump fix**
+
+- Added `scroll-margin-top: 90px` to `.helper-body .page-main`. The `↑ Back to top` links added in v3.63.101 point at `#top` on `<div class="page-main" id="top">`, but the browser was scrolling the page-main top edge to viewport pixel 0 — directly behind the sticky `.page-header` (~80px tall) — which hid the hero h1 and made the jump look like it stopped at the first content section. With this offset, page-main now lands cleanly under the sticky header where it belongs. Same fix applies to all helper pages with the same back-to-top pattern.
+
+**OG and Twitter sync**
+
+- The title + description rewrites swept through to the OG and Twitter Card meta tags as well. Social link previews now match the SEO meta. No more drift between what Google indexes and what Twitter/Facebook display.
+
+**Files changed:** `sitemap.xml` (rebuilt), all 10 HTML files (title + meta description + OG/Twitter sync), `index.html` (+ JSON-LD SoftwareApplication), `templates.html` (+ runtime JSON-LD ItemList), `help.html` (+ canonical + meta description + OG + Twitter), `js/version.js`, `js/app.js` (build stamp only), all 14 JS file headers (build stamp sweep), `style.css` (build stamp only).
+
+---
+
 ## v3.63.102
+
 
 **Templates page polish — sidebar label, footer redundancy, section CTAs, card tokens, anchor positioning**
 
