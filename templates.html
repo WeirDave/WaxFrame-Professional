@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-006
+     Build: 20260602-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,21 +15,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-006">
-  <title>Document Templates Catalog — WaxFrame Professional</title>
-  <meta name="description" content="WaxFrame ships with curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more. Browse the full catalog of project scaffolds used by the WaxFrame multi-AI hive.">
+  <meta name="waxframe-build" content="20260602-007">
+  <title>Document Templates Catalog — WaxFrame</title>
+  <meta name="description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
-  <meta property="og:title" content="Document Templates Catalog — WaxFrame Professional">
-  <meta property="og:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
+  <meta property="og:title" content="Document Templates Catalog — WaxFrame">
+  <meta property="og:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <meta property="og:url" content="https://waxframe.com/templates.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Document Templates Catalog — WaxFrame Professional">
-  <meta name="twitter:description" content="Curated document templates for the documents you actually write.">
+  <meta name="twitter:title" content="Document Templates Catalog — WaxFrame">
+  <meta name="twitter:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.102">
+  <link rel="stylesheet" href="style.css?v=3.63.103">
 </head>
 <body class="helper-body">
 
@@ -268,12 +268,12 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.102"></script>
-<script src="js/nav-helper.js?v=3.63.102"></script>
-<script src="js/license-helper.js?v=3.63.102"></script>
-<script src="js/version.js?v=3.63.102"></script>
-<script src="js/templates.js?v=3.63.102"></script>
-<script src="js/docs-scrollspy.js?v=3.63.102"></script>
+<script src="js/theme.js?v=3.63.103"></script>
+<script src="js/nav-helper.js?v=3.63.103"></script>
+<script src="js/license-helper.js?v=3.63.103"></script>
+<script src="js/version.js?v=3.63.103"></script>
+<script src="js/templates.js?v=3.63.103"></script>
+<script src="js/docs-scrollspy.js?v=3.63.103"></script>
 
 <script>
 // ============================================================
@@ -474,7 +474,77 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.app-version-stamp').forEach(el => { el.textContent = APP_VERSION; });
   renderBuiltIn();
   renderCustom();
+  injectJsonLd();
 });
+
+// ============================================================
+//  Structured data (JSON-LD) — schema.org ItemList of templates.
+//  Renders an ItemList where each ListItem is a CreativeWork
+//  describing one template. Eligible for Google rich-snippet
+//  treatment ("Document templates from WaxFrame" carousel).
+//  Runtime-rendered so the list stays in sync with templates.js
+//  without maintaining a parallel static block. Googlebot
+//  executes JS so this is crawlable.
+// ============================================================
+function injectJsonLd() {
+  const tpls = (typeof WAXFRAME_TEMPLATES !== 'undefined' && Array.isArray(WAXFRAME_TEMPLATES)) ? WAXFRAME_TEMPLATES : [];
+  if (tpls.length === 0) return;
+
+  // Order categories the same way the page renders them, then templates alpha.
+  const byCat = {};
+  for (const t of tpls) {
+    const cat = t.category || 'Other';
+    if (!byCat[cat]) byCat[cat] = [];
+    byCat[cat].push(t);
+  }
+  const orderedCats = [
+    ...CATEGORY_ORDER.filter(c => byCat[c]),
+    ...Object.keys(byCat).filter(c => !CATEGORY_ORDER.includes(c)).sort()
+  ];
+
+  const items = [];
+  let position = 1;
+  for (const cat of orderedCats) {
+    const list = byCat[cat].slice().sort((a, b) => a.name.localeCompare(b.name));
+    for (const t of list) {
+      const paths = Array.isArray(t.paths) && t.paths.length ? t.paths : ['scratch'];
+      const primaryContent = (t.pathContent && t.pathContent[paths[0]]) || {};
+      const description = primaryContent.description || t.description || '';
+      items.push({
+        '@type': 'ListItem',
+        position: position++,
+        item: {
+          '@type': 'CreativeWork',
+          name: t.name,
+          description: description,
+          genre: cat,
+          inLanguage: 'en',
+          url: `https://waxframe.com/templates.html#${catSlug(cat)}`,
+          isPartOf: {
+            '@type': 'WebPage',
+            name: 'Document Templates Catalog',
+            url: 'https://waxframe.com/templates.html'
+          }
+        }
+      });
+    }
+  }
+
+  const ld = {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: 'WaxFrame Document Templates Catalog',
+    description: 'Curated document templates shipped with WaxFrame Professional for cover letters, résumés, business proposals, RFP responses, product reviews, and more.',
+    numberOfItems: items.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: items
+  };
+
+  const script = document.createElement('script');
+  script.type = 'application/ld+json';
+  script.textContent = JSON.stringify(ld);
+  document.head.appendChild(script);
+}
 </script>
 
 </body>

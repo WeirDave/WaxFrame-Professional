@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260602-006
+     Build: 20260602-007
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,21 +9,79 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-006">
-  <title>WaxFrame</title>
-  <meta name="description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
+  <meta name="waxframe-build" content="20260602-007">
+  <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
+  <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
-  <meta property="og:title" content="WaxFrame Professional — Multi-AI Document Refinement">
-  <meta property="og:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
+  <meta property="og:title" content="WaxFrame — Multi-AI Document Refinement in Your Browser">
+  <meta property="og:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta property="og:url" content="https://waxframe.com/">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="WaxFrame Professional — Multi-AI Document Refinement">
-  <meta name="twitter:description" content="A browser-based multi-AI document collaboration tool. Multiple AI Worker Bees simultaneously review and refine your document across rounds until convergence. Open source, no backend, no tracking.">
+  <meta name="twitter:title" content="WaxFrame — Multi-AI Document Refinement in Your Browser">
+  <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.102">
+  <link rel="stylesheet" href="style.css?v=3.63.103">
+
+  <!-- ============================================================
+       Structured data (JSON-LD) — SoftwareApplication
+       Enables rich snippets in Google search results. Describes
+       WaxFrame as a software product with its category, platform,
+       author, and offer (free trial + paid Pro license).
+       ============================================================ -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "WaxFrame Professional",
+    "alternateName": "WaxFrame",
+    "description": "A browser-based multi-AI document refinement tool. A hive of AI Worker Bees reviews and refines your documents in iterative rounds while a Builder AI synthesizes the feedback. No backend, no install, air-gap safe.",
+    "url": "https://waxframe.com/",
+    "applicationCategory": "BusinessApplication",
+    "applicationSubCategory": "DocumentEditor",
+    "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
+    "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
+    "softwareVersion": "3.63.103",
+    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+    "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
+    "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
+    "author": {
+      "@type": "Person",
+      "name": "R David Paine III",
+      "url": "https://www.weirdave.com"
+    },
+    "offers": [
+      {
+        "@type": "Offer",
+        "name": "Free Trial",
+        "description": "3 free rounds — no signup required, bring your own API keys",
+        "price": "0",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      },
+      {
+        "@type": "Offer",
+        "name": "WaxFrame Pro License",
+        "description": "Unlimited rounds, lifetime license",
+        "url": "https://weirdave.gumroad.com/l/WaxFrame",
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
+      }
+    ],
+    "featureList": [
+      "Multi-AI document refinement across ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, Together AI",
+      "Iterative review rounds with hive convergence detection",
+      "Builder AI synthesizes reviewer feedback into a refined document",
+      "23+ built-in document templates: cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, more",
+      "Custom template save / export / import",
+      "Reference material support — DOCX, PDF, PPTX, XLSX, TXT, MD",
+      "Air-gap safe — vanilla HTML/CSS/JS, no backend, no tracking, all data in your browser",
+      "AGPL-3.0 open source"
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -2560,23 +2618,23 @@
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.102';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.103';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.102"></script>
-<script src="lib/jszip.min.js?v=3.63.102"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.102"></script>
-<script src="js/version.js?v=3.63.102"></script>
-<script src="js/storage.js?v=3.63.102"></script>
-<script src="js/theme.js?v=3.63.102"></script>
-<script src="js/audio.js?v=3.63.102"></script>
-<script src="js/scenes.js?v=3.63.102"></script>
-<script src="js/wf-debug.js?v=3.63.102"></script>
-<script src="js/provider-models.js?v=3.63.102"></script>
-<script src="js/api.js?v=3.63.102"></script>
-<script src="js/templates.js?v=3.63.102"></script>
-<script src="js/api-links.js?v=3.63.102"></script>
-<script src="js/app.js?v=3.63.102"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.103"></script>
+<script src="lib/jszip.min.js?v=3.63.103"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.103"></script>
+<script src="js/version.js?v=3.63.103"></script>
+<script src="js/storage.js?v=3.63.103"></script>
+<script src="js/theme.js?v=3.63.103"></script>
+<script src="js/audio.js?v=3.63.103"></script>
+<script src="js/scenes.js?v=3.63.103"></script>
+<script src="js/wf-debug.js?v=3.63.103"></script>
+<script src="js/provider-models.js?v=3.63.103"></script>
+<script src="js/api.js?v=3.63.103"></script>
+<script src="js/templates.js?v=3.63.103"></script>
+<script src="js/api-links.js?v=3.63.103"></script>
+<script src="js/app.js?v=3.63.103"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
