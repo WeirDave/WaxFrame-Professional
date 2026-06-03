@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260602-010
+     Build: 20260603-001
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-010">
+  <meta name="waxframe-build" content="20260603-001">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,106 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.107">
+  <link rel="stylesheet" href="style.css?v=3.63.108">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "HowTo",
+        "name": "How to set up a ChatGPT (OpenAI) API key for WaxFrame",
+        "description": "Create an OpenAI API key and connect it to WaxFrame so ChatGPT can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to platform.openai.com/api-keys and sign in.", "url": "https://platform.openai.com/api-keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Click Create new secret key, give it a name, then click Create." },
+          { "@type": "HowToStep", "name": "Copy the key", "text": "Copy the key immediately — it is shown only once." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the ChatGPT field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Claude (Anthropic) API key for WaxFrame",
+        "description": "Create an Anthropic API key and connect it to WaxFrame so Claude can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to console.anthropic.com/settings/keys and sign in.", "url": "https://console.anthropic.com/settings/keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Click Create Key, give it a name (e.g. WaxFrame), then click Create." },
+          { "@type": "HowToStep", "name": "Copy the key", "text": "Copy the key immediately — shown only once." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Claude field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Gemini (Google) API key for WaxFrame",
+        "description": "Create a Google AI Studio API key and connect it to WaxFrame so Gemini can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to aistudio.google.com/apikey and sign in with your Google account.", "url": "https://aistudio.google.com/apikey" },
+          { "@type": "HowToStep", "name": "Create a new key", "text": "Click Create API Key, name it WaxFrame, and copy the new key. Do not reuse a key already listed for an existing project." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste the new key into the Gemini field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Grok (xAI) API key for WaxFrame",
+        "description": "Create an xAI API key and connect it to WaxFrame so Grok can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to console.x.ai and sign in with your X account.", "url": "https://console.x.ai" },
+          { "@type": "HowToStep", "name": "Generate a key", "text": "Navigate to API Keys and generate a new key." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Grok field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Mistral API key for WaxFrame",
+        "description": "Create a Mistral API key and connect it to WaxFrame so Mistral can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to console.mistral.ai/api-keys and sign in.", "url": "https://console.mistral.ai/api-keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Create a new API key and copy it." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Mistral field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Perplexity API key for WaxFrame",
+        "description": "Create a Perplexity API key and connect it to WaxFrame so Perplexity can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to console.perplexity.ai and sign in.", "url": "https://console.perplexity.ai" },
+          { "@type": "HowToStep", "name": "Generate a key", "text": "Click Generate under API Keys and copy the key." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Perplexity field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Cohere API key for WaxFrame",
+        "description": "Create a Cohere API key and connect it to WaxFrame so Cohere can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to dashboard.cohere.com/api-keys and sign in.", "url": "https://dashboard.cohere.com/api-keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Create an API key and copy it." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Cohere field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a DeepSeek API key for WaxFrame",
+        "description": "Create a DeepSeek API key and connect it to WaxFrame so DeepSeek can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign up", "text": "Go to platform.deepseek.com/api_keys and sign up.", "url": "https://platform.deepseek.com/api_keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Click Create new API key and copy it." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the DeepSeek field in WaxFrame and press Enter." }
+        ]
+      },
+      {
+        "@type": "HowTo",
+        "name": "How to set up a Together AI API key for WaxFrame",
+        "description": "Create a Together AI API key and connect it to WaxFrame so Together can join your hive.",
+        "step": [
+          { "@type": "HowToStep", "name": "Sign in", "text": "Go to api.together.ai/settings/api-keys and sign in.", "url": "https://api.together.ai/settings/api-keys" },
+          { "@type": "HowToStep", "name": "Create a key", "text": "Create an API key and copy it." },
+          { "@type": "HowToStep", "name": "Paste into WaxFrame", "text": "Paste it into the Together field in WaxFrame and press Enter." }
+        ]
+      }
+    ]
+  }
+  </script>
 </head>
 <body class="helper-body">
 
@@ -847,7 +946,7 @@
 <div class="wf-card is-accent">
   <p><strong>You don't need all your AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, Gemini makes an excellent free Builder, with Claude for nuanced feedback and Grok for early assertive input. On the tightest budget, Gemini as Builder plus DeepSeek as a reviewer is the cheapest hive that runs — just expect slower rounds. A smaller hive completes rounds faster; the full hive gives the most thorough review.</p>
   <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
-  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope.</p>
+  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope. For a deeper look at how tokens are counted and what they cost, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a>.</p>
   <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
 </div>
 
@@ -951,15 +1050,15 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.107"></script>
-<script src="lib/docx.min.js?v=3.63.107"></script>
-<script src="js/docx-export.js?v=3.63.107"></script>
-<script src="js/nav-helper.js?v=3.63.107"></script>
-<script src="js/license-helper.js?v=3.63.107"></script>
-<script src="js/api-links.js?v=3.63.107"></script>
-<script src="js/version.js?v=3.63.107"></script>
-<script src="js/docs-scrollspy.js?v=3.63.107"></script>
-<script src="js/api.js?v=3.63.107"></script>
+<script src="js/theme.js?v=3.63.108"></script>
+<script src="lib/docx.min.js?v=3.63.108"></script>
+<script src="js/docx-export.js?v=3.63.108"></script>
+<script src="js/nav-helper.js?v=3.63.108"></script>
+<script src="js/license-helper.js?v=3.63.108"></script>
+<script src="js/api-links.js?v=3.63.108"></script>
+<script src="js/version.js?v=3.63.108"></script>
+<script src="js/docs-scrollspy.js?v=3.63.108"></script>
+<script src="js/api.js?v=3.63.108"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds
