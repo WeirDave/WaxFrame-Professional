@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260602-003
+   Build: 20260602-004
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -13567,77 +13567,17 @@ kbd {
 }
 
 
+
 /* ============================================================
-   TEMPLATES PAGE (v3.63.99 — templates.html)
-   Standalone SEO/marketing catalog. Read-only showcase, no
-   buttons, no actions, no app links from cards. Banner-card
-   category headers, fact rows, scaffold-preview accordion.
+   TEMPLATES PAGE (v3.63.100 — templates.html)
+   Catalog-specific styles ONLY. Page chassis lives on .hp-section,
+   .hp-section-header, .hp-section-body, .hp-section-title-block,
+   .page-footer-unified, .license-badge — same primitives every
+   other helper page uses.
    ============================================================ */
 
-.tpl-page {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: var(--space-6, 32px) var(--space-5, 24px) var(--space-8, 80px);
-}
-
-/* HERO */
-.tpl-hero {
-  padding: var(--space-5, 24px) var(--space-6, 32px);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  margin-bottom: var(--space-6, 32px);
-}
-.tpl-hero-title {
-  font-size: var(--fs-h1, 28px);
-  margin: 0 0 var(--space-3, 14px);
-  letter-spacing: -0.01em;
-  color: var(--accent);
-}
-.tpl-hero-lead {
-  font-size: var(--fs-lg, 16px);
-  line-height: 1.65;
-  margin: 0 0 var(--space-3, 14px);
-}
-.tpl-hero-sub {
-  font-size: var(--fs-base, 14px);
-  line-height: 1.6;
-  color: var(--text-dim);
-  margin: 0;
-}
-.tpl-hero-sub em { font-style: italic; color: var(--text, #e6edf3); }
-
-/* CATEGORY SECTIONS */
-.tpl-cat-section {
-  margin-bottom: var(--space-7, 48px);
-}
-
-.tpl-cat-banner {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-left: 4px solid var(--accent);
-  border-radius: 10px;
-  padding: var(--space-4, 18px) var(--space-5, 22px);
-  margin-bottom: var(--space-4, 18px);
-}
-.tpl-cat-banner-custom { border-left-color: var(--accent); }
-.tpl-cat-banner-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3, 12px);
-  margin-bottom: var(--space-2, 8px);
-}
-.tpl-cat-banner-icon {
-  font-size: 26px;
-  line-height: 1;
-}
-.tpl-cat-banner-title {
-  font-size: var(--fs-h2, 22px);
-  margin: 0;
-  flex: 1;
-  letter-spacing: -0.01em;
-}
-.tpl-cat-banner-count {
+/* Inline count badge inside hp-section-title */
+.tpl-cat-count {
   font-family: 'Courier New', monospace;
   font-size: 12px;
   color: var(--text-dim);
@@ -13645,34 +13585,31 @@ kbd {
   padding: 3px 10px;
   border-radius: 12px;
   border: 1px solid var(--border);
-}
-.tpl-cat-banner-blurb {
-  margin: 0;
-  font-size: var(--fs-base, 14px);
-  line-height: 1.6;
-  color: var(--text-dim);
+  font-weight: 400;
+  margin-left: var(--space-8);
+  vertical-align: middle;
 }
 
-/* CARD GRID */
+/* Catalog card grid */
 .tpl-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-  gap: var(--space-4, 16px);
+  gap: var(--space-16);
 }
 
 .tpl-card {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 10px;
-  padding: var(--space-4, 18px);
+  padding: var(--space-16);
   display: flex;
   flex-direction: column;
-  gap: var(--space-3, 12px);
+  gap: var(--space-12);
 }
 
 .tpl-card-header {
   display: flex;
-  gap: var(--space-3, 12px);
+  gap: var(--space-12);
   align-items: flex-start;
 }
 .tpl-card-icon {
@@ -13682,14 +13619,14 @@ kbd {
 }
 .tpl-card-title-wrap { flex: 1; min-width: 0; }
 .tpl-card-title {
-  font-size: var(--fs-lg, 17px);
-  margin: 0 0 var(--space-2, 6px);
+  font-size: 17px;
+  margin: 0 0 var(--space-8);
   letter-spacing: -0.005em;
   word-wrap: break-word;
 }
 .tpl-card-paths {
   display: flex;
-  gap: 6px;
+  gap: var(--space-4);
   flex-wrap: wrap;
 }
 .tpl-path-pill {
@@ -13708,7 +13645,7 @@ kbd {
 .tpl-path-refine  { color: var(--info, #58a6ff); border-color: var(--info, #58a6ff); }
 
 .tpl-card-desc {
-  font-size: var(--fs-base, 14px);
+  font-size: 14px;
   line-height: 1.55;
   margin: 0;
 }
@@ -13717,13 +13654,13 @@ kbd {
 .tpl-card-facts {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  padding-top: var(--space-2, 8px);
+  gap: var(--space-4);
+  padding-top: var(--space-8);
   border-top: 1px dashed var(--border);
 }
 .tpl-card-fact {
   display: flex;
-  gap: var(--space-3, 12px);
+  gap: var(--space-12);
   font-size: 12.5px;
   line-height: 1.5;
 }
@@ -13737,20 +13674,15 @@ kbd {
   flex-shrink: 0;
   padding-top: 2px;
 }
-.tpl-card-fact-val {
-  color: var(--text, #e6edf3);
-}
+.tpl-card-fact-val { color: var(--text, #e6edf3); }
 
 /* Scaffold-preview accordion */
-.tpl-scaffold {
-  margin-top: 0;
-}
 .tpl-scaffold-summary {
   cursor: pointer;
   font-size: 12px;
   color: var(--text-dim);
   font-weight: 500;
-  padding: 6px 0;
+  padding: var(--space-8) 0 var(--space-4);
   user-select: none;
   border-top: 1px dashed var(--border);
 }
@@ -13760,84 +13692,42 @@ kbd {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 6px;
-  padding: var(--space-3, 12px) var(--space-4, 14px);
+  padding: var(--space-12) var(--space-16);
   font-family: 'Courier New', monospace;
   font-size: 12px;
   line-height: 1.55;
   white-space: pre-wrap;
   word-wrap: break-word;
-  margin: var(--space-2, 8px) 0 0;
+  margin: var(--space-8) 0 0;
   max-height: 360px;
   overflow-y: auto;
   color: var(--text-dim);
 }
 
-/* SECTION wrapper for the docs accordion at the bottom */
-.tpl-section {
-  margin-top: var(--space-7, 48px);
-}
-
-/* KNOWLEDGE-BASE DOCS ACCORDION */
-.tpl-docs-accordion {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: var(--space-3, 14px) var(--space-5, 22px);
-}
-.tpl-docs-summary {
-  cursor: pointer;
-  font-size: var(--fs-base, 14px);
-  color: var(--text-dim);
-  padding: 6px 0;
-  user-select: none;
-  font-weight: 500;
-}
-.tpl-docs-summary:hover { color: var(--text, #e6edf3); }
-.tpl-docs-summary code {
-  background: var(--bg);
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-}
-.tpl-docs-body {
-  padding-top: var(--space-3, 14px);
-  border-top: 1px solid var(--border);
-  margin-top: var(--space-3, 14px);
-  font-size: var(--fs-base, 14px);
-  line-height: 1.65;
-}
-.tpl-docs-body p { margin: 0 0 var(--space-3, 12px); }
-.tpl-docs-body code {
-  background: var(--bg);
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-  font-family: 'Courier New', monospace;
-}
+/* Data-model documentation table */
 .tpl-docs-table {
   width: 100%;
   border-collapse: collapse;
-  margin: var(--space-3, 12px) 0 var(--space-4, 18px);
+  margin: var(--space-12) 0;
 }
 .tpl-docs-table td {
-  padding: 7px 14px;
+  padding: var(--space-8) var(--space-16);
   border-bottom: 1px solid var(--border);
   vertical-align: top;
   font-size: 13px;
+  line-height: 1.55;
 }
 .tpl-docs-table td:first-child {
   white-space: nowrap;
   width: 1%;
   color: var(--text, #e6edf3);
+  font-family: 'Courier New', monospace;
 }
 .tpl-docs-table tr:last-child td { border-bottom: 0; }
-
-/* Empty/error message */
-.tpl-empty-msg {
-  padding: var(--space-5, 24px);
-  background: var(--surface);
-  border: 1px dashed var(--border);
-  border-radius: 10px;
-  text-align: center;
-  color: var(--text-dim);
+.tpl-docs-table code {
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: 'Courier New', monospace;
 }

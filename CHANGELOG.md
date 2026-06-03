@@ -2,7 +2,30 @@
 
 ---
 
+## v3.63.100
+
+**Templates page rebuilt on the canonical helper-page chassis**
+
+v3.63.99 repositioned `templates.html` as a standalone SEO/marketing catalog but kept invented `.tpl-hero` / `.tpl-cat-section` / `.tpl-cat-banner` structural classes I'd written from scratch, plus an in-app-style `.license-pill` markup pasted from `index.html` instead of the canonical helper-page `.license-badge` pattern. Two real consequences:
+
+1. **License badge never updated on `templates.html`.** Unlocking Pro on the main app correctly saved the license to `localStorage`, but `license-helper.js`'s `updateLicenseBadge()` looks for element id `licenseBadge` — my page used id `licensePill` with text "🔓 Trial" hardcoded inline. Result: license saved successfully but the pill text stayed at "Trial" regardless of state, making the unlock look broken. The license modal itself worked; only the visual confirmation was wired wrong.
+2. **CSS read as visually off compared to other helper pages.** Every other helper page (User Manual, API Key Guide, Document Playbooks, What Are Tokens) uses the `.hp-section` / `.hp-section-header` / `.hp-section-bee` / `.hp-section-title-block` / `.hp-section-body` "Honeycomb-Layered Section primitive" from `style.css` line 11293. My page used parallel-but-different `.tpl-*` classes built from scratch. Same data, different visual system, immediately obvious side-by-side.
+
+Both issues are the same root cause: I'd built the page boilerplate from memory instead of copying the canonical pattern from `waxframe-user-manual.html`.
+
+- `templates.html` rebuilt on `.hp-section` chassis. Hero uses the canonical `.hp-section-header` with worker-bee image + title-block + sub-paragraph. Category sections use `.hp-section-header is-bare` + `.hp-section-body` with the catalog `.tpl-grid` inside. Data-model documentation moved from a standalone accordion into a proper `.hp-section` at the end of the page.
+- License badge moved from page-header to the canonical `.page-footer-unified` `.page-footer-right` location with the correct `<span class="license-badge" id="licenseBadge">` markup. `license-helper.js`'s `updateLicenseBadge()` now finds and updates the badge dynamically on page load — Trial text becomes "✓ Licensed" the moment the visitor returns from the main app after unlocking.
+- Page-header simplified: license pill removed entirely, theme + mute controls retained.
+- `style.css` v3.63.99 catalog block stripped; replaced with a minimal scoped block containing only the catalog-specific classes (`.tpl-grid`, `.tpl-card`, `.tpl-path-pill`, `.tpl-scaffold`, `.tpl-cat-count`, `.tpl-docs-table`). All structural styling now inherits from `.hp-section`.
+- Print header added matching the helper-page pattern: title + tagline appear in `.print-header` so the page exports cleanly if a user prints or saves the catalog.
+- Full cache-bust + build-stamp sweep across 10 HTML, 14 JS, `style.css` (v3.63.100, build 20260602-004).
+
+**Files changed:** `templates.html` (rebuilt on hp-section chassis), `style.css` (v3.63.99 templates block removed; minimal catalog-only block added), `js/version.js`, `js/app.js` (build stamp only), all 14 JS file headers (build stamp sweep), all 10 HTML files (cache-bust + meta build sweep).
+
+---
+
 ## v3.63.99
+
 
 **Templates page repositioned as a standalone SEO/marketing catalog**
 
