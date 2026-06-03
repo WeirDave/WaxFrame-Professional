@@ -1,43 +1,47 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260602-002
+     Build: 20260602-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
-     Dedicated Template Library page (v3.63.97).
-     Promotes Templates from a modal-only feature to a first-class
-     surface with its own URL, menu entry, and discovery path.
+     SEO / marketing showcase page (v3.63.99).
+     Standalone catalog of the document templates WaxFrame ships
+     with. No app links from cards, no Apply buttons, no flow back
+     into the working surface. Reads template data from templates.js
+     and renders it as a knowledge-base catalog tailored for first-
+     time visitors and search-engine indexing.
 
-     Apply actions deep-link back to index.html via the
-     ?template=ID&path=PATH query string handled in app.js
-     DOMContentLoaded. Save / Create / Import are scaffolds
-     for Phase 2 (blank-form editor) and Phase 3 (.json import).
+     The in-app template gallery modal remains the canonical
+     workflow surface for existing users. This page is funnel
+     content, not workflow content.
      ============================================================ -->
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260602-002">
-  <title>WaxFrame Templates</title>
-  <meta name="description" content="Browse WaxFrame's built-in document templates and manage your custom template library — Cover Letters, Resumes, Business Proposals, Product Reviews, and more.">
+  <meta name="waxframe-build" content="20260602-003">
+  <title>Document Templates Catalog — WaxFrame Professional</title>
+  <meta name="description" content="WaxFrame ships with curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more. Browse the full catalog of project scaffolds used by the WaxFrame multi-AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
-  <meta property="og:title" content="Templates — WaxFrame Professional">
-  <meta property="og:description" content="Browse WaxFrame's built-in document templates and manage your custom template library.">
+  <meta property="og:title" content="Document Templates Catalog — WaxFrame Professional">
+  <meta property="og:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more.">
   <meta property="og:url" content="https://waxframe.com/templates.html">
   <meta property="og:type" content="website">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Templates — WaxFrame Professional">
-  <meta name="twitter:description" content="Browse WaxFrame's built-in document templates and manage your custom template library.">
+  <meta name="twitter:title" content="Document Templates Catalog — WaxFrame Professional">
+  <meta name="twitter:description" content="Curated document templates for the documents you actually write.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.98">
+  <link rel="stylesheet" href="style.css?v=3.63.99">
 </head>
 <body class="helper-body">
 
 <!-- ============================================================
      SLIM HELPER-PAGE NAV MENU — strict subset of in-app menu
+     Templates link intentionally absent: the page is a catalog
+     surface for funnel/SEO, not a workflow destination.
      ============================================================ -->
 <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
 
@@ -60,7 +64,6 @@
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
-    <a class="nav-item" href="templates.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⭐ Templates</a>
     <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
@@ -114,103 +117,45 @@
 
   <!-- HERO -->
   <section class="tpl-hero">
-    <div class="tpl-hero-icon">⭐</div>
-    <div class="tpl-hero-body">
-      <h1 class="tpl-hero-title">Template Library</h1>
-      <p class="tpl-hero-lead">Templates fill in your Project fields with proven starting content for common document types. Pick one, hit Apply, and you land in WaxFrame with the goal, audience, scope, tone, and reference scaffold already populated. Edit anything that doesn't fit your specifics; the hive takes it from there.</p>
-      <p class="tpl-hero-sub">Most templates support two paths — <strong>Scratch</strong> (you have no draft yet; the hive writes one from the scaffold) and <strong>Refine</strong> (you have a draft; the hive polishes and tightens it without rewriting wholesale). A few are single-path by design — the Quick Start onboarding template is Scratch-only; the platform-specific Review templates (TripAdvisor, Google Maps, Yelp) are Refine-only.</p>
-    </div>
+    <h1 class="tpl-hero-title">Document Templates Catalog</h1>
+    <p class="tpl-hero-lead">WaxFrame ships with curated templates for the documents people actually write — cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, and more. Each template is a project scaffold: the document type, the audience, the outcome the document should achieve, the tone, the scope, and a reference structure the multi-AI hive uses to write or refine the document.</p>
+    <p class="tpl-hero-sub">This page is a reference catalog of what WaxFrame ships with. Templates are applied <em>inside the WaxFrame app</em> from the Project setup screen, not from this page. Use this catalog to see what's available before you start.</p>
   </section>
 
-  <!-- STATS BAR -->
-  <section class="tpl-stats" id="tplStats">
-    <div class="tpl-stat-item">
-      <span class="tpl-stat-num" id="tplStatBuiltIn">0</span>
-      <span class="tpl-stat-label">Built-in</span>
-    </div>
-    <div class="tpl-stat-item">
-      <span class="tpl-stat-num" id="tplStatCustom">0</span>
-      <span class="tpl-stat-label">My Templates</span>
-    </div>
-    <div class="tpl-stat-item">
-      <span class="tpl-stat-num" id="tplStatCategories">0</span>
-      <span class="tpl-stat-label">Categories</span>
-    </div>
-  </section>
+  <!-- BUILT-IN CATALOG (rendered by JS) -->
+  <div id="tplBuiltInBody"></div>
 
-  <!-- BUILT-IN TEMPLATES -->
-  <section class="tpl-section">
-    <div class="tpl-section-hdr">
-      <h2 class="tpl-section-title">📚 Built-in Templates</h2>
-      <p class="tpl-section-sub">Curated, tested templates shipped with WaxFrame. Each one captures the project shape (goal, audience, scope, tone, reference scaffold) for a specific document type.</p>
-    </div>
-    <div id="tplBuiltInBody"></div>
-  </section>
+  <!-- CUSTOM TEMPLATES — only renders if visitor has saved customs in localStorage -->
+  <div id="tplCustomBody"></div>
 
-  <!-- MY TEMPLATES -->
-  <section class="tpl-section">
-    <div class="tpl-section-hdr">
-      <h2 class="tpl-section-title">⭐ My Templates</h2>
-      <p class="tpl-section-sub">Custom templates you've saved from your own finished projects. Saved to this browser; tied to this device.</p>
-    </div>
-    <div id="tplCustomBody"></div>
-
-    <!-- ACTION CALLOUTS -->
-    <div class="tpl-actions-row">
-      <a class="tpl-action-card" href="index.html" target="_blank" rel="noopener noreferrer" title="Open WaxFrame, finish a project, then save its setup as a template">
-        <div class="tpl-action-icon">⭐</div>
-        <div class="tpl-action-body">
-          <div class="tpl-action-title">Save Current Setup as Template</div>
-          <div class="tpl-action-sub">Finish a project in WaxFrame, then click <strong>⭐ Save as Template</strong> on the finish modal. The recipe + your hive + the starting document are captured.</div>
-        </div>
-      </a>
-      <button class="tpl-action-card tpl-action-card-soon" onclick="showComingSoon('Create Blank Template')" title="Coming in a future release">
-        <div class="tpl-action-icon">📝</div>
-        <div class="tpl-action-body">
-          <div class="tpl-action-title">Create Blank Template <span class="tpl-soon-badge">Soon</span></div>
-          <div class="tpl-action-sub">Build a template from scratch in a guided editor — no finished project required.</div>
-        </div>
-      </button>
-      <button class="tpl-action-card tpl-action-card-soon" onclick="showComingSoon('Import Template File')" title="Coming in a future release">
-        <div class="tpl-action-icon">📂</div>
-        <div class="tpl-action-body">
-          <div class="tpl-action-title">Import Template File <span class="tpl-soon-badge">Soon</span></div>
-          <div class="tpl-action-sub">Load a <code>.json</code> template file someone else exported. Pairs with the existing per-card Export.</div>
-        </div>
-      </button>
-    </div>
-  </section>
-
-  <!-- DOCUMENTATION ACCORDION -->
+  <!-- KNOWLEDGE-BASE DOCS ACCORDION -->
   <section class="tpl-section">
     <details class="tpl-docs-accordion">
-      <summary class="tpl-docs-summary">📐 Template data model — for power users editing exported <code>.json</code></summary>
+      <summary class="tpl-docs-summary">📐 How a WaxFrame template is structured</summary>
       <div class="tpl-docs-body">
-        <p>Every template is a JSON object with these top-level fields:</p>
+        <p>A WaxFrame template is a JSON object that captures the shape of a project: the document type, who it's for, what it should accomplish, the tone, the scope, and a reference scaffold the hive reads when writing or refining. Applying a template in the app pre-populates the Project setup screen — the user can edit any field before starting.</p>
+        <p><strong>Top-level fields:</strong></p>
         <table class="tpl-docs-table">
-          <tr><td><code>id</code></td><td>Unique slug. Used as DOM ids and storage keys. Custom templates auto-generate one.</td></tr>
-          <tr><td><code>name</code></td><td>Short display name on the card.</td></tr>
-          <tr><td><code>icon</code></td><td>Single emoji shown on the card and pre-filled into the Project field on apply.</td></tr>
-          <tr><td><code>category</code></td><td>One of: Quick Start, Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations.</td></tr>
-          <tr><td><code>description</code></td><td>One-line explanation rendered on the card. Used as fallback when a path has no override.</td></tr>
-          <tr><td><code>paths</code></td><td>Array of supported paths. Values: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
-          <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields (see below).</td></tr>
+          <tr><td><code>id</code></td><td>Unique slug. Used as a storage key and DOM id.</td></tr>
+          <tr><td><code>name</code></td><td>Short display name.</td></tr>
+          <tr><td><code>icon</code></td><td>Single emoji shown on the card.</td></tr>
+          <tr><td><code>category</code></td><td>One of: Quick Start, Career &amp; Hiring, Business &amp; Sales, Content &amp; Marketing, Personal &amp; Everyday, Reviews &amp; Recommendations.</td></tr>
+          <tr><td><code>description</code></td><td>One-line summary.</td></tr>
+          <tr><td><code>paths</code></td><td>Array of supported modes: <code>"scratch"</code>, <code>"refine"</code>, or both.</td></tr>
+          <tr><td><code>pathContent</code></td><td>Object keyed by path slug. Each value carries the per-path Project fields.</td></tr>
         </table>
-        <p>Inside <code>pathContent[path]</code>:</p>
+        <p><strong>Inside each <code>pathContent[path]</code>:</strong></p>
         <table class="tpl-docs-table">
-          <tr><td><code>description</code></td><td>(Optional) Overrides the top-level description for this specific path.</td></tr>
-          <tr><td><code>goalDocType</code></td><td>What kind of document this is (e.g. "Cover letter").</td></tr>
+          <tr><td><code>goalDocType</code></td><td>What kind of document this is.</td></tr>
           <tr><td><code>goalAudience</code></td><td>Who the document is for.</td></tr>
           <tr><td><code>goalOutcome</code></td><td>What the document should accomplish.</td></tr>
           <tr><td><code>goalScope</code></td><td>What's in scope and what's not.</td></tr>
           <tr><td><code>goalTone</code></td><td>Voice and tone guidance.</td></tr>
           <tr><td><code>goalNotes</code></td><td>Hard constraints — things the hive must not do.</td></tr>
-          <tr><td><code>refMaterial</code></td><td>Reference material scaffold — injected as a Reference card on apply (scratch path).</td></tr>
-          <tr><td><code>hint</code></td><td>(Optional) Array of post-apply hints rendered in the Template Hint banner. Each entry is <code>{ field: "...", text: "..." }</code>.</td></tr>
-          <tr><td><code>lengthMode</code></td><td>(Optional) <code>"hardcap"</code>, <code>"range"</code>, or absent.</td></tr>
-          <tr><td><code>lengthLimit</code> / <code>lengthMin</code> / <code>lengthUnit</code></td><td>(Optional) Length-mode parameters.</td></tr>
+          <tr><td><code>refMaterial</code></td><td>Reference scaffold — fielded structure the user fills in with their specifics.</td></tr>
+          <tr><td><code>lengthMode</code> / <code>lengthLimit</code> / <code>lengthUnit</code></td><td>Optional length parameters.</td></tr>
         </table>
-        <p>Custom templates additionally capture <code>hive</code> (the AI lineup + Builder selection at save time) and <code>startingDoc</code> (the source document, when the user opts in). Both ride alongside <code>pathContent</code>.</p>
+        <p><strong>About Scratch vs Refine:</strong> a single template can support both modes. <em>Scratch</em> means the user has no draft yet — the hive writes one from the reference scaffold. <em>Refine</em> means the user has an existing draft — the hive polishes and tightens it without rewriting wholesale. Some templates are single-path by design: the platform-specific Review templates (TripAdvisor, Google Maps, Yelp, etc.) are refine-only because the input is always an existing review being rewritten for a different platform.</p>
       </div>
     </details>
   </section>
@@ -218,45 +163,7 @@
 </main>
 
 <!-- ============================================================
-     CONFIRM MODAL — used for delete confirmation on custom
-     templates. Inline so this page doesn't need wfConfirm from
-     app.js. Visual styling matches the in-app wf-confirm-overlay.
-     ============================================================ -->
-<div class="finish-modal-overlay" id="tplConfirmOverlay" onclick="if(event.target===this)tplConfirmClose()">
-  <div class="wf-confirm-modal">
-    <h2 class="wf-confirm-title" id="tplConfirmTitle">Confirm</h2>
-    <p class="wf-confirm-msg finish-modal-msg" id="tplConfirmMsg"></p>
-    <div class="wf-confirm-actions">
-      <button class="finish-modal-cancel" onclick="tplConfirmClose()" id="tplConfirmCancelBtn">Cancel</button>
-      <button class="wf-confirm-danger" id="tplConfirmOkBtn" onclick="tplConfirmConfirm()">Delete</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     COMING SOON MODAL — used for Phase 2/3 scaffolds
-     ============================================================ -->
-<div class="finish-modal-overlay" id="tplSoonOverlay" onclick="if(event.target===this)tplSoonClose()">
-  <div class="wf-confirm-modal">
-    <h2 class="wf-confirm-title" id="tplSoonTitle">Coming Soon</h2>
-    <p class="wf-confirm-msg finish-modal-msg" id="tplSoonMsg"></p>
-    <div class="wf-confirm-actions">
-      <button class="finish-modal-cancel" onclick="tplSoonClose()">OK</button>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
-     TOAST — success/info notifications
-     ============================================================ -->
-<div class="tpl-toast" id="tplToast"></div>
-
-<!-- ============================================================
      LICENSE + ABOUT MODALS — helper-page boilerplate.
-     About modal uses the canonical finish-modal-overlay pattern
-     established on the other helper pages — invented classes
-     like .about-modal-overlay have no CSS rules and would render
-     visible by default.
      ============================================================ -->
 <div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
@@ -306,15 +213,19 @@
 <!-- ============================================================
      SCRIPT IMPORTS
      ============================================================ -->
-<script src="js/theme.js?v=3.63.98"></script>
-<script src="js/nav-helper.js?v=3.63.98"></script>
-<script src="js/license-helper.js?v=3.63.98"></script>
-<script src="js/version.js?v=3.63.98"></script>
-<script src="js/templates.js?v=3.63.98"></script>
+<script src="js/theme.js?v=3.63.99"></script>
+<script src="js/nav-helper.js?v=3.63.99"></script>
+<script src="js/license-helper.js?v=3.63.99"></script>
+<script src="js/version.js?v=3.63.99"></script>
+<script src="js/templates.js?v=3.63.99"></script>
 
 <script>
 // ============================================================
-//  Page logic — browse / apply / export / delete
+//  Catalog rendering — read-only showcase, no actions.
+//  WAXFRAME_TEMPLATES is declared `const` in templates.js which
+//  makes it a lexical binding in the global script scope but NOT
+//  a property of window — reference it bare (same pattern
+//  APP_VERSION uses).
 // ============================================================
 'use strict';
 
@@ -328,31 +239,37 @@ const CATEGORY_ORDER = [
   'Reviews & Recommendations'
 ];
 
+// Marketing-page category blurbs — explain what each category covers
+// to a visitor who's never used WaxFrame before. Keyed by category name.
+const CATEGORY_BLURBS = {
+  'Quick Start':
+    'A low-stakes starter project for first-time WaxFrame users. Runs the same full hive flow as any other document — multi-AI rounds, hive convergence, Builder synthesis — on a small, comfortable subject so you can see the engine work end-to-end before committing to something important.',
+  'Career & Hiring':
+    'Job-search and hiring documents that have to land on a busy reader\'s desk and earn 30 seconds of real attention. Cover letters, résumés, job descriptions, LinkedIn About sections, thank-you notes — each scaffold is built around the actual decision the reader makes when they finish reading.',
+  'Business & Sales':
+    'B2B documents where credibility and clarity decide the outcome. Business proposals, executive summaries, cold outreach emails, RFP responses — written to be read by busy decision-makers who reward specificity and tune out marketing language.',
+  'Content & Marketing':
+    'Publishing-class long-form content with voice intact. Blog posts and articles that earn the click and the share, LinkedIn posts that read as expert peer-talk not thought-leader pose, presentation outlines where every slide carries weight.',
+  'Personal & Everyday':
+    'Lower-stakes personal projects where the hive\'s multi-AI review still earns its keep — anything you\'d rather not send as a first draft. Useful for one-off documents that don\'t fit a corporate or career template but deserve a careful read.',
+  'Reviews & Recommendations':
+    'Review and recommendation documents calibrated for the platform they\'ll publish on. Generic review templates handle the writing-from-scratch case; platform-specific templates (TripAdvisor, Google Maps, Yelp, Trustpilot, Amazon) take an existing review and rewrite it for that platform\'s voice, length, and convention.'
+};
+
+// Category icon emoji — purely decorative on the section banner.
+const CATEGORY_ICONS = {
+  'Quick Start': '🐝',
+  'Career & Hiring': '💼',
+  'Business & Sales': '📈',
+  'Content & Marketing': '✍️',
+  'Personal & Everyday': '🏡',
+  'Reviews & Recommendations': '⭐'
+};
+
 function escapeHtml(s) {
   return String(s == null ? '' : s)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function loadCustomTemplates() {
-  try {
-    const raw = localStorage.getItem(CUSTOM_TEMPLATES_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    return Array.isArray(arr) ? arr : [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveCustomTemplates(arr) {
-  try {
-    localStorage.setItem(CUSTOM_TEMPLATES_KEY, JSON.stringify(arr));
-    return true;
-  } catch (e) {
-    showToast('Could not save — localStorage error: ' + e.message, 'bad');
-    return false;
-  }
 }
 
 function pathLabel(path) {
@@ -365,54 +282,92 @@ function pathPill(path) {
   return `<span class="tpl-path-pill tpl-path-${escapeHtml(path)}">${escapeHtml(pathLabel(path))}</span>`;
 }
 
-// Apply opens index.html with deep-link params in a new tab.
-function applyHref(id, path) {
-  return `index.html?template=${encodeURIComponent(id)}&path=${encodeURIComponent(path)}`;
+function loadCustomTemplates() {
+  try {
+    const raw = localStorage.getItem(CUSTOM_TEMPLATES_KEY);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  } catch (e) { return []; }
 }
 
-function renderTemplateCard(t, opts) {
-  const isCustom = !!opts && opts.isCustom;
+// Render one template card — read-only showcase.
+// Lead description + document type + length + scaffold accordion.
+function renderTemplateCard(t) {
   const paths = Array.isArray(t.paths) && t.paths.length ? t.paths : ['scratch'];
   const primaryPath = paths[0];
-  const description = (t.pathContent && t.pathContent[primaryPath] && t.pathContent[primaryPath].description) || t.description || '';
+  const primaryContent = (t.pathContent && t.pathContent[primaryPath]) || {};
+  const description = primaryContent.description || t.description || '';
+  const docType = primaryContent.goalDocType || '';
+  const lengthMode = primaryContent.lengthMode;
+  const lengthLimit = primaryContent.lengthLimit;
+  const lengthMin = primaryContent.lengthMin;
+  const lengthUnit = primaryContent.lengthUnit;
 
-  let applyButtons;
-  if (paths.length === 1) {
-    applyButtons = `<a class="tpl-card-apply-btn" href="${applyHref(t.id, primaryPath)}" target="_blank" rel="noopener noreferrer" title="Apply this template in WaxFrame (${escapeHtml(pathLabel(primaryPath))})">Apply →</a>`;
-  } else {
-    applyButtons = paths.map(p =>
-      `<a class="tpl-card-apply-btn tpl-card-apply-btn-multi" href="${applyHref(t.id, p)}" target="_blank" rel="noopener noreferrer" title="Apply (${escapeHtml(pathLabel(p))})">${escapeHtml(pathLabel(p))} →</a>`
-    ).join('');
+  let lengthLabel = '';
+  if (lengthMode === 'hardcap' && lengthLimit) {
+    lengthLabel = `Up to ${escapeHtml(lengthLimit)} ${escapeHtml(lengthUnit || '')}`.trim();
+  } else if (lengthMode === 'range' && lengthMin && lengthLimit) {
+    lengthLabel = `${escapeHtml(lengthMin)}–${escapeHtml(lengthLimit)} ${escapeHtml(lengthUnit || '')}`.trim();
   }
 
-  const mgmtButtons = isCustom ? `
-    <div class="tpl-card-mgmt">
-      <button class="tpl-card-mgmt-btn" onclick="exportTemplate('${escapeHtml(t.id)}')" title="Download this template as a .json file">⬇ Export</button>
-      <button class="tpl-card-mgmt-btn tpl-card-mgmt-btn-danger" onclick="askDeleteTemplate('${escapeHtml(t.id)}', '${escapeHtml(t.name).replace(/'/g, "\\'")}')" title="Delete this custom template">🗑 Delete</button>
-    </div>` : '';
+  // Scaffold preview (refMaterial from primary path) — collapsed by default.
+  const scaffold = primaryContent.refMaterial || '';
+  const scaffoldBlock = scaffold ? `
+    <details class="tpl-scaffold">
+      <summary class="tpl-scaffold-summary">See the reference scaffold</summary>
+      <pre class="tpl-scaffold-body">${escapeHtml(scaffold)}</pre>
+    </details>
+  ` : '';
+
+  const factsRow = (docType || lengthLabel) ? `
+    <div class="tpl-card-facts">
+      ${docType ? `<div class="tpl-card-fact"><span class="tpl-card-fact-label">Document type</span><span class="tpl-card-fact-val">${escapeHtml(docType)}</span></div>` : ''}
+      ${lengthLabel ? `<div class="tpl-card-fact"><span class="tpl-card-fact-label">Length</span><span class="tpl-card-fact-val">${lengthLabel}</span></div>` : ''}
+    </div>
+  ` : '';
+
+  const pathsRow = `<div class="tpl-card-paths">${paths.map(pathPill).join('')}</div>`;
 
   return `
-    <article class="tpl-card${isCustom ? ' tpl-card-custom' : ''}">
-      <div class="tpl-card-header">
-        <span class="tpl-card-icon">${escapeHtml(t.icon || '📄')}</span>
+    <article class="tpl-card">
+      <header class="tpl-card-header">
+        <span class="tpl-card-icon" aria-hidden="true">${escapeHtml(t.icon || '📄')}</span>
         <div class="tpl-card-title-wrap">
           <h3 class="tpl-card-title">${escapeHtml(t.name)}</h3>
-          <div class="tpl-card-paths">${paths.map(pathPill).join('')}</div>
+          ${pathsRow}
         </div>
-      </div>
+      </header>
       <p class="tpl-card-desc">${escapeHtml(description)}</p>
-      <div class="tpl-card-actions">${applyButtons}</div>
-      ${mgmtButtons}
+      ${factsRow}
+      ${scaffoldBlock}
     </article>
+  `;
+}
+
+function renderCategoryBanner(category, count) {
+  const icon = CATEGORY_ICONS[category] || '📂';
+  const blurb = CATEGORY_BLURBS[category] || '';
+  return `
+    <header class="tpl-cat-banner">
+      <div class="tpl-cat-banner-row">
+        <span class="tpl-cat-banner-icon" aria-hidden="true">${escapeHtml(icon)}</span>
+        <h2 class="tpl-cat-banner-title">${escapeHtml(category)}</h2>
+        <span class="tpl-cat-banner-count">${count} template${count === 1 ? '' : 's'}</span>
+      </div>
+      ${blurb ? `<p class="tpl-cat-banner-blurb">${escapeHtml(blurb)}</p>` : ''}
+    </header>
   `;
 }
 
 function renderBuiltIn() {
   const body = document.getElementById('tplBuiltInBody');
-  // WAXFRAME_TEMPLATES is declared with `const` in templates.js, which makes
-  // it a lexical binding in the global script scope but NOT a property of
-  // window. Reference it bare (same as APP_VERSION from version.js).
   const tpls = (typeof WAXFRAME_TEMPLATES !== 'undefined' && Array.isArray(WAXFRAME_TEMPLATES)) ? WAXFRAME_TEMPLATES : [];
+
+  if (tpls.length === 0) {
+    body.innerHTML = '<p class="tpl-empty-msg">Template data failed to load. Refresh the page or report the issue.</p>';
+    return;
+  }
 
   // Group by category, preserving CATEGORY_ORDER
   const byCat = {};
@@ -429,109 +384,43 @@ function renderBuiltIn() {
   let html = '';
   for (const cat of orderedCats) {
     const list = byCat[cat].slice().sort((a, b) => a.name.localeCompare(b.name));
-    html += `
-      <div class="tpl-cat-block">
-        <h3 class="tpl-cat-header">${escapeHtml(cat)} <span class="tpl-cat-count">${list.length}</span></h3>
-        <div class="tpl-grid">${list.map(t => renderTemplateCard(t)).join('')}</div>
-      </div>`;
+    html += `<section class="tpl-cat-section">
+      ${renderCategoryBanner(cat, list.length)}
+      <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+    </section>`;
   }
   body.innerHTML = html;
-
-  document.getElementById('tplStatBuiltIn').textContent = String(tpls.length);
-  document.getElementById('tplStatCategories').textContent = String(orderedCats.length);
 }
 
 function renderCustom() {
   const body = document.getElementById('tplCustomBody');
   const customs = loadCustomTemplates();
-  document.getElementById('tplStatCustom').textContent = String(customs.length);
 
+  // Visitors don't have customs — keep the section absent rather than
+  // showing an empty-state that means nothing to them.
   if (customs.length === 0) {
-    body.innerHTML = `
-      <div class="tpl-empty">
-        <div class="tpl-empty-icon">⭐</div>
-        <p class="tpl-empty-title">No custom templates yet.</p>
-        <p class="tpl-empty-sub">Finish a project in WaxFrame and click <strong>⭐ Save as Template</strong> on the finish modal to capture its setup as a reusable recipe. Saved templates will appear here.</p>
-      </div>`;
+    body.innerHTML = '';
     return;
   }
 
   const list = customs.slice().sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  body.innerHTML = `<div class="tpl-grid">${list.map(t => renderTemplateCard(t, { isCustom: true })).join('')}</div>`;
+  body.innerHTML = `
+    <section class="tpl-cat-section">
+      <header class="tpl-cat-banner tpl-cat-banner-custom">
+        <div class="tpl-cat-banner-row">
+          <span class="tpl-cat-banner-icon" aria-hidden="true">⭐</span>
+          <h2 class="tpl-cat-banner-title">Your Saved Templates</h2>
+          <span class="tpl-cat-banner-count">${list.length} template${list.length === 1 ? '' : 's'}</span>
+        </div>
+        <p class="tpl-cat-banner-blurb">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
+      </header>
+      <div class="tpl-grid">${list.map(renderTemplateCard).join('')}</div>
+    </section>
+  `;
 }
 
-function exportTemplate(id) {
-  const customs = loadCustomTemplates();
-  const t = customs.find(x => x.id === id);
-  if (!t) {
-    showToast('Template not found.', 'bad');
-    return;
-  }
-  const safeName = (t.name || 'WaxFrame-Template').replace(/[^A-Za-z0-9._-]+/g, '_');
-  const filename = `${safeName}-WaxFrame-Template.json`;
-  const blob = new Blob([JSON.stringify(t, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-  showToast(`Exported "${t.name}".`, 'ok');
-}
-
-// Delete-confirm wiring
-let _pendingDeleteId = null;
-function askDeleteTemplate(id, name) {
-  _pendingDeleteId = id;
-  document.getElementById('tplConfirmTitle').textContent = 'Delete custom template?';
-  document.getElementById('tplConfirmMsg').innerHTML =
-    `<strong>"${escapeHtml(name)}"</strong> will be removed from this browser. This can't be undone — export the template first if you want a copy.`;
-  document.getElementById('tplConfirmOverlay').classList.add('active');
-}
-function tplConfirmClose() {
-  document.getElementById('tplConfirmOverlay').classList.remove('active');
-  _pendingDeleteId = null;
-}
-function tplConfirmConfirm() {
-  if (!_pendingDeleteId) { tplConfirmClose(); return; }
-  const id = _pendingDeleteId;
-  const customs = loadCustomTemplates();
-  const next = customs.filter(t => t.id !== id);
-  if (saveCustomTemplates(next)) {
-    showToast('Custom template deleted.', 'ok');
-    renderCustom();
-  }
-  tplConfirmClose();
-}
-
-// Coming-soon modal for Phase 2 / Phase 3 scaffolds
-function showComingSoon(featureName) {
-  document.getElementById('tplSoonTitle').textContent = featureName + ' — coming soon';
-  document.getElementById('tplSoonMsg').innerHTML =
-    `<strong>${escapeHtml(featureName)}</strong> is planned for a future release. Today, you can still get a custom template by finishing a project in WaxFrame and clicking <strong>⭐ Save as Template</strong> on the finish modal. Once saved, the template appears here and you can export it as a <code>.json</code> file.`;
-  document.getElementById('tplSoonOverlay').classList.add('active');
-}
-function tplSoonClose() {
-  document.getElementById('tplSoonOverlay').classList.remove('active');
-}
-
-// Toast — transient bottom notification
-let _toastTimer = null;
-function showToast(msg, kind) {
-  const el = document.getElementById('tplToast');
-  el.textContent = msg;
-  el.className = 'tpl-toast tpl-toast-show' + (kind ? ' tpl-toast-' + kind : '');
-  if (_toastTimer) clearTimeout(_toastTimer);
-  _toastTimer = setTimeout(() => {
-    el.className = 'tpl-toast';
-  }, 3200);
-}
-
-// Boot
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+  document.querySelectorAll('.app-version-stamp').forEach(el => { el.textContent = APP_VERSION; });
   renderBuiltIn();
   renderCustom();
 });
