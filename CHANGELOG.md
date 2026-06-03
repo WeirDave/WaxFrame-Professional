@@ -2,7 +2,26 @@
 
 ---
 
+## v3.63.101
+
+**Sticky sidebar TOC + back-to-top links added to templates.html**
+
+Following the v3.63.100 chassis rebuild, the catalog page works visually but lacks the navigation aids the User Manual provides. Long catalog scroll with no jump-to-category surface. Added the canonical helper-page sidebar pattern.
+
+- `templates.html` content wrapped in `.doc-layout` with `<aside class="doc-sidebar">` matching the User Manual's pattern exactly. Hero stays full-width above the layout (same as User Manual). Sidebar is sticky on desktop, content scrolls beside it.
+- Sidebar groups: **Built-in Templates** (6 categories — Quick Start, Career & Hiring, Business & Sales, Content & Marketing, Personal & Everyday, Reviews & Recommendations), **Your Templates** (only revealed when localStorage has custom templates), **Reference** (Template Data Model), **External Guides** (User Manual, API Key Guide, Document Playbooks, What Are Tokens — all open in a new tab).
+- Each category section rendered with an `id` derived from the category name (e.g. "Career & Hiring" → `id="cat-career-hiring"`). Sidebar `#anchor` links land on those ids. Slugify regex strips all non-alphanumeric characters — `&` is dropped, not transliterated, so sidebar hrefs and JS-rendered section ids stay byte-identical.
+- `↑ Back to top` links added at the end of every category section body and at the end of the Template Data Model section. Anchor target is `#top` which is already on `<div class="page-main" id="top">`.
+- `docs-scrollspy.js` added to the templates.html script imports. The shared helper-page scrollspy now highlights the active sidebar link as the visitor scrolls — same behavior the User Manual has had since v3.22.7.
+- Custom-template sidebar group (`#sbCustomCategory` + `#sbCustomLink`) ships with inline `style="display:none"` and gets revealed by JS only when `localStorage.waxframe_custom_templates` actually contains saved templates. First-time visitors never see a dead sidebar entry pointing at a missing section. Audited inline-style exception.
+- No CSS additions — all sidebar / `.doc-layout` / `.doc-main` / `.wh-back-top` styling inherits from the existing helper-page rules in `style.css` (added back in v3.22.7 for the User Manual). Same primitive, same look, zero divergence.
+
+**Files changed:** `templates.html` (sidebar markup + slug ids + back-to-top links + scrollspy import), `js/version.js`, `js/app.js` (build stamp only), all 14 JS file headers (build stamp sweep), all 10 HTML files (cache-bust + meta build sweep), `style.css` (build stamp only).
+
+---
+
 ## v3.63.100
+
 
 **Templates page rebuilt on the canonical helper-page chassis**
 
