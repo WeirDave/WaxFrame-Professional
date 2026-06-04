@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260603-014
+     Build: 20260603-015
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-014">
+  <meta name="waxframe-build" content="20260603-015">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.121">
+  <link rel="stylesheet" href="style.css?v=3.63.122">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -152,6 +152,24 @@
 </div>
 
 <div class="page-main" id="top">
+
+<!-- v3.63.122 — Hero hp-section moved OUTSIDE doc-layout so on mobile
+     the H1 + intro lands above the menu (same pattern as
+     document-playbooks.html, waxframe-user-manual.html, templates.html,
+     api-details.html). Previously the hero was inside doc-main wrapped
+     in a single hp-section with all the content; on mobile the menu
+     landed above the H1, which felt wrong. -->
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_Token_Bee_v1.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">AI API Pricing for WaxFrame</h1>
+      <p class="hp-section-sub">Per-token input and output rates, context windows, rate limits, and free-tier caps for every AI provider WaxFrame supports. Pick a Builder by cost and capability instead of guessing.</p>
+      <p class="hp-section-sub"><em>Last updated <strong><span id="lastUpdatedStamp">2026-06-03</span></strong>. Provider pricing changes a few times a year — always verify at the linked billing page before committing to a heavy session.</em></p>
+    </div>
+  </div>
+</div>
+
 <div class="doc-layout">
   <aside class="doc-sidebar">
     <div class="doc-sidebar-inner">
@@ -171,15 +189,8 @@
   </aside>
   <div class="doc-main">
 
+<!-- Body content — hero header moved to the hp-section above doc-layout -->
 <div class="hp-section">
-  <div class="hp-section-header">
-    <img src="images/WaxFrame_Token_Bee_v1.png" alt="" class="hp-section-bee">
-    <div class="hp-section-title-block">
-      <h1 class="hp-section-title">AI API Pricing for WaxFrame</h1>
-      <p class="hp-section-sub">Per-token input and output rates, context windows, rate limits, and free-tier caps for every AI provider WaxFrame supports. Pick a Builder by cost and capability instead of guessing.</p>
-      <p class="hp-section-sub"><em>Last updated <strong><span id="lastUpdatedStamp">2026-06-03</span></strong>. Provider pricing changes a few times a year — always verify at the linked billing page before committing to a heavy session.</em></p>
-    </div>
-  </div>
   <div class="hp-section-body">
 
     <div class="wf-card is-amber" id="how-to-read">
@@ -397,12 +408,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.121"></script>
-<script src="lib/docx.min.js?v=3.63.121"></script>
-<script src="js/docx-export.js?v=3.63.121"></script>
-<script src="js/nav-helper.js?v=3.63.121"></script>
-<script src="js/license-helper.js?v=3.63.121"></script>
-<script src="js/version.js?v=3.63.121"></script>
+<script src="js/theme.js?v=3.63.122"></script>
+<script src="lib/docx.min.js?v=3.63.122"></script>
+<script src="js/docx-export.js?v=3.63.122"></script>
+<script src="js/nav-helper.js?v=3.63.122"></script>
+<script src="js/license-helper.js?v=3.63.122"></script>
+<script src="js/version.js?v=3.63.122"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
