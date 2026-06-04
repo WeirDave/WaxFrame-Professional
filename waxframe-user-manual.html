@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260604-004
+     Build: 20260604-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-004">
+  <meta name="waxframe-build" content="20260604-005">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.131">
+  <link rel="stylesheet" href="style.css?v=3.63.132">
 </head>
 <body class="helper-body">
 
@@ -1028,7 +1028,7 @@
       </div>
       <div class="goal-info-row">
         <span class="info-label">Change Builder button</span>
-        <span class="goal-info-desc">Always visible. Opens a panel where you can switch which AI is acting as Builder for the current session without going back to Setup. Any AI with a saved key can be selected. Use this if your current Builder produces a structure error or if you want to try a different AI's writing style.</span>
+        <span class="goal-info-desc">Always visible. Opens a panel where you can switch which AI is acting as Builder for the current session without going back to Setup. Any AI with a saved key can be selected. Use this if your current Builder produces a structure error or if you want to try a different AI's writing style. The model dropdown badges each model with its role: <strong>✨ Reviewer</strong> = the AI's own pick for that role, <strong>🔨 Builder</strong> = the AI's own Builder pick, <strong>⚠️ Reviewer-only</strong> = a model that cannot fulfill the Builder role due to a structural cap (e.g. AI21's Jamba family, where every response is hard-capped at 4096 output tokens — too small to finish a Builder round). Reviewer-only models are also automatically excluded from Builder recommendations so you don't pick one by accident.</span>
       </div>
       <p>Below the header, the AI status area displays differently depending on your screen size:</p>
       <div class="goal-info-row">
@@ -1898,7 +1898,12 @@
 
     <div class="wh-block">
       <div class="wh-block-title">A round failed with a structure error</div>
-      <p>This means the Builder returned output that WaxFrame could not parse — usually because the document was too long or complex for that AI to follow the required output format precisely under that token load. Click <strong>Change Builder</strong> in the Hive panel, switch to ChatGPT or Gemini, and run the round again. Your document was not changed by the failed round, and the failed attempt is recorded in your Round History for reference.</p>
+      <p>This means the Builder returned output that WaxFrame could not parse. There are two common causes — the troubleshooting card will tell you which one applies:</p>
+      <ul>
+        <li><strong>Builder output was cut off mid-response (token cap).</strong> The Builder hit its API's max-output-tokens cap before finishing the required <code>%%CONFLICTS_START%%</code> formatting block. This is a model capacity limit, not an instruction-following bug — retrying with the same model will get truncated again. Switch to a Builder with a higher output cap (Claude, GPT, Gemini Pro all support 8K+; DeepSeek and Mistral Large also work). <strong>AI21's Jamba family has a hard 4096-token cap</strong> across every version (1.5 / 1.6 / 1.7) and is structurally unable to serve as Builder — WaxFrame filters it out of Builder recommendations and badges it ⚠️ Reviewer-only in the Change Builder dropdown for exactly this reason.</li>
+        <li><strong>Builder did not return the required formatting.</strong> The Builder finished its response normally but did not include the <code>%%CONFLICTS_START%%</code> block — the model ignored the strict-formatting instructions. Retrying often works the second time, or switch to a different Builder via Change Builder.</li>
+      </ul>
+      <p>In both cases your document was not changed by the failed round, and the failed attempt is recorded in your Round History for reference.</p>
     </div>
 
     <div class="wh-block">
@@ -2102,13 +2107,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.131"></script>
-<script src="lib/docx.min.js?v=3.63.131"></script>
-<script src="js/docx-export.js?v=3.63.131"></script>
-<script src="js/nav-helper.js?v=3.63.131"></script>
-<script src="js/license-helper.js?v=3.63.131"></script>
-<script src="js/version.js?v=3.63.131"></script>
-<script src="js/docs-scrollspy.js?v=3.63.131"></script>
+<script src="js/theme.js?v=3.63.132"></script>
+<script src="lib/docx.min.js?v=3.63.132"></script>
+<script src="js/docx-export.js?v=3.63.132"></script>
+<script src="js/nav-helper.js?v=3.63.132"></script>
+<script src="js/license-helper.js?v=3.63.132"></script>
+<script src="js/version.js?v=3.63.132"></script>
+<script src="js/docs-scrollspy.js?v=3.63.132"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>

@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260604-004
+     Build: 20260604-005
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-004">
+  <meta name="waxframe-build" content="20260604-005">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.131">
+  <link rel="stylesheet" href="style.css?v=3.63.132">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -58,7 +58,15 @@
         "name": "Do free tiers work as a WaxFrame Builder?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Gemini's free tier on AI Studio is the only practical free Builder option, and only while billing is disabled. The Builder is the highest-token role in WaxFrame — it reads the project setup, reference material, the full working document, and every reviewer's notes every round, then writes the document back. That's much more than the free Worker Bees use. Free tiers from Mistral, Cohere, Together AI, and Jamba are useful for Worker Bee roles but tend to hit rate limits as Builder on longer documents."
+          "text": "Gemini's free tier on AI Studio is the only practical free Builder option, and only while billing is disabled. The Builder is the highest-token role in WaxFrame — it reads the project setup, reference material, the full working document, and every reviewer's notes every round, then writes the document back. That's much more than the free Worker Bees use. Free tiers from Mistral, Cohere, and Together AI are useful for Worker Bee roles but tend to hit rate limits as Builder on longer documents."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Can AI21 Jamba be used as a Builder?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "No — Jamba is Reviewer-only, regardless of plan or pricing tier. AI21's API caps every Jamba response at 4096 output tokens (across Jamba 1.5, 1.6, and 1.7 — Mini and Large). A typical WaxFrame Builder round needs roughly 5K–8K output tokens to emit the refined document plus the required formatting blocks. Jamba truncates before finishing, the round fails, and your API credits are spent on a doomed call. This is an architectural limit on AI21's side, not a setting you can change. WaxFrame filters Jamba out of Builder recommendations automatically and badges it ⚠️ Reviewer-only in the Change Builder model picker so you don't waste credits trying. Jamba still works fine as a Worker Bee (Reviewer role) where ~2K of output is plenty."
         }
       },
       {
@@ -289,7 +297,12 @@
 
     <div class="wf-card">
       <h3 class="wf-card-title">Do free tiers work as a WaxFrame Builder?</h3>
-      <p>Gemini's free tier on AI Studio is the only practical free Builder option, and only while billing is disabled. The Builder is the highest-token role in WaxFrame — it reads the project setup, reference material, the full working document, and every reviewer's notes every round, then writes the document back. That's much more than the free Worker Bees use. Free tiers from Mistral, Cohere, Together AI, and Jamba are useful for Worker Bee roles but tend to hit rate limits as Builder on longer documents.</p>
+      <p>Gemini's free tier on AI Studio is the only practical free Builder option, and only while billing is disabled. The Builder is the highest-token role in WaxFrame — it reads the project setup, reference material, the full working document, and every reviewer's notes every round, then writes the document back. That's much more than the free Worker Bees use. Free tiers from Mistral, Cohere, and Together AI are useful for Worker Bee roles but tend to hit rate limits as Builder on longer documents.</p>
+    </div>
+
+    <div class="wf-card is-amber">
+      <h3 class="wf-card-title">Can AI21 Jamba be used as a Builder?</h3>
+      <p><strong>No — Jamba is Reviewer-only, regardless of plan or pricing tier.</strong> AI21's API caps every Jamba response at 4096 output tokens (across Jamba 1.5, 1.6, and 1.7 — Mini and Large). A typical WaxFrame Builder round needs roughly 5K–8K output tokens to emit the refined document plus the required formatting blocks. Jamba truncates before finishing, the round fails, and your API credits are spent on a doomed call. This is an architectural limit on AI21's side, not a setting you can change. WaxFrame filters Jamba out of Builder recommendations automatically and badges it <strong>⚠️ Reviewer-only</strong> in the Change Builder model picker so you don't waste credits trying. Jamba still works fine as a Worker Bee (Reviewer role) where ~2K of output is plenty.</p>
     </div>
 
     <div class="wf-card">
@@ -408,12 +421,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.131"></script>
-<script src="lib/docx.min.js?v=3.63.131"></script>
-<script src="js/docx-export.js?v=3.63.131"></script>
-<script src="js/nav-helper.js?v=3.63.131"></script>
-<script src="js/license-helper.js?v=3.63.131"></script>
-<script src="js/version.js?v=3.63.131"></script>
+<script src="js/theme.js?v=3.63.132"></script>
+<script src="lib/docx.min.js?v=3.63.132"></script>
+<script src="js/docx-export.js?v=3.63.132"></script>
+<script src="js/nav-helper.js?v=3.63.132"></script>
+<script src="js/license-helper.js?v=3.63.132"></script>
+<script src="js/version.js?v=3.63.132"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
