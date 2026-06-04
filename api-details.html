@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260603-002
+     Build: 20260603-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-002">
+  <meta name="waxframe-build" content="20260603-003">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.109">
+  <link rel="stylesheet" href="style.css?v=3.63.110">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -150,6 +150,7 @@
   <div class="nav-body">
     <div class="nav-section-label">Help & Support</div>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
     <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
     <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
@@ -946,7 +947,7 @@
 <div class="wf-card is-accent">
   <p><strong>You don't need all your AIs every round.</strong> Toggle them on or off at any time, except for your Builder. For a lean setup, Gemini makes an excellent free Builder, with Claude for nuanced feedback and Grok for early assertive input. On the tightest budget, Gemini as Builder plus DeepSeek as a reviewer is the cheapest hive that runs — just expect slower rounds. A smaller hive completes rounds faster; the full hive gives the most thorough review.</p>
   <p><strong>Toggle, don't remove.</strong> Use the checkboxes on the work screen to toggle individual AIs on or off between rounds while preserving their API keys. This is the most efficient way to manage persistent reviewers.</p>
-  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope. For a deeper look at how tokens are counted and what they cost, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a>.</p>
+  <p><strong>Your Builder is the most important choice.</strong> The Builder processes the entire document along with all reviewer suggestions each round, using significantly more tokens than any reviewer. Choose an AI you trust with large amounts of text, one with sufficient rate limits and token budget for your project scope. For a deeper look at how tokens are counted, see <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a>. For a per-token cost comparison across every provider on this page, see <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing ↗</a>.</p>
   <p><strong>Watch for convergence signals.</strong> When multiple AIs start returning NO CHANGES in the same round, the hive signals that the document has converged and may be ready for finalization or manual review.</p>
 </div>
 
@@ -1050,15 +1051,15 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.109"></script>
-<script src="lib/docx.min.js?v=3.63.109"></script>
-<script src="js/docx-export.js?v=3.63.109"></script>
-<script src="js/nav-helper.js?v=3.63.109"></script>
-<script src="js/license-helper.js?v=3.63.109"></script>
-<script src="js/api-links.js?v=3.63.109"></script>
-<script src="js/version.js?v=3.63.109"></script>
-<script src="js/docs-scrollspy.js?v=3.63.109"></script>
-<script src="js/api.js?v=3.63.109"></script>
+<script src="js/theme.js?v=3.63.110"></script>
+<script src="lib/docx.min.js?v=3.63.110"></script>
+<script src="js/docx-export.js?v=3.63.110"></script>
+<script src="js/nav-helper.js?v=3.63.110"></script>
+<script src="js/license-helper.js?v=3.63.110"></script>
+<script src="js/api-links.js?v=3.63.110"></script>
+<script src="js/version.js?v=3.63.110"></script>
+<script src="js/docs-scrollspy.js?v=3.63.110"></script>
+<script src="js/api.js?v=3.63.110"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds
