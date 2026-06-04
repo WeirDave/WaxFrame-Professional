@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260604-009
+// Build: 20260604-010
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -825,13 +825,13 @@ const WAXFRAME_TEMPLATES = [
   // trusted to apply platform constraints from a goalNotes string.
   // Forking bakes the cap into the template itself.
   //
-  //   Platform     Title cap    Body min     Body normal      Body detailed    Body hard cap
-  //   ───────────  ───────────  ───────────  ───────────────  ───────────────  ─────────────
-  //   Amazon       100 chars    500 chars    1,500–3,500      4,000–7,500      20,000 chars
-  //   Walmart       50 chars    500 chars      800–2,000      2,000–3,000       3,000 chars
-  //   Target       no limit     500 chars    1,000–2,500      2,500–3,500       3,500 chars *
-  //   Newegg       no limit     500 chars †    500–2,000 †    2,000–4,000 †     4,000 chars † per section
-  //   Best Buy     verify       (TBD)        (TBD)            (TBD)             5,000 chars
+  //   Platform     Title cap     Body min     Body normal      Body detailed    Body hard cap
+  //   ───────────  ────────────  ───────────  ───────────────  ───────────────  ─────────────
+  //   Amazon       100 chars     500 chars    1,500–3,500      4,000–7,500      20,000 chars
+  //   Walmart       50 chars     500 chars      800–2,000      2,000–3,000       3,000 chars
+  //   Target       no limit      500 chars    1,000–2,500      2,500–3,500       3,500 chars *
+  //   Newegg       no limit      500 chars †    500–2,000 †    2,000–4,000 †     4,000 chars † per section
+  //   Best Buy      50 chars ‡    50 chars    1,500–3,000      3,000–4,500       5,000 chars
   //   Yelp         (separate template — different doc type, see rewrite-as-yelp)
   //   Mfr / blog   none (soft 100-char headline ceiling as a safe default)
   //
@@ -843,6 +843,12 @@ const WAXFRAME_TEMPLATES = [
   //     Use a STRUCTURED-OUTPUT directive in goalNotes (PROS: / CONS: /
   //     OVERALL REVIEW: sections); user copy-pastes each into Newegg's
   //     three separate input fields.
+  //   ‡ Best Buy's title field caps at 50 chars but the paste-buffer
+  //     accepts up to 82 chars before truncating (David verified,
+  //     2026-06-04). Use 50 as the enforced cap so the title never gets
+  //     truncated mid-word. Best Buy also has a 5-char MINIMUM on the
+  //     title and a 50-char MINIMUM on the body — both are rejection
+  //     thresholds, not warnings.
   //
   // Secondary star ratings each platform asks for (write the body
   // knowing the reviewer will rate these aspects):
@@ -851,6 +857,7 @@ const WAXFRAME_TEMPLATES = [
   //                for money + Fit + Ease of installation + Quality.
   //   Target       Overall + Ease of use + Quality + Value.
   //   Newegg       Overall (1–5 eggs).
+  //   Best Buy     Overall (1–5 stars). No secondary star prompts.
   //
   //   Yelp note: separate "rewrite-as-yelp" template already exists.
   //   Don't make a Yelp product-review variant — Yelp's vocabulary +
@@ -1092,6 +1099,64 @@ const WAXFRAME_TEMPLATES = [
         "hint": [
           { "field": "Length Constraint", "text": "Newegg's three-part structure (Pros / Cons / Overall Review) is handled via goalNotes section headers — per-section soft cap is 4,000 chars. Length Constraint is left unset because the engine measures TOTAL document length while Newegg caps each section independently. Copy-paste each labeled section into Newegg's three fields." },
           { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document. If your draft is one narrative paragraph (not pros/cons/overall split), the hive will restructure it; if it's already in three sections, the hive will polish each independently." }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — BEST BUY — both paths
+  // ============================================================
+  // Best Buy constraints (David verified 2026-06-04):
+  //   Title:   5–50 chars (BOTH a 5-char minimum AND a 50-char hard cap;
+  //            the paste-buffer accepts up to 82 chars but truncates,
+  //            so 50 is the enforced safe ceiling)
+  //   Body:    50–5,000 chars (50-char minimum is a rejection threshold,
+  //            not a warning)
+  //   Body normal range (pre-selected): 1,500–3,000 chars
+  //   Rating:  1–5 stars overall; NO secondary star prompts (single
+  //            overall rating only — simpler than Walmart/Target).
+  {
+    "id": "product-review-bestbuy",
+    "name": "Product Review — Best Buy",
+    "icon": "🔵",
+    "category": "Reviews & Recommendations",
+    "description": "Best Buy-specific product review with the 50-char title cap (5-char minimum) and 5,000-char body cap (50-char minimum) baked in. Single overall star rating — no secondary star prompts. Tech-leaning audience expects specifics about performance and value.",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "A Best Buy product review with platform constraints baked in: 50-char title cap (5-char min), 1,500–3,000-char body normal range (5,000 hard cap, 50-char min). Single overall star rating.",
+        "goalDocType": "Best Buy product review",
+        "goalAudience": "Best Buy shoppers deciding whether to purchase this product. The audience skews toward consumer-electronics and appliances — they want practical specifics about performance, build quality, ease of use, and value. Less marketing fluff, more 'here's what it actually does and how it held up.'",
+        "goalOutcome": "Create a fair, honest Best Buy review that gives the shopper enough specifics to make a confident buy/skip call, under Best Buy's title and body limits.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or first impressions, real-world performance, build quality, ease of use, what worked, what didn't, value for money, and a clear bottom-line recommendation. Build only from facts in my Reference Material — do not invent specs, prices, dates, or features.",
+        "goalTone": "Clear, direct, specific, and fair. Best Buy's consumer-electronics audience expects technical precision more than Walmart's general retail audience but less than Newegg's enthusiast crowd. Honest criticism is allowed. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the verdict from this specific review — not a generic 'Review of [product]' stub. The headline should hint at the real conclusion (e.g. 'Great picture, terrible remote', 'Loud but worth it for the price', 'Setup took an hour, performance is solid'). No quotes around it, no 'Review:' prefix. HEADLINE LIMITS: 5-char MINIMUM (Best Buy rejects shorter), 50-char HARD CAP (Best Buy's title field truncates beyond this — even though paste-buffer accepts up to 82 chars, the enforced cap is 50). Examples of compliant headlines: 'Solid sound, weak app' (21 chars), 'Sharp picture but laggy menu' (28 chars), 'Five years in, still works perfectly' (37 chars). Body length recipe for Best Buy: Minimum 50 chars (rejection threshold — anything shorter is refused), Normal 1,500–3,000 chars (sweet spot, pre-selected), Detailed 3,000–4,500 chars (deep coverage), Hard cap 5,000 chars (Best Buy's actual body ceiling). The Length Constraint field defaults to Normal. Best Buy uses a single overall 1–5 star rating with NO secondary star prompts — focus the body on the overall buy/skip call rather than scoring sub-aspects.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: Best Buy\nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nReal-world performance: \nBuild quality: \nEase of use: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nValue for the money: \nStar rating (1–5): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "lengthMode": "range",
+        "lengthMin": "1500",
+        "lengthLimit": "3000",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Best Buy's Normal tier (1,500–3,000 characters). Switch if the source material warrants: Minimum 50 (Best Buy's rejection threshold), Normal 1,500–3,000 (default sweet spot), Detailed 3,000–4,500 (deep coverage), Hard cap 5,000 (Best Buy's actual ceiling). HEADLINE is enforced via goalNotes — must be 5–50 chars (5-char minimum is a rejection threshold; paste-buffer accepts up to 82 but anything beyond 50 gets truncated)." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing Best Buy review draft — sharpen specifics, fit Best Buy's title (5–50 chars) and body (50–5,000 chars) limits.",
+        "goalDocType": "Best Buy product review",
+        "goalAudience": "Best Buy shoppers deciding whether to purchase this product. The audience skews consumer-electronics and appliances — practical specifics about performance, build quality, and value beat marketing language.",
+        "goalOutcome": "Polish my existing Best Buy review so it's useful, honest, and actionable. Strengthen specifics, cut vague language, make the bottom-line recommendation land clearly, and bring headline + body within Best Buy's limits.",
+        "goalScope": "Preserve all my factual details — model, price, dates, use patterns. Sharpen vague language. Make sure the review covers purchase context, real-world performance, build quality, value, and a clear bottom-line recommendation.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the verdict — not a generic '[Product Name] Review' stub. No quotes, no 'Review:' prefix. HEADLINE LIMITS: 5-char MINIMUM (Best Buy rejects shorter), 50-char HARD CAP (truncates beyond — even though paste-buffer accepts up to 82, enforced cap is 50). If my draft's headline exceeds 50 chars, trim it to the verdict. If under 5 chars, expand it. Body length recipe: Minimum 50 (rejection threshold), Normal 1,500–3,000 (pre-selected), Detailed 3,000–4,500, Hard cap 5,000. Best Buy uses a single overall 1–5 star rating with no secondary star prompts.",
+        "refMaterial": "",
+        "lengthMode": "range",
+        "lengthMin": "1500",
+        "lengthLimit": "3000",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Best Buy's Normal tier (1,500–3,000 characters). Switch if your draft is longer or shorter: Minimum 50 (rejection threshold), Normal 1,500–3,000 (default), Detailed 3,000–4,500 (deep), Hard cap 5,000 (Best Buy's actual ceiling). HEADLINE is 5-50 chars — both min and max are enforced." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document" }
         ]
       }
     }
