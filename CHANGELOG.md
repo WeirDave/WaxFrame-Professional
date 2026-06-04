@@ -2,6 +2,55 @@
 
 ---
 
+## v3.63.116
+
+**SEO quick-wins pass: cleaner.html noindex, Pro Offer price field, Organization schema, package.json homepage**
+
+Build: `20260603-009`<br>
+Released: `2026-06-03`
+
+Four small SEO fixes surfaced by a Codex review pass over the v3.63.115 site. Each is a single-spot edit with no design / functionality impact.
+
+**1. `cleaner.html` is now noindex,nofollow**
+
+`cleaner.html` is the offline backup-cleanup dev tool — `v1.2 build 20260601-skeleton-collision-fix` per its own metadata. Per the backlog `Observations`, it has "no production value; dev/migration use only" but ships in the repo (and therefore at `waxframe.com/cleaner.html`) as a reference for the future in-app `normalizeHive()` port. It was previously indexable. Adding `<meta name="robots" content="noindex,nofollow">` keeps it accessible at its URL without polluting search results.
+
+**2. `index.html` Pro Offer JSON-LD now declares a price**
+
+The `SoftwareApplication.offers[1]` (WaxFrame Pro License) had `priceCurrency: "USD"` but no `price` field — malformed structured data per Google's Offer requirements, which would silently disqualify it from rich-result eligibility. Now declares `"price": "19"` matching the current Gumroad listing.
+
+**3. `index.html` gets an `Organization` entity in a JSON-LD `@graph`**
+
+The schema-org block on the homepage was a bare `SoftwareApplication`. Restructured to a `@graph` array containing two entities cross-linked by `@id`:
+
+- `Organization` (`@id: https://waxframe.com/#organization`) — name "WaxFrame", logo, founder (Person, R David Paine III), `sameAs` linking to GitHub repo + Gumroad listing.
+- `SoftwareApplication` — same fields as before, but `author` now references the founder `@id` instead of inlining the Person, and a new `publisher` field references the `Organization @id`.
+
+Helps Google build an entity graph for the WaxFrame brand, founder authority, and product. Cleaner than two unrelated JSON-LD blocks.
+
+**4. `package.json` homepage points at waxframe.com**
+
+Previously `https://weirdave.github.io/WaxFrame-Professional/`. The canonical URL across `CNAME`, `<link rel="canonical">`, `sitemap.xml`, and `robots.txt` has been `waxframe.com` for releases. Updating the npm-metadata `homepage` keeps tooling consistent — minor, but free.
+
+**What Codex recommended but we declined**
+
+For the record (and the v185 backlog captures this in detail):
+
+- **Splitting `document-playbooks.html` into 22 thin landing pages** — wrong framing. The playbooks page is intentionally a deep reference. Splitting creates thin content that hurts more than helps. Use-case pages (next on the roadmap) are *different* content tuned to search intent, not sliced-up playbook material.
+- **Migrating `templates.html` `ItemList` JSON-LD from runtime to static HTML** — overweights a theoretical concern. Google's JS rendering is reliable for static client-rendered SPAs and we already verified the JSON-LD is well-formed at runtime.
+- **`WebSite` + `BreadcrumbList` schema** — low value for the flat helper structure. `WebSite` with `SearchAction` only matters with site search; we have none. `BreadcrumbList` only matters with deep nesting; our helpers are one level deep.
+- **Sitemap freshness automation** — marginal. Google's renderer sees live pricing data via the Worker; sitemap lastmod is a hint, not a requirement.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files plus the Worker source.
+- `index.html` JSON-LD parses cleanly: `@graph` with 2 entities (`Organization`, `SoftwareApplication`); Pro Offer has `price: "19"`, `priceCurrency: "USD"`.
+- `cleaner.html` `<head>` now ships `meta name="robots"` declared before the `<title>`.
+
+**Files changed:** `index.html` (JSON-LD restructured to `@graph` with `Organization` + `SoftwareApplication`; Pro Offer gains `price: "19"`; softwareVersion → `3.63.116`), `cleaner.html` (`<meta name="robots" content="noindex,nofollow">`), `package.json` (`homepage` → `https://waxframe.com/`; version 3.63.115 → 3.63.116), `js/version.js` (`APP_VERSION` → `v3.63.116 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), `style.css` (build header), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v185.txt`.
+
+---
+
 ## v3.63.115
 
 **Pricing timestamp: collapse US DST/standard timezone abbreviations to umbrella form (PT/ET/CT/MT)**
