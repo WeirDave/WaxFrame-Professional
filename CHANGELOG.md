@@ -2,6 +2,49 @@
 
 ---
 
+## v3.63.136
+
+**Three new per-platform Product Review templates — Walmart / Target / Newegg — with verified constraints baked in**
+
+Build: `20260604-009`<br>
+Released: `2026-06-04`
+
+David verified the actual platform constraints on Walmart, Target, and Newegg directly from each platform's review submission form (2026-06-04). Three new templates ship in this release with those constraints baked into `goalNotes` so the hive produces output that fits each platform's form first try.
+
+**Walmart — `product-review-walmart`** (icon 🛍️):
+- Title: **50-char hard cap** (the tightest title cap of any major platform)
+- Body: 3,000-char hard cap; Normal range 800–2,000 pre-selected
+- Walmart's review form asks the reviewer to rate **five secondary aspects**: "Does it live up to expectations" + Value for money + Fit + Ease of installation + Quality. The body explicitly addresses each so the star ratings have prose backing them.
+- `refMaterial` scaffold prompts for fit, ease of installation, and value as separate fields.
+
+**Target — `product-review-target`** (icon 🎯):
+- Title: no hard cap (use soft 100-char readability ceiling)
+- Body: **3,500-char hard cap** (Target's UI claims 4,000 but accepts ~3,500 in practice — verified by David, use the safe ceiling)
+- Normal range 1,000–2,500 pre-selected
+- Three secondary star prompts: **Ease of use / Quality / Value** — body addresses each.
+
+**Newegg — `product-review-newegg`** (icon 🥚):
+- Newegg's review form is **structurally different** — three separate input fields: Pros, Cons, Overall Review. Each capped at ~4,376 chars (UI claims 5,000) — use **4,000 chars per section** as the safe ceiling.
+- The template emits **structured output** with three labeled sections (`PROS:` / `CONS:` / `OVERALL REVIEW:`) that the user copy-pastes into Newegg's three fields. Section headers are exact-text directives in `goalNotes` so the Builder produces them consistently.
+- Newegg uses 1–5 eggs (not stars) — documented in the template's instructions.
+- Title has no limit.
+- `lengthMode: "none"` because the engine measures total document length but Newegg caps each section independently — per-section guidance lives in `goalNotes`. User manually trims any over-cap section before pasting if needed.
+
+**Reference block updated** ([js/templates.js](js/templates.js) before `product-review-amazon`). The per-platform recipe table now has real numbers for Walmart / Target / Newegg replacing the prior TBDs. Secondary-star-rating prompts each platform asks for are also documented so future variants can model on what the platform expects vs. what the body must support.
+
+**[document-playbooks.html](document-playbooks.html)** length-recipe table updated:
+- Each new platform row now links directly to its template via the per-template anchor (`#tpl-product-review-walmart`, etc.).
+- Amazon row also got a link to its existing template anchor (was unlinked before).
+- Best Buy row updated — body cap noted, dedicated template still TBD pending measured run.
+
+**Validator stayed green** through the ceremony — no version-stamp drift this time (last release's `package.json` miss got caught + documented in v3.63.135's CHANGELOG; I remembered the lesson this round).
+
+Closes the v203/v204 "Product Review per-platform templates" Open Features item for Walmart / Target / Newegg. Best Buy still pending — its constraints aren't fully nailed down yet (title cap unknown, body sweet-spot range unknown without a measured run on its form). The infrastructure pattern is proven; Best Buy slots in when the data arrives.
+
+Standard ceremony: APP_VERSION → v3.63.136 Pro; build stamp 20260604-009; ?v=3.63.136 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (ninth release on the same day — new record); backlog → v205 (v202 dropped per 3-version margin).
+
+---
+
 ## v3.63.135
 
 **Templates page quick wins: Amazon length recipe reference baked into templates.js + per-card Duplicate action on custom templates + Recently-saved sort option**
