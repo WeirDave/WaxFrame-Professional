@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260603-011
+   Build: 20260603-012
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10083,17 +10083,35 @@ kbd {
   .footer-about-btn {
     padding: var(--space-6) var(--space-8);
   }
-  /* v3.63.118 — on mobile, surface the page hero (H1 + intro + bee
-     mascot) ABOVE the in-page jump nav, instead of letting the source
-     order push the sidebar to the top of the scroll. Flex-column with
-     explicit order lets us put .doc-main first visually without
-     restructuring HTML (which would break the desktop two-column
-     grid). */
+  /* v3.63.119 — on mobile, the visual order is:
+       1) Page hero (H1 + intro + bee mascot — the first child of .doc-main)
+       2) Jump-nav sidebar (the .doc-sidebar aside)
+       3) Rest of the body content (subsequent children of .doc-main)
+
+     The desktop grid puts sidebar left + content right; on mobile the
+     grid collapses and source order would put sidebar above everything
+     (bad — long jump nav before the visitor knows what page they're on).
+     v3.63.118 used order:1 on .doc-main / order:2 on .doc-sidebar which
+     fixed source-order but landed the sidebar at the VERY END (after
+     the entire long-form body, including FAQ + Related Guides). That's
+     also bad — the jump nav becomes useless at the bottom of the scroll.
+
+     This release uses display:contents on .doc-main to "unwrap" it so
+     its children become flex items of .doc-layout directly. Then we
+     can order: hero (first hp-section) → sidebar → rest. .doc-main has
+     no visual styles to lose (only min-width:0 — preserved on each
+     direct child instead). */
   .doc-layout {
     display: flex;
     flex-direction: column;
   }
   .doc-main {
+    display: contents;
+  }
+  .doc-main > * {
+    min-width: 0;
+  }
+  .doc-main > :first-child {
     order: 1;
   }
   .doc-sidebar {
@@ -10102,6 +10120,9 @@ kbd {
     max-height: none;
     overflow: visible;
     margin: var(--space-16) 0 var(--space-20);
+  }
+  .doc-main > :not(:first-child) {
+    order: 3;
   }
   .doc-sidebar-inner {
     box-sizing: border-box;
