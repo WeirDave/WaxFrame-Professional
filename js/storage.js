@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260604-003
+// Build: 20260604-004
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -1452,10 +1452,9 @@ async function importSession() {
         // session intentionally; wipe local to match.
         let restoredFromIDB = false;
         let wipedToScratch  = false;
-        let leftLocalIDBAlone = false;
         if (scope && !scope.session) {
-          // v5 with session unticked — preserve local IDB.
-          leftLocalIDBAlone = true;
+          // v5 with session unticked — preserve local IDB. No flag needed:
+          // the v5 toast branch below consults scope.session directly.
         } else if (data.IDB_SESSION) {
           try {
             await idbSet(data.IDB_SESSION);
