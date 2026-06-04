@@ -2,6 +2,31 @@
 
 ---
 
+## v3.63.131
+
+**Audit polish — fix two non-existent CSS tokens in the v3.63.130 Save Checkpoint modal, drop a dead variable, and fix a misdirected anchor link in the user manual**
+
+Build: `20260604-004`<br>
+Released: `2026-06-04`
+
+Self-audit pass on v3.63.130 caught four small issues. None blocked the feature; the modal worked and the restore logic was correct. But two CSS tokens didn't exist (silent fallback), one variable was dead code, and one in-manual anchor scrolled to the wrong section. All four fixed in this release.
+
+**CSS — two token typos in [style.css](style.css):**
+- `.save-checkpoint-modal { max-width: var(--modal-w-md); }` → `var(--modal-w-base)`. The `md` size never existed in the modal-width token system (which has `sm`, `base`, `lg`, `xl`, `2xl`). The undefined token silently failed and `max-width` fell back to whatever `.finish-modal` set. Now the modal renders at the intended 640px max width.
+- `.checkpoint-scope-row-child { padding-left: var(--space-22); }` → `var(--space-24)`. The space scale is 4 / 6 / 8 / 10 / 12 / 14 / 16 / 18 / 20 / 24 / 28 / 32 / 40 / 48 — no `22`. The undefined token silently failed and the Keys + Builder child rows sat at the same indent as their Hive parent. Now they nest visually under it.
+
+**JS — dead variable in [js/storage.js](js/storage.js) `importSession()`:**
+- `let leftLocalIDBAlone = false;` declared and assigned but never read. The v5 toast branch consults `scope.session` directly. Removed the variable and replaced its assignment with a no-op comment explaining the empty branch.
+
+**Manual — anchor link in [waxframe-user-manual.html](waxframe-user-manual.html):**
+- The diagnostic-bundle paragraph said *"see [Save Checkpoint scope](#settings) below"* — but `#settings` points at the entire Settings section of the manual, not at the Save Checkpoint scope block (which is in the Help & Diagnostics section). Added `id="checkpoint-scope"` to the target `<div class="wh-block">` and pointed the link at `#checkpoint-scope`. Clicking now scrolls to the right section.
+
+No behavior change, no new features — purely polish on what v3.63.130 shipped. Caught in a self-audit before any users hit the issues.
+
+Standard ceremony: APP_VERSION → v3.63.131 Pro; build stamp 20260604-004; ?v=3.63.131 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (fourth release on the same day); backlog → v200 (v197 dropped per 3-version margin).
+
+---
+
 ## v3.63.130
 
 **Selective EXPORT modal — pick which sections (Project / Session / Hive / Keys / Builder / License) go in each checkpoint. Retires the separate Save Checkpoint (Scrubbed) flow.**
