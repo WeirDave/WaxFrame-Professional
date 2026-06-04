@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.128
+
+**Finish the v3.63.108 helper-page body-copy linking sweep — 17 remaining playbook descriptions get "Apply it directly in WaxFrame from the … template ↗"**
+
+Build: `20260604-001`<br>
+Released: `2026-06-04`
+
+v3.63.108 inserted the "Apply it directly in WaxFrame from the X template ↗" body-prose link into 5 of 22 playbooks on document-playbooks.html (cover-letter, résumé, business-proposal, RFP, product-review — the SEO-leverage subset). This release finishes the sweep: the remaining 17 playbooks now carry the same link, pointing at their per-template anchor on templates.html (id="tpl-${id}" stamped by `renderTemplateCard`). One mechanical Edit per playbook — append the anchor to the existing `.dp-playbook-desc` block after the existing sentence. Playbook id → template id is 1:1 across the board.
+
+Playbooks updated this release: Quick Start, Job Description, LinkedIn About, Thank-You Letter, Email & Outreach, Executive Summary, Blog Post / Article, LinkedIn Post, Presentation Outline, Recipe, Contractor / Vendor Letter, Restaurant Review, Hotel Review, Business / Service Review, Trim to TripAdvisor, Trim to Google Maps, Rewrite as Yelp.
+
+All 22 playbooks now have the same shape: a description sentence followed by an in-app template link. The five SEO-leverage playbooks (cover-letter, résumé, business-proposal, RFP, product-review) retain their second sentence — the "deep dive" link to the matching landing page — which the other 17 don't have a landing-page counterpart for.
+
+Why it shipped now: cache-bust amortization. document-playbooks.html was already going to get its build stamp rolled this release; folding the 17 mechanical edits in costs nothing extra.
+
+No behavior change. No new pages. Pure body-copy linking.
+
+---
+
 ## v3.63.127
 
 **Reframe cross-links to the use-case landing pages as "deep dives" instead of "guides" / "short versions"**
