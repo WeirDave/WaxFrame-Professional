@@ -1,0 +1,78 @@
+WaxFrame Backlog Master v204
+2026-06-04
+
+State: v3.63.135 Pro shipped on main. Three quick templates-page wins bundled into one release: (1) Per-platform recipe reference block in js/templates.js before product-review-amazon — canonical headline + body length recipes for Amazon (baseline measured) plus the known hard caps for Best Buy / Walmart / Target / Newegg, with the fork-don't-overlay rationale baked in as a comment. Pure docs in code, lays groundwork for the next per-platform variant build. (2) Per-card 📋 Duplicate action on My Templates customs — clones the source with a fresh id, createdTs, and "(copy)" name (auto-incrementing on collision). Strips trailing "(copy …)" from source name first so duplicate-of-duplicate yields "X (copy 2)" not "X (copy) (copy)". (3) "Recently saved" sort dropdown on My Templates (appears with 2+ saved templates) — default newest first by (updatedTs || createdTs), Alphabetical as alternative. Session-scoped preference, no localStorage. Validator caught a real drift during the ceremony (package.json forgot to bump from 3.63.134) — the v3.63.134 release-check workflow that David shipped earlier today caught its first real-world version-stamp drift. The check is paying for itself.
+
+v3.63.134 state still holds: GitHub Actions release-ceremony validator + 18 CSS token fixes. v3.63.133 state still holds: Deep Dive capture dual-homed. v3.63.132 state still holds: Builder-incapable model filter (Jamba) + BUILDER_TRUNCATED error code. v3.63.131 state still holds: audit polish. v3.63.130 state still holds: selective EXPORT modal + scrubbed retirement. v3.63.129 state still holds: Backup → Checkpoint rename. v3.63.128 state still holds: 17-playbook body-copy link sweep. v3.63.127 state still holds: deep-dive cross-link reframe. Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc (Trim to TripAdvisor measured 2026-06-04).
+
+PRIOR STATE (v3.63.134, retained for context until next release reshuffles the margin):
+GitHub Actions release-ceremony validator (.github/workflows/release-check.yml + tools/release-check.mjs) — pure Node-stdlib, no npm deps. Checks JS syntax via node --check, verifies APP_VERSION matches package.json + JSON-LD softwareVersion + every ?v= and meta build stamp + every // Build: comment, and validates every var(--TOKEN) in style.css against actually-defined tokens (handles JS-spawned scoped vars + HTML inline style="--foo: …" overrides). First run caught 18 silently-failing CSS token references — all fixed in the same release so main passes CI immediately.
+
+PRIOR STATE (v3.63.133, retained for context until next release reshuffles the margin):
+Deep Dive capture dual-homed onto Settings → Diagnostics + a one-click "Enable Deep Dive" button on help.html. Dev-toolbar 🔬 toggle kept for fast access. All three surfaces sync the same localStorage flag via WF_DEBUG.setDeepDive() — no drift. help.html button sets localStorage.waxframe_deepdive='1' directly (no need to load wf-debug.js there; localStorage is shared across tabs of the same origin).
+
+PRIOR STATE (v3.63.132, retained for context until next release reshuffles the margin):
+Builder-incapable model filter (Jamba) + BUILDER_TRUNCATED error code + docs that thwart wasted API credits. New BUILDER_INCAPABLE_FAMILIES regex `/^(jamba|ai21[._-]?jamba)/i` wired into filterModelsForRole(). ⚠️ Reviewer-only badge in buildModelSelector(). BUILDER_TRUNCATED entry in WF_ERROR_CATALOG matching ctx.kind === 'builder_truncated' with detection at the missing-conflict-block sites — finishReason LENGTH/MAX_TOKENS routes to the new code. ai-api-pricing.html new amber FAQ "Can AI21 Jamba be used as a Builder?" with structural explanation; user-manual updated.
+
+PRIOR STATE (v3.63.131, retained for context until next release reshuffles the margin):
+Audit polish on v3.63.130. --modal-w-md → --modal-w-base; --space-22 → --space-24; removed dead leftLocalIDBAlone; #settings anchor for "Save Checkpoint scope" reworded to #checkpoint-scope.
+
+PRIOR STATE (v3.63.130, retained for context until next release reshuffles the margin):
+Phase B of the Checkpoint arc — selective EXPORT modal + retirement of the Save Checkpoint (Scrubbed) flow. 💾 Save Checkpoint nav item opens a modal with six checkboxes: Project / Session / Hive (parent) / API keys / Builder / License. Backup format v4 → v5 with _waxframe_backup_scope envelope. importSession's v5 path treats null + scope=false as "preserve local".
+
+PRIOR STATE (v3.63.129, retained for context until next release reshuffles the margin):
+Phase A of the Checkpoint arc — vocabulary rename "Backup" → "Checkpoint" and "Backup Builder" → "Failover Builder" across every user-facing surface. Internal code names stay.
+
+Open Bugs
+
+(none currently tracked)
+
+Open Features
+
+- Restore-from-Checkpoint diff-and-pick UI — turn the current blunt overwrite into a comparison + selective-import flow. STATUS: PARKED — bigger scope, gated on user feedback once the selective-export modal has actual users.
+
+- Custom Templates Phase 2 + Phase 3 — full editors behind the scaffold buttons that landed in v3.63.97. PHASE 2 (Create Blank): guided multi-step editor. PHASE 3 (Import .json): file-picker that validates and dedupes. PHASE 1B — hive auto-reconcile on apply — separate concern.
+
+- Templates page Phase 1 follow-ups — REMAINING: search/filter bar, per-card View Details expander, bulk Export All customs as ZIP. SHIPPED in v3.63.135: per-card Duplicate action + Recently-saved sort option.
+
+- Mistral 429 proactive warning via X-RateLimit-Remaining header. Mistral's API returns the header; WaxFrame doesn't currently read it. Surface a soft warning BEFORE a 429 hits (e.g. yellow chip on the Mistral row "~X requests left this minute"). Likely needs a small per-provider hook in callAPI (app.js ~11500) since rate-limit headers differ by provider.
+
+- Hive parallel fan-out RPS-awareness. CURRENT: a reviewer round fires up to N concurrent calls. With paid Mistral on Tier 1 or 2 (low RPS), that parallel burst itself can trigger 429 even though monthly token budget is healthy. CONSIDER: an optional per-provider concurrency cap.
+
+- Model recommender filter-awareness warning — when the recommender's pick has been flagged in the current session's ringBuffer with CONTENT_FILTERED, surface a ⚠️ next to that model in the Change Builder dropdown and in the recommend toast.
+
+- Failover Builder behavior — primary Builder hits CONTENT_FILTERED / EMPTY_RESPONSE → auto-failover to a configured Failover Builder for that one round only, then snap back to primary next round. Settings → Auto Mode already has the dropdown; this entry is about the BEHAVIOR for single-round CONTENT_FILTERED (today the dropdown only fires on failure-streak halts).
+
+- Builder-incapable family list expansion — watch-list. Currently just Jamba. As other broken-as-Builder families surface, extend BUILDER_INCAPABLE_FAMILIES regex.
+
+- Pause/resume at reviewer seam — finer-grained pause point INSIDE a round, between reviewers finishing and the builder firing. Current pause/halt mechanics all operate at round boundaries.
+
+- File System Access API exploration — investigate replacing download-only checkpoints with true file persistence via window.showSaveFilePicker / showOpenFilePicker / FileSystemHandle. Browser-support: Chrome/Edge yes, Safari/Firefox no.
+
+- Provider Catalog + Hive Profiles Foundation — two-layer provider model. Sequencing: (1) Add `starter: true` flag to API_CONFIGS entries; first-run Worker Bees filters to starter:true + any user-activated. (2) Build "+ Add from Catalog" modal. (3) Catalog expansion in two batches: Cloud API (Perplexity/Cohere/Together) then Local Server (LM Studio/Ollama/Alfredo/Open WebUI). (4) Hive Profiles as saved snapshots. Big multi-release arc.
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors, some confirmed live. Static grep insufficient (display:contents is load-bearing, JS template-literal class names evade grep). Dedicated branch, phased deletion, visual smoke test on every screen as pre-deploy gate.
+
+- CSS rule consolidation sweep — 6 cases of same-component-language-multiple-custom-classes worth consolidating. Same risk surface as dead-selector cleanup (visual regression).
+
+- Product Review per-platform templates — extend the per-platform pattern (established in v3.63.94 with product-review-amazon). Pending platforms with known constraints: Best Buy (~5,000 char body cap; verify title cap), Walmart (~4,000), Target (~4,000), Newegg (~5,000). Reference block now in templates.js (v3.63.135 SHIPPED) — when building each variant, copy the matching row's recipe into a new entry. Each platform gets its own template, not an overlay on a generic.
+
+- Repo housekeeping — `docs/` folder. David trimmed v30 today (2026-06-04). Continued trim as needed.
+
+- Triage CodeQL + Dependabot findings once first scans complete. Blocked on David pulling Security tab findings.
+
+Observations
+
+- 2026-06-04 (during v3.63.135 ceremony) — the v3.63.134 release-check validator caught its FIRST REAL DRIFT IN THE WILD. Cache-bust sweep updated everything except package.json (didn't match the regex pattern). Validator surfaced "package.json version 3.63.134 != APP_VERSION 3.63.135" on the pre-commit run. One-line fix, then green. Exactly the bug class the validator was built to catch. ROI confirmed in <2h.
+
+- 2026-06-04 (post-v3.63.134) — Length-floor convergence note from David's Trim to TripAdvisor run. Majority convergence fired at R3 with the document at 478 words against a 500-word floor (Range mode, 500–900 words). Two R3 holdouts (ChatGPT, DeepSeek) explicitly proposed expanding the recommendation paragraph to clear the floor; convergence engine fired anyway because the majority view was "done." Worth investigating before deciding on a code change: the convergence-path length check at app.js:14555 (majority path) and the matching unanimous path DO call `lengthGuardPrompt({ kind: 'convergence_under' })` when status is not 'ok', so the prompt path IS wired up. David's checkpoint shows `lengthGuardOverride: false`, so the gate should have fired. Either (a) `getLengthStatus(docText)` returned `ok` for 478 words against a 500 floor (off-by-one or unit mismatch in the floor check), (b) the prompt fired but David clicked through it without registering it as a "convergence blocked" event, or (c) the prompt path isn't reached in some specific sub-state of the majority-with-holdouts code path that we hit. Investigation needed before any code change — the prompt mechanism already exists, this is potentially a wiring bug not a missing feature. Re-add as a formal Open Bug if the investigation confirms (a) or (c). Re-open the conversation if (b) — that's a UX question, not a bug.
+
+- SHIPPED — Amazon length recipe reference block (v3.63.135). The "Amazon Product Review canonical length recipe (reference data for templates.js)" backlog item from v203 closes — the recipe now lives next to product-review-amazon as a comment block, ready for the next per-platform variant build to copy from.
+
+- SHIPPED — Per-card Duplicate action + Recently-saved sort (v3.63.135). Closes two of the five "Templates page Phase 1 follow-ups" items. Remaining: search/filter bar, View Details expander, bulk Export All as ZIP.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128. Google Search Console + Bing Webmaster Tools imported. First signals expected ~2 weeks from setup.
+
+- cleaner.html (offline backup-cleaner tool) preserved in David's local working tree as a working reference implementation for the eventual in-app normalizeHive() port (if real users ever surface with legacy ugly-ID backups). NOT committed to repo — no production value.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. Architectural decisions should NOT be re-litigated on sales speculation — engineering merit answers stand independent of conversion data. Funnel hasn't been opened yet; conversion is untested, not failed.

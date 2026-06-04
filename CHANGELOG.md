@@ -2,6 +2,53 @@
 
 ---
 
+## v3.63.135
+
+**Templates page quick wins: Amazon length recipe reference baked into templates.js + per-card Duplicate action on custom templates + Recently-saved sort option**
+
+Build: `20260604-008`<br>
+Released: `2026-06-04`
+
+Three small templates-page improvements bundled into one release. None changes existing behavior; all are additive.
+
+**1. Per-platform recipe reference block in [js/templates.js](js/templates.js)**
+
+Added a canonical reference table for retail-platform headline + body length recipes before `product-review-amazon`. Includes Amazon (the existing measured baseline), plus the known hard caps for Best Buy / Walmart / Target / Newegg with body sweet-spot rows marked TBD pending measured runs. Yelp is noted as a separate-template case (already covered by `rewrite-as-yelp`). The block also documents the rationale for forking per platform vs trying to overlay constraints on a generic `product-review` (the overlay approach was tried + failed in v3.63.92 — 134-char headline on an Amazon-100-cap target). Pure comment, no code. Closes the "Amazon Product Review canonical length recipe (reference data for templates.js)" backlog item.
+
+**2. Per-card 📋 Duplicate action on My Templates customs**
+
+New button on each custom-template card sits between the existing ⬇ Export and ✏️ Edit buttons. Clicking it:
+- Deep-clones the source template (preserves goal, refMaterial, hive, length settings, all pathContent)
+- Generates a fresh `id` + `createdTs`
+- Drops any `updatedTs` (the copy isn't an edit of anything — it's new)
+- Auto-names the copy `<Source name> (copy)`, incrementing to `(copy 2)`, `(copy 3)`, etc. if a name collision exists
+- Strips any trailing `(copy …)` from the source name first, so duplicating a duplicate yields `X (copy 2)` not `X (copy) (copy)`
+- Re-renders the gallery so the new card appears immediately
+
+Use case: build a variant by duplicating an existing template, then editing the copy via the existing ✏️ button. Eliminates the prior path of "Save as Template from scratch, fill every field again."
+
+**3. "Recently saved" sort option on My Templates**
+
+When 2+ custom templates exist, a sort dropdown appears in the toolbar alongside the existing + New blank / ⬆ Import buttons. Two options:
+
+- **Recently saved** (default, newest first by `updatedTs || createdTs`)
+- **Alphabetical** (by `name.localeCompare`)
+
+Session-scoped preference (no localStorage persistence — viewing mode, not a saved setting). The dropdown only renders when there are 2+ templates; single-template users don't see the option.
+
+**Style updates** ([style.css](style.css)):
+
+- Repositioned the existing Export/Edit/Delete buttons to make room for the new Duplicate button. Stack right-to-left from the card edge: Delete (rightmost) → Edit → Duplicate → Export. Each at 28px width, 36px spacing per slot. Card right-padding bumped from 116px to 152px to keep long template names from sliding under the action row.
+- Added `.template-custom-sort` + `.template-custom-sort-select` styling matching the toolbar's existing language (surface2 background, border2 outline, accent hover).
+
+**Validation:**
+
+The release-check validator ran clean on the new code. The Templates page is also covered by the existing screenshot-capture pipeline if visual regression appears (none expected — additive changes only).
+
+Standard ceremony: APP_VERSION → v3.63.135 Pro; build stamp 20260604-008; ?v=3.63.135 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (eighth release on the same day); backlog → v204 (v201 dropped per 3-version margin).
+
+---
+
 ## v3.63.134
 
 **GitHub Actions release-ceremony validator + 18 CSS token typos fixed (silently-failing references the validator caught on its first run against main)**

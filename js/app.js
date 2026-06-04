@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-007
+// Build: 20260604-008
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-007';         // build stamp — update each session
+const BUILD       = '20260604-008';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -3550,6 +3550,24 @@ function renderTemplateGalleryBody() {
   // v3.63.36 — custom templates now live behind their own "Custom Templates"
   // path-card instead of being mixed into the scratch/refine grids.
   const _customs = (typeof loadCustomTemplates === 'function') ? loadCustomTemplates() : [];
+  // v3.63.135 — Sort custom templates by user preference. Default to
+  // "recent" (newest first by updatedTs || createdTs) since that's
+  // typically what users want after saving a new template. "Alpha"
+  // is the alternative for users who think of their templates by name.
+  // The sort is session-scoped (no localStorage persistence) — it's
+  // a viewing preference, not a saved setting.
+  if (path === 'custom' && _customs.length > 1) {
+    const _sortMode = window._customTemplateSort || 'recent';
+    if (_sortMode === 'alpha') {
+      _customs.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    } else {
+      _customs.sort((a, b) => {
+        const ta = (b.updatedTs || b.createdTs || 0);
+        const tb = (a.updatedTs || a.createdTs || 0);
+        return ta - tb;
+      });
+    }
+  }
   const visibleTemplates = (path === 'custom')
     ? _customs
     : WAXFRAME_TEMPLATES.filter(t => Array.isArray(t.paths) && t.paths.includes(path));
@@ -3577,7 +3595,7 @@ function renderTemplateGalleryBody() {
   // who already have a draft and points back to the path picker for
   // the onboarding demo.
   const newuserCallout = (path === 'custom')
-    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">\u2b06 Import template</button><span class="template-custom-hint">Hover a saved template to export \u2b07, edit \u270f\ufe0f, or delete \ud83d\uddd1 it.</span></div>`
+    ? `<div class="template-custom-toolbar"><button class="template-new-blank" type="button" onclick="newBlankTemplate()">\u2795 New blank template</button><button class="template-new-blank template-import-btn" type="button" onclick="importCustomTemplate()">\u2b06 Import template</button>${_customs.length > 1 ? `<label class="template-custom-sort"><span class="template-custom-sort-label">Sort:</span><select class="template-custom-sort-select" onchange="setCustomTemplateSort(this.value)"><option value="recent"${(window._customTemplateSort || 'recent') === 'recent' ? ' selected' : ''}>Recently saved</option><option value="alpha"${window._customTemplateSort === 'alpha' ? ' selected' : ''}>Alphabetical</option></select></label>` : ''}<span class="template-custom-hint">Hover a saved template to export \u2b07, duplicate \ud83d\udccb, edit \u270f\ufe0f, or delete \ud83d\uddd1 it.</span></div>`
     : (path === 'scratch')
     ? `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>New to WaxFrame?</strong> Start with <strong>⭐ Quick Start</strong> below — it's a low-stakes chocolate-chip-cookie example that converges in a few rounds and teaches you the whole flow before you bring your own document.</p>`
     : `<p class="template-gallery-intro template-gallery-intro--newuser"><strong>Refining a draft?</strong> Pick the template that matches what you've already written — the hive will polish, tighten, and restructure without rewriting wholesale. Want a guided tour first? Click <strong>Change</strong> above and run the <strong>⭐ Quick Start</strong> demo from the Starting from scratch side.</p>`;
@@ -3616,7 +3634,7 @@ function renderTemplateGalleryBody() {
           // can't be removed). Wrap so the 🗑 sits over the card without
           // nesting a button inside the apply button.
           if (t.custom) {
-            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-export" type="button" title="Export ${escapeHtml(t.name)} as a file" onclick="event.stopPropagation(); exportCustomTemplate('${escapeHtml(t.id)}')">⬇</button><button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
+            return `<div class="template-card-wrap">${cardBtn}<button class="template-card-export" type="button" title="Export ${escapeHtml(t.name)} as a file" onclick="event.stopPropagation(); exportCustomTemplate('${escapeHtml(t.id)}')">⬇</button><button class="template-card-dup" type="button" title="Duplicate ${escapeHtml(t.name)} as a starting point for a variant" onclick="event.stopPropagation(); duplicateCustomTemplate('${escapeHtml(t.id)}')">📋</button><button class="template-card-edit" type="button" title="Edit ${escapeHtml(t.name)}" onclick="event.stopPropagation(); editCustomTemplate('${escapeHtml(t.id)}')">✏️</button><button class="template-card-del" type="button" title="Delete ${escapeHtml(t.name)}" onclick="event.stopPropagation(); deleteCustomTemplate('${escapeHtml(t.id)}')">🗑</button></div>`;
           }
           return cardBtn;
         }).join('')}
@@ -3986,6 +4004,49 @@ function deleteCustomTemplate(id) {
     if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
     toast(`\ud83d\uddd1 Deleted "${tpl.name}"`);
   });
+}
+
+// v3.63.135 \u2014 Duplicate an existing custom template as a starting point
+// for a variant. Deep-clones the source, generates a fresh id + createdTs,
+// appends " (copy)" to the name (or "(copy 2)", "(copy 3)" if collisions),
+// clears any updatedTs (this is a NEW template, not an edit of the source),
+// and re-renders the gallery. The user can then edit it via the \u270f\ufe0f button
+// to customize the copy.
+function duplicateCustomTemplate(id) {
+  const all = loadCustomTemplates();
+  const src = all.find(t => t.id === id);
+  if (!src) return;
+  const clone = JSON.parse(JSON.stringify(src)); // deep-clone all fields
+  // New identity
+  const ts = Date.now();
+  clone.id = 'custom-' + ts + '-' + Math.random().toString(36).slice(2, 7);
+  clone.createdTs = ts;
+  delete clone.updatedTs; // a fresh copy isn't an "update" of anything
+  clone.appVersion = (typeof APP_VERSION === 'string' ? APP_VERSION : '');
+  // Compute a non-colliding name. "X" -> "X (copy)", "X (copy)" -> "X (copy 2)", etc.
+  const baseName = (src.name || 'My Template').replace(/\s*\(copy(?:\s+\d+)?\)\s*$/i, '');
+  const existingNames = new Set(all.map(t => (t.name || '').trim()));
+  let candidate = `${baseName} (copy)`;
+  let n = 2;
+  while (existingNames.has(candidate)) {
+    candidate = `${baseName} (copy ${n})`;
+    n++;
+    if (n > 99) break; // sanity cap; user can rename manually if they hit this
+  }
+  clone.name = candidate;
+  all.push(clone);
+  saveCustomTemplates(all);
+  if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
+  toast(`\ud83d\udccb Duplicated "${src.name}" as "${clone.name}" \u2014 open it to customize`, 5000);
+}
+
+// v3.63.135 \u2014 Set the My Templates sort order. Session-scoped (no
+// localStorage persistence \u2014 it's a viewing preference, not a saved
+// setting). The dropdown's onchange wires through here so a future
+// change of sort options stays in one place.
+function setCustomTemplateSort(mode) {
+  window._customTemplateSort = (mode === 'alpha') ? 'alpha' : 'recent';
+  if (typeof renderTemplateGalleryBody === 'function') renderTemplateGalleryBody();
 }
 
 // Apply a template by id and path. v3.37.0 dual-path:

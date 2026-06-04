@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260604-007
+// Build: 20260604-008
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -808,6 +808,49 @@ const WAXFRAME_TEMPLATES = [
       }
     }
   },
+
+  // ============================================================
+  // PRODUCT REVIEW — PER-PLATFORM RECIPE REFERENCE  (v3.63.135)
+  // ============================================================
+  // Canonical headline + body length recipes for every retail platform
+  // we know constraints for. Reference data — when building the next
+  // per-platform fork (Best Buy / Walmart / Target / Newegg / Yelp /
+  // etc.), copy the matching row into a new product-review-<platform>
+  // entry with the same shape as product-review-amazon below.
+  //
+  // Why per-platform forks (not a single overlay on product-review):
+  // the overlay approach was tried and failed in v3.63.92 — a generic
+  // Product Review run produced a 134-char headline on what should
+  // have been an Amazon-100-cap target because the AIs couldn't be
+  // trusted to apply platform constraints from a goalNotes string.
+  // Forking bakes the cap into the template itself.
+  //
+  //   Platform     Title cap    Body min   Body normal      Body detailed    Body hard cap
+  //   ───────────  ───────────  ─────────  ───────────────  ───────────────  ─────────────
+  //   Amazon       100 chars    500 chars  1,500–3,500      4,000–7,500      20,000 chars
+  //   Best Buy     verify       (TBD)      (TBD)            (TBD)            5,000 chars
+  //   Walmart      verify       (TBD)      (TBD)            (TBD)            4,000 chars
+  //   Target       verify       (TBD)      (TBD)            (TBD)            4,000 chars
+  //   Newegg       verify       (TBD)      (TBD)            (TBD)            5,000 chars
+  //   Yelp         (separate template — different doc type, not product review)
+  //   Mfr / blog   none (soft 100-char headline ceiling as a safe default)
+  //
+  //   Yelp note: separate "rewrite-as-yelp" template already exists.
+  //   Don't make a Yelp product-review variant — Yelp's vocabulary +
+  //   structure differs enough that the platform-trim path is right.
+  //
+  // Body normal = the pre-selected default range (Amazon's recipe
+  //   shows 1,500–3,500 as the sweet spot). For platforms where we
+  //   only know the HARD CAP, normal/detailed default to a sensible
+  //   fraction of the cap until we get a measured run on that platform.
+  //
+  // When adding a new per-platform variant, also:
+  //   • Update style.css if the variant needs visual differentiation
+  //     (the .is-recommended treatment is reserved for Quick Start).
+  //   • Add a corresponding playbook section in document-playbooks.html
+  //     with the platform-specific constraints noted in goalNotes.
+  //   • Run a measured test (see WaxFrame_Playbook_Test_Master_vN.txt)
+  //     to validate the recipe produces in-range output.
 
   // ============================================================
   // PRODUCT REVIEW — AMAZON — both paths

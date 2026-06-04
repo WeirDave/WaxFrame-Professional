@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-007
+   Build: 20260604-008
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -14116,11 +14116,15 @@ kbd {
   justify-self: center;
 }
 /* v3.63.44 — Phase 2: custom-template edit affordance + new-blank toolbar. */
+/* v3.63.135 — added .template-card-dup (duplicate-to-variant). Buttons are
+   stacked right-to-left from the card edge: del (rightmost) → edit → dup →
+   export. Each shares the base styling here; per-button `right` offsets
+   below position them; hover-tint colors differ by action. */
 .template-card-export,
+.template-card-dup,
 .template-card-edit {
   position: absolute;
   top: var(--space-8);
-  right: 44px;               /* edit sits left of delete */
   width: 28px;
   height: 28px;
   display: flex;
@@ -14137,11 +14141,51 @@ kbd {
   opacity: 0;
   transition: opacity 0.12s, border-color 0.12s, color 0.12s, background 0.12s;
 }
+/* Position offsets — buttons stack right-to-left from the card edge.
+   del = ~var(--space-8) (rightmost, defined above), then 36px spacing
+   per button to the left. With three buttons left of del, the card
+   needs ~152px right-padding. */
+.template-card-edit   { right: 44px; }   /* second from right (left of del) */
+.template-card-dup    { right: 80px; }   /* third from right */
+.template-card-export { right: 116px; }  /* leftmost of the four */
 .template-card-wrap:hover .template-card-edit,
-.template-card-edit:focus-visible { opacity: 1; }
-.template-card-edit:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
-.template-card-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.template-card-wrap > .template-card { padding-right: 116px; }
+.template-card-wrap:hover .template-card-dup,
+.template-card-wrap:hover .template-card-export,
+.template-card-edit:focus-visible,
+.template-card-dup:focus-visible,
+.template-card-export:focus-visible { opacity: 1; }
+.template-card-edit:hover   { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
+.template-card-dup:hover    { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
+.template-card-export:hover { border-color: var(--accent); color: var(--accent); background: var(--surface3); }
+.template-card-edit:focus-visible,
+.template-card-dup:focus-visible,
+.template-card-export:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.template-card-wrap > .template-card { padding-right: 152px; }
+
+/* v3.63.135 — Sort dropdown in the custom-templates toolbar. Only
+   appears when there are 2+ saved templates (single template doesn't
+   need sorting). Inherits .template-custom-toolbar's flex layout. */
+.template-custom-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-6);
+  margin-left: var(--space-8);
+}
+.template-custom-sort-label {
+  font-size: var(--fs-sm);
+  color: var(--text-dim);
+}
+.template-custom-sort-select {
+  font-size: var(--fs-sm);
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4) var(--space-8);
+  cursor: pointer;
+}
+.template-custom-sort-select:hover { border-color: var(--accent); }
+.template-custom-sort-select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 .template-custom-toolbar {
   display: flex;
