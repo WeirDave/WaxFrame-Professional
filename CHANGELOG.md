@@ -2,6 +2,27 @@
 
 ---
 
+## v3.63.127
+
+**Reframe cross-links to the use-case landing pages as "deep dives" instead of "guides" / "short versions"**
+
+Build: `20260603-020`<br>
+Released: `2026-06-03`
+
+David flagged that the v3.63.123 cross-link framing on both templates.html and document-playbooks.html was weak — calling the landing pages "guides" (on templates) and "the short version" (on playbooks) misrepresented what they actually are. The landing pages aren't a shorter version of the playbook; they're the WHY behind the template — screening reality (humans don't read X first, AI does), why a multi-AI hive beats one AI, the origin story, what gets edited and what doesn't, what a typical session looks like. That's a deep dive, not a summary.
+
+Two reframes:
+
+1. **templates.html** — `LANDING_PAGES` map labels in `renderTemplateCard` updated to lead with `🔍 Deep dive:`:
+   - `🔍 Deep dive: AI Cover Letter Editor →`
+   - `🔍 Deep dive: AI Résumé Review →`
+   - `🔍 Deep dive: AI Business Proposal Writer →`
+2. **document-playbooks.html** — three playbook descriptions reframed from "For the short version of this workflow, see the … guide ↗" to "For a deep dive on why a multi-AI hive beats one AI here — [page-specific specifics] — see the … deep dive ↗". The page-specific text differs per document type (cover letter cites the application-portal screening reality + origin story; résumé cites the ATS / recruiter-copilot screening reality + origin story; business proposal cites how each model's blind spots show up in proposals + what a typical session looks like).
+
+No behavior change. No new pages. Pure cross-link copy reframe — better description of where the link goes, stronger pull-through from the in-app template + playbook surfaces into the SEO landing pages.
+
+---
+
 ## v3.63.126
 
 **ai-cover-letter-editor.html: same lead reframe as the résumé page — humans don't read cover letters first, AI does — and the WaxFrame origin story applies here too**
