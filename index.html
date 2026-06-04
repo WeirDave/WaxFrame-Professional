@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260604-002
+     Build: 20260604-003
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-002">
+  <meta name="waxframe-build" content="20260604-003">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.129">
+  <link rel="stylesheet" href="style.css?v=3.63.130">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.129",
+    "softwareVersion": "3.63.130",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1040,7 +1040,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset suppressed prompts</span>
-                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), Save Checkpoint warning, per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore from Checkpoint warning is intentionally NOT dismissable — it's a security trust gate that fires every time.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
+                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore from Checkpoint warning is intentionally NOT dismissable — it's a security trust gate that fires every time. The Save Checkpoint modal is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
             </div>
@@ -2020,6 +2020,70 @@
   </div>
 </div>
 
+<!-- SAVE CHECKPOINT MODAL (v3.63.130) — selective EXPORT, replaces the
+     pre-checkpoint sensitive-backup wfConfirm and the Save Checkpoint
+     (Scrubbed) menu item. Checkboxes pick which sections go in the file.
+     Defaults reflect the most common portable-project case: take the
+     project + session, leave hive/keys/builder behind so the file restores
+     cleanly on a machine with a different hive. License defaults ON for
+     self-portability (work→home); untick when sharing with a different
+     user. To make a share-safe redacted file, untick Keys + License (same
+     outcome the old Scrubbed flow produced, now reachable from one modal). -->
+<div class="finish-modal-overlay" id="saveCheckpointModal" onclick="if(event.target===this)closeSaveCheckpointModal()">
+  <div class="finish-modal save-checkpoint-modal">
+    <h2 class="finish-modal-title">&#x1F4BE; Save Checkpoint</h2>
+    <p class="finish-modal-msg">Pick what goes in this checkpoint. Stored locally &mdash; checkpoints may include your document text, AI responses, API keys, license key, and debug traces. Keep them somewhere private and only share with people you trust.</p>
+    <div class="checkpoint-scope-list">
+      <label class="checkpoint-scope-row">
+        <input type="checkbox" id="scopeProject" checked>
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">Project</span>
+          <span class="checkpoint-scope-desc">Goal, reference material, length settings</span>
+        </span>
+      </label>
+      <label class="checkpoint-scope-row">
+        <input type="checkbox" id="scopeSession" checked>
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">Session in progress</span>
+          <span class="checkpoint-scope-desc">Round history, working document, console transcript, notes</span>
+        </span>
+      </label>
+      <label class="checkpoint-scope-row">
+        <input type="checkbox" id="scopeHive" onchange="updateCheckpointScopeChildren()">
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">Hive composition</span>
+          <span class="checkpoint-scope-desc">Which AIs are active, custom-AI configs, per-AI model selections</span>
+        </span>
+      </label>
+      <label class="checkpoint-scope-row checkpoint-scope-row-child">
+        <input type="checkbox" id="scopeKeys" disabled>
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">API keys</span>
+          <span class="checkpoint-scope-desc">The API keys for each AI in your hive &mdash; requires Hive</span>
+        </span>
+      </label>
+      <label class="checkpoint-scope-row checkpoint-scope-row-child">
+        <input type="checkbox" id="scopeBuilder" disabled>
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">Builder selection</span>
+          <span class="checkpoint-scope-desc">Which AI is currently set as Builder &mdash; requires Hive</span>
+        </span>
+      </label>
+      <label class="checkpoint-scope-row">
+        <input type="checkbox" id="scopeLicense" checked>
+        <span class="checkpoint-scope-text">
+          <span class="checkpoint-scope-name">License</span>
+          <span class="checkpoint-scope-desc">Your WaxFrame Pro license key &mdash; untick when sharing with someone else</span>
+        </span>
+      </label>
+    </div>
+    <div class="finish-modal-footer-btns">
+      <button class="finish-modal-cancel" onclick="closeSaveCheckpointModal()">Cancel</button>
+      <button class="finish-modal-cancel finish-modal-cancel-accent" onclick="confirmSaveCheckpoint()">&#x1F4BE; Save Checkpoint</button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div id="toast"></div>
 
@@ -2761,23 +2825,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.129';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.130';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.129"></script>
-<script src="lib/jszip.min.js?v=3.63.129"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.129"></script>
-<script src="js/version.js?v=3.63.129"></script>
-<script src="js/storage.js?v=3.63.129"></script>
-<script src="js/theme.js?v=3.63.129"></script>
-<script src="js/audio.js?v=3.63.129"></script>
-<script src="js/scenes.js?v=3.63.129"></script>
-<script src="js/wf-debug.js?v=3.63.129"></script>
-<script src="js/provider-models.js?v=3.63.129"></script>
-<script src="js/api.js?v=3.63.129"></script>
-<script src="js/templates.js?v=3.63.129"></script>
-<script src="js/api-links.js?v=3.63.129"></script>
-<script src="js/app.js?v=3.63.129"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.130"></script>
+<script src="lib/jszip.min.js?v=3.63.130"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.130"></script>
+<script src="js/version.js?v=3.63.130"></script>
+<script src="js/storage.js?v=3.63.130"></script>
+<script src="js/theme.js?v=3.63.130"></script>
+<script src="js/audio.js?v=3.63.130"></script>
+<script src="js/scenes.js?v=3.63.130"></script>
+<script src="js/wf-debug.js?v=3.63.130"></script>
+<script src="js/provider-models.js?v=3.63.130"></script>
+<script src="js/api.js?v=3.63.130"></script>
+<script src="js/templates.js?v=3.63.130"></script>
+<script src="js/api-links.js?v=3.63.130"></script>
+<script src="js/app.js?v=3.63.130"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2840,8 +2904,7 @@ function wfMobileShareToast(msg) {
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button title="Save a checkpoint of your current session (project goal, hive, document, round history) to a JSON file you can restore from later" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
-    <button title="Save a checkpoint with all API keys and your license key stripped — safe to share with collaborators or support" class="nav-item" onclick="backupSessionScrubbed()">🧼 Save Checkpoint (Scrubbed)</button>
+    <button title="Save a checkpoint of your current session — checkboxes let you pick which sections (project, session, hive, keys, builder, license) go in the file" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
     <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>

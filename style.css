@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-002
+   Build: 20260604-003
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -9769,6 +9769,32 @@ kbd {
 .finish-modal-goal         { max-width: var(--modal-w-lg); text-align: left; } /* v3.55.1 — token-wired (still 900px) */
 .finish-modal-title-goal   { margin-bottom: var(--space-6); }
 .finish-modal-cancel-accent { border-color: var(--accent); color: var(--accent); }
+
+/* ── Save Checkpoint modal (v3.63.130 — selective EXPORT) ── */
+.save-checkpoint-modal { max-width: var(--modal-w-md); text-align: left; }
+.checkpoint-scope-list {
+  display: flex; flex-direction: column; gap: var(--space-6);
+  padding: var(--space-14); background: var(--surface2);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  margin: var(--space-14) 0; max-height: 55vh; overflow-y: auto;
+  box-sizing: border-box;
+}
+.checkpoint-scope-row {
+  display: flex; align-items: flex-start; gap: var(--space-10);
+  padding: var(--space-8) var(--space-6); border-radius: var(--radius-sm);
+  cursor: pointer; transition: background .12s;
+}
+.checkpoint-scope-row:hover { background: var(--surface3); }
+.checkpoint-scope-row input[type="checkbox"] {
+  margin-top: 3px; flex: none; cursor: pointer;
+  width: 16px; height: 16px;
+}
+.checkpoint-scope-row input[type="checkbox"]:disabled { cursor: not-allowed; opacity: .4; }
+.checkpoint-scope-row:has(input:disabled) { cursor: not-allowed; opacity: .55; }
+.checkpoint-scope-row-child { padding-left: var(--space-22); }
+.checkpoint-scope-text { display: flex; flex-direction: column; gap: 2px; }
+.checkpoint-scope-name { font-size: var(--fs-13); color: var(--text); font-weight: 600; }
+.checkpoint-scope-desc { font-size: var(--fs-12); color: var(--text-dim); }
 
 /* ── Project goal modal ── */
 .goal-modal-name         { font-size: var(--fs-13); color: var(--text); font-weight: 600; margin-bottom: 2px; }
