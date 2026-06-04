@@ -2,6 +2,61 @@
 
 ---
 
+## v3.63.117
+
+**Mobile funnel polish: table overflow fixes + AI API Pricing in rail + pricing transparency + min-screen footer**
+
+Build: `20260603-010`<br>
+Released: `2026-06-03`
+
+A focused mobile-experience audit (mobile-overlay on `index.html` and helper pages at 390×844) surfaced two real layout bugs and three funnel gaps. All five fixed.
+
+**Fix 1: Pricing-table and dp-table overflow on mobile**
+
+`ai-api-pricing.html`'s 8-column pricing table had no mobile overflow protection — would visibly overflow the 390px iPhone viewport. Same story on `document-playbooks.html` `.dp-table` blocks (fixed 160px label column + `white-space: nowrap`). The existing `@media (max-width: 820px)` block in `style.css` already had a horizontal-scroll-on-mobile pattern for `.wh-table` and `.tpl-docs-table`; `.ai-table` and `.dp-table` are now added to that same rule. Phone visitors can now scroll the table horizontally within its container without breaking the page layout.
+
+**Fix 2: AI API Pricing added to mobile-overlay "while you're here" rail**
+
+v3.63.110 shipped the new `ai-api-pricing.html` page but never added it to the mobile bridge's `mobile-overlay-links` rail. Mobile visitors researching `Claude API cost` or `GPT-4 pricing` (a defined SEO query segment) couldn't find it from the bridge. Now present in the rail with icon `💰` and a clear description ("Per-token costs across ChatGPT, Claude, Gemini, DeepSeek and more — sortable, with rate limits and free-tier caps").
+
+**Fix 3: Mobile rail reordered for the SEO funnel**
+
+Previously: Templates → Manual → Playbooks → Tokens. Now: Templates → Pricing → Manual → Tokens → Playbooks. Rationale: a mobile visitor who lands from search wants (1) something to browse (Templates), then (2) cost / pricing info (Pricing — directly relevant to "is this worth it?"), then (3) how it works (Manual), then (4) educational basics (Tokens), with (5) Playbooks last as the deepest long-form reference best read on desktop.
+
+**Fix 4: Pricing transparency on the mobile-overlay**
+
+A mobile visitor researching cost was missing a clear "what's this going to set me back" signal anywhere on the bridge. The Pro license is $19 USD lifetime, and there's a free 3-round trial — both should be visible above the fold. New `.mobile-overlay-pricing` element sits between the value-prop paragraph and the bookmark callout: `Free 3-round trial. Unlock unlimited rounds with a $19 lifetime license — no subscription, no recurring charges, ever.` Styled as a subtle pill with the accent-color emphasis on the price.
+
+**Fix 5: min-screen-overlay gets parity with mobile-overlay**
+
+The narrow-window overlay (1366×768 minimum, fires for tablets / docked DevTools / smaller laptops) was missing:
+- The AI API Pricing link
+- The What Are Tokens? link
+- A footer with theme controls + GitHub + Buy Pro
+
+All three added. Theme controls match the mobile-overlay's `.theme-opt` pattern; footer links mirror the mobile-overlay's `.mobile-overlay-footer-link` styling. New CSS classes: `.min-screen-footer`, `.min-screen-theme`, `.min-screen-theme-btn`, `.min-screen-footer-link`.
+
+**Deferred (defensible nice-to-haves, not critical)**
+
+For the v186 backlog record — the audit also surfaced these, intentionally not shipped now:
+
+- Sticky first column on the pricing table for mobile (provider name stays visible while scrolling rates right) — adds complexity, horizontal scroll already works.
+- Card-view alternative for the pricing table on mobile (one card per provider instead of the table) — substantial markup + CSS, defer until we have usage signals.
+- Larger tap targets on sortable column headers (`.pricing-sortable`) — marginal, header text wraps to 2 lines at 390px which gives effective 60px+ tap height already.
+- Email-me-later capture on the mobile-overlay — needs a backend or Gumroad form integration; substantial new feature.
+- Demo video / animated GIF of hive workflow — needs the video asset produced first.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files + Worker source.
+- Build stamp `20260603-010` consistent everywhere.
+- Cache-bust `?v=3.63.117` swept across all HTML script/link references.
+- All new CSS classes use existing tokens (`--accent`, `--text`, `--text-dim`, `--surface2`, `--border2`, `--radius-md`); no hardcoded hex.
+
+**Files changed:** `index.html` (mobile-overlay gains pricing transparency line + AI API Pricing rail card + rail reorder; min-screen-overlay gains 2 link cards + theme/GitHub/Buy Pro footer; JSON-LD `softwareVersion` → `3.63.117`), `style.css` (mobile-table overflow rule now includes `.ai-table` + `.dp-table`; new `.mobile-overlay-pricing` styles; new `.min-screen-footer` + `.min-screen-theme` + `.min-screen-theme-btn` + `.min-screen-footer-link` styles; build header), `js/version.js` (`APP_VERSION` → `v3.63.117 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `package.json` (3.63.116 → 3.63.117), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v186.txt`.
+
+---
+
 ## v3.63.116
 
 **SEO quick-wins pass: cleaner.html noindex, Pro Offer price field, Organization schema, package.json homepage**

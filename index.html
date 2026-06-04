@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260603-009
+     Build: 20260603-010
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-009">
+  <meta name="waxframe-build" content="20260603-010">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.116">
+  <link rel="stylesheet" href="style.css?v=3.63.117">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.116",
+    "softwareVersion": "3.63.117",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2620,9 +2620,20 @@
     <p class="min-screen-sub">If you're on a desktop or laptop: resize this browser window or dock dev tools to the bottom and you'll be in. If you're on a tablet, please switch to your computer.</p>
     <div class="min-screen-links">
       <a href="templates.html" class="min-screen-link">⭐ Browse the Template Catalog</a>
+      <a href="ai-api-pricing.html" class="min-screen-link">💰 AI API Pricing Comparison</a>
       <a href="waxframe-user-manual.html" class="min-screen-link">📖 Read the User Manual</a>
+      <a href="what-are-tokens.html" class="min-screen-link">🪙 What Are AI Tokens?</a>
       <a href="document-playbooks.html" class="min-screen-link">📋 See Document Playbooks</a>
     </div>
+    <p class="min-screen-footer">
+      <span class="min-screen-theme" aria-label="Theme">
+        <button type="button" class="min-screen-theme-btn theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+        <button type="button" class="min-screen-theme-btn theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto mode">⚙️</button>
+        <button type="button" class="min-screen-theme-btn theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+      </span>
+      <a href="https://github.com/WeirDave/WaxFrame-Professional" class="min-screen-footer-link">View source on GitHub</a> ·
+      <a href="https://weirdave.gumroad.com/l/WaxFrame" class="min-screen-footer-link">Buy WaxFrame Pro</a>
+    </p>
   </div>
 </div>
 
@@ -2647,6 +2658,7 @@
       <p class="mobile-overlay-msg"><strong>WaxFrame puts a team of AI Worker Bees on your document at the same time</strong> — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and others all reviewing and refining in iterative rounds, with a Builder AI synthesizing their feedback.</p>
     </div>
     <p class="mobile-overlay-sub">It's built to run on a desktop or laptop where you can see your Worker Bees, the document, and the Builder's output side by side. A phone screen can't fit all that at once, and editing a document while it's bouncing between multiple AIs is hard enough without squinting at it.</p>
+    <p class="mobile-overlay-pricing"><strong>Free 3-round trial.</strong> Unlock unlimited rounds with a <strong>$19 lifetime license</strong> — no subscription, no recurring charges, ever.</p>
     <div class="mobile-overlay-bookmark">
       <div class="mobile-overlay-bookmark-text">📌 <strong>Bookmark <a href="https://waxframe.com/" class="mobile-overlay-link-inline">waxframe.com</a></strong> and open it from your laptop when you're ready.</div>
       <button type="button" class="mobile-overlay-share-btn" onclick="wfMobileShare()">📤 Save or share this page</button>
@@ -2660,6 +2672,13 @@
           <span class="mobile-overlay-link-desc">23 starting points: cover letters, résumés, business proposals, RFP responses, product reviews, blog posts, and more</span>
         </span>
       </a>
+      <a href="ai-api-pricing.html" class="mobile-overlay-link">
+        <span class="mobile-overlay-link-icon">💰</span>
+        <span class="mobile-overlay-link-text">
+          <span class="mobile-overlay-link-title">AI API Pricing Comparison</span>
+          <span class="mobile-overlay-link-desc">Per-token costs across ChatGPT, Claude, Gemini, DeepSeek and more — sortable, with rate limits and free-tier caps</span>
+        </span>
+      </a>
       <a href="waxframe-user-manual.html" class="mobile-overlay-link">
         <span class="mobile-overlay-link-icon">📖</span>
         <span class="mobile-overlay-link-text">
@@ -2667,18 +2686,18 @@
           <span class="mobile-overlay-link-desc">How the setup flow, hive rounds, and Builder synthesis all work</span>
         </span>
       </a>
-      <a href="document-playbooks.html" class="mobile-overlay-link">
-        <span class="mobile-overlay-link-icon">📋</span>
-        <span class="mobile-overlay-link-text">
-          <span class="mobile-overlay-link-title">See Document Playbooks</span>
-          <span class="mobile-overlay-link-desc">Real convergence data for different document types — what to expect</span>
-        </span>
-      </a>
       <a href="what-are-tokens.html" class="mobile-overlay-link">
         <span class="mobile-overlay-link-icon">🪙</span>
         <span class="mobile-overlay-link-text">
           <span class="mobile-overlay-link-title">What Are AI Tokens?</span>
           <span class="mobile-overlay-link-desc">Plain-English explanation of token usage and what it costs to run rounds</span>
+        </span>
+      </a>
+      <a href="document-playbooks.html" class="mobile-overlay-link">
+        <span class="mobile-overlay-link-icon">📋</span>
+        <span class="mobile-overlay-link-text">
+          <span class="mobile-overlay-link-title">See Document Playbooks</span>
+          <span class="mobile-overlay-link-desc">Real convergence data for different document types — what to expect</span>
         </span>
       </a>
     </div>
@@ -2742,23 +2761,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.116';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.117';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.116"></script>
-<script src="lib/jszip.min.js?v=3.63.116"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.116"></script>
-<script src="js/version.js?v=3.63.116"></script>
-<script src="js/storage.js?v=3.63.116"></script>
-<script src="js/theme.js?v=3.63.116"></script>
-<script src="js/audio.js?v=3.63.116"></script>
-<script src="js/scenes.js?v=3.63.116"></script>
-<script src="js/wf-debug.js?v=3.63.116"></script>
-<script src="js/provider-models.js?v=3.63.116"></script>
-<script src="js/api.js?v=3.63.116"></script>
-<script src="js/templates.js?v=3.63.116"></script>
-<script src="js/api-links.js?v=3.63.116"></script>
-<script src="js/app.js?v=3.63.116"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.117"></script>
+<script src="lib/jszip.min.js?v=3.63.117"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.117"></script>
+<script src="js/version.js?v=3.63.117"></script>
+<script src="js/storage.js?v=3.63.117"></script>
+<script src="js/theme.js?v=3.63.117"></script>
+<script src="js/audio.js?v=3.63.117"></script>
+<script src="js/scenes.js?v=3.63.117"></script>
+<script src="js/wf-debug.js?v=3.63.117"></script>
+<script src="js/provider-models.js?v=3.63.117"></script>
+<script src="js/api.js?v=3.63.117"></script>
+<script src="js/templates.js?v=3.63.117"></script>
+<script src="js/api-links.js?v=3.63.117"></script>
+<script src="js/app.js?v=3.63.117"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
