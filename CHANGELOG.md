@@ -2,6 +2,57 @@
 
 ---
 
+## v3.63.112
+
+**Pricing-page polish: UTC timestamp + Builder picks cards driven by KV data**
+
+Build: `20260603-005`<br>
+Released: `2026-06-03`
+
+Two complaints flagged by David after `v3.63.111` went live — both addressed.
+
+**1. "Picking a Builder by Cost" cards are now dynamic too.**
+
+Before this release, the three picks cards were static HTML — pricing in the table refreshed from KV, but the cards still quoted the v3.63.110 prices verbatim and listed providers by hand. Guaranteed drift the first time pricing changed.
+
+Now: the three cards are empty containers (`pickCheapestNames` / `pickCheapestBody`, same for `Balanced` and `Capability`). A new `renderBuilderPicks()` function reads two new fields per provider in the JSON — `recommendationTag` (`cheapest` / `balanced` / `highest-capability` / `null`) and `recommendationNote` (the short prose describing why this pick is in that category) — plus a `shortName` field for the inline display label. Providers are sorted by `estPerRound` within each tag and listed with their current price pulled from the same data row that drives the main table.
+
+Net effect: edit `data/pricing-seed.json`, run one `wrangler kv key put`, and both the table AND the cards refresh in lockstep. The recommendation prose is editable through the same workflow — no HTML edits, no code change.
+
+Current tag assignments (v3.63.112 seed):
+
+- **cheapest:** `gemini-free`, `deepseek`
+- **balanced:** `chatgpt`, `mistral`
+- **highest-capability:** `claude`
+
+Future pricing updates can re-tag as the market shifts (e.g. promote DeepSeek to `balanced` once it gets faster, move Grok into `cheapest` if its pricing drops).
+
+**2. UTC timestamp on the "Last updated" stamp.**
+
+Previously the page just said `Last updated 2026-06-03` — no time of day, so a refresh that happened 12 hours ago looked identical to one that just landed. Now `lastUpdated` carries a full ISO 8601 datetime (`"2026-06-04T00:58:02Z"`), and a new `formatLastUpdated()` helper renders it as `"2026-06-04 00:58 UTC"`. Backward-compatible: if a future KV payload accidentally drops the time component, the function gracefully renders a date-only string.
+
+**Schema bumped to v2**
+
+`tools/pricing-worker/data/pricing-seed.json` now declares `schemaVersion: 2` reflecting the new fields (`recommendationTag`, `recommendationNote`, `shortName`, ISO datetime `lastUpdated`). The Worker is schema-agnostic — it returns whatever KV holds. The page reads `schemaVersion` if it ever needs to handle migrations.
+
+**FALLBACK_DATA refreshed in lockstep**
+
+The embedded fallback inside `ai-api-pricing.html` mirrors the new seed JSON exactly — first-paint and Worker-unreachable cases stay current.
+
+**Worker code stamp updated**
+
+`tools/pricing-worker/src/index.js` build header bumped to `20260603-005`. No code change to the Worker itself — the schema lives in the data, not in the Worker code.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files plus the Worker source.
+- Build stamp `20260603-005` consistent across `js/version.js`, `js/app.js`, all 13 other JS file headers, `style.css`, all 11 release HTMLs (including `ai-api-pricing.html`), `tools/pricing-worker/src/index.js`, and the pricing-page meta tag.
+- Cache-bust `?v=3.63.112` swept across all HTML script/link references.
+
+**Files changed:** `ai-api-pricing.html` (Builder picks cards rewritten as empty containers; new `renderBuilderPicks()` + `formatLastUpdated()` functions; `FALLBACK_DATA` schema bumped to v2 with new fields and ISO datetime), `tools/pricing-worker/data/pricing-seed.json` (`schemaVersion` 1 → 2; ISO datetime `lastUpdated`; new `shortName`, `recommendationTag`, `recommendationNote` per provider), `tools/pricing-worker/src/index.js` (build header only), `js/version.js` (`APP_VERSION` → `v3.63.112 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), all 10 existing release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.112`, `package.json` (3.63.111 → 3.63.112), `style.css` (build header), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v181.txt`.
+
+---
+
 ## v3.63.111
 
 **Dynamic pricing page — Cloudflare Worker + KV + sortable columns**
