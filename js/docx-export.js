@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — docx-export.js
-// Build: 20260603-007
+// Build: 20260603-008
 //  Real .docx export for helper/document pages. Builds a true
 //  OOXML document through the vendored `docx` library, walking
 //  WaxFrame's page primitives into Word paragraphs, tables,
