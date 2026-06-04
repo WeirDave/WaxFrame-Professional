@@ -2,6 +2,67 @@
 
 ---
 
+## v3.63.111
+
+**Dynamic pricing page — Cloudflare Worker + KV + sortable columns**
+
+Build: `20260603-004`<br>
+Released: `2026-06-03`
+
+Turns the static `ai-api-pricing.html` table into a dynamic page backed by a new Cloudflare Worker reading from KV storage. Pricing can now be updated without a Worker redeploy or a site rebuild — edit one JSON file, run one `wrangler kv key put`, and the live page picks up the change within an hour (Cloudflare cache TTL).
+
+**New: `tools/pricing-worker/` (Cloudflare Worker)**
+
+- `src/index.js` — the Worker itself. Single endpoint `GET /api/pricing` returns the JSON payload from KV. `OPTIONS` preflight handled. CORS open (`Access-Control-Allow-Origin: *`) since the data is public. Root `/` serves a small HTML status page that links to the source repo.
+- `wrangler.toml` — Worker config with KV namespace binding `PRICING_DATA`. David replaces `REPLACE_ME_WITH_KV_NAMESPACE_ID` with the ID returned from `wrangler kv namespace create PRICING_DATA`.
+- `data/pricing-seed.json` — initial pricing payload (10 providers including Gemini free + paid as separate rows, ordered by `estPerRound` ascending so the seed already reflects the default cheapest-first sort). Schema versioned (`schemaVersion: 1`); declares `tokensPerRound` so the per-round math is data-driven, not a magic constant in the code.
+- `README.md` — one-time setup commands (`wrangler login` → `kv namespace create` → seed → `wrangler deploy`) plus the update workflow for future pricing refreshes.
+
+**`ai-api-pricing.html` rewired**
+
+- Empty `<tbody id="pricingBody">` and `<tbody id="rateLimitsBody">` — content rendered by the inline script on page load.
+- Column headers in the pricing table become `<th class="pricing-sortable" data-sort="X">` for every sortable field: Provider name, Default model, Input $/M, Output $/M, Context, Max output, Est. $/round. Billing column stays non-sortable (it's just a link). Click toggles asc/desc; current sort column shows ▲ / ▼.
+- Default sort: `estPerRound` ascending (cheapest first) per request — Gemini free tier surfaces at the top, Claude/Perplexity at the bottom.
+- "Last updated" stamp now comes from the Worker payload's `lastUpdated` field, not hardcoded.
+- New `<div id="pricingStatusBanner">` element — hidden by default; shows a warning if the Worker is unreachable and the page falls back to embedded data.
+
+**Embedded fallback — the page never breaks**
+
+The inline script ships a `FALLBACK_DATA` object that mirrors `tools/pricing-worker/data/pricing-seed.json` exactly. If the Worker is unreachable (DNS, KV not initialized, network failure), the page falls back to that embedded snapshot and displays a small banner: "Live pricing service unreachable — showing the last embedded snapshot from 2026-06-03. Per-row billing links are still current." Worst case is slightly stale data, never a broken page.
+
+Each future release that touches pricing should refresh both `data/pricing-seed.json` AND the `FALLBACK_DATA` literal inside the page, keeping the embedded copy current.
+
+**Sort normalization — `K` / `M` suffixes handled**
+
+The `normalizeKMG()` helper parses display strings like `"1M"`, `"256K"`, `"8K"`, `"~60"` into comparable numbers for sort. Non-numeric values (`"varies"`, `"None"`, `"—"`, `"n/a"`, `"Limited"`, `"Trial credits"`) sort to the bottom regardless of direction so a sort on Context or Max Output is meaningful instead of alphabetical-by-coincidence.
+
+**CSS additions in `style.css`**
+
+A small block at the end of the file: cursor + hover for sortable headers, ▲ / ▼ arrows on `.sort-asc` / `.sort-desc`, and a `.pricing-status-banner` shell that picks up accent color in its `.is-warning` variant. Uses existing tokens (`--accent`, `--text-dim`, `--surface`, `--border`, `--space-*`, `--fs-13`, `--radius-sm`) — no hardcoded hex.
+
+**What David needs to do once to go live**
+
+```sh
+cd tools/pricing-worker
+npm install -g wrangler && wrangler login
+wrangler kv namespace create PRICING_DATA
+# paste the returned id into wrangler.toml
+wrangler kv key put --binding=PRICING_DATA latest --path=data/pricing-seed.json --remote
+wrangler deploy
+```
+
+Until that runs, the live site still works — it just always uses the embedded fallback and shows the "live unreachable" banner. After deploy, the banner disappears and the page is live-driven.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files.
+- Build stamp `20260603-004` consistent across `js/version.js`, `js/app.js`, all 13 other JS file headers, `style.css`, all 10 release HTMLs, the new `tools/pricing-worker/src/index.js`, and the pricing page meta tag.
+- Cache-bust `?v=3.63.111` swept across all HTML script/link references.
+
+**Files changed:** `ai-api-pricing.html` (static `<tbody>`s replaced with empty IDs + sortable column headers + status banner + inline render/fetch/sort script with FALLBACK_DATA), `style.css` (new sortable-header + status-banner CSS block; build header), `tools/pricing-worker/wrangler.toml` (new), `tools/pricing-worker/src/index.js` (new — Worker code), `tools/pricing-worker/data/pricing-seed.json` (new — initial KV payload, 10 providers), `tools/pricing-worker/README.md` (new — deploy + update instructions), `js/version.js` (`APP_VERSION` → `v3.63.111 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), all 10 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.111`, `package.json` (3.63.110 → 3.63.111), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v180.txt` (backlog bump; v177 deleted per the 3-version margin rule).
+
+---
+
 ## v3.63.110
 
 **AI API Pricing reference page — the SEO arc's #1 leverage move**
