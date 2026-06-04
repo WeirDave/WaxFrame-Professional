@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260603-013
+   Build: 20260603-014
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -265,6 +265,26 @@ html, body {
     url('images/WaxFrame_Honeycomb_BG_Dark.png');
   background-size: auto, 300px auto;
   background-repeat: repeat, repeat;
+}
+
+/* v3.63.121 — Helper pages need page-level scroll. The default in-app
+   rule above locks html/body to viewport height with overflow:hidden so
+   the app's setup screens can fill the screen without page scroll. But
+   that lock also broke back-to-top links and clipped long-form content
+   on helper pages (visitors couldn't scroll past viewport height — the
+   document reported scrollHeight === 844 on a 13000+ tall page). Body
+   on helper pages carries `class="helper-body"`; scope the override to
+   that with :has() on html so we don't disturb the in-app scroll lock.
+   :has() is universally supported as of 2022. */
+html:has(body.helper-body),
+body.helper-body {
+  height: auto;
+  overflow: visible;
+}
+body.helper-body .page-main {
+  display: block;
+  flex: none;
+  overflow: visible;
 }
 [data-theme="light"] body {
   background-image:
@@ -10050,12 +10070,38 @@ kbd {
   .helper-version-stamp {
     font-size: 10px;
   }
-  .page-header-controls {
-    max-width: 44px;
-    overflow: hidden;
+  /* v3.63.121 — restore the 3 theme buttons (light/auto/dark) on
+     mobile, but in a SEPARATE BAND below the brand row instead of
+     crammed in beside it. v3.63.106 had hidden them entirely (max-width
+     44px + display:none) to save header width — that lost the controls
+     on phones, but the first restore attempt that cluttered them next
+     to the mute button looked jammed.
+
+     Flex-wrap on .page-header lets the controls row wrap to a second
+     line below brand. A top border + slight padding gives it its own
+     band feel without needing a separate sticky element. The brand
+     block uses min-width:0 so its tagline truncates on very narrow
+     viewports rather than overflowing. */
+  .page-header {
+    flex-wrap: wrap;
   }
-  .page-header-controls .theme-opt:not(.mute-btn) {
-    display: none;
+  .page-header-brand,
+  .page-header-brand-text {
+    min-width: 0;
+  }
+  .page-header-tag {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .page-header-controls {
+    width: 100%;
+    justify-content: center;
+    gap: var(--space-6);
+    padding: var(--space-6) var(--space-12);
+    margin-top: var(--space-8);
+    border-top: 1px solid var(--border2);
+    flex-shrink: 0;
   }
   .helper-body .page-main {
     box-sizing: border-box;
@@ -10165,40 +10211,39 @@ kbd {
     -webkit-overflow-scrolling: touch;
   }
 
-  /* v3.63.118 — AI pricing tables (.ai-table on ai-api-pricing.html)
-     switch to card-view at mobile widths. Horizontal scroll on an
-     8-column table is unreadable on phones — readers can't tell the
-     scroll exists, can't compare across rows, lose context as soon
-     as they swipe right. Each row becomes a labeled-field card.
-     Requires data-label="..." on every <td> from the renderer.
+  /* v3.63.121 — Scoped to `.ai-table.is-stack` (the modifier added to
+     the pricing + rate-limits tables on ai-api-pricing.html). Earlier
+     versions applied this card-view to every `.ai-table` on the site,
+     but what-are-tokens.html re-uses the same class without data-label
+     attributes — empty ::before pseudo-elements broke its layout. The
+     modifier scopes the card-view to tables that opt in.
 
-     Affects: the pricing table AND the rate-limits table on
-     ai-api-pricing.html. Sortable column headers (in <thead>) are
-     hidden on mobile since the visual is no longer a table; the
-     default lowest-cost-first sort stays in effect at first paint. */
-  .ai-table {
+     Mechanism: hide <thead>, each <tr> becomes a vertical card, each
+     <td> becomes a labeled-field row driven by attr(data-label) via
+     ::before. First cell (provider name) stacks as the card header. */
+  .ai-table.is-stack {
     display: block;
     width: 100%;
     border: none;
   }
-  .ai-table thead {
+  .ai-table.is-stack thead {
     display: none;
   }
-  .ai-table tbody,
-  .ai-table tr,
-  .ai-table td {
+  .ai-table.is-stack tbody,
+  .ai-table.is-stack tr,
+  .ai-table.is-stack td {
     display: block;
     width: 100%;
     box-sizing: border-box;
   }
-  .ai-table tr {
+  .ai-table.is-stack tr {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
     padding: var(--space-10) var(--space-12);
     margin-bottom: var(--space-12);
   }
-  .ai-table td {
+  .ai-table.is-stack td {
     padding: var(--space-6) 0;
     border: none;
     border-bottom: 1px solid var(--border);
@@ -10209,11 +10254,11 @@ kbd {
     gap: var(--space-10);
     color: var(--text);
   }
-  .ai-table td:last-child {
+  .ai-table.is-stack td:last-child {
     border-bottom: none;
     padding-bottom: 0;
   }
-  .ai-table td::before {
+  .ai-table.is-stack td::before {
     content: attr(data-label);
     font-weight: 600;
     color: var(--text-dim);
@@ -10222,9 +10267,7 @@ kbd {
     letter-spacing: 0.05em;
     flex-shrink: 0;
   }
-  /* First cell (provider name) is the card header — no data-label,
-     larger text, stacks rather than splits across the row. */
-  .ai-table td:first-child {
+  .ai-table.is-stack td:first-child {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-4);
@@ -10233,12 +10276,22 @@ kbd {
     margin-bottom: var(--space-4);
     border-bottom: 1px solid var(--border);
   }
-  .ai-table td:first-child::before {
+  .ai-table.is-stack td:first-child::before {
     display: none;
   }
-  .ai-table td:first-child strong {
+  .ai-table.is-stack td:first-child strong {
     font-size: var(--fs-15);
     color: var(--text);
+  }
+
+  /* Plain .ai-table on other helper pages (e.g. what-are-tokens.html's
+     "Best Builder Choices") gets horizontal-scroll fallback when its
+     columns are wider than the viewport. Same approach .wh-table /
+     .tpl-docs-table / .dp-table use. */
+  .ai-table:not(.is-stack) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
