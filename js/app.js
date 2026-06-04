@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-012
+// Build: 20260604-013
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-012';         // build stamp — update each session
+const BUILD       = '20260604-013';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -6675,6 +6675,22 @@ function _parseTierResponse(text, models) {
   return out;
 }
 
+// v3.63.140 — Per-provider error log so the bundle can surface why
+// individual classifications didn't land (the v3.63.139 silent-null path
+// gave us no diagnostic when Mistral and Perplexity dropped out). Reset
+// at the top of every classifyTiersForAllKeyed call.
+window._lastTierClassificationErrors = window._lastTierClassificationErrors || {};
+function _recordTierError(provider, stage, detail) {
+  try {
+    window._lastTierClassificationErrors[provider] = {
+      stage,
+      detail: detail && detail.message ? detail.message : String(detail || ''),
+      ts: Date.now()
+    };
+  } catch (e) { /* defensive */ }
+  console.warn(`[tiers:${provider}] ${stage} failed:`, detail);
+}
+
 // Core tier-classification call for one provider. Returns
 // { cheap, balanced, thinker, fast, why, cached } or null on failure.
 async function classifyTiersForProvider(provider, opts) {
@@ -6690,32 +6706,37 @@ async function classifyTiersForProvider(provider, opts) {
   // refresh and a Recommend Models click are guaranteed to see the same model
   // catalog for the same provider.
   const cfg = API_CONFIGS[provider];
-  if (!cfg || !cfg._key) return null;
-  const isDefault = !!DEFAULT_AIS.find(d => d.provider === provider);
-  let models = [];
-  try {
-    if (isDefault) {
-      const cached = localStorage.getItem(`waxframe_models_${provider}`);
-      if (cached) {
-        const obj = JSON.parse(cached);
-        if (obj && Array.isArray(obj.models)) models = obj.models;
-      }
-    }
-    if (!models.length) {
-      const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
-      models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
-    }
-  } catch (e) {
-    console.warn(`[tiers:${provider}] model-fetch failed:`, e);
+  if (!cfg || !cfg._key) {
+    _recordTierError(provider, 'no-key', 'Provider has no API key configured');
     return null;
   }
-  if (!models.length) return null;
+  // v3.63.140 — Always force-fresh the models list. The prior version
+  // read waxframe_models_<provider> first, which produced stale picks
+  // when the user's hive had updated since the cache was last written
+  // (v3.63.139 ChatGPT classifier picked from gpt-5.4-* models while
+  // gpt-5.5 was selected and working in the hive). Forcing a live fetch
+  // makes the classifier always reason over the current catalog.
+  let models = [];
+  try {
+    const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
+    models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+  } catch (e) {
+    _recordTierError(provider, 'model-fetch', e);
+    return null;
+  }
+  if (!models.length) {
+    _recordTierError(provider, 'empty-model-list', 'Provider returned no chat-compatible models');
+    return null;
+  }
 
   // Filter using the existing Reviewer-role filter — tier picks must be
   // usable in the hive in SOME role (Builder filter is stricter and is
   // applied at Profile-resolve time, not here).
   const filtered = filterModelsForRole(models, 'reviewer');
-  if (!filtered.length) return null;
+  if (!filtered.length) {
+    _recordTierError(provider, 'all-models-filtered', `Provider returned ${models.length} model(s) but every one was structurally non-chat`);
+    return null;
+  }
 
   // Asking model: prefer the user's currently-selected model when it's in
   // the filtered list. Falls back to first available. Same logic as the
@@ -6745,7 +6766,8 @@ async function classifyTiersForProvider(provider, opts) {
     }
     const resp = await fetch(url, { method: 'POST', headers, body });
     if (!resp.ok) {
-      console.warn(`[tiers:${provider}] HTTP ${resp.status} from classifier`, await resp.text().catch(() => ''));
+      const errBody = await resp.text().catch(() => '');
+      _recordTierError(provider, 'http-error', `HTTP ${resp.status} ${resp.statusText} — ${errBody.slice(0, 200)}`);
       return null;
     }
     const data = await resp.json();
@@ -6753,10 +6775,21 @@ async function classifyTiersForProvider(provider, opts) {
     if (format === 'anthropic')   text = data?.content?.[0]?.text || '';
     else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     else                          text = data?.choices?.[0]?.message?.content || '';
+    if (!text) {
+      _recordTierError(provider, 'empty-response', `Empty response body from ${askingModel}`);
+      return null;
+    }
     const parsed = _parseTierResponse(text, filtered);
     if (!parsed) {
-      console.warn(`[tiers:${provider}] could not parse response:`, text);
+      _recordTierError(provider, 'parse-failed', `Could not extract tier slots from response: ${text.slice(0, 200)}`);
       return null;
+    }
+    // v3.63.140 — Sanity log when every slot came back null. The parser
+    // succeeded but every slot was unparseable / NONE — almost always a
+    // sign the model ignored the response format. Still cache the empty
+    // result so we have a paper trail; the bundle will show it.
+    if (!parsed.cheap && !parsed.balanced && !parsed.thinker && !parsed.fast) {
+      _recordTierError(provider, 'all-slots-empty', `Parser ran but every slot resolved to NONE — model may have ignored the response format. Raw: ${text.slice(0, 300)}`);
     }
     setCachedTiers(provider, {
       cheap:    parsed.cheap,
@@ -6767,22 +6800,40 @@ async function classifyTiersForProvider(provider, opts) {
     console.info(`[tiers:${provider}] classified —`, parsed);
     return { ...parsed, cached: false };
   } catch (e) {
-    console.warn(`[tiers:${provider}] classifier call failed:`, e);
+    _recordTierError(provider, 'classifier-exception', e);
     return null;
   }
 }
 
-// Convenience runner — classify every keyed default provider in parallel.
-// Returns a map { provider -> tier result }. Useful for the rollout pass and
-// the "refresh all tiers" UI button (lands in step 4 of the Hive Profiles
-// build, when the dropdown ships).
+// Convenience runner — classify every keyed provider in parallel (defaults
+// AND customs as of v3.63.140; the v3.63.139 version only walked
+// DEFAULT_AIS, which silently skipped DeepSeek / Cohere / Together AI /
+// Jamba even when they had keys). Returns a map
+// { provider -> tier result }. Resets the per-provider error log at the
+// top of the run so the bundle reflects the current state, not stale
+// failures from a prior call.
 async function classifyTiersForAllKeyed(opts) {
   opts = opts || {};
-  const providers = DEFAULT_AIS
-    .map(a => a.provider)
-    .filter(p => API_CONFIGS[p] && API_CONFIGS[p]._key);
+  // Reset the error log so the bundle reflects this run's outcomes only.
+  window._lastTierClassificationErrors = {};
+  // Walk every aiList entry with a key (defaults + customs). Dedupe by
+  // provider in case the same provider has multiple AI rows (rare but
+  // possible with custom imports).
+  const seen = new Set();
+  const providers = [];
+  const source = (typeof aiList !== 'undefined' && Array.isArray(aiList)) ? aiList : [];
+  for (const a of source) {
+    if (!a || !a.provider || seen.has(a.provider)) continue;
+    const cfg = API_CONFIGS[a.provider];
+    if (!cfg || !cfg._key) continue;
+    seen.add(a.provider);
+    providers.push(a.provider);
+  }
   const entries = await Promise.all(
-    providers.map(p => classifyTiersForProvider(p, opts).then(r => [p, r]).catch(() => [p, null]))
+    providers.map(p => classifyTiersForProvider(p, opts).then(r => [p, r]).catch(e => {
+      _recordTierError(p, 'runner-exception', e);
+      return [p, null];
+    }))
   );
   return Object.fromEntries(entries);
 }

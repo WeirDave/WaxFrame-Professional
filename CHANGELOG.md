@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.140
+
+**Security: Bundle for Scout no longer leaks API keys + four classifier coverage fixes**
+
+Build: `20260604-013`<br>
+Released: `2026-06-04`
+
+**🚨 Security fix** ([js/wf-debug.js](js/wf-debug.js)) — the v3.63.139 `📦 Bundle for Scout` export wrote `LS_HIVE` directly into the bundle, which includes the plaintext API keys for every keyed provider. Anyone who clicked Bundle for Scout in v3.63.139 leaked their keys into the downloaded JSON. v3.63.140 sanitizes the export before serialization: the `keys` object is replaced with `[REDACTED — N keys stripped from bundle export]` so the analyst can see keys existed but can't read them. Custom AI configs (`customAIConfigs[*]._key`) are also redacted defensively. New top-level envelope field `_waxframe_keys_redacted: true` makes the sanitization explicit. **If you generated a Bundle for Scout in v3.63.139, rotate every API key in your hive.**
+
+**Classifier walks all keyed providers** ([js/app.js:6797](js/app.js)) — v3.63.139's `classifyTiersForAllKeyed` walked `DEFAULT_AIS` only, which silently skipped DeepSeek, Cohere, Together AI, and Jamba even when they had keys. The four highest-cost reasoning-model providers from David's Midea-run analysis. v3.63.140 walks `aiList` instead (with dedupe by provider), capturing every keyed AI regardless of default-vs-custom status.
+
+**Classifier force-fetches the model list** ([js/app.js:6705](js/app.js)) — v3.63.139 read `waxframe_models_<provider>` first and only fell through to a live fetch if the cache was empty. This produced stale picks when the hive's selected model wasn't in the cached list (v3.63.139 ChatGPT picked from `gpt-5.4-nano / gpt-5.4-mini / o3` while `gpt-5.5` was the currently-selected and working hive model). v3.63.140 always fetches live so the classifier reasons over the current catalog.
+
+**Per-provider failure log included in the bundle** ([js/app.js:6680](js/app.js), [js/wf-debug.js](js/wf-debug.js)) — v3.63.139 silently swallowed classifier failures (model-fetch errors, HTTP errors, parse failures) via `console.warn`-and-return-null. Mistral and Perplexity both had valid keys and worked as reviewers but didn't appear in the v3.63.139 classifications — and we had no signal why. v3.63.140 records every failure with a stage tag (`no-key` / `model-fetch` / `empty-model-list` / `all-models-filtered` / `http-error` / `empty-response` / `parse-failed` / `all-slots-empty` / `classifier-exception` / `runner-exception`) and a detail string, all included in the bundle under `tierClassificationErrors`.
+
+**Iteration note** — the v3.63.139 dynamic classifier shipped four classifications across ten keyed providers. Three of them (ChatGPT, Claude, Gemini) reasoned over stale cached model lists. The remaining six failed silently or were skipped. v3.63.140 fixes the coverage gap and the security leak before the next test run; the prompt itself stays unchanged for now so we can isolate whether the next round's classifications improve from the coverage fix alone, or whether the prompt also needs tightening.
+
+---
+
 ## v3.63.139
 
 **Hive Profiles foundation: dynamic tier classifier + dev-toolbar simplification**
