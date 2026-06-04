@@ -2,6 +2,35 @@
 
 ---
 
+## v3.63.113
+
+**Pricing data freshness fix: drop Cache-Control max-age + browser no-store**
+
+Build: `20260603-006`<br>
+Released: `2026-06-03`
+
+Tiny but real follow-up to v3.63.112. After the schema-v2 KV update, David refreshed `ai-api-pricing.html` and still saw the v3.63.111-era `Last updated 2026-06-03` stamp instead of the new `2026-06-04 00:58 UTC`. The page HTML was the new build, the JS was correct, the Worker was serving the new data, the KV had the new payload — but the **browser had cached the previous Worker response for an hour** thanks to the `Cache-Control: public, max-age=3600` header the Worker shipped in v3.63.111.
+
+This release fixes two layers:
+
+**Worker** — `Cache-Control: public, max-age=3600` becomes `public, max-age=300, stale-while-revalidate=600`. Edge caches still absorb the load, but updates propagate within 5 minutes instead of an hour. The `stale-while-revalidate` directive lets Cloudflare serve stale data for up to 10 more minutes while it revalidates in the background — so visitors never wait for a fresh fetch.
+
+**Page** — fetch mode changes from `cache: 'default'` to `cache: 'no-store'`. The browser never caches its own private copy of the pricing JSON. Every visit hits Cloudflare's edge cache, which honors the Worker's 5-min `max-age`. Net effect: KV updates land in every visitor's browser within ~5 minutes of `wrangler kv key put`.
+
+Pricing data updates a few times a year, so neither change adds meaningful Worker load — the edge cache absorbs everything within the 5-min window.
+
+**For users currently seeing stale data**: hard-refresh (Ctrl+Shift+R) once after this ships, and the new cache headers prevent the issue from recurring on future updates.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files plus the Worker source.
+- Build stamp `20260603-006` consistent everywhere.
+- After Worker redeploy: `curl -I https://waxframe-pricing.weirdave.workers.dev/api/pricing` should return `Cache-Control: public, max-age=300, stale-while-revalidate=600`.
+
+**Files changed:** `tools/pricing-worker/src/index.js` (`Cache-Control` header), `ai-api-pricing.html` (`fetch()` cache mode), `js/version.js` (`APP_VERSION` → `v3.63.113 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `style.css` (build header), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.113`, `package.json` (3.63.112 → 3.63.113), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v182.txt`.
+
+---
+
 ## v3.63.112
 
 **Pricing-page polish: UTC timestamp + Builder picks cards driven by KV data**
