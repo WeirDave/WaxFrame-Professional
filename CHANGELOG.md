@@ -2,6 +2,46 @@
 
 ---
 
+## v3.63.139
+
+**Hive Profiles foundation: dynamic tier classifier + dev-toolbar simplification**
+
+Build: `20260604-012`<br>
+Released: `2026-06-04`
+
+First step of the Hive Profiles arc, plus a hard simplification of the dev-mode diagnostic surface that David's workflow had outgrown.
+
+**Dynamic tier classifier** ([js/app.js:5998](js/app.js)) — each keyed provider's own AI is asked to classify its current model lineup into four tier slots (CHEAP / BALANCED / THINKER / FAST) by NUMBER from a list-presented catalog. The classification prompt:
+
+- Hands the AI its actual current model list with numbered entries — same hallucination-proof shape as the existing Reviewer / Builder recommender. The AI picks by index; it can't return an id that isn't on the endpoint.
+- Frames NONE as expected and correct in named common cases: single-model providers, lineups without a reasoning variant, lineups without an explicit budget tier. Explicitly anchors on user-cost as the reason a wrong answer matters (*"a wrong tier answer here cascades into a hive profile that wastes the user's API credits"*).
+- Targets the post-mortem failure mode of v3.32.10's rolled-back FASTEST/BUDGET prompt. That version asked AIs to recall absolute pricing from memory; this version asks them to classify a concrete numbered list by name-convention heuristics (mini/haiku/flash → cheap, opus/pro/reasoning → thinker).
+
+Per-provider cache in `localStorage.waxframe_tiers_<provider>` (same shape as the existing recommender cache). `classifyTiersForProvider(provider, {force})` is the per-provider entry point; `classifyTiersForAllKeyed({force})` is the parallel runner across every keyed default provider.
+
+**Dev toolbar simplified** ([index.html:2701](index.html), [js/wf-debug.js](js/wf-debug.js)):
+
+- **`🔬 Deep Dive`** — now **auto-enables the moment dev mode unlocks** ([js/app.js:1813](js/app.js)). The toggle stays so the Settings → Diagnostics and help.html mirrors continue to work, but you no longer have to flip it on manually before every test run. Dev users were always opting in anyway.
+- **`🐝 Classify Tiers`** (new) — runs the tier classifier across every keyed provider sequentially. Each provider's raw API response + parsed result lands in the browser console; toast summarizes how many succeeded.
+- **`📦 Bundle for Scout`** (new) — downloads one JSON file containing the Deep Dive ring buffer + cached tier classifications + current project checkpoint (LS_PROJECT / LS_HIVE / LS_SESSION) + version metadata. Replaces the prior Save DeepDive + Save Checkpoint two-step. Filename: `{project}-r{rounds}-{stamp}-ScoutBundle.json`.
+- **`🗑 Clear Buffer`** (new) — wipes the Deep Dive ring buffer between projects. Tier classifications are preserved (they're per-provider, not per-project, so re-classifying every project would burn API credits for no signal change).
+
+**Retired** ([index.html:1844](index.html), [js/wf-debug.js](js/wf-debug.js)):
+
+- `📋 View Captures` button + the entire Deep Dive Viewer modal (table render, status line, seed-sample / copy / save-DeepDive / save-Checkpoint / clear / refresh actions)
+- The Deep Dive Viewer's helper methods: `openViewer`, `closeViewer`, `_renderViewer`, `testViewer`, `copyViewer`, `saveViewer`, `clearViewer`
+- All replaced by `📦 Bundle for Scout` — one click, one file, no in-app viewer to navigate.
+
+The dev-toolbar redesign is honest about the workflow David actually runs: capture → bundle → send to Scout for analysis → clear → repeat. The viewer machinery existed for users who'd analyze captures in place; that's not a real workflow. Removing it cuts ~150 lines of UI code that nobody used.
+
+**Step 1 of a planned multi-step arc**:
+- Step 1 (this release) — dynamic classifier + simplified dev-mode bundle export. Validates the prompt and parser against real provider lineups before any user-facing wiring.
+- Step 2 (planned) — Perplexity verification pass. After all providers self-classify, ship the bundle to Perplexity with a web-search verification prompt that confirms / revises / flags-as-unknown each pick against current provider pricing pages.
+- Step 3 (planned) — Hive Profiles storage layer + resolver + seeded starter profiles (Cheap / Balanced / Heavy thinkers / Speed-first) + custom user-saved profiles.
+- Step 4 (planned) — Hive Profile dropdown UI above the bee grid + dedicated hive-profiles.html docs page.
+
+---
+
 ## v3.63.138
 
 **Templates page Phase 1 follow-ups (3) + majority-convergence length-floor gate + Mistral 429 proactive warning**

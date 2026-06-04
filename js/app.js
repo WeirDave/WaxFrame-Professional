@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-011
+// Build: 20260604-012
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-011';         // build stamp — update each session
+const BUILD       = '20260604-012';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1811,6 +1811,17 @@ async function submitDevPassword() {
     attachDevToolbarDrag();
     const navDevSection = document.getElementById('navDevSection');
     if (navDevSection) navDevSection.classList.add('active');
+    // v3.63.139 — Auto-enable Deep Dive on dev-mode unlock. The toggle
+    // exists for non-dev users who opt in via Settings/help.html (privacy
+    // matters there since Deep Dive captures full prompts/responses
+    // including document content). But once dev mode is unlocked, the
+    // user is already opting into the developer surface — manually
+    // toggling Deep Dive on before every test run was pure friction.
+    // Skipped when Deep Dive is already on (e.g. unlocking after a
+    // previous session left it enabled via the Settings mirror).
+    if (typeof WF_DEBUG !== 'undefined' && !WF_DEBUG.deepDiveOn) {
+      WF_DEBUG.setDeepDive(true);
+    }
     toast('🛠 Dev mode enabled');
   } else {
     hideDevModal();
@@ -6537,6 +6548,243 @@ async function _rearmLengthGuard() {
 // when override is true.
 async function rearmLengthGuard() {
   return toggleLengthGuard();
+}
+
+// ============================================================
+// v3.63.139 — Hive Profiles: dynamic tier classifier
+// ------------------------------------------------------------
+// Each keyed provider's own AI classifies its current model lineup into
+// CHEAP / BALANCED / THINKER / FAST slots. Hive Profiles ("Cheap",
+// "Heavy thinkers", "Balanced", "Speed-first") resolve their per-provider
+// model picks by reading these classifications, so the presets stay
+// accurate as providers ship new models without needing a code change.
+//
+// Design choices behind this version (the prior FASTEST/BUDGET prompt
+// shipped in v3.32.10 and was rolled back — see the comment block above
+// MODEL_RECOMMENDATION_PROMPT_REVIEWER for the post-mortem):
+//
+//   • Classify-this-list, not recall-from-memory. Same shape as the
+//     existing recommender — numbered model list, pick by NUMBER. The
+//     AI cannot hallucinate a model id; the worst it can do is pick a
+//     wrong-tier model from the real list.
+//   • NONE is explicitly framed as expected and correct in named common
+//     cases (single-model lineups, no reasoning variant, etc.) so the
+//     AI doesn't fudge a fill-in answer that would burn user credits.
+//   • Anchored on user cost. The prompt names "wasting the user's API
+//     credits" as the reason a wrong answer matters — gives the AI a
+//     reason to honor NONE instead of guessing.
+//   • Per-provider cache (waxframe_tiers_<provider>). Mirrors the
+//     existing recommender cache shape; classifications survive reload
+//     and are refreshable on user demand.
+//   • Verification layer (step 2 — Perplexity cross-check) lands next.
+// ============================================================
+const MODEL_TIER_CLASSIFICATION_PROMPT =
+`You are classifying YOUR OWN currently-available models so that a multi-AI document-refinement tool can build pre-set hive profiles ("Cheap", "Balanced", "Heavy thinkers", "Speed-first") that pick the right tier from each provider's lineup automatically.
+
+Models on this endpoint (numbered):
+{MODEL_LIST}
+
+Classify ONE model from THIS list for each of these four tier slots. You are NOT being asked which is best absolutely — only which BEST FITS each tier RELATIVE to the others in the list above.
+
+  CHEAP    — lowest input + output token price among your lineup. If you
+             don't know exact prices, pick the model whose name conventions
+             (mini, haiku, flash, lite, nano, small, instant, light) signal
+             it's positioned as your low-cost tier. If your lineup has no
+             explicit budget tier, identify the RELATIVELY cheapest in
+             your list anyway — every lineup has a "cheapest."
+
+  BALANCED — best capability-per-dollar workhorse. Your "default" model
+             when cost and quality matter equally. Often your flagship's
+             prior generation or a "pro" tier without reasoning.
+
+  THINKER  — deepest reasoning capability, regardless of cost. Models
+             named with reasoning, thinking, pro-preview, opus,
+             deep-research, or with explicit chain-of-thought capability.
+             If none in your lineup qualify, reply NONE for this slot.
+
+  FAST     — lowest latency on standard chat workloads. Often the same
+             model as CHEAP, but not always — some lineups have a fast
+             flagship-light variant distinct from the cheapest tier.
+
+NONE rules — read carefully. NONE is EXPECTED and CORRECT in these cases:
+
+  • You have only one or two models total. Reuse the same number across
+    slots that apply, and reply NONE for slots that don't (a one-model
+    lineup → three NONEs is normal).
+  • Your lineup has no reasoning/thinking variant → THINKER = NONE. Most
+    providers without an "opus" / "pro-preview" / "reasoning" / "deep-
+    research" tier should pick NONE here.
+  • A genuinely missing concept is NONE, NOT a fudged fill-in. A wrong
+    tier answer here cascades into a hive profile that wastes the
+    user's API credits — picking a wrong-tier model just to fill a
+    slot is worse than NONE.
+
+If the same model genuinely fits multiple slots, reuse its number. Do not invent ids. Pick by NUMBER from the list above.
+
+Respond in EXACTLY this format with NO preamble, NO markdown, NO extra lines:
+
+CHEAP: <the number from the list, or NONE>
+BALANCED: <the number from the list, or NONE>
+THINKER: <the number from the list, or NONE>
+FAST: <the number from the list, or NONE>
+WHY: <one sentence justifying any non-obvious pick, max 200 chars>`;
+
+// Per-provider tier cache. Same key shape as the existing recommender cache
+// so the storage layer's serialization path is unchanged.
+function setCachedTiers(provider, tiers, why) {
+  if (!provider || !tiers) return;
+  try {
+    const payload = { ts: Date.now(), tiers, why: why || '' };
+    localStorage.setItem(`waxframe_tiers_${provider}`, JSON.stringify(payload));
+  } catch(e) { console.warn(`[tiers-cache:${provider}] write failed:`, e); }
+}
+function getCachedTiers(provider) {
+  if (!provider) return null;
+  try {
+    const raw = localStorage.getItem(`waxframe_tiers_${provider}`);
+    if (!raw) return null;
+    const obj = JSON.parse(raw);
+    return obj && obj.tiers ? obj : null;
+  } catch (e) { return null; }
+}
+
+// Parse the four-slot tier response. Tolerant of leading whitespace and
+// markdown bullets (same forgiveness the recommender parser added in
+// v3.58.1 for reasoning-model CoT preambles). Each slot resolves to a
+// model id from `models` (by NUMBER) or null (NONE / unparseable).
+function _parseTierResponse(text, models) {
+  if (!text) return null;
+  const out = { cheap: null, balanced: null, thinker: null, fast: null, why: '' };
+  const slots = ['cheap', 'balanced', 'thinker', 'fast'];
+  for (const slot of slots) {
+    const re = new RegExp(`^[ \\t>*#\`.\\-]*${slot}:\\s*([^\\n\\r]+)`, 'gim');
+    const matches = [...text.matchAll(re)];
+    if (!matches.length) continue;
+    const raw = matches[matches.length - 1][1].trim().replace(/^[`'"*]|[`'"*]$/g, '');
+    if (/^NONE$/i.test(raw)) { out[slot] = null; continue; }
+    const numMatch = raw.match(/^#?(\d{1,4})(?:[\s.):\]]|$)/);
+    if (numMatch) {
+      const idx = parseInt(numMatch[1], 10) - 1;
+      if (idx >= 0 && idx < models.length) out[slot] = models[idx];
+    } else if (models.includes(raw)) {
+      out[slot] = raw;
+    }
+  }
+  const whyMatches = [...text.matchAll(/^[ \t>*#`.\-]*why:\s*([^\n\r]+)/gim)];
+  if (whyMatches.length) out.why = whyMatches[whyMatches.length - 1][1].trim();
+  return out;
+}
+
+// Core tier-classification call for one provider. Returns
+// { cheap, balanced, thinker, fast, why, cached } or null on failure.
+async function classifyTiersForProvider(provider, opts) {
+  opts = opts || {};
+  const forceRefresh = !!opts.force;
+  if (!forceRefresh) {
+    const cached = getCachedTiers(provider);
+    if (cached) return { ...cached.tiers, why: cached.why, cached: true };
+  }
+
+  // Pick an asking model + a model list using the same per-provider plumbing
+  // recommendForDefault uses. Reuse rather than reimplement so a Hive Profile
+  // refresh and a Recommend Models click are guaranteed to see the same model
+  // catalog for the same provider.
+  const cfg = API_CONFIGS[provider];
+  if (!cfg || !cfg._key) return null;
+  const isDefault = !!DEFAULT_AIS.find(d => d.provider === provider);
+  let models = [];
+  try {
+    if (isDefault) {
+      const cached = localStorage.getItem(`waxframe_models_${provider}`);
+      if (cached) {
+        const obj = JSON.parse(cached);
+        if (obj && Array.isArray(obj.models)) models = obj.models;
+      }
+    }
+    if (!models.length) {
+      const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
+      models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+    }
+  } catch (e) {
+    console.warn(`[tiers:${provider}] model-fetch failed:`, e);
+    return null;
+  }
+  if (!models.length) return null;
+
+  // Filter using the existing Reviewer-role filter — tier picks must be
+  // usable in the hive in SOME role (Builder filter is stricter and is
+  // applied at Profile-resolve time, not here).
+  const filtered = filterModelsForRole(models, 'reviewer');
+  if (!filtered.length) return null;
+
+  // Asking model: prefer the user's currently-selected model when it's in
+  // the filtered list. Falls back to first available. Same logic as the
+  // recommender's askingModel selection (see recommendForDefault).
+  const askingModel = (cfg.model && filtered.includes(cfg.model)) ? cfg.model : filtered[0];
+  const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
+  const prompt = MODEL_TIER_CLASSIFICATION_PROMPT.replace(
+    '{MODEL_LIST}',
+    filtered.map((m, i) => `${i + 1}. ${m}`).join('\n')
+  );
+
+  let url, headers, body;
+  try {
+    if (format === 'anthropic') {
+      url = cfg.endpoint;
+      headers = { 'Content-Type': 'application/json', 'x-api-key': cfg._key, 'anthropic-version': '2023-06-01' };
+      body = JSON.stringify({ model: askingModel, max_tokens: 400, messages: [{ role: 'user', content: prompt }] });
+    } else if (format === 'google') {
+      url = `https://generativelanguage.googleapis.com/v1beta/models/${askingModel}:generateContent`;
+      headers = { 'Content-Type': 'application/json', 'x-goog-api-key': cfg._key };
+      body = JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] });
+    } else {
+      url = cfg.endpoint;
+      headers = { 'Content-Type': 'application/json' };
+      if (cfg._key) headers['Authorization'] = `Bearer ${cfg._key}`;
+      body = JSON.stringify({ model: askingModel, messages: [{ role: 'user', content: prompt }] });
+    }
+    const resp = await fetch(url, { method: 'POST', headers, body });
+    if (!resp.ok) {
+      console.warn(`[tiers:${provider}] HTTP ${resp.status} from classifier`, await resp.text().catch(() => ''));
+      return null;
+    }
+    const data = await resp.json();
+    let text = '';
+    if (format === 'anthropic')   text = data?.content?.[0]?.text || '';
+    else if (format === 'google') text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    else                          text = data?.choices?.[0]?.message?.content || '';
+    const parsed = _parseTierResponse(text, filtered);
+    if (!parsed) {
+      console.warn(`[tiers:${provider}] could not parse response:`, text);
+      return null;
+    }
+    setCachedTiers(provider, {
+      cheap:    parsed.cheap,
+      balanced: parsed.balanced,
+      thinker:  parsed.thinker,
+      fast:     parsed.fast
+    }, parsed.why);
+    console.info(`[tiers:${provider}] classified —`, parsed);
+    return { ...parsed, cached: false };
+  } catch (e) {
+    console.warn(`[tiers:${provider}] classifier call failed:`, e);
+    return null;
+  }
+}
+
+// Convenience runner — classify every keyed default provider in parallel.
+// Returns a map { provider -> tier result }. Useful for the rollout pass and
+// the "refresh all tiers" UI button (lands in step 4 of the Hive Profiles
+// build, when the dropdown ships).
+async function classifyTiersForAllKeyed(opts) {
+  opts = opts || {};
+  const providers = DEFAULT_AIS
+    .map(a => a.provider)
+    .filter(p => API_CONFIGS[p] && API_CONFIGS[p]._key);
+  const entries = await Promise.all(
+    providers.map(p => classifyTiersForProvider(p, opts).then(r => [p, r]).catch(() => [p, null]))
+  );
+  return Object.fromEntries(entries);
 }
 
 function setCachedRecommendation(cacheId, model, why, labels, none) {
