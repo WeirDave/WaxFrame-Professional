@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260604-010
+     Build: 20260604-011
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-010">
+  <meta name="waxframe-build" content="20260604-011">
   <title>Document Templates Catalog — WaxFrame</title>
   <meta name="description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.137">
+  <link rel="stylesheet" href="style.css?v=3.63.138">
 </head>
 <body class="helper-body">
 
@@ -155,6 +155,21 @@
 
     <div class="doc-main">
 
+      <!-- v3.63.138 — Catalog search/filter bar. Filters cards in-place
+           against name + description + category + document type. Sections
+           with zero matching cards collapse out of view. -->
+      <div class="tpl-search-bar" role="search">
+        <input type="search"
+               class="tpl-search-input"
+               id="tplSearchInput"
+               placeholder="🔎 Filter templates by name, description, or category…"
+               autocomplete="off"
+               spellcheck="false"
+               aria-label="Filter templates">
+        <button class="tpl-search-clear" id="tplSearchClear" type="button" hidden aria-label="Clear filter">✕</button>
+        <span class="tpl-search-count" id="tplSearchCount" aria-live="polite"></span>
+      </div>
+
       <!-- BUILT-IN CATALOG (rendered by JS into the body) -->
       <div id="tplBuiltInBody"></div>
 
@@ -269,12 +284,14 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.137"></script>
-<script src="js/nav-helper.js?v=3.63.137"></script>
-<script src="js/license-helper.js?v=3.63.137"></script>
-<script src="js/version.js?v=3.63.137"></script>
-<script src="js/templates.js?v=3.63.137"></script>
-<script src="js/docs-scrollspy.js?v=3.63.137"></script>
+<script src="js/theme.js?v=3.63.138"></script>
+<script src="js/nav-helper.js?v=3.63.138"></script>
+<script src="js/license-helper.js?v=3.63.138"></script>
+<script src="js/version.js?v=3.63.138"></script>
+<script src="js/templates.js?v=3.63.138"></script>
+<script src="js/docs-scrollspy.js?v=3.63.138"></script>
+<!-- v3.63.138 — JSZip powers the bulk Export All customs button -->
+<script src="lib/jszip.min.js?v=3.63.138"></script>
 
 <script>
 // ============================================================
@@ -370,6 +387,32 @@ function renderTemplateCard(t) {
 
   const pathsRow = `<div class="tpl-card-paths">${paths.map(pathPill).join('')}</div>`;
 
+  // v3.63.138 — Per-card "View full details" expander. Shows the goal
+  // fields (audience / outcome / scope / tone / constraints) that drive
+  // how the hive treats this template — visible without bouncing into
+  // the app. Falls back gracefully when a field is empty.
+  const detailRows = [
+    ['Audience',    primaryContent.goalAudience],
+    ['Outcome',     primaryContent.goalOutcome],
+    ['Scope',       primaryContent.goalScope],
+    ['Tone',        primaryContent.goalTone],
+    ['Constraints', primaryContent.goalNotes]
+  ].filter(([, v]) => typeof v === 'string' && v.trim().length);
+
+  const detailsBlock = detailRows.length ? `
+    <details class="tpl-details">
+      <summary class="tpl-details-summary">View full details</summary>
+      <div class="tpl-details-body">
+        ${detailRows.map(([label, val]) => `
+          <div class="tpl-details-row">
+            <span class="tpl-details-label">${escapeHtml(label)}</span>
+            <span class="tpl-details-val">${escapeHtml(val)}</span>
+          </div>
+        `).join('')}
+      </div>
+    </details>
+  ` : '';
+
   // v3.63.123 — Cross-link to dedicated use-case landing page for the three SEO targets.
   // v3.63.127 — Reframed as "deep dive" — these landing pages are the WHY
   // (screening reality, why a hive beats one AI, the origin story, what gets
@@ -384,8 +427,18 @@ function renderTemplateCard(t) {
     ? `<a class="tpl-card-landing-link" href="${landing.href}" target="_blank" rel="noopener noreferrer">${landing.label}</a>`
     : '';
 
+  // v3.63.138 — Filter haystack baked into a data attribute so the search
+  // bar's matcher doesn't have to re-walk DOM text per keystroke. Includes
+  // every visible-text field plus category so the catalog is searchable
+  // by any of the things a visitor might type.
+  const haystack = [
+    t.name, t.category, description, docType,
+    primaryContent.goalAudience, primaryContent.goalOutcome,
+    primaryContent.goalScope, primaryContent.goalTone, primaryContent.goalNotes
+  ].filter(Boolean).join(' ').toLowerCase();
+
   return `
-    <article class="tpl-card" id="tpl-${escapeHtml(t.id || '')}">
+    <article class="tpl-card" id="tpl-${escapeHtml(t.id || '')}" data-tpl-search="${escapeHtml(haystack)}">
       <header class="tpl-card-header">
         <span class="tpl-card-icon" aria-hidden="true">${escapeHtml(t.icon || '📄')}</span>
         <div class="tpl-card-title-wrap">
@@ -395,6 +448,7 @@ function renderTemplateCard(t) {
       </header>
       <p class="tpl-card-desc">${escapeHtml(description)}</p>
       ${factsRow}
+      ${detailsBlock}
       ${landingLink}
       ${scaffoldBlock}
     </article>
@@ -465,6 +519,9 @@ function renderCustom() {
         <div class="hp-section-title-block">
           <h2 class="hp-section-title" id="cat-custom">Your Saved Templates <span class="tpl-cat-count">${list.length} template${list.length === 1 ? '' : 's'}</span></h2>
           <p class="hp-section-sub">Templates you've saved from your own finished WaxFrame projects, stored in this browser. Manage these inside the WaxFrame app from the Project setup screen.</p>
+          <div class="tpl-custom-actions">
+            <button class="tpl-export-all-btn" id="tplExportAllBtn" type="button" title="Download every saved template as a single .zip">⬇ Export all as .zip</button>
+          </div>
         </div>
       </div>
       <div class="hp-section-body">
@@ -484,12 +541,150 @@ function renderCustom() {
   const sbLink = document.getElementById('sbCustomLink');
   if (sbCat)  sbCat.style.display  = '';
   if (sbLink) sbLink.style.display = '';
+
+  const btn = document.getElementById('tplExportAllBtn');
+  if (btn) btn.addEventListener('click', exportAllCustomsAsZip);
+}
+
+// ============================================================
+//  v3.63.138 — Catalog search/filter.
+//  Operates on the rendered cards via the data-tpl-search attribute
+//  the card renderer bakes in. Each keystroke walks the cards once,
+//  toggles a `is-hidden` class, then collapses any category section
+//  whose cards are all hidden. O(n) on cards which is fine here —
+//  the full catalog is under 60 templates.
+// ============================================================
+function applyTemplateFilter() {
+  const input = document.getElementById('tplSearchInput');
+  const clear = document.getElementById('tplSearchClear');
+  const count = document.getElementById('tplSearchCount');
+  if (!input || !clear || !count) return;
+
+  const raw = input.value.trim();
+  const needle = raw.toLowerCase();
+  const cards = document.querySelectorAll('.tpl-card[data-tpl-search]');
+
+  let total = 0, shown = 0;
+  cards.forEach(card => {
+    total++;
+    const hay = card.getAttribute('data-tpl-search') || '';
+    const match = needle === '' || hay.indexOf(needle) !== -1;
+    card.classList.toggle('is-hidden', !match);
+    if (match) shown++;
+  });
+
+  // Collapse category sections that no longer have any visible cards
+  // so the page doesn't show empty "X templates" headers.
+  document.querySelectorAll('.tpl-grid').forEach(grid => {
+    const section = grid.closest('.hp-section');
+    if (!section) return;
+    const anyVisible = grid.querySelector('.tpl-card:not(.is-hidden)');
+    section.classList.toggle('is-empty-by-filter', !anyVisible);
+  });
+
+  clear.hidden = raw === '';
+  count.textContent = raw === ''
+    ? ''
+    : `${shown} of ${total} match${shown === 1 ? '' : 'es'}`;
+}
+
+function clearTemplateFilter() {
+  const input = document.getElementById('tplSearchInput');
+  if (!input) return;
+  input.value = '';
+  applyTemplateFilter();
+  input.focus();
+}
+
+function wireUpSearch() {
+  const input = document.getElementById('tplSearchInput');
+  const clear = document.getElementById('tplSearchClear');
+  if (input) input.addEventListener('input', applyTemplateFilter);
+  if (clear) clear.addEventListener('click', clearTemplateFilter);
+}
+
+// ============================================================
+//  v3.63.138 — Bulk Export All custom templates as a .zip.
+//  Each template gets wrapped in the same envelope shape the
+//  in-app exportCustomTemplate() produces, so a downloaded
+//  archive's files are drop-in importable via the in-app
+//  Import action. Filename convention mirrors the per-template
+//  exporter ({slug}-{YYYYMMDD-HHmm}-template.json) so users
+//  can pluck single files back out and recognize what they are.
+// ============================================================
+function _wfTemplateStampLocal() {
+  const d = new Date(), pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
+}
+function _wfSlugLocal(s) {
+  return String(s || '').replace(/[^a-z0-9]+/gi, '-').replace(/^-+|-+$/g, '');
+}
+
+async function exportAllCustomsAsZip() {
+  const btn = document.getElementById('tplExportAllBtn');
+  if (typeof JSZip === 'undefined') {
+    alert('Export library failed to load. Refresh the page and try again.');
+    return;
+  }
+  const customs = loadCustomTemplates();
+  if (!customs.length) {
+    alert('You have no saved custom templates to export yet.');
+    return;
+  }
+
+  const originalLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ Bundling…'; }
+
+  try {
+    const zip = new JSZip();
+    const stamp = _wfTemplateStampLocal();
+    const appVer = (typeof APP_VERSION === 'string') ? APP_VERSION : '';
+    const usedNames = new Set();
+
+    customs.forEach((tpl, idx) => {
+      const envelope = {
+        _waxframe_template:         true,
+        _waxframe_template_version: 1,
+        _waxframe_app_version:      appVer,
+        exportedTs:                 Date.now(),
+        template:                   tpl
+      };
+      const base = (tpl.srcName ? _wfSlugLocal(tpl.srcName) + (tpl.srcVersion ? '-' + _wfSlugLocal(tpl.srcVersion) : '') : _wfSlugLocal(tpl.name)) || `template-${idx + 1}`;
+      let name = `${base}-${stamp}-template.json`;
+      // De-dupe within the archive — two customs sharing a slug would
+      // otherwise overwrite each other inside the zip.
+      let suffix = 2;
+      while (usedNames.has(name)) {
+        name = `${base}-${stamp}-${suffix}-template.json`;
+        suffix++;
+      }
+      usedNames.add(name);
+      zip.file(name, JSON.stringify(envelope, null, 2));
+    });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `waxframe-custom-templates-${stamp}.zip`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      try { document.body.removeChild(a); } catch (e) {}
+      URL.revokeObjectURL(url);
+    }, 1000);
+  } catch (e) {
+    alert('Export failed: ' + (e && e.message ? e.message : 'unknown error'));
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = originalLabel || '⬇ Export all as .zip'; }
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.app-version-stamp').forEach(el => { el.textContent = APP_VERSION; });
   renderBuiltIn();
   renderCustom();
+  wireUpSearch();
   injectJsonLd();
 });
 

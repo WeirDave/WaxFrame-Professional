@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-010
+// Build: 20260604-011
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-010';         // build stamp — update each session
+const BUILD       = '20260604-011';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -14450,6 +14450,29 @@ async function runRound() {
   if (failedCount > 0 && !_convergenceReliable) {
     consoleLog(`⚠️ Convergence check skipped this round — more AIs failed (${failedCount}) than responded (${successfulReviews.length}). Running a normal Builder round instead.`, 'warn');
   }
+  // v3.63.138 — Length-floor majority-convergence gate. When the user has a
+  // length constraint (range or target mode) and the document is out of range,
+  // defer MAJORITY convergence so the holdouts get one more round to push the
+  // doc into range. The holdouts in this scenario almost always include AIs
+  // proposing length-related edits — declaring convergence on top of them
+  // silences their signal. Unanimous convergence is unchanged (no holdouts =
+  // no signal left to leverage; the at-convergence prompt still asks the
+  // user). The length-guard override flag opts out entirely, matching the
+  // prompt's existing semantics. Surfaced by David's TripAdvisor R3 run:
+  // 478 words against a 500-word floor; 4 of 10 holdouts (ChatGPT, DeepSeek,
+  // Claude, Jamba) all pushing length-related expansion that would have
+  // crossed the threshold.
+  let _majorityLengthOk = true;
+  if (hasMajorityConvergence && holdouts.length > 0 && !window._lengthGuardOverride) {
+    const _convCstat = getLengthStatus(docText);
+    if (_convCstat && _convCstat.status !== 'ok') {
+      _majorityLengthOk = false;
+      const _side = _convCstat.status === 'over' ? 'over the limit' : 'under the floor';
+      const _bound = _convCstat.status === 'over' ? _convCstat.limitNum : _convCstat.floorNum;
+      consoleLog(`📏 Majority convergence deferred — document ${_side} (${_convCstat.actual} vs ${_bound} ${_convCstat.unitName}). The ${holdouts.length} holdout${holdouts.length === 1 ? "'s" : "s'"} length-related suggestions get another round to land.`, 'warn');
+      toast(`📏 Convergence deferred — ${_convCstat.actual} of ${_bound} ${_convCstat.unitName} ${_convCstat.status === 'over' ? 'limit' : 'floor'} (continuing)`, 5000);
+    }
+  }
   if (noChangesCount > 0 && noChangesCount === successfulReviews.length && _convergenceReliable) {
     consoleLog(`🏁 All AIs agree — no further changes needed.`, 'success');
     toast(`🏁 All ${noChangesCount} AIs agree the document is done!`, 5000);
@@ -14603,7 +14626,11 @@ async function runRound() {
   }
 
   // ── MAJORITY CONVERGENCE: skip Builder, show holdouts for user review ──
-  if (hasMajorityConvergence && _convergenceReliable && holdouts.length > 0) {
+  // v3.63.138 — Additional gate: _majorityLengthOk (computed above) must be
+  // true. When the document is out of length range and we have holdouts,
+  // their length-related suggestions get another round to land instead of
+  // being silenced by a convergence celebration.
+  if (hasMajorityConvergence && _convergenceReliable && holdouts.length > 0 && _majorityLengthOk) {
     consoleLog(`🏁 Majority convergence — ${noChangesCount} of ${successfulReviews.length} AIs satisfied. Skipping Builder.`, 'success');
     toast(`🏁 ${noChangesCount} of ${successfulReviews.length} AIs are done — review the holdout suggestions below`, 5000);
 
@@ -15220,6 +15247,68 @@ async function runRound() {
 // hang in seconds instead of minutes. Both values are tunable.
 const REVIEWER_TIMEOUT_MS = 360000; // 6 min  — reviewers / unknown (obs max 235s)
 const BUILDER_TIMEOUT_MS  = 900000; // 15 min — Builder writes (obs max 540s)
+
+// v3.63.138 — Mistral proactive rate-limit warning. Reads the standard
+// x-ratelimit-remaining-* headers (plus the older ratelimitbysize-* variants
+// Mistral has historically returned) and surfaces a console warn + bee-card
+// chip when the smallest remaining count drops below the threshold. Trigger
+// is a SOFT warning — the request that just returned succeeded; we're
+// warning that the NEXT request may not.
+const MISTRAL_RATE_LIMIT_WARN_THRESHOLD = 3; // rps remaining below this → warn
+const _MISTRAL_RATE_WARN_LAST = {};          // ai.id → ts; throttles repeat warns
+function _maybeWarnMistralRateLimit(ai, response) {
+  let remaining = Infinity;
+  let scope = '';
+  try {
+    // Mistral commonly returns:
+    //   x-ratelimit-remaining-requests / -tokens
+    //   x-ratelimitbysize-remaining-* (older naming)
+    // Iterate all headers and find the smallest "remaining" numeric value so
+    // we don't have to track every key Mistral may rename in the future.
+    response.headers.forEach((value, key) => {
+      const k = String(key).toLowerCase();
+      if (k.indexOf('remaining') === -1) return;
+      // Skip token-budget remaining headers — they're typically in the
+      // thousands and would never trip the request-rate threshold; the
+      // request-count headers are what predict a 429.
+      if (k.indexOf('token') !== -1) return;
+      const n = parseInt(value, 10);
+      if (Number.isFinite(n) && n < remaining) {
+        remaining = n;
+        scope = k;
+      }
+    });
+  } catch (e) { return; }
+  if (!Number.isFinite(remaining) || remaining >= MISTRAL_RATE_LIMIT_WARN_THRESHOLD) return;
+
+  // Throttle: at most one console warn per AI per 20s so a hive with many
+  // Mistral models doesn't carpet-bomb the console mid-round.
+  const now = Date.now();
+  const last = _MISTRAL_RATE_WARN_LAST[ai.id] || 0;
+  if (now - last < 20000) return;
+  _MISTRAL_RATE_WARN_LAST[ai.id] = now;
+
+  consoleLog(`⏳ ${ai.name} — Rate-limit headroom low (${remaining} request${remaining === 1 ? '' : 's'} left this window per ${scope}). The next call may hit a 429 — wait a moment before re-running, or reduce hive size.`, 'warn');
+
+  // Briefly tag the bee card so the user spots it without scanning the
+  // console. The tag is informational only — it does NOT change card state,
+  // so an in-flight 'sending' or 'done' state continues to render normally.
+  const card = document.getElementById('bcard-' + ai.id);
+  if (card) {
+    card.setAttribute('data-rate-warn', `~${remaining} req left`);
+    card.classList.add('is-rate-warn');
+    setTimeout(() => {
+      // Only clear if the same warning is still showing — a subsequent
+      // healthy response will overwrite the attribute, and we don't want
+      // to stomp a newer signal.
+      if (card.getAttribute('data-rate-warn') === `~${remaining} req left`) {
+        card.classList.remove('is-rate-warn');
+        card.removeAttribute('data-rate-warn');
+      }
+    }, 12000);
+  }
+}
+
 async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
   const cfg = API_CONFIGS[ai.provider];
   if (!cfg || !cfg._key) throw new Error('No API key');
@@ -15282,6 +15371,18 @@ async function callAPI(ai, prompt, notesContext = '', role = 'unknown') {
     throw new Error('NETWORK_FAILED: ' + fetchErr.message);
   } finally {
     clearTimeout(_timeoutId);
+  }
+
+  // v3.63.138 — Mistral proactive rate-limit warning. Surface a soft warning
+  // BEFORE a 429 hits by reading X-RateLimit-Remaining-Requests (and the
+  // older ratelimitbysize-* variants Mistral has used in the past). Logs to
+  // the console and tags the bee card briefly when remaining drops below the
+  // warn threshold; the chip clears on the next successful response that
+  // shows headroom. Free-tier Mistral on the v0 endpoint runs into the
+  // 1-rps / 6-rpm limit easily with parallel fan-out — this gives the user
+  // notice instead of a hard 429 error card mid-round.
+  if (ai.provider === 'mistral' && response.headers) {
+    _maybeWarnMistralRateLimit(ai, response);
   }
 
   if (!response.ok) {

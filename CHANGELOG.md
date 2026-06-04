@@ -2,6 +2,28 @@
 
 ---
 
+## v3.63.138
+
+**Templates page Phase 1 follow-ups (3) + majority-convergence length-floor gate + Mistral 429 proactive warning**
+
+Build: `20260604-011`<br>
+Released: `2026-06-04`
+
+Four backlog quick wins shipped together.
+
+**Templates page — three Phase 1 follow-ups land** ([templates.html](templates.html), [style.css](style.css)):
+- **Search/filter bar** sticky-pinned above the catalog. Filters cards by name, description, category, document type, and the goal fields in real time; sections with zero matches collapse so the page never shows empty category headers under an active filter. "N of M matches" counter + a one-click clear.
+- **Per-card View Details expander** on every card surfaces the goal fields the hive actually uses — Audience, Outcome, Scope, Tone, Constraints — in a clean labeled body. The previous "See the reference scaffold" expander stays untouched below it, so visitors can read the full template definition without leaving the page.
+- **Bulk Export All customs as `.zip`** on My Templates. Each file inside the archive uses the same envelope shape `exportCustomTemplate()` produces, so a downloaded zip is drop-in re-importable per file. Filename mirrors the per-template exporter (`{slug}-{YYYYMMDD-HHmm}-template.json`); the archive itself is `waxframe-custom-templates-{YYYYMMDD-HHmm}.zip`. Powered by the existing `lib/jszip.min.js` (no new dependency).
+
+**Majority-convergence length-floor gate** ([js/app.js:14449](js/app.js)):
+When the user has a length constraint set (range or target mode) and the document is out of range, MAJORITY convergence is now deferred so the holdouts get another round to land. The holdouts in this scenario almost always include AIs proposing length-related edits — declaring convergence on top of them silenced their signal in prior versions. Unanimous convergence is unchanged (no holdouts left to leverage; the at-convergence prompt still asks the user). The Length Guard override flag opts out entirely. Surfaced by David's TripAdvisor R3 run (2026-06-04): 478 words against a 500-word floor; 4 of 10 holdouts (ChatGPT, DeepSeek, Claude, Jamba) all proposing length-related expansion that would have crossed the threshold. The deferral logs `📏 Majority convergence deferred…` to the live console and surfaces a toast so the user sees why the round continued instead of celebrating.
+
+**Mistral 429 proactive warning** ([js/app.js:15249](js/app.js)):
+Surfaces a soft warning BEFORE a 429 hits. After each Mistral response, the smallest `x-ratelimit-remaining-*` requests-counter header is checked; when it drops below 3, a console warn fires (`⏳ Mistral — Rate-limit headroom low (N requests left this window…)`) and the bee card briefly shows a yellow `~N req left` chip in the top-right corner. Throttled to once per AI per 20s so a hive with multiple Mistral models doesn't carpet the console mid-round. Auto-clears ~12s after it lands. Helpful on free-tier Mistral with parallel hive fan-out, where the 1-rps / 6-rpm limit otherwise produces a hard 429 with no advance signal.
+
+---
+
 ## v3.63.137
 
 **Best Buy product review template — closes the per-platform variant arc**
