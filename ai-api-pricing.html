@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260603-010
+     Build: 20260603-011
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-010">
+  <meta name="waxframe-build" content="20260603-011">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.117">
+  <link rel="stylesheet" href="style.css?v=3.63.118">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -397,12 +397,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.117"></script>
-<script src="lib/docx.min.js?v=3.63.117"></script>
-<script src="js/docx-export.js?v=3.63.117"></script>
-<script src="js/nav-helper.js?v=3.63.117"></script>
-<script src="js/license-helper.js?v=3.63.117"></script>
-<script src="js/version.js?v=3.63.117"></script>
+<script src="js/theme.js?v=3.63.118"></script>
+<script src="lib/docx.min.js?v=3.63.118"></script>
+<script src="js/docx-export.js?v=3.63.118"></script>
+<script src="js/nav-helper.js?v=3.63.118"></script>
+<script src="js/license-helper.js?v=3.63.118"></script>
+<script src="js/version.js?v=3.63.118"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
@@ -510,14 +510,14 @@
       var est = '$' + Number(p.estPerRound).toFixed(3);
       if (p.estNote) est += '<span title="' + escapeHtml(p.estNote) + '">*</span>';
       return '<tr>' +
-        '<td><strong>' + escapeHtml(p.name) + '</strong></td>' +
-        '<td><code>' + escapeHtml(p.model) + '</code></td>' +
-        '<td>$' + Number(p.inputPerM).toFixed(2) + '</td>' +
-        '<td>$' + Number(p.outputPerM).toFixed(2) + '</td>' +
-        '<td>' + escapeHtml(p.contextWindow) + '</td>' +
-        '<td>' + escapeHtml(p.maxOutput) + '</td>' +
-        '<td>' + est + '</td>' +
-        '<td><a href="' + escapeHtml(p.billingUrl) + '" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>' +
+        '<td data-label="Provider"><strong>' + escapeHtml(p.name) + '</strong></td>' +
+        '<td data-label="Default model"><code>' + escapeHtml(p.model) + '</code></td>' +
+        '<td data-label="Input $/M">$' + Number(p.inputPerM).toFixed(2) + '</td>' +
+        '<td data-label="Output $/M">$' + Number(p.outputPerM).toFixed(2) + '</td>' +
+        '<td data-label="Context">' + escapeHtml(p.contextWindow) + '</td>' +
+        '<td data-label="Max output">' + escapeHtml(p.maxOutput) + '</td>' +
+        '<td data-label="Est. $/round">' + est + '</td>' +
+        '<td data-label="Billing"><a href="' + escapeHtml(p.billingUrl) + '" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>' +
       '</tr>';
     }).join('');
     tbody.innerHTML = html;
@@ -529,11 +529,11 @@
     if (!tbody || !currentData) return;
     var html = currentData.providers.map(function(p) {
       return '<tr>' +
-        '<td><strong>' + escapeHtml(p.name) + '</strong></td>' +
-        '<td>' + escapeHtml(p.tier1Rpm == null ? '—' : p.tier1Rpm) + '</td>' +
-        '<td>' + escapeHtml(p.tier1Tpm == null ? '—' : p.tier1Tpm) + '</td>' +
-        '<td>' + escapeHtml(p.freeTier == null ? '—' : p.freeTier) + '</td>' +
-        '<td>' + escapeHtml(p.rateLimitNotes == null ? '' : p.rateLimitNotes) + '</td>' +
+        '<td data-label="Provider"><strong>' + escapeHtml(p.name) + '</strong></td>' +
+        '<td data-label="Tier 1 RPM">' + escapeHtml(p.tier1Rpm == null ? '—' : p.tier1Rpm) + '</td>' +
+        '<td data-label="Tier 1 TPM">' + escapeHtml(p.tier1Tpm == null ? '—' : p.tier1Tpm) + '</td>' +
+        '<td data-label="Free tier">' + escapeHtml(p.freeTier == null ? '—' : p.freeTier) + '</td>' +
+        '<td data-label="Notes">' + escapeHtml(p.rateLimitNotes == null ? '' : p.rateLimitNotes) + '</td>' +
       '</tr>';
     }).join('');
     tbody.innerHTML = html;

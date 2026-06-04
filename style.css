@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260603-010
+   Build: 20260603-011
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10083,14 +10083,25 @@ kbd {
   .footer-about-btn {
     padding: var(--space-6) var(--space-8);
   }
+  /* v3.63.118 — on mobile, surface the page hero (H1 + intro + bee
+     mascot) ABOVE the in-page jump nav, instead of letting the source
+     order push the sidebar to the top of the scroll. Flex-column with
+     explicit order lets us put .doc-main first visually without
+     restructuring HTML (which would break the desktop two-column
+     grid). */
   .doc-layout {
-    display: block;
+    display: flex;
+    flex-direction: column;
+  }
+  .doc-main {
+    order: 1;
   }
   .doc-sidebar {
+    order: 2;
     position: static;
     max-height: none;
     overflow: visible;
-    margin: 0 0 var(--space-20);
+    margin: var(--space-16) 0 var(--space-20);
   }
   .doc-sidebar-inner {
     box-sizing: border-box;
@@ -10136,11 +10147,86 @@ kbd {
   }
   .wh-table,
   .tpl-docs-table,
-  .ai-table,
   .dp-table {
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* v3.63.118 — AI pricing tables (.ai-table on ai-api-pricing.html)
+     switch to card-view at mobile widths. Horizontal scroll on an
+     8-column table is unreadable on phones — readers can't tell the
+     scroll exists, can't compare across rows, lose context as soon
+     as they swipe right. Each row becomes a labeled-field card.
+     Requires data-label="..." on every <td> from the renderer.
+
+     Affects: the pricing table AND the rate-limits table on
+     ai-api-pricing.html. Sortable column headers (in <thead>) are
+     hidden on mobile since the visual is no longer a table; the
+     default lowest-cost-first sort stays in effect at first paint. */
+  .ai-table {
+    display: block;
+    width: 100%;
+    border: none;
+  }
+  .ai-table thead {
+    display: none;
+  }
+  .ai-table tbody,
+  .ai-table tr,
+  .ai-table td {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .ai-table tr {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-10) var(--space-12);
+    margin-bottom: var(--space-12);
+  }
+  .ai-table td {
+    padding: var(--space-6) 0;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-10);
+    color: var(--text);
+  }
+  .ai-table td:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+  .ai-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-dim);
+    font-size: var(--fs-11);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+  }
+  /* First cell (provider name) is the card header — no data-label,
+     larger text, stacks rather than splits across the row. */
+  .ai-table td:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+    padding-top: 0;
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+  .ai-table td:first-child::before {
+    display: none;
+  }
+  .ai-table td:first-child strong {
+    font-size: var(--fs-15);
+    color: var(--text);
   }
 }
 
