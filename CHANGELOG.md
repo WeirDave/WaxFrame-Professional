@@ -2,6 +2,22 @@
 
 ---
 
+## v3.63.124
+
+**In-app Tools menu: alphabetical sort + Round History icon swap**
+
+Build: `20260603-017`<br>
+Released: `2026-06-03`
+
+Two small in-app menu fixes David flagged after v3.63.123 shipped:
+
+1. **Tools section now sorted alphabetically.** Save as Template had been sitting at the top of the Tools section in `index.html` because that was the source order. Reordered to: Backup Session, Backup Session (Scrubbed), Import Backup, License Key, Round History, Save as Template.
+2. **Round History row no longer has an oversized icon gap.** That row was using an inline SVG (`<svg class="wf-icon wf-icon-history" …>`) while every other Tools row uses a plain emoji. The SVG rendered larger than the emojis and there was no flex-gap rule constraining the icon-to-label spacing, so it visibly stuck out. Swapped to `⏱` — same emoji the About modal already uses for Round History (line 2255). Both surfaces now match.
+
+Pure presentation change. No behavior change, no new feature, no helper-page change.
+
+---
+
 ## v3.63.123
 
 **Three use-case SEO landing pages: AI cover letter editor, AI business proposal writer, AI résumé review**

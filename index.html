@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260603-016
+     Build: 20260603-017
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-016">
+  <meta name="waxframe-build" content="20260603-017">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.123">
+  <link rel="stylesheet" href="style.css?v=3.63.124">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.123",
+    "softwareVersion": "3.63.124",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -2761,23 +2761,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.123';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.124';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.123"></script>
-<script src="lib/jszip.min.js?v=3.63.123"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.123"></script>
-<script src="js/version.js?v=3.63.123"></script>
-<script src="js/storage.js?v=3.63.123"></script>
-<script src="js/theme.js?v=3.63.123"></script>
-<script src="js/audio.js?v=3.63.123"></script>
-<script src="js/scenes.js?v=3.63.123"></script>
-<script src="js/wf-debug.js?v=3.63.123"></script>
-<script src="js/provider-models.js?v=3.63.123"></script>
-<script src="js/api.js?v=3.63.123"></script>
-<script src="js/templates.js?v=3.63.123"></script>
-<script src="js/api-links.js?v=3.63.123"></script>
-<script src="js/app.js?v=3.63.123"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.124"></script>
+<script src="lib/jszip.min.js?v=3.63.124"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.124"></script>
+<script src="js/version.js?v=3.63.124"></script>
+<script src="js/storage.js?v=3.63.124"></script>
+<script src="js/theme.js?v=3.63.124"></script>
+<script src="js/audio.js?v=3.63.124"></script>
+<script src="js/scenes.js?v=3.63.124"></script>
+<script src="js/wf-debug.js?v=3.63.124"></script>
+<script src="js/provider-models.js?v=3.63.124"></script>
+<script src="js/api.js?v=3.63.124"></script>
+<script src="js/templates.js?v=3.63.124"></script>
+<script src="js/api-links.js?v=3.63.124"></script>
+<script src="js/app.js?v=3.63.124"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2840,12 +2840,12 @@ function wfMobileShareToast(msg) {
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
     <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
     <button title="Download a backup with all API keys and your license key stripped — safe to share with collaborators or support" class="nav-item" onclick="backupSessionScrubbed()">🧼 Backup Session (Scrubbed)</button>
     <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
-    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" class="wf-icon wf-icon-history" aria-hidden="true"><path d="M13 3a9 9 0 0 0-9 9H1l4 4 4-4H6a7 7 0 1 1 7 7v2a9 9 0 1 0 0-18z" fill="#f5a623"/><path d="M12.5 8H11v6l5 3 .75-1.23-4.25-2.52z" fill="#f5a623"/></svg><span class="nav-item-label">Round History</span></button>
+    <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
+    <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Help & Support</div>
