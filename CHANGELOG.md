@@ -2,6 +2,60 @@
 
 ---
 
+## v3.63.110
+
+**AI API Pricing reference page — the SEO arc's #1 leverage move**
+
+Build: `20260603-003`<br>
+Released: `2026-06-03`
+
+New dedicated reference page covering per-token pricing across every AI provider WaxFrame supports. Targets the broad SEO query surface around AI API costs ("Claude API cost", "GPT-4 pricing", "DeepSeek API cost", "is multi-AI worth it") that the existing helper pages didn't cover. Pairs naturally with the API Key Guide (setup steps) and What Are Tokens? (how tokens are counted).
+
+**New page: `ai-api-pricing.html`**
+
+Helper-page chrome matching `api-details.html` (sidebar nav, hero, sections). Six sections:
+
+1. **How to read this page** — defines "WaxFrame round" (~7K tokens: 5K input + 2K output), explains the per-round cost estimate, calls out the free-tier billing-flip caveat.
+2. **Per-token pricing comparison** — main table with all 10 providers (ChatGPT, Claude, Gemini paid + free, Grok, Mistral, Perplexity, Cohere, DeepSeek, Together AI). Columns: provider, default model, input $/M, output $/M, context window, max output, estimated $/round, billing-page link. "Last updated 2026-06-03" stamp.
+3. **Rate limits & free-tier caps** — second table covering Tier 1 RPM/TPM, free-tier daily quotas, and per-provider quirks (Mistral's low Tier 1 RPS, Perplexity's $5/month auto-pay tier, DeepSeek's 60-90s response time).
+4. **Picking a Builder by cost** — three recommendation cards: cheapest (Gemini Flash free + DeepSeek), best balance (ChatGPT + Mistral), highest capability (Claude).
+5. **FAQ** — 6 Q-shaped headings answering "how much does a session cost", "which is cheapest", "is multi-AI worth it", "do free tiers work as Builder", "why not ChatGPT.com", "how often does pricing change". Mirrored exactly in `FAQPage` JSON-LD in `<head>`.
+6. **Related Guides** — body-prose cross-links to API Key Guide, What Are Tokens?, and User Manual.
+
+**FAQPage JSON-LD**
+
+6 entries in `<head>`, each `Question.name` matching a visible H3 exactly per Google's mismatched-markup penalty rule. Same audit pattern as the FAQPage block shipped on `what-are-tokens.html` in v3.63.108.
+
+**Nav-menu discoverability across all 10 release HTMLs**
+
+A `💰 AI API Pricing` link added to the hamburger nav menu on `index.html` and 8 helper pages between the existing `🔑 API Key Guide` and `📋 Document Playbooks` entries. Maintains the "helper menu = strict subset of main menu" rule. `help.html` is the self-contained break-glass page (no unified nav per its design contract) — intentionally skipped.
+
+**Body-copy cross-links**
+
+The page is already discoverable via nav chrome on every helper. v3.63.104 onward, the focus has been body-prose links (which carry more SEO weight than nav links). Two new body-prose entries:
+
+- `api-details.html` — General Tips paragraph extended: "For a per-token cost comparison across every provider on this page, see AI API Pricing ↗."
+- `what-are-tokens.html` — Best Builder Choices billing-rate notice now also points at AI API Pricing for the single-page comparison.
+
+**Sitemap**
+
+`ai-api-pricing.html` added to `sitemap.xml` at priority 0.8 (matching the other reference helper pages).
+
+**Verification**
+
+- `node --check` clean across all 15 JS files.
+- FAQPage JSON-LD valid; Q strings match visible H3 text exactly.
+- All asset references on the new page resolve (logo, bee mascot, social card).
+- Per-row "Check rates →" links go to each provider's actual billing console.
+
+**Pricing data confidence**
+
+Pricing data captured as of 2026-06-03 from each provider's current rate cards to the author's best knowledge. The page carries a prominent "Last updated" stamp and per-row billing-page links — readers verify against the source of truth before committing to a heavy session. Future iterations may automate this via a `tools/` script that scrapes provider pricing pages nightly (Codex framing option B), but v1 is hand-curated for immediate value and ranking.
+
+**Files changed:** `ai-api-pricing.html` (new), `api-details.html` (nav-menu entry + General Tips body cross-link), `what-are-tokens.html` (nav-menu entry + billing-notice body cross-link), `index.html` (nav-menu entry + JSON-LD `softwareVersion` → `3.63.110`), 6 other helper HTMLs (`document-playbooks.html`, `privacy.html`, `prompt-editor.html`, `templates.html`, `terms.html`, `waxframe-user-manual.html`) — nav-menu entry, `sitemap.xml` (new entry, priority 0.8), `js/version.js` (`APP_VERSION` → `v3.63.110 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `style.css` (build header), all 10 existing release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `package.json` (3.63.109 → 3.63.110), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v179.txt`. Doc hygiene also rolled in: `docs/WaxFrame_Backlog_Master_v176.txt` removed (outside the 3-version rollback margin now that v179 is current).
+
+---
+
 ## v3.63.109
 
 **Audit-driven fixes: broken Settings nav target, stale JSON-LD version, per-template anchor migration**
