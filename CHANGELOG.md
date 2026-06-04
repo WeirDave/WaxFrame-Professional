@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.126
+
+**ai-cover-letter-editor.html: same lead reframe as the résumé page — humans don't read cover letters first, AI does — and the WaxFrame origin story applies here too**
+
+Build: `20260603-019`<br>
+Released: `2026-06-03`
+
+Mirrors the v3.63.125 reframe on the résumé page. The application portal screens cover letters via ATS, the recruiter copilot tags fit-signals against the job description, and the hiring manager (if they read it at all) sees a one-paragraph AI summary before they ever open the actual letter. So if AI is the first reader, refine your cover letter using AI.
+
+Added a "This is literally how WaxFrame started" section right after the trial CTA — same origin story as the résumé page but cover-letter-flavored: the proto-WaxFrame workflow was used by hand on the cover letter that went with David's 20-year-old résumé during the same job hunt. Same multi-tab gauntlet, same four rounds, same result.
+
+Updated "Why a multi-AI hive beats one AI for cover letters" to reflect the three-layer screening reality (ATS keyword-match → copilot fit-signals → human scan), each layer with its own failure modes the hive catches but a single AI doesn't.
+
+Meta description, OG description, Twitter description, and JSON-LD description all reframed around the new lead.
+
+No structural change — same chassis, same body sections after the lead, same cross-links to Templates and the Cover Letter playbook.
+
+---
+
 ## v3.63.125
 
 **ai-resume-review.html: lead with the real reason — humans don't read résumés first, AI does — and the WaxFrame origin story**
