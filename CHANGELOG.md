@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.114
+
+**Pricing timestamp now renders in visitor's local time, UTC available on hover**
+
+Build: `20260603-007`<br>
+Released: `2026-06-03`
+
+Tiny UX win surfaced by David after v3.63.113: `Last updated 2026-06-04 00:58 UTC` is unambiguous but mentally translating UTC into wallclock time is friction nobody asked for. Most readers want to see the time in whatever timezone they're already living in.
+
+Now the `Last updated` stamp on `ai-api-pricing.html` renders in the **visitor's local time** via `Intl.DateTimeFormat` with the browser's default locale and timezone. Example outputs for the same underlying ISO instant (`2026-06-04T00:58:02Z`):
+
+- US Pacific:   `Jun 3, 2026, 5:58 PM PDT`
+- US Eastern:   `Jun 3, 2026, 8:58 PM EDT`
+- UK (BST):     `4 Jun 2026, 01:58 BST`
+- Tokyo:        `2026/6/4 09:58 JST`
+
+The locale-aware formatter chooses the date order, day/month name, and 12/24-hour clock based on the visitor's browser preferences — no assumption about an American audience.
+
+**UTC still available on hover.** The `<span id="lastUpdatedStamp">` element now carries a `title` attribute formatted as `UTC: 2026-06-04 00:58 UTC` for technical users who want the unambiguous global moment. On desktop browsers this shows as a tooltip; on touch devices it's silently ignored (which is fine — the visible text is already in their local time).
+
+**Graceful degradation.** Older browsers without `Intl.DateTimeFormat` fall back to `toLocaleString()`. The original date-only branch still handles legacy payloads with just a date in `lastUpdated`.
+
+**No KV / Worker change.** The change is purely on the page renderer. KV continues to hold ISO 8601 datetimes; the Worker continues to serve them unchanged.
+
+**Files changed:** `ai-api-pricing.html` (`formatLastUpdated` renamed to `formatLastUpdatedLocal` and rewritten to use `Intl.DateTimeFormat`; new `formatLastUpdatedUtc` preserved for the hover tooltip; `setLastUpdated` now sets both `textContent` and `title`), `js/version.js` (`APP_VERSION` → `v3.63.114 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), `style.css` (build header), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.114`, `package.json` (3.63.113 → 3.63.114), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v183.txt`.
+
+---
+
 ## v3.63.113
 
 **Pricing data freshness fix: drop Cache-Control max-age + browser no-store**
