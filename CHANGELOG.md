@@ -2,6 +2,44 @@
 
 ---
 
+## v3.63.115
+
+**Pricing timestamp: collapse US DST/standard timezone abbreviations to umbrella form (PT/ET/CT/MT)**
+
+Build: `20260603-008`<br>
+Released: `2026-06-03`
+
+David flagged after v3.63.114: "OK a little confused because the time for me right now is listed as PDT and we're actually in PST. Can't I just do PT?"
+
+Technically the page was correct — June 3 is during daylight saving time, so `Intl.DateTimeFormat` reports PDT (Pacific Daylight Time, UTC-7) rather than PST (Pacific Standard Time, UTC-8, which kicks in mid-November). But that DST/standard distinction is exactly the kind of friction that has zero value to a reader who already knows their own wallclock time.
+
+Now: after `Intl.DateTimeFormat` produces a US zone like `PDT` or `PST` or `EDT`/`EST`/`CDT`/`CST`/`MDT`/`MST`, a post-processing step collapses it to the umbrella form `PT` / `ET` / `CT` / `MT`. Same time, no DST anxiety, no twice-a-year cognitive flip when the clocks roll back.
+
+International zones (`BST`, `JST`, `GMT`, `AKST`/`AKDT`, `HST`, etc.) **intentionally stay as-is** — their abbreviations don't have the same daylight/standard ambiguity that the four contiguous US zones do.
+
+Implementation is a tiny map and a regex replace:
+
+```js
+var US_TIMEZONE_UMBRELLA = {
+  'PDT': 'PT', 'PST': 'PT',
+  'EDT': 'ET', 'EST': 'ET',
+  'CDT': 'CT', 'CST': 'CT',
+  'MDT': 'MT', 'MST': 'MT'
+};
+// ...
+return formatted.replace(/\b(PDT|PST|EDT|EST|CDT|CST|MDT|MST)\b/, function(m) {
+  return US_TIMEZONE_UMBRELLA[m];
+});
+```
+
+Hover tooltip continues to show the unambiguous UTC moment for technical readers — that hasn't changed.
+
+**No KV / Worker change.** Pure page renderer update.
+
+**Files changed:** `ai-api-pricing.html` (`US_TIMEZONE_UMBRELLA` map + post-process regex in `formatLastUpdatedLocal`), `js/version.js` (`APP_VERSION` → `v3.63.115 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), `style.css` (build header), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.115`, `package.json` (3.63.114 → 3.63.115), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v184.txt`.
+
+---
+
 ## v3.63.114
 
 **Pricing timestamp now renders in visitor's local time, UTC available on hover**
