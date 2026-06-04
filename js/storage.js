@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260604-002
+// Build: 20260604-003
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -946,249 +946,223 @@ function loadSettings() {
 
 
 /* =============================================================
-   BACKUP + RESTORE  (extracted from app.js v3.48.0)
+   CHECKPOINT (SAVE + RESTORE)  (extracted from app.js v3.48.0;
+                                 selective EXPORT added v3.63.130)
    Completes storage.js. All WaxFrame state persistence now in one file.
 
-   backupSession — downloads a JSON snapshot of LS_HIVE + LS_PROJECT +
-                   LS_SESSION + IDB_SESSION as a time-machine. Format v3.
-                   Flushes in-memory state to IDB before reading so the
-                   snapshot reflects the live UI state.
-   importSession — restores a backup file. Replaces localStorage layers
-                   and the IDB session; reloads to apply.
+   backupSession           — entry point wired to the nav menu + first-run
+                             nudge. Opens the Save Checkpoint modal
+                             (#saveCheckpointModal in index.html) for the
+                             user to pick scope; modal's Save button calls
+                             confirmSaveCheckpoint which delegates to
+                             _writeCheckpoint(scope).
+   confirmSaveCheckpoint   — reads the modal's checkbox state, calls
+                             _writeCheckpoint with a scope object.
+   _writeCheckpoint(scope) — assembles a format-v5 envelope based on scope,
+                             selectively fills LS_HIVE/LS_PROJECT/LS_LICENSE/
+                             session fields, writes the file. Internal —
+                             never call directly from UI.
+   importSession           — restores a checkpoint file. v5 path uses
+                             _waxframe_backup_scope to decide per-field
+                             whether to apply ("preserve local" on omit);
+                             v4 and prior use the legacy all-or-nothing
+                             replace path. Reloads to apply.
+
+   Format history:
+     v5 (v3.63.130+) — selective EXPORT. New _waxframe_backup_scope envelope
+                       field declares {project, session, hive, keys, builder,
+                       license} as booleans. Unticked sections write null and
+                       importSession preserves the receiver's local value.
+                       The Save Checkpoint (Scrubbed) menu item +
+                       backupSessionScrubbed/scrubBackup helpers +
+                       _waxframe_backup_scrubbed import branch all retired
+                       in this release — same outcome reached by unticking
+                       Keys + License in the new modal. _redactSecretsDeep /
+                       _redactHiveKeys / _redactSessionContent kept (still
+                       used by help.html for the diagnostic-bundle flow).
+     v4 (v3.24.0+)   — referenceDocs as an array (vs single doc earlier).
+                       Legacy scrubbed checkpoints from v3.63.59-129 may
+                       carry _waxframe_backup_scrubbed: true on a v4
+                       envelope; with no users in the wild, the import
+                       branch was dropped in v3.63.130. If such a file ever
+                       surfaces it imports via the v4 default path, which
+                       overwrites local LS_LICENSE with the file's null —
+                       a license loss, but a single-keystroke recovery.
+     v3 (v3.21.12+)  — LS_SESSION_MIRROR removed (IDB became source of truth).
+     v2 (v3.21.10/11)— LS_SESSION_MIRROR present alongside LS_SESSION.
    ============================================================= */
-async function backupSession() {
-  // v3.53.0 — Pre-export sensitivity warning. Backups bundle API keys,
-  // license key, document text, AI responses, and debug traces. The
-  // wfConfirm modal makes that explicit so users don't treat the file
-  // like a benign project export. Cancel exits without writing anything.
-  // wfConfirm is defined in app.js — at call time (button click) that
-  // script has loaded, so the runtime reference resolves cleanly even
-  // though storage.js parses first.
-  const proceed = await wfConfirm(
-    'Save Checkpoint',
-    "Checkpoints let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
-    { okText: 'Save Checkpoint', suppressKey: 'waxframe_suppress_sensitive_backup_confirm' }
-  );
-  if (!proceed) { closeNavMenu(); return; }
 
-  // v3.35.2 — Flush in-memory state to IDB BEFORE reading the
-  // snapshot. Without this, a backup taken while in-memory state
-  // hadn't yet been auto-saved to IDB (e.g. immediately after
-  // filling out the project setup screens, before any round has
-  // run) captured IDB_SESSION: null. Combined with the importSession
-  // bug fixed in this release — which silently skipped the IDB write
-  // when IDB_SESSION was null — the result was that importing a
-  // pre-Round-1 backup left the prior project's Round-N state in
-  // IDB to bleed through after reload. A backup must be a true
-  // time-machine: capture exactly the state at backup time, restore
-  // exactly to that state on import.
-  try { await saveSession({ force: true }); } catch(e) { console.warn('[backup] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+// Entry point — wired to the nav menu's "💾 Save Checkpoint" button and to
+// the first-run nudge's "Save a checkpoint" button (via firstRunDoBackup
+// in app.js). Opens the selective-export modal in index.html. The modal's
+// Save button calls confirmSaveCheckpoint(), which collects scope state
+// and delegates to _writeCheckpoint(scope). No download happens here.
+function backupSession() {
+  const modal = document.getElementById('saveCheckpointModal');
+  if (!modal) {
+    // Defensive — the modal HTML should always be in index.html. If it's
+    // somehow missing, save a full checkpoint directly so the nav button
+    // isn't dead. Logged so anyone debugging this catches the missing markup.
+    console.warn('[backupSession] saveCheckpointModal not in DOM; saving full checkpoint without modal');
+    _writeCheckpoint({ project:true, session:true, hive:true, keys:true, builder:true, license:true });
+    return;
+  }
+  // Reset checkbox state to defaults each open. Defaults reflect the
+  // portable-project use case the new modal was built for: project +
+  // session travel; hive/keys/builder stay local (different machines
+  // have different hives); license stays attached for self-portability.
+  // Untick License when sharing with a different user. To produce the
+  // legacy "scrubbed checkpoint" shape, tick Hive + Builder but leave
+  // Keys + License unticked — same outcome the retired Scrubbed flow
+  // produced, now reachable through the same modal.
+  document.getElementById('scopeProject').checked  = true;
+  document.getElementById('scopeSession').checked  = true;
+  document.getElementById('scopeHive').checked     = false;
+  document.getElementById('scopeKeys').checked     = false;
+  document.getElementById('scopeKeys').disabled    = true;
+  document.getElementById('scopeBuilder').checked  = false;
+  document.getElementById('scopeBuilder').disabled = true;
+  document.getElementById('scopeLicense').checked  = true;
+  modal.classList.add('active');
+  closeNavMenu();
+}
 
-  const hive    = localStorage.getItem(LS_HIVE)    || null;
-  const project = localStorage.getItem(LS_PROJECT) || null;
-  const license = localStorage.getItem(LS_LICENSE) || null;
-  // Legacy localStorage session — almost always null since the IDB migration
-  // ran ages ago. Kept for forward compatibility with any unmigrated browser.
-  const sessionLS = localStorage.getItem(LS_SESSION) || null;
-  // Primary session source: IndexedDB. The session blob (round history, working
-  // document, console HTML, notes, project clock seconds) lives in IDB.
-  let sessionIDB = null;
+function closeSaveCheckpointModal() {
+  document.getElementById('saveCheckpointModal')?.classList.remove('active');
+}
+
+// Hive parent gates Keys + Builder children. With Hive unticked, the file
+// has no hive at all, so keys-or-builder-without-hive is a nonsense state.
+// Auto-untick the children when the parent flips off, and re-enable them
+// when the parent flips on. Wired to the Hive checkbox's onchange.
+function updateCheckpointScopeChildren() {
+  const hive    = document.getElementById('scopeHive');
+  const keys    = document.getElementById('scopeKeys');
+  const builder = document.getElementById('scopeBuilder');
+  if (!hive || !keys || !builder) return;
+  if (hive.checked) {
+    keys.disabled    = false;
+    builder.disabled = false;
+  } else {
+    keys.checked    = false;
+    keys.disabled   = true;
+    builder.checked = false;
+    builder.disabled = true;
+  }
+}
+
+async function confirmSaveCheckpoint() {
+  const scope = {
+    project: !!document.getElementById('scopeProject')?.checked,
+    session: !!document.getElementById('scopeSession')?.checked,
+    hive:    !!document.getElementById('scopeHive')?.checked,
+    keys:    !!document.getElementById('scopeKeys')?.checked,
+    builder: !!document.getElementById('scopeBuilder')?.checked,
+    license: !!document.getElementById('scopeLicense')?.checked,
+  };
+  // Enforce the parent-gates-children invariant — even if a child somehow
+  // ended up ticked while disabled, collapse it here so the envelope is
+  // consistent with the UI semantics.
+  if (!scope.hive) { scope.keys = false; scope.builder = false; }
+  closeSaveCheckpointModal();
+  await _writeCheckpoint(scope);
+}
+
+// Internal — the actual save logic. Reads live state, applies scope
+// (omitted sections become null in the file; when Hive is ticked but Keys
+// or Builder are unticked, the sub-field inside LS_HIVE is blanked while
+// the rest of the hive composition is kept), writes a format-v5 envelope,
+// streams it to a Blob download.
+async function _writeCheckpoint(scope) {
+  // v3.35.2 — Flush in-memory state to IDB before reading the snapshot.
+  // Without this, a checkpoint taken while in-memory state hadn't yet been
+  // auto-saved to IDB (e.g. right after setup, before any round has run)
+  // would capture IDB_SESSION: null and the restore would not be a faithful
+  // time-machine.
+  try { await saveSession({ force: true }); } catch(e) { console.warn('[checkpoint] saveSession flush failed, proceeding with whatever is in IDB:', e); }
+
+  const hiveRaw    = localStorage.getItem(LS_HIVE)    || null;
+  const projectRaw = localStorage.getItem(LS_PROJECT) || null;
+  const licenseRaw = localStorage.getItem(LS_LICENSE) || null;
+  // Legacy localStorage session — almost always null since the IDB
+  // migration ran ages ago. Kept for forward compatibility with any
+  // unmigrated browser.
+  const sessionLS  = localStorage.getItem(LS_SESSION) || null;
+  // Primary session source: IndexedDB. The session blob (round history,
+  // working document, console HTML, notes, project clock seconds) lives here.
+  let sessionIDB   = null;
   try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
 
-  if (!hive && !project && !license && !sessionLS && !sessionIDB) {
-    toast('⚠️ Nothing to checkpoint'); return;
-  }
+  // Apply scope. Omitted sections become null in the output envelope; the
+  // importer's v5 path treats null + scope=false as "preserve local".
+  let outHive       = null;
+  let outProject    = null;
+  let outLicense    = null;
+  let outSessionLS  = null;
+  let outSessionIDB = null;
 
-  const backup = {
-    _waxframe_backup:         true,
-    _waxframe_backup_version: 4, // v4 = referenceDocs array (v3.24.0+); v3 = LS mirror removed (v3.21.12+); v2 (v3.21.10/11) included LS_SESSION_MIRROR
-    _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
-    _waxframe_backup_ts:      Date.now(),
-    LS_HIVE:           hive,
-    LS_PROJECT:        project,
-    LS_LICENSE:        license,
-    LS_SESSION:        sessionLS,
-    IDB_SESSION:       sessionIDB,    // ← the actual round data
-  };
-  const proj     = (() => { try { return JSON.parse(project || '{}'); } catch(e) { return {}; } })();
-  // v3.36.13 — Filename pattern aligned with document export, transcript, and
-  // deep-dive. Was: `{trunc40}-{trunc10}-WaxFrame-Backup-{stamp}` which
-  // truncated mid-word on long project names (e.g. "Brightwater" became
-  // "Brightwat") and used a different baseName shape than the other three
-  // artifacts. Now: `{baseName}-r{N}-{stamp}-Backup` — no truncation, same
-  // r-stamp pattern as transcript/deep-dive (so multiple backups from the
-  // same project at different rounds don't collide), and the "WaxFrame-"
-  // prefix is dropped since the `_waxframe_backup: true` field inside the
-  // JSON plus the `-Backup.json` suffix is enough to self-identify.
-  //
-  // We read projectName/projectVersion from the in-memory parsed LS_PROJECT
-  // (above) rather than calling buildExportName() because backupSession can
-  // be triggered from any screen via the nav menu, and buildExportName()
-  // depends on `workProjectName` / `workProjectVersion` DOM elements that
-  // only exist on the work screen. Reading from LS_PROJECT is screen-
-  // independent. The formatting regex mirrors buildExportName's exactly so
-  // the baseName matches what document/transcript/deep-dive produce.
-  const safeName = (proj.projectName || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  // v3.55.x — Version: ALL non-alphanumerics → dashes (so "v3.0" → "v3-0"),
-  // matching the legacy filename format. (The prior regex kept dots, giving
-  // "v3.0".)
-  const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-  const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
-  // Local-time timestamp: YYYYMMDD-HHmm (matches transcript/deep-dive/build-stamp format)
-  const d = new Date();
-  const pad = n => String(n).padStart(2, '0');
-  const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  // v3.55.x — Reverted to the legacy format David's existing backups use:
-  // `{name}-{version}-WaxFrame-Backup-{stamp}`. The v3.36.13 change (which
-  // dropped the "WaxFrame-" prefix, added a -r{N} round number, and moved the
-  // stamp before "-Backup") is undone — the timestamp already prevents
-  // same-project collisions, and David wants the old shape back.
-  const filename = `${baseName}-WaxFrame-Checkpoint-${stamp}`;
-  // Empty-file race fix history:
-  // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
-  //            via setTimeout(..., 1000) to give Chrome's download dispatcher
-  //            time to read the blob before the URL becomes invalid. Worked for
-  //            the ~41 KB Marco Contractor backup that originally surfaced the
-  //            race.
-  // v3.21.21 — Bumped the timeout from 1 second to 30 seconds. The 1-second
-  //            window was generous for tiny backups but not for real sessions:
-  //            a 473 KB RFP-Response backup raced again under v3.21.19,
-  //            producing the same 0-byte + filename(1) symptom. Larger blobs
-  //            take longer for the dispatcher to read, and 1 second was simply
-  //            too tight a margin for any realistic session size. 30 seconds
-  //            is ~30× the worst observed case (a 21-round JD backup at
-  //            642 KB) and gives the dispatcher 15× safety margin even for
-  //            hypothetical 100 MB blobs at slow disk write speeds. Memory
-  //            cost of the deferred revoke is negligible — at most a handful
-  //            of un-revoked blob URLs in any realistic session.
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-  const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `${filename}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 30000);
-  closeNavMenu();
-  // Confirm what was actually captured so the user knows whether session data
-  // is in the file or only project setup.
-  const sessionMsg = sessionIDB
-    ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
-    : ' (project setup only — no session data)';
-  toast(`💾 Checkpoint saved${sessionMsg}`);
-}
-
-
-// v3.63.59 — Backup scrubber. Strips credentials from a backup object so
-// it can be shared safely (with support, a collaborator, or for archival
-// without secrets). PURE function — takes a backup object (the in-memory
-// shape backupSession assembles), returns a deep-cloned copy with
-// credentials blanked. The caller drives the download flow.
-//
-// What's stripped:
-//   • LS_HIVE.keys (and any nested *key*/*token*/*secret*/*auth*/*password*
-//     /*credential* field at any depth) — uses the same _redactSecretsDeep
-//     walker the diagnostic-bundle redaction uses, so a scrubbed backup
-//     and a diagnostic bundle can never disagree on what counts as a secret.
-//   • LS_LICENSE — set to null (license key removed entirely)
-//   • IDB_SESSION — same deep redaction walk catches anything secret-shaped
-//     that leaked into the session (custom-AI auth headers, etc.)
-//
-// What's preserved:
-//   • Project metadata, document text, round history, reference material,
-//     AI responses, console transcript, ringBuffer entries (already
-//     redacted on capture per v3.63.7), and the rest of the backup shape.
-//
-// The output carries _waxframe_backup_scrubbed: true so importSession (and
-// any future analyzer) can recognize and adapt to it.
-function scrubBackup(backupObj) {
-  if (!backupObj || typeof backupObj !== 'object') return backupObj;
-  // Deep clone first so we never mutate the caller's reference.
-  const clean = JSON.parse(JSON.stringify(backupObj));
-
-  // LS_HIVE is stored as a JSON string inside the backup — parse, redact, restringify.
-  if (clean.LS_HIVE) {
-    try {
-      const hive = JSON.parse(clean.LS_HIVE);
-      clean.LS_HIVE = JSON.stringify(_redactSecretsDeep(hive));
-    } catch (e) {
-      console.warn('[scrubBackup] LS_HIVE parse failed; dropping rather than shipping corrupted hive:', e);
-      clean.LS_HIVE = null;
+  if (scope.hive && hiveRaw) {
+    // Strip sub-sections that the user opted out of, but keep the rest of
+    // the hive shape. Parse-fail falls through to the raw string so a
+    // malformed local hive still ships verbatim rather than getting
+    // accidentally nulled.
+    let parsed;
+    try { parsed = JSON.parse(hiveRaw); } catch(e) { parsed = null; }
+    if (parsed && typeof parsed === 'object') {
+      if (!scope.keys)    parsed.keys    = {};
+      if (!scope.builder) parsed.builder = '';
+      outHive = JSON.stringify(parsed);
+    } else {
+      outHive = hiveRaw;
     }
   }
-  // IDB_SESSION is a live object, not a JSON string — walk it directly.
-  if (clean.IDB_SESSION && typeof clean.IDB_SESSION === 'object') {
-    clean.IDB_SESSION = _redactSecretsDeep(clean.IDB_SESSION);
-  }
-  // License: blank the field entirely. importSession will preserve the
-  // receiver's existing license when it sees a scrubbed backup (rather
-  // than wiping it), so this null reads as "no license to import" not
-  // "remove the receiver's license".
-  clean.LS_LICENSE = null;
-
-  // Self-identify so importers / analyzers can branch on it.
-  clean._waxframe_backup_scrubbed    = true;
-  clean._waxframe_backup_scrubbed_ts = Date.now();
-
-  return clean;
-}
-
-
-// v3.63.59 — Scrubbed backup export. Same flow as backupSession but runs
-// the assembled backup through scrubBackup() before download. Lighter
-// confirm copy (the scrubbed file is safer to share) and filename carries
-// a -Scrubbed suffix so the two flavors are distinguishable at a glance.
-async function backupSessionScrubbed() {
-  const proceed = await wfConfirm(
-    'Save scrubbed Checkpoint',
-    "A scrubbed checkpoint includes your project, document, AI responses, and round history — but every API key and your license key are stripped. Safe to share with collaborators or attach to a support ticket. The recipient adds their own keys to continue running rounds.",
-    { okText: 'Save scrubbed Checkpoint' }
-  );
-  if (!proceed) { closeNavMenu(); return; }
-
-  // Flush in-memory state to IDB first so the snapshot is fresh. Mirrors
-  // backupSession's v3.35.2 fix — without this, a backup right after
-  // setup but before Round 1 captured an empty IDB.
-  try { await saveSession({ force: true }); } catch (e) { console.warn('[backupScrubbed] saveSession flush failed:', e); }
-
-  const hive    = localStorage.getItem(LS_HIVE)    || null;
-  const project = localStorage.getItem(LS_PROJECT) || null;
-  const license = localStorage.getItem(LS_LICENSE) || null;
-  const sessionLS = localStorage.getItem(LS_SESSION) || null;
-  let sessionIDB = null;
-  try { sessionIDB = await idbGet(); } catch (e) { /* ignore */ }
-
-  if (!hive && !project && !license && !sessionLS && !sessionIDB) {
-    toast('⚠️ Nothing to checkpoint'); return;
+  if (scope.project && projectRaw) outProject = projectRaw;
+  if (scope.license && licenseRaw) outLicense = licenseRaw;
+  if (scope.session) {
+    outSessionLS  = sessionLS;
+    outSessionIDB = sessionIDB;
   }
 
-  // Same shape backupSession produces, then scrubbed.
-  const raw = {
+  // Need at least ONE section to contain something. Otherwise the file
+  // would be an empty envelope — bail with a hint about what to do.
+  const captured = !!(outHive || outProject || outLicense || outSessionLS || outSessionIDB);
+  if (!captured) {
+    toast('⚠️ Nothing to checkpoint — tick at least one section that has data');
+    return;
+  }
+
+  const checkpoint = {
     _waxframe_backup:         true,
-    _waxframe_backup_version: 4,
+    _waxframe_backup_version: 5,
+    _waxframe_backup_scope:   { ...scope },
     _waxframe_app_version:    typeof APP_VERSION === 'string' ? APP_VERSION : '',
     _waxframe_backup_ts:      Date.now(),
-    LS_HIVE:           hive,
-    LS_PROJECT:        project,
-    LS_LICENSE:        license,
-    LS_SESSION:        sessionLS,
-    IDB_SESSION:       sessionIDB,
+    LS_HIVE:    outHive,
+    LS_PROJECT: outProject,
+    LS_LICENSE: outLicense,
+    LS_SESSION: outSessionLS,
+    IDB_SESSION: outSessionIDB,
   };
-  const backup = scrubBackup(raw);
 
-  // Filename: same baseName pattern as backupSession + -Scrubbed marker.
-  const proj    = (() => { try { return JSON.parse(project || '{}'); } catch (e) { return {}; } })();
+  // Filename: legacy `{name}-{version}-WaxFrame-Checkpoint-{stamp}.json`
+  // shape. Self-describing via internals (the `_waxframe_backup_scope`
+  // envelope field tells the importer what's inside), so the filename
+  // stays simple regardless of scope. Project name + version read from
+  // the parsed LS_PROJECT — backupSession can be triggered from any
+  // screen, and buildExportName() depends on work-screen DOM elements.
+  const proj     = (() => { try { return JSON.parse(projectRaw || '{}'); } catch(e) { return {}; } })();
   const safeName = (proj.projectName    || 'session').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const safeVer  = (proj.projectVersion || '').replace(/[^a-z0-9]/gi, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   const baseName = safeVer ? `${safeName}-${safeVer}` : safeName;
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const filename = `${baseName}-WaxFrame-Checkpoint-Scrubbed-${stamp}`;
+  const filename = `${baseName}-WaxFrame-Checkpoint-${stamp}`;
 
-  // Same download dance + 30s deferred revoke as backupSession.
-  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+  // 30s deferred URL.revokeObjectURL — see history at the prior backupSession
+  // implementation (v3.21.19 / v3.21.21). Larger checkpoints need more
+  // dispatcher time; 30s is well past the worst observed case.
+  const blob = new Blob([JSON.stringify(checkpoint, null, 2)], { type: 'application/json' });
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
   a.href     = url;
@@ -1197,11 +1171,15 @@ async function backupSessionScrubbed() {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 30000);
-  closeNavMenu();
-  const sessionMsg = sessionIDB
-    ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
-    : ' (project setup only — no session data)';
-  toast(`🧼 Scrubbed checkpoint saved — API keys + license stripped${sessionMsg}`, 6000);
+
+  // Toast confirms what actually landed in the file, so the user knows the
+  // scope was honored. Compact tag list from the chosen scope.
+  const tags = [];
+  if (scope.project) tags.push('project');
+  if (scope.session) tags.push(sessionIDB ? `session (${sessionIDB.history?.length || 0} rounds)` : 'session (empty)');
+  if (scope.hive)    tags.push(scope.keys && scope.builder ? 'hive+keys+builder' : (scope.keys ? 'hive+keys' : (scope.builder ? 'hive+builder' : 'hive only')));
+  if (scope.license) tags.push('license');
+  toast(`💾 Checkpoint saved — ${tags.join(', ')}`, 5000);
 }
 
 
@@ -1385,65 +1363,100 @@ async function importSession() {
           return;
         }
         if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame checkpoint file'); return; }
-        // v3.63.59 — scrubbed-backup detection. A scrubbed backup carries
-        // _waxframe_backup_scrubbed: true and has LS_LICENSE: null +
-        // every secret-shaped field in LS_HIVE/IDB_SESSION blanked. If we
-        // imported one with the default (overwrite-everything) flow, the
-        // receiver would lose their license and any keys they had for AIs
-        // that overlap with the sender's hive. Instead: preserve the
-        // receiver's license, and merge the receiver's keys into the
-        // imported hive (everything else — activeAIIds, builder, models,
-        // customAIs — takes the imported value, since the sender's choices
-        // about who's in the hive ARE what the receiver is opting into).
-        const isScrubbed = !!data._waxframe_backup_scrubbed;
+
+        // v3.63.130 — Format-version branch. v5 introduces selective EXPORT:
+        // the file carries `_waxframe_backup_scope` declaring which sections
+        // were intentionally included. Omitted sections (scope=false) write
+        // null in the envelope and the importer PRESERVES the receiver's
+        // local value rather than overwriting with null. v4 and earlier
+        // use the legacy all-or-nothing path below (null = wipe local).
+        const ver = data._waxframe_backup_version || 1;
+        const scope = (ver >= 5 && data._waxframe_backup_scope && typeof data._waxframe_backup_scope === 'object')
+          ? data._waxframe_backup_scope
+          : null;
+
         // ── Restore localStorage layers ──
-        if (data.LS_HIVE) {
-          if (isScrubbed) {
-            // Merge: imported hive structure + receiver's existing keys.
+        if (scope) {
+          // v5 selective path. Each section consults its scope flag; when
+          // unticked, leave local state alone. When Hive is ticked but
+          // Keys/Builder were unticked, the file's hive.keys is {} and
+          // hive.builder is '' — merge the local values back in so the
+          // user keeps their existing keys and Builder choice.
+          if (scope.hive && data.LS_HIVE) {
             try {
               const importedHive = JSON.parse(data.LS_HIVE);
-              const existingRaw  = localStorage.getItem(LS_HIVE);
-              const existingHive = existingRaw ? JSON.parse(existingRaw) : null;
-              if (existingHive && existingHive.keys && typeof existingHive.keys === 'object') {
-                importedHive.keys = existingHive.keys;
+              if (!scope.keys || !scope.builder) {
+                const existingRaw  = localStorage.getItem(LS_HIVE);
+                const existingHive = existingRaw ? (() => { try { return JSON.parse(existingRaw); } catch(_) { return null; } })() : null;
+                if (!scope.keys && existingHive && existingHive.keys && typeof existingHive.keys === 'object') {
+                  importedHive.keys = existingHive.keys;
+                }
+                if (!scope.builder && existingHive && typeof existingHive.builder === 'string') {
+                  importedHive.builder = existingHive.builder;
+                }
               }
               localStorage.setItem(LS_HIVE, JSON.stringify(importedHive));
             } catch (mergeErr) {
-              console.warn('[importSession] scrubbed-hive merge failed; falling back to direct overwrite:', mergeErr);
+              console.warn('[importSession] v5 hive merge failed; falling back to direct overwrite:', mergeErr);
               localStorage.setItem(LS_HIVE, data.LS_HIVE);
             }
-          } else {
-            localStorage.setItem(LS_HIVE, data.LS_HIVE);
+          }
+          // !scope.hive → leave local hive untouched (including keys + builder).
+          if (scope.project && data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+          // !scope.project → leave local project untouched.
+          if (scope.license) {
+            if (data.LS_LICENSE) {
+              localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
+            } else {
+              // scope.license=true + null LS_LICENSE means "I ticked License
+              // but had none set" — clear local to match.
+              localStorage.removeItem(LS_LICENSE);
+            }
+          }
+          // !scope.license → leave local license untouched (the file's null
+          // is intentional omission, not "remove local license").
+        } else {
+          // v4 (and earlier) all-or-nothing path. Null fields = overwrite
+          // local with empty. Legacy scrubbed checkpoints from v3.63.59-129
+          // would have hit a special _waxframe_backup_scrubbed branch here;
+          // that branch was retired in v3.63.130 with zero users in the
+          // wild. If such a file ever surfaces it imports through this
+          // default path — the local license gets wiped (recoverable by
+          // re-entering the key) but everything else is fine.
+          if (data.LS_HIVE) localStorage.setItem(LS_HIVE, data.LS_HIVE);
+          if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
+          if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+          if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
+            if (data.LS_LICENSE) localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
+            else                 localStorage.removeItem(LS_LICENSE);
           }
         }
-        if (data.LS_PROJECT) localStorage.setItem(LS_PROJECT, data.LS_PROJECT);
-        if (data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
-        if (Object.prototype.hasOwnProperty.call(data, 'LS_LICENSE')) {
-          if (data.LS_LICENSE) {
-            localStorage.setItem(LS_LICENSE, data.LS_LICENSE);
-          } else if (isScrubbed) {
-            // Scrubbed backup intentionally nulls LS_LICENSE — preserve the
-            // receiver's existing license rather than wiping it.
-            // (No-op: leave existing license in place.)
-          } else {
-            localStorage.removeItem(LS_LICENSE);
-          }
-        }
+        // LS_SESSION is the legacy localStorage session blob (almost always
+        // null since the IDB migration). v5 honors session scope; legacy
+        // path wrote it unconditionally above.
+        if (scope && scope.session && data.LS_SESSION) localStorage.setItem(LS_SESSION, data.LS_SESSION);
+
         // Note: v2 backups include LS_SESSION_MIRROR but mirror was removed in
         // v3.21.12 / format v3 — IDB_SESSION is now the single source of truth.
-        // ── (v3.35.2) IDB write is no longer optional ──
-        // Prior versions skipped the IDB write when data.IDB_SESSION
-        // was null/missing — leaving any prior session in IDB to
-        // bleed through after location.reload(). A backup must be a
-        // true time-machine, including the case where the captured
-        // state was "from-scratch, no rounds run yet". When
-        // IDB_SESSION is null/missing now, we explicitly wipe IDB
-        // (and the session-exists flag) so the reload reads the
-        // captured project setup against an empty session — which is
-        // exactly what was captured.
+        // ── (v3.35.2) IDB write is no longer optional for v4 ──
+        // Prior versions skipped the IDB write when data.IDB_SESSION was
+        // null/missing — leaving any prior session in IDB to bleed through
+        // after location.reload(). A v4 checkpoint must be a true time-
+        // machine, including the case where the captured state was "from-
+        // scratch, no rounds run yet". When IDB_SESSION is null/missing in
+        // a v4 file now, we explicitly wipe IDB so the reload reads the
+        // captured project setup against an empty session.
+        // ── (v3.63.130) v5 path defers to scope.session ──
+        // !scope.session → leave local IDB untouched (don't wipe, don't
+        // restore). scope.session + null IDB → user checkpointed an empty
+        // session intentionally; wipe local to match.
         let restoredFromIDB = false;
         let wipedToScratch  = false;
-        if (data.IDB_SESSION) {
+        let leftLocalIDBAlone = false;
+        if (scope && !scope.session) {
+          // v5 with session unticked — preserve local IDB.
+          leftLocalIDBAlone = true;
+        } else if (data.IDB_SESSION) {
           try {
             await idbSet(data.IDB_SESSION);
             try { localStorage.setItem('waxframe_v2_session_exists', '1'); } catch(_) {}
@@ -1453,9 +1466,6 @@ async function importSession() {
             toast(`⚠️ Project restored but IDB session write failed: ${idbErr.message || idbErr}. See console.`, 14000);
           }
         } else {
-          // No session in the backup → captured state was pre-Round-1
-          // (or a v1-format pre-v3.21.10 backup). Treat as explicit
-          // "reset to from-scratch" rather than as "skip the write".
           try {
             await idbClear();
             localStorage.removeItem('waxframe_v2_session_exists');
@@ -1465,31 +1475,44 @@ async function importSession() {
             toast(`⚠️ Project restored but IDB clear failed: ${clearErr.message || clearErr}. Prior session may persist.`, 14000);
           }
         }
-        // Diagnostic toast — be explicit about what was captured so users know
-        // whether they're getting full state or just project setup.
-        const v = data._waxframe_backup_version || 1;
-        if (v < 2 && !data.IDB_SESSION) {
-          toast('⚠️ Old backup format (pre-v3.21.10) — only project setup + API keys restored, session reset to fresh. Reloading…', 12000);
+
+        // Diagnostic toast — be explicit about what was captured + restored.
+        if (scope) {
+          // v5 path — summarize what got restored vs preserved.
+          const restoredTags = [];
+          const preservedTags = [];
+          if (scope.project) restoredTags.push('project'); else preservedTags.push('project');
+          if (scope.session) {
+            const sh = data.IDB_SESSION?.history?.length || 0;
+            restoredTags.push(sh > 0 ? `session (${sh} rounds)` : 'session (empty)');
+          } else {
+            preservedTags.push('session');
+          }
+          if (scope.hive) {
+            const hiveLabel = (scope.keys && scope.builder) ? 'hive+keys+builder'
+              : (scope.keys ? 'hive+keys' : (scope.builder ? 'hive+builder' : 'hive only'));
+            restoredTags.push(hiveLabel);
+          } else {
+            preservedTags.push('hive');
+          }
+          if (scope.license) restoredTags.push('license'); else preservedTags.push('license');
+          const restoredPart  = restoredTags.length  ? `Restored: ${restoredTags.join(', ')}` : 'Nothing restored';
+          const preservedPart = preservedTags.length ? ` · Kept local: ${preservedTags.join(', ')}` : '';
+          toast(`✅ ${restoredPart}${preservedPart}. Reloading…`, 7000);
+        } else if (ver < 2 && !data.IDB_SESSION) {
+          toast('⚠️ Old checkpoint format (pre-v3.21.10) — only project setup + API keys restored, session reset to fresh. Reloading…', 12000);
         } else if (restoredFromIDB) {
           const sh = data.IDB_SESSION?.history?.length || 0;
           const sd = data.IDB_SESSION?.docText?.length || 0;
-          toast(`✅ Backup restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
+          toast(`✅ Checkpoint restored — ${sh} round${sh !== 1 ? 's' : ''}, ${sd.toLocaleString()} chars in document. Reloading…`, 6000);
         } else if (wipedToScratch) {
-          toast('✅ Backup restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
+          toast('✅ Checkpoint restored — captured pre-Round-1 state, session reset to fresh. Reloading…', 6000);
         } else {
           toast('✅ Project setup restored — reloading…', 6000);
         }
-        // v3.63.59 — extra heads-up if the imported backup was scrubbed,
-        // so the user understands why their existing keys/license were
-        // preserved (instead of being overwritten) and that the imported
-        // hive lineup needs keys filled in for any AIs they don't already
-        // have set up.
-        if (isScrubbed) {
-          setTimeout(() => toast('🧼 Scrubbed backup — your existing API keys and license were preserved. Add keys to any new AIs in the imported hive.', 10000), 500);
-        }
         setTimeout(() => location.reload(), 1500);
       } catch(e) {
-        toast('⚠️ Could not read file — is it a WaxFrame backup?');
+        toast('⚠️ Could not read file — is it a WaxFrame checkpoint?');
       }
     };
     reader.readAsText(file);
