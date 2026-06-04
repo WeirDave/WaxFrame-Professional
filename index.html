@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260604-011
+     Build: 20260604-012
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-011">
+  <meta name="waxframe-build" content="20260604-012">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.138">
+  <link rel="stylesheet" href="style.css?v=3.63.139">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.138",
+    "softwareVersion": "3.63.139",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1841,48 +1841,14 @@
   </div>
 </div>
 
-<!-- DEEP DIVE VIEWER (v3.28.2) — clean UI for the WF_DEBUG.ringBuffer
-     so users don't have to type WF_DEBUG.ringBuffer in DevTools.
-     Opens via the 📋 View Captures button on the Dev Toolbar. -->
-<div class="finish-modal-overlay ddv-overlay" id="deepDiveViewer" onclick="if(event.target===this)WF_DEBUG.closeViewer()">
-  <div class="finish-modal ddv-modal">
-    <h2 class="finish-modal-title ddv-title-row">
-      <span class="ddv-icon">🔬</span> Deep Dive Capture Viewer
-      <span class="ddv-count-badge"><span id="ddvCount">0</span> rounds</span>
-    </h2>
-    <div class="ddv-body">
-      <p class="ddv-status" id="ddvStatus">Deep Dive is OFF — turn it on in the Dev Toolbar to start capturing rounds.</p>
-      <div class="ddv-table-wrap">
-        <table class="ddv-table">
-          <thead>
-            <tr>
-              <th>Time</th>
-              <th>AI</th>
-              <th>Provider</th>
-              <th>Model</th>
-              <th>Elapsed</th>
-              <th>Chars</th>
-              <th>Words</th>
-              <th>Finish</th>
-            </tr>
-          </thead>
-          <tbody id="ddvTableBody">
-            <tr><td colspan="8" class="ddv-empty">No captures yet.</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="ddv-actions">
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.testViewer()" title="Inject 6 fake captures so you can preview the populated viewer in both themes">🌱 Seed sample</button>
-        <button title="Copy the debug buffer as JSON" class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
-        <button class="tc-action-btn" type="button" onclick="WF_DEBUG.saveViewer()" title="Download the capture buffer as a JSON file. Best for full-session captures or archival.">💾 Save DeepDive</button>
-        <button class="tc-action-btn" type="button" onclick="backupSession()" title="Save a full session checkpoint (project goal, hive, document, round history) as JSON. Same as the Save Checkpoint option in the nav menu — available here so you can grab both DeepDive and Checkpoint files without leaving the viewer.">💾 Save Checkpoint</button>
-        <button title="Clear the debug buffer" class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
-        <button title="Refresh the debug view" class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
-      </div>
-    </div>
-    <button title="Close the debug viewer" class="finish-modal-cancel" onclick="WF_DEBUG.closeViewer()">← Close</button>
-  </div>
-</div>
+<!-- v3.63.139 — Deep Dive Viewer + Tiers Viewer modals retired. David's
+     workflow was always "Save DeepDive → Clear buffer → send to Scout"
+     so the entire viewing surface was friction. Replaced by the
+     📦 Bundle for Scout button on the dev toolbar, which downloads the
+     ring buffer + tier classifications + project checkpoint + version
+     metadata as a single JSON file. Round captures still happen in the
+     background whenever Deep Dive is on (auto-enabled when dev mode
+     unlocks). -->
 
 <!-- DISCARD CONFIRMATION MODAL — replaces the native confirm() that was used
      in v3.21.16 and earlier. Native dialog couldn't carry an alert sound and
@@ -2656,8 +2622,18 @@
     </div>
   </div>
   <span class="dev-toolbar-sep">|</span>
-  <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 10 rounds in memory)">🔬 Deep Dive</button>
-  <button id="wfViewCapturesBtn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer — see what was captured per round">📋 View Captures</button>
+  <!-- v3.63.139 — Dev-mode diagnostic surface simplified. The retired
+       View Captures + View Tiers modals were "viewer" UX that David's
+       workflow never used (his loop is always: capture → save → send to
+       Scout for analysis → clear → repeat). Deep Dive auto-enables on
+       dev-mode unlock so the toggle stops being friction; tier
+       classifications and round captures both fold into a single Bundle
+       for Scout download. The toggle remains for the Settings and
+       help.html mirrors so non-dev users can still opt in/out. -->
+  <button id="wfDeepDiveToggle" onclick="WF_DEBUG.setDeepDive(!WF_DEBUG.deepDiveOn)" title="Capture full technical detail on every round (last 200 rounds in memory). Auto-enabled when dev mode unlocks; toggle here to flip off temporarily.">🔬 Deep Dive</button>
+  <button id="wfClassifyTiersBtn" onclick="WF_DEBUG.classifyTiers()" title="Ask each keyed provider's own AI to classify its current models into Cheap / Balanced / Heavy thinkers / Fast slots — runs sequentially, logs every raw response to the browser console. Results land in the Bundle for Scout export.">🐝 Classify Tiers</button>
+  <button id="wfBundleForScoutBtn" onclick="WF_DEBUG.bundleForScout()" title="Download one JSON containing the Deep Dive ring buffer + cached tier classifications + current project checkpoint + version metadata. Everything Scout needs to analyze your run, in one file.">📦 Bundle for Scout</button>
+  <button id="wfClearBundleBtn" onclick="WF_DEBUG.clearBundle()" title="Wipe the Deep Dive ring buffer (per-round captures from the prior project). Tier classifications survive — they're per-provider, not per-project.">🗑 Clear Buffer</button>
   <span class="dev-toolbar-sep">|</span>
   <button id="wfDiffModeBtn" onclick="wfCycleDecisionDiffMode()" title="USER DECISION option diff — cycle Off → Words → Sentences. Highlights how each option differs from the Current text so near-identical full-paragraph rewrites become scannable. Re-renders the open conflict live.">🔀 Diff: Words</button>
   <!-- v3.35.3 — Cleanup button + cleanup.html retired. Out-of-date
@@ -2849,23 +2825,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.138';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.139';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.138"></script>
-<script src="lib/jszip.min.js?v=3.63.138"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.138"></script>
-<script src="js/version.js?v=3.63.138"></script>
-<script src="js/storage.js?v=3.63.138"></script>
-<script src="js/theme.js?v=3.63.138"></script>
-<script src="js/audio.js?v=3.63.138"></script>
-<script src="js/scenes.js?v=3.63.138"></script>
-<script src="js/wf-debug.js?v=3.63.138"></script>
-<script src="js/provider-models.js?v=3.63.138"></script>
-<script src="js/api.js?v=3.63.138"></script>
-<script src="js/templates.js?v=3.63.138"></script>
-<script src="js/api-links.js?v=3.63.138"></script>
-<script src="js/app.js?v=3.63.138"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.139"></script>
+<script src="lib/jszip.min.js?v=3.63.139"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.139"></script>
+<script src="js/version.js?v=3.63.139"></script>
+<script src="js/storage.js?v=3.63.139"></script>
+<script src="js/theme.js?v=3.63.139"></script>
+<script src="js/audio.js?v=3.63.139"></script>
+<script src="js/scenes.js?v=3.63.139"></script>
+<script src="js/wf-debug.js?v=3.63.139"></script>
+<script src="js/provider-models.js?v=3.63.139"></script>
+<script src="js/api.js?v=3.63.139"></script>
+<script src="js/templates.js?v=3.63.139"></script>
+<script src="js/api-links.js?v=3.63.139"></script>
+<script src="js/app.js?v=3.63.139"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">

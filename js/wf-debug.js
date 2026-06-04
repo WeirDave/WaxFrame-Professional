@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260604-011
+// Build: 20260604-012
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -163,113 +163,81 @@ window.WF_DEBUG = {
     }
   },
 
-  // ── Deep Dive Viewer (v3.28.2) ──
-  // Opens a modal showing the ring buffer as a clean table.
-  // No more typing WF_DEBUG.ringBuffer in DevTools.
-  openViewer() {
-    const modal = document.getElementById('deepDiveViewer');
-    if (!modal) return;
-    this._renderViewer();
-    modal.classList.add('active');
-  },
-  closeViewer() {
-    const modal = document.getElementById('deepDiveViewer');
-    if (modal) modal.classList.remove('active');
-  },
-  _renderViewer() {
-    const tbody  = document.getElementById('ddvTableBody');
-    const status = document.getElementById('ddvStatus');
-    const count  = document.getElementById('ddvCount');
-    if (!tbody || !status) return;
-
-    if (count) count.textContent = this.ringBuffer.length;
-
-    if (!this.deepDiveOn) {
-      status.textContent = 'Deep Dive is OFF — turn it on in the Dev Toolbar to start capturing rounds.';
-      status.className = 'ddv-status ddv-status-off';
-    } else if (this.ringBuffer.length === 0) {
-      status.textContent = 'Deep Dive is ON — no rounds captured yet. Run a round and come back.';
-      status.className = 'ddv-status ddv-status-empty';
-    } else {
-      status.textContent = `Deep Dive is ON — showing last ${this.ringBuffer.length} round(s) captured (max ${this.RING_MAX}).`;
-      status.className = 'ddv-status ddv-status-on';
-    }
-
-    if (this.ringBuffer.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="8" class="ddv-empty">No captures yet.</td></tr>';
-      return;
-    }
-
-    // Newest first
-    const rows = [...this.ringBuffer].reverse().map(c => {
-      const time = c.capturedAt ? new Date(c.capturedAt).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'}) : '—';
-      const esc = s => String(s ?? '—').replace(/[<>&]/g, ch => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[ch]));
-      return `<tr>
-        <td>${esc(time)}</td>
-        <td>${esc(c.aiName)}</td>
-        <td>${esc(c.provider)}</td>
-        <td class="ddv-mono">${esc(c.model)}</td>
-        <td class="ddv-num">${c.elapsed != null ? esc(c.elapsed) + 's' : '—'}</td>
-        <td class="ddv-num">${c.chars != null ? esc(c.chars.toLocaleString()) : '—'}</td>
-        <td class="ddv-num">${c.words != null ? esc(c.words.toLocaleString()) : '—'}</td>
-        <td class="ddv-mono">${esc(c.finishReason)}</td>
-      </tr>`;
-    }).join('');
-    tbody.innerHTML = rows;
-  },
-  copyViewer() {
-    if (this.ringBuffer.length === 0) {
-      if (typeof toast === 'function') toast('Nothing to copy — buffer is empty');
-      return;
-    }
-    const payload =
-      'WaxFrame Deep Dive Capture\n' +
-      '==========================\n' +
-      `Version: ${typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown'} · Build ${typeof BUILD !== 'undefined' ? BUILD : 'unknown'}\n` +
-      `Captured: ${this.ringBuffer.length} round(s)\n\n` +
-      JSON.stringify(this.ringBuffer, null, 2);
-    if (typeof copyToClipboard === 'function') {
-      copyToClipboard(payload, 'Capture buffer');
-    } else {
-      navigator.clipboard?.writeText(payload).catch(() => {});
-    }
-  },
-  // v3.36.9 — File download companion to copyViewer. With RING_MAX
-  // bumped to 200 in v3.36.7, full-session captures can exceed sane
-  // clipboard sizes; a download is the right tool for archival/share.
-  // Output is pure parseable JSON wrapped in a metadata envelope (the
-  // same shape backup files use), so external tooling can consume it
-  // without stripping a header preamble. Filename follows the v3.36.8
-  // transcript pattern: ${project}-${version}-r${N}-${stamp}-DeepDive.json
-  // — round count + local-time stamp so multiple captures from the
-  // same project don't collide on disk.
-  saveViewer() {
-    if (this.ringBuffer.length === 0) {
-      if (typeof toast === 'function') toast('Nothing to save — buffer is empty');
-      return;
-    }
-    const envelope = {
-      _waxframe_deepdive:         true,
-      _waxframe_app_version:      typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown',
-      _waxframe_build:            typeof BUILD       !== 'undefined' ? BUILD       : 'unknown',
-      _waxframe_captured_at:      new Date().toISOString(),
-      _waxframe_capture_count:    this.ringBuffer.length,
-      _waxframe_ring_max:         this.RING_MAX,
-      ringBuffer:                 this.ringBuffer
-    };
-    // Reuse buildExportName() so the project-name/version prefix
-    // matches what transcripts and documents use; fall back to
-    // "WaxFrame" if no project context is set yet (e.g. capture
-    // taken during pre-project bee testing).
+  // ════════════════════════════════════════════════════════════
+  // v3.63.139 — "Bundle for Scout" replaces the Deep Dive Viewer.
+  // ────────────────────────────────────────────────────────────
+  // Prior versions exposed a 6-action viewer modal (View Captures:
+  // seed sample / copy / save DeepDive / save Checkpoint / clear /
+  // refresh + a separate Tiers viewer modal with another 4 actions).
+  // David's actual workflow was always: capture → save DeepDive →
+  // clear buffer → send the files to Scout for analysis. The viewing
+  // surface was friction nobody used.
+  //
+  // bundleForScout collapses that whole flow into one click that
+  // downloads ONE JSON file containing everything Scout needs:
+  //   • Deep Dive ring buffer (per-round captures)
+  //   • Tier classifications (per-provider cache from the Hive
+  //     Profiles classifier)
+  //   • Project checkpoint (LS_PROJECT, LS_HIVE, LS_SESSION, the same
+  //     state backupSession produces — included inline rather than
+  //     pulled from a separate download)
+  //   • Version + build metadata
+  // Filename: {project}-r{rounds}-{stamp}-ScoutBundle.json
+  //
+  // clearBundle wipes the ring buffer (per-round captures from the
+  // prior project) so the next run starts clean. Tier classifications
+  // are deliberately preserved — they're per-provider, not per-
+  // project, and a wipe between projects would force a fresh
+  // classifier call every run.
+  // ════════════════════════════════════════════════════════════
+  bundleForScout() {
+    const _ad = new Date();
+    const _pad = n => String(n).padStart(2, '0');
+    const _stamp = `${_ad.getFullYear()}${_pad(_ad.getMonth()+1)}${_pad(_ad.getDate())}-${_pad(_ad.getHours())}${_pad(_ad.getMinutes())}`;
     const baseName = (typeof buildExportName === 'function')
       ? (buildExportName() || 'WaxFrame')
       : 'WaxFrame';
     const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
-    const _td = new Date();
-    const _pad = n => String(n).padStart(2, '0');
-    const _stamp = `${_td.getFullYear()}${_pad(_td.getMonth()+1)}${_pad(_td.getDate())}-${_pad(_td.getHours())}${_pad(_td.getMinutes())}`;
-    const filename = `${baseName}-r${totalRoundsForName}-${_stamp}-DeepDive.json`;
 
+    // Inline checkpoint snapshot — same keys backupSession reads, but we
+    // grab them direct from localStorage so the bundle is self-contained
+    // without invoking the full backup-download flow.
+    let tierCache = {};
+    try {
+      const providers = (typeof DEFAULT_AIS !== 'undefined' && Array.isArray(DEFAULT_AIS))
+        ? DEFAULT_AIS.map(a => a.provider)
+        : [];
+      for (const p of providers) {
+        const raw = localStorage.getItem(`waxframe_tiers_${p}`);
+        if (raw) {
+          try { tierCache[p] = JSON.parse(raw); } catch (e) { /* skip malformed */ }
+        }
+      }
+    } catch (e) { /* defensive — tier cache is optional */ }
+
+    let checkpoint = null;
+    try {
+      checkpoint = {
+        LS_PROJECT: localStorage.getItem('waxframe_v2_project'),
+        LS_HIVE:    localStorage.getItem('waxframe_v2_hive'),
+        LS_SESSION: localStorage.getItem('waxframe_v2_session_mirror')
+      };
+    } catch (e) { /* defensive */ }
+
+    const envelope = {
+      _waxframe_scout_bundle:  true,
+      _waxframe_app_version:   typeof APP_VERSION !== 'undefined' ? APP_VERSION : 'unknown',
+      _waxframe_build:         typeof BUILD       !== 'undefined' ? BUILD       : 'unknown',
+      _waxframe_captured_at:   new Date().toISOString(),
+      _waxframe_ring_max:      this.RING_MAX,
+      _waxframe_ring_count:    this.ringBuffer.length,
+      _waxframe_tier_count:    Object.keys(tierCache).length,
+      ringBuffer:              this.ringBuffer,
+      tierClassifications:     tierCache,
+      checkpoint:              checkpoint
+    };
+
+    const filename = `${baseName}-r${totalRoundsForName}-${_stamp}-ScoutBundle.json`;
     const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
@@ -278,28 +246,28 @@ window.WF_DEBUG = {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
-    // 30s deferred URL.revokeObjectURL — same pattern used by
-    // backupSession (v3.21.21) and exportTranscript (v3.32.9) to
-    // avoid the 0-byte race when the browser dispatcher hasn't
-    // finished writing before the blob URL is revoked.
     setTimeout(() => URL.revokeObjectURL(url), 30000);
-    if (typeof toast === 'function') toast('💾 Deep Dive capture saved');
+
+    const parts = [];
+    if (this.ringBuffer.length) parts.push(`${this.ringBuffer.length} round capture${this.ringBuffer.length === 1 ? '' : 's'}`);
+    if (Object.keys(tierCache).length) parts.push(`${Object.keys(tierCache).length} tier classification${Object.keys(tierCache).length === 1 ? '' : 's'}`);
+    if (checkpoint && checkpoint.LS_PROJECT) parts.push('project checkpoint');
+    const summary = parts.length ? parts.join(' + ') : 'metadata only';
+    if (typeof toast === 'function') toast(`📦 Bundle saved — ${summary}`, 5000);
   },
-  clearViewer() {
+  clearBundle() {
     if (this.ringBuffer.length === 0) {
-      if (typeof toast === 'function') toast('Buffer is already empty');
+      if (typeof toast === 'function') toast('Ring buffer is already empty');
       return;
     }
+    const n = this.ringBuffer.length;
     this.ringBuffer = [];
-    this._renderViewer();
-    if (typeof toast === 'function') toast('🔬 Capture buffer cleared');
+    if (typeof toast === 'function') toast(`🗑 Cleared ${n} round capture${n === 1 ? '' : 's'} — tier classifications preserved`, 4000);
   },
 
   // ── Dev test triggers (v3.28.2) ──
   // testCard cycles through every catalog entry on each click so all
   // 14 card designs can be eyeballed without forcing real errors.
-  // testViewer seeds the ring buffer with realistic fake captures
-  // and opens the viewer — purely for theme/layout review.
   _testCardIdx: 0,
   testCard() {
     const entry = WF_ERROR_CATALOG[this._testCardIdx % WF_ERROR_CATALOG.length];
@@ -321,18 +289,42 @@ window.WF_DEBUG = {
     this.showCard(entry, ctx);
     if (typeof toast === 'function') toast(`Card ${this._testCardIdx} of ${WF_ERROR_CATALOG.length}: ${entry.code}`);
   },
-  testViewer() {
-    const fake = [
-      { aiName: 'Claude',     provider: 'claude',     model: 'claude-opus-4-7',         elapsed: 38.5, chars: 5821, words: 1024, status: 200, finishReason: 'end_turn' },
-      { aiName: 'ChatGPT',    provider: 'chatgpt',    model: 'gpt-5.5',                 elapsed: 21.3, chars: 4612, words:  823, status: 200, finishReason: 'stop' },
-      { aiName: 'Gemini',     provider: 'gemini',     model: 'gemini-3.1-pro',          elapsed: 37.3, chars: 4108, words:  717, status: 200, finishReason: 'STOP' },
-      { aiName: 'Grok',       provider: 'grok',       model: 'grok-4.20-reasoning',     elapsed: 49.5, chars: 3094, words:  544, status: 200, finishReason: 'stop' },
-      { aiName: 'DeepSeek',   provider: 'deepseek',   model: 'deepseek-v4',             elapsed:  0.8, chars: 4922, words:  848, status: 200, finishReason: 'stop' },
-      { aiName: 'Perplexity', provider: 'perplexity', model: 'sonar-pro',               elapsed:  7.1, chars: 1873, words:  313, status: 200, finishReason: 'stop' }
-    ];
-    this.ringBuffer = fake.map(f => ({ ...f, capturedAt: new Date().toISOString() }));
-    this.openViewer();
-    if (typeof toast === 'function') toast(`🔬 Seeded ${fake.length} fake captures — preview only`);
+
+  // ════════════════════════════════════════════════════════════
+  // v3.63.139 — Hive Profiles tier classifier dev-toolbar entry
+  // ────────────────────────────────────────────────────────────
+  // The actual classifier logic lives in app.js
+  // (classifyTiersForAllKeyed / classifyTiersForProvider /
+  // getCachedTiers). This is the thin front-end the 🐝 Classify
+  // Tiers button on the dev toolbar invokes: runs across every
+  // keyed provider sequentially, logs each raw response to the
+  // browser console for prompt iteration, toasts a summary.
+  // No viewer modal — results land in the next 📦 Bundle for
+  // Scout download alongside the ring buffer.
+  // ════════════════════════════════════════════════════════════
+  async classifyTiers(opts) {
+    opts = opts || {};
+    const force = !!opts.force;
+    if (typeof classifyTiersForAllKeyed !== 'function') {
+      if (typeof toast === 'function') toast('⚠️ Tier classifier unavailable — app.js not loaded');
+      return;
+    }
+    const btn = document.getElementById('wfClassifyTiersBtn');
+    const origLabel = btn ? btn.innerHTML : null;
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Classifying…'; }
+    if (typeof toast === 'function') toast(force ? '🐝 Re-classifying every keyed provider…' : '🐝 Classifying every keyed provider…', 4000);
+    try {
+      const results = await classifyTiersForAllKeyed({ force });
+      const ok   = Object.values(results).filter(r => r && (r.cheap || r.balanced || r.thinker || r.fast)).length;
+      const fail = Object.values(results).filter(r => !r).length;
+      console.log('🐝 Tier classifications — full result map:', results);
+      if (typeof toast === 'function') toast(`🐝 ${ok} provider${ok === 1 ? '' : 's'} classified${fail ? ` · ${fail} failed (see console)` : ''} — bundle to send to Scout`, 6000);
+    } catch (e) {
+      console.warn('[WF_DEBUG.classifyTiers] failed:', e);
+      if (typeof toast === 'function') toast(`⚠️ Tier classification failed: ${e.message || 'unknown'}`, 6000);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = origLabel || '🐝 Classify Tiers'; }
+    }
   }
 };
 
