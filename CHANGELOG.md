@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.122
+
+**ai-api-pricing.html: H1 hero moved outside doc-layout to match other helper pages**
+
+Build: `20260603-015`<br>
+Released: `2026-06-03`
+
+Trailing fix on v3.63.121. David flagged that `ai-api-pricing.html` still had the menu above the H1 hero on mobile — same structural issue that v3.63.121 fixed on `api-details.html`. Now matched: the hero `<div class="hp-section">` (Token Bee + H1 "AI API Pricing for WaxFrame" + intro paragraphs + "Last updated" stamp) moved OUTSIDE `.doc-layout`. Body content (How to read + tables + Builder picks + FAQ + Related Guides) stays inside `.doc-main`.
+
+Mobile flow is now `chrome → hero with H1 → menu → content` on every doc-layout helper page: `ai-api-pricing.html`, `api-details.html`, `document-playbooks.html`, `waxframe-user-manual.html`, `templates.html`. Consistent across the site.
+
+**Verified in Chrome MCP at 390×844**: chrome 0-126 → hero 168-541 (H1 at y=150) → menu 572-1029 → first content card (#how-to-read) at y=1078. Pricing card-view still renders (10 rows), 4 theme buttons visible, back-to-top works, no horizontal page overflow.
+
+Desktop is unchanged — the hero sits above the `(240px 1fr)` grid, same way the existing 3 hero-outside pages have always worked.
+
+**Files changed:** `ai-api-pricing.html` (hero hp-section moved outside doc-layout; body content stays in doc-main inside an hp-section with header removed), `js/version.js` (`APP_VERSION` → `v3.63.122 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only), `style.css` (build header), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.122`, `package.json` (3.63.121 → 3.63.122), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v191.txt`.
+
+---
+
 ## v3.63.121
 
 **Mobile fixed properly: page-level scroll restored, theme band, back-to-top working, scoped pricing card-view**
