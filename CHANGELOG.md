@@ -2,6 +2,54 @@
 
 ---
 
+## v3.63.118
+
+**Mobile pricing-page rebuild: card-view tables + doc-layout source order**
+
+Build: `20260603-011`<br>
+Released: `2026-06-03`
+
+Two real mobile bugs after v3.63.117 — flagged by David on a Galaxy S25 emulator at 412×915.
+
+**Fix 1: Pricing & rate-limit tables now render as cards on mobile**
+
+v3.63.117 added `.ai-table` to the existing horizontal-scroll mobile fallback. That fix worked in theory (the table did become a scroll container) but failed in practice: phone users couldn't tell the scroll existed, couldn't compare values across rows, and lost context the moment they swiped right on an 8-column table. The audit had already flagged "card-view alternative" as the proper fix and we shipped the half-measure instead — owning that, doing it right now.
+
+Mobile (`@media (max-width: 820px)`) restructure for `.ai-table`:
+- `<thead>` hidden (column headers don't fit the model anymore).
+- Each `<tr>` becomes a vertical card: surface background, subtle border, padding.
+- Each `<td>` becomes a labeled-field row inside the card — label on the left in dim uppercase letterspaced caption style, value on the right.
+- First cell (provider name) renders as the card header: no label prefix, larger font, stacked above its inner content, separated from the rest by a divider.
+- Last cell's bottom border is suppressed so the card edge sits cleanly.
+
+Renderer changes in `ai-api-pricing.html`:
+- `renderPricingTable()` now emits `data-label="Provider"` / `"Default model"` / `"Input $/M"` / `"Output $/M"` / `"Context"` / `"Max output"` / `"Est. $/round"` / `"Billing"` on each `<td>`.
+- `renderRateLimitsTable()` mirrors the pattern with `"Provider"` / `"Tier 1 RPM"` / `"Tier 1 TPM"` / `"Free tier"` / `"Notes"`.
+
+CSS reads `attr(data-label)` via the `::before` pseudo-element on each `<td>`. The first child suppresses the label because the provider name is its own visual header.
+
+Desktop behavior is unchanged — the `@media` block only fires at ≤820px. `.dp-table` and `.wh-table` continue to use the existing horizontal-scroll fallback (which is fine for two-column key/value layouts where the value column simply wraps).
+
+**Fix 2: Mobile `.doc-layout` source order — page hero now sits above the jump nav**
+
+The desktop `.doc-layout` is a `grid (240px 1fr)` — sidebar left, hero+main right. The HTML source has `<aside class="doc-sidebar">` before `<div class="doc-main">` so the grid can place them by area. On mobile the grid collapsed to `display: block` and source order won, meaning visitors saw the jump-nav card FIRST and the page H1 + hero SECOND.
+
+Changed `.doc-layout` mobile rule from `display: block` to `display: flex; flex-direction: column`, then added `order: 1` to `.doc-main` and `order: 2` to `.doc-sidebar`. No HTML restructure, no desktop change. Affects every helper page using the `.doc-layout` chassis (`api-details.html`, `document-playbooks.html`, `waxframe-user-manual.html`, `ai-api-pricing.html`).
+
+Also bumped the sidebar's top margin (`margin: var(--space-16) 0 var(--space-20)`) so the jump nav has visual breathing room from the hero above it.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files + Worker source.
+- `style.css` regex confirms 1 occurrence of the v3.63.118 card-view comment and ≥1 `order: 1` directive (within `.doc-main` rule).
+- `ai-api-pricing.html` regex confirms 2 occurrences of `data-label="Provider"` (pricing table + rate-limits table).
+- Build stamp `20260603-011` consistent across all 15 JS files, `style.css`, all 11 release HTMLs, the Worker source, and the pricing-page meta tag.
+- Cache-bust `?v=3.63.118` swept across all HTML script/link references.
+
+**Files changed:** `ai-api-pricing.html` (renderer now emits `data-label` on every `<td>` in both `renderPricingTable` and `renderRateLimitsTable`), `style.css` (new mobile card-view rules for `.ai-table`; `.doc-layout` mobile rule switches to flex column with explicit `order` on `.doc-main` + `.doc-sidebar`; build header), `js/version.js` (`APP_VERSION` → `v3.63.118 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.118`, `package.json` (3.63.117 → 3.63.118), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v187.txt`.
+
+---
+
 ## v3.63.117
 
 **Mobile funnel polish: table overflow fixes + AI API Pricing in rail + pricing transparency + min-screen footer**
