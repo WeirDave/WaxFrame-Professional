@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260604-012
+// Build: 20260604-013
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -199,27 +199,68 @@ window.WF_DEBUG = {
       : 'WaxFrame';
     const totalRoundsForName = Math.max(0, (typeof round !== 'undefined' ? round : 1) - 1);
 
-    // Inline checkpoint snapshot — same keys backupSession reads, but we
-    // grab them direct from localStorage so the bundle is self-contained
-    // without invoking the full backup-download flow.
+    // v3.63.140 — Walk every keyed provider (defaults + customs) for tier
+    // cache, not just DEFAULT_AIS. v3.63.139 missed custom AIs entirely
+    // because the runner only iterated defaults; this read needs to mirror
+    // that fix so a Bundle for Scout captures every classification that
+    // exists.
     let tierCache = {};
     try {
-      const providers = (typeof DEFAULT_AIS !== 'undefined' && Array.isArray(DEFAULT_AIS))
-        ? DEFAULT_AIS.map(a => a.provider)
-        : [];
-      for (const p of providers) {
-        const raw = localStorage.getItem(`waxframe_tiers_${p}`);
+      const seen = new Set();
+      const collect = (provider) => {
+        if (!provider || seen.has(provider)) return;
+        seen.add(provider);
+        const raw = localStorage.getItem(`waxframe_tiers_${provider}`);
         if (raw) {
-          try { tierCache[p] = JSON.parse(raw); } catch (e) { /* skip malformed */ }
+          try { tierCache[provider] = JSON.parse(raw); } catch (e) { /* skip malformed */ }
         }
+      };
+      if (typeof aiList !== 'undefined' && Array.isArray(aiList)) {
+        for (const a of aiList) collect(a.provider);
+      }
+      if (typeof DEFAULT_AIS !== 'undefined' && Array.isArray(DEFAULT_AIS)) {
+        for (const a of DEFAULT_AIS) collect(a.provider);
       }
     } catch (e) { /* defensive — tier cache is optional */ }
 
+    // v3.63.140 — Capture the last classification error map so Scout has
+    // diagnostic info on providers that failed silently (Mistral and
+    // Perplexity in the v3.63.139 test run).
+    let tierErrors = null;
+    try {
+      if (typeof window !== 'undefined' && window._lastTierClassificationErrors) {
+        tierErrors = window._lastTierClassificationErrors;
+      }
+    } catch (e) { /* defensive */ }
+
+    // v3.63.140 — Sanitize the checkpoint snapshot. The prior version
+    // dumped LS_HIVE verbatim, which includes the user's plaintext API
+    // keys. Strip them before serialization and leave a marker so the
+    // analyst can see the keys existed but were redacted.
+    const _redactKeysIn = (raw) => {
+      if (!raw) return raw;
+      try {
+        const obj = JSON.parse(raw);
+        if (obj && obj.keys && typeof obj.keys === 'object') {
+          const n = Object.keys(obj.keys).length;
+          obj.keys = `[REDACTED — ${n} key${n === 1 ? '' : 's'} stripped from bundle export]`;
+        }
+        if (obj && obj.customAIConfigs && typeof obj.customAIConfigs === 'object') {
+          for (const id of Object.keys(obj.customAIConfigs)) {
+            const cfg = obj.customAIConfigs[id];
+            if (cfg && typeof cfg === 'object' && '_key' in cfg) cfg._key = '[REDACTED]';
+          }
+        }
+        return JSON.stringify(obj);
+      } catch (e) {
+        return '[parse failed — block omitted for safety]';
+      }
+    };
     let checkpoint = null;
     try {
       checkpoint = {
         LS_PROJECT: localStorage.getItem('waxframe_v2_project'),
-        LS_HIVE:    localStorage.getItem('waxframe_v2_hive'),
+        LS_HIVE:    _redactKeysIn(localStorage.getItem('waxframe_v2_hive')),
         LS_SESSION: localStorage.getItem('waxframe_v2_session_mirror')
       };
     } catch (e) { /* defensive */ }
@@ -232,8 +273,10 @@ window.WF_DEBUG = {
       _waxframe_ring_max:      this.RING_MAX,
       _waxframe_ring_count:    this.ringBuffer.length,
       _waxframe_tier_count:    Object.keys(tierCache).length,
+      _waxframe_keys_redacted: true,
       ringBuffer:              this.ringBuffer,
       tierClassifications:     tierCache,
+      tierClassificationErrors: tierErrors,
       checkpoint:              checkpoint
     };
 
