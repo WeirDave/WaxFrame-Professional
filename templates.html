@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — templates.html
-     Build: 20260603-015
+     Build: 20260603-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
 
@@ -15,7 +15,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-015">
+  <meta name="waxframe-build" content="20260603-016">
   <title>Document Templates Catalog — WaxFrame</title>
   <meta name="description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <link rel="canonical" href="https://waxframe.com/templates.html">
@@ -29,7 +29,7 @@
   <meta name="twitter:description" content="Curated document templates for cover letters, résumés, business proposals, RFP responses, product reviews, and more — used by the WaxFrame AI hive.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.122">
+  <link rel="stylesheet" href="style.css?v=3.63.123">
 </head>
 <body class="helper-body">
 
@@ -269,12 +269,12 @@
 <!-- ============================================================
      SCRIPT IMPORTS — same set as other helper pages
      ============================================================ -->
-<script src="js/theme.js?v=3.63.122"></script>
-<script src="js/nav-helper.js?v=3.63.122"></script>
-<script src="js/license-helper.js?v=3.63.122"></script>
-<script src="js/version.js?v=3.63.122"></script>
-<script src="js/templates.js?v=3.63.122"></script>
-<script src="js/docs-scrollspy.js?v=3.63.122"></script>
+<script src="js/theme.js?v=3.63.123"></script>
+<script src="js/nav-helper.js?v=3.63.123"></script>
+<script src="js/license-helper.js?v=3.63.123"></script>
+<script src="js/version.js?v=3.63.123"></script>
+<script src="js/templates.js?v=3.63.123"></script>
+<script src="js/docs-scrollspy.js?v=3.63.123"></script>
 
 <script>
 // ============================================================
@@ -370,6 +370,17 @@ function renderTemplateCard(t) {
 
   const pathsRow = `<div class="tpl-card-paths">${paths.map(pathPill).join('')}</div>`;
 
+  // v3.63.123 — Cross-link to dedicated use-case landing page for the three SEO targets.
+  const LANDING_PAGES = {
+    'cover-letter':      { href: 'ai-cover-letter-editor.html', label: 'Read the AI Cover Letter Editor guide →' },
+    'resume':            { href: 'ai-resume-review.html',       label: 'Read the AI Résumé Review guide →' },
+    'business-proposal': { href: 'ai-business-proposal.html',   label: 'Read the AI Business Proposal Writer guide →' }
+  };
+  const landing = LANDING_PAGES[t.id];
+  const landingLink = landing
+    ? `<a class="tpl-card-landing-link" href="${landing.href}" target="_blank" rel="noopener noreferrer">${landing.label}</a>`
+    : '';
+
   return `
     <article class="tpl-card" id="tpl-${escapeHtml(t.id || '')}">
       <header class="tpl-card-header">
@@ -381,6 +392,7 @@ function renderTemplateCard(t) {
       </header>
       <p class="tpl-card-desc">${escapeHtml(description)}</p>
       ${factsRow}
+      ${landingLink}
       ${scaffoldBlock}
     </article>
   `;

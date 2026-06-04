@@ -1,0 +1,295 @@
+<!-- ============================================================
+     WaxFrame — ai-business-proposal.html
+     Build: 20260603-016
+     Author: WeirDave (R David Paine III) | License: AGPL-3.0
+     GitHub: github.com/WeirDave/WaxFrame-Professional
+
+     Use-case landing page (v3.63.123). Second of three SEO
+     landing pages — targets "AI business proposal" search
+     intent. Linear scroll, no doc-layout. Funnels into the
+     Templates catalog and the Business Proposal playbook.
+     ============================================================ -->
+<!DOCTYPE html>
+<html lang="en" data-theme="auto">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="waxframe-build" content="20260603-016">
+  <title>AI Business Proposal Writer — Multi-AI Refinement — WaxFrame</title>
+  <meta name="description" content="Draft and refine business proposals with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more, finding the weak spots before your prospect does. Free trial, $19 lifetime.">
+  <link rel="canonical" href="https://waxframe.com/ai-business-proposal.html">
+  <meta property="og:title" content="AI Business Proposal Writer — Multi-AI Refinement — WaxFrame">
+  <meta property="og:description" content="Draft and refine business proposals with a hive of AI reviewers, finding the weak spots before your prospect does.">
+  <meta property="og:url" content="https://waxframe.com/ai-business-proposal.html">
+  <meta property="og:type" content="article">
+  <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AI Business Proposal Writer — Multi-AI Refinement — WaxFrame">
+  <meta name="twitter:description" content="Draft and refine business proposals with a hive of AI reviewers, finding the weak spots before your prospect does.">
+  <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
+  <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
+  <link rel="stylesheet" href="style.css?v=3.63.123">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AI Business Proposal Writer — Multi-AI Refinement",
+    "description": "Draft and refine business proposals with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more, finding the weak spots before your prospect does.",
+    "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
+    "author": { "@type": "Person", "name": "R David Paine III", "url": "https://www.weirdave.com" },
+    "publisher": { "@type": "Organization", "name": "WaxFrame", "logo": { "@type": "ImageObject", "url": "https://waxframe.com/images/Waxframe_logo_v19.png" } },
+    "mainEntityOfPage": "https://waxframe.com/ai-business-proposal.html"
+  }
+  </script>
+</head>
+<body class="helper-body">
+
+<!-- ========================================================
+     SLIM HELPER-PAGE NAV MENU (v3.22.5)
+     ======================================================== -->
+<div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+<div class="nav-panel" id="navPanel">
+  <div class="nav-panel-header">
+    <div class="nav-panel-brand">
+      <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="nav-panel-logo">
+      <div class="nav-panel-brand-text">
+        <span class="nav-panel-title">WaxFrame</span>
+        <span class="nav-panel-tagline">Many minds, one refined result.</span>
+        <span class="app-version-stamp nav-panel-version"></span>
+        <button class="nav-panel-about-btn" onclick="closeNavMenu();document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+      </div>
+    </div>
+    <button class="nav-close-btn" onclick="closeNavMenu()">✕</button>
+  </div>
+
+  <div class="nav-body">
+    <div class="nav-section-label">Help & Support</div>
+    <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
+    <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">WaxFrame App</div>
+    <a class="nav-item" href="index.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🚀 Open WaxFrame</a>
+    <a class="nav-item" href="waxframe-user-manual.html#settings" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">⚙ Settings</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Tools</div>
+    <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
+
+    <div class="nav-divider"></div>
+    <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section-label">Legal</div>
+    <a class="nav-item" href="privacy.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛡️ Privacy Policy</a>
+    <a class="nav-item" href="terms.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📜 Terms of Use</a>
+  </div>
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE HEADER (v3.22.5)
+     ======================================================== -->
+<div class="page-header">
+  <div class="page-header-left">
+    <button class="nav-hamburger" onclick="openNavMenu()" title="Navigation"><span></span><span></span><span></span></button>
+  </div>
+  <div class="page-header-brand">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="page-header-logo">
+    <div class="page-header-brand-text">
+      <div class="page-header-name">WaxFrame</div>
+      <div class="page-header-tag">Many minds, one refined result.</div>
+      <span class="app-version-stamp helper-version-stamp"></span>
+    </div>
+  </div>
+  <div class="page-header-controls">
+    <button class="theme-opt mute-btn" onclick="toggleMute()" title="Toggle sounds">🔊</button>
+    <button class="theme-opt" data-theme="light" onclick="setTheme('light')" title="Light mode">☀️</button>
+    <button class="theme-opt" data-theme="auto" onclick="setTheme('auto')" title="Auto">⚙️</button>
+    <button class="theme-opt" data-theme="dark" onclick="setTheme('dark')" title="Dark mode">🌙</button>
+  </div>
+</div>
+
+<div class="page-main" id="top">
+
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_Project_Bee_v2.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">AI Business Proposal Writer</h1>
+      <p class="hp-section-sub">Draft and refine a business proposal with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more, all reading your proposal at the same time and finding the weak spots before your prospect does. Bring a draft or start from a template; the hive turns it into the one that wins the project.</p>
+    </div>
+  </div>
+  <div class="hp-section-body">
+
+    <div class="wf-card is-accent">
+      <p><strong>Free 3-round trial — no signup, no credit card.</strong> Unlock unlimited rounds with a $19 lifetime license. <a href="index.html" target="_blank" rel="noopener noreferrer" class="link-accent">Open WaxFrame ↗</a> · <a href="templates.html#tpl-business-proposal" target="_blank" rel="noopener noreferrer" class="link-accent">Business Proposal Template ↗</a></p>
+    </div>
+
+    <h2>Why a multi-AI hive beats one AI for proposals</h2>
+
+    <div class="wf-card">
+      <p>A business proposal has to do four hard things at once: speak to the prospect's actual problem, position your offer credibly, justify the price without being defensive, and make next steps frictionless. One AI catches some of these. A hive catches all of them — because each model brings different instincts.</p>
+      <p>ChatGPT is strong on structure and clear hierarchies. Claude is strong on tone and reading whether your proposal sounds confident vs. defensive. Gemini surfaces gaps in scope and assumptions fast. Grok pushes harder on tightening the value proposition. DeepSeek hunts for inconsistencies between sections.</p>
+      <p>WaxFrame runs all of them on your proposal at once. Each returns numbered, specific suggestions. A Builder AI synthesizes the strongest into a refined version. You review every change, accept or reject, and run another round. Four to six rounds is typical for a proposal of substance.</p>
+    </div>
+
+    <h2>What WaxFrame edits and what it won't</h2>
+
+    <div class="wf-card is-amber">
+      <p><strong>Will:</strong> sharpen the problem statement so the prospect feels seen, tighten the proposed approach into clearly-named phases, surface missing deliverables, flag scope ambiguity that will cause disputes later, calibrate tone to match the prospect's industry, restructure pricing presentation so it lands as value not cost, kill defensive hedging language, kill jargon that doesn't earn its keep, strengthen the call to action so signing is the path of least resistance.</p>
+      <p><strong>Won't:</strong> invent capabilities you don't have, manufacture client logos or case studies, fabricate pricing math, or commit you to deliverables you didn't write into your draft. The Builder is explicitly instructed to never add facts that aren't in your draft or reference material.</p>
+    </div>
+
+    <h2>How to use WaxFrame for your proposal</h2>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">If you have a draft</h3>
+      <p>Open WaxFrame, pick the Business Proposal template, paste your draft into the Starting Document screen. Paste the RFP, discovery call notes, or written brief into the Reference Material screen — the hive will check your proposal against what the prospect actually asked for, every round. Pick a Builder AI (Claude for tone work, ChatGPT for structural rewrites). Run 4-6 rounds. Export when satisfied.</p>
+    </div>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">If you're starting from scratch</h3>
+      <p>Same template, but click <strong>Start from Scratch</strong> on the Starting Document screen. In the Notes drawer before Round 1, paste five things: (1) who the prospect is and what they do, (2) the problem you're solving for them in their words, (3) your proposed approach in 2-3 sentences, (4) deliverables and timeline, (5) price and what's included. The hive will assemble a structured first draft and refine from there.</p>
+    </div>
+
+    <div class="wf-card">
+      <h3 class="wf-card-title">Reference material is where this stops feeling generic</h3>
+      <p>If you paste only the prospect's name, the hive will produce a competent generic proposal. If you paste the discovery call transcript, the RFP, the existing email thread, or anything else the prospect has said — every reviewer will check your proposal against their actual words, every round. That's how proposals stop sounding like templates.</p>
+      <p>WaxFrame handles 10,000+ characters of reference material without performance issues. Paste freely.</p>
+    </div>
+
+    <h2>What a typical session looks like</h2>
+
+    <div class="wf-card is-green">
+      <p><strong>Round 1.</strong> Six reviewers flag: problem statement is too generic for this prospect, deliverables are clear but timeline isn't, pricing reads as defensive, the close is buried, two missing items the RFP explicitly asked for. Builder rewrites with fixes. You accept five of six.</p>
+      <p><strong>Round 2.</strong> Reviewers flag: timeline is now clear but missing dependencies, "value vs cost" framing is better but the rationale is thin, scope still has one ambiguous phrase. Builder rewrites. You accept all.</p>
+      <p><strong>Round 3.</strong> Reviewers flag: rationale lands now, scope is clean, but the executive summary at the top no longer matches the body (because you've been editing the body for two rounds). Builder rewrites the exec summary. You accept.</p>
+      <p><strong>Round 4.</strong> Three reviewers return NO CHANGES; three flag final polish (verbs, parallel structure in the deliverables list, one numeral inconsistency). Builder applies. You export to .docx.</p>
+      <p>Total time: ~25-35 minutes for a substantive proposal. Total API cost: usually under $1 on a paid Builder model.</p>
+    </div>
+
+    <h2>The Business Proposal template includes</h2>
+
+    <div class="wf-card">
+      <p><strong>Document type</strong> set to "Business proposal." <strong>Target audience</strong> pre-scripted ("Decision-maker(s) at [prospect company] evaluating vendors for [project]. May be technical, may be executive, often both"). <strong>Desired outcome</strong> pre-scripted ("Prospect signs the SOW. Six sections: Problem we're solving / Proposed approach / Deliverables / Timeline / Pricing / Next steps"). <strong>Scope &amp; constraints</strong> already populated ("No defensive hedging. No 'we will leverage synergies'. No 'thank you for the opportunity' opens. Price is presented as value not cost"). <strong>Reference Material</strong> field labeled for the RFP, discovery notes, or written brief. <strong>Best AIs For:</strong> Claude for tone and reading defensive vs. confident, ChatGPT for structure, Grok for tightening the value prop.</p>
+      <p>Every field is editable once the template loads. The defaults are starting points, not constraints.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Get started</h2>
+
+    <div class="wf-card is-accent">
+      <p><strong>1. Open WaxFrame.</strong> <a href="index.html" target="_blank" rel="noopener noreferrer" class="link-accent">waxframe.com ↗</a> — runs in your browser, no install, no signup. Works on desktop and laptop (Chrome, Firefox, Edge, Safari at 1366×768 or wider).</p>
+      <p><strong>2. Apply the Business Proposal template</strong> from the <a href="templates.html#tpl-business-proposal" target="_blank" rel="noopener noreferrer" class="link-accent">Template Catalog ↗</a> — auto-populates the Goal fields.</p>
+      <p><strong>3. Want the deep version of this workflow?</strong> See the <a href="document-playbooks.html#business-proposal" target="_blank" rel="noopener noreferrer" class="link-accent">Business Proposal playbook ↗</a> — every field, every option, with reasoning.</p>
+      <p><strong>4. Cost question?</strong> See <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing ↗</a> — live per-token rates for every supported provider.</p>
+    </div>
+
+    <a href="#top" class="wh-back-top">↑ Back to top</a>
+
+  </div>
+</div>
+</div>
+
+<div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <div class="goal-info-icon">
+      <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img">
+    </div>
+    <h2 class="finish-modal-title">Open Source & Privacy</h2>
+    <div class="goal-info-body">
+      <p>WaxFrame is fully open source under the AGPL-3.0 license. Every line of code is public and auditable.</p>
+      <div class="goal-info-row">
+        <span class="goal-info-phase draft">No Server</span>
+        <span class="goal-info-desc">WaxFrame has no backend. Everything runs in your browser. Your documents, API keys, and session data never leave your machine.</span>
+      </div>
+      <div class="goal-info-row">
+        <span class="goal-info-phase refine">No Tracking</span>
+        <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
+      </div>
+      <p class="goal-info-tip">💡 Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- ========================================================
+     UNIFIED HELPER-PAGE FOOTER (v3.22.5) — sticky bottom.
+     ======================================================== -->
+<div class="page-footer page-footer-unified">
+  <div class="page-footer-actions">
+    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx)">⬇ Download as Word</button>
+  </div>
+  <div class="page-footer-center"></div>
+  <div class="page-footer-right">
+    <span class="license-badge" id="licenseBadge" title="License status"></span>
+    <button class="footer-about-btn" onclick="document.getElementById('aboutModalHelper').classList.add('active')">ℹ️ About</button>
+  </div>
+</div>
+
+<!-- ========================================================
+     ABOUT MODAL — helper-page version. Metadata only.
+     ======================================================== -->
+<div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
+  <div class="finish-modal goal-info-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="about-modal-logo">
+    <h2 class="finish-modal-title">WaxFrame</h2>
+    <p class="about-modal-subtitle">About</p>
+    <div class="goal-info-body">
+      <div class="goal-info-row"><span class="info-label">Version</span><span class="goal-info-desc"><span class="app-version-stamp"></span></span></div>
+      <div class="goal-info-row"><span class="info-label">License</span><span class="goal-info-desc">AGPL-3.0 — open source, free to use and modify with attribution. <a href="https://www.gnu.org/licenses/agpl-3.0.html" target="_blank" rel="noopener noreferrer" class="link-accent">Read license →</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Source</span><span class="goal-info-desc"><a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">github.com/WeirDave/WaxFrame-Professional</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Author</span><span class="goal-info-desc">R David Paine III — <a href="https://www.weirdave.com" target="_blank" rel="noopener noreferrer" class="link-accent">weirdave.com</a></span></div>
+      <div class="goal-info-row"><span class="info-label">Testing</span><span class="goal-info-desc">Candy</span></div>
+      <div class="goal-info-row"><span class="info-label">Stack</span><span class="goal-info-desc">Vanilla HTML, CSS, JavaScript — no frameworks, no server, no install required.</span></div>
+      <p class="goal-info-tip">Built with ❤️ by WeirDave and Claude.</p>
+    </div>
+    <button class="finish-modal-cancel" onclick="document.getElementById('aboutModalHelper').classList.remove('active')">Got it →</button>
+  </div>
+</div>
+
+<!-- LICENSE MODALS — helper-page (v3.22.6) -->
+<div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">WaxFrame Pro</h2>
+    <p class="license-modal-msg" id="licenseModalMsg">Enter your license key to continue.</p>
+    <input class="license-modal-input" id="licenseKeyInput" type="text" placeholder="XXXXXXXX-XXXXXXXX-XXXXXXXX-XXXXXXXX" autocomplete="off" spellcheck="false" onkeydown="if(event.key==='Enter') submitLicenseKey()">
+    <div class="license-modal-error" id="licenseKeyError"></div>
+    <button class="license-modal-btn" id="licenseSubmitBtn" onclick="submitLicenseKey()">Unlock Pro</button>
+    <a class="license-modal-buy" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer">Don't have a key? Buy WaxFrame Pro →</a>
+    <button class="finish-modal-cancel" onclick="hideLicenseModal()">← Not now</button>
+  </div>
+</div>
+
+<div class="license-modal-overlay" id="licenseManageModal" onclick="if(event.target===this)hideLicenseManageModal()">
+  <div class="license-modal">
+    <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
+    <h2 class="license-modal-title">Manage License</h2>
+    <p class="license-modal-msg">Your WaxFrame Pro license is active.</p>
+    <div class="license-modal-key-display" id="licenseManageKey">••••••••-••••••••-••••••••-••••••••</div>
+    <div class="license-modal-actions">
+      <button class="license-modal-btn-secondary" onclick="replaceLicenseKey()">Replace Key</button>
+      <button class="license-modal-btn-danger" onclick="confirmRemoveLicense()">Remove Key</button>
+    </div>
+    <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
+  </div>
+</div>
+
+<script src="js/theme.js?v=3.63.123"></script>
+<script src="lib/docx.min.js?v=3.63.123"></script>
+<script src="js/docx-export.js?v=3.63.123"></script>
+<script src="js/nav-helper.js?v=3.63.123"></script>
+<script src="js/license-helper.js?v=3.63.123"></script>
+<script src="js/version.js?v=3.63.123"></script>
+<script>
+  document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+</script>
+</body>
+</html>

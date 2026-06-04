@@ -1,8 +1,14 @@
 <!-- ============================================================
-     WaxFrame — privacy.html
+     WaxFrame — ai-cover-letter-editor.html
      Build: 20260603-016
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
+
+     Use-case landing page (v3.63.123). One of three SEO-focused
+     landing pages built to catch search intent for specific
+     document types and funnel into the Templates catalog + the
+     WaxFrame app. Linear scroll, no doc-layout — visitors land
+     from search, read top-to-bottom, click a CTA.
      ============================================================ -->
 <!DOCTYPE html>
 <html lang="en" data-theme="auto">
@@ -10,20 +16,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="waxframe-build" content="20260603-016">
-  <title>Privacy Policy — WaxFrame</title>
-  <meta name="description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
-  <link rel="canonical" href="https://waxframe.com/privacy.html">
-  <meta property="og:title" content="Privacy Policy — WaxFrame">
-  <meta property="og:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
-  <meta property="og:url" content="https://waxframe.com/privacy.html">
-  <meta property="og:type" content="website">
+  <title>AI Cover Letter Editor — Multi-AI Refinement — WaxFrame</title>
+  <meta name="description" content="Refine your cover letter with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more — catching what a single AI misses. Free trial, $19 lifetime license.">
+  <link rel="canonical" href="https://waxframe.com/ai-cover-letter-editor.html">
+  <meta property="og:title" content="AI Cover Letter Editor — Multi-AI Refinement — WaxFrame">
+  <meta property="og:description" content="Refine your cover letter with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more — catching what a single AI misses.">
+  <meta property="og:url" content="https://waxframe.com/ai-cover-letter-editor.html">
+  <meta property="og:type" content="article">
   <meta property="og:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Privacy Policy — WaxFrame">
-  <meta name="twitter:description" content="WaxFrame's privacy policy. No backend, no database, no tracking. API keys, prompts, and documents stay in your browser.">
+  <meta name="twitter:title" content="AI Cover Letter Editor — Multi-AI Refinement — WaxFrame">
+  <meta name="twitter:description" content="Refine your cover letter with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more — catching what a single AI misses.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
   <link rel="stylesheet" href="style.css?v=3.63.123">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "AI Cover Letter Editor — Multi-AI Refinement",
+    "description": "Refine your cover letter with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more — catching what a single AI misses.",
+    "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
+    "author": { "@type": "Person", "name": "R David Paine III", "url": "https://www.weirdave.com" },
+    "publisher": { "@type": "Organization", "name": "WaxFrame", "logo": { "@type": "ImageObject", "url": "https://waxframe.com/images/Waxframe_logo_v19.png" } },
+    "mainEntityOfPage": "https://waxframe.com/ai-cover-letter-editor.html"
+  }
+  </script>
 </head>
 <body class="helper-body">
 
@@ -47,10 +65,12 @@
   </div>
 
   <div class="nav-body">
-    <div class="nav-section-label">Documentation</div>
+    <div class="nav-section-label">Help & Support</div>
     <a class="nav-item" href="api-details.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🔑 API Key Guide</a>
     <a class="nav-item" href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">💰 AI API Pricing</a>
-    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
+    <a class="nav-item" href="document-playbooks.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📋 Document Playbooks</a>
+    <a class="nav-item" href="help.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛟 Help</a>
+    <a class="nav-item" href="waxframe-user-manual.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">📖 User Manual</a>
     <a class="nav-item" href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🪙 What Are Tokens?</a>
 
     <div class="nav-divider"></div>
@@ -63,7 +83,6 @@
     <button class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
 
     <div class="nav-divider"></div>
-    <div class="nav-section-label">Support</div>
     <a class="nav-item nav-item-accent" href="https://weirdave.gumroad.com/l/WaxFrame" target="_blank" rel="noopener noreferrer" onclick="closeNavMenu()">🛒 Buy WaxFrame Pro</a>
 
     <div class="nav-divider"></div>
@@ -100,109 +119,101 @@
 
 <div class="hp-section">
   <div class="hp-section-header">
+    <img src="images/WaxFrame_Project_Bee_v2.png" alt="" class="hp-section-bee">
     <div class="hp-section-title-block">
-      <h1 class="hp-section-title">Privacy Policy</h1>
-      <p class="hp-section-sub">WaxFrame is built so that your private data stays private by design — not by promise. There is no server to send it to. This page explains exactly where your data lives, the one narrow exception, and what the third-party services you connect can see.</p>
-      <p class="hp-section-sub"><em>Effective May 25, 2026.</em></p>
+      <h1 class="hp-section-title">AI Cover Letter Editor</h1>
+      <p class="hp-section-sub">Refine your cover letter with a hive of AI reviewers — ChatGPT, Claude, Gemini, and more, all reading your draft at the same time, catching what a single AI misses. Bring your draft or start from a template; the hive turns it into the one a hiring manager actually reads.</p>
     </div>
   </div>
   <div class="hp-section-body">
 
-    <h2>The short version</h2>
-
-    <div class="wf-card is-green">
-      <h3 class="wf-card-title">No backend, no database, no tracking</h3>
-      <p>WaxFrame has no application server and no database. The entire app runs in your browser. There is no WaxFrame account to create, and no analytics, telemetry, advertising, or cookies for tracking. Because there is no server collecting anything, there is nothing for WaxFrame to sell, share, or leak.</p>
-      <p>The one piece of data that ever leaves your browser to a service operated by WaxFrame's developer is Claude traffic, which passes through a relay that does not log or store it. That single exception is detailed below.</p>
-    </div>
-
-    <h2>What WaxFrame stores, and where</h2>
-
     <div class="wf-card is-accent">
-      <h3 class="wf-card-title">Everything stays in your browser</h3>
-      <p>Your API keys, your projects, your documents, your session history, and your preferences (theme, mute, hive setup) are stored locally in your browser using <code>localStorage</code> and <code>IndexedDB</code>. This data is per-browser-profile and per-machine: what you save on your work laptop does not appear on your phone, and clearing this site's browser data removes it.</p>
-      <p>This local data is <strong>not encrypted at rest</strong>. Any code or browser extension running in the same browser profile that can read your storage can read it — the same threat model as any site-scoped browser storage. On shared or untrusted devices, use a separate browser profile or clear site data when you finish.</p>
+      <p><strong>Free 3-round trial — no signup, no credit card.</strong> Unlock unlimited rounds with a $19 lifetime license. <a href="index.html" target="_blank" rel="noopener noreferrer" class="link-accent">Open WaxFrame ↗</a> · <a href="templates.html#tpl-cover-letter" target="_blank" rel="noopener noreferrer" class="link-accent">Cover Letter Template ↗</a></p>
     </div>
 
-    <h2>Where your data goes when you run the hive</h2>
+    <h2>Why a multi-AI hive beats one AI for cover letters</h2>
 
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">Directly to the AI providers you choose</h3>
-      <p>When you run a round, WaxFrame sends your prompt and document text from your browser straight to the AI providers you have configured — OpenAI, Google, xAI, Mistral, Perplexity, Cohere, Together AI, DeepSeek, and any custom or server-based endpoints you add. Your API keys are sent only with those requests, only to those providers.</p>
-      <p>Each provider receives, processes, and handles that data under <strong>its own privacy policy and terms</strong> — not WaxFrame's. What a provider does with your prompts and documents (including whether it retains them or uses them for training) is governed by your agreement with that provider. Review each provider's policy before sending sensitive content.</p>
+    <div class="wf-card">
+      <p>A single AI cover letter generator gives you one model's voice, one model's blind spots. ChatGPT tends to over-formalize. Claude polishes voice but can soften specifics. Gemini is fast but sometimes glosses over the role-fit connection. Grok pushes harder on tone; DeepSeek is methodical but quiet on flair.</p>
+      <p><strong>WaxFrame runs all of them on your draft at once.</strong> Each one returns numbered, specific suggestions — "tighten paragraph 2," "the hook is generic," "the close is weak," "you didn't mention the company by name." A Builder AI then synthesizes the strongest suggestions into a refined version. You review what changed, accept or reject any individual change, and run another round if you want. Three or four rounds is typical for cover letters.</p>
+      <p>The result reads like one author wrote it — but it's been pressure-tested by half a dozen.</p>
     </div>
+
+    <h2>What WaxFrame edits and what it won't</h2>
 
     <div class="wf-card is-amber">
-      <h3 class="wf-card-title">The one exception — Claude</h3>
-      <p>Anthropic's API does not currently allow direct browser requests (no CORS), so Claude traffic routes through a small Cloudflare Worker operated by WaxFrame's developer at <a href="https://waxframe-claude-proxy.weirdave.workers.dev/" target="_blank" rel="noopener noreferrer" class="link-accent"><code>waxframe-claude-proxy.weirdave.workers.dev</code></a>. The Worker forwards your request straight to Anthropic and <strong>does not log or persist your API key or prompt content</strong> — but it necessarily sees them in transit while forwarding. This relay exists only to satisfy the browser's CORS requirement; it adds no storage and no analytics.</p>
-      <p>Every other provider connects directly browser-to-provider with no WaxFrame intermediary.</p>
+      <p><strong>Will:</strong> tighten the hook so it lands in three seconds, sharpen the role-fit connection between your background and the specific job, calibrate tone for the company culture, kill generic openers ("I am writing to express my interest"), kill the filler phrases hiring managers skim past, surface where you're underselling a real accomplishment, flag where you're overselling without evidence.</p>
+      <p><strong>Won't:</strong> fabricate experience you don't have, invent numbers or accomplishments, lie about your skills, or make claims the hiring manager could disprove in 30 seconds on LinkedIn. WaxFrame's Builder is explicitly instructed not to add facts that aren't supported by what you provide.</p>
     </div>
 
-    <h2>Buying WaxFrame Pro</h2>
+    <h2>How to use WaxFrame for your cover letter</h2>
 
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">Payments are handled by Gumroad</h3>
-      <p>WaxFrame Pro licenses are sold through Gumroad. Your payment details and purchase information are collected and processed by <strong>Gumroad</strong> under its own privacy policy — WaxFrame never sees or stores your payment information. After purchase, your license key is stored locally in your browser and verified against Gumroad's license API when you activate Pro. WaxFrame keeps no record of who owns a license.</p>
+    <div class="wf-card">
+      <h3 class="wf-card-title">If you have a draft</h3>
+      <p>Open WaxFrame, pick the Cover Letter template, paste your draft into the Starting Document screen. Paste the job description into the Reference Material screen — the hive will check your letter against what the employer actually asked for, every round. Pick a Builder AI (Claude or ChatGPT work well here). Run 3-6 rounds, reviewing what changed after each one. Export when you're satisfied.</p>
     </div>
 
-    <h2>Hosting</h2>
-
-    <div class="wf-card is-accent">
-      <h3 class="wf-card-title">Static hosting on GitHub Pages</h3>
-      <p>The WaxFrame site is served as static files via GitHub Pages at <code>waxframe.com</code>. As with any web host, GitHub may record standard technical request data (such as IP address and user agent) in its own server logs under GitHub's privacy practices. WaxFrame adds no tracking on top of this and receives none of that log data.</p>
+    <div class="wf-card">
+      <h3 class="wf-card-title">If you're starting from scratch</h3>
+      <p>Same template, but click <strong>Start from Scratch</strong> on the Starting Document screen and leave the text box empty. Before Round 1, open the Notes drawer and paste three things: (1) why you're a fit for this specific role, (2) one concrete accomplishment with numbers if possible, (3) what specifically excites you about the company or position. The hive will build a first draft from those talking points. Run rounds the same way.</p>
     </div>
 
-    <h2>Your control</h2>
+    <div class="wf-card">
+      <h3 class="wf-card-title">The reference material matters more than you think</h3>
+      <p>The single biggest mistake people make with AI cover letter tools is not feeding them the job description. WaxFrame's reviewers cite against your reference material every round — if you paste the JD, every reviewer will flag where your letter does and doesn't match the stated requirements. If you don't, the hive will produce a competent but generic letter.</p>
+      <p>Paste the full posting. The first 500 chars of "About Us" boilerplate isn't worth as much as the actual requirements list, the team description, and the application instructions. The hive can read 10,000+ characters of reference material without slowing down.</p>
+    </div>
+
+    <h2>What a typical session looks like</h2>
 
     <div class="wf-card is-green">
-      <h3 class="wf-card-title">You hold all of it</h3>
-      <p>Because your data lives only in your browser, you control it completely. Clear this site's browser data to erase everything WaxFrame has stored locally, including your saved API keys. Revoke an API key at the provider's console at any time to cut off access. WaxFrame is fully open source under AGPL-3.0, so every claim on this page is independently auditable in the source.</p>
+      <p><strong>Round 1.</strong> Six reviewers flag: weak hook, three filler phrases, role-fit connection is implied but not stated, missing the company name, one accomplishment is buried. Builder rewrites with all five fixes. You review and accept four of five changes.</p>
+      <p><strong>Round 2.</strong> Reviewers flag: the new opener is stronger but a touch formal for this company's voice, the second paragraph is tighter but loses the metric you wanted to keep, close is still generic. Builder rewrites. You accept.</p>
+      <p><strong>Round 3.</strong> Two reviewers return NO CHANGES; the other four flag minor polish (a comma, a stronger verb). Builder applies. You export to .docx.</p>
+      <p>Total time: ~15 minutes. Total cost: usually under 50 cents in API calls on a paid Builder, or free if Gemini Flash is your Builder on AI Studio's free tier.</p>
     </div>
 
-    <h2>Children</h2>
+    <h2>The Cover Letter template includes</h2>
+
+    <div class="wf-card">
+      <p><strong>Document type</strong> set to "Cover letter." <strong>Target audience</strong> pre-scripted ("Hiring manager at [company] reviewing applications for a [job title] role"). <strong>Desired outcome</strong> pre-scripted ("Reader wants to interview me. Three paragraphs: hook, role connection, confident close with a clear call to action"). <strong>Scope &amp; constraints</strong> already populated ("Three paragraphs max. No 'I am writing to express my interest' openers. No filler phrases. No 'I look forward to hearing from you' sign-offs"). <strong>Reference Material</strong> field labeled for the job description. <strong>Best AIs For:</strong> Claude for voice and authenticity, ChatGPT for punchy rewrites, Grok for tone calibration.</p>
+      <p>You can override any of these once the template loads. They're starting points, not constraints.</p>
+    </div>
+
+    <hr class="wf-section-divider">
+
+    <h2>Get started</h2>
 
     <div class="wf-card is-accent">
-      <p>WaxFrame is a developer/productivity tool and is not directed at children under 13. It collects no personal information through any server, because it has no server.</p>
-    </div>
-
-    <h2>Changes &amp; contact</h2>
-
-    <div class="wf-card is-accent">
-      <p>If this policy changes, the effective date above will be updated and the change will appear in the public repository history. Questions or concerns? Open an issue on <a href="https://github.com/WeirDave/WaxFrame-Professional/issues" target="_blank" rel="noopener noreferrer" class="link-accent">GitHub</a> — that is the contact channel for WaxFrame.</p>
-    </div>
-
-    <div class="wf-tip">
-      <span class="wf-tip-icon"><img src="images/WaxFrame_InfoButton_v1.png" alt=""></span>
-      <div class="wf-tip-body">See also the <a href="terms.html" class="link-accent">Terms of Use</a> and the full <a href="api-details.html" class="link-accent">API Key Guide</a> for the technical disclosure on key storage.</div>
+      <p><strong>1. Open WaxFrame.</strong> <a href="index.html" target="_blank" rel="noopener noreferrer" class="link-accent">waxframe.com ↗</a> — runs in your browser, no install, no signup. Works on desktop and laptop (Chrome, Firefox, Edge, Safari at 1366×768 or wider).</p>
+      <p><strong>2. Apply the Cover Letter template</strong> from the <a href="templates.html#tpl-cover-letter" target="_blank" rel="noopener noreferrer" class="link-accent">Template Catalog ↗</a> — auto-populates the Goal fields.</p>
+      <p><strong>3. Want the deep version of this workflow?</strong> See the <a href="document-playbooks.html#cover-letter" target="_blank" rel="noopener noreferrer" class="link-accent">Cover Letter playbook ↗</a> — every field, every option, with reasoning.</p>
+      <p><strong>4. Cost question?</strong> See <a href="ai-api-pricing.html" target="_blank" rel="noopener noreferrer" class="link-accent">AI API Pricing ↗</a> — live per-token rates for every supported provider.</p>
     </div>
 
     <a href="#top" class="wh-back-top">↑ Back to top</a>
 
   </div>
 </div>
-
 </div>
 
-<!-- ========================================================
-     OPEN SOURCE & PRIVACY MODAL
-     ======================================================== -->
 <div class="finish-modal-overlay" id="openSourceModal" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
     <div class="goal-info-icon">
-      <img src="images/WaxFrame_InfoButton_v1.png" alt="" class="helper-info-img">
+      <img src="images/WaxFrame_InfoButton_v1.png" alt="ⓘ" class="helper-info-img">
     </div>
-    <h2 class="finish-modal-title">Open Source &amp; Privacy</h2>
+    <h2 class="finish-modal-title">Open Source & Privacy</h2>
     <div class="goal-info-body">
       <p>WaxFrame is fully open source under the AGPL-3.0 license. Every line of code is public and auditable.</p>
       <div class="goal-info-row">
-        <span class="goal-info-phase draft">No Backend</span>
-        <span class="goal-info-desc">WaxFrame has no database or app server. Everything runs in your browser. Your documents and session data live in your browser only — they never sit on a WaxFrame server because there isn't one.</span>
+        <span class="goal-info-phase draft">No Server</span>
+        <span class="goal-info-desc">WaxFrame has no backend. Everything runs in your browser. Your documents, API keys, and session data never leave your machine.</span>
       </div>
       <div class="goal-info-row">
         <span class="goal-info-phase refine">No Tracking</span>
         <span class="goal-info-desc">No analytics, no telemetry, no cookies, no accounts. Nothing is tracked.</span>
       </div>
-      <p class="goal-info-tip">Read the full <a href="privacy.html" class="link-accent">Privacy Policy</a> and <a href="terms.html" class="link-accent">Terms of Use</a>, or <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">read the source on GitHub →</a></p>
+      <p class="goal-info-tip">💡 Your API keys go directly from your browser to each AI provider. WaxFrame never sees them. <a href="https://github.com/WeirDave/WaxFrame-Professional" target="_blank" rel="noopener noreferrer" class="link-accent">Read the source on GitHub →</a></p>
     </div>
     <button class="finish-modal-cancel" onclick="document.getElementById('openSourceModal').classList.remove('active')">Got it →</button>
   </div>
@@ -213,7 +224,7 @@
      ======================================================== -->
 <div class="page-footer page-footer-unified">
   <div class="page-footer-actions">
-    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx) with images — opens in Word, Google Docs, or LibreOffice">⬇ Download as Word</button>
+    <button class="btn" onclick="downloadPageAsDocx()" title="Download this page as a Word document (.docx)">⬇ Download as Word</button>
   </div>
   <div class="page-footer-center"></div>
   <div class="page-footer-right">
@@ -223,7 +234,7 @@
 </div>
 
 <!-- ========================================================
-     ABOUT MODAL — helper-page
+     ABOUT MODAL — helper-page version. Metadata only.
      ======================================================== -->
 <div class="finish-modal-overlay" id="aboutModalHelper" onclick="if(event.target===this)this.classList.remove('active')">
   <div class="finish-modal goal-info-modal">
@@ -243,9 +254,7 @@
   </div>
 </div>
 
-<!-- ========================================================
-     LICENSE MODALS — helper-page (v3.22.6)
-     ======================================================== -->
+<!-- LICENSE MODALS — helper-page (v3.22.6) -->
 <div class="license-modal-overlay" id="licenseModal" onclick="if(event.target===this)hideLicenseModal()">
   <div class="license-modal">
     <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="license-modal-logo">
@@ -272,7 +281,6 @@
     <button class="finish-modal-cancel" onclick="hideLicenseManageModal()">← Close</button>
   </div>
 </div>
-
 
 <script src="js/theme.js?v=3.63.123"></script>
 <script src="lib/docx.min.js?v=3.63.123"></script>
