@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-005
+// Build: 20260604-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-005';         // build stamp — update each session
+const BUILD       = '20260604-006';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -807,6 +807,12 @@ function renderSettings() {
   if (sRounds) sRounds.value = getAutoSlowRounds();
   const reroll = document.getElementById('setAutoRerollAttempts');
   if (reroll) reroll.value = getAutoRerollAttempts();
+  // v3.63.133 — Deep Dive toggle in the new Diagnostics section. Reads the
+  // canonical state from WF_DEBUG (which loads from localStorage at init).
+  // The dev-toolbar toggle and this Settings toggle stay in sync via
+  // WF_DEBUG.setDeepDive() which updates both.
+  const dd = document.getElementById('setDeepDive');
+  if (dd && typeof WF_DEBUG !== 'undefined') dd.checked = !!WF_DEBUG.deepDiveOn;
   // v3.56.12 — Vision/OCR provider picker. List all four vision providers,
   // flagging which are keyed; the saved pick is restored (falls back to
   // Automatic at runtime if it's later un-keyed).

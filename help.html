@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260604-005
+  Build: 20260604-006
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-005">
+  <meta name="waxframe-build" content="20260604-006">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -258,7 +258,17 @@
       </div>
 
       <div class="step">
-        <div class="step-head"><span class="step-num">2</span><span class="t">Attach a diagnostic bundle</span></div>
+        <div class="step-head"><span class="step-num">2</span><span class="t">Optional: enable Deep Dive first for richer data</span></div>
+        <div class="step-body">
+          <p>For intermittent failures (rounds that fail sometimes but not always) or hard-to-reproduce bugs, turn on <strong>Deep Dive capture</strong> in WaxFrame before reproducing the issue. It records per-API-call telemetry — request/response shapes, finishReason, payload sizes, token counts, timing — into a ring buffer of the last 200 calls. The diagnostic bundle (Step 3) picks that up automatically. Off by default; you can turn it back off from Settings → Diagnostics when you're done.</p>
+          <p>Click below to flip it on now. Then open (or refresh) WaxFrame in another tab, reproduce the issue, and come back here for Step 3.</p>
+          <button id="enableDeepDiveBtn" type="button">🔬 Enable Deep Dive in WaxFrame</button>
+          <p class="status" id="deepDiveStatus"></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-head"><span class="step-num">3</span><span class="t">Attach a diagnostic bundle</span></div>
         <div class="step-body">
           <p>A support-safe snapshot of your setup and session. Download it, then <strong>drag the file into your GitHub issue</strong>.</p>
           <label class="chk">
@@ -361,9 +371,9 @@
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.132"></script>
-  <script src="js/storage.js?v=3.63.132"></script>
-  <script src="js/provider-models.js?v=3.63.132"></script>
+  <script src="js/version.js?v=3.63.133"></script>
+  <script src="js/storage.js?v=3.63.133"></script>
+  <script src="js/provider-models.js?v=3.63.133"></script>
   <script>
   (function () {
     'use strict';
@@ -816,6 +826,44 @@
     });
 
     populateModelDumpProviders();
+
+    // ── Deep Dive enable button (v3.63.133) ──
+    // Sets the same localStorage flag the in-app toggle uses. Cross-tab:
+    // browsers share localStorage between tabs on the same origin, so when
+    // the user clicks here and then refreshes / opens WaxFrame, wf-debug.js
+    // reads '1' from localStorage on init and starts capturing immediately.
+    // No round-trip needed and we don't need wf-debug.js loaded on this page.
+    var enableDeepDiveBtn = document.getElementById('enableDeepDiveBtn');
+    var deepDiveStatus = document.getElementById('deepDiveStatus');
+    if (enableDeepDiveBtn) {
+      // Reflect current state on load so a user who already turned it on
+      // sees the right label and isn't asked to enable twice.
+      var alreadyOn = localStorage.getItem('waxframe_deepdive') === '1';
+      if (alreadyOn) {
+        enableDeepDiveBtn.textContent = '✓ Deep Dive already enabled';
+        enableDeepDiveBtn.disabled = true;
+        if (deepDiveStatus) {
+          deepDiveStatus.textContent = 'Capturing is on. Open or refresh WaxFrame, reproduce the issue, then come back for Step 3.';
+          deepDiveStatus.className = 'status ok';
+        }
+      }
+      enableDeepDiveBtn.addEventListener('click', function () {
+        try {
+          localStorage.setItem('waxframe_deepdive', '1');
+          enableDeepDiveBtn.textContent = '✓ Deep Dive enabled';
+          enableDeepDiveBtn.disabled = true;
+          if (deepDiveStatus) {
+            deepDiveStatus.textContent = '✓ Deep Dive enabled. Open or refresh WaxFrame in another tab, reproduce the issue, then come back here for Step 3. Turn it back off from Settings → Diagnostics when you’re done.';
+            deepDiveStatus.className = 'status ok';
+          }
+        } catch (e) {
+          if (deepDiveStatus) {
+            deepDiveStatus.textContent = '⚠️ Could not write to localStorage (' + (e && e.message ? e.message : 'unknown error') + '). Try enabling it directly in WaxFrame instead: Settings → Diagnostics → Deep Dive capture.';
+            deepDiveStatus.className = 'status err';
+          }
+        }
+      });
+    }
 
     // ── diagnostic bundle (reuses storage.js redaction; own assembly) ──
     var bundleBtn = document.getElementById('bundleBtn');
