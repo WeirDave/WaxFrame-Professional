@@ -2,6 +2,34 @@
 
 ---
 
+## v3.63.120
+
+**Mobile doc-layout: revert to source order — menu at the top, content below**
+
+Build: `20260603-013`<br>
+Released: `2026-06-03`
+
+Third revision on the mobile doc-layout ordering. v3.63.118 used `order: 1 / order: 2` to fix source-order — the menu landed at the very bottom (after the entire long-form body) on every page. v3.63.119 used `display: contents` + `:first-child` `order` to pull the first child of `.doc-main` before the menu — worked on `ai-api-pricing.html` where the first child happens to be a true hero, but broke on every other doc-layout page because the first child varies:
+
+- `document-playbooks.html` — first child of `.doc-main` is the Quick Start playbook (substantial content). v3.63.119 landed Quick Start ABOVE the menu, then the menu, then the rest of the playbooks. The page felt split.
+- `waxframe-user-manual.html` — first child of `.doc-main` is the "Before You Start" / "What's in the folder" section. v3.63.119 landed that ABOVE the menu, then menu in the middle of the page.
+- `api-details.html` — first child of `.doc-main` is the "Get Your API Keys" hp-section (300+ lines containing the entire API key guide). v3.63.119 landed all of that ABOVE the menu, then menu, then "Know Your Hive" + "General Tips" — felt like two documents with a TOC between them.
+- `templates.html` — first child of `.doc-main` is `<div id="tplBuiltInBody">` (empty placeholder that JS fills with EVERY built-in template). v3.63.119 landed all the built-in templates ABOVE the menu, then menu, then the custom-templates placeholder + data-model docs — menu at the bottom in practice.
+
+No CSS rule "heroes" cleanly across these structural variations.
+
+**Fix**: revert to source order. Every doc-layout page has `<aside class="doc-sidebar">` BEFORE `<div class="doc-main">` in HTML. `display: block` honors that, putting menu first on every page.
+
+For pages with the H1 hero OUTSIDE doc-layout (`document-playbooks`, `waxframe-user-manual`, `templates`), the visual flow is `chrome → hero H1 → menu → content` — exactly what David asked for ("menu right after the header").
+
+For pages with the H1 INSIDE doc-main (`ai-api-pricing`, `api-details`), the flow is `chrome → menu → H1 + content`. The H1 lives after the menu on those two pages, but the page name is already in the WaxFrame brand chrome at the top so it's not lost.
+
+This is essentially the pre-v3.63.118 layout with the explicit reasoning written into the CSS comment so future eyes don't try the same fancy `order` tricks again.
+
+**Files changed:** `style.css` (doc-layout mobile rule replaced with simple `display: block`; explanatory comment captures why the clever approaches were tried and rejected; build header), `js/version.js` (`APP_VERSION` → `v3.63.120 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.120`, `package.json` (3.63.119 → 3.63.120), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v189.txt`.
+
+---
+
 ## v3.63.119
 
 **Mobile jump-nav now sits between hero and body content (was at the bottom)**
