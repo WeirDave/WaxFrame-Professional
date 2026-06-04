@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260603-007
+     Build: 20260603-008
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-007">
+  <meta name="waxframe-build" content="20260603-008">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.114">
+  <link rel="stylesheet" href="style.css?v=3.63.115">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -397,12 +397,12 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.114"></script>
-<script src="lib/docx.min.js?v=3.63.114"></script>
-<script src="js/docx-export.js?v=3.63.114"></script>
-<script src="js/nav-helper.js?v=3.63.114"></script>
-<script src="js/license-helper.js?v=3.63.114"></script>
-<script src="js/version.js?v=3.63.114"></script>
+<script src="js/theme.js?v=3.63.115"></script>
+<script src="lib/docx.min.js?v=3.63.115"></script>
+<script src="js/docx-export.js?v=3.63.115"></script>
+<script src="js/nav-helper.js?v=3.63.115"></script>
+<script src="js/license-helper.js?v=3.63.115"></script>
+<script src="js/version.js?v=3.63.115"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
@@ -550,14 +550,30 @@
     }
   }
 
+  // Maps US daylight/standard timezone abbreviations to their umbrella
+  // ("Pacific Time" / "Eastern Time" / etc.) form. Sidesteps the
+  // PDT-vs-PST mental friction — readers familiar with their own
+  // wallclock time don't care which side of the November cutover the
+  // date falls on, they just want "PT". International zones (BST, JST,
+  // GMT, AKST/AKDT, HST, etc.) intentionally stay as-is — their
+  // abbreviations don't have the same daylight/standard ambiguity.
+  var US_TIMEZONE_UMBRELLA = {
+    'PDT': 'PT', 'PST': 'PT',
+    'EDT': 'ET', 'EST': 'ET',
+    'CDT': 'CT', 'CST': 'CT',
+    'MDT': 'MT', 'MST': 'MT'
+  };
+
   // Format the lastUpdated value for display in the visitor's local time.
   // Accepts ISO datetime ("2026-06-04T00:58:02Z") or legacy date-only
   // ("2026-06-03") strings. Uses Intl.DateTimeFormat with the browser's
   // default locale + timezone so each visitor sees the timestamp in
-  // wallclock time they recognize.
+  // wallclock time they recognize. US DST/standard pairs are collapsed
+  // into the umbrella abbreviation (PDT/PST → PT, EDT/EST → ET, etc.)
+  // before display.
   // Example outputs (same UTC moment in different timezones):
-  //   US Pacific:   "Jun 3, 2026, 5:58 PM PDT"
-  //   US Eastern:   "Jun 3, 2026, 8:58 PM EDT"
+  //   US Pacific:   "Jun 3, 2026, 5:58 PM PT"
+  //   US Eastern:   "Jun 3, 2026, 8:58 PM ET"
   //   UK:           "4 Jun 2026, 01:58 BST"
   function formatLastUpdatedLocal(iso) {
     if (!iso) return 'unknown';
@@ -565,7 +581,7 @@
     var d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     try {
-      return new Intl.DateTimeFormat(undefined, {
+      var formatted = new Intl.DateTimeFormat(undefined, {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -573,6 +589,9 @@
         minute: '2-digit',
         timeZoneName: 'short'
       }).format(d);
+      return formatted.replace(/\b(PDT|PST|EDT|EST|CDT|CST|MDT|MST)\b/, function(m) {
+        return US_TIMEZONE_UMBRELLA[m];
+      });
     } catch (e) {
       // Fallback for older browsers that don't support timeZoneName: 'short'
       return d.toLocaleString();
