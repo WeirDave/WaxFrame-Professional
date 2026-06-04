@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260604-005
+// Build: 20260604-006
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -84,6 +84,11 @@ window.WF_DEBUG = {
     localStorage.setItem('waxframe_deepdive', on ? '1' : '0');
     const btn = document.getElementById('wfDeepDiveToggle');
     if (btn) btn.classList.toggle('active', !!on);
+    // v3.63.133 — Sync the Settings → Diagnostics checkbox too, so the dev
+    // toolbar 🔬 button and the Settings toggle reflect the same state no
+    // matter which surface the user flipped it from.
+    const settingsToggle = document.getElementById('setDeepDive');
+    if (settingsToggle) settingsToggle.checked = !!on;
     if (!on) this.ringBuffer = []; // clear capture when turning off
     if (typeof toast === 'function') toast(on ? '🔬 Deep Dive ON — capturing every round' : '🔬 Deep Dive OFF');
   },
