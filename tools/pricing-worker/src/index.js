@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — pricing Worker
-//  Build: 20260603-005
+//  Build: 20260603-006
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -26,7 +26,12 @@ const CORS = {
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
-  'Cache-Control': 'public, max-age=3600',
+  // 5-min fresh + 10-min stale-while-revalidate. Pricing data updates a few
+  // times a year, so we don't need aggressive caching — and a long cache
+  // window means stale "Last updated" stamps in the visitor's browser for
+  // the first hour after a KV refresh. 300s + SWR keeps it both cheap and
+  // fresh-enough.
+  'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
   ...CORS
 };
 
