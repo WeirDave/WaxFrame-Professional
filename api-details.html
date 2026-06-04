@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — api-details.html
-     Build: 20260603-013
+     Build: 20260603-014
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-013">
+  <meta name="waxframe-build" content="20260603-014">
   <title>API Key Guide for AI Providers — WaxFrame</title>
   <meta name="description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <link rel="canonical" href="https://waxframe.com/api-details.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Step-by-step API key setup for WaxFrame's AI providers — ChatGPT, Claude, Gemini, Grok, Mistral, Perplexity, and Together AI.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.120">
+  <link rel="stylesheet" href="style.css?v=3.63.121">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -197,7 +197,28 @@
   </div>
 </div>
 
-<div class="page-main">
+<div class="page-main" id="top">
+
+<!-- v3.63.121 — Hero hp-section moved OUTSIDE doc-layout so on mobile
+     the H1 + intro lands above the menu (same pattern as
+     document-playbooks.html, waxframe-user-manual.html,
+     templates.html). The original structure had the hero INSIDE
+     doc-main wrapped in a single hp-section with all the API key
+     cards — that made the menu visually split between API Keys and
+     Know Your Hive on mobile. Now the hero is its own hp-section
+     above doc-layout, and the API key cards live as direct children
+     of doc-main alongside #hive and #tips. -->
+<div class="hp-section">
+  <div class="hp-section-header">
+    <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="hp-section-bee">
+    <div class="hp-section-title-block">
+      <h1 class="hp-section-title">Get Your API Keys</h1>
+      <p class="hp-section-sub">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
+      <p class="hp-section-sub"><em>Model recommendations and hive notes on this page were last reviewed <strong>May 24, 2026</strong>. Models shown are the shipped defaults — switch any AI to a newer model in-app via Recommend Models.</em></p>
+    </div>
+  </div>
+</div>
+
 <div class="doc-layout">
   <aside class="doc-sidebar">
     <div class="doc-sidebar-inner">
@@ -222,17 +243,9 @@
   </aside>
   <div class="doc-main">
 
-<!-- ── SECTION 1: API KEY SETUP ── -->
+<!-- ── SECTION 1: API KEY SETUP — body content (header moved to hero above) ── -->
 
 <div class="hp-section">
-  <div class="hp-section-header">
-    <img src="images/WaxFrame_API_Bee_v1.png" alt="" class="hp-section-bee">
-    <div class="hp-section-title-block">
-      <h1 class="hp-section-title">Get Your API Keys</h1>
-      <p class="hp-section-sub">In Pro mode, WaxFrame sends prompts directly to each AI automatically — no copy/paste, no tab switching. Each AI needs its own API key. Follow the guides below to get set up.</p>
-      <p class="hp-section-sub"><em>Model recommendations and hive notes on this page were last reviewed <strong>May 24, 2026</strong>. Models shown are the shipped defaults — switch any AI to a newer model in-app via Recommend Models.</em></p>
-    </div>
-  </div>
   <div class="hp-section-body">
 
 <div class="wf-card is-accent" id="first-key">
@@ -954,6 +967,8 @@
   </div><!-- /hp-section-body Section 3 -->
 </div><!-- /hp-section Section 3 -->
 
+  <a href="#top" class="wh-back-top">↑ Back to top</a>
+
   </div><!-- /.doc-main -->
 </div><!-- /.doc-layout -->
 </div><!-- /page-main -->
@@ -1051,15 +1066,15 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.120"></script>
-<script src="lib/docx.min.js?v=3.63.120"></script>
-<script src="js/docx-export.js?v=3.63.120"></script>
-<script src="js/nav-helper.js?v=3.63.120"></script>
-<script src="js/license-helper.js?v=3.63.120"></script>
-<script src="js/api-links.js?v=3.63.120"></script>
-<script src="js/version.js?v=3.63.120"></script>
-<script src="js/docs-scrollspy.js?v=3.63.120"></script>
-<script src="js/api.js?v=3.63.120"></script>
+<script src="js/theme.js?v=3.63.121"></script>
+<script src="lib/docx.min.js?v=3.63.121"></script>
+<script src="js/docx-export.js?v=3.63.121"></script>
+<script src="js/nav-helper.js?v=3.63.121"></script>
+<script src="js/license-helper.js?v=3.63.121"></script>
+<script src="js/api-links.js?v=3.63.121"></script>
+<script src="js/version.js?v=3.63.121"></script>
+<script src="js/docs-scrollspy.js?v=3.63.121"></script>
+<script src="js/api.js?v=3.63.121"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
   // v3.57.0 — derive displayed model names from the live API_CONFIGS seeds

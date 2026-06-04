@@ -2,6 +2,73 @@
 
 ---
 
+## v3.63.121
+
+**Mobile fixed properly: page-level scroll restored, theme band, back-to-top working, scoped pricing card-view**
+
+Build: `20260603-014`<br>
+Released: `2026-06-03`
+
+Comprehensive coordinated fix after a real mobile audit at iPhone 14 viewport (390×844). Three earlier releases (v3.63.118 / v3.63.119 / v3.63.120) shipped guesswork CSS without rendering the pages. This one was tested in a local Chrome MCP browser against every helper page before commit.
+
+**1. Root cause: `html, body { height: 100%; overflow: hidden }` (line 256) clipped helper pages**
+
+The original rule on `html, body` locks the in-app screens to viewport height (correct — the app's setup flow needs fixed-height panels). But because the rule was global, helper pages inherited it: `document.documentElement.scrollHeight === 844` on a 13000+ tall page. That's why **back-to-top links did nothing**, content past the fold appeared truncated, and the "blowout" sections David was seeing on what-are-tokens.html were actually content sitting outside a clipped overflow region.
+
+Fix scoped to helper pages via `:has()`:
+
+```css
+html:has(body.helper-body),
+body.helper-body {
+  height: auto;
+  overflow: visible;
+}
+body.helper-body .page-main {
+  display: block;
+  flex: none;
+  overflow: visible;
+}
+```
+
+In-app `index.html` (no `helper-body` class) keeps the viewport lock. `:has()` is universally supported (Chrome 105+, Safari 15.4+, Firefox 121+ — past the WaxFrame baseline).
+
+**Verified live**: clicking `wh-back-top` on `privacy.html` scrolls from y=3000 → y=36 (90px scroll-margin-top compensation for the sticky header). `dp-back-top` on `document-playbooks.html` scrolls from y=10000 → y=36.
+
+**2. Theme buttons restored on mobile — in a band below the brand row, not jammed in**
+
+v3.63.106 hid the 3 theme buttons (light/auto/dark) on mobile with `max-width: 44px + overflow: hidden + display: none` to save header width. That lost theme control on phones. A first restore attempt that crammed them next to the mute button "looked wonky." Now: `.page-header` wraps with `flex-wrap`, controls take a full second row below brand with a `border-top` separator. 4 buttons (mute + 3 themes) center-aligned, normal size, clearly tap-targetable.
+
+Header is now 126px tall on mobile (was 72px) — +54px for the theme band. Worth it for accessible theme control.
+
+**3. Back-to-top + `#top` anchor added to 6 pages that lacked them**
+
+`api-details.html`, `what-are-tokens.html`, `prompt-editor.html`, `privacy.html`, `terms.html`, `help.html` had no back-to-top mechanism at all. Each now gets `id="top"` on its main container plus a `.wh-back-top` (or `.back-top` for the self-contained help.html) link near the end of content.
+
+**4. `api-details.html` H1 hero moved above the menu**
+
+Restructured to match `document-playbooks.html` / `waxframe-user-manual.html` / `templates.html` pattern: the hero `<div class="hp-section">` (with the API Bee, H1 "Get Your API Keys", and intro paragraphs) is now OUTSIDE `.doc-layout`. The existing hp-section inside `.doc-main` keeps its body (`#first-key` Start Here card + 9 provider cards + the wf-cards) — header moved upstream. Mobile flow becomes `chrome → hero with H1 → menu → API key cards → Know Your Hive → General Tips` — no more "split between two documents" feel.
+
+**5. Pricing card-view scoped to `.is-stack` modifier — `what-are-tokens.html` "blowout" fixed**
+
+v3.63.118's card-view CSS targeted all `.ai-table` elements. `what-are-tokens.html` reuses the `.ai-table` class on a 5-column "Best Builder Choices" table without `data-label` attributes — the empty `::before` pseudo-elements broke its layout. Now the card-view CSS is scoped to `.ai-table.is-stack`, which only `ai-api-pricing.html`'s pricing + rate-limits tables carry. `what-are-tokens.html`'s `.ai-table` falls through to a `:not(.is-stack)` horizontal-scroll fallback — scrolls cleanly inside its `wf-card` container at mobile width instead of blowing out the page.
+
+**6. v3.63.118/119/120 doc-layout `order` / `display:contents` experiments fully reverted**
+
+Source order was the right answer all along; the earlier experiments were trying to solve a symptom (mobile sidebar placement) without the root-cause fix (overflow lock). With the overflow lock now removed, source order works: every helper page has `<aside class="doc-sidebar">` before `<div class="doc-main">` in HTML, so the menu lands first inside doc-layout on mobile. Pages with H1 hero OUTSIDE doc-layout (`document-playbooks`, `waxframe-user-manual`, `templates`, and now `api-details`) get chrome → hero → menu → content. Pages with everything inside doc-main (`ai-api-pricing`) get chrome → menu → H1 + content — the page name is in the brand chrome at the top so it's not lost.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files + Worker source.
+- Live Chrome MCP test at 390×844 (and again at 519×1124) on `ai-api-pricing`, `api-details`, `document-playbooks`, `waxframe-user-manual`, `templates`, `what-are-tokens`, `prompt-editor`, `privacy`, `terms`, `help` — all 10 pages.
+- All 4 theme buttons visible in the page-header band on mobile.
+- Back-to-top scrolls to y≈36 on every page (sticky header offset).
+- `docHeight === scrollHeight` on long pages (160826 on `document-playbooks.html`, 23274 on `api-details.html`).
+- No horizontal page overflow on any page at 390px width.
+
+**Files changed:** `style.css` (overflow scope override for `.helper-body`; theme controls render as second band on mobile via `flex-wrap`; `.ai-table.is-stack` modifier scoping for card-view + `.ai-table:not(.is-stack)` horizontal-scroll fallback; build header), `ai-api-pricing.html` (added `is-stack` class to both `.ai-table` elements), `api-details.html` (H1 hero hp-section moved outside doc-layout; `id="top"` on page-main; back-to-top link before doc-main close), `what-are-tokens.html` + `prompt-editor.html` + `privacy.html` + `terms.html` (`id="top"` on page-main; back-to-top link at end of content), `help.html` (`id="top"` on `<main>`; back-to-top link), `.gitignore` (added `.claude/` so worktree dev tooling stays local), `js/version.js` (`APP_VERSION` → `v3.63.121 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.121`, `package.json` (3.63.120 → 3.63.121), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v190.txt`.
+
+---
+
 ## v3.63.120
 
 **Mobile doc-layout: revert to source order — menu at the top, content below**

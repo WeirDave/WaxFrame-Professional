@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!--
   WaxFrame Professional — Support (break-glass page)
-  Build: 20260603-013
+  Build: 20260603-014
 
   DESIGN CONTRACT (intentional, audited exception to the usual rules):
   This page must work even when the main app is broken — corrupt style.css,
@@ -23,7 +23,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-013">
+  <meta name="waxframe-build" content="20260603-014">
   <title>Help & Troubleshooting — WaxFrame</title>
   <meta name="description" content="WaxFrame troubleshooting and diagnostics. Export a redacted diagnostic bundle, file a bug, or reset your local state when something breaks.">
   <link rel="canonical" href="https://waxframe.com/help.html">
@@ -226,7 +226,7 @@
   </style>
 </head>
 <body>
-  <main>
+  <main id="top">
 
     <div class="hdr">
       <img src="images/Waxframe_logo_v19.png" alt="WaxFrame" class="logo">
@@ -356,12 +356,14 @@
 
     <p class="footer">WaxFrame Professional · Many minds, one refined result.</p>
 
+    <a href="#top" class="back-top">↑ Back to top</a>
+
   </main>
 
   <!-- Definition-only at load; feature-detected below. Safe even if they 404. -->
-  <script src="js/version.js?v=3.63.120"></script>
-  <script src="js/storage.js?v=3.63.120"></script>
-  <script src="js/provider-models.js?v=3.63.120"></script>
+  <script src="js/version.js?v=3.63.121"></script>
+  <script src="js/storage.js?v=3.63.121"></script>
+  <script src="js/provider-models.js?v=3.63.121"></script>
   <script>
   (function () {
     'use strict';
