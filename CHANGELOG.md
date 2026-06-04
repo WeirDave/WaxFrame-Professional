@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.119
+
+**Mobile jump-nav now sits between hero and body content (was at the bottom)**
+
+Build: `20260603-012`<br>
+Released: `2026-06-03`
+
+Trailing fix on v3.63.118 — David flagged that the doc-layout sidebar (jump nav) was landing at the very bottom of the page on mobile, after the entire long-form body. Affects every helper page using the `.doc-layout` chassis: `ai-api-pricing.html`, `api-details.html`, `document-playbooks.html`, `waxframe-user-manual.html`, `templates.html`.
+
+v3.63.118 used `order: 1` on `.doc-main` + `order: 2` on `.doc-sidebar` which correctly put the page hero BEFORE the sidebar in source-order terms — but `.doc-main` contains the entire body of the page (hero + tables + cards + FAQ + Related Guides), so "after .doc-main" meant after EVERYTHING. The jump nav at the bottom of a long scroll is functionally useless.
+
+**Fix: unwrap `.doc-main` with `display: contents` on mobile**
+
+`display: contents` on `.doc-main` makes the box of the element disappear for layout purposes — its children become direct flex items of `.doc-layout`. Then the order chain is:
+
+- `order: 1` — first child of `.doc-main` (the hero `<div class="hp-section">`)
+- `order: 2` — `.doc-sidebar` (the jump nav)
+- `order: 3` — all other children of `.doc-main` (body sections)
+
+Net result on mobile: hero first, jump nav second, body content third. The nav is now where visitors expect it: near the top of the page, available for quick jumps to any section.
+
+`.doc-main` had no visual styles to lose (just `min-width: 0` to prevent grid-cell overflow). Preserved that on each direct child with `.doc-main > * { min-width: 0 }` so long code blocks still don't blow out their flex item width.
+
+Desktop behavior unchanged — the `@media` block only fires at ≤820px. The desktop `grid (240px 1fr)` layout still places sidebar left and main content right.
+
+**Browser support**: `display: contents` is supported on every browser ≥2018 (Chrome 65+, Safari 11.1+, Firefox 37+, Edge 79+). Well past the WaxFrame baseline.
+
+**Verification**
+
+- `node --check` clean across all 15 JS files + Worker source.
+- Build stamp `20260603-012` consistent everywhere.
+- Cache-bust `?v=3.63.119` swept across all HTML script/link references.
+
+**Files changed:** `style.css` (mobile `.doc-layout` rule restructured with `display: contents` + `order` chain on first child / sidebar / rest; build header), `js/version.js` (`APP_VERSION` → `v3.63.119 Pro`), `js/app.js` (`BUILD` constant), all 13 other JS file headers (build stamp sweep), `tools/pricing-worker/src/index.js` (build header only — no code change), all 11 release HTMLs (`meta waxframe-build` stamp + `?v=` cache-bust sweep), `index.html` JSON-LD `softwareVersion` → `3.63.119`, `package.json` (3.63.118 → 3.63.119), `CHANGELOG.md`, `docs/WaxFrame_Backlog_Master_v188.txt`.
+
+---
+
 ## v3.63.118
 
 **Mobile pricing-page rebuild: card-view tables + doc-layout source order**
