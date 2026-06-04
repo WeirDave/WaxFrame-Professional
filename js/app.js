@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-013
+// Build: 20260604-014
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -507,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-013';         // build stamp — update each session
+const BUILD       = '20260604-014';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -6595,16 +6595,23 @@ Classify ONE model from THIS list for each of these four tier slots. You are NOT
 
   BALANCED — best capability-per-dollar workhorse. Your "default" model
              when cost and quality matter equally. Often your flagship's
-             prior generation or a "pro" tier without reasoning.
+             prior generation or a "pro" tier without reasoning. Must be
+             capable enough to review and refine a long document — do NOT
+             put a small / distilled / tiny model here (anything roughly
+             7B parameters or smaller belongs in CHEAP/FAST, not here).
 
   THINKER  — deepest reasoning capability, regardless of cost. Models
              named with reasoning, thinking, pro-preview, opus,
              deep-research, or with explicit chain-of-thought capability.
-             If none in your lineup qualify, reply NONE for this slot.
+             Same capability floor as BALANCED — a small/distilled model
+             does NOT belong here even if it's the only "reasoning"-named
+             entry on the endpoint. If none in your lineup qualify, reply
+             NONE for this slot.
 
   FAST     — lowest latency on standard chat workloads. Often the same
              model as CHEAP, but not always — some lineups have a fast
              flagship-light variant distinct from the cheapest tier.
+             Small models are FINE here — speed is the priority.
 
 NONE rules — read carefully. NONE is EXPECTED and CORRECT in these cases:
 
@@ -6631,10 +6638,18 @@ WHY: <one sentence justifying any non-obvious pick, max 200 chars>`;
 
 // Per-provider tier cache. Same key shape as the existing recommender cache
 // so the storage layer's serialization path is unchanged.
-function setCachedTiers(provider, tiers, why) {
+function setCachedTiers(provider, tiers, why, meta) {
   if (!provider || !tiers) return;
   try {
     const payload = { ts: Date.now(), tiers, why: why || '' };
+    if (meta && typeof meta === 'object') {
+      // v3.63.141 — preserve diagnostic metadata (modelSource: live-fetch /
+      // model-fallbacks / custom-endpoint, askingModel: which model we asked
+      // to do the classification) so the bundle shows the provenance of
+      // every cached classification.
+      if (meta.modelSource) payload.modelSource = meta.modelSource;
+      if (meta.askingModel) payload.askingModel = meta.askingModel;
+    }
     localStorage.setItem(`waxframe_tiers_${provider}`, JSON.stringify(payload));
   } catch(e) { console.warn(`[tiers-cache:${provider}] write failed:`, e); }
 }
@@ -6692,7 +6707,21 @@ function _recordTierError(provider, stage, detail) {
 }
 
 // Core tier-classification call for one provider. Returns
-// { cheap, balanced, thinker, fast, why, cached } or null on failure.
+// { cheap, balanced, thinker, fast, why, cached, modelSource }
+// or null on failure.
+// v3.63.141 — Architectural alignment with recommendForDefault. The
+// v3.63.139/.140 implementation duplicated infrastructure that already
+// existed and broke for every provider the standalone path didn't know
+// about. Now we mirror the recommender exactly: try fetchModelsForProvider
+// first (which knows each default provider's actual discovery shape),
+// fall back to MODEL_FALLBACKS when null/empty (Perplexity has no /models
+// endpoint at all; Mistral/Cohere/Together/Jamba aren't in MODEL_FILTERS
+// so fetchModelsForProvider returns null for them). The asking-model
+// ladder also mirrors the recommender — newest viable > stable fallback >
+// cfg.model > list[0]. Putting cfg.model FIRST (v3.63.140 behavior) was
+// David's chicken-and-egg: if the user's currently-selected model is a
+// reasoning model that buries answers in CoT, the classifier inherits
+// every bad behavior of the answer-source we're trying to evaluate.
 async function classifyTiersForProvider(provider, opts) {
   opts = opts || {};
   const forceRefresh = !!opts.force;
@@ -6701,47 +6730,67 @@ async function classifyTiersForProvider(provider, opts) {
     if (cached) return { ...cached.tiers, why: cached.why, cached: true };
   }
 
-  // Pick an asking model + a model list using the same per-provider plumbing
-  // recommendForDefault uses. Reuse rather than reimplement so a Hive Profile
-  // refresh and a Recommend Models click are guaranteed to see the same model
-  // catalog for the same provider.
   const cfg = API_CONFIGS[provider];
   if (!cfg || !cfg._key) {
     _recordTierError(provider, 'no-key', 'Provider has no API key configured');
     return null;
   }
-  // v3.63.140 — Always force-fresh the models list. The prior version
-  // read waxframe_models_<provider> first, which produced stale picks
-  // when the user's hive had updated since the cache was last written
-  // (v3.63.139 ChatGPT classifier picked from gpt-5.4-* models while
-  // gpt-5.5 was selected and working in the hive). Forcing a live fetch
-  // makes the classifier always reason over the current catalog.
+
+  // ─── Model list: live → MODEL_FALLBACKS chain ───
+  // For defaults, fetchModelsForProvider handles the per-provider endpoint
+  // shape (returns null for Perplexity / Mistral / Cohere / Together /
+  // Jamba which aren't in MODEL_FILTERS). For customs, the user-supplied
+  // endpoint is the only discovery path. MODEL_FALLBACKS catches everything
+  // that fell through above. modelSource is captured for diagnostics so the
+  // bundle shows where each classification's models came from.
+  const isDefault = !!(typeof DEFAULT_AIS !== 'undefined' && DEFAULT_AIS.find(d => d.provider === provider));
   let models = [];
+  let modelSource = 'unknown';
   try {
-    const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
-    models = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+    if (isDefault) {
+      const live = await fetchModelsForProvider(provider);
+      if (live && live.length) { models = live; modelSource = 'live-fetch'; }
+    } else if (cfg.endpoint) {
+      const format = cfg.format || 'openai';
+      const live = await fetchModelsFromEndpoint(cfg.endpoint, format, cfg._key, cfg._modelsEndpoint);
+      if (live && live.length) { models = live; modelSource = 'custom-endpoint'; }
+    }
   } catch (e) {
-    _recordTierError(provider, 'model-fetch', e);
-    return null;
+    // Non-fatal — fall through to MODEL_FALLBACKS below. Record so the
+    // bundle shows that the live attempt happened and failed.
+    _recordTierError(provider, 'model-fetch-attempted', e);
   }
   if (!models.length) {
-    _recordTierError(provider, 'empty-model-list', 'Provider returned no chat-compatible models');
+    const fb = (typeof MODEL_FALLBACKS !== 'undefined' && MODEL_FALLBACKS[provider]) || [];
+    if (fb.length) { models = fb.slice(); modelSource = 'model-fallbacks'; }
+  }
+  if (!models.length) {
+    _recordTierError(provider, 'no-models-available', 'No models available from live fetch OR MODEL_FALLBACKS');
     return null;
   }
 
-  // Filter using the existing Reviewer-role filter — tier picks must be
-  // usable in the hive in SOME role (Builder filter is stricter and is
-  // applied at Profile-resolve time, not here).
+  // ─── Filter to reviewer-safe (tier picks need to be usable in the hive in
+  // SOME role; Builder filter is stricter and applied at Profile-resolve
+  // time, not here). ───
   const filtered = filterModelsForRole(models, 'reviewer');
   if (!filtered.length) {
-    _recordTierError(provider, 'all-models-filtered', `Provider returned ${models.length} model(s) but every one was structurally non-chat`);
+    _recordTierError(provider, 'all-models-filtered', `Source returned ${models.length} model(s) but every one was structurally non-chat`);
     return null;
   }
 
-  // Asking model: prefer the user's currently-selected model when it's in
-  // the filtered list. Falls back to first available. Same logic as the
-  // recommender's askingModel selection (see recommendForDefault).
-  const askingModel = (cfg.model && filtered.includes(cfg.model)) ? cfg.model : filtered[0];
+  // ─── Asking model: mirror recommendForDefault's ladder ───
+  // viable[0] (newest filtered) > stableFallback (curated MODEL_FALLBACKS entry
+  // present in the live list) > cfg.model (user's current pick) > list[0]
+  // (last resort). Prefers a known-stable instruction-follower over whatever
+  // the user has selected for production use — the classifier needs the
+  // asking model to follow simple format instructions, not whatever happens
+  // to be in the hive slot.
+  const fbList = (typeof MODEL_FALLBACKS !== 'undefined' && MODEL_FALLBACKS[provider]) || [];
+  const stableFallback = fbList.find(m => filtered.includes(m));
+  const askingModel = filtered[0]
+    || stableFallback
+    || (cfg.model && filtered.includes(cfg.model) ? cfg.model : null)
+    || models[0];
   const format = cfg.format || (provider === 'claude' ? 'anthropic' : provider === 'gemini' ? 'google' : 'openai');
   const prompt = MODEL_TIER_CLASSIFICATION_PROMPT.replace(
     '{MODEL_LIST}',
@@ -6796,9 +6845,9 @@ async function classifyTiersForProvider(provider, opts) {
       balanced: parsed.balanced,
       thinker:  parsed.thinker,
       fast:     parsed.fast
-    }, parsed.why);
-    console.info(`[tiers:${provider}] classified —`, parsed);
-    return { ...parsed, cached: false };
+    }, parsed.why, { modelSource, askingModel });
+    console.info(`[tiers:${provider}] classified (source: ${modelSource}, asker: ${askingModel}) —`, parsed);
+    return { ...parsed, cached: false, modelSource, askingModel };
   } catch (e) {
     _recordTierError(provider, 'classifier-exception', e);
     return null;
