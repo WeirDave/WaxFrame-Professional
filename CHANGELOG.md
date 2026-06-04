@@ -2,6 +2,25 @@
 
 ---
 
+## v3.63.125
+
+**ai-resume-review.html: lead with the real reason — humans don't read résumés first, AI does — and the WaxFrame origin story**
+
+Build: `20260603-018`<br>
+Released: `2026-06-03`
+
+Reframed the résumé landing page lead. The v3.63.123 hero buried the actual reason this matters: ATS systems screen résumés before any human sees them, recruiter copilots summarize them, and the hiring manager typically reads an AI's pre-digested version. So if AI is the first reader, the smart move is to refine your résumé using AI — and that's exactly what WaxFrame does.
+
+Added a "This is literally how WaxFrame started" section right after the trial CTA: David built the proto-WaxFrame workflow by hand on his own 20-year-old résumé using ChatGPT, Claude, and Gemini in separate tabs, manually collecting and reconciling feedback round by round, and that's the résumé that got him hired. The app exists because the result was that much better than any single AI on its own — but the manual version was tedious enough that nobody would do it twice. WaxFrame is that workflow with the tedium removed.
+
+Also updated the "Why a multi-AI hive beats one AI for résumé review" section to reflect modern screening reality: ATS keyword-matches first, recruiter copilot summarizes second, human scans third. Each layer has different failure modes that a hive catches but a single AI misses.
+
+Meta description, OG description, Twitter description, and JSON-LD description all reframed around the new lead ("Humans don't read résumés first — AI does").
+
+No structural change — same chassis, same body sections after the lead, same cross-links to Templates and the Résumé playbook. Just a stronger top.
+
+---
+
 ## v3.63.124
 
 **In-app Tools menu: alphabetical sort + Round History icon swap**
