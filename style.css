@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260603-012
+   Build: 20260603-013
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -10083,46 +10083,37 @@ kbd {
   .footer-about-btn {
     padding: var(--space-6) var(--space-8);
   }
-  /* v3.63.119 — on mobile, the visual order is:
-       1) Page hero (H1 + intro + bee mascot — the first child of .doc-main)
-       2) Jump-nav sidebar (the .doc-sidebar aside)
-       3) Rest of the body content (subsequent children of .doc-main)
+  /* v3.63.120 — mobile doc-layout is just source order: menu first,
+     then page content. Tried clever flex+order in v3.63.118 and
+     display:contents in v3.63.119; both produced inconsistent results
+     because the page structure varies. Some pages have the H1 hero
+     OUTSIDE doc-layout (document-playbooks, waxframe-user-manual,
+     templates) — those land hero → menu → content correctly. Some
+     have the H1 INSIDE doc-main wrapped in an hp-section
+     (ai-api-pricing, api-details) — those land menu → H1+content.
+     Some have the first child of doc-main be substantial content
+     (api-details' "Get Your API Keys" hp-section is 300+ lines), some
+     have empty placeholder divs that JS fills (templates'
+     tplBuiltInBody). No :first-child rule "heroes" cleanly across
+     all of these.
 
-     The desktop grid puts sidebar left + content right; on mobile the
-     grid collapses and source order would put sidebar above everything
-     (bad — long jump nav before the visitor knows what page they're on).
-     v3.63.118 used order:1 on .doc-main / order:2 on .doc-sidebar which
-     fixed source-order but landed the sidebar at the VERY END (after
-     the entire long-form body, including FAQ + Related Guides). That's
-     also bad — the jump nav becomes useless at the bottom of the scroll.
-
-     This release uses display:contents on .doc-main to "unwrap" it so
-     its children become flex items of .doc-layout directly. Then we
-     can order: hero (first hp-section) → sidebar → rest. .doc-main has
-     no visual styles to lose (only min-width:0 — preserved on each
-     direct child instead). */
+     Source order is the predictable answer: the menu is always first
+     inside doc-layout in HTML on every page, so display:block gives
+     us menu → content on every page. On pages with the H1 hero
+     outside doc-layout, the visual flow is:
+        chrome → hero H1 → menu → content
+     On pages with the H1 inside doc-main, the flow is:
+        chrome → menu → H1+content
+     The H1 lives after the menu on those two pages but the page name
+     is already in the WaxFrame chrome at the top, so it's not lost. */
   .doc-layout {
-    display: flex;
-    flex-direction: column;
-  }
-  .doc-main {
-    display: contents;
-  }
-  .doc-main > * {
-    min-width: 0;
-  }
-  .doc-main > :first-child {
-    order: 1;
+    display: block;
   }
   .doc-sidebar {
-    order: 2;
     position: static;
     max-height: none;
     overflow: visible;
-    margin: var(--space-16) 0 var(--space-20);
-  }
-  .doc-main > :not(:first-child) {
-    order: 3;
+    margin: 0 0 var(--space-20);
   }
   .doc-sidebar-inner {
     box-sizing: border-box;
