@@ -4,6 +4,9 @@ tools/pricing-worker/.wrangler/
 # Atomic-write temp files (created by edit tools when Dropbox sync races)
 *.tmp.*
 
+# Claude Code worktrees + dev tooling (local-only audit servers, etc.)
+.claude/
+
 # OS noise
 .DS_Store
 Thumbs.db
