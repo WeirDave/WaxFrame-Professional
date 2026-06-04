@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.133
+
+**Deep Dive capture — dual-homed on Settings → Diagnostics + a one-click "enable for next session" prompt on help.html. Dev-toolbar toggle stays.**
+
+Build: `20260604-006`<br>
+Released: `2026-06-04`
+
+Deep Dive was previously discoverable only from the dev toolbar — invisible to anyone without `?dev` enabled, which is every non-David user. That meant supporting a real-world bug report required walking the user through "enable Deep Dive → reproduce → export bundle" before they could even start, with no clear path to the toggle. This release surfaces it on the two screens users actually land on when something's broken: Settings → Diagnostics (for power users who want it always-on) and help.html (for users who just hit a bug and need to gather data for a report).
+
+**Three pieces:**
+
+1. **New Settings → Diagnostics section** ([index.html ~1049](index.html:1049)). Sits between Workflow & Updates and Storage. Section description sets expectation up front ("off by default, only turn on while troubleshooting, has a small memory + speed cost"). Two rows: a Deep Dive toggle (matching the existing settings-toggle pattern) and a View Captures action button that opens the existing Deep Dive viewer modal. `renderSettings()` in [js/app.js](js/app.js) syncs the toggle's `checked` state from `WF_DEBUG.deepDiveOn` when Settings opens, so the on/off state is always accurate.
+
+2. **`WF_DEBUG.setDeepDive()` syncs both toggles** ([js/wf-debug.js](js/wf-debug.js)). When the user flips Deep Dive from the dev-toolbar 🔬 button, the new Settings checkbox updates too. When they flip it from Settings, the dev toolbar button updates. Same single source of truth (`localStorage.waxframe_deepdive`) — both surfaces reflect it.
+
+3. **One-click "Enable Deep Dive" button on help.html** ([help.html](help.html)). New Step 2 in the bug-report workflow ("Optional: enable Deep Dive first for richer data") — sits between "Open issue on GitHub" and "Attach diagnostic bundle" (which is now Step 3). The button sets `localStorage.waxframe_deepdive = '1'` directly (no need to load wf-debug.js on help.html — localStorage is shared across tabs of the same origin, so the next time the user opens / refreshes WaxFrame it picks up the flag). State is reflected on load: if Deep Dive is already on, the button shows "✓ Deep Dive already enabled" and surfaces the next-step instructions instead of asking to enable twice.
+
+**What this fixes:** the discovery problem. The dev-toolbar toggle (kept for David's speed-of-access) was a power-user-only surface. Now the help.html flow guides a user through:
+- Open bug report → fill in what happened
+- **(Optional) Enable Deep Dive → click → return to WaxFrame → reproduce → come back**
+- Download the bundle with all the rich capture data in it
+- Drag the file into the GitHub issue
+
+The diagnostic-bundle redactor already handles the ringBuffer entries it picks up from a Deep Dive capture — no changes needed there. Three surfaces, same single toggle state.
+
+**No behavior change to the in-app Deep Dive mechanics.** Same ring buffer (200 entries), same per-call schema, same viewer modal, same redaction in the diagnostic bundle. Pure surfacing change.
+
+Standard ceremony: APP_VERSION → v3.63.133 Pro; build stamp 20260604-006; ?v=3.63.133 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (sixth release on the same day — that's a record); backlog → v202 (v199 dropped per 3-version margin; importSession ID-normalization bug REMOVED per David's confirmation that zero-known-users means zero exposure surface).
+
+---
+
 ## v3.63.132
 
 **Builder-incapable model filter (Jamba) + structural "Builder output truncated" error code + matching documentation in the user manual and AI API Pricing page**

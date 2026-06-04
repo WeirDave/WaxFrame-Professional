@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260604-005
+     Build: 20260604-006
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-005">
+  <meta name="waxframe-build" content="20260604-006">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.132">
+  <link rel="stylesheet" href="style.css?v=3.63.133">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.132",
+    "softwareVersion": "3.63.133",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -1043,6 +1043,30 @@
                 <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore from Checkpoint warning is intentionally NOT dismissable — it's a security trust gate that fires every time. The Save Checkpoint modal is the action surface, not a yes/no gate, so it has no suppression either.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h2 class="settings-section-title">🔬 Diagnostics</h2>
+            <p class="settings-section-desc">Off by default. Turn these on only when troubleshooting a specific issue — they have a small memory + speed cost while active. Power-users only; nothing here is needed for normal use.</p>
+
+            <div class="settings-row">
+              <div class="settings-row-label">
+                <span class="settings-row-name">Deep Dive capture</span>
+                <span class="settings-row-help">Captures detailed per-API-call telemetry on every round — request/response shapes, finishReason, payload sizes, token counts, timing, error codes — into a ring buffer of the last 200 calls. Use this when you need to file a bug report for an intermittent failure, or want to inspect what each AI actually returned (raw text, not WaxFrame's parsed view). The data is included automatically in the diagnostic bundle exported from the Help page. Slightly slows down round throughput while active. Same toggle as the 🔬 button on the dev toolbar.</span>
+              </div>
+              <label class="settings-toggle" title="Toggle">
+                <input type="checkbox" id="setDeepDive" onchange="WF_DEBUG.setDeepDive(this.checked)">
+                <span class="settings-toggle-slider"></span>
+              </label>
+            </div>
+
+            <div class="settings-row settings-row-actions">
+              <div class="settings-row-label">
+                <span class="settings-row-name">View captures</span>
+                <span class="settings-row-help">Opens the Deep Dive capture viewer — a clean table of every captured API call with prompt/response previews, status codes, timing, and finishReason. The buffer is round-scoped and rotates every 200 entries.</span>
+              </div>
+              <button class="btn settings-reset-btn" onclick="WF_DEBUG.openViewer()" title="Open the Deep Dive capture viewer modal">📋 Open viewer</button>
             </div>
           </div>
 
@@ -2825,23 +2849,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.132';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.133';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.132"></script>
-<script src="lib/jszip.min.js?v=3.63.132"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.132"></script>
-<script src="js/version.js?v=3.63.132"></script>
-<script src="js/storage.js?v=3.63.132"></script>
-<script src="js/theme.js?v=3.63.132"></script>
-<script src="js/audio.js?v=3.63.132"></script>
-<script src="js/scenes.js?v=3.63.132"></script>
-<script src="js/wf-debug.js?v=3.63.132"></script>
-<script src="js/provider-models.js?v=3.63.132"></script>
-<script src="js/api.js?v=3.63.132"></script>
-<script src="js/templates.js?v=3.63.132"></script>
-<script src="js/api-links.js?v=3.63.132"></script>
-<script src="js/app.js?v=3.63.132"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.133"></script>
+<script src="lib/jszip.min.js?v=3.63.133"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.133"></script>
+<script src="js/version.js?v=3.63.133"></script>
+<script src="js/storage.js?v=3.63.133"></script>
+<script src="js/theme.js?v=3.63.133"></script>
+<script src="js/audio.js?v=3.63.133"></script>
+<script src="js/scenes.js?v=3.63.133"></script>
+<script src="js/wf-debug.js?v=3.63.133"></script>
+<script src="js/provider-models.js?v=3.63.133"></script>
+<script src="js/api.js?v=3.63.133"></script>
+<script src="js/templates.js?v=3.63.133"></script>
+<script src="js/api-links.js?v=3.63.133"></script>
+<script src="js/app.js?v=3.63.133"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
