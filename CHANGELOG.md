@@ -2,6 +2,39 @@
 
 ---
 
+## v3.63.132
+
+**Builder-incapable model filter (Jamba) + structural "Builder output truncated" error code + matching documentation in the user manual and AI API Pricing page**
+
+Build: `20260604-005`<br>
+Released: `2026-06-04`
+
+David's 2026-05-31 testing confirmed both jamba-mini and jamba-large fail as Builder, with two failure modes — outputting the refMaterial scaffold verbatim, AND hitting the 4096 max_tokens cap before reaching the formatting block. June 2026 cross-checked the second mode against AI21's docs, AWS Bedrock Jamba parameter docs, OpenRouter, and Hugging Face model cards — the 4096-token output cap is real, current, and consistent across Jamba 1.5, 1.6, and 1.7 (Mini and Large alike). It's not a setting AI21 can flip; it's architectural. A typical WaxFrame Builder round needs ~5–8K output tokens to emit the refined document plus the formatting + applied-changes blocks. Jamba structurally cannot do that. This release ships the filter + the user-visible warnings + the docs so nobody else burns API credits on a doomed Builder pick.
+
+**Code — three pieces:**
+
+1. **`BUILDER_INCAPABLE_FAMILIES` constant** ([js/app.js](js/app.js)). New regex `/^(jamba|ai21[._-]?jamba)/i` matching every Jamba variant. Wired into `filterModelsForRole()` so the recommender skips these models for the Builder role automatically. New `isBuilderIncapableModel(m)` helper exported for the dropdown.
+
+2. **⚠️ Reviewer-only badge in the Change Builder model dropdown** ([js/app.js](js/app.js), [style.css](style.css)). `buildModelSelector()` now adds a `⚠️ Reviewer-only` opt-role marker on any incapable model AND tints the row amber via the new `.is-builder-warn-pick` class. The model is still SELECTABLE — the user can override if they really mean to (e.g. they have a private deployment with the cap raised) — but the visual + tooltip make the reason obvious. CSS uses the existing `--warn` token (amber).
+
+3. **`BUILDER_TRUNCATED` troubleshooting error code** ([js/wf-debug.js](js/wf-debug.js)). New entry in `WF_ERROR_CATALOG` matching `ctx.kind === 'builder_truncated'`. Title: *"Builder output was cut off mid-response (token cap)"*. The meaning text explains it's a structural capacity issue, points at higher-cap Builders (Claude / GPT / Gemini Pro 8K+), and calls out Jamba's 4096 hard cap explicitly. Plumbed via a new `truncated` entry in `showRoundErrorModal()`'s `ctxKindMap` and a detection branch in BOTH `runRound`'s Builder check ([app.js ~13713](js/app.js)) AND `runBuilderOnly`'s Builder check ([app.js ~14691](js/app.js)): when the conflict block is missing AND the last Builder ring-buffer entry's `finishReason` is `LENGTH` or `MAX_TOKENS` (covers OpenAI / Mistral / Anthropic / Google variants), emit `truncated` instead of `conflicts`. Distinct cards, distinct fix paths.
+
+**Documentation — three surfaces:**
+
+1. **[ai-api-pricing.html](ai-api-pricing.html)** — new amber FAQ card *"Can AI21 Jamba be used as a Builder?"* with the structural explanation, the 4096-cap citation across versions, and the WaxFrame filter behavior. Mirrored in the JSON-LD `FAQPage` schema so Google's rich-results lift the answer too. The previous Builder-free-tier FAQ no longer name-drops Jamba alongside Mistral/Cohere/Together — Jamba's case is qualitatively different (structural, not rate-limit).
+
+2. **[waxframe-user-manual.html](waxframe-user-manual.html)** — Change Builder button description ([~1030](waxframe-user-manual.html:1030)) now documents the dropdown's role markers including the new `⚠️ Reviewer-only` badge with the Jamba example baked in. *"A round failed with a structure error"* troubleshooting block ([~1899](waxframe-user-manual.html:1899)) expanded from one paragraph to a two-bullet diagnosis covering both failure modes — token-cap truncation (with the Jamba callout) and ignored-instructions — each pointing at its own fix.
+
+3. **CHANGELOG** — this entry.
+
+**Backwards compatibility:** The filter is additive — anyone who had Jamba quarantined manually via the v3.63.31 self-healing path still has the localStorage entry; they keep working. Anyone who never tried Jamba as Builder will now never see it as a Builder recommendation. Anyone who DID set Jamba as Builder (probably nobody, given the failures) keeps the saved setting but will see the ⚠️ Reviewer-only badge next time they open Change Builder, and the troubleshooting card will explain what went wrong if they run a round.
+
+**The headline win:** users who pick "Recommend Models" no longer get Jamba pushed at them for the Builder role. Combined with the upfront badge in the dropdown and the clear truncation error if they override, the path to wasting API credits on Jamba-as-Builder is now blocked at three layers.
+
+Standard ceremony: APP_VERSION → v3.63.132 Pro; build stamp 20260604-005; ?v=3.63.132 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (fifth release on the same day); backlog → v201 (v198 dropped per 3-version margin).
+
+---
+
 ## v3.63.131
 
 **Audit polish — fix two non-existent CSS tokens in the v3.63.130 Save Checkpoint modal, drop a dead variable, and fix a misdirected anchor link in the user manual**
