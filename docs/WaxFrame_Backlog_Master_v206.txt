@@ -1,0 +1,81 @@
+WaxFrame Backlog Master v206
+2026-06-04
+
+State: v3.63.137 Pro shipped on main. Best Buy product review template added (product-review-bestbuy, icon 🔵) with David's verified constraints: title 5-50 chars (both min AND max enforced), body 50-5,000 chars (50-char min is a rejection threshold), single overall 1-5 star rating with no secondary star prompts (simpler than Walmart's 5-aspect or Target's 3-aspect forms). Normal body range 1,500-3,000 pre-selected. Tone calibrated for Best Buy's consumer-electronics audience — more precision than Walmart's general-retail tone, less than Newegg's enthusiast crowd. Reference block in templates.js updated with real numbers replacing the prior verify-TBD row; new footnote (‡) documents Best Buy's title paste-buffer quirk (accepts up to 82 chars but truncates beyond 50). document-playbooks.html length table updated with the template anchor link. PER-PLATFORM VARIANT ARC NOW COMPLETE — all five US-major retail platforms with known constraints have dedicated templates: Amazon (v3.63.94 measured baseline), Walmart / Target / Newegg (v3.63.136), Best Buy (v3.63.137). The generic product-review template remains the no-platform default for blogs / manufacturer sites / undecided cases.
+
+v3.63.136 state still holds: Walmart / Target / Newegg per-platform templates. v3.63.135 state still holds: templates page quick wins. v3.63.134 state still holds: GitHub Actions release-ceremony validator. v3.63.133 state still holds: Deep Dive capture dual-homed. v3.63.132 state still holds: Builder-incapable model filter (Jamba) + BUILDER_TRUNCATED. v3.63.131 state still holds: audit polish. v3.63.130 state still holds: selective EXPORT modal + scrubbed retirement. v3.63.129 state still holds: Backup → Checkpoint rename. Sitemap lastmod 2026-06-04. PLAYBOOK TEST MASTER v37 is the live test-tracking doc.
+
+PRIOR STATE (v3.63.136, retained for context until next release reshuffles the margin):
+Three new per-platform Product Review templates — Walmart / Target / Newegg — based on David's verified constraints. Walmart: 50-char title cap, 3,000-char body cap, five secondary star prompts addressed. Target: no title cap, 3,500-char body cap, three secondary star prompts. Newegg: structurally different — three separate input fields (Pros / Cons / Overall Review) each ~4,000 char cap, structured output via section headers, uses eggs not stars.
+
+PRIOR STATE (v3.63.135, retained for context until next release reshuffles the margin):
+Templates page quick wins. Per-platform recipe reference block in js/templates.js. Per-card 📋 Duplicate action on My Templates customs. "Recently saved" sort dropdown on My Templates.
+
+PRIOR STATE (v3.63.134, retained for context until next release reshuffles the margin):
+GitHub Actions release-ceremony validator (.github/workflows/release-check.yml + tools/release-check.mjs). First run caught 18 silently-failing CSS token references. Validator caught its first real-world drift during v3.63.135 ceremony (package.json forgot to bump).
+
+PRIOR STATE (v3.63.133, retained for context until next release reshuffles the margin):
+Deep Dive capture dual-homed onto Settings → Diagnostics + a one-click "Enable Deep Dive" button on help.html. All three surfaces sync the same localStorage flag.
+
+PRIOR STATE (v3.63.132, retained for context until next release reshuffles the margin):
+Builder-incapable model filter (Jamba) + BUILDER_TRUNCATED error code. ⚠️ Reviewer-only badge in buildModelSelector(); detection at the missing-conflict-block sites routes finishReason LENGTH/MAX_TOKENS to the new error code.
+
+PRIOR STATE (v3.63.131, retained for context until next release reshuffles the margin):
+Audit polish on v3.63.130. CSS token typos fixed (--modal-w-md → --modal-w-base; --space-22 → --space-24); dead variable removed; anchor link corrected.
+
+PRIOR STATE (v3.63.130, retained for context until next release reshuffles the margin):
+Phase B of the Checkpoint arc — selective EXPORT modal + retirement of the Save Checkpoint (Scrubbed) flow. Six-checkbox modal. Backup format v4 → v5 with _waxframe_backup_scope envelope.
+
+Open Bugs
+
+(none currently tracked)
+
+Open Features
+
+- Restore-from-Checkpoint diff-and-pick UI — turn the current blunt overwrite into a comparison + selective-import flow. STATUS: PARKED — gated on user feedback once the selective-export modal has actual users.
+
+- Custom Templates Phase 2 + Phase 3 — full editors behind the scaffold buttons that landed in v3.63.97. PHASE 2 (Create Blank), PHASE 3 (Import .json), PHASE 1B (hive auto-reconcile on apply).
+
+- Templates page Phase 1 follow-ups — REMAINING: search/filter bar, per-card View Details expander, bulk Export All customs as ZIP. SHIPPED in v3.63.135: per-card Duplicate action + Recently-saved sort.
+
+- Mistral 429 proactive warning via X-RateLimit-Remaining header. Surface a soft warning BEFORE a 429 hits (e.g. yellow chip on the Mistral row "~X requests left this minute"). Likely needs a small per-provider hook in callAPI (app.js ~11500).
+
+- Hive parallel fan-out RPS-awareness. Optional per-provider concurrency cap so paid Mistral on a low tier doesn't 429 itself with parallel fan-out.
+
+- Model recommender filter-awareness warning — when the recommender's pick has been flagged in the current session's ringBuffer with CONTENT_FILTERED, surface a ⚠️ next to that model in the Change Builder dropdown.
+
+- Failover Builder behavior — primary Builder hits CONTENT_FILTERED / EMPTY_RESPONSE → auto-failover to a configured Failover Builder for that one round only. Settings → Auto Mode dropdown exists; this entry is about the BEHAVIOR for single-round CONTENT_FILTERED (today the dropdown only fires on failure-streak halts).
+
+- Builder-incapable family list expansion — watch-list. Currently just Jamba. As other broken-as-Builder families surface, extend BUILDER_INCAPABLE_FAMILIES regex.
+
+- Pause/resume at reviewer seam — finer-grained pause INSIDE a round, between reviewers finishing and the builder firing.
+
+- File System Access API exploration — true file persistence vs download pile-up.
+
+- Provider Catalog + Hive Profiles Foundation — two-layer provider model. 4-phase sequence: starter flag → "+ Add from Catalog" modal → catalog expansion (Cloud then Local) → Hive Profiles as saved snapshots.
+
+- CSS dead-selector cleanup branch — ~155 flagged selectors. Static grep insufficient; dedicated branch, phased deletion, visual smoke test gate.
+
+- CSS rule consolidation sweep — 6 cases worth consolidating.
+
+- Repo housekeeping — `docs/` folder. Continued trim as needed.
+
+- Triage CodeQL + Dependabot findings once first scans complete. Blocked on David pulling Security tab findings.
+
+(Note: "Product Review per-platform templates" REMOVED from Open Features — arc complete in v3.63.136 + v3.63.137. Five US-major retail platforms now covered.)
+
+Observations
+
+- SHIPPED — Per-platform Product Review template arc complete (v3.63.137 ships Best Buy, completing Amazon + Walmart + Target + Newegg + Best Buy). All five US-major retail platforms have dedicated templates with verified constraints baked in. The generic product-review stays as the no-platform default for blogs / manufacturer sites.
+
+- SHIPPED — Walmart / Target / Newegg per-platform Product Review templates (v3.63.136). David verified constraints from each platform's review submission form on 2026-06-04. Newegg's structured-output pattern (PROS: / CONS: / OVERALL REVIEW: section headers) is a new variant of the template format.
+
+- 2026-06-04 (during v3.63.135 ceremony) — the v3.63.134 release-check validator caught its FIRST REAL DRIFT IN THE WILD. Cache-bust sweep missed package.json. Validator surfaced "package.json version mismatch" on the pre-commit run. v3.63.136 + v3.63.137 ceremonies stayed green throughout — lesson learned. ROI confirmed.
+
+- 2026-06-04 (post-v3.63.134) — Length-floor convergence note from David's Trim to TripAdvisor run. Majority convergence fired at R3 with the document at 478 words against a 500-word floor. Investigation needed: convergence_under prompt exists at app.js:14555 + matching unanimous path; either getLengthStatus has an off-by-one, the prompt fired but David clicked through, or a sub-state of the majority-with-holdouts path bypasses the prompt.
+
+- 2026-06-04 — SEO measurement infrastructure live since v3.63.128. Google Search Console + Bing Webmaster Tools imported. First signals expected ~2 weeks from setup.
+
+- cleaner.html preserved in David's local working tree for the eventual in-app normalizeHive() port. Not committed to repo.
+
+- Adoption-friction note: David surfaced "zero sales after months of build" 2026-06-01, reaffirmed 2026-06-04. Engineering merit answers stand independent of conversion data.

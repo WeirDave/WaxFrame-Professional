@@ -2,6 +2,37 @@
 
 ---
 
+## v3.63.137
+
+**Best Buy product review template — closes the per-platform variant arc**
+
+Build: `20260604-010`<br>
+Released: `2026-06-04`
+
+David verified Best Buy's review-submission-form constraints directly (2026-06-04). New `product-review-bestbuy` template ships with them baked in.
+
+**Best Buy — `product-review-bestbuy`** (icon 🔵):
+- Title: **5–50 chars** (both min AND max enforced — Best Buy rejects titles under 5 chars and truncates over 50, even though the paste-buffer accepts up to 82)
+- Body: **50–5,000 chars** (50-char min is a rejection threshold, not a warning)
+- Normal range 1,500–3,000 pre-selected
+- Rating: single overall 1–5 stars — **no secondary star prompts** (simpler than Walmart's 5-aspect form or Target's 3-aspect form)
+- Tone calibrated for Best Buy's consumer-electronics audience — practical specifics about performance, build quality, ease of use, and value beat marketing language (more precision than Walmart's general-retail tone, less than Newegg's enthusiast crowd).
+
+Reference block in [js/templates.js](js/templates.js) updated:
+- Best Buy row replaces the prior `verify (TBD)` with real verified numbers.
+- Secondary-star-rating table notes Best Buy explicitly has none — the simpler form is a feature, not an omission.
+- New footnote (‡) documents the title field's quirk: paste-buffer accepts up to 82 chars but the form truncates beyond 50.
+
+[document-playbooks.html](document-playbooks.html) length table updated — Best Buy row now links to the dedicated template anchor with the verified constraints in plain text.
+
+**Per-platform variant arc complete.** The five US-major retail platforms with known constraints are now all covered: Amazon (v3.63.94 — measured baseline), Walmart / Target / Newegg (v3.63.136 — David's same-day verification), Best Buy (this release). Each has its own template with platform-specific limits baked in. The generic `product-review` template remains the no-platform default for blogs / manufacturer sites / undecided cases.
+
+Validator stayed green throughout — version-stamp checks all matched, no CSS token drift, no JS syntax issues.
+
+Standard ceremony: APP_VERSION → v3.63.137 Pro; build stamp 20260604-010; ?v=3.63.137 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (tenth release on the same day — new record); backlog → v206 (v203 dropped per 3-version margin).
+
+---
+
 ## v3.63.136
 
 **Three new per-platform Product Review templates — Walmart / Target / Newegg — with verified constraints baked in**
