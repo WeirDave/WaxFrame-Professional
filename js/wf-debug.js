@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260604-004
+// Build: 20260604-005
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -546,6 +546,25 @@ window.WF_ERROR_CATALOG = [
     matches: (err, ctx) => ctx.kind === 'builder_missing_conflicts',
     title: 'Builder did not return the required formatting',
     meaning: 'The Builder produced output but did not include the %%CONFLICTS_START%% block WaxFrame needs to read the result. Some AIs ignore strict formatting instructions. Try retrying the round (often works the second time), or switch to a different Builder via Change Builder.',
+    actions: [
+      { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
+      { label: 'Retry round', kind: 'retry' }
+    ]
+  },
+  {
+    // v3.63.132 — Distinct from BUILDER_NO_CONFLICTS_BLOCK. Fired when the
+    // last Builder API call returned finishReason='length' / 'MAX_TOKENS'
+    // AND the response is missing the formatting block. Diagnosis is
+    // structural (output cap, not instruction-following), so the suggested
+    // fix points at model capacity rather than retrying with the same
+    // model. Some families (Jamba 1.5/1.6/1.7 with hard 4096-token output
+    // cap) cannot be used as Builder regardless of setting — those are
+    // also filtered from Builder recommendations and badged
+    // ⚠️ Reviewer-only in the Change Builder model dropdown.
+    code: 'BUILDER_TRUNCATED',
+    matches: (err, ctx) => ctx.kind === 'builder_truncated',
+    title: 'Builder output was cut off mid-response (token cap)',
+    meaning: 'The Builder hit its API\'s max-output-tokens cap before finishing the %%CONFLICTS_START%% formatting block WaxFrame needs. This is a model capacity limit, not bad instruction-following — retrying with the same model will get truncated again. Switch to a Builder with a higher output cap (Claude / GPT / Gemini Pro all support 8K+; DeepSeek and Mistral Large work too). Some families have a hard cap that can\'t be raised — notably AI21\'s Jamba (capped at 4096 across 1.5 / 1.6 / 1.7), which is structurally incompatible with the Builder role no matter how you configure it. Jamba still works fine as a Reviewer.',
     actions: [
       { label: 'Change Builder', kind: 'open-modal', handler: 'openChangeBuilder' },
       { label: 'Retry round', kind: 'retry' }

@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-004
+   Build: 20260604-005
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -4490,6 +4490,17 @@ body.helper-body .page-main {
 .model-select-opt .opt-role { font-weight: 700; }
 .model-select-opt .opt-role.is-reviewer { color: var(--accent); }
 .model-select-opt .opt-role.is-builder  { color: var(--blue); }
+/* v3.63.132 — Reviewer-only warning marker. Used for models filtered out
+   of Builder recommendations because of a structural cap (Jamba's
+   4096-token output ceiling, etc.). Amber tint to read as "caution" not
+   "broken" — the model still works fine as a Reviewer and the user can
+   still pick it for Builder if they really mean to. */
+.model-select-opt.is-builder-warn-pick {
+  background: color-mix(in oklab, var(--warn, #fbbf24) 12%, transparent);
+  border-right: 3px solid var(--warn, #fbbf24);
+}
+.model-select-opt.is-builder-warn-pick:hover { filter: brightness(1.12); }
+.model-select-opt .opt-role.is-builder-warn { color: var(--warn, #fbbf24); }
 /* v3.63.34 — keyboard-active row (arrow-key highlight). Distinct from
    .is-selected (the committed pick) and :hover. An outline rather than a
    background so it reads clearly even on the gold/blue-tinted pick rows. */

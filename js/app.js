@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — app.js
-// Build: 20260604-004
+// Build: 20260604-005
 //  Author: WeirDave (R David Paine III) | License: AGPL-3.0
 //  GitHub: github.com/WeirDave/WaxFrame-Professional
 //
@@ -126,13 +126,19 @@ function buildModelSelector(aiId, provider, currentModel, showRecheck = false) {
     const spans = [];
     if (m === reviewerModel) spans.push('<span class="opt-role is-reviewer">✨ Reviewer</span>');
     if (m === builderModel)  spans.push('<span class="opt-role is-builder">🔨 Builder</span>');
+    // v3.63.132 — Reviewer-only warning. Surfaces in the dropdown so users
+    // see WHY they shouldn't pick this model as Builder — and still can if
+    // they really mean to (e.g. they've raised the cap server-side and
+    // want to override our guard).
+    if (isBuilderIncapableModel(m)) spans.push('<span class="opt-role is-builder-warn" title="Output token cap too low to finish a Builder round — use as Reviewer only">⚠️ Reviewer-only</span>');
     const markerHTML = spans.length ? spans.join(' · ') + ' — ' : '';
     const reasoningBadge = (m === reviewerModel && isReasoningLike(m)) ? ' (reasoning)' : '';
     return `${markerHTML}${esc(m)}${reasoningBadge}`;
   };
   const _tintCls = (m) => {
     const r = m === reviewerModel, b = m === builderModel;
-    return (r && b) ? ' is-both-pick' : r ? ' is-reviewer-pick' : b ? ' is-builder-pick' : '';
+    const w = isBuilderIncapableModel(m);
+    return (r && b) ? ' is-both-pick' : r ? ' is-reviewer-pick' : b ? ' is-builder-pick' : w ? ' is-builder-warn-pick' : '';
   };
   const optRows = models.map(m =>
     `<div class="model-select-opt${_tintCls(m)}${m === currentModel ? ' is-selected' : ''}" role="option" data-value="${escapeHtml(m)}" onclick="wfModelSelectPick(this, event)">${_optInner(m)}</div>`
@@ -501,7 +507,7 @@ let _lineNumDebounce = null;
 
 // ── VERSION ──
 // APP_VERSION lives in version.js — loaded before app.js on every page.
-const BUILD       = '20260604-004';         // build stamp — update each session
+const BUILD       = '20260604-005';         // build stamp — update each session
 
 // v3.63.61 — Round-counter forensic instrumentation. Every increment site
 // is wrapped with _logRoundBump(siteTag) to give us a telemetry trail.
@@ -1614,7 +1620,12 @@ function showRoundErrorModal(reason, details) {
   const ctxKindMap = {
     bloat:      'builder_bloat',
     conflicts:  'builder_missing_conflicts',
-    delimiters: 'builder_delimiters'
+    delimiters: 'builder_delimiters',
+    // v3.63.132 — Builder output truncated at the model's max_tokens cap
+    // before the formatting block was emitted. Distinct meaning from
+    // "missing conflicts" (model ignored instructions) so it routes to a
+    // different troubleshooting card (BUILDER_TRUNCATED).
+    truncated:  'builder_truncated'
   };
   const kind = ctxKindMap[reason];
   if (kind) {
@@ -5993,13 +6004,39 @@ const NEVER_ALLOWED_PATTERN =
 const BUILDER_DISALLOWED_PATTERN =
   /(reasoning|thinking|deep[-_ ]?research|research|chain[-_ ]?of[-_ ]?thought|\bcot\b|\bo1\b|\bo3\b|\bo4\b|\br1\b|planner|agentic|reflect|deliberative)/i;
 
+// v3.63.132 — Hardcoded "broken as Builder" model families. These cannot
+// fulfill the Builder role due to a STRUCTURAL limit (most commonly an
+// API-level max_tokens output cap too small to finish the
+// %%CONFLICTS_START%% formatting block on a real round) — no amount of
+// prompt engineering can rescue them. Filtered out of Builder
+// recommendations AND badged with ⚠️ Reviewer-only in the model dropdown
+// so users don't waste API credits on doomed rounds.
+//
+// Currently flagged:
+//   • Jamba (all variants) — AI21's hard 4096-token output cap. A typical
+//     WaxFrame Builder round needs ~5-8K output tokens (refined document +
+//     formatting blocks + applied-changes block); Jamba truncates before
+//     completing the formatting block. Confirmed against AI21 / AWS Bedrock
+//     / OpenRouter docs in June 2026: 4096 cap holds across Jamba 1.5,
+//     1.6, and 1.7. Architectural — not a setting AI21 can flip. Jamba
+//     still works fine as a REVIEWER (~2K output) so this is a Builder-
+//     only quarantine; only Builder recommendations skip it.
+const BUILDER_INCAPABLE_FAMILIES = /^(jamba|ai21[._-]?jamba)/i;
+function isBuilderIncapableModel(m) {
+  return typeof m === 'string' && BUILDER_INCAPABLE_FAMILIES.test(m);
+}
+
 function filterModelsForRole(models, role) {
   if (!Array.isArray(models)) return [];
   return models.filter(m => {
     // v3.63.31 — never recommend a quarantined (incapable) model.
     if (typeof isModelIncapable === 'function' && isModelIncapable(m)) return false;
     if (NEVER_ALLOWED_PATTERN.test(m)) return false;
-    if (role === 'builder' && BUILDER_DISALLOWED_PATTERN.test(m)) return false;
+    if (role === 'builder') {
+      if (BUILDER_DISALLOWED_PATTERN.test(m)) return false;
+      // v3.63.132 — known-broken Builder families (Jamba etc.).
+      if (BUILDER_INCAPABLE_FAMILIES.test(m)) return false;
+    }
     return true;
   });
 }
@@ -13712,11 +13749,28 @@ async function runBuilderOnly() {
 
     if (!hasConflictBlock) {
       builderHadError = true;
-      _failedRoundReason = 'conflicts';
-      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-      setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
-      setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-      consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
+      // v3.63.132 — Distinguish "Builder ignored the instructions" from
+      // "Builder hit its API's output cap mid-response". Check the last
+      // ring-buffer entry for this round's Builder call; finishReason of
+      // 'length' (OpenAI/Mistral/etc.) or 'MAX_TOKENS' (Anthropic/Google)
+      // means the response was cut off, not malformed. Different error
+      // code → different troubleshooting card with the right fix.
+      const _lastBuilderCall = (typeof WF_DEBUG !== 'undefined' && Array.isArray(WF_DEBUG.ringBuffer))
+        ? WF_DEBUG.ringBuffer.slice().reverse().find(e => e?.role === 'builder' && e?.round === round)
+        : null;
+      const _finish = (_lastBuilderCall?.finishReason || '').toString().toUpperCase();
+      const _truncated = _finish === 'LENGTH' || _finish === 'MAX_TOKENS';
+      _failedRoundReason = _truncated ? 'truncated' : 'conflicts';
+      _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${prompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}${_truncated ? ` · finishReason=${_finish}` : ''}`;
+      if (_truncated) {
+        setBeeStatus(builderAI.id, 'error', 'Output truncated');
+        setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
+        consoleLog(`⚠️ Builder output truncated (finishReason=${_finish}) — round rejected. Try a Builder with higher output capacity.`, 'error');
+      } else {
+        setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+        setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
+      }
     } else if (conflicts) {
       consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
     } else {
@@ -14690,11 +14744,24 @@ async function runRound() {
       // ── GATE 1: Missing conflicts block = hard failure ──
       if (!hasConflictBlock) {
         builderHadError = true;
-        _failedRoundReason = 'conflicts';
-        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}`;
-        setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
-        setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
-        consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
+        // v3.63.132 — Same truncation-vs-ignored split as runRound's
+        // Builder path above. See comments there for the rationale.
+        const _lastBuilderCall = (typeof WF_DEBUG !== 'undefined' && Array.isArray(WF_DEBUG.ringBuffer))
+          ? WF_DEBUG.ringBuffer.slice().reverse().find(e => e?.role === 'builder' && e?.round === round)
+          : null;
+        const _finish = (_lastBuilderCall?.finishReason || '').toString().toUpperCase();
+        const _truncated = _finish === 'LENGTH' || _finish === 'MAX_TOKENS';
+        _failedRoundReason = _truncated ? 'truncated' : 'conflicts';
+        _failedRoundDetails = `Builder: ${builderAI.name} · Chars sent: ${builderPrompt.length.toLocaleString()} · Time: ${new Date().toLocaleTimeString()}${_truncated ? ` · finishReason=${_finish}` : ''}`;
+        if (_truncated) {
+          setBeeStatus(builderAI.id, 'error', 'Output truncated');
+          setStatus(`⚠️ Builder output cut off at the model's token cap — round rejected`);
+          consoleLog(`⚠️ Builder output truncated (finishReason=${_finish}) — round rejected. Try a Builder with higher output capacity.`, 'error');
+        } else {
+          setBeeStatus(builderAI.id, 'error', 'Missing conflicts block');
+          setStatus(`⚠️ Builder did not return a %%CONFLICTS_START%% block — round rejected`);
+          consoleLog(`⚠️ Builder output missing %%CONFLICTS_START%% block — round rejected (hard stop).`, 'error');
+        }
       } else if (conflicts) {
         consoleLog(`⚡ Conflicts detected — see Conflicts panel`, 'warn');
       } else {
