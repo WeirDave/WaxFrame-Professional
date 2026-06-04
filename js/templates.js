@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — templates.js  (v3.38.3 — per-path descriptions, full audit)
-// Build: 20260604-008
+// Build: 20260604-009
 //  THE source of truth for Document Templates on the Project
 //  screen. Each entry maps directly to the Project Goal fields
 //  + Reference Material content. Adding a template = paste a new
@@ -825,15 +825,32 @@ const WAXFRAME_TEMPLATES = [
   // trusted to apply platform constraints from a goalNotes string.
   // Forking bakes the cap into the template itself.
   //
-  //   Platform     Title cap    Body min   Body normal      Body detailed    Body hard cap
-  //   ───────────  ───────────  ─────────  ───────────────  ───────────────  ─────────────
-  //   Amazon       100 chars    500 chars  1,500–3,500      4,000–7,500      20,000 chars
-  //   Best Buy     verify       (TBD)      (TBD)            (TBD)            5,000 chars
-  //   Walmart      verify       (TBD)      (TBD)            (TBD)            4,000 chars
-  //   Target       verify       (TBD)      (TBD)            (TBD)            4,000 chars
-  //   Newegg       verify       (TBD)      (TBD)            (TBD)            5,000 chars
-  //   Yelp         (separate template — different doc type, not product review)
+  //   Platform     Title cap    Body min     Body normal      Body detailed    Body hard cap
+  //   ───────────  ───────────  ───────────  ───────────────  ───────────────  ─────────────
+  //   Amazon       100 chars    500 chars    1,500–3,500      4,000–7,500      20,000 chars
+  //   Walmart       50 chars    500 chars      800–2,000      2,000–3,000       3,000 chars
+  //   Target       no limit     500 chars    1,000–2,500      2,500–3,500       3,500 chars *
+  //   Newegg       no limit     500 chars †    500–2,000 †    2,000–4,000 †     4,000 chars † per section
+  //   Best Buy     verify       (TBD)        (TBD)            (TBD)             5,000 chars
+  //   Yelp         (separate template — different doc type, see rewrite-as-yelp)
   //   Mfr / blog   none (soft 100-char headline ceiling as a safe default)
+  //
+  //   * Target's UI claims a 4,000-char cap but accepts ~3,500 in practice.
+  //     Use 3,500 as the safe hard cap (David verified, 2026-06-04).
+  //   † Newegg has a THREE-PART body: Pros / Cons / Overall Review, each
+  //     with the same cap. UI claims 5,000 each; actual is 4,376 (David
+  //     verified, 2026-06-04). Use 4,000 as the per-section safe cap.
+  //     Use a STRUCTURED-OUTPUT directive in goalNotes (PROS: / CONS: /
+  //     OVERALL REVIEW: sections); user copy-pastes each into Newegg's
+  //     three separate input fields.
+  //
+  // Secondary star ratings each platform asks for (write the body
+  // knowing the reviewer will rate these aspects):
+  //   Amazon       Just overall (1–5 stars).
+  //   Walmart      Overall + "Does it live up to expectations?" + Value
+  //                for money + Fit + Ease of installation + Quality.
+  //   Target       Overall + Ease of use + Quality + Value.
+  //   Newegg       Overall (1–5 eggs).
   //
   //   Yelp note: separate "rewrite-as-yelp" template already exists.
   //   Don't make a Yelp product-review variant — Yelp's vocabulary +
@@ -900,6 +917,181 @@ const WAXFRAME_TEMPLATES = [
         "hint": [
           { "field": "Length Constraint", "text": "Pre-set to Amazon's Normal tier (1,500–3,500 characters). Switch if your draft is naturally longer or shorter: Minimum 500 (thin), Normal 1,500–3,500 (default), Detailed 4,000–7,500 (deep), Hard cap 20,000 (Amazon's actual ceiling). HEADLINE cap of 100 characters is enforced via goalNotes — keep it short and verdict-driven." },
           { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document" }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — WALMART — both paths
+  // ============================================================
+  // Walmart constraints (David verified 2026-06-04):
+  //   Title:   ≤ 50 chars (hard — TIGHTEST title cap of any platform)
+  //   Body:    ≤ 3,000 chars (hard)
+  //   Body normal range (pre-selected): 800–2,000 chars
+  //   Secondary star ratings the reviewer fills in: Does it live up to
+  //     expectations · Value for money · Fit · Ease of installation · Quality
+  //   The body should explicitly address each of those aspects so the
+  //   star ratings have prose backing them.
+  {
+    "id": "product-review-walmart",
+    "name": "Product Review — Walmart",
+    "icon": "🛍️",
+    "category": "Reviews & Recommendations",
+    "description": "Walmart-specific product review with the tight 50-character title cap and 3,000-character body limit baked in. Body explicitly addresses Walmart's secondary star prompts: Value for money / Fit / Ease of installation / Quality / Does it live up to expectations.",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "A Walmart product review with platform constraints baked in: 50-char title cap (tight!), 800–2,000-char body normal range (3,000 hard cap), and explicit coverage of Walmart's five secondary star prompts.",
+        "goalDocType": "Walmart product review",
+        "goalAudience": "Walmart shoppers deciding whether to purchase this product. They want practical, specific details about real-world use — fit, build quality, value, and whether the product met expectations — not generic praise or vague complaints.",
+        "goalOutcome": "Create a fair, honest Walmart review that addresses the five aspects Walmart will ask the reviewer to rate (expectations, value, fit, ease of installation, quality), under Walmart's tight title and body limits.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), setup or installation experience, fit (if applicable — clothing/parts/replacements), use over time, value for money, quality, what worked, what didn't, and whether it lived up to expectations. Build only from facts in my Reference Material — do not invent specs, prices, dates, sizes, or features.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed. Preserve the reviewer's natural voice. Walmart's audience skews practical and budget-conscious — concrete numbers and specifics beat marketing language every time.",
+        "goalNotes": "Open with a one-line headline. HEADLINE HARD CAP: 50 characters — Walmart's title limit is the tightest of any major retailer, so the headline must be ruthlessly compressed. Examples of 50-char-or-under verdicts: 'Snug fit, holds up to weekly washes' (37 chars), 'Cheap plastic — broke after two uses' (37 chars), 'Exactly as described, fast shipping' (37 chars). No quotes, no 'Review:' prefix. Body must explicitly address each of Walmart's five secondary star prompts so the star ratings have prose backing them: (1) Does it live up to expectations — was the product as advertised; (2) Value for money — does the price match the quality; (3) Fit — sizing accuracy or fitment for the intended purpose; (4) Ease of installation / use — how hard was setup; (5) Quality — build, materials, durability. Body length recipe for Walmart: Minimum 500 chars (thin source), Normal 800–2,000 chars (sweet spot, pre-selected), Detailed 2,000–3,000 chars (deep coverage), Hard cap 3,000 chars (Walmart's actual body ceiling — exceeding this gets truncated by the form). The Length Constraint field defaults to Normal.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant / size: \nPrice paid: \nWhere purchased: Walmart\nWhy you bought it: \nHow long you've used it: \nSetup or installation experience: \nFirst impressions: \nFit (sizing accuracy or fitment for purpose): \nBuild quality: \nEase of installation / ease of use: \nDoes it live up to the product description / expectations: \nPerformance over time: \nValue for the money: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nStar rating (0–5): \nWho should buy it: \nWho should avoid it: ",
+        "lengthMode": "range",
+        "lengthMin": "800",
+        "lengthLimit": "2000",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Walmart's Normal tier (800–2,000 characters). Switch if the source material warrants: Minimum 500 (thin), Normal 800–2,000 (default sweet spot), Detailed 2,000–3,000 (deep), Hard cap 3,000 (Walmart's actual body ceiling). HEADLINE cap of 50 characters is enforced via goalNotes — this is the tightest title cap of any retailer, keep it brutally short and verdict-driven." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing Walmart review draft — sharpen specifics, enforce the 50-character title cap, fit Walmart's body length tier, and make sure each of Walmart's five secondary star prompts (expectations / value / fit / ease / quality) has prose backing it.",
+        "goalDocType": "Walmart product review",
+        "goalAudience": "Walmart shoppers deciding whether to purchase this product. They want practical, specific details about real-world use — fit, build quality, value, and whether the product met expectations.",
+        "goalOutcome": "Polish my existing Walmart review so it's useful, honest, and actionable. Strengthen specifics, cut vague language, make sure each of the five secondary-star aspects (expectations, value, fit, ease of installation, quality) is addressed in the body, and bring headline + body within Walmart's tight limits.",
+        "goalScope": "Preserve all my factual details — model, price, dates, sizes, use patterns. Sharpen vague language. Make sure the review covers purchase context, fit, build quality, value, ease of installation, and a clear bottom-line recommendation.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline. HEADLINE HARD CAP: 50 characters — Walmart's title limit. If my draft's headline exceeds 50 chars, trim it ruthlessly to the verdict. Examples: 'Snug fit, holds up to weekly washes' (37 chars), 'Cheap plastic — broke after two uses' (37 chars). No quotes, no 'Review:' prefix. Body must address each of Walmart's five secondary star prompts: expectations / value / fit / ease of installation / quality. If my draft omits any of these aspects, add a sentence using the facts in my Reference Material — do not invent details. Body length recipe: Minimum 500, Normal 800–2,000 (pre-selected), Detailed 2,000–3,000, Hard cap 3,000.",
+        "refMaterial": "",
+        "lengthMode": "range",
+        "lengthMin": "800",
+        "lengthLimit": "2000",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Walmart's Normal tier (800–2,000 characters). Switch if your draft is longer or shorter: Minimum 500 (thin), Normal 800–2,000 (default), Detailed 2,000–3,000 (deep), Hard cap 3,000 (Walmart's actual ceiling). HEADLINE 50-char cap is enforced via goalNotes." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document" }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — TARGET — both paths
+  // ============================================================
+  // Target constraints (David verified 2026-06-04):
+  //   Title:   no apparent limit (use 100-char soft default)
+  //   Body:    ≤ 3,500 chars (Target's UI says 4,000 but accepts ~3,500
+  //            in practice — use 3,500 as the safe hard cap)
+  //   Body normal range (pre-selected): 1,000–2,500 chars
+  //   Secondary star ratings: Overall + Ease of use + Quality + Value
+  {
+    "id": "product-review-target",
+    "name": "Product Review — Target",
+    "icon": "🎯",
+    "category": "Reviews & Recommendations",
+    "description": "Target-specific product review with the 3,500-character body cap baked in (Target's UI claims 4,000 but accepts ~3,500 in practice). Body explicitly addresses Target's secondary star prompts: Ease of use / Quality / Value.",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "A Target product review with platform constraints baked in: no hard title cap (soft 100-char ceiling), 1,000–2,500-char body normal range (3,500 hard cap), and explicit coverage of Target's three secondary star prompts.",
+        "goalDocType": "Target product review",
+        "goalAudience": "Target shoppers deciding whether to purchase this product. They want practical, specific details — how easy it is to use, build quality, and whether the price made sense — not generic praise or vague complaints.",
+        "goalOutcome": "Create a fair, honest Target review that addresses the three aspects Target asks the reviewer to rate (ease of use, quality, value) plus an overall verdict, under Target's body length limits.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), first impressions or setup, ease of use, quality, value for money, what worked, what didn't, and whether you'd buy it again. Build only from facts in my Reference Material — do not invent specs, prices, dates, or features.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the verdict — not a generic 'Review of [product]' stub. No quotes, no 'Review:' prefix. Target does not enforce a hard title cap so headlines can run longer than Walmart's 50, but stay under 100 chars as a readability ceiling. Body must explicitly address each of Target's three secondary star prompts so the star ratings have prose backing them: (1) Ease of use — how intuitive / easy is setup and operation; (2) Quality — build, materials, durability; (3) Value — does the price match what you got. Body length recipe for Target: Minimum 500 chars (thin source), Normal 1,000–2,500 chars (sweet spot, pre-selected), Detailed 2,500–3,500 chars (deep coverage), Hard cap 3,500 chars (Target's UI claims 4,000 but trims to ~3,500 in practice — use 3,500 as the safe ceiling). The Length Constraint field defaults to Normal.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: Target\nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nFirst impressions: \nSetup or unboxing: \nEase of use: \nBuild quality / materials / durability: \nWhat worked well: \nWhat did not work well: \nAny defects, missing parts, or failures: \nValue for the money: \nStar rating (0–5): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "lengthMode": "range",
+        "lengthMin": "1000",
+        "lengthLimit": "2500",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Target's Normal tier (1,000–2,500 characters). Switch if the source material warrants: Minimum 500 (thin), Normal 1,000–2,500 (default sweet spot), Detailed 2,500–3,500 (deep), Hard cap 3,500 (Target's actual body ceiling — UI claims 4,000 but accepts ~3,500 in practice)." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing Target review draft — sharpen specifics, fit Target's body length tier, and make sure each of Target's three secondary star prompts (ease of use / quality / value) has prose backing it.",
+        "goalDocType": "Target product review",
+        "goalAudience": "Target shoppers deciding whether to purchase this product. They want practical, specific details about ease of use, build quality, and value.",
+        "goalOutcome": "Polish my existing Target review so it's useful, honest, and actionable. Strengthen specifics, cut vague language, make sure each of the three secondary-star aspects (ease of use, quality, value) is addressed in the body, and bring the body within Target's 3,500-char limit.",
+        "goalScope": "Preserve all my factual details — model, price, dates, use patterns. Sharpen vague language. Make sure the review covers purchase context, ease of use, quality, value, and a clear bottom-line recommendation.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is allowed. Preserve the reviewer's natural voice.",
+        "goalNotes": "Open with a one-line headline that captures the verdict — not a generic '[Product Name] Review' stub. No quotes, no 'Review:' prefix. No hard title cap on Target, but keep it under 100 chars for readability. Body must address each of Target's three secondary star prompts: ease of use / quality / value. If my draft omits any of these aspects, add a sentence using facts in my Reference Material — do not invent details. Body length recipe: Minimum 500, Normal 1,000–2,500 (pre-selected), Detailed 2,500–3,500, Hard cap 3,500.",
+        "refMaterial": "",
+        "lengthMode": "range",
+        "lengthMin": "1000",
+        "lengthLimit": "2500",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Pre-set to Target's Normal tier (1,000–2,500 characters). Switch if your draft is longer or shorter: Minimum 500 (thin), Normal 1,000–2,500 (default), Detailed 2,500–3,500 (deep), Hard cap 3,500 (Target's actual ceiling)." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document" }
+        ]
+      }
+    }
+  },
+
+  // ============================================================
+  // PRODUCT REVIEW — NEWEGG — both paths
+  // ============================================================
+  // Newegg constraints (David verified 2026-06-04):
+  //   Title:   no limit
+  //   Structure: THREE-PART form — Pros / Cons / Overall Review,
+  //              each a separate input field
+  //   Cap:     ~4,376 per section (UI claims 5,000; use 4,000 as
+  //            the safe per-section cap)
+  //   Rating:  1–5 eggs (Newegg uses eggs not stars)
+  //
+  // Output format directive: the model must emit THREE clearly-
+  // delimited sections so the user can copy-paste each into Newegg's
+  // three separate input fields. The convergence engine measures
+  // total length, so lengthMode is "none" and per-section caps live
+  // in goalNotes as soft guidance — the user can manually trim if
+  // any single section overshoots when pasting.
+  {
+    "id": "product-review-newegg",
+    "name": "Product Review — Newegg",
+    "icon": "🥚",
+    "category": "Reviews & Recommendations",
+    "description": "Newegg-specific product review with structured three-part output: PROS section, CONS section, OVERALL REVIEW section — each capped at ~4,000 characters to fit Newegg's three input fields. Newegg uses 1–5 eggs (not stars).",
+    "paths": ["scratch", "refine"],
+    "pathContent": {
+      "scratch": {
+        "description": "A Newegg product review with platform constraints baked in: structured three-part output (PROS / CONS / OVERALL REVIEW, each ~4,000 chars max), 1–5 egg rating, no hard title cap. Built for Newegg's tech-savvy audience that wants specifics.",
+        "goalDocType": "Newegg product review",
+        "goalAudience": "Newegg shoppers — tech-savvy, comparison-driven, want specifics about performance, build quality, value, and any gotchas. They read pros and cons as separate fields and expect each to have substance.",
+        "goalOutcome": "Create a fair, honest Newegg review in Newegg's three-part structure (PROS / CONS / OVERALL REVIEW), with each section having real substance — not generic praise or vague complaints.",
+        "goalScope": "Include purchase context (why bought, price paid, model/variant), setup, performance, build quality, what worked, what didn't, value for money, and bottom-line recommendation. Build only from facts in my Reference Material — do not invent specs, prices, dates, or features.",
+        "goalTone": "Clear, direct, specific, and fair — Newegg's audience expects technical precision more than other platforms. Honest criticism is fine. Preserve the reviewer's natural voice.",
+        "goalNotes": "OUTPUT STRUCTURE — CRITICAL: Newegg's review form has THREE separate input fields (Pros / Cons / Overall Review), so the output MUST emit three clearly-delimited sections. Use these exact section headers on their own lines, no markdown formatting, no quotes:\n\nPROS:\n[content here — at least three concrete pros pulled from the reference material, each as a short bullet line starting with a dash. Stay specific, no marketing-speak. ~500–2,000 chars total.]\n\nCONS:\n[content here — at least one honest con (if the source has any), each as a short bullet line starting with a dash. If the product is genuinely great, a thin Cons section is fine but include the inevitable trade-offs (price, learning curve, missing features). ~500–2,000 chars total.]\n\nOVERALL REVIEW:\n[content here — narrative paragraph(s) covering purchase context, real-world performance, value for money, and bottom-line recommendation (who should buy / avoid). ~1,000–4,000 chars.]\n\nPer-section HARD CAP: 4,000 characters each (Newegg's UI claims 5,000 but accepts ~4,376 in practice — use 4,000 as the safe ceiling). If any section runs longer, the user will trim before pasting. The user copy-pastes each labeled section into Newegg's corresponding input field. Open the OVERALL REVIEW with a one-line headline (no quotes, no 'Review:' prefix) — no character limit on Newegg titles but keep it under 100 chars for readability.",
+        "refMaterial": "Product name: \nBrand: \nModel / variant: \nPrice paid: \nWhere purchased: Newegg\nWhy you bought it: \nHow long you've used it: \nHow often you use it: \nWhat you used it for: \nSetup / installation: \nFirst impressions: \nPerformance / real-world use: \nBuild quality: \nWhat worked well (the pros — list the specific wins): \nWhat did not work well (the cons — list the specific issues): \nAny defects, missing parts, or DOAs: \nValue for the money: \nEgg rating (1–5): \nWho should buy it: \nWho should avoid it: \nWould you buy it again: ",
+        "lengthMode": "none",
+        "lengthLimit": "",
+        "lengthMin": "",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Newegg's three-part structure (Pros / Cons / Overall Review) is handled via goalNotes section headers — per-section soft cap is 4,000 chars (Newegg's actual ceiling, despite UI claim of 5,000). Length Constraint is left unset because the engine measures TOTAL document length but Newegg caps each section independently. The user copy-pastes each labeled section into Newegg's three corresponding fields; if any section runs long, manually trim before pasting." }
+        ]
+      },
+      "refine": {
+        "description": "Polish an existing Newegg review draft — restructure into PROS / CONS / OVERALL REVIEW three-part output, sharpen specifics, and keep each section under ~4,000 characters.",
+        "goalDocType": "Newegg product review",
+        "goalAudience": "Newegg shoppers — tech-savvy, comparison-driven, want specifics about performance, build quality, value, and any gotchas.",
+        "goalOutcome": "Polish my existing Newegg review so it follows Newegg's three-part structure (Pros / Cons / Overall Review). Strengthen specifics, cut vague language, separate true pros from cons cleanly, and bring each section under ~4,000 chars.",
+        "goalScope": "Preserve all my factual details — model, price, dates, performance specifics. Sharpen vague language. If my draft mixes pros and cons together in narrative form, split them into the Pros / Cons sections; if it's already structured, polish each section independently.",
+        "goalTone": "Clear, direct, specific, and fair. Honest criticism is fine. Preserve the reviewer's natural voice.",
+        "goalNotes": "OUTPUT STRUCTURE — CRITICAL: Restructure my draft into Newegg's three-part output:\n\nPROS:\n[content here — bullet lines, specifics not generics, ~500–2,000 chars]\n\nCONS:\n[content here — bullet lines, ~500–2,000 chars]\n\nOVERALL REVIEW:\n[narrative paragraph(s), ~1,000–4,000 chars, opens with a one-line headline]\n\nIf my draft is already structured this way, polish each section independently. If it's a single narrative, identify the explicit and implicit pros / cons and split them into the labeled sections. Per-section HARD CAP: 4,000 characters each (Newegg's UI says 5,000 but accepts ~4,376 in practice). Use exact section headers as shown above (no markdown, no quotes). No 'Review:' prefix on the headline. Newegg uses 1–5 eggs (not stars). Do not invent specs, prices, dates, or features. Do not soften legitimate criticism.",
+        "refMaterial": "",
+        "lengthMode": "none",
+        "lengthLimit": "",
+        "lengthMin": "",
+        "lengthUnit": "characters",
+        "hint": [
+          { "field": "Length Constraint", "text": "Newegg's three-part structure (Pros / Cons / Overall Review) is handled via goalNotes section headers — per-section soft cap is 4,000 chars. Length Constraint is left unset because the engine measures TOTAL document length while Newegg caps each section independently. Copy-paste each labeled section into Newegg's three fields." },
+          { "field": "Starting Document", "text": "Paste your draft review on Setup — Step 5 of 5 — Starting Document. If your draft is one narrative paragraph (not pros/cons/overall split), the hive will restructure it; if it's already in three sections, the hive will polish each independently." }
         ]
       }
     }
