@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — waxframe-user-manual.html
-     Build: 20260604-003
+     Build: 20260604-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-003">
+  <meta name="waxframe-build" content="20260604-004">
   <title>WaxFrame User Manual — Multi-AI Document Refinement Guide</title>
   <meta name="description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <link rel="canonical" href="https://waxframe.com/waxframe-user-manual.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Complete guide to WaxFrame's hive setup, document refinement workflow, Builder configuration, reference material, convergence, and export.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.130">
+  <link rel="stylesheet" href="style.css?v=3.63.131">
 </head>
 <body class="helper-body">
 
@@ -1983,10 +1983,10 @@
     <div class="wh-block">
       <div class="wh-block-title">The diagnostic bundle</div>
       <p>The Help page has a single button that exports a JSON snapshot of your session — your active hive configuration, your project setup, your current document round, browser environment, and recent error history. Before the file is written to your downloads folder, three things are stripped automatically: <strong>every API key</strong>, <strong>your license key</strong>, and (optionally, with a checkbox) <strong>your document text and AI responses</strong>. Document and reference text are kept by default because they are usually what support needs to reproduce a content-related bug; uncheck the box if your document is sensitive.</p>
-      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#settings" class="link-accent">Save Checkpoint scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
+      <p>The bundle is for sharing with support only — it has no reason to round-trip and cannot be restored. For a restorable share-safe file, save a checkpoint with API keys and license unticked (see <a href="#checkpoint-scope" class="link-accent">Save Checkpoint scope</a> below). For a private restorable copy of your full session, save a checkpoint with everything ticked — it keeps your keys and is restorable, but should only be stored somewhere you trust.</p>
     </div>
 
-    <div class="wh-block">
+    <div class="wh-block" id="checkpoint-scope">
       <div class="wh-block-title">Save Checkpoint scope (share-safe via checkboxes)</div>
       <p>The <strong>💾 Save Checkpoint</strong> modal in the <strong>☰</strong> menu lets you tick which sections go in the checkpoint file. Six sections, each independently chooseable:</p>
       <ul>
@@ -2102,13 +2102,13 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.130"></script>
-<script src="lib/docx.min.js?v=3.63.130"></script>
-<script src="js/docx-export.js?v=3.63.130"></script>
-<script src="js/nav-helper.js?v=3.63.130"></script>
-<script src="js/license-helper.js?v=3.63.130"></script>
-<script src="js/version.js?v=3.63.130"></script>
-<script src="js/docs-scrollspy.js?v=3.63.130"></script>
+<script src="js/theme.js?v=3.63.131"></script>
+<script src="lib/docx.min.js?v=3.63.131"></script>
+<script src="js/docx-export.js?v=3.63.131"></script>
+<script src="js/nav-helper.js?v=3.63.131"></script>
+<script src="js/license-helper.js?v=3.63.131"></script>
+<script src="js/version.js?v=3.63.131"></script>
+<script src="js/docs-scrollspy.js?v=3.63.131"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
 </script>
