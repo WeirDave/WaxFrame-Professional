@@ -1,0 +1,51 @@
+# ============================================================
+# WaxFrame — release-check.yml (v3.63.134)
+#
+# Runs on every push to main and every pull request targeting main.
+# Invokes tools/release-check.mjs to validate:
+#   • JS syntax (node --check on every .js file under js/)
+#   • Version-stamp consistency (APP_VERSION matches package.json,
+#     JSON-LD softwareVersion, every ?v= cache-bust, every
+#     waxframe-build meta tag, every // Build: comment)
+#   • CSS token references (every var(--TOKEN) in style.css must
+#     resolve to a defined token — catches typos like the
+#     --space-22 / --modal-w-md mistakes that bit us in v3.63.131)
+#
+# Fails the build on any inconsistency. Each problem is printed
+# with a file path and (when known) a line number, which GitHub
+# surfaces inline in the PR diff.
+#
+# Run the same checks locally before pushing:
+#   node tools/release-check.mjs
+# ============================================================
+
+name: Release-ceremony validation
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Validate release ceremony
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Match a modern LTS; WaxFrame is plain-script vanilla JS so any
+          # current Node will parse it the same way. No npm install — the
+          # validator is pure Node stdlib by design (matches the project's
+          # "vanilla, no build step" stance).
+          node-version: '20'
+
+      - name: Run release-ceremony validator
+        run: node tools/release-check.mjs

@@ -2,6 +2,65 @@
 
 ---
 
+## v3.63.134
+
+**GitHub Actions release-ceremony validator + 18 CSS token typos fixed (silently-failing references the validator caught on its first run against main)**
+
+Build: `20260604-007`<br>
+Released: `2026-06-04`
+
+Adds `.github/workflows/release-check.yml` + `tools/release-check.mjs` — a pure-Node-stdlib validator that runs on every push to main and every PR targeting main. Catches the kinds of typos and drift that bit us in v3.63.131 (`--space-22` / `--modal-w-md` silently falling back, no browser warning) before they ship.
+
+**What the validator checks:**
+
+1. **JS syntax** — `node --check` on every `.js` file under `js/`. Fails on any parse error.
+2. **Version-stamp consistency** — `APP_VERSION` (from [js/version.js](js/version.js)) must match `package.json` `version`, the JSON-LD `softwareVersion` on [index.html](index.html), every `?v=X.Y.Z` cache-bust ref on every HTML file, every `<meta name="waxframe-build">` stamp, and every `// Build:` comment on every JS file + [style.css](style.css). Drift between these is the most common ceremony bug.
+3. **CSS token references** — for every `var(--TOKEN)` in [style.css](style.css), the TOKEN must be defined either in a `:root` block (the theme system) or anywhere else as a custom-property declaration (scoped vars, inline-style overrides set via JS `setProperty('--foo', ...)`, animation parameters in HTML templates, etc.). The first run against main caught **18 silently-failing token references** — undefined tokens whose `var()` calls were resolving to either nothing or to a hardcoded fallback literal that defeated the design-system token system entirely.
+
+**The 18 CSS fixes the validator forced this release:**
+
+| Old (undefined) | New |
+|---|---|
+| `var(--text2)` × 4 | `var(--text-dim)` |
+| `var(--bg2)` | `var(--surface2)` |
+| `var(--bg3)` × 2 | `var(--surface3)` |
+| `var(--text-faint)` | `var(--text-dim)` |
+| `var(--amber-dim)` | `var(--accent-dim)` |
+| `var(--bg-deep)` | `var(--bg)` |
+| `var(--danger, #c0392b)` | `var(--err)` |
+| `var(--fs-10)` × 4 | `var(--fs-11)` |
+| `var(--space-7)` | `var(--space-6)` |
+| `var(--space-22)` (in hp-section margin, not the v3.63.131 instance) | `var(--space-24)` |
+| `var(--space-5, 20px)` | `var(--space-20)` |
+| `var(--space-2, 8px)` | `var(--space-8)` |
+| `var(--accent-bg, rgba(247, 195, 64, 0.08))` | `rgba(247, 195, 64, 0.08)` (no token exists; use the literal) |
+| `var(--surface-hover, rgba(255,255,255,0.06))` | `rgba(255,255,255,0.06)` (literal) |
+| `var(--text-bright, #fff)` | `var(--text)` |
+| `var(--surface-elev, rgba(255,255,255,0.08))` | `rgba(255,255,255,0.08)` (literal) |
+| `var(--font-body)` | `var(--font)` |
+
+Some of these had fallback literals (`var(--space-5, 20px)`) so the rules were silently using the fallback the whole time — visually correct but defeating the point of the design-system tokens. Others had no fallback, meaning the property was effectively no-op (browser default kicked in). Net visual impact of the fixes: probably zero for most users — but the design system is consistent now, and future drift gets caught at PR time.
+
+**Where the validator runs:**
+
+- **Locally** — `node tools/release-check.mjs` from the repo root. Pure stdlib, no `npm install`. Exit 0 on success, 1 on failure. Use before pushing.
+- **CI on push to main** — `.github/workflows/release-check.yml`. Same script, same outcome, but the result is annotated on the commit / PR. Failure blocks the merge.
+
+**Skipped on purpose (for now):**
+
+- Dead-link check (every `src="..."` / `href="..."` to a local file exists). Considered for v1, deferred — the version-stamp + CSS-token checks have a much higher catch rate per line of validator code, and dead-link bugs surface immediately as a 404 in the browser anyway. Add later if motivated.
+- AST-based CSS parsing. Regex was sufficient for WaxFrame's well-formed style.css and avoids an `npm install` dep. Re-evaluate if the validator ever misses or false-positives on a real case.
+
+**Design notes:**
+
+- Pure Node stdlib — no npm deps. WaxFrame has no build step; adding deps just for the validator would invert the project's "vanilla HTML/CSS/JS" stance.
+- Read-only. The script never modifies files. State inspection, not state mutation.
+- Permissive on locally-scoped CSS vars. The first pass flagged ~40 false positives from `--dx` / `--dy` / `--size` / `--dur` / etc. (CSS-animation parameters set inline via JS template-literals on dynamically-spawned elements like `.hive-smoke-particle`). Second pass scans JS files for `setProperty('--foo', ...)` and template-literal `--foo:` patterns to recognize those, and HTML files for `style="--foo: ..."`. The remaining "undefined" set is the actual typo set.
+
+Standard ceremony: APP_VERSION → v3.63.134 Pro; build stamp 20260604-007; ?v=3.63.134 cache-bust on every helper page; package.json bump; JSON-LD softwareVersion bump; CHANGELOG prepended; sitemap.xml lastmod stays 2026-06-04 (seventh release on the same day); backlog → v203 (v200 dropped per 3-version margin).
+
+---
+
 ## v3.63.133
 
 **Deep Dive capture — dual-homed on Settings → Diagnostics + a one-click "enable for next session" prompt on help.html. Dev-toolbar toggle stays.**

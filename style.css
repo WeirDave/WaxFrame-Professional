@@ -1,6 +1,6 @@
 /* =============================================================
    WaxFrame — style.css
-   Build: 20260604-006
+   Build: 20260604-007
    Author: WeirDave (R David Paine III) | License: AGPL-3.0
    ============================================================= */
 
@@ -709,7 +709,7 @@ body.helper-body .page-main {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text2);
+  color: var(--text-dim);
   margin-bottom: var(--space-6);
 }
 .welcome-info-row {
@@ -731,7 +731,7 @@ body.helper-body .page-main {
   gap: 2px;
   font-size: var(--fs-13);
   line-height: 1.5;
-  color: var(--text2);
+  color: var(--text-dim);
 }
 .welcome-info-body strong {
   color: var(--text);
@@ -739,7 +739,7 @@ body.helper-body .page-main {
 }
 .welcome-info-note {
   font-size: var(--fs-12);
-  color: var(--text2);
+  color: var(--text-dim);
   opacity: 0.8;
 }
 
@@ -837,7 +837,7 @@ body.helper-body .page-main {
   transition: opacity 0.15s ease, background 0.15s ease;
 }
 .ai-setup-row:hover .ai-setup-rename-btn { opacity: 0.85; }
-.ai-setup-rename-btn:hover { opacity: 1; background: var(--surface-hover, rgba(255,255,255,0.06)); }
+.ai-setup-rename-btn:hover { opacity: 1; background: rgba(255,255,255,0.06); }
 /* Input swapped in for the name span during rename. Matches the name's
    typography (mono, fs-13, weight 600) so the row layout doesn't shift. */
 .ai-setup-rename-input {
@@ -847,8 +847,8 @@ body.helper-body .page-main {
   font-family: var(--font-mono);
   font-weight: 600;
   font-size: var(--fs-13);
-  color: var(--text-bright, #fff);
-  background: var(--surface-elev, rgba(255,255,255,0.08));
+  color: var(--text);
+  background: rgba(255,255,255,0.08);
   border: 1px solid var(--accent, #ffb84d);
   border-radius: 3px;
   padding: 2px 6px;
@@ -1382,12 +1382,12 @@ body.helper-body .page-main {
   padding: var(--space-4) var(--space-12) var(--space-4) var(--space-6);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
-  background: var(--bg2);
+  background: var(--surface2);
   transition: border-color 0.15s, background 0.15s;
 }
 .welcome-menu-btn:hover {
   border-color: var(--accent);
-  background: var(--bg2);
+  background: var(--surface2);
 }
 .welcome-menu-btn .nav-hamburger {
   border: none;
@@ -1609,7 +1609,7 @@ body.helper-body .page-main {
   color: var(--text-dim);
   font-size: var(--fs-13);
   font-weight: 500;
-  font-family: var(--font-body);
+  font-family: var(--font);
   text-decoration: none;
   cursor: pointer;
   text-align: left;
@@ -4008,7 +4008,7 @@ body.helper-body .page-main {
 }
 .import-server-help-runtime {
   font-size: var(--fs-11);
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin-top: var(--space-10);
   padding: var(--space-8) var(--space-10);
   border: 1px dashed var(--border);
@@ -4090,7 +4090,7 @@ body.helper-body .page-main {
   border: 1px dashed var(--border);
   border-radius: var(--radius-md);
   padding: var(--space-24);
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .import-server-checklist-placeholder-icon {
   font-size: var(--fs-32);
@@ -4106,7 +4106,7 @@ body.helper-body .page-main {
 }
 .import-server-checklist-placeholder-desc {
   font-size: var(--fs-12);
-  color: var(--text-faint);
+  color: var(--text-dim);
   line-height: 1.5;
   max-width: 280px;
 }
@@ -4138,7 +4138,7 @@ body.helper-body .page-main {
 }
 .import-checklist-timestamp {
   font-size: var(--fs-11);
-  color: var(--text-faint);
+  color: var(--text-dim);
   font-style: italic;
 }
 .import-server-checklist-actions { display: flex; gap: var(--space-6); }
@@ -4211,7 +4211,7 @@ body.helper-body .page-main {
 }
 .import-server-nickname-label {
   font-size: var(--fs-11);
-  color: var(--text-faint);
+  color: var(--text-dim);
   text-transform: uppercase;
   letter-spacing: 0.4px;
   font-weight: 600;
@@ -4229,10 +4229,10 @@ body.helper-body .page-main {
 }
 .import-server-name-input.is-default {
   font-style: italic;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .import-server-name-input::placeholder {
-  color: var(--text-faint);
+  color: var(--text-dim);
   font-style: italic;
 }
 .import-server-name-input:focus { outline: none; border-color: var(--accent); }
@@ -4241,7 +4241,7 @@ body.helper-body .page-main {
   font-weight: 700;
   letter-spacing: 0.3px;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--text-dim);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
@@ -4433,7 +4433,7 @@ body.helper-body .page-main {
 .model-select-custom .model-select-arrow {
   flex-shrink: 0;
   color: var(--text-dim);
-  font-size: var(--fs-10);
+  font-size: var(--fs-11);
   transition: transform 0.12s;
 }
 .model-select-custom.is-open { border-color: var(--accent); }
@@ -4542,7 +4542,7 @@ body.helper-body .page-main {
   font-weight: 700;
 }
 .hive-count-sep {
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin: 0 2px;
 }
 /* .ai-hidden-restore-btn removed in v3.31.0 — paired with the
@@ -5130,12 +5130,12 @@ kbd {
 .ssc-message {
   font-size: 0.88rem;
   line-height: 1.55;
-  color: var(--text2);
+  color: var(--text-dim);
   margin-bottom: 10px;
 }
 .ssc-counts {
   font-size: 0.82rem;
-  color: var(--text2);
+  color: var(--text-dim);
   font-family: 'Courier New', monospace;
   margin-bottom: 10px;
 }
@@ -5154,7 +5154,7 @@ kbd {
   right: 8px;
   background: transparent;
   border: none;
-  color: var(--text2);
+  color: var(--text-dim);
   font-size: 1rem;
   cursor: pointer;
   padding: 4px 6px;
@@ -5823,7 +5823,7 @@ kbd {
   border-color: var(--green);
 }
 .decision-locked-badge {
-  font-size: var(--fs-10);
+  font-size: var(--fs-11);
   font-weight: 700;
   padding: 2px var(--space-6);
   border-radius: 10px;
@@ -6060,7 +6060,7 @@ kbd {
   color: var(--green);
 }
 .applied-repeat-badge {
-  font-size: var(--fs-10);
+  font-size: var(--fs-11);
   font-weight: 700;
   padding: 2px var(--space-6);
   border-radius: 10px;
@@ -6076,7 +6076,7 @@ kbd {
   border-color: var(--red);
 }
 .applied-locked-tag {
-  font-size: var(--fs-10);
+  font-size: var(--fs-11);
   font-weight: 700;
   padding: 2px var(--space-6);
   border-radius: 10px;
@@ -7893,7 +7893,7 @@ kbd {
 /* ── License Manage Modal — extra elements ── */
 .license-modal-key-display {
   width: 100%;
-  background: var(--bg-deep);
+  background: var(--bg);
   border: 1px solid var(--border2);
   border-radius: var(--radius-sm);
   padding: var(--space-12) var(--space-14);
@@ -8420,7 +8420,7 @@ kbd {
   border-radius: 20px; white-space: nowrap; flex-shrink: 0;
 }
 .badge-free    { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); }
-.badge-paid    { background: var(--amber-dim); border: 1px solid var(--amber); color: var(--amber); }
+.badge-paid    { background: var(--accent-dim); border: 1px solid var(--amber); color: var(--amber); }
 .badge-limited { background: var(--blue-dim);  border: 1px solid var(--blue);  color: var(--blue); }
 
 /* ── Steps (api page) ── */
@@ -9079,7 +9079,7 @@ kbd {
    DOM id collision with the bee card's dropdown). */
 .tc-model-picker-tip {
   font-size: 0.8rem;
-  color: var(--text2, var(--text));
+  color: var(--text-dim);
   opacity: 0.85;
   line-height: 1.4;
 }
@@ -9925,10 +9925,10 @@ kbd {
 .wh-warn p { font-size:var(--fs-14); color:#f87171; line-height:1.5; margin:0; }
 
 .wh-table { width:100%; border-collapse:collapse; font-size:var(--fs-14); margin-top:var(--space-10); margin-bottom:var(--space-4); }
-.wh-table th { background:var(--bg3); color:var(--text); font-weight:700; text-align:left; padding:var(--space-6) var(--space-10); border:1px solid var(--border2); }
+.wh-table th { background:var(--surface3); color:var(--text); font-weight:700; text-align:left; padding:var(--space-6) var(--space-10); border:1px solid var(--border2); }
 .wh-table td { padding:var(--space-6) var(--space-10); border:1px solid var(--border2); color:var(--text-dim); vertical-align:top; line-height:1.5; }
-.wh-table tr:nth-child(even) td { background:var(--bg2); }
-.wh-table td code { font-family:Courier New,monospace; font-size:var(--fs-13); background:var(--bg3); padding:1px var(--space-4); border-radius:3px; }
+.wh-table tr:nth-child(even) td { background:var(--surface2); }
+.wh-table td code { font-family:Courier New,monospace; font-size:var(--fs-13); background:var(--surface3); padding:1px var(--space-4); border-radius:3px; }
 
 .wh-steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:var(--space-8); }
 .wh-step { display:flex; gap:var(--space-12); align-items:flex-start; font-size:var(--fs-14); color:var(--text-dim); line-height:1.6; }
@@ -10204,12 +10204,12 @@ kbd {
   }
   .doc-sidebar-link {
     font-size: var(--fs-13);
-    padding: var(--space-7) var(--space-8);
+    padding: var(--space-6) var(--space-8);
   }
   .hp-section {
     width: 100%;
     max-width: 100%;
-    margin-bottom: var(--space-22);
+    margin-bottom: var(--space-24);
   }
   .hp-section:first-of-type {
     margin-top: var(--space-16);
@@ -10631,7 +10631,7 @@ kbd {
   color: #0a0c12;
 }
 .nav-item-exit-dev {
-  color: var(--danger, #c0392b);
+  color: var(--err);
   opacity: 0.6;
   font-size: var(--fs-11);
 }
@@ -14187,7 +14187,7 @@ kbd {
    [data-theme] / prefers-color-scheme convention used throughout.
    Generate both sets with: tools/capture-screenshots.ps1 -Theme both
    ============================================================ */
-.ss-shot { margin: var(--space-5, 20px) auto; max-width: 920px; }
+.ss-shot { margin: var(--space-20) auto; max-width: 920px; }
 .ss-shot img {
   display: block;
   width: 100%;
@@ -14197,7 +14197,7 @@ kbd {
   box-shadow: var(--shadow-md);
 }
 .ss-shot figcaption {
-  margin-top: var(--space-2, 8px);
+  margin-top: var(--space-8);
   font-size: var(--fs-sm);
   color: var(--text-dim);
   text-align: center;
@@ -14340,7 +14340,7 @@ kbd {
   text-decoration: none;
   transition: background 0.15s ease;
 }
-.tpl-card-landing-link:hover { background: var(--accent-bg, rgba(247, 195, 64, 0.08)); }
+.tpl-card-landing-link:hover { background: rgba(247, 195, 64, 0.08); }
 
 /* Scaffold-preview accordion */
 .tpl-scaffold-summary {
