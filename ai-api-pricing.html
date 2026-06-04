@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — ai-api-pricing.html
-     Build: 20260603-003
+     Build: 20260603-004
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260603-003">
+  <meta name="waxframe-build" content="20260603-004">
   <title>AI API Pricing — Per-Token Costs for ChatGPT, Claude, Gemini and More — WaxFrame</title>
   <meta name="description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <link rel="canonical" href="https://waxframe.com/ai-api-pricing.html">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="Current per-token API pricing for ChatGPT, Claude, Gemini, DeepSeek, Mistral, Grok, Cohere, Together AI, and Perplexity. Cost-per-WaxFrame-round estimates and rate limits.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.110">
+  <link rel="stylesheet" href="style.css?v=3.63.111">
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -177,7 +177,7 @@
     <div class="hp-section-title-block">
       <h1 class="hp-section-title">AI API Pricing for WaxFrame</h1>
       <p class="hp-section-sub">Per-token input and output rates, context windows, rate limits, and free-tier caps for every AI provider WaxFrame supports. Pick a Builder by cost and capability instead of guessing.</p>
-      <p class="hp-section-sub"><em>Last updated <strong>2026-06-03</strong>. Provider pricing changes a few times a year — always verify at the linked billing page before committing to a heavy session.</em></p>
+      <p class="hp-section-sub"><em>Last updated <strong><span id="lastUpdatedStamp">2026-06-03</span></strong>. Provider pricing changes a few times a year — always verify at the linked billing page before committing to a heavy session.</em></p>
     </div>
   </div>
   <div class="hp-section-body">
@@ -196,122 +196,22 @@
     <p class="api-section-sub">Default models shipped in WaxFrame. Switch any AI to a newer or cheaper model in-app via Recommend Models.</p>
 
     <div class="wf-card is-green">
-      <p class="token-rates-notice">💡 Billing rates change. Verify each provider's billing page monthly to stay current. Per-round cost is an estimate for a typical WaxFrame Builder pass (~7K total tokens).</p>
+      <p class="token-rates-notice">💡 Billing rates change. Verify each provider's billing page monthly to stay current. Per-round cost is an estimate for a typical WaxFrame Builder pass (~7K total tokens). <strong>Click any column header to sort.</strong> Default sort: lowest cost per round first.</p>
+      <div id="pricingStatusBanner" class="pricing-status-banner" hidden></div>
       <table class="ai-table">
         <thead>
           <tr>
-            <th>Provider</th>
-            <th>Default model</th>
-            <th>Input $/M</th>
-            <th>Output $/M</th>
-            <th>Context</th>
-            <th>Max output</th>
-            <th>Est. $/round</th>
+            <th class="pricing-sortable" data-sort="name">Provider <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="model">Default model <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="inputPerM">Input $/M <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="outputPerM">Output $/M <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="contextWindow">Context <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="maxOutput">Max output <span class="sort-arrow"></span></th>
+            <th class="pricing-sortable" data-sort="estPerRound">Est. $/round <span class="sort-arrow"></span></th>
             <th>Billing</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><strong>ChatGPT</strong> (OpenAI)</td>
-            <td><code>gpt-4.1</code></td>
-            <td>$2.00</td>
-            <td>$8.00</td>
-            <td>1M</td>
-            <td>32K</td>
-            <td>$0.026</td>
-            <td><a href="https://platform.openai.com/settings/organization/billing/overview" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Claude</strong> (Anthropic)</td>
-            <td><code>claude-sonnet-4-6</code></td>
-            <td>$3.00</td>
-            <td>$15.00</td>
-            <td>200K</td>
-            <td>8K</td>
-            <td>$0.045</td>
-            <td><a href="https://console.anthropic.com/settings/billing" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Gemini</strong> (Google) — paid</td>
-            <td><code>gemini-2.5-flash</code></td>
-            <td>$0.075</td>
-            <td>$0.30</td>
-            <td>1M</td>
-            <td>8K</td>
-            <td>$0.001</td>
-            <td><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Gemini</strong> (Google) — free tier</td>
-            <td><code>gemini-2.5-flash</code></td>
-            <td>$0.00</td>
-            <td>$0.00</td>
-            <td>1M</td>
-            <td>8K</td>
-            <td>$0.00*</td>
-            <td><a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Grok</strong> (xAI)</td>
-            <td><code>grok-4-fast-non-reasoning</code></td>
-            <td>$0.20</td>
-            <td>$0.50</td>
-            <td>256K</td>
-            <td>8K</td>
-            <td>$0.002</td>
-            <td><a href="https://console.x.ai/billing" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Mistral</strong></td>
-            <td><code>mistral-large-latest</code></td>
-            <td>$2.00</td>
-            <td>$6.00</td>
-            <td>128K</td>
-            <td>8K</td>
-            <td>$0.022</td>
-            <td><a href="https://console.mistral.ai/api-keys" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Perplexity</strong></td>
-            <td><code>sonar-pro</code></td>
-            <td>$3.00</td>
-            <td>$15.00</td>
-            <td>200K</td>
-            <td>8K</td>
-            <td>$0.045</td>
-            <td><a href="https://console.perplexity.ai" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Cohere</strong></td>
-            <td><code>command-r-plus</code></td>
-            <td>$2.50</td>
-            <td>$10.00</td>
-            <td>128K</td>
-            <td>4K</td>
-            <td>$0.033</td>
-            <td><a href="https://dashboard.cohere.com/billing" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>DeepSeek</strong></td>
-            <td><code>deepseek-chat</code></td>
-            <td>$0.27</td>
-            <td>$1.10</td>
-            <td>64K</td>
-            <td>8K</td>
-            <td>$0.004</td>
-            <td><a href="https://platform.deepseek.com/top_up" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-          <tr>
-            <td><strong>Together AI</strong></td>
-            <td><code>Llama-3.3-70B-Instruct-Turbo</code></td>
-            <td>$0.88</td>
-            <td>$0.88</td>
-            <td>128K</td>
-            <td>4K</td>
-            <td>$0.006</td>
-            <td><a href="https://api.together.ai/settings/billing" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>
-          </tr>
-        </tbody>
+        <tbody id="pricingBody"></tbody>
       </table>
       <p class="hp-section-sub"><em>* Gemini free tier only while billing is <strong>disabled</strong> on your Google AI Studio account. Adding a credit card flips routing to paid tier even on the same model name. See <a href="what-are-tokens.html" target="_blank" rel="noopener noreferrer" class="link-accent">What Are Tokens? ↗</a> for the full caveat.</em></p>
     </div>
@@ -332,78 +232,7 @@
             <th>Notes</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td><strong>ChatGPT</strong></td>
-            <td>500</td>
-            <td>30K</td>
-            <td>None</td>
-            <td>Tiers scale with usage history; $5 credit unlocks most user needs.</td>
-          </tr>
-          <tr>
-            <td><strong>Claude</strong></td>
-            <td>50</td>
-            <td>50K</td>
-            <td>None</td>
-            <td>Tiers progress automatically with paid spend over time.</td>
-          </tr>
-          <tr>
-            <td><strong>Gemini</strong> (free)</td>
-            <td>15</td>
-            <td>—</td>
-            <td><strong>1500 RPD</strong></td>
-            <td>Free while billing disabled. Daily quota resets at midnight Pacific.</td>
-          </tr>
-          <tr>
-            <td><strong>Gemini</strong> (paid)</td>
-            <td>2K</td>
-            <td>4M</td>
-            <td>n/a</td>
-            <td>Paid-tier limits are very generous; cost discipline matters more than RPM.</td>
-          </tr>
-          <tr>
-            <td><strong>Grok</strong></td>
-            <td>~60</td>
-            <td>varies</td>
-            <td>Limited</td>
-            <td>API availability and quotas vary; check console for current tier.</td>
-          </tr>
-          <tr>
-            <td><strong>Mistral</strong></td>
-            <td>~30</td>
-            <td>varies</td>
-            <td>Trial credits</td>
-            <td><strong>Low RPS on paid Tier 1.</strong> A parallel 6-bee hive can trigger 429 even with token budget remaining. Contact Mistral support for tier raise.</td>
-          </tr>
-          <tr>
-            <td><strong>Perplexity</strong></td>
-            <td>~50</td>
-            <td>varies</td>
-            <td>None</td>
-            <td>$5/month recurring subscription tier (enable auto-pay at signup) covers most usage; $50/month otherwise.</td>
-          </tr>
-          <tr>
-            <td><strong>Cohere</strong></td>
-            <td>~100</td>
-            <td>varies</td>
-            <td>Trial credits</td>
-            <td>Generous trial credits; not yet hive-tested in production.</td>
-          </tr>
-          <tr>
-            <td><strong>DeepSeek</strong></td>
-            <td>~60</td>
-            <td>varies</td>
-            <td>None</td>
-            <td>Cheapest paid option, but consistently the slowest responder in the hive (60–90s/round).</td>
-          </tr>
-          <tr>
-            <td><strong>Together AI</strong></td>
-            <td>~600</td>
-            <td>varies</td>
-            <td>Trial credits</td>
-            <td>Open-weight model gateway; generous limits, not yet hive-tested in production.</td>
-          </tr>
-        </tbody>
+        <tbody id="rateLimitsBody"></tbody>
       </table>
       <p class="hp-section-sub"><em>Tier 1 RPM/TPM figures are typical entry-tier limits for paid accounts. Most providers raise limits automatically as paid usage history grows. Rate-limit headers ("X-RateLimit-Remaining" or equivalent) let WaxFrame surface 429 warnings before they bite — a future release will pipe these into the troubleshooting layer.</em></p>
     </div>
@@ -570,14 +399,229 @@
 </div>
 
 
-<script src="js/theme.js?v=3.63.110"></script>
-<script src="lib/docx.min.js?v=3.63.110"></script>
-<script src="js/docx-export.js?v=3.63.110"></script>
-<script src="js/nav-helper.js?v=3.63.110"></script>
-<script src="js/license-helper.js?v=3.63.110"></script>
-<script src="js/version.js?v=3.63.110"></script>
+<script src="js/theme.js?v=3.63.111"></script>
+<script src="lib/docx.min.js?v=3.63.111"></script>
+<script src="js/docx-export.js?v=3.63.111"></script>
+<script src="js/nav-helper.js?v=3.63.111"></script>
+<script src="js/license-helper.js?v=3.63.111"></script>
+<script src="js/version.js?v=3.63.111"></script>
 <script>
   document.querySelectorAll('.app-version-stamp').forEach(function(el) { el.textContent = APP_VERSION; });
+</script>
+
+<!-- ========================================================
+     Dynamic pricing renderer.
+     Fetches live data from the waxframe-pricing Cloudflare
+     Worker (KV-backed). Falls back to the embedded snapshot
+     below if the Worker is unreachable. The embedded data
+     ships as the page's last-known-good copy; on each
+     release we should refresh it from data/pricing-seed.json
+     in tools/pricing-worker.
+     ======================================================== -->
+<script>
+(function(){
+  'use strict';
+
+  var PRICING_API = 'https://waxframe-pricing.weirdave.workers.dev/api/pricing';
+
+  // FALLBACK_DATA mirrors tools/pricing-worker/data/pricing-seed.json
+  var FALLBACK_DATA = {
+    lastUpdated: '2026-06-03',
+    schemaVersion: 1,
+    tokensPerRound: { input: 5000, output: 2000 },
+    providers: [
+      { id:'gemini-free', name:'Gemini (Google) — free tier', model:'gemini-2.5-flash', inputPerM:0.00, outputPerM:0.00, contextWindow:'1M', maxOutput:'8K', estPerRound:0.000, estNote:'free while AI Studio billing is disabled', billingUrl:'https://aistudio.google.com/apikey', tier1Rpm:'15', tier1Tpm:'—', freeTier:'1500 RPD', rateLimitNotes:'Free while billing disabled. Daily quota resets at midnight Pacific.' },
+      { id:'gemini-paid', name:'Gemini (Google) — paid', model:'gemini-2.5-flash', inputPerM:0.075, outputPerM:0.30, contextWindow:'1M', maxOutput:'8K', estPerRound:0.001, billingUrl:'https://aistudio.google.com/apikey', tier1Rpm:'2K', tier1Tpm:'4M', freeTier:'n/a', rateLimitNotes:'Paid-tier limits are very generous; cost discipline matters more than RPM.' },
+      { id:'grok', name:'Grok (xAI)', model:'grok-4-fast-non-reasoning', inputPerM:0.20, outputPerM:0.50, contextWindow:'256K', maxOutput:'8K', estPerRound:0.002, billingUrl:'https://console.x.ai/billing', tier1Rpm:'~60', tier1Tpm:'varies', freeTier:'Limited', rateLimitNotes:'API availability and quotas vary; check console for current tier.' },
+      { id:'deepseek', name:'DeepSeek', model:'deepseek-chat', inputPerM:0.27, outputPerM:1.10, contextWindow:'64K', maxOutput:'8K', estPerRound:0.004, billingUrl:'https://platform.deepseek.com/top_up', tier1Rpm:'~60', tier1Tpm:'varies', freeTier:'None', rateLimitNotes:'Cheapest paid option, but consistently the slowest responder in the hive (60–90s/round).' },
+      { id:'together', name:'Together AI', model:'Llama-3.3-70B-Instruct-Turbo', inputPerM:0.88, outputPerM:0.88, contextWindow:'128K', maxOutput:'4K', estPerRound:0.006, billingUrl:'https://api.together.ai/settings/billing', tier1Rpm:'~600', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Open-weight model gateway; generous limits, not yet hive-tested in production.' },
+      { id:'mistral', name:'Mistral', model:'mistral-large-latest', inputPerM:2.00, outputPerM:6.00, contextWindow:'128K', maxOutput:'8K', estPerRound:0.022, billingUrl:'https://console.mistral.ai/api-keys', tier1Rpm:'~30', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Low RPS on paid Tier 1. A parallel 6-bee hive can trigger 429 even with token budget remaining. Contact Mistral support for tier raise.' },
+      { id:'chatgpt', name:'ChatGPT (OpenAI)', model:'gpt-4.1', inputPerM:2.00, outputPerM:8.00, contextWindow:'1M', maxOutput:'32K', estPerRound:0.026, billingUrl:'https://platform.openai.com/settings/organization/billing/overview', tier1Rpm:'500', tier1Tpm:'30K', freeTier:'None', rateLimitNotes:'Tiers scale with usage history; $5 credit unlocks most user needs.' },
+      { id:'cohere', name:'Cohere', model:'command-r-plus', inputPerM:2.50, outputPerM:10.00, contextWindow:'128K', maxOutput:'4K', estPerRound:0.033, billingUrl:'https://dashboard.cohere.com/billing', tier1Rpm:'~100', tier1Tpm:'varies', freeTier:'Trial credits', rateLimitNotes:'Generous trial credits; not yet hive-tested in production.' },
+      { id:'claude', name:'Claude (Anthropic)', model:'claude-sonnet-4-6', inputPerM:3.00, outputPerM:15.00, contextWindow:'200K', maxOutput:'8K', estPerRound:0.045, billingUrl:'https://console.anthropic.com/settings/billing', tier1Rpm:'50', tier1Tpm:'50K', freeTier:'None', rateLimitNotes:'Tiers progress automatically with paid spend over time.' },
+      { id:'perplexity', name:'Perplexity', model:'sonar-pro', inputPerM:3.00, outputPerM:15.00, contextWindow:'200K', maxOutput:'8K', estPerRound:0.045, billingUrl:'https://console.perplexity.ai', tier1Rpm:'~50', tier1Tpm:'varies', freeTier:'None', rateLimitNotes:'$5/month recurring subscription tier (enable auto-pay at signup) covers most usage; $50/month otherwise.' }
+    ]
+  };
+
+  var currentData = null;
+  var sortColumn = 'estPerRound';
+  var sortDir = 'asc';
+
+  function escapeHtml(s) {
+    if (s == null) return '';
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+  }
+
+  // "1M" -> 1000000, "256K" -> 256000, "8K" -> 8000, "—" / "varies" / "n/a" -> NaN
+  function normalizeKMG(v) {
+    if (v == null) return NaN;
+    var s = String(v).trim();
+    if (s === '' || s === '—' || /^(varies|n\/a|none|limited|trial credits)$/i.test(s)) return NaN;
+    var m = s.match(/^~?\s*([0-9]*\.?[0-9]+)\s*([KMGB]?)$/i);
+    if (!m) return NaN;
+    var n = parseFloat(m[1]);
+    var suffix = m[2].toUpperCase();
+    if (suffix === 'K') n *= 1e3;
+    else if (suffix === 'M') n *= 1e6;
+    else if (suffix === 'G' || suffix === 'B') n *= 1e9;
+    return n;
+  }
+
+  function sortKey(provider, col) {
+    var v = provider[col];
+    // Numeric columns first
+    if (col === 'inputPerM' || col === 'outputPerM' || col === 'estPerRound') {
+      return typeof v === 'number' ? v : NaN;
+    }
+    if (col === 'contextWindow' || col === 'maxOutput' || col === 'tier1Rpm' || col === 'tier1Tpm') {
+      return normalizeKMG(v);
+    }
+    // String columns
+    return String(v == null ? '' : v).toLowerCase();
+  }
+
+  function compareProviders(a, b, col, dir) {
+    var av = sortKey(a, col);
+    var bv = sortKey(b, col);
+    var cmp;
+    // NaN goes to the bottom regardless of direction
+    var aNaN = typeof av === 'number' && isNaN(av);
+    var bNaN = typeof bv === 'number' && isNaN(bv);
+    if (aNaN && bNaN) cmp = 0;
+    else if (aNaN) return 1;
+    else if (bNaN) return -1;
+    else if (typeof av === 'number' && typeof bv === 'number') cmp = av - bv;
+    else cmp = String(av).localeCompare(String(bv));
+    return dir === 'asc' ? cmp : -cmp;
+  }
+
+  function renderPricingTable() {
+    var tbody = document.getElementById('pricingBody');
+    if (!tbody || !currentData) return;
+    var rows = currentData.providers.slice().sort(function(a, b) {
+      return compareProviders(a, b, sortColumn, sortDir);
+    });
+    var html = rows.map(function(p) {
+      var est = '$' + Number(p.estPerRound).toFixed(3);
+      if (p.estNote) est += '<span title="' + escapeHtml(p.estNote) + '">*</span>';
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(p.name) + '</strong></td>' +
+        '<td><code>' + escapeHtml(p.model) + '</code></td>' +
+        '<td>$' + Number(p.inputPerM).toFixed(2) + '</td>' +
+        '<td>$' + Number(p.outputPerM).toFixed(2) + '</td>' +
+        '<td>' + escapeHtml(p.contextWindow) + '</td>' +
+        '<td>' + escapeHtml(p.maxOutput) + '</td>' +
+        '<td>' + est + '</td>' +
+        '<td><a href="' + escapeHtml(p.billingUrl) + '" target="_blank" rel="noopener noreferrer" class="token-billing-link">Check rates →</a></td>' +
+      '</tr>';
+    }).join('');
+    tbody.innerHTML = html;
+    updateSortIndicators();
+  }
+
+  function renderRateLimitsTable() {
+    var tbody = document.getElementById('rateLimitsBody');
+    if (!tbody || !currentData) return;
+    var html = currentData.providers.map(function(p) {
+      return '<tr>' +
+        '<td><strong>' + escapeHtml(p.name) + '</strong></td>' +
+        '<td>' + escapeHtml(p.tier1Rpm == null ? '—' : p.tier1Rpm) + '</td>' +
+        '<td>' + escapeHtml(p.tier1Tpm == null ? '—' : p.tier1Tpm) + '</td>' +
+        '<td>' + escapeHtml(p.freeTier == null ? '—' : p.freeTier) + '</td>' +
+        '<td>' + escapeHtml(p.rateLimitNotes == null ? '' : p.rateLimitNotes) + '</td>' +
+      '</tr>';
+    }).join('');
+    tbody.innerHTML = html;
+  }
+
+  function updateSortIndicators() {
+    var headers = document.querySelectorAll('.pricing-sortable');
+    for (var i = 0; i < headers.length; i++) {
+      var th = headers[i];
+      th.classList.remove('sort-asc', 'sort-desc');
+      if (th.getAttribute('data-sort') === sortColumn) {
+        th.classList.add(sortDir === 'asc' ? 'sort-asc' : 'sort-desc');
+      }
+    }
+  }
+
+  function setLastUpdated(stamp) {
+    var el = document.getElementById('lastUpdatedStamp');
+    if (el && stamp) el.textContent = stamp;
+  }
+
+  function setStatusBanner(message, isWarning) {
+    var el = document.getElementById('pricingStatusBanner');
+    if (!el) return;
+    if (!message) {
+      el.hidden = true;
+      el.textContent = '';
+      return;
+    }
+    el.hidden = false;
+    el.textContent = message;
+    el.classList.toggle('is-warning', !!isWarning);
+  }
+
+  function attachSortHandlers() {
+    var headers = document.querySelectorAll('.pricing-sortable');
+    for (var i = 0; i < headers.length; i++) {
+      (function(th) {
+        th.addEventListener('click', function() {
+          var col = th.getAttribute('data-sort');
+          if (col === sortColumn) {
+            sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          } else {
+            sortColumn = col;
+            sortDir = 'asc';
+          }
+          renderPricingTable();
+        });
+      })(headers[i]);
+    }
+  }
+
+  function loadPricing() {
+    return fetch(PRICING_API, { cache: 'default' })
+      .then(function(res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(function(data) {
+        if (!data || !Array.isArray(data.providers)) throw new Error('malformed payload');
+        return { data: data, source: 'live' };
+      })
+      .catch(function(err) {
+        return { data: FALLBACK_DATA, source: 'fallback', error: err };
+      });
+  }
+
+  function init() {
+    attachSortHandlers();
+    loadPricing().then(function(result) {
+      currentData = result.data;
+      setLastUpdated(currentData.lastUpdated);
+      renderPricingTable();
+      renderRateLimitsTable();
+      if (result.source === 'fallback') {
+        setStatusBanner('Live pricing service unreachable — showing the last embedded snapshot from ' + (currentData.lastUpdated || 'an earlier release') + '. Per-row billing links are still current.', true);
+      } else {
+        setStatusBanner(null);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 </script>
 </body>
 </html>

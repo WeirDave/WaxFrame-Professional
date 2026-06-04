@@ -1,0 +1,11 @@
+name = "waxframe-pricing"
+main = "src/index.js"
+compatibility_date = "2026-06-03"
+
+# Cloudflare KV namespace holding the pricing payload.
+# David: create the namespace once with:
+#   wrangler kv namespace create PRICING_DATA
+# Then paste the returned id below.
+[[kv_namespaces]]
+binding = "PRICING_DATA"
+id = "REPLACE_ME_WITH_KV_NAMESPACE_ID"
