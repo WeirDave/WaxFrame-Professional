@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — storage.js
-// Build: 20260604-001
+// Build: 20260604-002
 //
 //  COMPLETE storage layer. All WaxFrame state persistence lives
 //  here as of v3.48.0:
@@ -965,9 +965,9 @@ async function backupSession() {
   // script has loaded, so the runtime reference resolves cleanly even
   // though storage.js parses first.
   const proceed = await wfConfirm(
-    'Sensitive backup',
-    "Full backups let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
-    { okText: 'Save to Backup', suppressKey: 'waxframe_suppress_sensitive_backup_confirm' }
+    'Save Checkpoint',
+    "Checkpoints let you restore this project exactly where you left off. They may include your document text, AI responses, API keys, license key, and debug traces. Store them somewhere private and only share them with people you trust.",
+    { okText: 'Save Checkpoint', suppressKey: 'waxframe_suppress_sensitive_backup_confirm' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
@@ -996,7 +996,7 @@ async function backupSession() {
   try { sessionIDB = await idbGet(); } catch(e) { /* ignore */ }
 
   if (!hive && !project && !license && !sessionLS && !sessionIDB) {
-    toast('⚠️ Nothing to back up'); return;
+    toast('⚠️ Nothing to checkpoint'); return;
   }
 
   const backup = {
@@ -1043,7 +1043,7 @@ async function backupSession() {
   // dropped the "WaxFrame-" prefix, added a -r{N} round number, and moved the
   // stamp before "-Backup") is undone — the timestamp already prevents
   // same-project collisions, and David wants the old shape back.
-  const filename = `${baseName}-WaxFrame-Backup-${stamp}`;
+  const filename = `${baseName}-WaxFrame-Checkpoint-${stamp}`;
   // Empty-file race fix history:
   // v3.21.19 — Append anchor to DOM, click, remove, defer URL.revokeObjectURL
   //            via setTimeout(..., 1000) to give Chrome's download dispatcher
@@ -1076,7 +1076,7 @@ async function backupSession() {
   const sessionMsg = sessionIDB
     ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
     : ' (project setup only — no session data)';
-  toast(`💾 Session backed up${sessionMsg}`);
+  toast(`💾 Checkpoint saved${sessionMsg}`);
 }
 
 
@@ -1141,9 +1141,9 @@ function scrubBackup(backupObj) {
 // a -Scrubbed suffix so the two flavors are distinguishable at a glance.
 async function backupSessionScrubbed() {
   const proceed = await wfConfirm(
-    'Export scrubbed backup',
-    "A scrubbed backup includes your project, document, AI responses, and round history — but every API key and your license key are stripped. Safe to share with collaborators or attach to a support ticket. The recipient adds their own keys to continue running rounds.",
-    { okText: 'Save scrubbed backup' }
+    'Save scrubbed Checkpoint',
+    "A scrubbed checkpoint includes your project, document, AI responses, and round history — but every API key and your license key are stripped. Safe to share with collaborators or attach to a support ticket. The recipient adds their own keys to continue running rounds.",
+    { okText: 'Save scrubbed Checkpoint' }
   );
   if (!proceed) { closeNavMenu(); return; }
 
@@ -1160,7 +1160,7 @@ async function backupSessionScrubbed() {
   try { sessionIDB = await idbGet(); } catch (e) { /* ignore */ }
 
   if (!hive && !project && !license && !sessionLS && !sessionIDB) {
-    toast('⚠️ Nothing to back up'); return;
+    toast('⚠️ Nothing to checkpoint'); return;
   }
 
   // Same shape backupSession produces, then scrubbed.
@@ -1185,7 +1185,7 @@ async function backupSessionScrubbed() {
   const d = new Date();
   const pad = n => String(n).padStart(2, '0');
   const stamp = `${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}-${pad(d.getHours())}${pad(d.getMinutes())}`;
-  const filename = `${baseName}-WaxFrame-Backup-Scrubbed-${stamp}`;
+  const filename = `${baseName}-WaxFrame-Checkpoint-Scrubbed-${stamp}`;
 
   // Same download dance + 30s deferred revoke as backupSession.
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
@@ -1201,7 +1201,7 @@ async function backupSessionScrubbed() {
   const sessionMsg = sessionIDB
     ? ` (${sessionIDB.history?.length || 0} rounds, ${(sessionIDB.docText?.length || 0).toLocaleString()} chars)`
     : ' (project setup only — no session data)';
-  toast(`🧼 Scrubbed backup downloaded — API keys + license stripped${sessionMsg}`, 6000);
+  toast(`🧼 Scrubbed checkpoint saved — API keys + license stripped${sessionMsg}`, 6000);
 }
 
 
@@ -1359,8 +1359,8 @@ async function importSession() {
   // rule, suppressKey belongs only on informational confirms, never on
   // a safety brake. This warning must fire every time.
   const proceed = await wfConfirm(
-    'Restore from backup',
-    "Only restore backups you created or trust. A backup can replace your local project, AI setup, API keys, and session state.",
+    'Restore from Checkpoint',
+    "Only restore checkpoints you created or trust. A checkpoint can replace your local project, AI setup, API keys, and session state.",
     { okText: 'Choose file' }
   );
   if (!proceed) { closeNavMenu(); return; }
@@ -1381,10 +1381,10 @@ async function importSession() {
         // Catch them before the generic "not a valid backup" message so
         // the user understands WHY it won't import.
         if (data._waxframe_diagnostic && !data._waxframe_backup) {
-          toast('⚠️ This is a Diagnostic Bundle (export-only, for sending to support). It can\'t restore a session — use a Backup file for that.', 9000);
+          toast('⚠️ This is a Diagnostic Bundle (export-only, for sending to support). It can\'t restore a session — use a Checkpoint file for that.', 9000);
           return;
         }
-        if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame backup file'); return; }
+        if (!data._waxframe_backup) { toast('⚠️ Not a valid WaxFrame checkpoint file'); return; }
         // v3.63.59 — scrubbed-backup detection. A scrubbed backup carries
         // _waxframe_backup_scrubbed: true and has LS_LICENSE: null +
         // every secret-shaped field in LS_HIVE/IDB_SESSION blanked. If we

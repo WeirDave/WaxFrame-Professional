@@ -1,6 +1,6 @@
 <!-- ============================================================
      WaxFrame — index.html
-     Build: 20260604-001
+     Build: 20260604-002
      Author: WeirDave (R David Paine III) | License: AGPL-3.0
      GitHub: github.com/WeirDave/WaxFrame-Professional
      ============================================================ -->
@@ -9,7 +9,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="waxframe-build" content="20260604-001">
+  <meta name="waxframe-build" content="20260604-002">
   <title>WaxFrame — Multi-AI Document Refinement in Your Browser</title>
   <meta name="description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <link rel="canonical" href="https://waxframe.com/">
@@ -23,7 +23,7 @@
   <meta name="twitter:description" content="A browser-based multi-AI tool where Worker Bees review and refine your documents in iterative rounds. No backend, no install, air-gap safe.">
   <meta name="twitter:image" content="https://waxframe.com/images/WaxFrame_Social_Card_v1.png">
   <link rel="icon" type="image/png" href="images/Waxframe_logo_v19.png">
-  <link rel="stylesheet" href="style.css?v=3.63.128">
+  <link rel="stylesheet" href="style.css?v=3.63.129">
 
   <!-- ============================================================
        Structured data (JSON-LD) — SoftwareApplication
@@ -62,7 +62,7 @@
     "applicationSubCategory": "DocumentEditor",
     "operatingSystem": "Web Browser (Chrome, Firefox, Edge, Safari)",
     "browserRequirements": "Desktop browser, 1366x768 minimum resolution",
-    "softwareVersion": "3.63.128",
+    "softwareVersion": "3.63.129",
     "license": "https://www.gnu.org/licenses/agpl-3.0.html",
     "image": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
     "screenshot": "https://waxframe.com/images/WaxFrame_Social_Card_v1.png",
@@ -909,7 +909,7 @@
 
             <div class="settings-row">
               <div class="settings-row-label">
-                <span class="settings-row-name">Backup Builder</span>
+                <span class="settings-row-name">Failover Builder</span>
                 <span class="settings-row-help">If your Builder hits the failure-streak limit during an Auto run, WaxFrame pauses and offers to promote this AI to Builder so you can resume in one click. Choose "None" to have Auto pause and ask you without offering a promotion. Slow Builders do not trigger this — only repeated failures do.</span>
               </div>
               <select class="settings-select" id="setAutoBackupBuilder" onchange="saveAutoBackupBuilder(this.value)">
@@ -960,7 +960,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset Auto settings</span>
-                <span class="settings-row-help">Restore every Auto Mode option above to its built-in default (Backup Builder: none · Never disable Builder: off · Failure-streak limit: 2 · Slow threshold: 3× / 2 rounds · Reround attempts: 2).</span>
+                <span class="settings-row-help">Restore every Auto Mode option above to its built-in default (Failover Builder: none · Never disable Builder: off · Failure-streak limit: 2 · Slow threshold: 3× / 2 rounds · Reround attempts: 2).</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetAutoSettings()" title="Restore all Auto Mode settings to defaults">↺ Reset to defaults</button>
             </div>
@@ -1040,7 +1040,7 @@
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
                 <span class="settings-row-name">Reset suppressed prompts</span>
-                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), Sensitive Backup warning, per-project Checkpoint Backup Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore-from-backup warning is intentionally NOT dismissable — it's a security trust gate that fires every time.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
+                <span class="settings-row-help">Every confirmation modal carrying a "Don't show this again" option leaves a suppression flag when dismissed. This includes the Length Guard toggle (disable + re-arm), Save Checkpoint warning, per-project Checkpoint Nudge, Server/Internet mode switch, Add reference doc mid-session, Recommend Models for All, Go back to Home, and per-template educational modals. (The Restore from Checkpoint warning is intentionally NOT dismissable — it's a security trust gate that fires every time.) Click here to clear all of them at once; every dismissed prompt will reappear next time you trigger its action.</span>
               </div>
               <button class="btn settings-reset-btn" onclick="resetSuppressedPrompts()" title="Bring back every dismissed confirmation modal">↺ Reset suppressed prompts</button>
             </div>
@@ -1048,7 +1048,7 @@
 
           <div class="settings-section">
             <h2 class="settings-section-title">🧹 Storage</h2>
-            <p class="settings-section-desc">WaxFrame stores everything locally in your browser across three storage layers — nothing leaves your machine. Each button below targets one layer; the last wipes everything. Wipes are irreversible from inside the app; export anything worth keeping first (use Backup, below this section in a future release, or your existing export buttons on the work screen). Each wipe needs a two-click confirm. After a wipe the page reloads so the app starts fresh.</p>
+            <p class="settings-section-desc">WaxFrame stores everything locally in your browser across three storage layers — nothing leaves your machine. Each button below targets one layer; the last wipes everything. Wipes are irreversible from inside the app; save a checkpoint of anything worth keeping first (Menu → 💾 Save Checkpoint), or use your existing export buttons on the work screen. Each wipe needs a two-click confirm. After a wipe the page reloads so the app starts fresh.</p>
 
             <div class="settings-row settings-row-actions">
               <div class="settings-row-label">
@@ -1705,7 +1705,7 @@
     <h2 class="finish-modal-title">Auto paused</h2>
     <p class="finish-modal-msg auto-halt-reason" id="autoHaltReason">Auto stopped.</p>
     <div class="auto-halt-actions">
-      <button title="Promote your configured backup Builder and resume Auto Mode" class="auto-halt-btn auto-halt-resume" id="autoHaltPromoteBtn" style="display:none" onclick="autoHaltPromoteBackup()">🔁 Promote backup &amp; resume</button>
+      <button title="Promote your configured Failover Builder and resume Auto Mode" class="auto-halt-btn auto-halt-resume" id="autoHaltPromoteBtn" style="display:none" onclick="autoHaltPromoteBackup()">🔁 Promote failover &amp; resume</button>
       <button title="Resume Auto Mode and chain the next round automatically" class="auto-halt-btn auto-halt-resume" id="autoHaltResumeBtn" onclick="autoHaltResume()">▶ Resume Auto</button>
       <button title="Switch to Manual Mode — you click Smoke the Hive for each round" class="auto-halt-btn auto-halt-manual" onclick="autoHaltSwitchManual()">↩ Switch to Manual</button>
       <button title="Stop here — keep the current document and end Auto Mode" class="auto-halt-btn auto-halt-stop" onclick="autoHaltStop()">⏹ Stop here</button>
@@ -1851,7 +1851,7 @@
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.testViewer()" title="Inject 6 fake captures so you can preview the populated viewer in both themes">🌱 Seed sample</button>
         <button title="Copy the debug buffer as JSON" class="tc-action-btn" type="button" onclick="WF_DEBUG.copyViewer()">📋 Copy as JSON</button>
         <button class="tc-action-btn" type="button" onclick="WF_DEBUG.saveViewer()" title="Download the capture buffer as a JSON file. Best for full-session captures or archival.">💾 Save DeepDive</button>
-        <button class="tc-action-btn" type="button" onclick="backupSession()" title="Download a full session backup (project goal, hive, document, round history) as JSON. Same as the Backup Session option in the nav menu — available here so you can grab both DeepDive and Backup files without leaving the viewer.">💾 Save Backup</button>
+        <button class="tc-action-btn" type="button" onclick="backupSession()" title="Save a full session checkpoint (project goal, hive, document, round history) as JSON. Same as the Save Checkpoint option in the nav menu — available here so you can grab both DeepDive and Checkpoint files without leaving the viewer.">💾 Save Checkpoint</button>
         <button title="Clear the debug buffer" class="tc-action-btn" type="button" onclick="WF_DEBUG.clearViewer()">🗑 Clear buffer</button>
         <button title="Refresh the debug view" class="tc-action-btn" type="button" onclick="WF_DEBUG._renderViewer()">↻ Refresh</button>
       </div>
@@ -2007,7 +2007,7 @@
     <h2 class="finish-modal-title">&#x1F3C1; Set up and ready to run</h2>
     <p class="finish-modal-msg">Before you burn any tokens, two quick things you can do &mdash; both optional, and both available later from the menu.</p>
     <div class="finish-modal-actions">
-      <button class="finish-modal-btn finish-modal-btn-export" onclick="firstRunDoBackup()">&#x1F4BE; Save a checkpoint backup
+      <button class="finish-modal-btn finish-modal-btn-export" onclick="firstRunDoBackup()">&#x1F4BE; Save a checkpoint
         <span class="finish-modal-btn-sub">Restore this exact starting point if a round goes sideways &mdash; includes hive, goal, reference, and starting document</span>
       </button>
       <button class="finish-modal-btn finish-modal-btn-export" onclick="firstRunDoTemplate()">&#x2B50; Save as a template
@@ -2256,12 +2256,12 @@
         <span class="goal-info-desc">Browse every completed round in the current session — see the document at each round, every reviewer response, the Builder's resolutions, and any USER DECISION blocks. Export the full transcript as a single file from here.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">💾 Backup Session</span>
-        <span class="goal-info-desc">Save your full current state — hive, project, reference material, round history, work-in-progress document — to a single JSON file you can re-import later. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
+        <span class="info-label">💾 Save Checkpoint</span>
+        <span class="goal-info-desc">Save a checkpoint of your full current state — hive, project, reference material, round history, work-in-progress document — to a single JSON file you can restore from later. Recommended before any risky operation or experimental round, and as a periodic safety net on long projects.</span>
       </div>
       <div class="goal-info-row">
-        <span class="info-label">📂 Import Backup</span>
-        <span class="goal-info-desc">Restore from a previously-saved backup JSON. Replaces your current session entirely, so back up your current work first if you need to keep both.</span>
+        <span class="info-label">📂 Restore from Checkpoint</span>
+        <span class="goal-info-desc">Restore from a previously-saved checkpoint JSON. Replaces your current session entirely, so save a checkpoint of your current work first if you need to keep both.</span>
       </div>
       <div class="goal-info-row">
         <span class="info-label">🔑 License Key</span>
@@ -2761,23 +2761,23 @@ function wfMobileShareToast(msg) {
      so it loads via <script type="module"> and stashes pdfjsLib onto window so the
      rest of app.js (which references window.pdfjsLib) keeps working unchanged. -->
 <script type="module">
-  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.128';
+  import * as pdfjsLib from './lib/pdf.min.mjs?v=3.63.129';
   window.pdfjsLib = pdfjsLib;
 </script>
-<script src="lib/mammoth.browser.min.js?v=3.63.128"></script>
-<script src="lib/jszip.min.js?v=3.63.128"></script>
-<script src="lib/xlsx.full.min.js?v=3.63.128"></script>
-<script src="js/version.js?v=3.63.128"></script>
-<script src="js/storage.js?v=3.63.128"></script>
-<script src="js/theme.js?v=3.63.128"></script>
-<script src="js/audio.js?v=3.63.128"></script>
-<script src="js/scenes.js?v=3.63.128"></script>
-<script src="js/wf-debug.js?v=3.63.128"></script>
-<script src="js/provider-models.js?v=3.63.128"></script>
-<script src="js/api.js?v=3.63.128"></script>
-<script src="js/templates.js?v=3.63.128"></script>
-<script src="js/api-links.js?v=3.63.128"></script>
-<script src="js/app.js?v=3.63.128"></script>
+<script src="lib/mammoth.browser.min.js?v=3.63.129"></script>
+<script src="lib/jszip.min.js?v=3.63.129"></script>
+<script src="lib/xlsx.full.min.js?v=3.63.129"></script>
+<script src="js/version.js?v=3.63.129"></script>
+<script src="js/storage.js?v=3.63.129"></script>
+<script src="js/theme.js?v=3.63.129"></script>
+<script src="js/audio.js?v=3.63.129"></script>
+<script src="js/scenes.js?v=3.63.129"></script>
+<script src="js/wf-debug.js?v=3.63.129"></script>
+<script src="js/provider-models.js?v=3.63.129"></script>
+<script src="js/api.js?v=3.63.129"></script>
+<script src="js/templates.js?v=3.63.129"></script>
+<script src="js/api-links.js?v=3.63.129"></script>
+<script src="js/app.js?v=3.63.129"></script>
 
 <!-- WaxFrame Finish Animation -->
 <div id="hiveFinishOverlay" class="hive-finish-overlay" aria-hidden="true">
@@ -2840,9 +2840,9 @@ function wfMobileShareToast(msg) {
 
     <div class="nav-divider"></div>
     <div class="nav-section-label">Tools</div>
-    <button title="Download a JSON backup of your current session (project goal, hive, document, round history)" class="nav-item" onclick="backupSession()">💾 Backup Session</button>
-    <button title="Download a backup with all API keys and your license key stripped — safe to share with collaborators or support" class="nav-item" onclick="backupSessionScrubbed()">🧼 Backup Session (Scrubbed)</button>
-    <button title="Import a previously-saved WaxFrame backup file" class="nav-item" onclick="importSession()">📂 Import Backup</button>
+    <button title="Save a checkpoint of your current session (project goal, hive, document, round history) to a JSON file you can restore from later" class="nav-item" onclick="backupSession()">💾 Save Checkpoint</button>
+    <button title="Save a checkpoint with all API keys and your license key stripped — safe to share with collaborators or support" class="nav-item" onclick="backupSessionScrubbed()">🧼 Save Checkpoint (Scrubbed)</button>
+    <button title="Restore from a previously-saved WaxFrame checkpoint file" class="nav-item" onclick="importSession()">📂 Restore from Checkpoint</button>
     <button title="Manage your WaxFrame Pro license key" class="nav-item" onclick="closeNavMenu();showLicenseModal()">🔑 License Key</button>
     <button title="Open Round History — every completed round in this session" class="nav-item" onclick="closeNavMenu();openRoundHistoryModal()">⏱ Round History</button>
     <button title="Save this project's setup (goal, reference, length guard, and hive) as a reusable template" class="nav-item" onclick="openSaveTemplateModal()">&#x2B50; Save as Template</button>
@@ -2899,7 +2899,7 @@ function wfMobileShareToast(msg) {
       <button class="btn btn-sm verify-panel-close" title="Cancel — discards the file entirely" onclick="cancelVerifyImport()">✕</button>
     </div>
     <div class="verify-panel-explainer-wrap">
-      <p class="verify-panel-explainer" id="verifyExplainer">Please check the extracted text on the right and adjust anything that doesn't match. If there are too many things to fix, try the Re-scan button to get another AI to look at it. If it looks good, we recommend making a backup copy by using the Back up button. Otherwise, click Proceed when you're satisfied.</p>
+      <p class="verify-panel-explainer" id="verifyExplainer">Please check the extracted text on the right and adjust anything that doesn't match. If there are too many things to fix, try the Re-scan button to get another AI to look at it. If it looks good, we recommend saving a copy by using the Save as .txt button. Otherwise, click Proceed when you're satisfied.</p>
       <details class="verify-tech-details" id="verifyTechDetails">
         <summary class="verify-tech-summary">Show technical details</summary>
         <div class="verify-tech-details-body" id="verifyTechDetailsBody"></div>
@@ -2923,7 +2923,7 @@ function wfMobileShareToast(msg) {
     <div class="verify-panel-ftr">
       <button class="btn verify-reread-btn" id="verifyRereadBtn" title="Re-runs the page images through a different keyed vision provider for a fresh transcription" onclick="verifyTryDifferentReader()">🔁 Re-scan with another AI</button>
       <div class="verify-ftr-right">
-        <button class="btn" title="Download the extracted text as a .txt — the modal stays open so you can keep editing" onclick="backupVerifyExtractedText()">💾 Back up as .txt</button>
+        <button class="btn" title="Download the extracted text as a .txt — the modal stays open so you can keep editing" onclick="backupVerifyExtractedText()">💾 Save as .txt</button>
         <button class="btn" title="Discard this file entirely — returns you to the setup screen with the slot empty" onclick="cancelVerifyImport()">Cancel</button>
         <button class="btn btn-cta btn-accent" id="verifyProceedBtn" title="Commit the extracted text to the project and close" onclick="proceedVerifyImport()">✅ Proceed</button>
       </div>
