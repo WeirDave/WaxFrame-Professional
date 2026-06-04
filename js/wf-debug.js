@@ -1,6 +1,6 @@
 // ============================================================
 //  WaxFrame — wf-debug.js
-// Build: 20260604-013
+// Build: 20260604-014
 //
 //  Two-layer Troubleshooting + Deep Dive system (v3.28.0+).
 //  Pulled out of app.js in v3.43.0 as part of the cross-cutting
@@ -346,8 +346,15 @@ window.WF_DEBUG = {
   // Scout download alongside the ring buffer.
   // ════════════════════════════════════════════════════════════
   async classifyTiers(opts) {
+    // v3.63.141 — Always force-refresh when called from the dev-toolbar
+    // button (or any caller that doesn't explicitly pass force:false). The
+    // prior default served cache, which left v3.63.139's stale picks in
+    // place even after v3.63.140 shipped the live-fetch fix — the button
+    // never re-ran the previously-cached providers. Explicit user action
+    // should always be fresh; cache reads belong on the bundle/resolver
+    // side, not on the action button.
     opts = opts || {};
-    const force = !!opts.force;
+    const force = opts.force === false ? false : true;
     if (typeof classifyTiersForAllKeyed !== 'function') {
       if (typeof toast === 'function') toast('⚠️ Tier classifier unavailable — app.js not loaded');
       return;
@@ -355,7 +362,7 @@ window.WF_DEBUG = {
     const btn = document.getElementById('wfClassifyTiersBtn');
     const origLabel = btn ? btn.innerHTML : null;
     if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Classifying…'; }
-    if (typeof toast === 'function') toast(force ? '🐝 Re-classifying every keyed provider…' : '🐝 Classifying every keyed provider…', 4000);
+    if (typeof toast === 'function') toast('🐝 Re-classifying every keyed provider…', 4000);
     try {
       const results = await classifyTiersForAllKeyed({ force });
       const ok   = Object.values(results).filter(r => r && (r.cheap || r.balanced || r.thinker || r.fast)).length;

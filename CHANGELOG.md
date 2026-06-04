@@ -2,6 +2,43 @@
 
 ---
 
+## v3.63.141
+
+**Tier classifier architectural alignment with the existing recommender**
+
+Build: `20260604-014`<br>
+Released: `2026-06-04`
+
+The v3.63.139/.140 classifier was a parallel re-implementation that quietly broke for every provider the standalone path didn't know about. v3.63.141 stops reinventing infrastructure that's already solved and aligns the classifier with `recommendForDefault`'s established pattern.
+
+**Use `fetchModelsForProvider` for defaults, with MODEL_FALLBACKS as the canonical no-discovery fallback** ([js/app.js:6735](js/app.js)) — the v3.63.140 implementation called the raw `fetchModelsFromEndpoint` and bypassed the per-provider plumbing entirely. Real consequences in David's last bundle:
+
+- **Perplexity** has no `/v1/models` endpoint at all (documented in the v3.26.2 comment block in `recommendForDefault`). The recommender handles this by falling back to `MODEL_FALLBACKS['perplexity']` — the curated `['sonar', 'sonar-pro', 'sonar-deep-research', 'sonar-reasoning-pro']` list. The v3.63.140 classifier didn't know about this fallback and produced `NetworkError when attempting to fetch resource`.
+- **Mistral / Cohere / Together AI / Jamba** aren't in `MODEL_FILTERS` at all — `fetchModelsForProvider` returns `null` for them at line 386 (early return). The recommender's fallback chain catches this; the v3.63.140 classifier's raw call produced `empty-model-list`.
+
+v3.63.141 uses `fetchModelsForProvider` for defaults, falls through to `MODEL_FALLBACKS[provider]` when the live fetch returns null/empty, and for customs uses `fetchModelsFromEndpoint(cfg.endpoint, ...)` since that IS their actual discovery path. A new `modelSource` field (`live-fetch` / `custom-endpoint` / `model-fallbacks`) gets persisted with every cached classification so the bundle shows the provenance.
+
+**Asking-model selection mirrors `recommendForDefault`** ([js/app.js:6760](js/app.js)) — the v3.63.140 ladder was `cfg.model || filtered[0]`, which preferred whatever model the user happened to have selected. If that model is a reasoning model that buries its answers in chain-of-thought, the classifier inherits every bad behavior of the answer-source we're trying to evaluate. David's chicken-and-egg.
+
+v3.63.141 uses the recommender's ladder:
+
+```
+viable[0]              // newest filtered model
+  || stableFallback    // curated MODEL_FALLBACKS entry that's in the live list
+  || cfg.model         // user's currently-selected model
+  || models[0]         // last resort
+```
+
+A known-stable instruction-follower is the right asking model — not whatever's in the production hive slot.
+
+**Dev-toolbar 🐝 Classify Tiers button always force-refreshes** ([js/wf-debug.js](js/wf-debug.js)) — the v3.63.140 button passed `force: false` by default, which served cache and only re-ran providers without a cached entry. David's v3.63.140 bundle showed v3.63.139's stale picks for ChatGPT/Claude/Gemini/Grok still in place even after the live-fetch fix shipped, because the button never re-ran them. v3.63.141 inverts the default: explicit user actions are always fresh; cache reads belong on the bundle/resolver side.
+
+**Capability-floor anchor in the classifier prompt** ([js/app.js:6480](js/app.js)) — BALANCED and THINKER slots now explicitly say "must be capable enough to review and refine a long document — do NOT put a small / distilled / tiny model here (anything roughly 7B parameters or smaller belongs in CHEAP/FAST, not here)." Catches the v3.63.140 Together AI classification that put `arize-ai/qwen-2-1.5b-instruct` (1.5B parameters, distilled) in BALANCED. Small models stay valid in CHEAP/FAST where speed is the priority.
+
+**Bundle gains diagnostic provenance** — every cached classification now carries `modelSource` and `askingModel` so when a result looks wrong, the bundle shows exactly where the model list came from and which model produced the answer.
+
+---
+
 ## v3.63.140
 
 **Security: Bundle for Scout no longer leaks API keys + four classifier coverage fixes**
