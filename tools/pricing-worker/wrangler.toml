@@ -8,4 +8,4 @@ compatibility_date = "2026-06-03"
 # Then paste the returned id below.
 [[kv_namespaces]]
 binding = "PRICING_DATA"
-id = "REPLACE_ME_WITH_KV_NAMESPACE_ID"
+id = "2a06447c94914b699778a87511cee795"
